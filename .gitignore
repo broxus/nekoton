@@ -1,9 +1,4 @@
 /.idea/
-
 /target/
 /**/*.rs.bk
-
-/node_modules/
-
-/dist/
-/pkg/
+Cargo.lock
