@@ -1,6 +1,50 @@
-[workspace]
-members = ["nekoton", "nekoton-crypto" ,"nekoton-helpers"]
+[package]
+name = "nekoton"
+version = "0.1.0"
+authors = [
+    "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
+    "Ivan Kalinin <i.kalinin@dexpa.io>"
+]
+edition = "2018"
 
-[profile.release]
-opt-level = "s"
-lto = true
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1"
+aes-ctr = "0.6"
+base64 = "0.13"
+curve25519-dalek = "3.0"
+chacha20poly1305 = "0.7.1"
+ed25519-dalek = "1.0"
+hex = "0.4"
+futures = "0.3"
+js-sys = "0.3"
+parking_lot = "0.11.1"
+pin-project-lite = "0.2"
+rand = { version = "0.7", features = ["getrandom"] }
+ring = "0.16"
+secstr = "0.4.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.9"
+thiserror = "1.0"
+tiny-hderive = "0.3.0"
+tiny-bip39 = "0.8.0"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+wee_alloc = "0.4"
+x25519-dalek = "1.1"
+getrandom = "0.1"
+
+ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "original", package = "ton_api" }
+
+ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi.git" }
+ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
+ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
+
+[dev-dependencies]
+pretty_assertions = "0.7.1"
+hex = "0.4.3"
+
+[features]
+default = []
+web = ["getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]

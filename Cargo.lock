@@ -81,27 +81,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afddf7f520a80dbf76e6f50a35bca42a2331ef227a28b3b6dc5c2e2338d114b1"
 
 [[package]]
-name = "api_derive"
-version = "1.10.0"
-source = "git+https://github.com/tonlabs/TON-SDK.git#85c6a8f2c3a68a2786766206a5b34c93407a7faf"
-dependencies = [
- "api_info",
- "quote 1.0.9",
- "serde_json",
- "syn 1.0.60",
-]
-
-[[package]]
-name = "api_info"
-version = "1.10.0"
-source = "git+https://github.com/tonlabs/TON-SDK.git#85c6a8f2c3a68a2786766206a5b34c93407a7faf"
-dependencies = [
- "serde",
- "serde_derive",
- "serde_json",
-]
-
-[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -298,16 +277,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "console_error_panic_hook"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8d976903543e0c48546a91908f21588a680a8c8f984df9a5d69feccb2b2a211"
-dependencies = [
- "cfg-if 0.1.10",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "cpuid-bool"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -326,15 +295,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d663548de7f5cca343f1e0a48d14dcfb0e9eb4e079ec58883b7251539fa10aeb"
 dependencies = [
  "build_const",
-]
-
-[[package]]
-name = "crc-any"
-version = "2.3.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3784befdf9469f4d51c69ef0b774f6a99de6bcc655285f746f16e0dd63d9007"
-dependencies = [
- "debug-helper",
 ]
 
 [[package]]
@@ -394,12 +354,6 @@ dependencies = [
  "subtle 2.4.0",
  "zeroize",
 ]
-
-[[package]]
-name = "debug-helper"
-version = "0.3.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a8a5bb894f24f42c247f19b25928a88e31867c0f84552c05df41a9dd527435e"
 
 [[package]]
 name = "diff"
@@ -787,63 +741,33 @@ dependencies = [
  "anyhow",
  "async-trait",
  "base64 0.13.0",
- "console_error_panic_hook",
+ "chacha20poly1305",
  "curve25519-dalek",
  "ed25519-dalek",
  "futures",
  "getrandom",
  "hex 0.4.3",
  "js-sys",
- "nekoton-crypto",
- "nekoton-helpers",
+ "parking_lot",
  "pin-project-lite",
+ "pretty_assertions 0.7.1",
  "rand",
+ "ring",
+ "secstr",
  "serde",
  "serde_json",
  "sha2 0.9.3",
  "thiserror",
+ "tiny-bip39",
+ "tiny-hderive",
  "ton_abi",
  "ton_api",
  "ton_block",
  "ton_types",
  "wasm-bindgen",
  "wasm-bindgen-futures",
- "wasm-bindgen-test",
  "wee_alloc",
  "x25519-dalek",
-]
-
-[[package]]
-name = "nekoton-crypto"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64 0.13.0",
- "chacha20poly1305",
- "ed25519-dalek",
- "hex 0.4.3",
- "parking_lot",
- "ring",
- "secstr",
- "serde",
- "serde_json",
- "tiny-bip39",
- "tiny-hderive",
-]
-
-[[package]]
-name = "nekoton-helpers"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64 0.13.0",
- "ed25519-dalek",
- "hex 0.4.3",
- "pretty_assertions 0.7.1",
- "ton_abi",
- "ton_block",
- "ton_sdk",
- "ton_types",
 ]
 
 [[package]]
@@ -1208,12 +1132,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
-name = "scoped-tls"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea6a9290e3c9cf0f18145ef7ffa62d68ee0bf5fcd651017e586dc7fd5da448c2"
-
-[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1496,46 +1414,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ton_labs_assembler"
-version = "1.0.0"
-source = "git+https://github.com/tonlabs/ton-labs-assembler.git#8dea5c6ad9afd1f47d4f597330d06e604780ea49"
-dependencies = [
- "failure",
- "hex 0.4.3",
- "log",
- "num",
- "num-traits",
- "ton_types",
-]
-
-[[package]]
-name = "ton_sdk"
-version = "1.10.0"
-source = "git+https://github.com/tonlabs/TON-SDK.git#85c6a8f2c3a68a2786766206a5b34c93407a7faf"
-dependencies = [
- "api_derive",
- "api_info",
- "base64 0.10.1",
- "chrono",
- "crc-any",
- "ed25519-dalek",
- "failure",
- "hex 0.3.2",
- "lazy_static",
- "log",
- "num-bigint",
- "num-traits",
- "serde",
- "serde_derive",
- "serde_json",
- "sha2 0.8.2",
- "ton_abi",
- "ton_block",
- "ton_types",
- "ton_vm",
-]
-
-[[package]]
 name = "ton_tl_codegen"
 version = "0.0.1"
 source = "git+https://github.com/broxus/ton-labs-tl.git?branch=original#fcb184ed287288cfbaee2bedae4cba541e8e3849"
@@ -1564,24 +1442,6 @@ dependencies = [
  "num-traits",
  "rand",
  "sha2 0.8.2",
-]
-
-[[package]]
-name = "ton_vm"
-version = "1.0.0"
-source = "git+https://github.com/tonlabs/ton-labs-vm.git#c817670f6e17d73dc8f05a5fd4af00302e8e12bb"
-dependencies = [
- "ed25519",
- "ed25519-dalek",
- "failure",
- "hex 0.4.3",
- "log",
- "num",
- "num-traits",
- "rand",
- "sha2 0.8.2",
- "ton_labs_assembler",
- "ton_types",
 ]
 
 [[package]]
@@ -1710,30 +1570,6 @@ name = "wasm-bindgen-shared"
 version = "0.2.70"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd4945e4943ae02d15c13962b38a5b1e81eadd4b71214eee75af64a4d6a4fd64"
-
-[[package]]
-name = "wasm-bindgen-test"
-version = "0.3.20"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0d4da138503a4cf86801b94d95781ee3619faa8feca830569cc6b54997b8b5c"
-dependencies = [
- "console_error_panic_hook",
- "js-sys",
- "scoped-tls",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "wasm-bindgen-test-macro",
-]
-
-[[package]]
-name = "wasm-bindgen-test-macro"
-version = "0.3.20"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3199c33f06500c731d5544664c24d0c2b742b98debc6b1c6f0c6d6e8fb7c19b"
-dependencies = [
- "proc-macro2 1.0.24",
- "quote 1.0.9",
-]
 
 [[package]]
 name = "web-sys"
