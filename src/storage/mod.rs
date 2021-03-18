@@ -1,4 +1,4 @@
-mod keystore;
+pub mod keystore;
 pub use keystore::mnemonics::*;
 pub use keystore::StoredKey;
 
