@@ -61,11 +61,10 @@ pub fn unpack_std_smc_addr(packed: &str, base64_url: bool) -> Result<MsgAddrStd,
 mod test {
     use std::str::FromStr;
 
+    use crate::helpers::address::{pack_std_smc_addr, unpack_std_smc_addr};
     #[cfg(test)]
     use pretty_assertions::assert_eq;
     use ton_block::{MsgAddrStd, MsgAddressInt};
-
-    use crate::address::{pack_std_smc_addr, unpack_std_smc_addr};
 
     fn get_std_addr() -> MsgAddrStd {
         if let MsgAddressInt::AddrStd(a) = MsgAddressInt::from_str(

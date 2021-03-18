@@ -38,20 +38,22 @@ fn ed25519_keys_from_secret_bytes(bytes: &[u8]) -> Result<ed25519_dalek::Keypair
 
 #[cfg(test)]
 mod test {
-    use crate::recovery::ton_labs::derive_from_words_labs;
+    use crate::storage::keystore::mnemonics::labs::derive_from_words;
 
     #[test]
     fn bad_mnemonic() {
-        let key = derive_from_words_labs(
+        let key = derive_from_words(
             "pioneer fever hazard scam install wise reform corn bubble leisure amazing note",
+            0,
         );
         assert!(key.is_err());
     }
 
     #[test]
     fn ton_recovery() {
-        let key = derive_from_words_labs(
+        let key = derive_from_words(
             "pioneer fever hazard scan install wise reform corn bubble leisure amazing note",
+            0,
         )
         .unwrap();
         let secret = key.secret;

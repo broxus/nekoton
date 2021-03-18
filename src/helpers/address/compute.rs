@@ -164,8 +164,8 @@ mod test {
     use pretty_assertions::assert_eq;
     use ton_block::MsgAddressInt;
 
-    use crate::address::compute::{compute_address, Wallet};
-    use crate::address::{msg_addr_from_str, msg_addr_int_to_std, pack_std_smc_addr};
+    use crate::helpers::address::compute::msg_addr_int_to_std;
+    use crate::helpers::address::{compute_address, msg_addr_from_str, pack_std_smc_addr, Wallet};
 
     fn default_pubkey() -> ed25519_dalek::PublicKey {
         ed25519_dalek::PublicKey::from_bytes(
@@ -178,7 +178,7 @@ mod test {
     #[test]
     fn test_v3() {
         let pk = default_pubkey();
-        let addr = compute_address(&pk, Wallet::WalletV3, 0).unwrap();
+        let addr = compute_address(&pk, Wallet::WalletV3, 0);
         assert_eq!(
             pack_std_smc_addr(true, &addr, false),
             "UQDIsJmoySkJdZEX5NNj02aix0BXE4-Ym4zcGFCfmo0xaeFc"
@@ -188,7 +188,7 @@ mod test {
     #[test]
     fn test_surf() {
         let pk = default_pubkey();
-        let addr = compute_address(&pk, Wallet::SurfWallet, 0).unwrap();
+        let addr = compute_address(&pk, Wallet::SurfWallet, 0);
         assert_eq!(
             pack_std_smc_addr(true, &addr, true),
             "EQC5aPHGTz9B4EaZpq7wYq-eoKWiOFXwUx05vURmxwl4W4Jn"
@@ -201,7 +201,7 @@ mod test {
                 .unwrap(),
         )
         .unwrap();
-        let addr = compute_address(&pk, Wallet::SafeMultisigWallet, 0).unwrap();
+        let addr = compute_address(&pk, Wallet::SafeMultisigWallet, 0);
 
         let expected_address = msg_addr_int_to_std(
             &MsgAddressInt::from_str(
@@ -220,7 +220,7 @@ mod test {
                 .unwrap(),
         )
         .unwrap();
-        let addr = compute_address(&pk, Wallet::SafeMultisigWallet24h, 0).unwrap();
+        let addr = compute_address(&pk, Wallet::SafeMultisigWallet24h, 0);
         let expected_address =
             msg_addr_from_str("0:2d0f4b099b346f51cb1b736188b1ee19d71c2ac4688da3fa126020ac2b5a2b5c")
                 .unwrap();
@@ -234,7 +234,7 @@ mod test {
                 .unwrap(),
         )
         .unwrap();
-        let addr = compute_address(&pk, Wallet::SetcodeMultisigWallet, 0).unwrap();
+        let addr = compute_address(&pk, Wallet::SetcodeMultisigWallet, 0);
         let expected_address =
             msg_addr_from_str("0:9d368d911c9444e7805d7ea0fd8d05005f3e8a739d053ed1622c2313cd99a15d")
                 .unwrap();

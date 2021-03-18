@@ -307,7 +307,7 @@ const TON_WORDS: [&str; 2048] = [
 
 #[cfg(test)]
 mod test {
-    use crate::recovery::durov::{phrase_is_ok, phrase_to_key_durov};
+    use crate::storage::keystore::mnemonics::legacy::{derive_from_words, phrase_is_ok};
 
     #[test]
     fn test_validate() {
@@ -325,7 +325,7 @@ mod test {
 
     #[test]
     fn test_derivation() {
-        let keypair = phrase_to_key_durov("unaware face erupt ceiling frost shiver crumble know party before brisk skirt fence boat powder copy plastic until butter fluid property concert say verify").unwrap();
+        let keypair = derive_from_words("unaware face erupt ceiling frost shiver crumble know party before brisk skirt fence boat powder copy plastic until butter fluid property concert say verify").unwrap();
         let expected = "o0kpHL39KRq0KX11zZ0/sCwJL66t+gA4vnfuwBjhAWU=";
         let pub_expecteed = "lHW4ZS8QvCHcgR4uChD7QJWU2kf5JRMtUnZ2p1GSZjg=";
         assert_eq!(base64::encode(&keypair.public.as_bytes()), pub_expecteed);
