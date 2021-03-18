@@ -2,8 +2,6 @@ use anyhow::Error;
 use bip39::{Language, Seed};
 use tiny_hderive::bip32::ExtendedPrivKey;
 
-use super::GeneratedKey;
-
 pub fn derive_from_words(phrase: &str, account_id: u16) -> Result<ed25519_dalek::Keypair, Error> {
     let mnemonic = bip39::Mnemonic::from_phrase(phrase, Language::English)?;
     let hd = Seed::new(&mnemonic, "");
@@ -18,14 +16,11 @@ pub fn derive_from_words(phrase: &str, account_id: u16) -> Result<ed25519_dalek:
     ed25519_keys_from_secret_bytes(&derived.secret()) //todo check me
 }
 
-pub fn generate_words(entropy: [u8; 32], account_id: u16) -> Result<GeneratedKey, Error> {
+pub fn generate_words(entropy: [u8; 32]) -> Result<Vec<String>, Error> {
     let mnemonic = bip39::Mnemonic::from_entropy(&entropy, Language::English)?
         .phrase()
         .to_string();
-    Ok(GeneratedKey {
-        keypair: derive_from_words(&mnemonic, account_id)?,
-        words: mnemonic.split_whitespace().map(|x| x.to_string()).collect(),
-    })
+    Ok(mnemonic.split_whitespace().map(|x| x.to_string()).collect())
 }
 
 fn ed25519_keys_from_secret_bytes(bytes: &[u8]) -> Result<ed25519_dalek::Keypair, Error> {

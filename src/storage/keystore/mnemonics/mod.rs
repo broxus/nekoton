@@ -16,7 +16,7 @@ pub enum AccountType {
 
 pub struct GeneratedKey {
     pub words: Vec<String>,
-    pub keypair: Keypair,
+    pub account_type: AccountType,
 }
 
 /// Derives keypair from wordlist.
@@ -41,9 +41,12 @@ pub fn generate(account_type: AccountType) -> Result<GeneratedKey, Error> {
     let mut entropy = [0; 256 / 8];
     rng.fill(&mut entropy)
         .map_err(KeystoreError::FailedToGenerateRandomBytes)?;
-
     match account_type {
-        AccountType::Legacy => legacy::generate_words(entropy),
-        AccountType::Labs(id) => labs::generate_words(entropy, id),
+        AccountType::Legacy => Ok(legacy::generate_words(entropy)),
+        AccountType::Labs(_) => labs::generate_words(entropy),
     }
+    .map(|words| GeneratedKey {
+        account_type,
+        words,
+    })
 }

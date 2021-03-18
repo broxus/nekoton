@@ -1,7 +1,6 @@
-pub use keystore::recovery::*;
+mod keystore;
+pub use keystore::mnemonics::*;
 pub use keystore::StoredKey;
-
-pub mod keystore;
 
 pub trait KvStorage {
     type Error;

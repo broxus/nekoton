@@ -24,7 +24,7 @@ pub enum Wallet {
 }
 
 ///Constructs std address from [`MsgAddressInt`] assuming, that [`ton_block::MsgAddrVar`] is not used.
-pub fn msg_addr_int_to_std(addr: &MsgAddressInt) -> anyhow::Result<MsgAddrStd, Error> {
+fn msg_addr_int_to_std(addr: &MsgAddressInt) -> anyhow::Result<MsgAddrStd, Error> {
     match addr {
         MsgAddressInt::AddrStd(a) => Ok(a.clone()),
         MsgAddressInt::AddrVar(_) => {
@@ -72,7 +72,7 @@ fn compute_ftabi_contract_address(
     public_key: &ed25519_dalek::PublicKey,
     workchain_id: i8,
 ) -> MsgAddrStd {
-    let mut state_init_roots = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(tvc))
+    let state_init_roots = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(tvc))
         .expect("Shouldn't fail");
     let mut state_init =
         StateInit::construct_from(&mut state_init_roots.into()).expect("Shouldn't fail");

@@ -3,18 +3,20 @@ use std::fmt::{Debug, Formatter};
 use std::io::Read;
 use std::num::NonZeroU32;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use chacha20poly1305::aead::{Aead, NewAead};
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
-use ed25519_dalek::{ed25519, Keypair, Signer};
+use ed25519_dalek::{ed25519, Keypair, SecretKey, Signer};
 use ring::rand::SecureRandom;
 use ring::{digest, pbkdf2};
 use secstr::{SecStr, SecVec};
 use serde::{Deserialize, Serialize};
 
+use crate::storage::derive_from_words;
+
 use super::AccountType;
 
-pub mod recovery;
+pub mod mnemonics;
 
 const NONCE_LENGTH: usize = 12;
 
@@ -37,14 +39,8 @@ pub struct StoredKey {
 
 impl StoredKey {
     /// Initializes signer from key pair
-    pub fn new(
-        password: SecStr,
-        key_pair: Keypair,
-        account_type: AccountType,
-        phrase: &str,
-    ) -> Result<Self> {
+    pub fn new(password: SecStr, account_type: AccountType, phrase: &str) -> Result<Self> {
         let rng = ring::rand::SystemRandom::new();
-
         // prepare nonce
         let mut private_key_nonce = [0u8; 12];
         rng.fill(&mut private_key_nonce)
@@ -64,11 +60,13 @@ impl StoredKey {
         let key = symmetric_key_from_password(password, &salt);
         let encryptor = ChaCha20Poly1305::new(&key);
 
+        let keypair = derive_from_words(&phrase, account_type)?;
         // encrypt private key
+        let pubkey = keypair.public;
         let encrypted_private_key =
-            encrypt(&encryptor, &private_key_nonce, key_pair.secret.as_ref())?;
-        let pubkey = key_pair.public;
-        drop(key_pair);
+            encrypt(&encryptor, &private_key_nonce, keypair.secret.as_ref())?;
+
+        drop(keypair);
 
         // encrypt seed phrase
         let encrypted_seed_phrase = encrypt(&encryptor, &seed_phrase_nonce, phrase.as_ref())?;
@@ -154,6 +152,17 @@ impl StoredKey {
 
     pub fn sign(&self, data: &[u8], password: SecStr) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
         self.inner.sign(data, password)
+    }
+
+    ///Used for gas estimation
+    pub fn sign_with_fake_key(&self, data: &[u8]) -> [u8; ed25519::SIGNATURE_LENGTH] {
+        let pk = SecretKey::from_bytes(&[0; 32]).expect("Shouldn't fail");
+        let pubkey = ed25519_dalek::PublicKey::from(&pk);
+        let kp = Keypair {
+            public: pubkey,
+            secret: pk,
+        };
+        kp.sign(data).to_bytes()
     }
 
     pub fn public_key(&self) -> &[u8; 32] {
@@ -280,7 +289,6 @@ pub enum KeystoreError {
 }
 
 mod hex_encode {
-    use serde::Deserialize;
 
     pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
     where

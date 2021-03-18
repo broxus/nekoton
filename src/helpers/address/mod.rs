@@ -1,11 +1,11 @@
-mod compute;
-
 use anyhow::Error;
 use base64::URL_SAFE;
 use ton_block::MsgAddrStd;
 use ton_types::AccountId;
 
-use crate::helpers::crc::*;
+use crate::helpers::crc::crc_16;
+pub use compute::{compute_address, msg_addr_from_str, Wallet};
+mod compute;
 
 ///Packs std address to base64 format
 /// # Arguments
@@ -61,10 +61,11 @@ pub fn unpack_std_smc_addr(packed: &str, base64_url: bool) -> Result<MsgAddrStd,
 mod test {
     use std::str::FromStr;
 
-    use crate::address::{pack_std_smc_addr, unpack_std_smc_addr};
     #[cfg(test)]
     use pretty_assertions::assert_eq;
     use ton_block::{MsgAddrStd, MsgAddressInt};
+
+    use crate::address::{pack_std_smc_addr, unpack_std_smc_addr};
 
     fn get_std_addr() -> MsgAddrStd {
         if let MsgAddressInt::AddrStd(a) = MsgAddressInt::from_str(

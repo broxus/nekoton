@@ -8,7 +8,6 @@ use ring::hmac;
 use ring::pbkdf2::{self, PBKDF2_HMAC_SHA512};
 
 use super::util::{Bits, Bits11, IterExt};
-use super::GeneratedKey;
 
 const PBKDF_ITERATIONS: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(100_000) };
 
@@ -22,11 +21,11 @@ pub fn derive_from_words(phrase: &str) -> Result<Keypair, Error> {
     Ok(keypair)
 }
 
-pub fn generate_words(entropy: [u8; 32]) -> Result<GeneratedKey, Error> {
+pub fn generate_words(entropy: [u8; 32]) -> Vec<String> {
     from_entropy_unchecked(entropy)
 }
 
-fn from_entropy_unchecked(entropy: [u8; 256 / 8]) -> Result<GeneratedKey, Error> {
+fn from_entropy_unchecked(entropy: [u8; 256 / 8]) -> Vec<String> {
     fn sha256_first_byte(input: &[u8]) -> u8 {
         use ring::digest;
         digest::digest(&digest::SHA256, input).as_ref()[0]
@@ -51,10 +50,7 @@ fn from_entropy_unchecked(entropy: [u8; 256 / 8]) -> Result<GeneratedKey, Error>
         .map(|bits: Bits11| wordlist[bits.bits() as usize]) //todo should we check index?
         .join(" ");
 
-    Ok(GeneratedKey {
-        keypair: derive_from_words(&phrase)?,
-        words: phrase.split_whitespace().map(|x| x.to_string()).collect(),
-    })
+    phrase.split_whitespace().map(|x| x.to_string()).collect()
 }
 
 fn phrase_to_entropy(phrase: &[&str]) -> [u8; 64] {
@@ -312,6 +308,7 @@ const TON_WORDS: [&str; 2048] = [
 #[cfg(test)]
 mod test {
     use crate::recovery::durov::{phrase_is_ok, phrase_to_key_durov};
+
     #[test]
     fn test_validate() {
         phrase_is_ok(
