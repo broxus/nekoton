@@ -1,9 +1,10 @@
 /.idea/
-
 /target/
 /**/*.rs.bk
+Cargo.lock
 
-/node_modules/
+nekoton/.idea/
 
-/dist/
-/pkg/
+nekoton/target/
+node_modules/
+dist/
