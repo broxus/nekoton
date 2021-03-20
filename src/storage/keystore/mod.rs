@@ -289,8 +289,6 @@ pub enum KeystoreError {
 }
 
 mod hex_encode {
-    use serde::Deserialize;
-
     pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
     where
         T: AsRef<[u8]> + Sized,
