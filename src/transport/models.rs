@@ -1,6 +1,7 @@
 use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone)]
 pub enum ContractState {
     NotExists,
