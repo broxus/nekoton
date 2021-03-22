@@ -1,36 +1,30 @@
-#[derive(Debug, Clone)]
-pub struct LastBlockIdExt {
-    pub workchain: i8,
-    pub shard: u64,
-    pub seqno: u32,
-    pub root_hash: [u8; 32],
-    pub file_hash: [u8; 32],
+use ton_block::{AccountStuff, Transaction};
+use ton_types::UInt256;
+
+#[derive(Clone)]
+pub enum ContractState {
+    NotExists,
+    Exists {
+        account: AccountStuff,
+        timings: GenTimings,
+        last_transaction_id: TransactionId,
+    },
 }
 
-#[derive(Debug, Clone)]
-pub enum AccountState {
-    NotFound,
-    Frozen,
-    Active(ActiveAccountState),
+#[derive(Debug, Copy, Clone)]
+pub enum GenTimings {
+    Unknown,
+    Known { gen_lt: u64, gen_utime: u32 },
 }
 
-#[derive(Debug, Clone)]
-pub struct ActiveAccountState {
-    pub last_trans_id: TransactionId,
-    pub gen_lt: u64,
-    pub gen_utime: u32,
-    pub balance: u64,
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct TransactionId {
     pub lt: u64,
-    pub hash: [u8; 32],
+    pub hash: UInt256,
 }
 
-#[derive(Debug, Clone)]
-pub struct Transaction {
-    pub id: TransactionId,
-    pub prev_trans_lt: Option<TransactionId>,
-    pub now: u32,
+#[derive(Clone)]
+pub struct TransactionFull {
+    pub hash: UInt256,
+    pub data: Transaction,
 }

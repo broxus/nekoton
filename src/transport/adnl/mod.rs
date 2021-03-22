@@ -1,24 +1,34 @@
 use std::num::NonZeroUsize;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use aes_ctr::cipher::SyncStreamCipher;
 use anyhow::Result;
 use async_trait::async_trait;
 use rand::{CryptoRng, Rng, RngCore};
 use sha2::digest::FixedOutput;
+use tokio::sync::Mutex;
 use ton_api::{ton, BoxedSerialize, Deserializer, IntoBoxed};
-use ton_block::{Deserializable, MsgAddressInt};
+use ton_block::{Deserializable, Message, MsgAddressInt, Serializable};
 
 use crate::transport::models::*;
 use crate::transport::Transport;
 
+const LAST_BLOCK_THRESHOLD: u64 = 1;
+
 pub struct AdnlTransport {
     connection: Arc<dyn AdnlConnection>,
+    last_block: Arc<LastBlock>,
 }
 
 impl AdnlTransport {
     pub fn new(connection: Arc<dyn AdnlConnection>) -> Self {
-        Self { connection }
+        let threshold = std::time::Duration::from_secs(LAST_BLOCK_THRESHOLD);
+
+        Self {
+            connection,
+            last_block: Arc::new(LastBlock::new(&threshold)),
+        }
     }
 
     async fn query<T>(&self, query: T) -> Result<T::Reply>
@@ -38,44 +48,27 @@ impl AdnlTransport {
 
 #[async_trait]
 impl Transport for AdnlTransport {
-    async fn send_message(&self, data: &[u8]) -> Result<()> {
+    async fn send_message(&self, message: &Message) -> Result<()> {
+        let data = message
+            .serialize()
+            .and_then(|cell| cell.write_to_bytes())
+            .map_err(|_| QuerySendMessageError::FailedToSerialize)?;
+
         self.query(ton::rpc::lite_server::SendMessage {
-            body: ton::bytes(data.to_vec()),
+            body: ton::bytes(data),
         })
         .await?;
         Ok(())
     }
 
-    async fn get_masterchain_info(&self) -> Result<LastBlockIdExt> {
-        let info = self
-            .query(ton::rpc::lite_server::GetMasterchainInfo)
-            .await?;
-
-        Ok(LastBlockIdExt {
-            workchain: info.last().workchain as i8,
-            shard: info.last().shard as u64,
-            seqno: info.last().seqno as u32,
-            root_hash: info.last().root_hash.0,
-            file_hash: info.last().file_hash.0,
-        })
-    }
-
-    async fn get_account_state(
-        &self,
-        last_block_id: &LastBlockIdExt,
-        address: &MsgAddressInt,
-    ) -> Result<AccountState> {
+    async fn get_account_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
         use ton_block::{Deserializable, HashmapAugType};
+
+        let last_block_id = self.last_block.get_last_block(self).await?;
 
         let response = self
             .query(ton::rpc::lite_server::GetAccountState {
-                id: ton::ton_node::blockidext::BlockIdExt {
-                    workchain: last_block_id.workchain as ton::int,
-                    shard: last_block_id.shard as ton::int64,
-                    seqno: last_block_id.seqno as ton::int,
-                    root_hash: ton::int256(last_block_id.root_hash),
-                    file_hash: ton::int256(last_block_id.file_hash),
-                },
+                id: last_block_id,
                 account: ton::lite_server::accountid::AccountId {
                     workchain: address.workchain_id(),
                     id: ton::int256(
@@ -87,7 +80,7 @@ impl Transport for AdnlTransport {
             .only();
 
         match ton_block::Account::construct_from_bytes(&response.state.0) {
-            Ok(ton_block::Account::Account(info)) => {
+            Ok(ton_block::Account::Account(account)) => {
                 let q_roots =
                     ton_types::deserialize_cells_tree(&mut std::io::Cursor::new(&response.proof.0))
                         .map_err(|_| QueryAccountStateError::InvalidAccountStateProof)?;
@@ -112,20 +105,22 @@ impl Transport for AdnlTransport {
                     .map_err(|_| QueryAccountStateError::InvalidAccountStateProof)?;
 
                 Ok(if let Some(shard_info) = shard_info {
-                    AccountState::Active(ActiveAccountState {
-                        last_trans_id: TransactionId {
-                            lt: shard_info.last_trans_lt(),
-                            hash: shard_info.last_trans_hash().clone().into(),
+                    ContractState::Exists {
+                        account,
+                        timings: GenTimings::Known {
+                            gen_lt: ss.gen_lt(),
+                            gen_utime: ss.gen_time(),
                         },
-                        gen_lt: ss.gen_lt(),
-                        gen_utime: ss.gen_time(),
-                        balance: info.storage.balance.grams.0 as u64,
-                    })
+                        last_transaction_id: TransactionId {
+                            lt: shard_info.last_trans_lt(),
+                            hash: *shard_info.last_trans_hash(),
+                        },
+                    }
                 } else {
-                    AccountState::NotFound
+                    ContractState::NotExists
                 })
             }
-            Ok(_) => Ok(AccountState::NotFound),
+            Ok(_) => Ok(ContractState::NotExists),
             Err(_) => Err(QueryAccountStateError::InvalidAccountState.into()),
         }
     }
@@ -135,7 +130,7 @@ impl Transport for AdnlTransport {
         address: &MsgAddressInt,
         from: &TransactionId,
         count: u8,
-    ) -> Result<Vec<Transaction>> {
+    ) -> Result<Vec<TransactionFull>> {
         let response = self
             .query(ton::rpc::lite_server::GetTransactions {
                 count: count as i32,
@@ -146,7 +141,7 @@ impl Transport for AdnlTransport {
                     ),
                 },
                 lt: from.lt as i64,
-                hash: ton::int256(from.hash),
+                hash: from.hash.into(),
             })
             .await?;
         let transactions = ton_types::deserialize_cells_tree(&mut std::io::Cursor::new(
@@ -157,22 +152,64 @@ impl Transport for AdnlTransport {
         let mut result = Vec::with_capacity(transactions.len());
         for item in transactions.into_iter() {
             let hash = item.repr_hash();
-            let transaction = ton_block::Transaction::construct_from_cell(item)
-                .map_err(|_| QueryTransactionsError::InvalidTransaction)?;
-            result.push(Transaction {
-                id: TransactionId {
-                    lt: transaction.lt,
-                    hash: hash.into(),
-                },
-                prev_trans_lt: (transaction.prev_trans_lt != 0).then(|| TransactionId {
-                    lt: transaction.prev_trans_lt,
-                    hash: transaction.prev_trans_hash.into(),
-                }),
-                now: transaction.now,
+            result.push(TransactionFull {
+                hash,
+                data: ton_block::Transaction::construct_from_cell(item)
+                    .map_err(|_| QueryTransactionsError::InvalidTransaction)?,
             });
         }
         Ok(result)
     }
+}
+
+struct LastBlock {
+    id: Mutex<
+        Option<(
+            Result<ton::ton_node::blockidext::BlockIdExt, QueryLastBlockError>,
+            Instant,
+        )>,
+    >,
+    threshold: Duration,
+}
+
+impl LastBlock {
+    fn new(threshold: &Duration) -> Self {
+        Self {
+            id: Mutex::new(None),
+            threshold: *threshold,
+        }
+    }
+
+    async fn get_last_block(
+        &self,
+        transport: &AdnlTransport,
+    ) -> Result<ton::ton_node::blockidext::BlockIdExt, QueryLastBlockError> {
+        let mut lock = self.id.lock().await;
+        let now = Instant::now();
+
+        let new_id = match &mut *lock {
+            Some((result, last)) if now.duration_since(*last) < self.threshold => {
+                return result.clone();
+            }
+            _ => transport
+                .query(ton::rpc::lite_server::GetMasterchainInfo)
+                .await
+                .map(|result| result.only().last)
+                .map_err(|e| match e.downcast() {
+                    Ok(e) => QueryLastBlockError::QueryError(e),
+                    _ => QueryLastBlockError::Unknown,
+                }),
+        };
+
+        *lock = Some((new_id.clone(), now));
+        new_id
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum QuerySendMessageError {
+    #[error("Failed to serialize message")]
+    FailedToSerialize,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -189,6 +226,14 @@ pub enum QueryTransactionsError {
     InvalidTransactionsList,
     #[error("Invalid transaction data")]
     InvalidTransaction,
+}
+
+#[derive(thiserror::Error, Clone, Debug)]
+pub enum QueryLastBlockError {
+    #[error("Query error: {:?}", .0)]
+    QueryError(#[from] QueryError),
+    #[error("Unknown")]
+    Unknown,
 }
 
 #[async_trait]
@@ -311,7 +356,7 @@ enum ReceiverState {
     WaitingPayload(NonZeroUsize),
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Clone, Debug)]
 pub enum QueryError {
     #[error("Lite server error. code: {}, reason: {}", .0.code(), .0.message())]
     LiteServer(ton::lite_server::Error),
