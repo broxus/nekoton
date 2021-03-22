@@ -363,44 +363,22 @@ mod hex_nonce {
 
 #[cfg(test)]
 mod test {
-    // use secstr::SecStr;
-    // use crate::storage::{StoredKey, AccountType};
-    //
-    // fn default_keys() -> ed25519_dalek::Keypair {
-    //     let ton_private_key = ed25519_dalek::SecretKey::from_bytes(
-    //         &hex::decode("e371ef1d7266fc47b30d49dc886861598f09e2e6294d7f0520fe9aa460114e51")
-    //             .unwrap(),
-    //     )
-    //     .unwrap();
-    //     let ton_public_key = ed25519_dalek::PublicKey::from(&ton_private_key);
-    //     let ton_key_pair = ed25519_dalek::Keypair {
-    //         secret: ton_private_key,
-    //         public: ton_public_key,
-    //     };
-    //
-    //     ton_key_pair
-    // }
-    //
-    // #[test]
-    // fn test_init() {
-    //     let password = SecStr::new("123".into());
-    //
-    //     let ton_key_pair = default_keys();
-    //
-    //     let (signer, data) = StoredKey::new(password.clone(), AccountType::Legacy, ).unwrap();
-    //     let read_signer = TonSigner::from_reader(data.as_bytes(), password).unwrap();
-    //
-    //     assert_eq!(read_signer, signer);
-    // }
-    //
-    // #[test]
-    // fn test_bad_password() {
-    //     let password = SecStr::new("123".into());
-    //
-    //     let ton_key_pair = default_keys();
-    //
-    //     let (_, data) = TonSigner::init(password, ton_key_pair).unwrap();
-    //     let result = TonSigner ::from_reader(data.as_bytes(), SecStr::new("lol".into()));
-    //     assert!(result.is_err());
-    // }
+    use secstr::SecStr;
+
+    use crate::storage::AccountType::Legacy;
+    use crate::storage::StoredKey;
+    #[test]
+    fn test_init() {
+        let password = SecStr::new("123".into());
+        StoredKey::new(password, Legacy, "canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley").unwrap();
+    }
+
+    #[test]
+    fn test_bad_password() {
+        let password = SecStr::new("123".into());
+        let signer = StoredKey::new(password, Legacy, "canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley").unwrap();
+
+        let result = signer.sign(b"lol", "lol".into());
+        assert!(result.is_err());
+    }
 }
