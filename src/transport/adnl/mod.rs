@@ -11,6 +11,7 @@ use tokio::sync::Mutex;
 use ton_api::{ton, BoxedSerialize, Deserializer, IntoBoxed};
 use ton_block::{Deserializable, Message, MsgAddressInt, Serializable};
 
+use crate::core::models::{GenTimings, TransactionId};
 use crate::transport::models::*;
 use crate::transport::Transport;
 

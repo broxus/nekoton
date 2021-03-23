@@ -7,6 +7,7 @@ use graphql_client::*;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
+use crate::core::models::{GenTimings, TransactionId};
 use crate::transport::models::*;
 use crate::transport::Transport;
 
