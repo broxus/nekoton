@@ -41,9 +41,10 @@ pub fn generate(account_type: AccountType) -> Result<GeneratedKey, Error> {
     let mut entropy = [0; 256 / 8];
     rng.fill(&mut entropy)
         .map_err(KeystoreError::FailedToGenerateRandomBytes)?;
+
     match account_type {
         AccountType::Legacy => Ok(legacy::generate_words(entropy)),
-        AccountType::Labs(_) => labs::generate_words(entropy),
+        AccountType::Labs(_) => labs::generate_words(&entropy[..16]),
     }
     .map(|words| GeneratedKey {
         account_type,
