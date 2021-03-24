@@ -2,7 +2,7 @@ use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
 use crate::core::models::{GenTimings, TransactionId};
-
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone)]
 pub enum ContractState {
     NotExists,

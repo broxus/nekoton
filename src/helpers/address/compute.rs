@@ -7,13 +7,13 @@ use ton_block::{
 };
 use ton_types::{BuilderData, Cell, IBitstring, Result, UInt256};
 
-const SAFE_MULTISIG_WALLET_CODE: &[u8] = include_bytes!("../contracts/SafeMultisigWallet.tvc");
+const SAFE_MULTISIG_WALLET_CODE: &[u8] = include_bytes!("../contracts_code/SafeMultisigWallet.tvc");
 const SAFE_MULTISIG_WALLET24H_CODE: &[u8] =
-    include_bytes!("../contracts/SafeMultisigWallet24h.tvc");
+    include_bytes!("../contracts_code/SafeMultisigWallet24h.tvc");
 const SETCODE_MULTISIG_WALLET_CODE: &[u8] =
-    include_bytes!("../contracts/SetcodeMultisigWallet.tvc");
-const SURF_WALLET_CODE: &[u8] = include_bytes!("../contracts/Surf.tvc");
-const WALLET_V3_CODE: &[u8] = include_bytes!("../contracts/wallet_code.boc");
+    include_bytes!("../contracts_code/SetcodeMultisigWallet.tvc");
+const SURF_WALLET_CODE: &[u8] = include_bytes!("../contracts_code/Surf.tvc");
+const WALLET_V3_CODE: &[u8] = include_bytes!("../contracts_code/wallet_code.boc");
 
 pub enum Wallet {
     SafeMultisigWallet,
