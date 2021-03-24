@@ -44,8 +44,10 @@ ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi.git" }
 ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
 ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/tonlabs/ton-labs-vm.git", default-features = false }
-
+ton_sdk = { git = "https://github.com/tonlabs/TON-SDK.git" }
 cached = "0.23.0"
+
+failure = "0.1.8"
 
 [dev-dependencies]
 pretty_assertions = "0.7.1"
