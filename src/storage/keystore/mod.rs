@@ -39,7 +39,12 @@ pub struct StoredKey {
 
 impl StoredKey {
     /// Initializes signer from key pair
-    pub fn new(password: SecStr, account_type: AccountType, phrase: &str) -> Result<Self> {
+    pub fn new(
+        name: &str,
+        password: SecStr,
+        account_type: AccountType,
+        phrase: &str,
+    ) -> Result<Self> {
         let rng = ring::rand::SystemRandom::new();
         // prepare nonce
         let mut private_key_nonce = [0u8; 12];
@@ -73,13 +78,14 @@ impl StoredKey {
 
         Ok(Self {
             inner: CryptoData {
-                salt,
+                account_type,
+                name: name.to_owned(),
+                pubkey,
                 encrypted_private_key,
                 private_key_nonce,
-                account_type,
                 encrypted_seed_phrase,
                 seed_phrase_nonce,
-                pubkey,
+                salt,
             },
         })
     }
@@ -165,8 +171,16 @@ impl StoredKey {
         kp.sign(data).to_bytes()
     }
 
+    pub fn name(&self) -> &str {
+        &self.inner.name
+    }
+
     pub fn public_key(&self) -> &[u8; 32] {
         self.inner.pubkey.as_bytes()
+    }
+
+    pub fn account_type(&self) -> AccountType {
+        self.inner.account_type
     }
 
     pub fn as_json(&self) -> String {
@@ -186,6 +200,7 @@ impl Debug for StoredKey {
 #[derive(Serialize, Deserialize, Clone)]
 struct CryptoData {
     account_type: AccountType,
+    name: String,
 
     #[serde(with = "hex_pubkey")]
     pubkey: ed25519_dalek::PublicKey,
