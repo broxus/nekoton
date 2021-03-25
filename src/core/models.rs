@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
-use crate::helpers::address::Wallet;
+use crate::helpers::address::ContractType;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AssetsList {
@@ -18,7 +18,7 @@ pub struct AssetsList {
 pub struct MainWalletAsset {
     pub address: String,
     pub public_key: String,
-    pub contract: Wallet,
+    pub contract: ContractType,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

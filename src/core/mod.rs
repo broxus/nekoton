@@ -46,7 +46,7 @@ pub trait AccountSubscription {
     async fn send(&mut self, message: &ton_block::Message) -> Result<()>;
 
     /// Called by manual polling
-    async fn refresh(&mut self);
+    async fn refresh(&mut self) -> Result<()>;
 
     /// Called by block-walking
     async fn handle_block(&mut self, block: &ton_block::Block) -> Result<()>;
