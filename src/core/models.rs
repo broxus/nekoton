@@ -5,6 +5,42 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
+use crate::helpers::address::Wallet;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AssetsList {
+    pub main_wallet: MainWalletAsset,
+    pub token_wallets: Vec<TokenWalletAsset>,
+    pub depools: Vec<DePoolAsset>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MainWalletAsset {
+    pub address: String,
+    pub public_key: String,
+    pub contract: Wallet,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TokenWalletAsset {
+    pub symbol: Symbol,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct DePoolAsset {
+    pub address: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct Symbol {
+    /// Symbol name, e.g. USDT, DAI, etc.
+    pub name: String,
+
+    /// Address of the root token contract
+    #[serde(with = "serde_address")]
+    pub root_token_contract: MsgAddressInt,
+}
+
 pub struct WalletState {
     /// Brief account state
     pub account_state: AccountState,
