@@ -33,13 +33,12 @@ pub fn derive_from_words(mnemonic: &str, account_type: AccountType) -> Result<Ke
 
 /// Generates mnemonic and keypair.
 pub fn generate(account_type: AccountType) -> Result<GeneratedKey, Error> {
-    match account_type {
-        AccountType::Legacy => Ok(legacy::generate_words(generate_entropy::<32>()?)),
-        AccountType::Labs(_) => labs::generate_words(generate_entropy::<16>()?),
-    }
-    .map(|words| GeneratedKey {
+    Ok(GeneratedKey {
         account_type,
-        words,
+        words: match account_type {
+            AccountType::Legacy => legacy::generate_words(generate_entropy::<32>()?),
+            AccountType::Labs(_) => labs::generate_words(generate_entropy::<16>()?),
+        },
     })
 }
 

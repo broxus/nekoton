@@ -1,7 +1,7 @@
 use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
-use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
+use crate::core::models::{GenTimings, LastTransactionId};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Clone)]

@@ -1,3 +1,5 @@
+pub mod mnemonics;
+
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::io::Read;
@@ -12,11 +14,9 @@ use ring::{digest, pbkdf2};
 use secstr::{SecStr, SecVec};
 use serde::{Deserialize, Serialize};
 
-use crate::storage::derive_from_words;
-
 use super::AccountType;
-
-pub mod mnemonics;
+use crate::storage::derive_from_words;
+use crate::utils::TrustMe;
 
 const NONCE_LENGTH: usize = 12;
 
@@ -162,7 +162,7 @@ impl StoredKey {
 
     ///Used for gas estimation
     pub fn sign_with_fake_key(&self, data: &[u8]) -> [u8; ed25519::SIGNATURE_LENGTH] {
-        let pk = SecretKey::from_bytes(&[0; 32]).expect("Shouldn't fail");
+        let pk = SecretKey::from_bytes(&[0; 32]).trust_me();
         let pubkey = ed25519_dalek::PublicKey::from(&pk);
         let kp = Keypair {
             public: pubkey,
@@ -184,7 +184,7 @@ impl StoredKey {
     }
 
     pub fn as_json(&self) -> String {
-        serde_json::to_string(&self.inner).expect("Shouldn't fail")
+        serde_json::to_string(&self.inner).trust_me()
     }
 }
 

@@ -8,6 +8,8 @@ use ton_block::{
 };
 use ton_types::{BuilderData, Cell, IBitstring, Result, UInt256};
 
+use crate::utils::TrustMe;
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum ContractType {
     SafeMultisigWallet,
@@ -66,19 +68,18 @@ fn compute_ftabi_contract_address(
     public_key: &ed25519_dalek::PublicKey,
     workchain_id: i8,
 ) -> MsgAddrStd {
-    let state_init_roots = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(tvc))
-        .expect("Shouldn't fail");
-    let mut state_init =
-        StateInit::construct_from(&mut state_init_roots.into()).expect("Shouldn't fail");
+    let state_init_roots =
+        ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(tvc)).trust_me();
+    let mut state_init = StateInit::construct_from(&mut state_init_roots.into()).trust_me();
 
     let new_data = ton_abi::Contract::insert_pubkey(
         state_init.data.clone().unwrap_or_default().into(),
         public_key.as_bytes(),
     )
-    .expect("Shouldn't fail");
+    .trust_me();
     state_init.set_data(new_data.into_cell());
 
-    let hash = state_init.hash().expect("Shouldn't fail");
+    let hash = state_init.hash().trust_me();
 
     MsgAddrStd {
         anycast: None,
@@ -95,7 +96,7 @@ mod wallet_v3 {
         wallet_v3::InitData::from_key(&key)
             .with_wallet_id(id)
             .compute_addr(workchain_id)
-            .expect("Shouldn't fail")
+            .trust_me()
     }
 
     /// WalletV3 init data

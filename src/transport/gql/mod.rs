@@ -6,11 +6,11 @@ use anyhow::Result;
 use async_trait::async_trait;
 use graphql_client::*;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
-use ton_types::UInt256;
 
 use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
 use crate::transport::models::*;
 use crate::transport::Transport;
+use crate::utils::TrustMe;
 
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
@@ -28,7 +28,7 @@ impl GqlTransport {
         let request_body = T::build_query(params);
         let response = self
             .connection
-            .post(&serde_json::to_string(&request_body).expect("Shouldn't fail"))
+            .post(&serde_json::to_string(&request_body).trust_me())
             .await
             .map_err(api_failure)?;
 
