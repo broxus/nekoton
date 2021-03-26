@@ -38,6 +38,8 @@ wee_alloc = "0.4"
 x25519-dalek = "1.1"
 getrandom = "0.1"
 
+num-traits = "0.2.14"
+
 ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "original", package = "ton_api" }
 
 ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi.git" }
@@ -45,8 +47,9 @@ ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
 ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/tonlabs/ton-labs-vm.git" }
 ton_sdk = { git = "https://github.com/tonlabs/TON-SDK.git" }
-
+ton_executor = {git = "https://github.com/tonlabs/ton-labs-executor.git"}
 failure = "0.1.8"
+chrono = "0.4.19"
 
 [dev-dependencies]
 pretty_assertions = "0.7.1"
