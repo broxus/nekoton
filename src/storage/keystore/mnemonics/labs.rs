@@ -16,7 +16,7 @@ pub fn derive_from_words(phrase: &str, account_id: u16) -> Result<ed25519_dalek:
     ed25519_keys_from_secret_bytes(&derived.secret()) //todo check me
 }
 
-pub fn generate_words(entropy: &[u8]) -> Result<Vec<String>, Error> {
+pub fn generate_words(entropy: [u8; 16]) -> Result<Vec<String>, Error> {
     let mnemonic = bip39::Mnemonic::from_entropy(&entropy, Language::English)?
         .phrase()
         .to_string();

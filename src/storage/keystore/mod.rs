@@ -382,16 +382,21 @@ mod test {
 
     use crate::storage::AccountType::Legacy;
     use crate::storage::StoredKey;
+
+    const KEY_NAME: &str = "Test key";
+    const TEST_PASSWORD: &str = "123";
+    const TEST_MNEMONIC: &str = "canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley";
+
     #[test]
     fn test_init() {
-        let password = SecStr::new("123".into());
-        StoredKey::new(password, Legacy, "canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley").unwrap();
+        let password = SecStr::new(TEST_PASSWORD.into());
+        StoredKey::new(KEY_NAME, password, Legacy, TEST_MNEMONIC).unwrap();
     }
 
     #[test]
     fn test_bad_password() {
-        let password = SecStr::new("123".into());
-        let signer = StoredKey::new(password, Legacy, "canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley").unwrap();
+        let password = SecStr::new(TEST_PASSWORD.into());
+        let signer = StoredKey::new(KEY_NAME, password, Legacy, TEST_MNEMONIC).unwrap();
 
         let result = signer.sign(b"lol", "lol".into());
         assert!(result.is_err());

@@ -57,7 +57,7 @@ pub struct AccountState {
     /// At what point was this state obtained
     pub gen_timings: GenTimings,
     /// Last transaction id
-    pub last_transaction_id: Option<TransactionId>,
+    pub last_transaction_id: Option<LastTransactionId>,
     /// Whether the contract is deployed
     pub is_deployed: bool,
 }
@@ -165,7 +165,7 @@ pub enum TransactionError {
     Unsupported,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountStatus {
     /// Account exists and has a positive balance
@@ -288,6 +288,13 @@ pub enum MessageBodyError {
     FailedToSerialize,
     #[error("Failed to deserialize data")]
     FailedToDeserialize,
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase", tag = "type")]
+pub enum LastTransactionId {
+    Exact(TransactionId),
+    Inexact { latest_lt: u64 },
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]

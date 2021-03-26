@@ -1,7 +1,8 @@
 use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
-use crate::core::models::{GenTimings, TransactionId};
+use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
+
 #[allow(clippy::large_enum_variant)]
 #[derive(Clone)]
 pub enum ContractState {
@@ -9,7 +10,7 @@ pub enum ContractState {
     Exists {
         account: AccountStuff,
         timings: GenTimings,
-        last_transaction_id: TransactionId,
+        last_transaction_id: LastTransactionId,
     },
 }
 

@@ -11,7 +11,7 @@ use tokio::sync::Mutex;
 use ton_api::{ton, BoxedSerialize, Deserializer, IntoBoxed};
 use ton_block::{Deserializable, Message, MsgAddressInt, Serializable};
 
-use crate::core::models::{GenTimings, TransactionId};
+use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
 use crate::transport::models::*;
 use crate::transport::Transport;
 
@@ -112,10 +112,10 @@ impl Transport for AdnlTransport {
                             gen_lt: ss.gen_lt(),
                             gen_utime: ss.gen_time(),
                         },
-                        last_transaction_id: TransactionId {
+                        last_transaction_id: LastTransactionId::Exact(TransactionId {
                             lt: shard_info.last_trans_lt(),
                             hash: *shard_info.last_trans_hash(),
-                        },
+                        }),
                     }
                 } else {
                     ContractState::NotExists

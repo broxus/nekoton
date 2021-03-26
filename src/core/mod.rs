@@ -1,15 +1,9 @@
 pub mod models;
 pub mod wallet;
 
-use std::convert::TryFrom;
-
 use anyhow::Result;
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
-use ton_block::{Deserializable, MsgAddressInt, Serializable};
-use ton_types::UInt256;
 
-use crate::transport::models::*;
 use crate::transport::Transport;
 
 pub struct TonInterface {

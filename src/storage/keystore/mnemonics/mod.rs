@@ -33,21 +33,23 @@ pub fn derive_from_words(mnemonic: &str, account_type: AccountType) -> Result<Ke
 
 /// Generates mnemonic and keypair.
 pub fn generate(account_type: AccountType) -> Result<GeneratedKey, Error> {
-    use ring::rand;
-    use ring::rand::SecureRandom;
-
-    let rng = rand::SystemRandom::new();
-
-    let mut entropy = [0; 256 / 8];
-    rng.fill(&mut entropy)
-        .map_err(KeystoreError::FailedToGenerateRandomBytes)?;
-
     match account_type {
-        AccountType::Legacy => Ok(legacy::generate_words(entropy)),
-        AccountType::Labs(_) => labs::generate_words(&entropy[..16]),
+        AccountType::Legacy => Ok(legacy::generate_words(generate_entropy::<32>()?)),
+        AccountType::Labs(_) => labs::generate_words(generate_entropy::<16>()?),
     }
     .map(|words| GeneratedKey {
         account_type,
         words,
     })
+}
+
+fn generate_entropy<const N: usize>() -> Result<[u8; N], KeystoreError> {
+    use ring::rand::SecureRandom;
+
+    let rng = ring::rand::SystemRandom::new();
+
+    let mut entropy = [0; N];
+    rng.fill(&mut entropy)
+        .map_err(KeystoreError::FailedToGenerateRandomBytes)?;
+    Ok(entropy)
 }

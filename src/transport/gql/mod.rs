@@ -8,7 +8,7 @@ use graphql_client::*;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
-use crate::core::models::{GenTimings, TransactionId};
+use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
 use crate::transport::models::*;
 use crate::transport::Transport;
 
@@ -233,9 +233,8 @@ impl Transport for GqlTransport {
 
         match Account::construct_from_base64(&account_state) {
             Ok(Account::Account(account)) => {
-                let last_transaction_id = TransactionId {
-                    lt: account.storage.last_trans_lt,
-                    hash: Default::default(), // there is no way to get it in gql
+                let last_transaction_id = LastTransactionId::Inexact {
+                    latest_lt: account.storage.last_trans_lt,
                 };
 
                 Ok(ContractState::Exists {
