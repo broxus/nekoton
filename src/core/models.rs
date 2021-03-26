@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::convert::TryFrom;
 
 use anyhow::Result;
@@ -290,18 +291,86 @@ pub enum MessageBodyError {
     FailedToDeserialize,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "type")]
 pub enum LastTransactionId {
     Exact(TransactionId),
     Inexact { latest_lt: u64 },
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+impl LastTransactionId {
+    /// Whether the exact id is known
+    pub fn is_exact(&self) -> bool {
+        matches!(self, Self::Exact(_))
+    }
+
+    /// Converts last transaction id into real or fake id
+    pub fn to_transaction_id(self) -> TransactionId {
+        match self {
+            Self::Exact(id) => id,
+            Self::Inexact { latest_lt } => TransactionId {
+                lt: latest_lt,
+                hash: Default::default(),
+            },
+        }
+    }
+}
+
+impl PartialEq for LastTransactionId {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Exact(left), Self::Exact(right)) => left == right,
+            (Self::Inexact { latest_lt: left }, Self::Inexact { latest_lt: right }) => {
+                left == right
+            }
+            _ => false,
+        }
+    }
+}
+
+impl PartialOrd for LastTransactionId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for LastTransactionId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let left = match self {
+            Self::Exact(id) => &id.lt,
+            Self::Inexact { latest_lt } => latest_lt,
+        };
+        let right = match other {
+            Self::Exact(id) => &id.lt,
+            Self::Inexact { latest_lt } => latest_lt,
+        };
+        left.cmp(right)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, Serialize, Deserialize)]
 pub struct TransactionId {
     pub lt: u64,
     #[serde(with = "serde_uint256")]
     pub hash: UInt256,
+}
+
+impl PartialEq for TransactionId {
+    fn eq(&self, other: &Self) -> bool {
+        self.lt == other.lt
+    }
+}
+
+impl PartialOrd for TransactionId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for TransactionId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.lt.cmp(&other.lt)
+    }
 }
 
 pub mod serde_uint256 {
