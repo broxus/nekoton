@@ -50,6 +50,10 @@ impl AdnlTransport {
 
 #[async_trait]
 impl Transport for AdnlTransport {
+    fn max_transactions_per_fetch(&self) -> u8 {
+        16
+    }
+
     async fn send_message(&self, message: &Message) -> Result<()> {
         let data = message
             .serialize()
@@ -129,8 +133,8 @@ impl Transport for AdnlTransport {
 
     async fn get_transactions(
         &self,
-        address: &MsgAddressInt,
-        from: &TransactionId,
+        address: MsgAddressInt,
+        from: TransactionId,
         count: u8,
     ) -> Result<Vec<TransactionFull>> {
         let response = self

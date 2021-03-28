@@ -1,5 +1,4 @@
 use anyhow::Error;
-use futures::TryStreamExt;
 
 pub trait NoFailure {
     type Output;

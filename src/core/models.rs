@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use std::convert::TryFrom;
 
 use anyhow::Result;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
@@ -72,13 +73,56 @@ pub enum GenTimings {
     Known { gen_lt: u64, gen_utime: u32 },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Additional estimated lag for the pending message to be expired
+pub const GEN_TIMINGS_ALLOWABLE_INTERVAL: u32 = 30;
+
+impl GenTimings {
+    pub fn current_utime(&self) -> u32 {
+        match *self {
+            GenTimings::Unknown => {
+                // TODO: split optimistic and pessimistic predictions for unknown timings
+                Utc::now().timestamp() as u32 - GEN_TIMINGS_ALLOWABLE_INTERVAL
+            }
+            GenTimings::Known { gen_utime, .. } => gen_utime,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct PendingTransaction {
+    /// Incoming message source
+    #[serde(with = "serde_optional_address")]
+    pub src: Option<MsgAddressInt>,
     /// Hash of the external message body. Used to identify message in executed transactions
     #[serde(with = "serde_uint256")]
     pub body_hash: UInt256,
     /// Expiration timestamp, unixtime
     pub expire_at: u32,
+}
+
+impl PartialEq<Transaction> for PendingTransaction {
+    fn eq(&self, other: &Transaction) -> bool {
+        self.expire_at < other.created_at
+            && self.src == other.in_msg.src
+            && matches!(&other.in_msg.body, Some(body) if self.body_hash == body.hash)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MessageType {
+    Internal,
+    External,
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct TransactionsBatchInfo {
+    /// The smallest lt in a group
+    pub min_lt: u64,
+    /// Maximum lt in a group
+    pub max_lt: u64,
+    /// Whether this batch was from the preload request
+    pub old: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

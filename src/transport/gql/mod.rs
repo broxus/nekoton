@@ -190,6 +190,10 @@ impl GqlTransport {
 
 #[async_trait]
 impl Transport for GqlTransport {
+    fn max_transactions_per_fetch(&self) -> u8 {
+        50
+    }
+
     async fn send_message(&self, message: &Message) -> Result<()> {
         let cell = message
             .serialize()
@@ -250,8 +254,8 @@ impl Transport for GqlTransport {
 
     async fn get_transactions(
         &self,
-        address: &MsgAddressInt,
-        from: &TransactionId,
+        address: MsgAddressInt,
+        from: TransactionId,
         count: u8,
     ) -> Result<Vec<TransactionFull>> {
         #[derive(GraphQLQuery)]
