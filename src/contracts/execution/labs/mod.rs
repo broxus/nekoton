@@ -12,9 +12,23 @@
  *
  */
 
-mod errors;
-mod models;
-mod utils;
+use std::convert::TryFrom;
+use std::sync::{atomic::AtomicU64, Arc};
+
+use num_traits::ToPrimitive;
+use serde::de::Unexpected::TupleVariant;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use ton_block::{AccStatusChange, Account, Message, Serializable};
+use ton_executor::{
+    BlockchainConfig, ExecutorError, OrdinaryTransactionExecutor, TransactionExecutor,
+};
+use ton_sdk::{AbiContract, TransactionFees};
+use ton_types::{Cell, SliceData};
+use ton_vm::error::TvmError;
+use ton_vm::stack::StackItem;
+
+use models::MessageBodyType;
 
 // use super::stack::serialize_item;
 // use super::types::{ExecutionOptions, ResolvedExecutionOptions};
@@ -32,22 +46,21 @@ mod utils;
 // use crate::processing::{parsing::decode_output, DecodedOutput};
 // use crate::utils::NoFailure;
 // use crate::{abi::Abi, boc::BocCacheType};
-use crate::contracts::execution::labs::models::{Abi, ExecutionOptions, ResolvedExecutionOptions};
+use crate::contracts::execution::labs::errors::TvmExecError;
+use crate::contracts::execution::labs::models::{
+    Abi, ExecutionOptions, ParamsOfDecodeMessage, ResolvedExecutionOptions,
+};
 use crate::contracts::execution::labs::utils::{
     deserialize_cell_from_boc, deserialize_object_from_boc, deserialize_object_from_cell,
-    serialize_object_to_cell,
+    serialize_cell_to_base64, serialize_object_to_base64, serialize_object_to_cell,
 };
 use crate::utils::NoFailure;
-use num_traits::ToPrimitive;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::convert::TryFrom;
-use std::sync::{atomic::AtomicU64, Arc};
-use ton_block::{Account, Message, Serializable};
-use ton_executor::{ExecutorError, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_sdk::TransactionFees;
-use ton_types::Cell;
-use ton_vm::stack::StackItem;
+use ton_abi::token::Detokenizer;
+use ton_abi::{Param, Token, TokenValue};
+
+mod errors;
+mod models;
+mod utils;
 
 type ClientResult<T> = anyhow::Result<T>;
 
@@ -128,7 +141,7 @@ impl AccountForExecutor {
         balance: Option<ton_block::CurrencyCollection>,
     ) -> ClientResult<Cell> {
         if let Some(balance) = balance {
-            let mut account: Account = deserialize_object_from_cell(account, "account")?;
+            let mut account: Account = deserialize_object_from_cell(account)?;
             account.set_balance(balance);
             serialize_object_to_cell(&account)
         } else {
@@ -149,8 +162,6 @@ pub struct ParamsOfRunExecutor {
     pub abi: Option<Abi>,
     /// Skip transaction check flag
     pub skip_transaction_check: Option<bool>,
-    /// Cache type to put the result. The BOC itself returned if no cache type provided
-    pub boc_cache: Option<()>,
     /// Return updated account flag. Empty string is returned if the flag is `false`
     pub return_updated_account: Option<bool>,
 }
@@ -192,6 +203,109 @@ pub struct ResultOfRunExecutor {
 
     /// Transaction fees
     pub fees: TransactionFees,
+}
+
+#[derive(Serialize, Deserialize, Default, Debug, PartialEq, Clone)]
+pub struct DecodedOutput {
+    /// Decoded bodies of the out messages.
+    ///
+    /// If the message can't be decoded, then `None` will be stored in
+    /// the appropriate position.
+    pub out_messages: Vec<Option<DecodedMessageBody>>,
+
+    /// Decoded body of the function output message.
+    pub output: Option<Value>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub struct DecodedMessageBody {
+    /// Type of the message body content.
+    pub body_type: MessageBodyType,
+
+    /// Function or event name.
+    pub name: String,
+
+    /// Parameters or result value.
+    pub value: Option<Value>,
+
+    /// Function header.
+    pub header: Option<FunctionHeader>,
+}
+
+pub struct DecodedMessage {
+    pub function_name: String,
+    pub tokens: Vec<Token>,
+    pub params: Vec<Param>,
+}
+
+impl DecodedMessageBody {
+    fn new(
+        body_type: MessageBodyType,
+        decoded: DecodedMessage,
+        header: Option<FunctionHeader>,
+    ) -> ClientResult<Self> {
+        let value = Detokenizer::detokenize_to_json_value(&decoded.params, &decoded.tokens)
+            .map_err(|e| anyhow::Error::msg(e.to_string()))?;
+        Ok(Self {
+            body_type,
+            name: decoded.function_name,
+            value: Some(value),
+            header,
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
+pub struct FunctionHeader {
+    /// Message expiration time in seconds.
+    /// If not specified - calculated automatically from message_expiration_timeout(),
+    /// try_index and message_expiration_timeout_grow_factor() (if ABI includes `expire` header).
+    pub expire: Option<u32>,
+
+    /// Message creation time in milliseconds. If not specified, `now` is used
+    /// (if ABI includes `time` header).
+    pub time: Option<u64>,
+
+    /// Public key is used by the contract to check the signature. Encoded in `hex`.
+    /// If not specified, method fails with exception (if ABI includes `pubkey` header)..
+    pub pubkey: Option<String>,
+}
+
+impl FunctionHeader {
+    pub fn from(tokens: &Vec<Token>) -> ClientResult<Option<Self>> {
+        fn required_time(token: &Token) -> ClientResult<u64> {
+            match &token.value {
+                TokenValue::Time(v) => Ok(v.clone()),
+                _ => Err(anyhow::anyhow!("`time` header has invalid format",)),
+            }
+        }
+        fn required_expire(token: &Token) -> ClientResult<u32> {
+            match &token.value {
+                TokenValue::Expire(v) => Ok(v.clone()),
+                _ => Err(anyhow::anyhow!("`expire` header has invalid format",)),
+            }
+        }
+        fn required_pubkey(token: &Token) -> ClientResult<Option<String>> {
+            match token.value {
+                TokenValue::PublicKey(key) => Ok(key.as_ref().map(|x| hex::encode(x.as_bytes()))),
+                _ => Err(anyhow::anyhow!("`pubkey` header has invalid format",)),
+            }
+        }
+
+        if tokens.len() == 0 {
+            return Ok(None);
+        }
+        let mut header = FunctionHeader::default();
+        for token in tokens {
+            match token.name.as_str() {
+                "time" => header.time = Some(required_time(&token)?),
+                "expire" => header.expire = Some(required_expire(&token)?),
+                "pubkey" => header.pubkey = required_pubkey(&token)?,
+                _ => (),
+            }
+        }
+        Ok(Some(header))
+    }
 }
 
 // #[derive(Serialize, Deserialize, Default, Debug, PartialEq, Clone)]
@@ -243,17 +357,79 @@ pub struct ResultOfRunExecutor {
 ///
 /// If you need this emulation to be as precise as possible then specify `ParamsOfRunExecutor` parameter.
 /// If you need to see the aborted transaction as a result, not as an error, set `skip_transaction_check` to `true`.
+
+async fn extract_error<F>(
+    transaction: &ton_sdk::Transaction,
+    contract_info: impl FnOnce() -> F,
+) -> Result<(), TvmExecError>
+where
+    F: futures::Future<Output = ClientResult<(ton_block::MsgAddressInt, u64)>>,
+{
+    if let Some(storage) = &transaction.storage {
+        if storage.status_change != AccStatusChange::Unchanged {
+            let (address, balance) = contract_info()
+                .await
+                .map_err(|e| TvmExecError::UnknownExecutionError(e.to_string()))?;
+            return Err(TvmExecError::StoragePhaseFailed {
+                acc_status_change: storage.status_change.clone(),
+                address,
+                balance,
+            });
+        }
+    }
+
+    if let Some(reason) = transaction.compute.skipped_reason.clone() {
+        let (address, balance) = contract_info()
+            .await
+            .map_err(|e| TvmExecError::UnknownExecutionError(e.to_string()))?;
+        return Err(TvmExecError::TvmExecutionSkipped {
+            reason,
+            address,
+            balance,
+        });
+    }
+
+    if transaction.compute.success.is_none() || !transaction.compute.success.unwrap() {
+        let (address, _) = contract_info()
+            .await
+            .map_err(|e| TvmExecError::UnknownExecutionError(e.to_string()))?;
+        return Err(TvmExecError::TvmExecutionFailed {
+            err_message: "compute phase isn't succeeded".to_string(),
+            code: transaction.compute.exit_code.unwrap_or(-1),
+            exit_arg: transaction.compute.exit_arg.map(i32::into).unwrap_or(0), //todo not sure
+            address,
+            gas_used: Some(transaction.compute.gas_used),
+        });
+    }
+
+    if let Some(action) = &transaction.action {
+        if !action.success {
+            let (address, balance) = contract_info()
+                .await
+                .map_err(|e| TvmExecError::UnknownExecutionError(e.to_string()))?;
+            return Err(TvmExecError::ActionPhaseFailed {
+                result_code: action.result_code,
+                valid: action.valid,
+                no_funds: action.no_funds,
+                address,
+                balance,
+            });
+        }
+    }
+
+    Ok(())
+}
+
 pub(crate) async fn calc_transaction_fees<F>(
     transaction: &ton_block::Transaction,
-    real_tr: bool,
     skip_check: bool,
     contract_info: impl FnOnce() -> F,
-) -> ClientResult<ton_sdk::TransactionFees>
+) -> Result<ton_sdk::TransactionFees, TvmExecError>
 where
     F: futures::Future<Output = ClientResult<(ton_block::MsgAddressInt, u64)>>,
 {
     let transaction = ton_sdk::Transaction::try_from(transaction)
-        .map_err(|err| Error::can_not_read_transaction(err))?;
+        .map_err(|e| TvmExecError::UnknownExecutionError(e.to_string()))?;
 
     if !transaction.is_aborted() || skip_check {
         return Ok(transaction.calc_fees());
@@ -261,12 +437,8 @@ where
 
     let mut error = match extract_error(&transaction, contract_info).await {
         Err(err) => err,
-        Ok(_) => Error::transaction_aborted(),
+        Ok(_) => TvmExecError::TransactionAborted,
     };
-
-    if real_tr {
-        error.data["transaction_id"] = transaction.id().to_string().into()
-    }
 
     Err(error)
 }
@@ -275,15 +447,16 @@ pub async fn run_executor(
     message: Message,
     params: ParamsOfRunExecutor,
 ) -> ClientResult<ResultOfRunExecutor> {
-    let msg_address = message.dst().ok_or_else(|| Error::invalid_message_type())?;
+    let msg_address = message
+        .dst()
+        .ok_or_else(|| TvmExecError::UnknownExecutionError("Invalid message type".into()))?;
     let (account, _) = params.account.get_account(msg_address.clone()).await?;
 
     let options = ResolvedExecutionOptions::from_options(params.execution_options).await?;
 
     let account_copy = account.clone();
     let contract_info = move || async move {
-        let account: ton_block::Account =
-            deserialize_object_from_cell(account_copy.clone(), "account")?;
+        let account: ton_block::Account = deserialize_object_from_cell(account_copy.clone())?;
         match account.stuff() {
             Some(stuff) => {
                 let balance = stuff
@@ -304,7 +477,6 @@ pub async fn run_executor(
 
     let fees = calc_transaction_fees(
         &transaction,
-        false,
         params.skip_transaction_check.unwrap_or_default(),
         contract_info,
     )
@@ -316,81 +488,160 @@ pub async fn run_executor(
             .get_out_msg(i)
             .convert()?
             .ok_or_else(|| anyhow::anyhow!("message missing"))?;
-        out_messages.push(serialize_object_to_base64(&message, "message")?);
+        out_messages.push(serialize_object_to_base64(&message)?);
     }
 
     // TODO decode Message object without converting to string
     let decoded = if let Some(abi) = params.abi.as_ref() {
-        Some(decode_output(&context, abi, out_messages.clone()).await?)
+        Some(decode_output(abi, out_messages.clone()).await?)
     } else {
         None
     };
 
     let account = if params.return_updated_account.unwrap_or_default() {
-        serialize_cell_to_boc(&context, modified_account, "account", params.boc_cache).await?
+        serialize_cell_to_base64(&modified_account)?
     } else {
         String::new()
     };
 
     Ok(ResultOfRunExecutor {
         out_messages,
-        transaction: parse_transaction(&context, &transaction).await?,
+        transaction: parse_transaction(&transaction).await?,
         account,
         decoded,
         fees,
     })
 }
 
-pub fn serialize_items<'a>(
-    items: Box<dyn Iterator<Item = &'a StackItem> + 'a>,
-    flatten_lists: bool,
-) -> ClientResult<Value> {
-    let mut stack = vec![(vec![], items)];
-    let mut list_items: Option<Vec<Value>> = None;
-    loop {
-        let (mut vec, mut iter) = stack.pop().unwrap();
-        let next = iter.next();
-        if let Some(list) = list_items.take() {
-            // list is ended if current tuple has next element
-            // or it already contains more than one element
-            // or element type in current tuple is not equal to list items type
-            if next.is_some() || vec.len() != 1 || !is_equal_type(&vec[0], &list[0]) {
-                vec.push(json!(ComplexType::List(list)));
-            } else {
-                list_items = Some(list);
+pub(crate) async fn decode_output(abi: &Abi, messages: Vec<String>) -> ClientResult<DecodedOutput> {
+    let mut out_messages = Vec::new();
+    let mut output = None;
+    for message in messages {
+        let decode_result = decode_message(ParamsOfDecodeMessage {
+            message,
+            abi: abi.clone(),
+        })
+        .await;
+        let decoded = match decode_result {
+            Ok(decoded) => {
+                if decoded.body_type == MessageBodyType::Output {
+                    output = decoded.value.clone();
+                }
+                Some(decoded)
             }
-        }
+            Err(_) => None,
+        };
+        out_messages.push(decoded);
+    }
+    Ok(DecodedOutput {
+        out_messages,
+        output,
+    })
+}
 
-        if let Some(item) = next {
-            match process_item(item)? {
-                ProcessingResult::Serialized(value) => {
-                    vec.push(value);
-                    stack.push((vec, iter));
-                }
-                ProcessingResult::Nested(nested_iter) => {
-                    stack.push((vec, iter));
-                    stack.push((vec![], nested_iter));
-                }
-            }
-        } else {
-            if let Some((parent_vec, _)) = stack.last_mut() {
-                // list starts from tuple with 2 elements: some value and null,
-                // the value becomes the last list item
-                if vec.len() == 2 && vec[1] == Value::Null && flatten_lists {
-                    vec.resize(1, Value::Null);
-                    list_items = Some(vec);
-                } else if let Some(list) = list_items.take() {
-                    vec.extend(list.into_iter());
-                    list_items = Some(vec);
-                } else {
-                    parent_vec.push(Value::Array(vec));
-                }
-            } else {
-                return Ok(Value::Array(vec));
-            }
-        }
+pub async fn decode_message(params: ParamsOfDecodeMessage) -> ClientResult<DecodedMessageBody> {
+    let (abi, message) = prepare_decode(&params).await?;
+    if let Some(body) = message.body() {
+        decode_body(abi, body, message.is_internal())
+    } else {
+        Err(anyhow::anyhow!("The message body is empty",))
     }
 }
+
+fn decode_body(
+    abi: AbiContract,
+    body: SliceData,
+    is_internal: bool,
+) -> ClientResult<DecodedMessageBody> {
+    if let Ok(output) = abi.decode_output(body.clone(), is_internal) {
+        if abi.events().get(&output.function_name).is_some() {
+            DecodedMessageBody::new(MessageBodyType::Event, output, None)
+        } else {
+            DecodedMessageBody::new(MessageBodyType::Output, output, None)
+        }
+    } else if let Ok(input) = abi.decode_input(body.clone(), is_internal) {
+        // TODO: add pub access to `abi_version` field of `Contract` struct.
+        let abi_version = abi
+            .functions()
+            .values()
+            .next()
+            .map(|x| x.abi_version)
+            .unwrap_or(1);
+        let (header, _, _) =
+            ton_abi::Function::decode_header(abi_version, body.clone(), abi.header(), is_internal)
+                .map_err(|err| anyhow::anyhow!(format!("Can't decode function header: {}", err)))?;
+        DecodedMessageBody::new(
+            MessageBodyType::Input,
+            input,
+            FunctionHeader::from(&header)?,
+        )
+    } else {
+        Err(anyhow::anyhow!(
+            "The message body does not match the specified ABI",
+        ))
+    }
+}
+
+async fn prepare_decode(
+    params: &ParamsOfDecodeMessage,
+) -> ClientResult<(AbiContract, ton_block::Message)> {
+    let abi = params.abi.json_string()?;
+    let abi = AbiContract::load(abi.as_bytes()).convert()?;
+    let message = deserialize_object_from_boc(&params.message).await?;
+    Ok((abi, message.object))
+}
+
+//
+// pub fn serialize_items<'a>(
+//     items: Box<dyn Iterator<Item = &'a StackItem> + 'a>,
+//     flatten_lists: bool,
+// ) -> ClientResult<Value> {
+//     let mut stack = vec![(vec![], items)];
+//     let mut list_items: Option<Vec<Value>> = None;
+//     loop {
+//         let (mut vec, mut iter) = stack.pop().unwrap();
+//         let next = iter.next();
+//         if let Some(list) = list_items.take() {
+//             // list is ended if current tuple has next element
+//             // or it already contains more than one element
+//             // or element type in current tuple is not equal to list items type
+//             if next.is_some() || vec.len() != 1 || !is_equal_type(&vec[0], &list[0]) {
+//                 vec.push(json!(ComplexType::List(list)));
+//             } else {
+//                 list_items = Some(list);
+//             }
+//         }
+//
+//         if let Some(item) = next {
+//             match process_item(item)? {
+//                 ProcessingResult::Serialized(value) => {
+//                     vec.push(value);
+//                     stack.push((vec, iter));
+//                 }
+//                 ProcessingResult::Nested(nested_iter) => {
+//                     stack.push((vec, iter));
+//                     stack.push((vec![], nested_iter));
+//                 }
+//             }
+//         } else {
+//             if let Some((parent_vec, _)) = stack.last_mut() {
+//                 // list starts from tuple with 2 elements: some value and null,
+//                 // the value becomes the last list item
+//                 if vec.len() == 2 && vec[1] == Value::Null && flatten_lists {
+//                     vec.resize(1, Value::Null);
+//                     list_items = Some(vec);
+//                 } else if let Some(list) = list_items.take() {
+//                     vec.extend(list.into_iter());
+//                     list_items = Some(vec);
+//                 } else {
+//                     parent_vec.push(Value::Array(vec));
+//                 }
+//             } else {
+//                 return Ok(Value::Array(vec));
+//             }
+//         }
+//     }
+// }
 
 /// Executes get-methods of ABI-compatible contracts
 ///
@@ -458,7 +709,7 @@ async fn call_executor<F>(
     msg: ton_block::Message,
     options: ResolvedExecutionOptions,
     contract_info: impl FnOnce() -> F,
-) -> ClientResult<(ton_block::Transaction, Cell)>
+) -> Result<(ton_block::Transaction, Cell), TvmExecError>
 where
     F: futures::Future<Output = ClientResult<(ton_block::MsgAddressInt, u64)>>,
 {
@@ -485,15 +736,25 @@ where
                             .as_ref()
                             .map(|item| serialize_item(item))
                             .transpose()?;
-                        Error::tvm_execution_failed(err_message, *code, exit_arg, &address, None)
+                        TvmExecError::TvmExecutionFailed {
+                            err_message,
+                            code: *code,
+                            exit_arg,
+                            address,
+                            gas_used: None,
+                        }
                     }
                     Some(ExecutorError::NoFundsToImportMsg) => {
-                        Error::low_balance(&address, balance)
+                        TvmExecError::LowBalance { address, balance }
                     }
                     Some(ExecutorError::ExtMsgComputeSkipped(reason)) => {
-                        Error::tvm_execution_skipped(reason, &address, balance)
+                        TvmExecError::TvmExecutionSkipped {
+                            reason: reason.clone(),
+                            address,
+                            balance,
+                        }
                     }
-                    _ => Error::unknown_execution_error(err),
+                    _ => TvmExecError::UnknownExecutionError(err_message),
                 },
                 Err(err) => err,
             };
@@ -502,4 +763,27 @@ where
     };
 
     Ok((transaction, account))
+}
+
+impl ResolvedExecutionOptions {
+    pub async fn from_options(options: Option<ExecutionOptions>) -> ClientResult<Self> {
+        let options = options.unwrap_or_default();
+
+        let config = BlockchainConfig::default();
+
+        let block_lt = options
+            .block_lt
+            .unwrap_or(options.transaction_lt.unwrap_or(1_000_001) - 1);
+        let transaction_lt = options.transaction_lt.unwrap_or(block_lt + 1);
+        let block_time = options
+            .block_time
+            .unwrap_or_else(|| (chrono::Utc::now().timestamp_millis() / 1000) as u32);
+
+        Ok(Self {
+            block_lt,
+            block_time,
+            blockchain_config: Arc::new(config),
+            transaction_lt,
+        })
+    }
 }

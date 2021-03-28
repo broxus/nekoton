@@ -1,6 +1,7 @@
 use ton_block::{Deserializable, Serializable};
 use ton_types::UInt256;
 
+use crate::contracts::execution::labs::models::DeserializedObject;
 use crate::contracts::execution::labs::ClientResult;
 use crate::utils::NoFailure;
 
@@ -36,10 +37,9 @@ pub(crate) async fn deserialize_object_from_boc<S: Deserializable>(
 
 pub(crate) fn deserialize_object_from_cell<S: Deserializable>(
     cell: ton_types::Cell,
-    name: &str,
 ) -> ClientResult<S> {
     S::construct_from(&mut cell.into())
-        .map_err(|err| Error::invalid_boc(format!("cannot deserialize {} from BOC: {}", name, err)))
+        .map_err(|err| anyhow::anyhow!("cannot deserialize {} from BOC", err))
 }
 
 pub(crate) enum DeserializedBoc {
@@ -51,7 +51,20 @@ impl DeserializedBoc {
     pub fn bytes(self, name: &str) -> ClientResult<Vec<u8>> {
         match self {
             DeserializedBoc::Bytes(vec) => Ok(vec),
-            DeserializedBoc::Cell(cell) => serialize_cell_to_bytes(&cell, name),
+            DeserializedBoc::Cell(cell) => serialize_cell_to_bytes(&cell),
         }
     }
+}
+
+pub(crate) fn serialize_cell_to_bytes(cell: &ton_types::Cell) -> ClientResult<Vec<u8>> {
+    ton_types::cells_serialization::serialize_toc(&cell).convert()
+}
+
+pub(crate) fn serialize_cell_to_base64(cell: &ton_types::Cell) -> ClientResult<String> {
+    Ok(base64::encode(&serialize_cell_to_bytes(cell)?))
+}
+
+pub(crate) fn serialize_object_to_base64<S: Serializable>(object: &S) -> ClientResult<String> {
+    let cell = serialize_object_to_cell(object)?;
+    Ok(serialize_cell_to_base64(&cell)?)
 }
