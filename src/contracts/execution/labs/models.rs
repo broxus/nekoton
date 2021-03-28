@@ -1,13 +1,29 @@
+use crate::contracts::execution::labs::utils::DeserializedBoc;
+use crate::contracts::execution::labs::ClientResult;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use ton_block::Deserializable;
 use ton_executor::BlockchainConfig;
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Abi {
     Contract(AbiContract),
     Json(String),
     Handle(AbiHandle),
 
     Serialized(AbiContract),
+}
+
+impl Abi {
+    pub(crate) fn json_string(&self) -> ClientResult<String> {
+        match self {
+            Self::Contract(abi) | Self::Serialized(abi) => {
+                Ok(serde_json::to_string(abi).map_err(|err| anyhow::anyhow!("Invalid abi"))?)
+            }
+            Self::Json(abi) => Ok(abi.clone()),
+            _ => Err(anyhow::anyhow!("ABI handles are not supported yet",)),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -80,4 +96,37 @@ pub struct ExecutionOptions {
     pub block_lt: Option<u64>,
     /// transaction logical time
     pub transaction_lt: Option<u64>,
+}
+
+pub(crate) struct DeserializedObject<S: Deserializable> {
+    pub boc: DeserializedBoc,
+    pub cell: ton_types::Cell,
+    pub object: S,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ParamsOfDecodeMessage {
+    /// contract ABI
+    pub abi: Abi,
+
+    /// Message BOC
+    pub message: String,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub enum MessageBodyType {
+    /// Message contains the input of the ABI function.
+    Input,
+
+    /// Message contains the output of the ABI function.
+    Output,
+
+    /// Message contains the input of the imported ABI function.
+    ///
+    /// Occurs when contract sends an internal message to other
+    /// contract.
+    InternalOutput,
+
+    /// Message contains the input of the ABI event.
+    Event,
 }
