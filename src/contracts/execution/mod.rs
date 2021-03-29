@@ -7,9 +7,9 @@ use tvm::call;
 // use ton_abi::Contract;
 use crate::utils::NoFailure;
 
+mod execution_20;
 mod labs;
 mod tvm;
-
 struct LocalExecutor {
     contract: ton_abi::Contract,
 }
