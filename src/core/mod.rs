@@ -115,7 +115,7 @@ impl MainWalletSubscription {
         );
 
         while let Some((new_transactions, batch_info)) = transactions.next().await {
-            let new_transactions = convert_transactions(new_transactions);
+            let new_transactions = convert_transactions(new_transactions).collect::<Vec<_>>();
             if new_transactions.is_empty() {
                 continue;
             }
@@ -280,7 +280,9 @@ impl AccountSubscription for MainWalletSubscription {
             self.handler.on_state_changed(account_state);
 
             if let Some((new_transactions, batch_info)) = new_transactions {
-                let new_transactions = convert_transactions(new_transactions);
+                let new_transactions = convert_transactions(new_transactions)
+                    .rev()
+                    .collect::<Vec<_>>();
                 self.check_executed_transactions(&new_transactions);
                 if !new_transactions.is_empty() {
                     self.handler
@@ -404,11 +406,12 @@ pub enum AccountSubscriptionError {
     InvalidBlock,
 }
 
-fn convert_transactions(transactions: Vec<TransactionFull>) -> Vec<Transaction> {
+fn convert_transactions(
+    transactions: Vec<TransactionFull>,
+) -> impl Iterator<Item = Transaction> + DoubleEndedIterator {
     transactions
         .into_iter()
         .filter_map(|transaction| Transaction::try_from((transaction.hash, transaction.data)).ok())
-        .collect::<Vec<_>>()
 }
 
 fn request_transactions<'a>(
