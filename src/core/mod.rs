@@ -44,6 +44,18 @@ pub struct MainWalletSubscription {
 }
 
 impl MainWalletSubscription {
+    pub fn address(&self) -> &MsgAddressInt {
+        &self.address
+    }
+
+    pub fn account_state(&self) -> &AccountState {
+        &self.account_state
+    }
+
+    pub fn pending_transactions(&self) -> &[PendingTransaction] {
+        &self.pending_transactions
+    }
+
     /// Requests current account state and notifies the handler if it was changed
     pub async fn refresh_account_state(&mut self) -> Result<bool> {
         let new_state = match self.transport.get_account_state(&self.address).await? {
