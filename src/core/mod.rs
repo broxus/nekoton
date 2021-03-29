@@ -56,6 +56,35 @@ impl MainWalletSubscription {
         &self.pending_transactions
     }
 
+    pub async fn subscribe(
+        transport: Arc<dyn Transport>,
+        address: MsgAddressInt,
+        handler: Arc<dyn AccountSubscriptionHandler>,
+    ) -> Result<MainWalletSubscription> {
+        let mut result = MainWalletSubscription {
+            transport,
+            handler,
+            address,
+            account_state: AccountState {
+                balance: 0,
+                gen_timings: GenTimings::Unknown,
+                last_transaction_id: None,
+                is_deployed: false,
+            },
+            latest_known_transaction: None,
+            pending_transactions: Vec::new(),
+        };
+
+        if result.refresh_account_state().await? {
+            let count = result.transport.max_transactions_per_fetch();
+            result
+                .refresh_latest_transactions(count, Some(count as usize))
+                .await?;
+        }
+
+        Ok(result)
+    }
+
     /// Requests current account state and notifies the handler if it was changed
     pub async fn refresh_account_state(&mut self) -> Result<bool> {
         let new_state = match self.transport.get_account_state(&self.address).await? {
@@ -324,38 +353,6 @@ pub trait TransportSubscription {
         address: MsgAddressInt,
         handler: Arc<dyn AccountSubscriptionHandler>,
     ) -> Result<MainWalletSubscription>;
-}
-
-#[async_trait]
-impl TransportSubscription for Arc<dyn Transport> {
-    async fn subscribe_main_wallet(
-        &self,
-        address: MsgAddressInt,
-        handler: Arc<dyn AccountSubscriptionHandler>,
-    ) -> Result<MainWalletSubscription> {
-        let mut result = MainWalletSubscription {
-            transport: self.clone(),
-            handler,
-            address,
-            account_state: AccountState {
-                balance: 0,
-                gen_timings: GenTimings::Unknown,
-                last_transaction_id: None,
-                is_deployed: false,
-            },
-            latest_known_transaction: None,
-            pending_transactions: Vec::new(),
-        };
-
-        if result.refresh_account_state().await? {
-            let count = self.max_transactions_per_fetch();
-            result
-                .refresh_latest_transactions(count, Some(count as usize))
-                .await?;
-        }
-
-        Ok(result)
-    }
 }
 
 pub trait AccountSubscriptionHandler: Send + Sync {
