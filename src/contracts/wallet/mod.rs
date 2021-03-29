@@ -1,5 +1,3 @@
-use ton_block::Message;
-
 use crate::transport::Transport;
 
 use super::wallet::state::WalletState;
