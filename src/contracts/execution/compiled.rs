@@ -24,33 +24,6 @@ impl CompiledContract {
     }
 
     ///Executes contract code and returns transaction and modified contract code
-    fn execute(&self) -> Result<(Transaction, Self)> {
-        let executor = OrdinaryTransactionExecutor::new(self.config.clone());
-        let mut code = self.code.clone();
-        let time = chrono::Utc::now().timestamp() as u32;
-        executor
-            .execute(
-                None,
-                &mut code,
-                time,
-                self.block_lt,
-                self.last_transaction_lt.clone(),
-                false,
-            )
-            .convert()
-            .map(|x| {
-                (
-                    x,
-                    Self {
-                        code,
-                        config: self.config.clone(),
-                        last_transaction_lt: self.last_transaction_lt.clone(),
-                        block_lt: self.block_lt,
-                    },
-                )
-            })
-    }
-
     fn execute_with_message(&self, input_message: &Message) -> Result<(Transaction, Self)> {
         let executor = OrdinaryTransactionExecutor::new(self.config.clone());
         let mut code = self.code.clone();
@@ -81,11 +54,10 @@ impl CompiledContract {
 
 #[cfg(test)]
 mod test {
+    use crate::contracts::execution::compiled::CompiledContract;
     use ton_block::{Deserializable, Message};
     use ton_executor::BlockchainConfig;
     use ton_types::Cell;
-
-    use crate::contracts::execution::execution_20::compiled::CompiledContract;
 
     #[test]
     fn test_execute() {
