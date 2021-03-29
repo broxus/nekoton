@@ -6,11 +6,11 @@ use anyhow::Result;
 use async_trait::async_trait;
 use graphql_client::*;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
-use ton_types::UInt256;
 
-use crate::core::models::{GenTimings, TransactionId};
+use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
 use crate::transport::models::*;
 use crate::transport::Transport;
+use crate::utils::TrustMe;
 
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
@@ -28,7 +28,7 @@ impl GqlTransport {
         let request_body = T::build_query(params);
         let response = self
             .connection
-            .post(&serde_json::to_string(&request_body).expect("Shouldn't fail"))
+            .post(&serde_json::to_string(&request_body).trust_me())
             .await
             .map_err(api_failure)?;
 
@@ -190,6 +190,10 @@ impl GqlTransport {
 
 #[async_trait]
 impl Transport for GqlTransport {
+    fn max_transactions_per_fetch(&self) -> u8 {
+        50
+    }
+
     async fn send_message(&self, message: &Message) -> Result<()> {
         let cell = message
             .serialize()
@@ -233,9 +237,8 @@ impl Transport for GqlTransport {
 
         match Account::construct_from_base64(&account_state) {
             Ok(Account::Account(account)) => {
-                let last_transaction_id = TransactionId {
-                    lt: account.storage.last_trans_lt,
-                    hash: Default::default(), // there is no way to get it in gql
+                let last_transaction_id = LastTransactionId::Inexact {
+                    latest_lt: account.storage.last_trans_lt,
                 };
 
                 Ok(ContractState::Exists {
@@ -251,8 +254,8 @@ impl Transport for GqlTransport {
 
     async fn get_transactions(
         &self,
-        address: &MsgAddressInt,
-        from: &TransactionId,
+        address: MsgAddressInt,
+        from: TransactionId,
         count: u8,
     ) -> Result<Vec<TransactionFull>> {
         #[derive(GraphQLQuery)]

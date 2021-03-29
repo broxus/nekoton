@@ -11,12 +11,14 @@ use crate::core::models::TransactionId;
 
 #[async_trait]
 pub trait Transport: Send + Sync {
+    fn max_transactions_per_fetch(&self) -> u8;
+
     async fn send_message(&self, message: &ton_block::Message) -> Result<()>;
     async fn get_account_state(&self, address: &MsgAddressInt) -> Result<ContractState>;
     async fn get_transactions(
         &self,
-        address: &MsgAddressInt,
-        from: &TransactionId,
+        address: MsgAddressInt,
+        from: TransactionId,
         count: u8,
     ) -> Result<Vec<TransactionFull>>;
 }

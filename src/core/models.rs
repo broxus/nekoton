@@ -1,9 +1,47 @@
+use std::cmp::Ordering;
 use std::convert::TryFrom;
 
 use anyhow::Result;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
+
+use crate::helpers::address::ContractType;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AssetsList {
+    pub main_wallet: MainWalletAsset,
+    pub token_wallets: Vec<TokenWalletAsset>,
+    pub depools: Vec<DePoolAsset>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MainWalletAsset {
+    pub address: String,
+    pub public_key: String,
+    pub contract: ContractType,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TokenWalletAsset {
+    pub symbol: Symbol,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct DePoolAsset {
+    pub address: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct Symbol {
+    /// Symbol name, e.g. USDT, DAI, etc.
+    pub name: String,
+
+    /// Address of the root token contract
+    #[serde(with = "serde_address")]
+    pub root_token_contract: MsgAddressInt,
+}
 
 pub struct WalletState {
     /// Brief account state
@@ -21,7 +59,7 @@ pub struct AccountState {
     /// At what point was this state obtained
     pub gen_timings: GenTimings,
     /// Last transaction id
-    pub last_transaction_id: Option<TransactionId>,
+    pub last_transaction_id: Option<LastTransactionId>,
     /// Whether the contract is deployed
     pub is_deployed: bool,
 }
@@ -35,13 +73,56 @@ pub enum GenTimings {
     Known { gen_lt: u64, gen_utime: u32 },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Additional estimated lag for the pending message to be expired
+pub const GEN_TIMINGS_ALLOWABLE_INTERVAL: u32 = 30;
+
+impl GenTimings {
+    pub fn current_utime(&self) -> u32 {
+        match *self {
+            GenTimings::Unknown => {
+                // TODO: split optimistic and pessimistic predictions for unknown timings
+                Utc::now().timestamp() as u32 - GEN_TIMINGS_ALLOWABLE_INTERVAL
+            }
+            GenTimings::Known { gen_utime, .. } => gen_utime,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct PendingTransaction {
+    /// Incoming message source
+    #[serde(with = "serde_optional_address")]
+    pub src: Option<MsgAddressInt>,
     /// Hash of the external message body. Used to identify message in executed transactions
     #[serde(with = "serde_uint256")]
     pub body_hash: UInt256,
     /// Expiration timestamp, unixtime
     pub expire_at: u32,
+}
+
+impl PartialEq<Transaction> for PendingTransaction {
+    fn eq(&self, other: &Transaction) -> bool {
+        self.expire_at < other.created_at
+            && self.src == other.in_msg.src
+            && matches!(&other.in_msg.body, Some(body) if self.body_hash == body.hash)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MessageType {
+    Internal,
+    External,
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct TransactionsBatchInfo {
+    /// The smallest lt in a group
+    pub min_lt: u64,
+    /// Maximum lt in a group
+    pub max_lt: u64,
+    /// Whether this batch was from the preload request
+    pub old: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -129,7 +210,7 @@ pub enum TransactionError {
     Unsupported,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountStatus {
     /// Account exists and has a positive balance
@@ -254,11 +335,86 @@ pub enum MessageBodyError {
     FailedToDeserialize,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase", tag = "type")]
+pub enum LastTransactionId {
+    Exact(TransactionId),
+    Inexact { latest_lt: u64 },
+}
+
+impl LastTransactionId {
+    /// Whether the exact id is known
+    pub fn is_exact(&self) -> bool {
+        matches!(self, Self::Exact(_))
+    }
+
+    /// Converts last transaction id into real or fake id
+    pub fn to_transaction_id(self) -> TransactionId {
+        match self {
+            Self::Exact(id) => id,
+            Self::Inexact { latest_lt } => TransactionId {
+                lt: latest_lt,
+                hash: Default::default(),
+            },
+        }
+    }
+}
+
+impl PartialEq for LastTransactionId {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Exact(left), Self::Exact(right)) => left == right,
+            (Self::Inexact { latest_lt: left }, Self::Inexact { latest_lt: right }) => {
+                left == right
+            }
+            _ => false,
+        }
+    }
+}
+
+impl PartialOrd for LastTransactionId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for LastTransactionId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let left = match self {
+            Self::Exact(id) => &id.lt,
+            Self::Inexact { latest_lt } => latest_lt,
+        };
+        let right = match other {
+            Self::Exact(id) => &id.lt,
+            Self::Inexact { latest_lt } => latest_lt,
+        };
+        left.cmp(right)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, Serialize, Deserialize)]
 pub struct TransactionId {
     pub lt: u64,
     #[serde(with = "serde_uint256")]
     pub hash: UInt256,
+}
+
+impl PartialEq for TransactionId {
+    fn eq(&self, other: &Self) -> bool {
+        self.lt == other.lt
+    }
+}
+
+impl PartialOrd for TransactionId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for TransactionId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.lt.cmp(&other.lt)
+    }
 }
 
 pub mod serde_uint256 {

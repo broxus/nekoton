@@ -14,6 +14,7 @@ aes-ctr = "0.6"
 base64 = "0.13"
 curve25519-dalek = "3.0"
 chacha20poly1305 = "0.7.1"
+chrono = "0.4"
 ed25519-dalek = "1.0"
 graphql_client = "0.9"
 hex = "0.4"
@@ -22,7 +23,6 @@ js-sys = "0.3"
 parking_lot = "0.11.1"
 pin-project-lite = "0.2"
 rand = { version = "0.7", features = ["getrandom"] }
-reqwest = { version = "0.11", features = ["json"], optional = true }
 ring = "0.16"
 secstr = "0.4.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -57,8 +57,8 @@ hex = "0.4.3"
 
 [features]
 default = []
-std = ["reqwest"]
-web = ["getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
+std = []
+web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.features]
 default = ["std"]

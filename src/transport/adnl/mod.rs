@@ -11,9 +11,10 @@ use tokio::sync::Mutex;
 use ton_api::{ton, BoxedSerialize, Deserializer, IntoBoxed};
 use ton_block::{Deserializable, Message, MsgAddressInt, Serializable};
 
-use crate::core::models::{GenTimings, TransactionId};
+use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
 use crate::transport::models::*;
 use crate::transport::Transport;
+use crate::utils::TrustMe;
 
 const LAST_BLOCK_THRESHOLD: u64 = 1;
 
@@ -49,6 +50,10 @@ impl AdnlTransport {
 
 #[async_trait]
 impl Transport for AdnlTransport {
+    fn max_transactions_per_fetch(&self) -> u8 {
+        16
+    }
+
     async fn send_message(&self, message: &Message) -> Result<()> {
         let data = message
             .serialize()
@@ -112,10 +117,10 @@ impl Transport for AdnlTransport {
                             gen_lt: ss.gen_lt(),
                             gen_utime: ss.gen_time(),
                         },
-                        last_transaction_id: TransactionId {
+                        last_transaction_id: LastTransactionId::Exact(TransactionId {
                             lt: shard_info.last_trans_lt(),
                             hash: *shard_info.last_trans_hash(),
-                        },
+                        }),
                     }
                 } else {
                     ContractState::NotExists
@@ -128,8 +133,8 @@ impl Transport for AdnlTransport {
 
     async fn get_transactions(
         &self,
-        address: &MsgAddressInt,
-        from: &TransactionId,
+        address: MsgAddressInt,
+        from: TransactionId,
         count: u8,
     ) -> Result<Vec<TransactionFull>> {
         let response = self
@@ -275,7 +280,7 @@ impl ClientState {
 
     pub fn build_query(&mut self, query: &ton::TLObject) -> Query {
         let mut rng = rand::thread_rng();
-        let query_bytes = query.boxed_serialized_bytes().expect("Shouldn't fail");
+        let query_bytes = query.boxed_serialized_bytes().trust_me();
         let (query_id, data) = build_adnl_message(
             &mut rng,
             &ton::TLObject::new(ton::rpc::lite_server::Query {
@@ -383,7 +388,7 @@ where
     let mut query = Vec::new();
     ton_api::Serializer::new(&mut query)
         .write_boxed(data)
-        .expect("Shouldn't fail");
+        .trust_me();
 
     let message = ton::adnl::message::message::Query {
         query_id: ton::int256(query_id),
@@ -393,7 +398,7 @@ where
     let mut data = Vec::new();
     ton_api::Serializer::new(&mut data)
         .write_boxed(&message)
-        .expect("Shouldn't fail");
+        .trust_me();
 
     (query_id, data)
 }

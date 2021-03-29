@@ -1,10 +1,10 @@
+pub mod keystore;
+
 use anyhow::Result;
 use async_trait::async_trait;
 
 pub use keystore::mnemonics::*;
 pub use keystore::StoredKey;
-
-pub mod keystore;
 
 #[async_trait]
 pub trait KvStorage {
