@@ -506,7 +506,6 @@ pub async fn run_executor(
 
     Ok(ResultOfRunExecutor {
         out_messages,
-        transaction: parse_transaction(&transaction).await?,
         account,
         decoded,
         fees,
