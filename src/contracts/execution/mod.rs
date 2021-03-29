@@ -1,31 +1,14 @@
-use anyhow::Error;
-use ton_block::{AccountStorage, AccountStuff, MsgAddrStd, MsgAddressInt};
-use ton_sdk::{Contract, ContractImage};
+mod abi;
+mod compiled;
 
-use tvm::call;
+use std::sync::atomic::AtomicU64;
+use std::sync::Arc;
 
-// use ton_abi::Contract;
+use anyhow::Result;
+use ton_block::Transaction;
+use ton_executor::{
+    BlockchainConfig, ExecutorError, OrdinaryTransactionExecutor, TransactionExecutor,
+};
+use ton_types::Cell;
+
 use crate::utils::NoFailure;
-
-mod execution_20;
-mod labs;
-mod tvm;
-struct LocalExecutor {
-    contract: ton_abi::Contract,
-}
-
-impl LocalExecutor {
-    pub fn new(abi: &str) -> Result<Self, Error> {
-        let reader = std::io::Cursor::new(abi);
-        let contract = ton_sdk::AbiContract::load(reader).convert()?;
-        contract.function("kek").convert()?;
-        Ok(Self { contract })
-    }
-    fn calculate_fee(&self) {
-        let astuff = AccountStuff {
-            addr: MsgAddressInt::AddrStd(MsgAddrStd::default()),
-            storage_stat: Default::default(),
-            storage: AccountStorage::default(),
-        };
-    }
-}
