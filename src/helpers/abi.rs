@@ -65,7 +65,7 @@ fn process_out_messages(
             continue;
         }
 
-        let body = msg.body().ok_or_else(|| AbiError::InvalidOutputMessage)?;
+        let body = msg.body().ok_or(AbiError::InvalidOutputMessage)?;
 
         if abi_function
             .is_my_output_message(body.clone(), false)

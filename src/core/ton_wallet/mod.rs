@@ -16,7 +16,7 @@ use crate::transport::models::ContractState;
 use crate::transport::Transport;
 
 #[derive(Clone)]
-pub struct MainWalletSubscription {
+pub struct TonWalletSubscription {
     transport: Arc<dyn Transport>,
     handler: Arc<dyn AccountSubscriptionHandler>,
     address: MsgAddressInt,
@@ -25,7 +25,7 @@ pub struct MainWalletSubscription {
     pending_transactions: Vec<PendingTransaction>,
 }
 
-impl MainWalletSubscription {
+impl TonWalletSubscription {
     pub fn address(&self) -> &MsgAddressInt {
         &self.address
     }
@@ -42,8 +42,8 @@ impl MainWalletSubscription {
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
         handler: Arc<dyn AccountSubscriptionHandler>,
-    ) -> Result<MainWalletSubscription> {
-        let mut result = MainWalletSubscription {
+    ) -> Result<TonWalletSubscription> {
+        let mut result = TonWalletSubscription {
             transport,
             handler,
             address,
@@ -229,7 +229,7 @@ impl MainWalletSubscription {
 }
 
 #[async_trait]
-impl AccountSubscription for MainWalletSubscription {
+impl AccountSubscription for TonWalletSubscription {
     async fn send(
         &mut self,
         message: &ton_block::Message,

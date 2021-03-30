@@ -21,13 +21,13 @@ pub enum PollingMethod {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AssetsList {
-    pub main_wallet: MainWalletAsset,
+    pub ton_wallet: TonWalletAsset,
     pub token_wallets: Vec<TokenWalletAsset>,
     pub depools: Vec<DePoolAsset>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MainWalletAsset {
+pub struct TonWalletAsset {
     pub address: String,
     pub public_key: String,
     pub contract: ContractType,

@@ -1,5 +1,5 @@
-mod main_wallet;
 pub mod models;
+pub mod ton_wallet;
 mod utils;
 
 use anyhow::Result;
