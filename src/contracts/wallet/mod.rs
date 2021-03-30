@@ -80,6 +80,7 @@ impl Wallet {
     }
 }
 
+#[derive(Clone)]
 pub enum TransferAction {
     DeployFirst,
     Sign(Box<dyn UnsignedMessage>),
@@ -93,8 +94,8 @@ pub trait UnsignedMessage: DynClone {
 dyn_clone::clone_trait_object!(UnsignedMessage);
 
 pub struct SignedMessage {
-    message: ton_block::Message,
-    expire_at: u32,
+    pub message: ton_block::Message,
+    pub expire_at: u32,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
