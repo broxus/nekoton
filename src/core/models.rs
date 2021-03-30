@@ -7,7 +7,17 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
-use crate::helpers::address::ContractType;
+use crate::contracts::wallet::ContractType;
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub enum PollingMethod {
+    /// Manual polling once a minute or by a click.
+    /// Used when there are no pending transactions
+    Manual,
+    /// Block-walking for GQL or fast refresh for ADNL.
+    /// Used when there are some pending transactions
+    Reliable,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AssetsList {

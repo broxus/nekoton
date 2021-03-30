@@ -7,7 +7,6 @@ use std::sync::Arc;
 use anyhow::Result;
 use ton_block::{Account, Transaction};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_types::Cell;
 
 use crate::core::models::{GenTimings, LastTransactionId};
 use crate::transport::models::ContractState;

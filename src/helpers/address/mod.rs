@@ -4,8 +4,6 @@ use ton_block::MsgAddrStd;
 use ton_types::AccountId;
 
 use crate::helpers::crc::crc_16;
-pub use compute::{compute_address, msg_addr_from_str, ContractType};
-mod compute;
 
 ///Packs std address to base64 format
 /// # Arguments

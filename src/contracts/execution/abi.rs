@@ -1,7 +1,7 @@
 use ton_abi::{Function, Token};
 use ton_block::{
-    CommonMsgInfo, Deserializable, ExternalInboundMessageHeader, Message, MsgAddrStd,
-    MsgAddressInt, Transaction, TransactionId,
+    CommonMsgInfo, Deserializable, ExternalInboundMessageHeader, Message, MsgAddressInt,
+    Transaction,
 };
 
 use crate::utils::NoFailure;
