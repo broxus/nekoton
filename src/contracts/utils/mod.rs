@@ -4,7 +4,7 @@ use num_traits::ToPrimitive;
 use ton_abi::{Contract, Function, Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
 use ton_types::{BuilderData, Cell, UInt256};
-
+pub mod functions;
 use crate::utils::*;
 
 #[derive(thiserror::Error, Debug)]
@@ -19,9 +19,9 @@ pub struct MessageBuilder<'a> {
 }
 
 impl<'a> MessageBuilder<'a> {
-    pub fn new(contract: &'a Contract, name: &str) -> Result<Self> {
+    pub fn new(contract: &'a Contract, function_name: &str) -> Result<Self> {
         let function = contract
-            .function(name)
+            .function(function_name)
             .map_err(|_| ContractError::InvalidAbi)?;
         let input = Vec::with_capacity(function.inputs.len());
 
