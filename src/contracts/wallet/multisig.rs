@@ -128,14 +128,15 @@ impl UnsignedMessage for UnsignedMultisigMessage {
         self.hash.as_slice()
     }
 
-    fn sign(mut self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
-        let payload =
-            ton_abi::Function::fill_sign(2, Some(signature), None, self.payload).convert()?;
+    fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
+        let payload = self.payload.clone();
+        let payload = ton_abi::Function::fill_sign(2, Some(signature), None, payload).convert()?;
 
-        self.message.set_body(payload.into());
+        let mut message = self.message.clone();
+        message.set_body(payload.into());
 
         Ok(SignedMessage {
-            message: self.message,
+            message,
             expire_at: self.expire_at,
         })
     }

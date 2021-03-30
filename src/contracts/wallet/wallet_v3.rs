@@ -37,9 +37,9 @@ impl UnsignedMessage for UnsignedWalletV3Deploy {
         &[]
     }
 
-    fn sign(self, _: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
+    fn sign(&self, _: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
         Ok(SignedMessage {
-            message: self.message,
+            message: self.message.clone(),
             expire_at: self.expire_at,
         })
     }
@@ -111,15 +111,17 @@ impl UnsignedMessage for UnsignedWalletV3Message {
         self.hash.as_slice()
     }
 
-    fn sign(mut self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
-        self.payload
+    fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
+        let mut payload = self.payload.clone();
+        payload
             .prepend_raw(signature, signature.len() * 8)
             .convert()?;
 
-        self.message.set_body(self.payload.into());
+        let mut message = self.message.clone();
+        message.set_body(payload.into());
 
         Ok(SignedMessage {
-            message: self.message,
+            message,
             expire_at: self.expire_at,
         })
     }
