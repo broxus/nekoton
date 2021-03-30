@@ -1,6 +1,8 @@
 mod multisig;
 mod wallet_v3;
 
+use std::str::FromStr;
+
 use anyhow::Result;
 use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
@@ -99,6 +101,26 @@ pub struct SignedMessage {
 pub enum ContractType {
     Multisig(MultisigType),
     WalletV3,
+}
+
+impl FromStr for ContractType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "WalletV3" => Self::WalletV3,
+            s => Self::Multisig(MultisigType::from_str(s)?),
+        })
+    }
+}
+
+impl std::fmt::Display for ContractType {
+    fn fmt(&self, f: &'_ mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::WalletV3 => f.write_str("WalletV3"),
+            Self::Multisig(multisig_type) => multisig_type.fmt(f),
+        }
+    }
 }
 
 pub fn compute_address(

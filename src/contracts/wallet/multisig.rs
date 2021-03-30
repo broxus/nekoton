@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use anyhow::Result;
 use chrono::Utc;
 use ed25519_dalek::PublicKey;
-use serde::{Deserialize, Serialize};
 use ton_abi::TokenValue;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 use ton_types::{BuilderData, SliceData, UInt256};
@@ -142,13 +141,14 @@ impl UnsignedMessage for UnsignedMultisigMessage {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub enum MultisigType {
-    SafeMultisigWallet,
-    SafeMultisigWallet24h,
-    SetcodeMultisigWallet,
-    SurfWallet,
-}
+crate::define_string_enum!(
+    pub enum MultisigType {
+        SafeMultisigWallet,
+        SafeMultisigWallet24h,
+        SetcodeMultisigWallet,
+        SurfWallet,
+    }
+);
 
 pub fn compute_contract_address(
     public_key: &PublicKey,

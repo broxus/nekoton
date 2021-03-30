@@ -176,3 +176,36 @@ impl std::convert::AsRef<[u8]> for &UInt128 {
         self.as_slice()
     }
 }
+
+#[macro_export]
+macro_rules! define_string_enum {
+    ($vis:vis enum $type:ident { $($variant:ident),*$(,)? }) => {
+        #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+        $vis enum $type {
+            $($variant),*,
+        }
+
+        impl std::str::FromStr for $type {
+            type Err = anyhow::Error;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                Ok(match s {
+                    $(stringify!($variant) => Self::$variant),*,
+                    _ => return Err($crate::utils::UnknownEnumVariant.into()),
+                })
+            }
+        }
+
+        impl std::fmt::Display for $type {
+            fn fmt(&self, f: &'_ mut std::fmt::Formatter) -> std::fmt::Result {
+                match self {
+                    $(Self::$variant => f.write_str(stringify!($variant))),*,
+                }
+            }
+        }
+    };
+}
+
+#[derive(thiserror::Error, Debug)]
+#[error("Unknown enum variant")]
+pub struct UnknownEnumVariant;
