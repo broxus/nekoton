@@ -7,16 +7,82 @@ use anyhow::Result;
 use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
-use ton_block::MsgAddressInt;
+use ton_block::{Message, MsgAddressInt, Transaction};
 use ton_types::SliceData;
 
+use crate::contracts::abi::ton_token_wallet;
+use crate::helpers::abi::FunctionAbi;
 pub use multisig::MultisigType;
+use ton_abi::Function;
+use ton_executor::BlockchainConfig;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
 pub struct Wallet {
     public_key: PublicKey,
     contract_type: ContractType,
+}
+
+#[derive(Copy, Clone)]
+enum ParsingContext {
+    MainWallet,
+    TokenWallet,
+}
+
+///Transactions from bridge
+#[derive(Copy, Clone)]
+enum TransactionAdditionalInfo {
+    RegularTransaction, //None
+    //From internal input message
+    // Events
+    TokenWalletDeployed,   //
+    EthEventStatusChanged, //
+    TonEventStatusChanged, //
+
+    // Token transaction
+    TokenTransfer,
+    ///Incoming
+    TokenSwapBack, //
+    TokenMint,     //
+    TokensBounced, //
+
+    // DePool transaction
+    DePoolOrdinaryStakeTransaction,   //
+    DePoolOnRoundCompleteTransaction, //
+
+    // Multisig transaction
+    MultisigDeploymentTransaction, //
+    MultisigSubmitTransaction,     //
+    MultisigConfirmTransaction,
+}
+
+//todo normal name
+fn main_wallet_parse(tx: &Transaction) -> Result<TransactionAdditionalInfo> {
+    use super::utils::functions::FunctionBuilder;
+    use ton_abi::{Param, ParamType};
+    let wallet_deploy = FunctionBuilder::new("notifyWalletDeployed")
+        .in_arg(Param::new("root", ParamType::Address))
+        .build();
+    let abi_parser = FunctionAbi::new(&wallet_deploy)?;
+    let res = if let Ok(_) = abi_parser.parse(tx) {
+        return Ok(TransactionAdditionalInfo::TokenWalletDeployed);
+    };
+
+    let eth_event_status_changed =
+
+    Ok(())
+}
+
+pub fn parse_event(
+    tx: &Transaction,
+    ctx: ParsingContext,
+    config: BlockchainConfig,
+) -> Option<TransactionAdditionalInfo> {
+    use crate::helpers;
+    match ctx {
+        ParsingContext::MainWallet => match () {},
+        ParsingContext::TokenWallet => {}
+    }
 }
 
 impl Wallet {
