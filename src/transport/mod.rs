@@ -13,6 +13,7 @@ use crate::core::models::TransactionId;
 pub trait Transport: Send + Sync {
     fn max_transactions_per_fetch(&self) -> u8;
 
+    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig>;
     async fn send_message(&self, message: &ton_block::Message) -> Result<()>;
     async fn get_account_state(&self, address: &MsgAddressInt) -> Result<ContractState>;
     async fn get_transactions(

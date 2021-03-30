@@ -194,6 +194,46 @@ impl Transport for GqlTransport {
         50
     }
 
+    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
+        #[derive(GraphQLQuery)]
+        #[graphql(
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_latest_key_block.graphql"
+        )]
+        struct QueryLatestKeyBlock;
+
+        let boc = self
+            .fetch::<QueryLatestKeyBlock>(query_latest_key_block::Variables)
+            .await?
+            .blocks
+            .and_then(|block| block.into_iter().flatten().next())
+            .ok_or_else(no_blocks_found)?
+            .boc
+            .ok_or_else(invalid_response)?;
+
+        let block = ton_block::Block::construct_from_base64(&boc)
+            .map_err(|_| NodeClientError::InvalidBlock)?;
+
+        let extra = block
+            .read_extra()
+            .map_err(|_| NodeClientError::InvalidBlock)?;
+
+        let master = extra
+            .read_custom()
+            .map_err(|_| NodeClientError::InvalidBlock)?
+            .ok_or(NodeClientError::InvalidBlock)?;
+
+        let params = master
+            .config()
+            .ok_or(NodeClientError::InvalidBlock)?
+            .clone();
+
+        let config = ton_executor::BlockchainConfig::with_config(params)
+            .map_err(|_| NodeClientError::InvalidConfig)?;
+
+        Ok(config)
+    }
+
     async fn send_message(&self, message: &Message) -> Result<()> {
         let cell = message
             .serialize()
@@ -354,4 +394,6 @@ pub enum NodeClientError {
     UnsupportedNetwork,
     #[error("Invalid block")]
     InvalidBlock,
+    #[error("Invalid config")]
+    InvalidConfig,
 }

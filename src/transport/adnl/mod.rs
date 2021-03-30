@@ -46,12 +46,84 @@ impl AdnlTransport {
             },
         }
     }
+
+    async fn get_block(
+        &self,
+        id: ton::ton_node::blockidext::BlockIdExt,
+    ) -> Result<ton_block::Block> {
+        let block = self.query(ton::rpc::lite_server::GetBlock { id }).await?;
+
+        let block = ton_block::Block::construct_from_bytes(&block.only().data.0)
+            .map_err(|_| QueryConfigError::InvalidBlock)?;
+
+        Ok(block)
+    }
+
+    async fn get_block_by_seqno(
+        &self,
+        id: ton::ton_node::blockid::BlockId,
+    ) -> Result<ton_block::Block> {
+        let block_id = self
+            .query(ton::rpc::lite_server::LookupBlock {
+                mode: 0x1,
+                id,
+                lt: None,
+                utime: None,
+            })
+            .await?;
+
+        self.get_block(block_id.only().id).await
+    }
 }
 
 #[async_trait]
 impl Transport for AdnlTransport {
     fn max_transactions_per_fetch(&self) -> u8 {
         16
+    }
+
+    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
+        const MASTERCHAIN_SHARD: u64 = 0x8000000000000000;
+
+        let last_block_id = self.last_block.get_last_block(self).await?;
+
+        let mut block = self.get_block(last_block_id).await?;
+
+        {
+            let info = block
+                .info
+                .read_struct()
+                .map_err(|_| QueryConfigError::InvalidBlock)?;
+
+            if !info.key_block() {
+                block = self
+                    .get_block_by_seqno(ton::ton_node::blockid::BlockId {
+                        workchain: -1,
+                        shard: MASTERCHAIN_SHARD as i64,
+                        seqno: info.prev_key_block_seqno() as i32,
+                    })
+                    .await?;
+            }
+        }
+
+        let extra = block
+            .read_extra()
+            .map_err(|_| QueryConfigError::InvalidBlock)?;
+
+        let master = extra
+            .read_custom()
+            .map_err(|_| QueryConfigError::InvalidBlock)?
+            .ok_or(QueryConfigError::InvalidBlock)?;
+
+        let params = master
+            .config()
+            .ok_or(QueryConfigError::InvalidBlock)?
+            .clone();
+
+        let config = ton_executor::BlockchainConfig::with_config(params)
+            .map_err(|_| QueryConfigError::InvalidConfig)?;
+
+        Ok(config)
     }
 
     async fn send_message(&self, message: &Message) -> Result<()> {
@@ -210,6 +282,14 @@ impl LastBlock {
         *lock = Some((new_id.clone(), now));
         new_id
     }
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum QueryConfigError {
+    #[error("Invalid block")]
+    InvalidBlock,
+    #[error("Invalid config")]
+    InvalidConfig,
 }
 
 #[derive(thiserror::Error, Debug)]
