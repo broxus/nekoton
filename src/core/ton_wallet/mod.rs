@@ -12,6 +12,7 @@ use super::{
 use crate::core::models::{
     AccountState, GenTimings, PendingTransaction, Transaction, TransactionId, TransactionsBatchInfo,
 };
+use crate::helpers::abi::Executor;
 use crate::transport::models::ContractState;
 use crate::transport::Transport;
 
@@ -65,6 +66,25 @@ impl TonWalletSubscription {
         }
 
         Ok(result)
+    }
+
+    /// Calculate message execution fees
+    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
+        let blockchain_config = self.transport.get_blockchain_config().await?;
+        let (account, timings, last_transaction_id) =
+            match self.transport.get_account_state(&self.address).await? {
+                ContractState::Exists {
+                    account,
+                    timings,
+                    last_transaction_id,
+                } => (account, timings, last_transaction_id),
+                _ => return Err(ContractExecutionError::ContractNotFound.into()),
+            };
+
+        let transaction = Executor::new(blockchain_config, account, timings, &last_transaction_id)
+            .run(message)?;
+
+        Ok(transaction.total_fees.grams.0 as u64)
     }
 
     /// Requests current account state and notifies the handler if it was changed
@@ -327,4 +347,10 @@ impl AccountSubscription for TonWalletSubscription {
             PollingMethod::Reliable
         }
     }
+}
+
+#[derive(thiserror::Error, Debug)]
+enum ContractExecutionError {
+    #[error("Contract not found")]
+    ContractNotFound,
 }
