@@ -6,7 +6,7 @@ use super::{
 };
 
 #[derive(Clone)]
-struct CompiledContract {
+pub struct CompiledContract {
     code: Cell,
     config: BlockchainConfig,
     last_transaction_lt: Arc<AtomicU64>,
@@ -14,7 +14,12 @@ struct CompiledContract {
 }
 
 impl CompiledContract {
-    fn new(code: Cell, config: BlockchainConfig, last_transaction_lt: u64, block_lt: u64) -> Self {
+    pub fn new(
+        code: Cell,
+        config: BlockchainConfig,
+        last_transaction_lt: u64,
+        block_lt: u64,
+    ) -> Self {
         Self {
             code,
             config,
@@ -24,7 +29,7 @@ impl CompiledContract {
     }
 
     ///Executes contract code and returns transaction and modified contract code
-    fn execute_with_message(&self, input_message: &Message) -> Result<(Transaction, Self)> {
+    pub fn execute_with_message(&self, input_message: &Message) -> Result<(Transaction, Self)> {
         let executor = OrdinaryTransactionExecutor::new(self.config.clone());
         let mut code = self.code.clone();
         let time = chrono::Utc::now().timestamp() as u32;
