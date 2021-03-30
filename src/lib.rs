@@ -1,4 +1,4 @@
-mod contracts;
+pub mod contracts;
 pub mod core;
 pub mod helpers;
 pub mod storage;

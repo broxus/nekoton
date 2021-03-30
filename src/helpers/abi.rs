@@ -1,44 +1,170 @@
-use ton_block::{Account, Message};
+use std::collections::HashMap;
+use std::sync::atomic::AtomicU64;
+use std::sync::Arc;
 
-use super::{
-    match_contract_state, Arc, AtomicU64, BlockchainConfig, NoFailure, OrdinaryTransactionExecutor,
-    Result, Transaction, TransactionExecutor,
-};
-use crate::transport::models::ContractState;
+use anyhow::Result;
+use chrono::Utc;
+use ton_abi::{Function, Token};
+use ton_block::{Account, AccountStuff, Deserializable, MsgAddressInt};
+use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
 
-#[derive(Clone)]
-pub struct CompiledContract {
-    account: Account,
-    config: BlockchainConfig,
-    block_lt: u64,
-    block_unix_time: u32,
-    last_tx_lt: Arc<AtomicU64>,
+use crate::core::models::{GenTimings, LastTransactionId};
+use crate::utils::*;
+
+pub struct FunctionAbi<'a> {
+    fun: &'a Function,
 }
 
-impl CompiledContract {
-    pub fn new(config: BlockchainConfig, state: &ContractState) -> Self {
-        let (account, block_unix_time, block_lt, last_tx_lt) = match_contract_state(state);
+impl<'a> FunctionAbi<'a> {
+    pub fn new(fun: &'a Function) -> Result<Self> {
+        Ok(Self { fun })
+    }
 
-        Self {
-            account,
-            config,
-            block_lt,
-            block_unix_time,
-            last_tx_lt,
+    pub fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
+        let messages = parse_transaction_messages(&tx)?;
+        process_out_messages(&*messages, &self.fun)
+    }
+
+    pub fn run_local(
+        &self,
+        address: MsgAddressInt,
+        account_state: ton_block::AccountStuff,
+        timings: GenTimings,
+        last_transaction_id: &LastTransactionId,
+        config: BlockchainConfig,
+        input: &[Token],
+    ) -> Result<Vec<Token>> {
+        let mut msg =
+            ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+                dst: address,
+                ..Default::default()
+            });
+
+        msg.set_body(
+            self.fun
+                .encode_input(&HashMap::default(), &input, false, None)
+                .convert()?
+                .into(),
+        );
+
+        let mut executor = Executor::new(config, account_state, timings, &last_transaction_id);
+        let transaction = executor.run(&msg)?;
+
+        self.parse(&transaction)
+    }
+}
+
+fn process_out_messages(
+    messages: &[ton_block::Message],
+    abi_function: &Function,
+) -> Result<Vec<Token>> {
+    let mut output = None;
+
+    for msg in messages {
+        if !matches!(msg.header(), ton_block::CommonMsgInfo::ExtOutMsgInfo(_)) {
+            continue;
+        }
+
+        let body = msg.body().ok_or_else(|| AbiError::InvalidOutputMessage)?;
+
+        if abi_function
+            .is_my_output_message(body.clone(), false)
+            .convert()?
+        {
+            let tokens = abi_function.decode_output(body, false).convert()?;
+
+            output = Some(tokens);
+            break;
         }
     }
 
-    ///Executes contract code and returns transaction and modified contract code
-    pub fn execute_with_message(&self, input_message: &Message) -> Result<Transaction> {
+    match output {
+        Some(a) => Ok(a),
+        None if !abi_function.has_output() => Ok(Default::default()),
+        _ => Err(AbiError::NoMessagesProduced.into()),
+    }
+}
+
+fn parse_transaction_messages(
+    transaction: &ton_block::Transaction,
+) -> Result<Vec<ton_block::Message>> {
+    let mut messages = Vec::new();
+    transaction
+        .out_msgs
+        .iterate_slices(|slice| {
+            if let Ok(message) = slice
+                .reference(0)
+                .and_then(ton_block::Message::construct_from_cell)
+            {
+                messages.push(message);
+            }
+            Ok(true)
+        })
+        .convert()?;
+    Ok(messages)
+}
+
+#[derive(thiserror::Error, Debug)]
+enum AbiError {
+    #[error("Invalid output message")]
+    InvalidOutputMessage,
+    #[error("No external output messages")]
+    NoMessagesProduced,
+}
+
+pub struct Executor {
+    config: BlockchainConfig,
+    account: Account,
+    block_utime: u32,
+    block_lt: u64,
+    last_transaction_lt: Arc<AtomicU64>,
+}
+
+impl Executor {
+    pub fn new(
+        config: BlockchainConfig,
+        account: AccountStuff,
+        timings: GenTimings,
+        last_transaction_id: &LastTransactionId,
+    ) -> Self {
+        const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
+
+        let last_transaction_lt = match last_transaction_id {
+            LastTransactionId::Exact(id) => id.lt,
+            LastTransactionId::Inexact { latest_lt } => *latest_lt,
+        };
+
+        let (block_utime, block_lt) = match timings {
+            GenTimings::Unknown => (
+                Utc::now().timestamp() as u32,
+                last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
+            ),
+            GenTimings::Known { gen_lt, gen_utime } => (gen_utime, gen_lt),
+        };
+
+        Self {
+            config,
+            account: Account::Account(account),
+            block_utime,
+            block_lt,
+            last_transaction_lt: Arc::new(AtomicU64::new(last_transaction_lt)),
+        }
+    }
+
+    pub fn account(&self) -> &Account {
+        &self.account
+    }
+
+    pub fn run(&mut self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
         let executor = OrdinaryTransactionExecutor::new(self.config.clone());
         executor
             .execute_for_account(
-                Some(&input_message),
-                &mut self.account.clone(),
+                Some(message),
+                &mut self.account,
                 Default::default(),
-                self.block_unix_time,
+                self.block_utime,
                 self.block_lt,
-                self.last_tx_lt.clone(),
+                self.last_transaction_lt.clone(),
                 false,
             )
             .convert()
@@ -47,12 +173,48 @@ impl CompiledContract {
 
 #[cfg(test)]
 mod test {
-    use crate::contracts::execution::compiled::CompiledContract;
-    use crate::core::models::{GenTimings, LastTransactionId};
-    use crate::transport::models::ContractState;
-    use ton_block::Account;
-    use ton_block::{Deserializable, Message};
-    use ton_executor::BlockchainConfig;
+    use super::*;
+    use ton_block::{Deserializable, Message, Transaction};
+
+    #[test]
+    fn test_run_local() {
+        let contract = r#####"{
+            "ABI version": 2,
+            "header": ["pubkey", "time", "expire"],
+            "functions": [
+                {
+                    "name": "getCustodians",
+                    "inputs": [],
+                    "outputs": [
+                        {"components":[{"name":"index","type":"uint8"},{"name":"pubkey","type":"uint256"}],"name":"custodians","type":"tuple[]"}
+                    ]
+                },
+                {
+                    "name": "submitTransaction",
+                    "inputs": [
+                        {"name":"dest","type":"address"},
+                        {"name":"value","type":"uint128"},
+                        {"name":"bounce","type":"bool"},
+                        {"name":"allBalance","type":"bool"},
+                        {"name":"payload","type":"cell"}
+                    ],
+                    "outputs": [
+                        {"name":"transId","type":"uint64"}
+                    ]
+                }
+            ],
+            "data": [],
+            "events": []
+        }"#####;
+
+        let contract_abi = ton_abi::Contract::load(&mut std::io::Cursor::new(contract)).trust_me();
+        let function = contract_abi.function("submitTransaction").trust_me();
+
+        let _msg_code = base64::decode("te6ccgEBBAEA0QABRYgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4MAQHhkN2GJNWURKaCKnkZsRQhhRpn6THu/L5UVbrQqftLTfUQT74cmHie7f1G6gzgchbLtyMtLAADdEgyd74v9hADgPx2uNPC/rcj5o9MEu0xQtT7O4QxICY7yPkDTSqLNRfNQAAAXh+Daz0/////xMdgs2ACAWOAAxkzX//CemECbh7vgh+JqjeKnKVxwwO21B0Xbqitsj/gAAAAAAAAAAAAAAADuaygBAMAAA==").unwrap();
+        let tx = Transaction::construct_from_base64("te6ccgECDwEAArcAA7dxjJmv/+E9MIE3D3fBD8TVG8VOUrjhgdtqDou3VFbZH/AAALPVJCfkGksT3Y8aHAm7mnKfGA/AccQcwRmJeHov8yXElkW09QQwAACz0BBMOBYGHORAAFSAICXTqAUEAQIRDINHRh4pg8RAAwIAb8mPQkBMUWFAAAAAAAAEAAAAAAAEDt5ElKCY0ANTjCaw8ltpBJRSPdcEmknKxwOoduRmHbJAkCSUAJ1GT2MTiAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAIJy3y4B4TEhaY3M9HQMWqBpVJc3IUvntA5EtNHkjN1t4sqjUitqEc3Fb6TafRVFXMJNDjglljNUbcLzalj6ghNYgAIB4AsGAgHdCQcBASAIAHXgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4AAAWeqSE/IbAw5yISY7BZoAAAAAAAAAAQAEBIAoAsUgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/8ABjJmv/+E9MIE3D3fBD8TVG8VOUrjhgdtqDou3VFbZH/QdzWUAAYUWGAAABZ6pIT8hMDDnIhAAUWIADGTNf/8J6YQJuHu+CH4mqN4qcpXHDA7bUHRduqK2yP+DAwB4ZDdhiTVlESmgip5GbEUIYUaZ+kx7vy+VFW60Kn7S031EE++HJh4nu39RuoM4HIWy7cjLSwAA3RIMne+L/YQA4D8drjTwv63I+aPTBLtMULU+zuEMSAmO8j5A00qizUXzUAAAF4fg2s9P////8THYLNgDQFjgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4AAAAAAAAAAAAAAAA7msoAQOAAA=").trust_me();
+        let parser = FunctionAbi::new(function).trust_me();
+        dbg!(parser.parse(&tx).unwrap());
+    }
 
     #[test]
     fn test_execute() {
@@ -64,20 +226,17 @@ mod test {
         } else {
             unreachable!()
         };
-        let contract = CompiledContract::new(
+        let mut executor = Executor::new(
             BlockchainConfig::default(),
-            &ContractState::Exists {
-                account,
-                timings: GenTimings::Known {
-                    gen_lt: 16916000,
-                    gen_utime: 12356000,
-                },
-                last_transaction_id: LastTransactionId::Inexact {
-                    latest_lt: 12356916000001,
-                },
+            account,
+            GenTimings::Known {
+                gen_lt: 16916000,
+                gen_utime: 12356000,
+            },
+            &LastTransactionId::Inexact {
+                latest_lt: 12356916000001,
             },
         );
-        dbg!(contract.execute_with_message(&Message::construct_from_bytes(&*msg_code).unwrap()))
-            .unwrap();
+        dbg!(executor.run(&Message::construct_from_bytes(&*msg_code).unwrap())).unwrap();
     }
 }

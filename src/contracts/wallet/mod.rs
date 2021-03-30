@@ -116,15 +116,8 @@ pub fn compute_address(
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use std::str::FromStr;
-
-    use pretty_assertions::assert_eq;
-    use ton_block::MsgAddressInt;
-
-    use crate::helpers::address::compute::msg_addr_int_to_std;
-    use crate::helpers::address::{
-        compute_address, msg_addr_from_str, pack_std_smc_addr, ContractType,
-    };
 
     fn default_pubkey() -> ed25519_dalek::PublicKey {
         ed25519_dalek::PublicKey::from_bytes(
@@ -139,20 +132,27 @@ mod test {
         let pk = default_pubkey();
         let addr = compute_address(&pk, ContractType::WalletV3, 0);
         assert_eq!(
-            pack_std_smc_addr(true, &addr, false),
-            "UQDIsJmoySkJdZEX5NNj02aix0BXE4-Ym4zcGFCfmo0xaeFc"
+            addr,
+            MsgAddressInt::from_str(
+                "0:c8b099a8c92909759117e4d363d366a2c74057138f989b8cdc18509f9a8d3169"
+            )
+            .unwrap()
         );
     }
 
     #[test]
     fn test_surf() {
         let pk = default_pubkey();
-        let addr = compute_address(&pk, ContractType::SurfWallet, 0);
+        let addr = compute_address(&pk, ContractType::Multisig(MultisigType::SurfWallet), 0);
         assert_eq!(
-            pack_std_smc_addr(true, &addr, true),
-            "EQC5aPHGTz9B4EaZpq7wYq-eoKWiOFXwUx05vURmxwl4W4Jn"
+            addr,
+            MsgAddressInt::from_str(
+                "0:b968f1c64f3f41e04699a6aef062af9ea0a5a23855f0531d39bd4466c709785b"
+            )
+            .unwrap()
         );
     }
+
     #[test]
     fn test_multisig() {
         let pk = ed25519_dalek::PublicKey::from_bytes(
@@ -160,16 +160,18 @@ mod test {
                 .unwrap(),
         )
         .unwrap();
-        let addr = compute_address(&pk, ContractType::SafeMultisigWallet, 0);
-
-        let expected_address = msg_addr_int_to_std(
-            &MsgAddressInt::from_str(
+        let addr = compute_address(
+            &pk,
+            ContractType::Multisig(MultisigType::SafeMultisigWallet),
+            0,
+        );
+        assert_eq!(
+            addr,
+            MsgAddressInt::from_str(
                 "0:5C3BCF647CDFD678FBEC95754ACCB2668F7CD651F60FCDD9689C1829A94CFEE6",
             )
-            .unwrap(),
-        )
-        .unwrap();
-        assert_eq!(addr, expected_address);
+            .unwrap()
+        );
     }
 
     #[test]
@@ -179,11 +181,18 @@ mod test {
                 .unwrap(),
         )
         .unwrap();
-        let addr = compute_address(&pk, ContractType::SafeMultisigWallet24h, 0);
-        let expected_address =
-            msg_addr_from_str("0:2d0f4b099b346f51cb1b736188b1ee19d71c2ac4688da3fa126020ac2b5a2b5c")
-                .unwrap();
-        assert_eq!(addr, expected_address);
+        let addr = compute_address(
+            &pk,
+            ContractType::Multisig(MultisigType::SafeMultisigWallet24h),
+            0,
+        );
+        assert_eq!(
+            addr,
+            MsgAddressInt::from_str(
+                "0:2d0f4b099b346f51cb1b736188b1ee19d71c2ac4688da3fa126020ac2b5a2b5c"
+            )
+            .unwrap()
+        );
     }
 
     #[test]
@@ -193,10 +202,17 @@ mod test {
                 .unwrap(),
         )
         .unwrap();
-        let addr = compute_address(&pk, ContractType::SetcodeMultisigWallet, 0);
-        let expected_address =
-            msg_addr_from_str("0:9d368d911c9444e7805d7ea0fd8d05005f3e8a739d053ed1622c2313cd99a15d")
-                .unwrap();
-        assert_eq!(addr, expected_address);
+        let addr = compute_address(
+            &pk,
+            ContractType::Multisig(MultisigType::SetcodeMultisigWallet),
+            0,
+        );
+        assert_eq!(
+            addr,
+            MsgAddressInt::from_str(
+                "0:9d368d911c9444e7805d7ea0fd8d05005f3e8a739d053ed1622c2313cd99a15d"
+            )
+            .unwrap()
+        );
     }
 }
