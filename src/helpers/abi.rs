@@ -163,7 +163,8 @@ impl Executor {
     }
 
     pub fn run(&mut self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
-        let executor = OrdinaryTransactionExecutor::new(self.config.clone());
+        let mut executor = OrdinaryTransactionExecutor::new(self.config.clone());
+        executor.set_signature_check_disabled(self.disable_signature_check);
         executor
             .execute_for_account(
                 Some(message),
