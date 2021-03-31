@@ -82,6 +82,7 @@ impl TonWalletSubscription {
             };
 
         let transaction = Executor::new(blockchain_config, account, timings, &last_transaction_id)
+            .disable_signature_check()
             .run(message)?;
 
         Ok(transaction.total_fees.grams.0 as u64)

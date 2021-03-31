@@ -118,6 +118,7 @@ pub struct Executor {
     block_utime: u32,
     block_lt: u64,
     last_transaction_lt: Arc<AtomicU64>,
+    disable_signature_check: bool,
 }
 
 impl Executor {
@@ -148,7 +149,13 @@ impl Executor {
             block_utime,
             block_lt,
             last_transaction_lt: Arc::new(AtomicU64::new(last_transaction_lt)),
+            disable_signature_check: false,
         }
+    }
+
+    pub fn disable_signature_check(&mut self) -> &mut Self {
+        self.disable_signature_check = true;
+        self
     }
 
     pub fn account(&self) -> &Account {
@@ -156,7 +163,8 @@ impl Executor {
     }
 
     pub fn run(&mut self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
-        let executor = OrdinaryTransactionExecutor::new(self.config.clone());
+        let mut executor = OrdinaryTransactionExecutor::new(self.config.clone());
+        executor.set_signature_check_disabled(self.disable_signature_check);
         executor
             .execute_for_account(
                 Some(message),
