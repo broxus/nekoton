@@ -10,11 +10,12 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Message, MsgAddressInt, Transaction};
 use ton_types::SliceData;
 
-use crate::contracts::abi::ton_token_wallet;
+use crate::contracts::abi::{ton_token_wallet, eth_event};
 use crate::helpers::abi::FunctionAbi;
 pub use multisig::MultisigType;
 use ton_abi::Function;
 use ton_executor::BlockchainConfig;
+use crate::utils::TrustMe;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
@@ -24,14 +25,14 @@ pub struct Wallet {
 }
 
 #[derive(Copy, Clone)]
-enum ParsingContext {
+pub enum ParsingContext {
     MainWallet,
     TokenWallet,
 }
 
 ///Transactions from bridge
 #[derive(Copy, Clone)]
-enum TransactionAdditionalInfo {
+pub enum TransactionAdditionalInfo {
     RegularTransaction, //None
     //From internal input message
     // Events
@@ -68,10 +69,25 @@ fn main_wallet_parse(tx: &Transaction) -> Result<TransactionAdditionalInfo> {
         return Ok(TransactionAdditionalInfo::TokenWalletDeployed);
     };
 
-    let eth_event_status_changed =
-
-    Ok(())
+    let eth_event_status_changed = eth_event().function("_status").trust_me();
+    todo!()
+    // Ok(())
 }
+
+fn token_wallet_parse(tx: &Transaction) ->Result<TransactionAdditionalInfo>{
+    let transfer_family = ["transferToRecipient", "transfer", "transferFrom", "internalTransfer", "internalTransferFrom"]
+        .iter()
+        .map(|x|FunctionAbi::new( ton_token_wallet().function(x).trust_me()).trust_me().parse(tx))
+        .collect::<Result<Vec<_>>>().is_ok();
+    
+    if transfer_family {
+        Ok(TransactionAdditionalInfo::TokenTransfer)
+    }
+
+    todo!()
+    // let token_transfer = ton_token_wallet().function()
+}
+
 
 pub fn parse_event(
     tx: &Transaction,
@@ -79,10 +95,11 @@ pub fn parse_event(
     config: BlockchainConfig,
 ) -> Option<TransactionAdditionalInfo> {
     use crate::helpers;
-    match ctx {
-        ParsingContext::MainWallet => match () {},
-        ParsingContext::TokenWallet => {}
-    }
+    todo!()
+    // match ctx {
+    //     ParsingContext::MainWallet => match () {},
+    //     ParsingContext::TokenWallet => {}
+    // }
 }
 
 impl Wallet {
@@ -304,5 +321,11 @@ mod test {
             )
             .unwrap()
         );
+    }
+
+    #[test]
+    fn test_val(){
+        let eth_event_status_changed = eth_event().function("_status").trust_me();
+
     }
 }
