@@ -44,8 +44,8 @@ ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "origina
 ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi.git" }
 ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
 ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
-ton_vm = { git = "https://github.com/tonlabs/ton-labs-vm.git" }
-ton_executor = {git = "https://github.com/tonlabs/ton-labs-executor.git"}
+ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
+ton_executor = {git = "https://github.com/broxus/ton-labs-executor.git"}
 failure = "0.1.8"
 chrono = "0.4.19"
 
