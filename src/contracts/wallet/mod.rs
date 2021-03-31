@@ -4,13 +4,14 @@ mod wallet_v3;
 use std::str::FromStr;
 
 use anyhow::Result;
-use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 use ton_types::SliceData;
 
 pub use multisig::MultisigType;
+
+use crate::storage::keystore::UnsignedMessage;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
@@ -84,19 +85,6 @@ impl Wallet {
 pub enum TransferAction {
     DeployFirst,
     Sign(Box<dyn UnsignedMessage>),
-}
-
-pub trait UnsignedMessage: DynClone {
-    fn hash(&self) -> &[u8];
-    fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage>;
-}
-
-dyn_clone::clone_trait_object!(UnsignedMessage);
-
-#[derive(Clone)]
-pub struct SignedMessage {
-    pub message: ton_block::Message,
-    pub expire_at: u32,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]

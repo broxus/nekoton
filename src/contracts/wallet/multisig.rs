@@ -7,9 +7,10 @@ use ton_abi::TokenValue;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 use ton_types::{BuilderData, SliceData, UInt256};
 
-use super::{SignedMessage, TransferAction, UnsignedMessage, DEFAULT_WORKCHAIN};
+use super::{TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
 use crate::contracts::utils::*;
+use crate::storage::keystore::{SignedMessage, UnsignedMessage};
 use crate::utils::*;
 
 pub fn prepare_deploy(
