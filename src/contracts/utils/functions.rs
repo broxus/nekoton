@@ -2,8 +2,6 @@ use super::{Function, StandaloneToken};
 use tiny_hderive::bip44::IntoDerivationPath;
 use ton_abi::{Param, ParamType};
 
-use super::Function;
-
 #[derive(Default)]
 pub struct FunctionBuilder {
     /// Contract function specification.
@@ -42,7 +40,7 @@ impl FunctionBuilder {
         self
     }
 
-    pub fn header(mut self,  name: &str, arg_type: ParamType) -> Self {
+    pub fn header(mut self, name: &str, arg_type: ParamType) -> Self {
         self.header.push(Param::new(name, arg_type));
         self
     }
