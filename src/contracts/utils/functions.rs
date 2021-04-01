@@ -1,6 +1,6 @@
 use super::{Function, StandaloneToken};
 use tiny_hderive::bip44::IntoDerivationPath;
-use ton_abi::Param;
+use ton_abi::{Param, ParamType};
 
 #[derive(Default)]
 pub struct FunctionBuilder {
@@ -30,18 +30,18 @@ impl FunctionBuilder {
         }
     }
 
-    pub fn in_arg(mut self, arg_type: Param) -> Self {
-        self.inputs.push(arg_type);
+    pub fn in_arg(mut self, name: &str, arg_type: ParamType) -> Self {
+        self.inputs.push(Param::new(name, arg_type));
         self
     }
 
-    pub fn out_arg(mut self, arg_type: Param) -> Self {
-        self.outputs.push(arg_type);
+    pub fn out_arg(mut self, name: &str, arg_type: ParamType) -> Self {
+        self.outputs.push(Param::new(name, arg_type));
         self
     }
 
-    pub fn header(mut self, arg_type: Param) -> Self {
-        self.header.push(arg_type);
+    pub fn header(mut self,  name: &str, arg_type: ParamType) -> Self {
+        self.header.push(Param::new(name, arg_type));
         self
     }
     pub fn build(self) -> Function {
