@@ -1,3 +1,4 @@
+pub mod accounts;
 pub mod keystore;
 
 use anyhow::Result;

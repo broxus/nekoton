@@ -7,8 +7,6 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
-use crate::contracts::wallet::ContractType;
-
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum PollingMethod {
     /// Manual polling once a minute or by a click.
@@ -17,30 +15,6 @@ pub enum PollingMethod {
     /// Block-walking for GQL or fast refresh for ADNL.
     /// Used when there are some pending transactions
     Reliable,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AssetsList {
-    pub ton_wallet: TonWalletAsset,
-    pub token_wallets: Vec<TokenWalletAsset>,
-    pub depools: Vec<DePoolAsset>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TonWalletAsset {
-    pub address: String,
-    pub public_key: String,
-    pub contract: ContractType,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct TokenWalletAsset {
-    pub symbol: Symbol,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct DePoolAsset {
-    pub address: String,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

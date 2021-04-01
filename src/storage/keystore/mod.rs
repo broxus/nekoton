@@ -81,6 +81,45 @@ impl KeyStore {
     ///
     /// Returns hex-encoded public key, which can be used as key id later
     pub async fn add_key(&self, key: StoredKey) -> Result<String> {
+        let public_key = hex::encode(key.public_key());
+
+        let mut keys = self.keys.write().await;
+        match keys.entry(public_key.clone()) {
+            hash_map::Entry::Occupied(_) => return Err(KeyStoreError::KeyAlreadyExists.into()),
+            hash_map::Entry::Vacant(entry) => {
+                entry.insert(key);
+            }
+        }
+
+        self.save(&*keys).await?;
+        Ok(public_key)
+    }
+
+    /// Removes key from the keystore
+    ///
+    /// # Arguments
+    /// `public_key` - hex encoded public key
+    pub async fn remove_key(&self, public_key: &str) -> Result<Option<StoredKey>> {
+        let mut keys = self.keys.write().await;
+        let result = keys.remove(public_key);
+
+        self.save(&*keys).await?;
+        Ok(result)
+    }
+
+    /// Removes all keys
+    pub async fn clear(&self) -> Result<()> {
+        self.storage.remove(STORAGE_KEYSTORE).await?;
+        self.keys.write().await.clear();
+        Ok(())
+    }
+
+    /// Returns handler to the inner keys map
+    pub async fn stored_keys(&'_ self) -> RwLockReadGuard<'_, HashMap<String, StoredKey>> {
+        self.keys.read().await
+    }
+
+    async fn save(&self, keys: &HashMap<String, StoredKey>) -> Result<()> {
         struct KeysMap<'a>(&'a HashMap<String, StoredKey>);
 
         impl<'a> serde::Serialize for KeysMap<'a> {
@@ -97,36 +136,8 @@ impl KeyStore {
             }
         }
 
-        let public_key = hex::encode(key.public_key());
-
-        let new_data = {
-            let mut keys = self.keys.write().await;
-            match keys.entry(public_key.clone()) {
-                hash_map::Entry::Occupied(_) => return Err(KeyStoreError::KeyAlreadyExists.into()),
-                hash_map::Entry::Vacant(entry) => {
-                    entry.insert(key);
-                }
-            }
-            serde_json::to_string(&KeysMap(&*keys)).trust_me()
-        };
-
-        self.storage.set(STORAGE_KEYSTORE, &new_data).await?;
-
-        Ok(public_key)
-    }
-
-    /// Removes key from the keystore
-    ///
-    /// # Arguments
-    /// `public_key` - hex encoded public key
-    pub async fn remove_key(&self, public_key: &str) -> Option<StoredKey> {
-        let mut keys = self.keys.write().await;
-        keys.remove(public_key)
-    }
-
-    /// Returns handler to the inner keys map
-    pub async fn stored_keys(&'_ self) -> RwLockReadGuard<'_, HashMap<String, StoredKey>> {
-        self.keys.read().await
+        let data = serde_json::to_string(&KeysMap(keys)).trust_me();
+        self.storage.set(STORAGE_KEYSTORE, &data).await
     }
 }
 
