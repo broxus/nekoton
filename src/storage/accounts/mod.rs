@@ -87,6 +87,18 @@ impl AccountsStorage {
         })
     }
 
+    pub async fn set_current_account(&self, address: &str) -> Result<()> {
+        let (assets, current_account) = &mut *self.accounts.write().await;
+        if !assets.contains_key(address) {
+            return Err(AccountsStorageError::AccountNotFound.into());
+        }
+
+        *current_account = Some(address.to_owned());
+
+        self.save(assets, current_account).await?;
+        Ok(())
+    }
+
     /// Add account
     pub async fn add_account(
         &self,
@@ -123,8 +135,8 @@ impl AccountsStorage {
 
     /// Removes specified from the storage and resets current account if needed
     pub async fn remove_account(&self, address: &str) -> Result<Option<AssetsList>> {
-        let (accounts, current_account) = &mut *self.accounts.write().await;
-        let result = accounts.remove(address);
+        let (assets, current_account) = &mut *self.accounts.write().await;
+        let result = assets.remove(address);
 
         if result.is_some()
             && matches!(current_account, Some(current_account) if address == current_account)
@@ -132,7 +144,7 @@ impl AccountsStorage {
             *current_account = None;
         }
 
-        self.save(accounts, current_account).await?;
+        self.save(assets, current_account).await?;
         Ok(result)
     }
 
@@ -140,8 +152,8 @@ impl AccountsStorage {
     pub async fn clear(&self) -> Result<()> {
         self.storage.remove(STORAGE_ACCOUNTS).await?;
 
-        let (accounts, keys) = &mut *self.accounts.write().await;
-        accounts.clear();
+        let (assets, keys) = &mut *self.accounts.write().await;
+        assets.clear();
         *keys = None;
 
         Ok(())
@@ -252,4 +264,6 @@ pub mod serde_public_key {
 enum AccountsStorageError {
     #[error("Account already exists")]
     AccountAlreadyExists,
+    #[error("Account not found")]
+    AccountNotFound,
 }
