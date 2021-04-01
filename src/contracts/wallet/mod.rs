@@ -1,20 +1,25 @@
-mod multisig;
-mod wallet_v3;
-
+use std::alloc::Global;
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 use anyhow::Result;
 use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
-use ton_block::{Message, MsgAddressInt, Transaction};
+use ton_abi::{Function, ParamType, Token, TokenValue, Uint};
+use ton_block::{Message, MsgAddress, MsgAddressInt, Transaction};
+use ton_executor::BlockchainConfig;
 use ton_types::SliceData;
 
-use crate::contracts::abi::ton_token_wallet;
-use crate::helpers::abi::FunctionAbi;
 pub use multisig::MultisigType;
-use ton_abi::Function;
-use ton_executor::BlockchainConfig;
+
+use crate::contracts::abi::{eth_event, ton_token_wallet};
+use crate::contracts::utils::functions::FunctionBuilder;
+use crate::helpers::abi::FunctionAbi;
+use crate::utils::{TrustMe, UInt128};
+
+mod multisig;
+mod wallet_v3;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
@@ -24,54 +29,148 @@ pub struct Wallet {
 }
 
 #[derive(Copy, Clone)]
-enum ParsingContext {
+pub enum ParsingContext {
     MainWallet,
     TokenWallet,
 }
 
 ///Transactions from bridge
 #[derive(Copy, Clone)]
-enum TransactionAdditionalInfo {
-    RegularTransaction, //None
+pub enum TransactionAdditionalInfo {
+    RegularTransaction,
+    //None
     //From internal input message
     // Events
-    TokenWalletDeployed,   //
-    EthEventStatusChanged, //
+    TokenWalletDeployed(MsgAddress),
+    //
+    EthEventStatusChanged,
+    //
     TonEventStatusChanged, //
 
     // Token transaction
     TokenTransfer,
     ///Incoming
-    TokenSwapBack, //
-    TokenMint,     //
-    TokensBounced, //
+    TokenSwapBack,
+    //
+    TokenMint,
+    //
+    TokensBounced(BounceCallback), //
 
     // DePool transaction
-    DePoolOrdinaryStakeTransaction,   //
+    DePoolOrdinaryStakeTransaction,
+    //
     DePoolOnRoundCompleteTransaction, //
 
     // Multisig transaction
-    MultisigDeploymentTransaction, //
-    MultisigSubmitTransaction,     //
+    MultisigDeploymentTransaction,
+    //
+    MultisigSubmitTransaction,
+    //
     MultisigConfirmTransaction,
 }
 
+struct BounceCallback {
+    token_wallet: MsgAddress,
+    token_root: MsgAddress,
+    ammount: Uint,
+    bounced_from: MsgAddress,
+    updated_balance: Uint,
+}
+
+struct Mint{
+
+}
+
+impl TryFrom<Vec<Token>> for BounceCallback {
+    type Error = ();
+
+    fn try_from(value: Vec<Token>) -> Result<Self, Self::Error> {
+        if value.len() != 5 {
+            return Err(Self::Error);
+        }
+        let token_wallet = &value[0];
+        let token_root = &value[1];
+        let ammount = &value[2];
+        let bounced_from = &value[3];
+        let updated_balance = &value[4];
+
+        let token_wallet = match token_wallet {
+            TokenValue::Address(a) => a.clone(),
+            _ => return Err(Self::Error)
+        };
+        let token_root = match token_root {
+            TokenValue::Address(a) => a.clone(),
+            _ => return Err(Self::Error)
+        };
+        let ammount = match ammount {
+            TokenValue::Uint(a) => a.clone(),
+            _ => return Err(Self::Error)
+        };
+        let bounced_from = match bounced_from {
+            TokenValue::Address(a) => a.clone(),
+            _ => return Err(Self::Error)
+        };
+        let updated_balance = match updated_balance {
+            TokenValue::Uint(a) => a.clone(),
+            _ => return Err(Self::Error)
+        };
+        Ok(BounceCallback {
+            token_wallet,
+            token_root,
+            ammount,
+            bounced_from,
+            updated_balance,
+        })
+    }
+}
+
 //todo normal name
-fn main_wallet_parse(tx: &Transaction) -> Result<TransactionAdditionalInfo> {
+fn main_wallet_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
     use super::utils::functions::FunctionBuilder;
     use ton_abi::{Param, ParamType};
     let wallet_deploy = FunctionBuilder::new("notifyWalletDeployed")
-        .in_arg(Param::new("root", ParamType::Address))
+        .in_arg("root", ParamType::Address)
         .build();
-    let abi_parser = FunctionAbi::new(&wallet_deploy)?;
-    let res = if let Ok(_) = abi_parser.parse(tx) {
-        return Ok(TransactionAdditionalInfo::TokenWalletDeployed);
+    let abi_parser = FunctionAbi::new(&wallet_deploy).trust_me();
+    if let Ok(a) = abi_parser.parse(tx) {
+        let address = match &a.get(0)?.value {
+            TokenValue::Address(ad) => { TransactionAdditionalInfo::TokenWalletDeployed(ad.clone()) }
+            _ => TransactionAdditionalInfo::RegularTransaction
+        };
+        return Some(address);
     };
 
-    let eth_event_status_changed =
-
-    Ok(())
+    l
+    todo!()
+    // Ok(())
 }
+
+fn token_wallet_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
+    let transfer_family = ["transferToRecipient", "transfer", "transferFrom", "internalTransfer", "internalTransferFrom"]
+        .iter()
+        .map(|x| FunctionAbi::new(ton_token_wallet().function(x).trust_me()).trust_me().parse(tx))
+        .collect::<Result<Vec<_>>>().is_ok();
+    if transfer_family {
+        Ok(TransactionAdditionalInfo::TokenTransfer)
+    }
+    let tokens_bounced = FunctionBuilder::new("tokensBouncedCallback")
+        .in_arg("token_wallet", ParamType::Address)
+        .in_arg("token_root", ParamType::Address)
+        .in_arg("amount", ParamType::Uint(128))
+        .in_arg("bounced_from", ParamType::Address)
+        .in_arg("updated_balance", ParamType::Uint(128))
+        .build();
+
+    let abi_parser = FunctionAbi::new(&eth_event_status_changed).trust_me();
+
+    if let Ok(a) = abi_parser.parse(tx) {
+        let info = BounceCallback::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TokensBounced(info));
+    };
+    todo!()
+    // let token_transfer = ton_token_wallet().function()
+}
+
 
 pub fn parse_event(
     tx: &Transaction,
@@ -79,10 +178,11 @@ pub fn parse_event(
     config: BlockchainConfig,
 ) -> Option<TransactionAdditionalInfo> {
     use crate::helpers;
-    match ctx {
-        ParsingContext::MainWallet => match () {},
-        ParsingContext::TokenWallet => {}
-    }
+    todo!()
+    // match ctx {
+    //     ParsingContext::MainWallet => match () {},
+    //     ParsingContext::TokenWallet => {}
+    // }
 }
 
 impl Wallet {
@@ -206,15 +306,16 @@ pub fn compute_address(
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use std::str::FromStr;
+
+    use super::*;
 
     fn default_pubkey() -> ed25519_dalek::PublicKey {
         ed25519_dalek::PublicKey::from_bytes(
             &*hex::decode("e5a4307499c781b50ce41ee1e1c656b6db62ea4806568378f11ddc2b08d40773")
                 .unwrap(),
         )
-        .unwrap()
+            .unwrap()
     }
 
     #[test]
@@ -226,7 +327,7 @@ mod test {
             MsgAddressInt::from_str(
                 "0:c8b099a8c92909759117e4d363d366a2c74057138f989b8cdc18509f9a8d3169"
             )
-            .unwrap()
+                .unwrap()
         );
     }
 
@@ -239,7 +340,7 @@ mod test {
             MsgAddressInt::from_str(
                 "0:b968f1c64f3f41e04699a6aef062af9ea0a5a23855f0531d39bd4466c709785b"
             )
-            .unwrap()
+                .unwrap()
         );
     }
 
@@ -249,7 +350,7 @@ mod test {
             &*hex::decode("1e6e5912e156d02dd4769caae5c5d8ee9058726c75d263bafc642d64669cc46d")
                 .unwrap(),
         )
-        .unwrap();
+            .unwrap();
         let addr = compute_address(
             &pk,
             ContractType::Multisig(MultisigType::SafeMultisigWallet),
@@ -260,7 +361,7 @@ mod test {
             MsgAddressInt::from_str(
                 "0:5C3BCF647CDFD678FBEC95754ACCB2668F7CD651F60FCDD9689C1829A94CFEE6",
             )
-            .unwrap()
+                .unwrap()
         );
     }
 
@@ -270,7 +371,7 @@ mod test {
             &*hex::decode("32e6c4634145353e8ee270adf837beb519e02a59c503d206e85c5e25c2be535b")
                 .unwrap(),
         )
-        .unwrap();
+            .unwrap();
         let addr = compute_address(
             &pk,
             ContractType::Multisig(MultisigType::SafeMultisigWallet24h),
@@ -281,7 +382,7 @@ mod test {
             MsgAddressInt::from_str(
                 "0:2d0f4b099b346f51cb1b736188b1ee19d71c2ac4688da3fa126020ac2b5a2b5c"
             )
-            .unwrap()
+                .unwrap()
         );
     }
 
@@ -291,7 +392,7 @@ mod test {
             &*hex::decode("32e6c4634145353e8ee270adf837beb519e02a59c503d206e85c5e25c2be535b")
                 .unwrap(),
         )
-        .unwrap();
+            .unwrap();
         let addr = compute_address(
             &pk,
             ContractType::Multisig(MultisigType::SetcodeMultisigWallet),
@@ -302,7 +403,12 @@ mod test {
             MsgAddressInt::from_str(
                 "0:9d368d911c9444e7805d7ea0fd8d05005f3e8a739d053ed1622c2313cd99a15d"
             )
-            .unwrap()
+                .unwrap()
         );
+    }
+
+    #[test]
+    fn test_val() {
+        let eth_event_status_changed = eth_event().function("_status").trust_me();
     }
 }
