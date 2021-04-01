@@ -27,10 +27,9 @@ pub struct SignedMessage {
     pub expire_at: u32,
 }
 
-#[derive(Clone)]
 pub struct KeyStore {
     storage: Arc<dyn Storage>,
-    keys: Arc<RwLock<HashMap<String, StoredKey>>>,
+    keys: RwLock<HashMap<String, StoredKey>>,
 }
 
 impl KeyStore {
@@ -65,7 +64,7 @@ impl KeyStore {
 
         Ok(Self {
             storage,
-            keys: Arc::new(RwLock::new(data)),
+            keys: RwLock::new(data),
         })
     }
 
@@ -73,7 +72,7 @@ impl KeyStore {
     pub async fn load_unchecked(storage: Arc<dyn Storage>) -> Self {
         Self::load(storage.clone()).await.unwrap_or_else(|_| Self {
             storage,
-            keys: Arc::new(Default::default()),
+            keys: Default::default(),
         })
     }
 
