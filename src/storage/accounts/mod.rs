@@ -102,6 +102,7 @@ impl AccountsStorage {
     /// Add account
     pub async fn add_account(
         &self,
+        name: &str,
         public_key: ed25519_dalek::PublicKey,
         contract: wallet::ContractType,
         update_current: bool,
@@ -115,6 +116,7 @@ impl AccountsStorage {
                 return Err(AccountsStorageError::AccountAlreadyExists.into())
             }
             btree_map::Entry::Vacant(entry) => entry.insert(AssetsList {
+                name: name.to_owned(),
                 ton_wallet: TonWalletAsset {
                     address,
                     public_key,
@@ -211,6 +213,7 @@ impl<'a> StoredAccountsData<'a> {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AssetsList {
+    pub name: String,
     pub ton_wallet: TonWalletAsset,
     pub token_wallets: Vec<TokenWalletAsset>,
     pub depools: Vec<DePoolAsset>,
