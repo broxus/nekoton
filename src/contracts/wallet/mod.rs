@@ -1,15 +1,25 @@
-mod multisig;
-mod wallet_v3;
-
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
-use ton_block::MsgAddressInt;
+use ton_abi::{ParamType, TokenValue};
+use ton_block::{MsgAddressInt, Transaction};
+
 use ton_types::SliceData;
 
 pub use multisig::MultisigType;
+
+use crate::contracts::abi::ton_token_wallet;
+use crate::contracts::utils::functions::FunctionBuilder;
+use crate::contracts::wallet::models::*;
+use crate::helpers::abi::FunctionExt;
+use crate::utils::TrustMe;
+
+mod models;
+mod multisig;
+mod wallet_v3;
 
 use crate::storage::keystore::UnsignedMessage;
 
@@ -18,6 +28,116 @@ pub const DEFAULT_WORKCHAIN: i8 = 0;
 pub struct Wallet {
     public_key: PublicKey,
     contract_type: ContractType,
+}
+
+//todo normal name
+fn main_wallet_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
+    let wallet_deploy = FunctionBuilder::new("notifyWalletDeployed")
+        .in_arg("root", ParamType::Address)
+        .build();
+    if let Ok(a) = wallet_deploy.parse(tx) {
+        let address = match &a.get(0)?.value {
+            TokenValue::Address(ad) => TransactionAdditionalInfo::TokenWalletDeployed(ad.clone()),
+            _ => TransactionAdditionalInfo::RegularTransaction,
+        };
+        return Some(address);
+    };
+
+    todo!()
+    // Ok(())
+}
+
+fn token_wallet_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
+    let transfer = ton_token_wallet().function("transferFrom").trust_me();
+
+    if let Ok(a) = transfer.parse(tx) {
+        let info = Transfer::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TokenTransfer(
+            TransferFamily::Transfer(info),
+        ));
+    }
+
+    if let Ok(a) = transfer.parse(tx) {
+        let info = TransferFrom::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TokenTransfer(
+            TransferFamily::TransferFrom(info),
+        ));
+    }
+
+    if let Ok(a) = transfer.parse(tx) {
+        let info = TransferToRecipient::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TokenTransfer(
+            TransferFamily::TransferToRecipient(info),
+        ));
+    }
+
+    if let Ok(a) = transfer.parse(tx) {
+        let info = InternalTransferFrom::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TokenTransfer(
+            TransferFamily::InternalTransferFrom(info),
+        ));
+    }
+
+    let tokens_bounced = FunctionBuilder::new("tokensBouncedCallback")
+        .in_arg("token_wallet", ParamType::Address)
+        .in_arg("token_root", ParamType::Address)
+        .in_arg("amount", ParamType::Uint(128))
+        .in_arg("bounced_from", ParamType::Address)
+        .in_arg("updated_balance", ParamType::Uint(128))
+        .build();
+
+    if let Ok(a) = tokens_bounced.parse(tx) {
+        let info = BounceCallback::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TokensBounced(info));
+    };
+
+    let mint = FunctionBuilder::new("mint")
+        .in_arg("tokens", ParamType::Uint(128))
+        .in_arg("to", ParamType::Address)
+        .build();
+
+    if let Ok(a) = mint.parse(&tx) {
+        let info = Mint::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TokenMint(info));
+    }
+
+    let token_swap_back = ton_token_wallet().function("burnByOwner").trust_me();
+    if let Ok(a) = token_swap_back.parse(tx) {
+        let info = TokenSwapBack::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TokenSwapBack(info));
+    }
+
+    Some(TransactionAdditionalInfo::RegularTransaction)
+}
+
+fn event_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
+    let eth_event = FunctionBuilder::new("notifyEthereumEventStatusChanged")
+        .in_arg("EthereumEventStatus", ParamType::Uint(8))
+        .build();
+    if let Ok(a) = eth_event.parse(tx) {
+        let info = EthereumStatusChanged::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::EthEventStatusChanged(info));
+    }
+    let ton_event = FunctionBuilder::new("notifyTonEventStatusChanged")
+        .in_arg("TonEventStatus", ParamType::Uint(8))
+        .build();
+    if let Ok(a) = ton_event.parse(tx) {
+        let info = TonEventStatus::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TonEventStatusChanged(info));
+    }
+
+    None
+}
+
+pub fn parse_additional_info(
+    tx: &Transaction,
+    ctx: ParsingContext,
+) -> Option<TransactionAdditionalInfo> {
+    match ctx {
+        ParsingContext::MainWallet => main_wallet_parse(tx),
+        ParsingContext::TokenWallet => token_wallet_parse(tx),
+        ParsingContext::Event => event_parse(tx),
+    }
 }
 
 impl Wallet {
@@ -128,8 +248,9 @@ pub fn compute_address(
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use std::str::FromStr;
+
+    use super::*;
 
     fn default_pubkey() -> ed25519_dalek::PublicKey {
         ed25519_dalek::PublicKey::from_bytes(
@@ -226,5 +347,10 @@ mod test {
             )
             .unwrap()
         );
+    }
+
+    #[test]
+    fn test_val() {
+        let eth_event_status_changed = eth_event().function("_status").trust_me();
     }
 }

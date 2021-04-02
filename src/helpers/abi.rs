@@ -11,13 +11,31 @@ use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExe
 use crate::core::models::{GenTimings, LastTransactionId};
 use crate::utils::*;
 
+pub trait FunctionExt {
+    fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>>;
+}
+
+impl FunctionExt for &Function {
+    fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
+        let abi = FunctionAbi::new(self);
+        abi.parse(tx)
+    }
+}
+
+impl FunctionExt for Function {
+    fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
+        let abi = FunctionAbi::new(self);
+        abi.parse(tx)
+    }
+}
+
 pub struct FunctionAbi<'a> {
     fun: &'a Function,
 }
 
 impl<'a> FunctionAbi<'a> {
-    pub fn new(fun: &'a Function) -> Result<Self> {
-        Ok(Self { fun })
+    pub fn new(fun: &'a Function) -> Self {
+        Self { fun }
     }
 
     pub fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
