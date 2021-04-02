@@ -6,7 +6,7 @@ mod labs;
 mod legacy;
 mod util;
 
-use crate::storage::keystore::KeystoreError;
+use crate::storage::keystore::KeyStoreError;
 
 #[derive(Serialize, Deserialize, Copy, Clone)]
 pub enum AccountType {
@@ -33,20 +33,22 @@ pub fn derive_from_words(mnemonic: &str, account_type: AccountType) -> Result<Ke
 
 /// Generates mnemonic and keypair.
 pub fn generate(account_type: AccountType) -> Result<GeneratedKey, Error> {
-    use ring::rand;
+    Ok(GeneratedKey {
+        account_type,
+        words: match account_type {
+            AccountType::Legacy => legacy::generate_words(generate_entropy::<32>()?),
+            AccountType::Labs(_) => labs::generate_words(generate_entropy::<16>()?),
+        },
+    })
+}
+
+fn generate_entropy<const N: usize>() -> Result<[u8; N], KeyStoreError> {
     use ring::rand::SecureRandom;
 
-    let rng = rand::SystemRandom::new();
+    let rng = ring::rand::SystemRandom::new();
 
-    let mut entropy = [0; 256 / 8];
+    let mut entropy = [0; N];
     rng.fill(&mut entropy)
-        .map_err(KeystoreError::FailedToGenerateRandomBytes)?;
-    match account_type {
-        AccountType::Legacy => Ok(legacy::generate_words(entropy)),
-        AccountType::Labs(_) => labs::generate_words(entropy),
-    }
-    .map(|words| GeneratedKey {
-        account_type,
-        words,
-    })
+        .map_err(KeyStoreError::FailedToGenerateRandomBytes)?;
+    Ok(entropy)
 }

@@ -3,23 +3,23 @@ use async_trait::async_trait;
 use ton_block::MsgAddressInt;
 
 pub mod adnl;
+pub mod gql;
 pub mod models;
 
 use self::models::*;
+use crate::core::models::TransactionId;
 
 #[async_trait]
 pub trait Transport: Send + Sync {
-    async fn send_message(&self, data: &[u8]) -> Result<()>;
-    async fn get_masterchain_info(&self) -> Result<LastBlockIdExt>;
-    async fn get_account_state(
-        &self,
-        last_block_id: &LastBlockIdExt,
-        address: &MsgAddressInt,
-    ) -> Result<AccountState>;
+    fn max_transactions_per_fetch(&self) -> u8;
+
+    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig>;
+    async fn send_message(&self, message: &ton_block::Message) -> Result<()>;
+    async fn get_account_state(&self, address: &MsgAddressInt) -> Result<ContractState>;
     async fn get_transactions(
         &self,
-        address: &MsgAddressInt,
-        from: &TransactionId,
+        address: MsgAddressInt,
+        from: TransactionId,
         count: u8,
-    ) -> Result<Vec<Transaction>>;
+    ) -> Result<Vec<TransactionFull>>;
 }
