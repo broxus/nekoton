@@ -1,5 +1,4 @@
-use super::{Function, StandaloneToken};
-use tiny_hderive::bip44::IntoDerivationPath;
+use super::Function;
 use ton_abi::{Param, ParamType};
 
 #[derive(Default)]

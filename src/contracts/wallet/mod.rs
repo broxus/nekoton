@@ -5,21 +5,18 @@ use anyhow::Result;
 use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
-use ton_abi::{Function, ParamType, Token, TokenValue, Uint};
-use ton_block::{Message, MsgAddress, MsgAddressInt, Transaction};
-use ton_executor::BlockchainConfig;
-use ton_types::{Cell, SliceData};
+use ton_abi::{ParamType, TokenValue};
+use ton_block::{MsgAddressInt, Transaction};
+
+use ton_types::SliceData;
 
 pub use multisig::MultisigType;
 
-use crate::contracts::abi::{eth_event, ton_token_wallet};
+use crate::contracts::abi::ton_token_wallet;
 use crate::contracts::utils::functions::FunctionBuilder;
-use crate::contracts::wallet::models::{
-    InternalTransfer, InternalTransferFrom, ParsingContext, TransactionAdditionalInfo, Transfer,
-    TransferFamily, TransferFrom, TransferToRecipient,
-};
-use crate::helpers::abi::{FunctionAbi, FunctionExt};
-use crate::utils::{TrustMe, UInt128};
+use crate::contracts::wallet::models::*;
+use crate::helpers::abi::FunctionExt;
+use crate::utils::TrustMe;
 
 mod models;
 mod multisig;
@@ -34,8 +31,6 @@ pub struct Wallet {
 
 //todo normal name
 fn main_wallet_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
-    use super::utils::functions::FunctionBuilder;
-    use ton_abi::{Param, ParamType};
     let wallet_deploy = FunctionBuilder::new("notifyWalletDeployed")
         .in_arg("root", ParamType::Address)
         .build();
@@ -56,30 +51,30 @@ fn token_wallet_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
 
     if let Ok(a) = transfer.parse(tx) {
         let info = Transfer::try_from(a).ok()?;
-        Some(TransactionAdditionalInfo::TokenTransfer(
+        return Some(TransactionAdditionalInfo::TokenTransfer(
             TransferFamily::Transfer(info),
-        ))
+        ));
     }
 
     if let Ok(a) = transfer.parse(tx) {
         let info = TransferFrom::try_from(a).ok()?;
-        Some(TransactionAdditionalInfo::TokenTransfer(
+        return Some(TransactionAdditionalInfo::TokenTransfer(
             TransferFamily::TransferFrom(info),
-        ))
+        ));
     }
 
     if let Ok(a) = transfer.parse(tx) {
         let info = TransferToRecipient::try_from(a).ok()?;
-        Some(TransactionAdditionalInfo::TokenTransfer(
+        return Some(TransactionAdditionalInfo::TokenTransfer(
             TransferFamily::TransferToRecipient(info),
-        ))
+        ));
     }
 
     if let Ok(a) = transfer.parse(tx) {
         let info = InternalTransferFrom::try_from(a).ok()?;
-        Some(TransactionAdditionalInfo::TokenTransfer(
+        return Some(TransactionAdditionalInfo::TokenTransfer(
             TransferFamily::InternalTransferFrom(info),
-        ))
+        ));
     }
 
     let tokens_bounced = FunctionBuilder::new("tokensBouncedCallback")
@@ -101,7 +96,7 @@ fn token_wallet_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
         .build();
 
     if let Ok(a) = mint.parse(&tx) {
-        let info = Mint::try_from(a)?;
+        let info = Mint::try_from(a).ok()?;
         return Some(TransactionAdditionalInfo::TokenMint(info));
     }
 
@@ -114,17 +109,34 @@ fn token_wallet_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
     Some(TransactionAdditionalInfo::RegularTransaction)
 }
 
-pub fn parse_event(
+fn event_parse(tx: &Transaction) -> Option<TransactionAdditionalInfo> {
+    let eth_event = FunctionBuilder::new("notifyEthereumEventStatusChanged")
+        .in_arg("EthereumEventStatus", ParamType::Uint(8))
+        .build();
+    if let Ok(a) = eth_event.parse(tx) {
+        let info = EthereumStatusChanged::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::EthEventStatusChanged(info));
+    }
+    let ton_event = FunctionBuilder::new("notifyTonEventStatusChanged")
+        .in_arg("TonEventStatus", ParamType::Uint(8))
+        .build();
+    if let Ok(a) = ton_event.parse(tx) {
+        let info = TonEventStatus::try_from(a).ok()?;
+        return Some(TransactionAdditionalInfo::TonEventStatusChanged(info));
+    }
+
+    None
+}
+
+pub fn parse_additional_info(
     tx: &Transaction,
     ctx: ParsingContext,
-    config: BlockchainConfig,
 ) -> Option<TransactionAdditionalInfo> {
-    use crate::helpers;
-    todo!()
-    // match ctx {
-    //     ParsingContext::MainWallet => match () {},
-    //     ParsingContext::TokenWallet => {}
-    // }
+    match ctx {
+        ParsingContext::MainWallet => main_wallet_parse(tx),
+        ParsingContext::TokenWallet => token_wallet_parse(tx),
+        ParsingContext::Event => event_parse(tx),
+    }
 }
 
 impl Wallet {

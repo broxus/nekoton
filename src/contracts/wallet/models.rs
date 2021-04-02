@@ -1,30 +1,23 @@
 use std::convert::TryFrom;
-use std::str::FromStr;
 
 use anyhow::Result;
-use dyn_clone::DynClone;
-use ed25519_dalek::PublicKey;
-use serde::{Deserialize, Serialize};
-use ton_abi::{Function, ParamType, Token, TokenValue, Uint};
-use ton_block::{Message, MsgAddress, MsgAddressInt, Transaction};
-use ton_executor::BlockchainConfig;
-use ton_types::{Cell, SliceData};
 
-pub use multisig::MultisigType;
+use ton_abi::{Token, TokenValue, Uint};
+use ton_block::MsgAddress;
 
-use crate::contracts::abi::{eth_event, ton_token_wallet};
-use crate::contracts::utils::functions::FunctionBuilder;
-use crate::helpers::abi::{FunctionAbi, FunctionExt};
-use crate::utils::{TrustMe, UInt128};
+use ton_types::Cell;
 
-#[derive(Copy, Clone)]
+use num_traits::ToPrimitive;
+
+#[derive(Copy, Clone, Debug)]
 pub enum ParsingContext {
     MainWallet,
     TokenWallet,
+    Event,
 }
 
 ///Transactions from bridge
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum TransactionAdditionalInfo {
     RegularTransaction,
     //None
@@ -32,9 +25,9 @@ pub enum TransactionAdditionalInfo {
     // Events
     TokenWalletDeployed(MsgAddress),
     //
-    EthEventStatusChanged,
+    EthEventStatusChanged(EthereumStatusChanged),
     //
-    TonEventStatusChanged, //
+    TonEventStatusChanged(TonEventStatus), //
 
     // Token transaction
     TokenTransfer(TransferFamily),
@@ -56,6 +49,70 @@ pub enum TransactionAdditionalInfo {
     MultisigSubmitTransaction,
     //
     MultisigConfirmTransaction,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum EthereumStatusChanged {
+    InProcess = 0,
+    Confirmed = 1,
+    Executed = 2,
+    Rejected = 3,
+}
+
+impl TryFrom<Vec<Token>> for EthereumStatusChanged {
+    type Error = ();
+
+    fn try_from(mut value: Vec<Token>) -> Result<Self, Self::Error> {
+        if value.len() != 1 {
+            return Err(());
+        }
+        let ethereum_status_changed = value.remove(0).value;
+
+        let ethereum_status_changed = match ethereum_status_changed {
+            TokenValue::Uint(a) => a.number.to_u8().ok_or(())?,
+            _ => return Err(()),
+        };
+        let ethereum_status_changed = match ethereum_status_changed {
+            0 => EthereumStatusChanged::InProcess,
+            1 => EthereumStatusChanged::Confirmed,
+            2 => EthereumStatusChanged::Executed,
+            3 => EthereumStatusChanged::Rejected,
+            _ => return Err(()),
+        };
+
+        Ok(ethereum_status_changed)
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum TonEventStatus {
+    InProcess = 0,
+    Confirmed = 1,
+    Rejected = 2,
+}
+
+impl TryFrom<Vec<Token>> for TonEventStatus {
+    type Error = ();
+
+    fn try_from(mut value: Vec<Token>) -> Result<Self, Self::Error> {
+        if value.len() != 1 {
+            return Err(());
+        }
+        let ton_event_status = value.remove(0).value;
+
+        let ton_event_status = match ton_event_status {
+            TokenValue::Uint(a) => a.number.to_u8().ok_or(())?,
+            _ => return Err(()),
+        };
+        let ton_event_status = match ton_event_status {
+            0 => TonEventStatus::InProcess,
+            1 => TonEventStatus::Confirmed,
+            2 => TonEventStatus::Rejected,
+            _ => return Err(()),
+        };
+
+        Ok(ton_event_status)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -189,6 +246,7 @@ impl TryFrom<Vec<Token>> for BounceCallback {
     }
 }
 
+#[derive(Clone, Debug)]
 pub enum TransferFamily {
     Transfer(Transfer),
     TransferFrom(TransferFrom),
@@ -196,6 +254,7 @@ pub enum TransferFamily {
     InternalTransferFrom(InternalTransferFrom),
 }
 
+#[derive(Clone, Debug)]
 pub struct Transfer {
     pub to: MsgAddress,
     pub tokens: Uint,
@@ -227,6 +286,7 @@ impl TryFrom<Vec<Token>> for Transfer {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct TransferFrom {
     pub from: MsgAddress,
     pub to: MsgAddress,
@@ -269,6 +329,7 @@ impl TryFrom<Vec<Token>> for TransferFrom {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct TransferToRecipient {
     pub recipient_public_key: Uint,
     pub recipient_address: MsgAddress,
@@ -312,6 +373,7 @@ impl TryFrom<Vec<Token>> for TransferToRecipient {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct InternalTransfer {
     pub tokens: Uint,
     pub sender_public_key: Uint,
@@ -347,6 +409,7 @@ impl TryFrom<Vec<Token>> for InternalTransfer {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct InternalTransferFrom {
     pub to: MsgAddress,
     pub tokens: Uint,
