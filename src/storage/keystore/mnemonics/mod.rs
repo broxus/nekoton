@@ -6,7 +6,7 @@ mod labs;
 mod legacy;
 mod util;
 
-use crate::storage::keystore::KeystoreError;
+use crate::storage::keystore::KeyStoreError;
 
 #[derive(Serialize, Deserialize, Copy, Clone)]
 pub enum AccountType {
@@ -42,13 +42,13 @@ pub fn generate(account_type: AccountType) -> Result<GeneratedKey, Error> {
     })
 }
 
-fn generate_entropy<const N: usize>() -> Result<[u8; N], KeystoreError> {
+fn generate_entropy<const N: usize>() -> Result<[u8; N], KeyStoreError> {
     use ring::rand::SecureRandom;
 
     let rng = ring::rand::SystemRandom::new();
 
     let mut entropy = [0; N];
     rng.fill(&mut entropy)
-        .map_err(KeystoreError::FailedToGenerateRandomBytes)?;
+        .map_err(KeyStoreError::FailedToGenerateRandomBytes)?;
     Ok(entropy)
 }

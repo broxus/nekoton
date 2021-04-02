@@ -5,8 +5,9 @@ use ed25519_dalek::PublicKey;
 use ton_block::{MsgAddrStd, MsgAddressInt, Serializable};
 use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 
-use super::{SignedMessage, TransferAction, UnsignedMessage, DEFAULT_WORKCHAIN};
+use super::{TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
+use crate::storage::keystore::{SignedMessage, UnsignedMessage};
 use crate::utils::*;
 
 pub fn prepare_deploy(public_key: &PublicKey, expire_at: u32) -> Result<Box<dyn UnsignedMessage>> {

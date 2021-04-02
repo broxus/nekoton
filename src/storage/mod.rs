@@ -1,13 +1,14 @@
+pub mod accounts;
 pub mod keystore;
 
 use anyhow::Result;
 use async_trait::async_trait;
 
 pub use keystore::mnemonics::*;
-pub use keystore::StoredKey;
+pub use keystore::stored_key::StoredKey;
 
 #[async_trait]
-pub trait KvStorage {
+pub trait Storage {
     /// Retrieve data from storage
     async fn get(&self, key: &str) -> Result<Option<String>>;
 
