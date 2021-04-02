@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::Result;
 use base64::URL_SAFE;
 use ton_block::{MsgAddrStd, MsgAddressInt};
@@ -65,6 +67,13 @@ pub fn unpack_std_smc_addr(packed: &str, base64_url: bool) -> Result<MsgAddressI
     }))
 }
 
+pub fn validate_address(address: &str) -> bool {
+    let regular = MsgAddressInt::from_str(address).is_ok();
+    let b64_def = unpack_std_smc_addr(address, false).is_ok();
+    let b64_safe = unpack_std_smc_addr(address, true).is_ok();
+    regular | b64_def | b64_safe
+}
+
 #[derive(thiserror::Error, Debug)]
 enum AddressConversionError {
     #[error("Unsupported address type")]
@@ -81,10 +90,11 @@ enum AddressConversionError {
 mod test {
     use std::str::FromStr;
 
-    use crate::helpers::address::{pack_std_smc_addr, unpack_std_smc_addr};
     #[cfg(test)]
     use pretty_assertions::assert_eq;
     use ton_block::MsgAddressInt;
+
+    use crate::helpers::address::{pack_std_smc_addr, unpack_std_smc_addr};
 
     fn test_addr() -> MsgAddressInt {
         MsgAddressInt::from_str(
