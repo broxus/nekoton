@@ -12,6 +12,7 @@ use ton_api::{ton, BoxedSerialize, Deserializer, IntoBoxed};
 use ton_block::{Deserializable, Message, MsgAddressInt, Serializable};
 
 use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
+use crate::external::AdnlConnection;
 use crate::transport::models::*;
 use crate::transport::Transport;
 use crate::utils::TrustMe;
@@ -320,11 +321,6 @@ pub enum QueryLastBlockError {
     QueryError(#[from] QueryError),
     #[error("Unknown")]
     Unknown,
-}
-
-#[async_trait]
-pub trait AdnlConnection: Send + Sync {
-    async fn query(&self, request: ton::TLObject) -> Result<ton::TLObject>;
 }
 
 pub struct ClientState {

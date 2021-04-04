@@ -1,13 +1,22 @@
+mod function_builder;
+mod message_builder;
+mod token_parser;
+
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 
 use anyhow::Result;
 use chrono::Utc;
-use ton_abi::{Function, Token};
-use ton_block::{Account, AccountStuff, Deserializable, MsgAddressInt};
+use num_bigint::{BigInt, BigUint};
+use ton_abi::{Function, Token, TokenValue};
+use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
+use ton_types::UInt256;
 
+pub use self::function_builder::*;
+pub use self::message_builder::*;
+pub use self::token_parser::*;
 use crate::core::models::{GenTimings, LastTransactionId};
 use crate::utils::*;
 
@@ -196,6 +205,20 @@ impl Executor {
             .convert()
     }
 }
+
+pub trait StandaloneToken {}
+impl StandaloneToken for MsgAddressInt {}
+impl StandaloneToken for MsgAddrStd {}
+impl StandaloneToken for UInt256 {}
+impl StandaloneToken for UInt128 {}
+impl StandaloneToken for BigUint {}
+impl StandaloneToken for BigInt {}
+impl StandaloneToken for u16 {}
+impl StandaloneToken for u32 {}
+impl StandaloneToken for u64 {}
+impl StandaloneToken for bool {}
+impl StandaloneToken for Vec<u8> {}
+impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod test {

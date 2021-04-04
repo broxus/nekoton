@@ -9,8 +9,8 @@ use ton_types::{BuilderData, SliceData, UInt256};
 
 use super::{TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
-use crate::contracts::utils::*;
-use crate::storage::keystore::{SignedMessage, UnsignedMessage};
+use crate::crypto::{SignedMessage, UnsignedMessage};
+use crate::helpers::abi::{BigUint128, MessageBuilder};
 use crate::utils::*;
 
 pub fn prepare_deploy(

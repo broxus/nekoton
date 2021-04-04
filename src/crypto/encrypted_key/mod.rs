@@ -12,8 +12,7 @@ use ring::{digest, pbkdf2};
 use secstr::{SecStr, SecVec};
 use serde::{Deserialize, Serialize};
 
-use super::KeyStoreError;
-use crate::storage::{self, AccountType};
+use crate::crypto::*;
 use crate::utils::TrustMe;
 
 const NONCE_LENGTH: usize = 12;
@@ -29,39 +28,39 @@ const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1) };
 const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(100_000) };
 
 #[derive(Clone)]
-pub struct StoredKey {
+pub struct EncryptedKey {
     inner: CryptoData,
 }
 
-impl StoredKey {
+impl EncryptedKey {
     /// Initializes signer from key pair
     pub fn new(
         name: &str,
         password: SecStr,
-        account_type: AccountType,
+        account_type: MnemonicType,
         phrase: &str,
     ) -> Result<Self> {
         let rng = ring::rand::SystemRandom::new();
         // prepare nonce
         let mut private_key_nonce = [0u8; 12];
         rng.fill(&mut private_key_nonce)
-            .map_err(KeyStoreError::FailedToGenerateRandomBytes)?;
+            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
         let private_key_nonce = Nonce::clone_from_slice(&private_key_nonce);
 
         let mut seed_phrase_nonce = [0u8; 12];
         rng.fill(&mut seed_phrase_nonce)
-            .map_err(KeyStoreError::FailedToGenerateRandomBytes)?;
+            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
         let seed_phrase_nonce = Nonce::clone_from_slice(&seed_phrase_nonce);
 
         let mut salt = vec![0u8; CREDENTIAL_LEN];
         rng.fill(salt.as_mut_slice())
-            .map_err(KeyStoreError::FailedToGenerateRandomBytes)?;
+            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
 
         // prepare encryptor
         let key = symmetric_key_from_password(password, &salt);
         let encryptor = ChaCha20Poly1305::new(&key);
 
-        let keypair = storage::derive_from_words(&phrase, account_type)?;
+        let keypair = derive_from_phrase(&phrase, account_type)?;
         // encrypt private key
         let pubkey = keypair.public;
         let encrypted_private_key =
@@ -91,7 +90,7 @@ impl StoredKey {
         T: Read,
     {
         let crypto_data: CryptoData = serde_json::from_reader(reader)?;
-        Ok(StoredKey { inner: crypto_data })
+        Ok(EncryptedKey { inner: crypto_data })
     }
 
     pub fn change_password(&mut self, old_password: SecStr, new_password: SecStr) -> Result<()> {
@@ -100,17 +99,17 @@ impl StoredKey {
         // prepare nonce
         let mut new_private_key_nonce = vec![0u8; 12];
         rng.fill(&mut new_private_key_nonce)
-            .map_err(KeyStoreError::FailedToGenerateRandomBytes)?;
+            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
         let new_private_key_nonce = Nonce::clone_from_slice(&new_private_key_nonce);
 
         let mut new_seed_phrase_nonce = [0u8; 12];
         rng.fill(&mut new_seed_phrase_nonce)
-            .map_err(KeyStoreError::FailedToGenerateRandomBytes)?;
+            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
         let new_seed_phrase_nonce = Nonce::clone_from_slice(&new_seed_phrase_nonce);
 
         let mut new_salt = vec![0u8; CREDENTIAL_LEN];
         rng.fill(&mut new_salt)
-            .map_err(KeyStoreError::FailedToGenerateRandomBytes)?;
+            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
 
         // prepare encryptor/decrypter pair
         let old_key = symmetric_key_from_password(old_password, &self.inner.salt);
@@ -164,7 +163,7 @@ impl StoredKey {
         self.inner.pubkey.as_bytes()
     }
 
-    pub fn account_type(&self) -> AccountType {
+    pub fn account_type(&self) -> MnemonicType {
         self.inner.account_type
     }
 
@@ -173,7 +172,7 @@ impl StoredKey {
     }
 }
 
-impl Debug for StoredKey {
+impl Debug for EncryptedKey {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self.inner.pubkey)
     }
@@ -182,7 +181,7 @@ impl Debug for StoredKey {
 ///Data, stored on disk in `encrypted_data` filed of config.
 #[derive(Serialize, Deserialize, Clone)]
 struct CryptoData {
-    account_type: AccountType,
+    account_type: MnemonicType,
     name: String,
 
     #[serde(with = "hex_pubkey")]
@@ -214,7 +213,7 @@ impl CryptoData {
         )
         .and_then(|x| {
             ed25519_dalek::SecretKey::from_bytes(x.unsecure())
-                .map_err(|_| KeyStoreError::InvalidPrivateKey)
+                .map_err(|_| EncryptedKeyError::InvalidPrivateKey)
         })?;
 
         let pair = Keypair {
@@ -229,12 +228,12 @@ fn decrypt_key_pair(
     encrypted_key: &[u8],
     key: &Key,
     nonce: &Nonce,
-) -> Result<ed25519_dalek::Keypair, KeyStoreError> {
+) -> Result<ed25519_dalek::Keypair, EncryptedKeyError> {
     let decrypter = ChaCha20Poly1305::new(&key);
 
     decrypt(&decrypter, nonce, encrypted_key).and_then(|data| {
         let secret = ed25519_dalek::SecretKey::from_bytes(&data)
-            .map_err(|_| KeyStoreError::InvalidPrivateKey)?;
+            .map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
         let public = ed25519_dalek::PublicKey::from(&secret);
         Ok(Keypair { secret, public })
     })
@@ -245,20 +244,28 @@ fn decrypt_secure(
     dec: &ChaCha20Poly1305,
     nonce: &Nonce,
     data: &[u8],
-) -> Result<SecVec<u8>, KeyStoreError> {
+) -> Result<SecVec<u8>, EncryptedKeyError> {
     decrypt(dec, nonce, data).map(SecVec::new)
 }
 
 /// Decrypts data using specified decrypter and nonce
-fn decrypt(dec: &ChaCha20Poly1305, nonce: &Nonce, data: &[u8]) -> Result<Vec<u8>, KeyStoreError> {
+fn decrypt(
+    dec: &ChaCha20Poly1305,
+    nonce: &Nonce,
+    data: &[u8],
+) -> Result<Vec<u8>, EncryptedKeyError> {
     dec.decrypt(nonce, data)
-        .map_err(|_| KeyStoreError::FailedToDecryptData)
+        .map_err(|_| EncryptedKeyError::FailedToDecryptData)
 }
 
 /// Encrypts data using specified encryptor and nonce
-fn encrypt(enc: &ChaCha20Poly1305, nonce: &Nonce, data: &[u8]) -> Result<Vec<u8>, KeyStoreError> {
+fn encrypt(
+    enc: &ChaCha20Poly1305,
+    nonce: &Nonce,
+    data: &[u8],
+) -> Result<Vec<u8>, EncryptedKeyError> {
     enc.encrypt(nonce, data)
-        .map_err(|_| KeyStoreError::FailedToEncryptData)
+        .map_err(|_| EncryptedKeyError::FailedToEncryptData)
 }
 
 /// Calculates symmetric key from user password, using pbkdf2
@@ -347,6 +354,18 @@ mod hex_nonce {
     }
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum EncryptedKeyError {
+    #[error("Failed to generate random bytes")]
+    FailedToGenerateRandomBytes(ring::error::Unspecified),
+    #[error("Invalid private key")]
+    InvalidPrivateKey,
+    #[error("Failed to decrypt data")]
+    FailedToDecryptData,
+    #[error("Failed to encrypt data")]
+    FailedToEncryptData,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -358,14 +377,14 @@ mod test {
     #[test]
     fn test_init() {
         let password = SecStr::new(TEST_PASSWORD.into());
-        StoredKey::new(KEY_NAME, password, AccountType::Legacy, TEST_MNEMONIC).unwrap();
+        EncryptedKey::new(KEY_NAME, password, MnemonicType::Legacy, TEST_MNEMONIC).unwrap();
     }
 
     #[test]
     fn test_bad_password() {
         let password = SecStr::new(TEST_PASSWORD.into());
         let signer =
-            StoredKey::new(KEY_NAME, password, AccountType::Legacy, TEST_MNEMONIC).unwrap();
+            EncryptedKey::new(KEY_NAME, password, MnemonicType::Legacy, TEST_MNEMONIC).unwrap();
 
         let result = signer.sign(b"lol", "lol".into());
         assert!(result.is_err());

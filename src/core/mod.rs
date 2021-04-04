@@ -67,11 +67,3 @@ pub trait AccountSubscription {
     /// Returns current polling method
     fn polling_method(&self) -> PollingMethod;
 }
-
-#[derive(thiserror::Error, Debug)]
-pub enum AccountSubscriptionError {
-    #[error("Invalid message destination")]
-    InvalidMessageDestination,
-    #[error("Invalid message type")]
-    InvalidMessageType,
-}

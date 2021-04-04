@@ -11,7 +11,7 @@ use super::util::{Bits, Bits11, IterExt};
 
 const PBKDF_ITERATIONS: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(100_000) };
 
-pub fn derive_from_words(phrase: &str) -> Result<Keypair, Error> {
+pub fn derive_from_phrase(phrase: &str) -> Result<Keypair, Error> {
     let phrase: Vec<_> = phrase.split_whitespace().collect();
     phrase_is_ok(&phrase)?;
     let seed = phrase_to_seed(&phrase);
@@ -307,7 +307,7 @@ const TON_WORDS: [&str; 2048] = [
 
 #[cfg(test)]
 mod test {
-    use crate::storage::keystore::mnemonics::legacy::{derive_from_words, phrase_is_ok};
+    use crate::crypto::mnemonic::legacy::{derive_from_phrase, phrase_is_ok};
 
     #[test]
     fn test_validate() {
@@ -325,7 +325,7 @@ mod test {
 
     #[test]
     fn test_derivation() {
-        let keypair = derive_from_words("unaware face erupt ceiling frost shiver crumble know party before brisk skirt fence boat powder copy plastic until butter fluid property concert say verify").unwrap();
+        let keypair = derive_from_phrase("unaware face erupt ceiling frost shiver crumble know party before brisk skirt fence boat powder copy plastic until butter fluid property concert say verify").unwrap();
         let expected = "o0kpHL39KRq0KX11zZ0/sCwJL66t+gA4vnfuwBjhAWU=";
         let pub_expecteed = "lHW4ZS8QvCHcgR4uChD7QJWU2kf5JRMtUnZ2p1GSZjg=";
         assert_eq!(base64::encode(&keypair.public.as_bytes()), pub_expecteed);
