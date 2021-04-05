@@ -79,9 +79,8 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         return Some(TransactionAdditionalInfo::TokensBounced(info));
     };
 
-    let mint = FunctionBuilder::new("mint")
+    let mint = FunctionBuilder::new("accept")
         .in_arg("tokens", ParamType::Uint(128))
-        .in_arg("to", ParamType::Address)
         .build();
 
     if let Ok(a) = mint.decode_input(tx.clone(), true) {
@@ -94,7 +93,7 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         let info = TokenSwapBack::try_from(a).ok()?;
         return Some(TransactionAdditionalInfo::TokenSwapBack(info));
     }
-
+    dbg!();
     Some(TransactionAdditionalInfo::RegularTransaction)
 }
 
@@ -188,5 +187,31 @@ mod test {
         } else {
             panic!()
         }
+    }
+
+    #[test]
+    fn test_swap() {
+        let tx = Transaction::construct_from_base64("te6ccgECDQEAAx4AA7V/AxqO0U7QTnYewCYNWriQfk3gBkNp5RAP5xRZRXYCQlAAAK8wDBUYEgZhXilMhb8uwySppSot4mIjr0gv3SETJXkSpo1fNtPQAACvL/vetDYFZ2wQADR//SVoBQQBAhcETQkHc1lAGH5JaxEDAgBvyZRshEw2dnwAAAAAAAQAAgAAAALltNr4qYJCC5/34YbNvyKcqgqDBCXdRgOzhnR40LLkaEEQQRQAnkfA7B6EgAAAAAAAAAABbwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnJyFRYUCdbm/iIPBBrBh1nQvDRUv4iVZ/TPXsafdMGq7iwcTZXDAFF+tOJ0kZZV41JVZ/IFqG20VsHpSYsLRlDmAgHgCgYBAd8HAbFoAeBjUdop2gnOw9gEwatXEg/JvADIbTyiAfziiyiuwEhLADOcXDcMUS0fCqCF6CrhQZyn2MQ4TEQF7IDBOoLlzsWDUHLFXNQGNnbSAAAV5gGCowTArO2CwAgB7S4oiKoAAAAAAAAAAAAAAAAAmJaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlwAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8uCQFDgAvpSKEmcdsAU50DME0ul92s65jErkbosgMW7ZfKyelfEAwBsWgBUkKKaORs1v/d2CpkdS1rueLjL5EbgaivG/SlIBcUZ5cAPAxqO0U7QTnYewCYNWriQfk3gBkNp5RAP5xRZRXYCQlQdzWUAAYsZKwAABXmAMuIBMCs7W7ACwHNEEfJBAAAAAAAAAAAAAAAAACYloAAAAAAAAAAAAAAAAAAAAAAgBUkKKaORs1v/d2CpkdS1rueLjL5EbgaivG/SlIBcUZ5cAF9KRQkzjtgCnOgZgml0vu1nXMYlcjdFkBi3bL5WT0r4gwAKGLH29AUH5aUHpmCISLU2U5gJYC7").unwrap();
+
+        if let TransactionAdditionalInfo::TokenSwapBack(_) =
+            parse_additional_info(&tx, ParsingContext::TokenWallet).unwrap()
+        {
+            ()
+        } else {
+            panic!()
+        };
+    }
+
+    #[test]
+    fn test_mint() {
+        let tx = Transaction::construct_from_base64("te6ccgECBwEAAaMAA7V/Dx4joMaXoc3RFiyAn6o7n4HT55z5/QGPim3CCNJXQXAAAK8vTVj4NVj26LQJ+AavyN1HTyfjsnB1V8MYazh2SAaGUfKitkNwAACvL01Y+BYFZ1BAABRzL58IBQQBAhMECOYloBhzL58RAwIAW8AAAAAAAAAAAAAAAAEtRS2kSeULjPfdJ4YfFGEir+G1RruLcPyCFvDGFBOfjgQAnETpaJxAAAAAAAAAAADmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCcmGLc3puHpvUqy9khm0IOdhMB4DZAuyNlJTJCkg0wvMOh6b7MBQnENOWWqV8wO0KnzyqzAm1eeuCWS1jgX4RNrUBAaAGANdoAEC3zK80W70FBnMN7CWF5ai6t7ZNfr6N19g9kzzkIx83ADw8eI6DGl6HN0RYsgJ+qO5+B0+ec+f0Bj4ptwgjSV0FzmJaAAYUWGAAABXl6TENBsCs6fAFn+ergAAAAAAAAAAN4Lazp2QAAEA=").unwrap();
+
+        if let TransactionAdditionalInfo::TokenMint(_) =
+            dbg!(parse_additional_info(&tx, ParsingContext::TokenWallet).unwrap())
+        {
+            ()
+        } else {
+            panic!()
+        };
     }
 }

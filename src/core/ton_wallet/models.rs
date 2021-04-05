@@ -170,27 +170,22 @@ impl TryFrom<Vec<Token>> for TokenSwapBack {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Mint {
     pub tokens: Uint,
-    pub to: MsgAddress,
 }
 
 impl TryFrom<Vec<Token>> for Mint {
     type Error = ();
 
     fn try_from(mut value: Vec<Token>) -> Result<Self, Self::Error> {
-        if value.len() != 2 {
+        if value.len() != 1 {
             return Err(());
         }
         let tokens = value.remove(0).value;
-        let to = value.remove(0).value;
+
         let tokens = match tokens {
             TokenValue::Uint(a) => a,
             _ => return Err(()),
         };
-        let to = match to {
-            TokenValue::Address(a) => a,
-            _ => return Err(()),
-        };
-        Ok(Mint { tokens, to })
+        Ok(Mint { tokens })
     }
 }
 
