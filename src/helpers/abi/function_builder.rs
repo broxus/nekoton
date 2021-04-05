@@ -1,5 +1,4 @@
-use super::Function;
-use ton_abi::{Param, ParamType};
+use ton_abi::{Function, Param, ParamType};
 
 #[derive(Default)]
 pub struct FunctionBuilder {
@@ -34,15 +33,16 @@ impl FunctionBuilder {
         self
     }
 
-    pub fn out_arg(mut self, name: &str, arg_type: ParamType) -> Self {
+    pub fn out_arg(mut self, name: &str, arg_type: ton_abi::ParamType) -> Self {
         self.outputs.push(Param::new(name, arg_type));
         self
     }
 
-    pub fn header(mut self, name: &str, arg_type: ParamType) -> Self {
+    pub fn header(mut self, name: &str, arg_type: ton_abi::ParamType) -> Self {
         self.header.push(Param::new(name, arg_type));
         self
     }
+
     pub fn build(self) -> Function {
         let mut fun = Function {
             abi_version: self.abi_version,

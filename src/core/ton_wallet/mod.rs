@@ -1,20 +1,143 @@
+pub mod models;
+mod multisig;
+pub mod transactions;
+mod wallet_v3;
+
 use std::convert::TryFrom;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Result;
 use async_trait::async_trait;
+use ed25519_dalek::PublicKey;
 use futures::StreamExt;
+use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
+use ton_types::SliceData;
 
-use super::{
-    utils, AccountSubscription, AccountSubscriptionError, AccountSubscriptionHandler, PollingMethod,
+pub use self::multisig::MultisigType;
+use super::models::{
+    AccountState, AccountSubscriptionError, GenTimings, PendingTransaction, Transaction,
+    TransactionId, TransactionsBatchInfo,
 };
-use crate::core::models::{
-    AccountState, GenTimings, PendingTransaction, Transaction, TransactionId, TransactionsBatchInfo,
-};
+use super::{utils, AccountSubscription, AccountSubscriptionHandler, PollingMethod};
+use crate::crypto::UnsignedMessage;
 use crate::helpers::abi::Executor;
 use crate::transport::models::ContractState;
 use crate::transport::Transport;
+
+pub const DEFAULT_WORKCHAIN: i8 = 0;
+
+pub struct TonWallet {
+    public_key: PublicKey,
+    contract_type: ContractType,
+}
+
+impl TonWallet {
+    pub fn new(public_key: PublicKey, contract_type: ContractType) -> Self {
+        Self {
+            public_key,
+            contract_type,
+        }
+    }
+
+    pub fn compute_address(&self) -> MsgAddressInt {
+        compute_address(&self.public_key, self.contract_type, DEFAULT_WORKCHAIN)
+    }
+
+    pub fn public_key(&self) -> &PublicKey {
+        &self.public_key
+    }
+
+    pub fn contract_type(&self) -> ContractType {
+        self.contract_type
+    }
+
+    pub fn prepare_deploy(&self, expire_at: u32) -> Result<Box<dyn UnsignedMessage>> {
+        match self.contract_type {
+            ContractType::Multisig(multisig_type) => {
+                multisig::prepare_deploy(&self.public_key, multisig_type, expire_at)
+            }
+            ContractType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expire_at),
+        }
+    }
+
+    pub fn prepare_transfer(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        destination: MsgAddressInt,
+        amount: u64,
+        bounce: bool,
+        body: Option<SliceData>,
+        expire_at: u32,
+    ) -> Result<TransferAction> {
+        match self.contract_type {
+            ContractType::Multisig(_) => multisig::prepare_transfer(
+                &self.public_key,
+                current_state,
+                destination,
+                amount,
+                bounce,
+                body,
+                expire_at,
+            ),
+            ContractType::WalletV3 => wallet_v3::prepare_transfer(
+                &self.public_key,
+                current_state,
+                destination,
+                amount,
+                bounce,
+                body,
+                expire_at,
+            ),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum TransferAction {
+    DeployFirst,
+    Sign(Box<dyn UnsignedMessage>),
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub enum ContractType {
+    Multisig(MultisigType),
+    WalletV3,
+}
+
+impl FromStr for ContractType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "WalletV3" => Self::WalletV3,
+            s => Self::Multisig(MultisigType::from_str(s)?),
+        })
+    }
+}
+
+impl std::fmt::Display for ContractType {
+    fn fmt(&self, f: &'_ mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::WalletV3 => f.write_str("WalletV3"),
+            Self::Multisig(multisig_type) => multisig_type.fmt(f),
+        }
+    }
+}
+
+pub fn compute_address(
+    public_key: &PublicKey,
+    contract_type: ContractType,
+    workchain_id: i8,
+) -> MsgAddressInt {
+    match contract_type {
+        ContractType::Multisig(multisig_type) => {
+            multisig::compute_contract_address(public_key, multisig_type, workchain_id)
+        }
+        ContractType::WalletV3 => wallet_v3::compute_contract_address(public_key, workchain_id),
+    }
+}
 
 #[derive(Clone)]
 pub struct TonWalletSubscription {

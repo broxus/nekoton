@@ -8,6 +8,7 @@ use graphql_client::*;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
 use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
+use crate::external::GqlConnection;
 use crate::transport::models::*;
 use crate::transport::Transport;
 use crate::utils::TrustMe;
@@ -328,11 +329,6 @@ impl Transport for GqlTransport {
         })
         .collect::<Result<Vec<_>, _>>()
     }
-}
-
-#[async_trait]
-pub trait GqlConnection: Send + Sync {
-    async fn post(&self, data: &str) -> Result<String>;
 }
 
 #[derive(Clone)]

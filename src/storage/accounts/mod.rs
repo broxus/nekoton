@@ -7,10 +7,10 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{RwLock, RwLockReadGuard};
 use ton_block::MsgAddressInt;
 
-use super::Storage;
-use crate::contracts::wallet;
 use crate::core::models::*;
-use crate::utils::TrustMe;
+use crate::core::ton_wallet;
+use crate::external::Storage;
+use crate::utils::*;
 
 const STORAGE_ACCOUNTS: &str = "accounts";
 
@@ -104,10 +104,11 @@ impl AccountsStorage {
         &self,
         name: &str,
         public_key: ed25519_dalek::PublicKey,
-        contract: wallet::ContractType,
+        contract: ton_wallet::ContractType,
         update_current: bool,
     ) -> Result<String> {
-        let address = wallet::compute_address(&public_key, contract, wallet::DEFAULT_WORKCHAIN);
+        let address =
+            ton_wallet::compute_address(&public_key, contract, ton_wallet::DEFAULT_WORKCHAIN);
         let key = address.to_string();
 
         let (accounts, current_account) = &mut *self.accounts.write().await;
@@ -221,11 +222,11 @@ pub struct AssetsList {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TonWalletAsset {
-    #[serde(with = "crate::core::models::serde_address")]
+    #[serde(with = "serde_address")]
     pub address: MsgAddressInt,
     #[serde(with = "serde_public_key")]
     pub public_key: ed25519_dalek::PublicKey,
-    pub contract: wallet::ContractType,
+    pub contract: ton_wallet::ContractType,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -235,32 +236,8 @@ pub struct TokenWalletAsset {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct DePoolAsset {
-    #[serde(with = "crate::core::models::serde_address")]
+    #[serde(with = "serde_address")]
     pub address: MsgAddressInt,
-}
-
-pub mod serde_public_key {
-    use super::*;
-
-    use serde::de::Error;
-    use serde::Deserialize;
-
-    pub fn serialize<S>(data: &ed25519_dalek::PublicKey, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&hex::encode(data.as_bytes()))
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<ed25519_dalek::PublicKey, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let data = String::deserialize(deserializer)?;
-        let bytes = hex::decode(&data).map_err(|_| D::Error::custom("Invalid PublicKey"))?;
-        ed25519_dalek::PublicKey::from_bytes(&bytes)
-            .map_err(|_| D::Error::custom("Invalid PublicKey"))
-    }
 }
 
 #[derive(thiserror::Error, Debug)]

@@ -2,7 +2,8 @@ use std::fmt::{LowerHex, UpperHex};
 use std::str::FromStr;
 
 use anyhow::Error;
-use ton_types::SliceData;
+use ton_block::MsgAddressInt;
+use ton_types::{SliceData, UInt256};
 
 pub trait NoFailure {
     type Output;
@@ -130,7 +131,8 @@ impl From<&[u8]> for UInt128 {
     fn from(value: &[u8]) -> Self {
         let mut data = [0; 16];
         let len = std::cmp::min(value.len(), 16);
-        (0..len).for_each(|i| data[i] = value[i]);
+        let offset = 16 - len;
+        (0..len).for_each(|i| data[i + offset] = value[i]);
         Self(data)
     }
 }
@@ -209,3 +211,102 @@ macro_rules! define_string_enum {
 #[derive(thiserror::Error, Debug)]
 #[error("Unknown enum variant")]
 pub struct UnknownEnumVariant;
+
+pub mod serde_public_key {
+    use serde::de::Error;
+    use serde::Deserialize;
+
+    pub fn serialize<S>(data: &ed25519_dalek::PublicKey, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&hex::encode(data.as_bytes()))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<ed25519_dalek::PublicKey, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = String::deserialize(deserializer)?;
+        let bytes = hex::decode(&data).map_err(|_| D::Error::custom("Invalid PublicKey"))?;
+        ed25519_dalek::PublicKey::from_bytes(&bytes)
+            .map_err(|_| D::Error::custom("Invalid PublicKey"))
+    }
+}
+
+pub mod serde_uint256 {
+    use super::*;
+
+    use serde::de::Error;
+    use serde::Deserialize;
+
+    pub fn serialize<S>(data: &UInt256, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&data.to_hex_string())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<UInt256, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = String::deserialize(deserializer)?;
+        UInt256::from_str(&data).map_err(|_| D::Error::custom("Invalid uint256"))
+    }
+}
+
+pub mod serde_address {
+    use super::*;
+
+    use std::str::FromStr;
+
+    use serde::de::Error;
+    use serde::Deserialize;
+
+    pub fn serialize<S>(data: &MsgAddressInt, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&data.to_string())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<MsgAddressInt, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = String::deserialize(deserializer)?;
+        MsgAddressInt::from_str(&data).map_err(|_| D::Error::custom("Invalid address"))
+    }
+}
+
+pub mod serde_optional_address {
+    use super::*;
+
+    use serde::{Deserialize, Serialize};
+
+    pub fn serialize<S>(data: &Option<MsgAddressInt>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        #[serde(transparent)]
+        struct Wrapper<'a>(#[serde(with = "serde_address")] &'a MsgAddressInt);
+
+        match data {
+            Some(data) => serializer.serialize_some(&Wrapper(data)),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<MsgAddressInt>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(transparent)]
+        struct Wrapper(#[serde(with = "serde_address")] MsgAddressInt);
+
+        Option::<Wrapper>::deserialize(deserializer).map(|wrapper| wrapper.map(|data| data.0))
+    }
+}

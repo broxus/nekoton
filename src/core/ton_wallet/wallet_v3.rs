@@ -7,7 +7,7 @@ use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 
 use super::{TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
-use crate::storage::keystore::{SignedMessage, UnsignedMessage};
+use crate::crypto::{SignedMessage, UnsignedMessage};
 use crate::utils::*;
 
 pub fn prepare_deploy(public_key: &PublicKey, expire_at: u32) -> Result<Box<dyn UnsignedMessage>> {

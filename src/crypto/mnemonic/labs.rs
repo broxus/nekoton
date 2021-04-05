@@ -4,7 +4,7 @@ use tiny_hderive::bip32::ExtendedPrivKey;
 
 use crate::utils::TrustMe;
 
-pub fn derive_from_words(phrase: &str, account_id: u16) -> Result<ed25519_dalek::Keypair, Error> {
+pub fn derive_from_phrase(phrase: &str, account_id: u16) -> Result<ed25519_dalek::Keypair, Error> {
     let mnemonic = bip39::Mnemonic::from_phrase(phrase, Language::English)?;
     let hd = Seed::new(&mnemonic, "");
     let seed_bytes = hd.as_bytes();
@@ -41,11 +41,11 @@ fn ed25519_keys_from_secret_bytes(bytes: &[u8]) -> Result<ed25519_dalek::Keypair
 
 #[cfg(test)]
 mod test {
-    use crate::storage::keystore::mnemonics::labs::derive_from_words;
+    use crate::crypto::mnemonic::labs::derive_from_phrase;
 
     #[test]
     fn bad_mnemonic() {
-        let key = derive_from_words(
+        let key = derive_from_phrase(
             "pioneer fever hazard scam install wise reform corn bubble leisure amazing note",
             0,
         );
@@ -54,7 +54,7 @@ mod test {
 
     #[test]
     fn ton_recovery() {
-        let key = derive_from_words(
+        let key = derive_from_phrase(
             "pioneer fever hazard scan install wise reform corn bubble leisure amazing note",
             0,
         )

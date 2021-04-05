@@ -1,4 +1,2 @@
-mod abi;
-mod code;
-pub mod utils;
-pub mod wallet;
+pub mod abi;
+pub mod code;

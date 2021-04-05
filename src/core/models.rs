@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
+use crate::utils::*;
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum PollingMethod {
     /// Manual polling once a minute or by a click.
@@ -401,79 +403,10 @@ impl Ord for TransactionId {
     }
 }
 
-pub mod serde_uint256 {
-    use super::*;
-
-    use serde::de::Error;
-    use serde::Deserialize;
-
-    pub fn serialize<S>(data: &UInt256, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&data.to_hex_string())
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<UInt256, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let data = String::deserialize(deserializer)?;
-        UInt256::from_str(&data).map_err(|_| D::Error::custom("Invalid uint256"))
-    }
-}
-
-pub mod serde_address {
-    use super::*;
-
-    use std::str::FromStr;
-
-    use serde::de::Error;
-    use serde::Deserialize;
-
-    pub fn serialize<S>(data: &MsgAddressInt, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&data.to_string())
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<MsgAddressInt, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let data = String::deserialize(deserializer)?;
-        MsgAddressInt::from_str(&data).map_err(|_| D::Error::custom("Invalid address"))
-    }
-}
-
-pub mod serde_optional_address {
-    use super::*;
-
-    use serde::{Deserialize, Serialize};
-
-    pub fn serialize<S>(data: &Option<MsgAddressInt>, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        #[derive(Serialize)]
-        #[serde(transparent)]
-        struct Wrapper<'a>(#[serde(with = "serde_address")] &'a MsgAddressInt);
-
-        match data {
-            Some(data) => serializer.serialize_some(&Wrapper(data)),
-            None => serializer.serialize_none(),
-        }
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<MsgAddressInt>, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        #[serde(transparent)]
-        struct Wrapper(#[serde(with = "serde_address")] MsgAddressInt);
-
-        Option::<Wrapper>::deserialize(deserializer).map(|wrapper| wrapper.map(|data| data.0))
-    }
+#[derive(thiserror::Error, Debug)]
+pub(super) enum AccountSubscriptionError {
+    #[error("Invalid message destination")]
+    InvalidMessageDestination,
+    #[error("Invalid message type")]
+    InvalidMessageType,
 }
