@@ -85,7 +85,7 @@ impl EncryptedKey {
         })
     }
 
-    pub fn get_mnemonic(&self, password: SecStr) -> Result<String, KeyStoreError> {
+    pub fn get_mnemonic(&self, password: SecStr) -> Result<String, EncryptedKeyError> {
         let salt = &self.inner.salt;
         let password = symmetric_key_from_password(password, salt);
         let dec = ChaCha20Poly1305::new(&password);
@@ -94,10 +94,17 @@ impl EncryptedKey {
             &self.inner.seed_phrase_nonce,
             &self.inner.encrypted_seed_phrase,
         )
-        .and_then(|x| String::from_utf8(x).map_err(|_| KeyStoreError::FailedToDecryptData))
+        .and_then(|x| String::from_utf8(x).map_err(|_| EncryptedKeyError::FailedToDecryptData))
     }
 
-    pub fn get_ton_cli_seed() {}
+    pub fn get_key_pair(&self, password: SecStr) -> Result<Keypair, EncryptedKeyError> {
+        let password = symmetric_key_from_password(password, &self.inner.salt);
+        decrypt_key_pair(
+            &self.inner.encrypted_private_key,
+            &password,
+            &self.inner.private_key_nonce,
+        )
+    }
 
     pub fn from_reader<T>(reader: T) -> Result<Self>
     where
