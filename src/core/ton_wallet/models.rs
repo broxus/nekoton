@@ -17,7 +17,7 @@ pub enum ParsingContext {
 }
 
 ///Transactions from bridge
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TransactionAdditionalInfo {
     RegularTransaction,
     //None
@@ -51,7 +51,7 @@ pub enum TransactionAdditionalInfo {
     MultisigConfirmTransaction,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum EthereumStatusChanged {
     InProcess = 0,
     Confirmed = 1,
@@ -84,7 +84,7 @@ impl TryFrom<Vec<Token>> for EthereumStatusChanged {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TonEventStatus {
     InProcess = 0,
     Confirmed = 1,
@@ -115,7 +115,7 @@ impl TryFrom<Vec<Token>> for TonEventStatus {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TokenSwapBack {
     pub tokens: Uint,
     pub grams: Uint,
@@ -167,7 +167,7 @@ impl TryFrom<Vec<Token>> for TokenSwapBack {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Mint {
     pub tokens: Uint,
     pub to: MsgAddress,
@@ -194,7 +194,7 @@ impl TryFrom<Vec<Token>> for Mint {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct BounceCallback {
     pub token_wallet: MsgAddress,
     pub token_root: MsgAddress,
@@ -246,7 +246,7 @@ impl TryFrom<Vec<Token>> for BounceCallback {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TransferFamily {
     Transfer(Transfer),
     TransferFrom(TransferFrom),
@@ -254,7 +254,7 @@ pub enum TransferFamily {
     InternalTransferFrom(InternalTransferFrom),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Transfer {
     pub to: MsgAddress,
     pub tokens: Uint,
@@ -286,7 +286,7 @@ impl TryFrom<Vec<Token>> for Transfer {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TransferFrom {
     pub from: MsgAddress,
     pub to: MsgAddress,
@@ -329,7 +329,7 @@ impl TryFrom<Vec<Token>> for TransferFrom {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct TransferToRecipient {
     pub recipient_public_key: Uint,
     pub recipient_address: MsgAddress,
@@ -373,7 +373,7 @@ impl TryFrom<Vec<Token>> for TransferToRecipient {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct InternalTransfer {
     pub tokens: Uint,
     pub sender_public_key: Uint,
@@ -409,7 +409,7 @@ impl TryFrom<Vec<Token>> for InternalTransfer {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct InternalTransferFrom {
     pub to: MsgAddress,
     pub tokens: Uint,

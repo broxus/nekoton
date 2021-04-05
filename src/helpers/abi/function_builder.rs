@@ -1,22 +1,23 @@
 use ton_abi::{Function, Param, ParamType};
 
+#[allow(dead_code)]
 #[derive(Default)]
 pub struct FunctionBuilder {
     /// Contract function specification.
     /// ABI version
-    pub abi_version: u8,
+    abi_version: u8,
     /// Function name.
-    pub name: String,
+    name: String,
     /// Function header parameters.
-    pub header: Vec<Param>,
+    header: Vec<Param>,
     /// Function input.
-    pub inputs: Vec<Param>,
+    inputs: Vec<Param>,
     /// Function output.
-    pub outputs: Vec<Param>,
+    outputs: Vec<Param>,
     /// Function ID for inbound messages
-    pub input_id: u32,
+    input_id: u32,
     /// Function ID for outbound messages
-    pub output_id: u32,
+    output_id: u32,
 }
 
 impl FunctionBuilder {
@@ -26,6 +27,12 @@ impl FunctionBuilder {
             abi_version: 2,
             ..Default::default()
         }
+    }
+
+    pub fn default_headers(self) -> Self {
+        self.header("pubkey", ParamType::PublicKey)
+            .header("time", ParamType::Time)
+            .header("expire", ParamType::Expire)
     }
 
     pub fn in_arg(mut self, name: &str, arg_type: ParamType) -> Self {
@@ -57,5 +64,40 @@ impl FunctionBuilder {
         fun.input_id = id & 0x7FFFFFFF;
         fun.output_id = id | 0x80000000;
         fun
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::helpers::abi::FunctionBuilder;
+    use ton_abi::ParamType;
+
+    // "name": "transfer",
+    // "inputs": [
+    // {"name":"to","type":"address"},
+    // {"name":"tokens","type":"uint128"},
+    // {"name":"grams","type":"uint128"},
+    // {"name":"send_gas_to","type":"address"},
+    // {"name":"notify_receiver","type":"bool"},
+    //     {"name":"payload","type":"cell"}
+    //     ],
+    //     "outputs": [
+    //     ]
+    #[test]
+    fn build() {
+        let original = crate::contracts::abi::ton_token_wallet()
+            .function("transfer")
+            .unwrap();
+        let imposter = FunctionBuilder::new("transfer")
+            .default_headers()
+            .in_arg("to", ParamType::Address)
+            .in_arg("tokens", ParamType::Uint(128))
+            .in_arg("grams", ParamType::Uint(128))
+            .in_arg("send_gas_to", ParamType::Address)
+            .in_arg("notify_receiver", ParamType::Bool)
+            .in_arg("payload", ParamType::Cell)
+            .build();
+
+        assert_eq!(original, &imposter)
     }
 }
