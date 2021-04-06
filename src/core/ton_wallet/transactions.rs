@@ -2,12 +2,13 @@ use std::convert::TryFrom;
 
 use ton_abi::{ParamType, TokenValue};
 use ton_block::Transaction;
+use ton_types::SliceData;
 
-use super::models::*;
 use crate::contracts::abi;
 use crate::helpers::abi::FunctionBuilder;
 use crate::utils::*;
-use ton_types::SliceData;
+
+use super::models::*;
 
 //todo normal name
 fn main_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
@@ -15,7 +16,6 @@ fn main_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         .in_arg("root", ParamType::Address)
         .build();
     if let Ok(a) = wallet_deploy.decode_input(tx, true) {
-        dbg!(&a);
         let address = match &a.get(0)?.value {
             TokenValue::Address(ad) => TransactionAdditionalInfo::TokenWalletDeployed(ad.clone()),
             _ => return None,
@@ -35,7 +35,6 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
             TransferFamily::Transfer(info),
         ));
     }
-
     let transfer = abi::ton_token_wallet().function("transferFrom").trust_me();
     if let Ok(a) = transfer.decode_input(tx.clone(), true) {
         let info = TransferFrom::try_from(a).ok()?;
@@ -93,7 +92,6 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         let info = TokenSwapBack::try_from(a).ok()?;
         return Some(TransactionAdditionalInfo::TokenSwapBack(info));
     }
-    dbg!();
     Some(TransactionAdditionalInfo::RegularTransaction)
 }
 
@@ -131,14 +129,14 @@ pub fn parse_additional_info(
 
 #[cfg(test)]
 mod test {
+    use ton_block::MsgAddress::AddrStd;
+    use ton_block::{Deserializable, MsgAddrStd, Transaction};
+
     use crate::core::ton_wallet::models::{
         EthereumStatusChanged, ParsingContext, TonEventStatus, TransactionAdditionalInfo,
         TransferFamily,
     };
     use crate::core::ton_wallet::transactions::parse_additional_info;
-    use ton_abi::ParamType;
-    use ton_block::MsgAddress::AddrStd;
-    use ton_block::{Deserializable, MsgAddrStd, Transaction};
 
     #[test]
     fn test_main_wallet_parse() {
@@ -233,8 +231,7 @@ mod test {
 
     #[test]
     fn test_notify_done() {
-        let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpY0FkKsGZIkbgb+dAhZwgZ18EGe+NGsuMOe6ebP1mZa9VGBSAAAAoKWNBZBYFZCYQABQIAwIBABUECMBhqAmgGHoSAgCCclq5dziqP8pJGLbMXsD/zoi5C1fOxaikRiOGCKuDP17sST2OxTOw8znrkarFBXwMMjxqG+Yjk6CZ5llzQdlgia8BAaAEALloADQl9gqkGhHr2dVFYNi6nXYctRsDgijXBYPrSLWcD60rAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwjAYagAYUWGAAAAUFLAyfEMCshLQkM9gNAMA="
-        ).unwrap();
+        let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpY0FkKsGZIkbgb+dAhZwgZ18EGe+NGsuMOe6ebP1mZa9VGBSAAAAoKWNBZBYFZCYQABQIAwIBABUECMBhqAmgGHoSAgCCclq5dziqP8pJGLbMXsD/zoi5C1fOxaikRiOGCKuDP17sST2OxTOw8znrkarFBXwMMjxqG+Yjk6CZ5llzQdlgia8BAaAEALloADQl9gqkGhHr2dVFYNi6nXYctRsDgijXBYPrSLWcD60rAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwjAYagAYUWGAAAAUFLAyfEMCshLQkM9gNAMA=").unwrap();
 
         if let TransactionAdditionalInfo::TonEventStatusChanged(a) =
             dbg!(parse_additional_info(&tx, ParsingContext::Event).unwrap())
@@ -250,8 +247,7 @@ mod test {
 
     #[test]
     fn test_notify_eth_executed() {
-        let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA7F3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpJyyIHVER8kq3HiJ7CLh63f0L6FNuFHClVei7uztOlIVx5IAgAAAoKR2jIBYFZB0QABQgKAMCAQAVBEBIicQJoBh6EgIAgnJ5eeKyWbIdllmQpwd9nH4qJGD/wzlQHDOWGC8QCKLnKVPlKWjgh4Ae4SGip4eNs+wh2HRqN6GU/Wffzz3PQ0+cAQGgBAC3aADXzfj3weHPfUJKipSKRpGGpGAwOVdhrobopP5lBZqZQQAdni4Be7O/IRDIKFt+HlRYLVRJWtA232uCnysW/gTGMIicQAYUWGAAAAUFJGt/BMCsg5ImeLTNAUA="
-        ).unwrap();
+        let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA7F3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpJyyIHVER8kq3HiJ7CLh63f0L6FNuFHClVei7uztOlIVx5IAgAAAoKR2jIBYFZB0QABQgKAMCAQAVBEBIicQJoBh6EgIAgnJ5eeKyWbIdllmQpwd9nH4qJGD/wzlQHDOWGC8QCKLnKVPlKWjgh4Ae4SGip4eNs+wh2HRqN6GU/Wffzz3PQ0+cAQGgBAC3aADXzfj3weHPfUJKipSKRpGGpGAwOVdhrobopP5lBZqZQQAdni4Be7O/IRDIKFt+HlRYLVRJWtA232uCnysW/gTGMIicQAYUWGAAAAUFJGt/BMCsg5ImeLTNAUA=").unwrap();
 
         if let TransactionAdditionalInfo::EthEventStatusChanged(a) =
             dbg!(parse_additional_info(&tx, ParsingContext::Event).unwrap())
@@ -267,9 +263,7 @@ mod test {
 
     #[test]
     fn test_notify_eth_in_progress() {
-        let tx = Transaction::construct_from_base64("te6ccgECBQEAARIAA7N3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoHa2hZg3hyGFZxbZG8DRavBlR+G7vy+yz9PJyQrxh/W4QAAAnbUG/sCYFZBnwABRCRugDAgEAFwSEjciJxAmgGHoSAgCCcp0VD3BI01U2YOaQOUOy9/YQkmqW/wL8IERbo0LGwN/gcu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDgBAaAEALdoANfN+PfB4c99QkqKlIpGkYakYDA5V2Guhuik/mUFmplBAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwiJxABhRYYAAABQUhjxMEwKyDMiZ4tM0AQA=="
-
-        ).unwrap();
+        let tx = Transaction::construct_from_base64("te6ccgECBQEAARIAA7N3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoHa2hZg3hyGFZxbZG8DRavBlR+G7vy+yz9PJyQrxh/W4QAAAnbUG/sCYFZBnwABRCRugDAgEAFwSEjciJxAmgGHoSAgCCcp0VD3BI01U2YOaQOUOy9/YQkmqW/wL8IERbo0LGwN/gcu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDgBAaAEALdoANfN+PfB4c99QkqKlIpGkYakYDA5V2Guhuik/mUFmplBAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwiJxABhRYYAAABQUhjxMEwKyDMiZ4tM0AQA==").unwrap();
 
         if let TransactionAdditionalInfo::EthEventStatusChanged(a) =
             dbg!(parse_additional_info(&tx, ParsingContext::Event).unwrap())
@@ -282,12 +276,10 @@ mod test {
             panic!()
         };
     }
+
     #[test]
     fn test_eth_notify_done() {
-        let tx = Transaction::construct_from_base64(  "te6ccgECBQEAAQ4AA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoLbKTCjolcexnodkGoK58txUv9GyQgugOZ9EMrSi3GIHgAAAoKRBJKBYFZBnwABQIAwIBABMECInECaAYehICAIJycu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDir/Oq0GrRrpS+ymd9014DHJx3FvKJnpwSicuDNwT4phgEBoAQAt2gA183498Hhz31CSoqUikaRhqRgMDlXYa6G6KT+ZQWamUEAHZ4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCInEAGFFhgAAAFBSGPExDArIMyJni0zQDA"
-
-
-        ).unwrap();
+        let tx = Transaction::construct_from_base64( "te6ccgECBQEAAQ4AA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoLbKTCjolcexnodkGoK58txUv9GyQgugOZ9EMrSi3GIHgAAAoKRBJKBYFZBnwABQIAwIBABMECInECaAYehICAIJycu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDir/Oq0GrRrpS+ymd9014DHJx3FvKJnpwSicuDNwT4phgEBoAQAt2gA183498Hhz31CSoqUikaRhqRgMDlXYa6G6KT+ZQWamUEAHZ4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCInEAGFFhgAAAFBSGPExDArIMyJni0zQDA").unwrap();
 
         if let TransactionAdditionalInfo::EthEventStatusChanged(a) =
             dbg!(parse_additional_info(&tx, ParsingContext::Event).unwrap())

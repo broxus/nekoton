@@ -52,6 +52,7 @@ chrono = "0.4.19"
 [dev-dependencies]
 pretty_assertions = "0.7.1"
 hex = "0.4.3"
+criterion = "0.3"
 
 [features]
 default = []
@@ -63,3 +64,8 @@ default = ["std"]
 
 [target.'cfg(target_arch = "wasm32")'.features]
 default = ["web"]
+
+
+[[bench]]
+name = "words"
+harness = false
