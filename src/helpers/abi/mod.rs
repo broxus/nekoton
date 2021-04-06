@@ -59,7 +59,6 @@ impl<'a> FunctionAbi<'a> {
         account_state: ton_block::AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
-        config: BlockchainConfig,
         input: &[Token],
     ) -> Result<Vec<Token>> {
         let mut msg =
@@ -75,10 +74,12 @@ impl<'a> FunctionAbi<'a> {
                 .into(),
         );
 
-        let mut executor = Executor::new(config, account_state, timings, &last_transaction_id);
-        let transaction = executor.run(&msg)?;
+        let BlockStats {
+            gen_utime, gen_lt, ..
+        } = get_block_stats(timings, last_transaction_id);
 
-        self.parse(&transaction)
+        let messages = tvm::call_msg(gen_utime, gen_lt, account_state, &msg)?.0;
+        process_out_messages(&messages, self.fun)
     }
 }
 
@@ -149,6 +150,35 @@ pub struct Executor {
     disable_signature_check: bool,
 }
 
+struct BlockStats {
+    gen_utime: u32,
+    gen_lt: u64,
+    last_transaction_lt: u64,
+}
+
+fn get_block_stats(timings: GenTimings, last_transaction_id: &LastTransactionId) -> BlockStats {
+    // Additional estimated logical time offset for the latest transaction id
+    pub const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
+
+    let last_transaction_lt = match last_transaction_id {
+        LastTransactionId::Exact(id) => id.lt,
+        LastTransactionId::Inexact { latest_lt } => *latest_lt,
+    };
+
+    match timings {
+        GenTimings::Unknown => BlockStats {
+            gen_utime: Utc::now().timestamp() as u32,
+            gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
+            last_transaction_lt,
+        },
+        GenTimings::Known { gen_lt, gen_utime } => BlockStats {
+            gen_utime,
+            gen_lt,
+            last_transaction_lt,
+        },
+    }
+}
+
 impl Executor {
     pub fn new(
         config: BlockchainConfig,
@@ -156,26 +186,17 @@ impl Executor {
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
     ) -> Self {
-        const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
-
-        let last_transaction_lt = match last_transaction_id {
-            LastTransactionId::Exact(id) => id.lt,
-            LastTransactionId::Inexact { latest_lt } => *latest_lt,
-        };
-
-        let (block_utime, block_lt) = match timings {
-            GenTimings::Unknown => (
-                Utc::now().timestamp() as u32,
-                last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
-            ),
-            GenTimings::Known { gen_lt, gen_utime } => (gen_utime, gen_lt),
-        };
+        let BlockStats {
+            gen_utime,
+            gen_lt,
+            last_transaction_lt,
+        } = get_block_stats(timings, last_transaction_id);
 
         Self {
             config,
             account: Account::Account(account),
-            block_utime,
-            block_lt,
+            block_utime: gen_utime,
+            block_lt: gen_lt,
             last_transaction_lt: Arc::new(AtomicU64::new(last_transaction_lt)),
             disable_signature_check: false,
         }
