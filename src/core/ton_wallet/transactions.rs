@@ -89,7 +89,7 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
     }
 
     let token_swap_back = abi::ton_token_wallet().function("burnByOwner").trust_me();
-    if let Ok(a) = token_swap_back.decode_input(tx.clone(), true) {
+    if let Ok(a) = token_swap_back.decode_input(tx, true) {
         let info = TokenSwapBack::try_from(a).ok()?;
         return Some(TransactionAdditionalInfo::TokenSwapBack(info));
     }
@@ -109,7 +109,7 @@ fn event_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
     let ton_event = FunctionBuilder::new("notifyTonEventStatusChanged")
         .in_arg("TonEventStatus", ParamType::Uint(8))
         .build();
-    if let Ok(a) = ton_event.decode_input(tx.clone(), true) {
+    if let Ok(a) = ton_event.decode_input(tx, true) {
         let info = TonEventStatus::try_from(a).ok()?;
         return Some(TransactionAdditionalInfo::TonEventStatusChanged(info));
     }
@@ -132,10 +132,10 @@ pub fn parse_additional_info(
 #[cfg(test)]
 mod test {
     use crate::core::ton_wallet::models::{
-        ParsingContext, TransactionAdditionalInfo, TransferFamily,
+        EthereumStatusChanged, ParsingContext, TonEventStatus, TransactionAdditionalInfo,
+        TransferFamily,
     };
     use crate::core::ton_wallet::transactions::parse_additional_info;
-    use crate::helpers::abi::FunctionBuilder;
     use ton_abi::ParamType;
     use ton_block::MsgAddress::AddrStd;
     use ton_block::{Deserializable, MsgAddrStd, Transaction};
@@ -210,6 +210,92 @@ mod test {
             dbg!(parse_additional_info(&tx, ParsingContext::TokenWallet).unwrap())
         {
             ()
+        } else {
+            panic!()
+        };
+    }
+
+    #[test]
+    fn test_notify_in_progress() {
+        let tx = Transaction::construct_from_base64("te6ccgECBQEAARIAA7F3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpY0FkF0icFNiz9eyMoHQj/XjOgvfd/Ty/FCTLIWVObMZeWYygAAAoKVP/JBYFZCYQABQgSAMCAQAXBECIwGGoCaAYehICAIJyfS8JL8YlmU0DmZFQVw8vxQ/7HiHzKY43/AS+wp7M2ylauXc4qj/KSRi2zF7A/86IuQtXzsWopEYjhgirgz9e7AEBoAQAuWgANCX2CqQaEevZ1UVg2Lqddhy1GwOCKNcFg+tItZwPrSsAHZ4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCMBhqABhRYYAAABQUsDJ8EwKyEtCQz2A0AQA==").unwrap();
+
+        if let TransactionAdditionalInfo::TonEventStatusChanged(a) =
+            dbg!(parse_additional_info(&tx, ParsingContext::Event).unwrap())
+        {
+            if let TonEventStatus::InProcess = a {
+            } else {
+                panic!()
+            }
+        } else {
+            panic!()
+        };
+    }
+
+    #[test]
+    fn test_notify_done() {
+        let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpY0FkKsGZIkbgb+dAhZwgZ18EGe+NGsuMOe6ebP1mZa9VGBSAAAAoKWNBZBYFZCYQABQIAwIBABUECMBhqAmgGHoSAgCCclq5dziqP8pJGLbMXsD/zoi5C1fOxaikRiOGCKuDP17sST2OxTOw8znrkarFBXwMMjxqG+Yjk6CZ5llzQdlgia8BAaAEALloADQl9gqkGhHr2dVFYNi6nXYctRsDgijXBYPrSLWcD60rAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwjAYagAYUWGAAAAUFLAyfEMCshLQkM9gNAMA="
+        ).unwrap();
+
+        if let TransactionAdditionalInfo::TonEventStatusChanged(a) =
+            dbg!(parse_additional_info(&tx, ParsingContext::Event).unwrap())
+        {
+            if let TonEventStatus::Confirmed = a {
+            } else {
+                panic!()
+            }
+        } else {
+            panic!()
+        };
+    }
+
+    #[test]
+    fn test_notify_eth_executed() {
+        let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA7F3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpJyyIHVER8kq3HiJ7CLh63f0L6FNuFHClVei7uztOlIVx5IAgAAAoKR2jIBYFZB0QABQgKAMCAQAVBEBIicQJoBh6EgIAgnJ5eeKyWbIdllmQpwd9nH4qJGD/wzlQHDOWGC8QCKLnKVPlKWjgh4Ae4SGip4eNs+wh2HRqN6GU/Wffzz3PQ0+cAQGgBAC3aADXzfj3weHPfUJKipSKRpGGpGAwOVdhrobopP5lBZqZQQAdni4Be7O/IRDIKFt+HlRYLVRJWtA232uCnysW/gTGMIicQAYUWGAAAAUFJGt/BMCsg5ImeLTNAUA="
+        ).unwrap();
+
+        if let TransactionAdditionalInfo::EthEventStatusChanged(a) =
+            dbg!(parse_additional_info(&tx, ParsingContext::Event).unwrap())
+        {
+            if let EthereumStatusChanged::Executed = a {
+            } else {
+                panic!()
+            }
+        } else {
+            panic!()
+        };
+    }
+
+    #[test]
+    fn test_notify_eth_in_progress() {
+        let tx = Transaction::construct_from_base64("te6ccgECBQEAARIAA7N3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoHa2hZg3hyGFZxbZG8DRavBlR+G7vy+yz9PJyQrxh/W4QAAAnbUG/sCYFZBnwABRCRugDAgEAFwSEjciJxAmgGHoSAgCCcp0VD3BI01U2YOaQOUOy9/YQkmqW/wL8IERbo0LGwN/gcu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDgBAaAEALdoANfN+PfB4c99QkqKlIpGkYakYDA5V2Guhuik/mUFmplBAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwiJxABhRYYAAABQUhjxMEwKyDMiZ4tM0AQA=="
+
+        ).unwrap();
+
+        if let TransactionAdditionalInfo::EthEventStatusChanged(a) =
+            dbg!(parse_additional_info(&tx, ParsingContext::Event).unwrap())
+        {
+            if let EthereumStatusChanged::InProcess = a {
+            } else {
+                panic!()
+            }
+        } else {
+            panic!()
+        };
+    }
+    #[test]
+    fn test_eth_notify_done() {
+        let tx = Transaction::construct_from_base64(  "te6ccgECBQEAAQ4AA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoLbKTCjolcexnodkGoK58txUv9GyQgugOZ9EMrSi3GIHgAAAoKRBJKBYFZBnwABQIAwIBABMECInECaAYehICAIJycu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDir/Oq0GrRrpS+ymd9014DHJx3FvKJnpwSicuDNwT4phgEBoAQAt2gA183498Hhz31CSoqUikaRhqRgMDlXYa6G6KT+ZQWamUEAHZ4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCInEAGFFhgAAAFBSGPExDArIMyJni0zQDA"
+
+
+        ).unwrap();
+
+        if let TransactionAdditionalInfo::EthEventStatusChanged(a) =
+            dbg!(parse_additional_info(&tx, ParsingContext::Event).unwrap())
+        {
+            if let EthereumStatusChanged::Confirmed = a {
+            } else {
+                panic!()
+            }
         } else {
             panic!()
         };
