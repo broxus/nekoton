@@ -1,6 +1,7 @@
 mod function_builder;
 mod message_builder;
 mod token_parser;
+mod tvm;
 
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
