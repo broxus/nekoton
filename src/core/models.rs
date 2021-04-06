@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 
 use anyhow::Result;
 use chrono::Utc;
+use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
@@ -36,6 +37,57 @@ pub struct WalletState {
     pub last_transactions: Vec<Transaction>,
     /// List of pending transactions
     pub pending_transactions: Vec<PendingTransaction>,
+}
+
+#[derive(Debug, Copy, Clone, Eq, Ord, PartialOrd, PartialEq, Hash, Serialize, Deserialize)]
+pub enum TokenWalletVersion {
+    /// First stable iteration of token wallets.
+    /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/34e466bd42789413f02aeec0051b9d1212fe6de9)
+    Tip3v1,
+    /// Second iteration of token wallets with extended transfer messages payload.
+    /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/97ee321a2d8619372cdd2db8df30bd543e5c7417)
+    Tip3v2,
+    /// Third iteration of token wallets with updated compiler version and responsible getters.
+    /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/e7ef0506081fb36de94ea92d1bc1c50888ca65bc)
+    Tip3v3,
+}
+
+impl TryFrom<u32> for TokenWalletVersion {
+    type Error = anyhow::Error;
+
+    fn try_from(version: u32) -> Result<Self, Self::Error> {
+        Ok(match version {
+            1 => Self::Tip3v1,
+            2 => Self::Tip3v2,
+            3 => Self::Tip3v3,
+            _ => return Err(UnknownTokenWalletVersion.into()),
+        })
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+#[error("Unknown token wallet version")]
+struct UnknownTokenWalletVersion;
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TokenWalletDetails {
+    /// Linked root token contract address
+    #[serde(with = "serde_address")]
+    pub root_address: MsgAddressInt,
+    /// Owner wallet address
+    #[serde(with = "serde_address")]
+    pub owner_address: MsgAddressInt,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TokenWalletState {
+    /// Balance in tokens
+    pub balance: BigUint,
+    /// Address of tokens proxy contract
+    #[serde(with = "serde_optional_address")]
+    pub proxy_address: Option<MsgAddressInt>,
+    /// Underlying contract state
+    pub account_state: AccountState,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

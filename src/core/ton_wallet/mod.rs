@@ -20,7 +20,8 @@ use super::models::{
     AccountState, AccountSubscriptionError, GenTimings, PendingTransaction, Transaction,
     TransactionId, TransactionsBatchInfo,
 };
-use super::{utils, AccountSubscription, AccountSubscriptionHandler, PollingMethod};
+use super::{utils, AccountSubscription, PollingMethod};
+use crate::core::utils::PendingTransactionsExt;
 use crate::crypto::UnsignedMessage;
 use crate::helpers::abi::Executor;
 use crate::transport::models::ContractState;
@@ -142,7 +143,7 @@ pub fn compute_address(
 #[derive(Clone)]
 pub struct TonWalletSubscription {
     transport: Arc<dyn Transport>,
-    handler: Arc<dyn AccountSubscriptionHandler>,
+    handler: Arc<dyn TonWalletSubscriptionHandler>,
     address: MsgAddressInt,
     account_state: AccountState,
     latest_known_transaction: Option<TransactionId>,
@@ -165,7 +166,7 @@ impl TonWalletSubscription {
     pub async fn subscribe(
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
-        handler: Arc<dyn AccountSubscriptionHandler>,
+        handler: Arc<dyn TonWalletSubscriptionHandler>,
     ) -> Result<TonWalletSubscription> {
         let mut result = TonWalletSubscription {
             transport,
@@ -379,41 +380,15 @@ impl AccountSubscription for TonWalletSubscription {
         message: &ton_block::Message,
         expire_at: u32,
     ) -> Result<PendingTransaction> {
-        let src = match message.header() {
-            ton_block::CommonMsgInfo::ExtInMsgInfo(header) => {
-                if header.dst == self.address {
-                    None
-                } else {
-                    return Err(AccountSubscriptionError::InvalidMessageDestination.into());
-                }
-            }
-            _ => return Err(AccountSubscriptionError::InvalidMessageType.into()),
-        };
-
-        let body_hash = message
-            .body()
-            .map(|body| body.hash(ton_types::cell::MAX_LEVEL))
-            .unwrap_or_default();
-
-        let pending_transaction = PendingTransaction {
-            src,
-            body_hash,
-            expire_at,
-        };
-
-        self.pending_transactions.push(pending_transaction.clone());
+        let pending_transaction =
+            self.pending_transactions
+                .add_message(&self.address, message, expire_at)?;
         match self.transport.send_message(message).await {
             // return pending transaction on success
             Ok(()) => Ok(pending_transaction),
             // remove pending transaction from queue on error
             Err(e) => {
-                if let Some(i) = self
-                    .pending_transactions
-                    .iter()
-                    .position(|item| item.eq(&pending_transaction))
-                {
-                    self.pending_transactions.remove(i);
-                }
+                self.pending_transactions.cancel(&pending_transaction);
                 Err(e)
             }
         }
@@ -477,4 +452,25 @@ impl AccountSubscription for TonWalletSubscription {
 enum ContractExecutionError {
     #[error("Contract not found")]
     ContractNotFound,
+}
+
+pub trait TonWalletSubscriptionHandler: Send + Sync {
+    /// Called when found transaction which is relative with one of the pending transactions
+    fn on_message_sent(&self, pending_transaction: PendingTransaction, transaction: Transaction);
+
+    /// Called when no transactions produced for the specific message before some expiration time
+    fn on_message_expired(&self, pending_transaction: PendingTransaction);
+
+    /// Called every time a new state is detected
+    fn on_state_changed(&self, new_state: AccountState);
+
+    /// Called every time new transactions are detected.
+    /// - When new block found
+    /// - When manually requesting the latest transactions (can be called several times)
+    /// - When preloading transactions
+    fn on_transactions_found(
+        &self,
+        transactions: Vec<Transaction>,
+        batch_info: TransactionsBatchInfo,
+    );
 }

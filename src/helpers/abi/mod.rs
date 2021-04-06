@@ -23,12 +23,31 @@ use crate::utils::*;
 
 pub trait FunctionExt {
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>>;
+
+    fn run_local(
+        &self,
+        account_state: ton_block::AccountStuff,
+        timings: GenTimings,
+        last_transaction_id: &LastTransactionId,
+        input: &[Token],
+    ) -> Result<Vec<Token>>;
 }
 
 impl FunctionExt for &Function {
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
         let abi = FunctionAbi::new(self);
         abi.parse(tx)
+    }
+
+    fn run_local(
+        &self,
+        account_state: ton_block::AccountStuff,
+        timings: GenTimings,
+        last_transaction_id: &LastTransactionId,
+        input: &[Token],
+    ) -> Result<Vec<Token>> {
+        let abi = FunctionAbi::new(self);
+        abi.run_local(account_state, timings, last_transaction_id, input)
     }
 }
 
@@ -37,25 +56,35 @@ impl FunctionExt for Function {
         let abi = FunctionAbi::new(self);
         abi.parse(tx)
     }
+
+    fn run_local(
+        &self,
+        account_state: ton_block::AccountStuff,
+        timings: GenTimings,
+        last_transaction_id: &LastTransactionId,
+        input: &[Token],
+    ) -> Result<Vec<Token>> {
+        let abi = FunctionAbi::new(self);
+        abi.run_local(account_state, timings, last_transaction_id, input)
+    }
 }
 
-pub struct FunctionAbi<'a> {
+struct FunctionAbi<'a> {
     fun: &'a Function,
 }
 
 impl<'a> FunctionAbi<'a> {
-    pub fn new(fun: &'a Function) -> Self {
+    fn new(fun: &'a Function) -> Self {
         Self { fun }
     }
 
-    pub fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
+    fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
         let messages = parse_transaction_messages(&tx)?;
         process_out_messages(&*messages, &self.fun)
     }
 
-    pub fn run_local(
+    fn run_local(
         &self,
-        address: MsgAddressInt,
         account_state: ton_block::AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
@@ -63,7 +92,7 @@ impl<'a> FunctionAbi<'a> {
     ) -> Result<Vec<Token>> {
         let mut msg =
             ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
-                dst: address,
+                dst: account_state.addr.clone(),
                 ..Default::default()
             });
 

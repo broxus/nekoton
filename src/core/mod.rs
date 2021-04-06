@@ -1,4 +1,5 @@
 pub mod models;
+pub mod token_wallet;
 pub mod ton_wallet;
 mod utils;
 
@@ -26,27 +27,6 @@ impl TonInterface {
     pub fn set_transport(&mut self, transport: Box<dyn Transport>) {
         self.transport = transport;
     }
-}
-
-pub trait AccountSubscriptionHandler: Send + Sync {
-    /// Called when found transaction which is relative with one of the pending transactions
-    fn on_message_sent(&self, pending_transaction: PendingTransaction, transaction: Transaction);
-
-    /// Called when no transactions produced for the specific message before some expiration time
-    fn on_message_expired(&self, pending_transaction: PendingTransaction);
-
-    /// Called every time a new state is detected
-    fn on_state_changed(&self, new_state: AccountState);
-
-    /// Called every time new transactions are detected.
-    /// - When new block found
-    /// - When manually requesting the latest transactions (can be called several times)
-    /// - When preloading transactions
-    fn on_transactions_found(
-        &self,
-        transactions: Vec<Transaction>,
-        batch_info: TransactionsBatchInfo,
-    );
 }
 
 #[async_trait]

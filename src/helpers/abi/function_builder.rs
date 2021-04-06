@@ -1,5 +1,9 @@
 use ton_abi::{Function, Param, ParamType};
 
+use super::{FunctionArg, TokenValueExt};
+
+const ANSWER_ID: &str = "_answer_id";
+
 #[allow(dead_code)]
 #[derive(Default)]
 pub struct FunctionBuilder {
@@ -35,13 +39,32 @@ impl FunctionBuilder {
             .header("expire", ParamType::Expire)
     }
 
+    pub fn responsible(mut self) -> Self {
+        self.make_responsible();
+        self
+    }
+
+    pub fn make_responsible(&mut self) {
+        self.inputs.push(Param::new(ANSWER_ID, ParamType::Uint(32)));
+    }
+
     pub fn in_arg(mut self, name: &str, arg_type: ParamType) -> Self {
         self.inputs.push(Param::new(name, arg_type));
         self
     }
 
+    pub fn inputs(mut self, inputs: Vec<Param>) -> Self {
+        self.inputs = inputs;
+        self
+    }
+
     pub fn out_arg(mut self, name: &str, arg_type: ton_abi::ParamType) -> Self {
         self.outputs.push(Param::new(name, arg_type));
+        self
+    }
+
+    pub fn outputs(mut self, outputs: Vec<Param>) -> Self {
+        self.outputs = outputs;
         self
     }
 
@@ -65,6 +88,30 @@ impl FunctionBuilder {
         fun.output_id = id | 0x80000000;
         fun
     }
+}
+
+#[derive(Default)]
+pub struct TupleBuilder {
+    types: Vec<Param>,
+}
+
+impl TupleBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn arg(mut self, name: &str, arg_type: ParamType) -> Self {
+        self.types.push(Param::new(name, arg_type));
+        self
+    }
+
+    pub fn build(self) -> ParamType {
+        ParamType::Tuple(self.types)
+    }
+}
+
+pub fn answer_id() -> ton_abi::Token {
+    0u32.token_value().named(ANSWER_ID)
 }
 
 #[cfg(test)]
