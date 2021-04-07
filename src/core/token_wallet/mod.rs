@@ -170,7 +170,7 @@ impl<'a> RootTokenContractState<'a> {
         Err(TokenWalletError::UnknownVersion.into())
     }
 
-    /// Retrieves details using specified version
+    /// Retrieve details using specified version
     fn get_details(&self, version: TokenWalletVersion) -> Result<RootTokenContractDetails> {
         let mut details_abi = TupleBuilder::new()
             .arg("name", ton_abi::ParamType::Bytes)

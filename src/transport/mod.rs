@@ -2,12 +2,13 @@ use anyhow::Result;
 use async_trait::async_trait;
 use ton_block::MsgAddressInt;
 
+use crate::core::models::TransactionId;
+
+use self::models::*;
+
 pub mod adnl;
 pub mod gql;
 pub mod models;
-
-use self::models::*;
-use crate::core::models::TransactionId;
 
 #[async_trait]
 pub trait Transport: Send + Sync {

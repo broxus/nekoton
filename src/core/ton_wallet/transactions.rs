@@ -154,7 +154,7 @@ fn multisig_parse(data: SliceData, tx: &Transaction) -> Option<TransactionAdditi
         .function("submitTransaction")
         .trust_me();
 
-    if let Ok(a) = submit.decode_input(data.clone(), false) {
+    if let Ok(a) = submit.decode_input(data, false) {
         dbg!(&a);
         let out = submit.parse(tx).ok()?;
         let info = SubmitTransaction::try_from((a, out)).ok()?;
