@@ -39,15 +39,20 @@ pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
     if payload.get_next_u32().ok()? != 0 {
         return None;
     }
-    ton_abi::TokenValue::decode_params(
-        &vec![ton_abi::Param::new("comment", ton_abi::ParamType::Bytes)],
-        payload,
-        2,
-    )
-    .ok()?
-    .into_parser()
-    .parse_next()
-    .ok()
+
+    let mut cell = payload.checked_drain_reference().ok()?;
+
+    let mut data = Vec::new();
+    loop {
+        data.extend_from_slice(cell.data());
+        data.pop();
+        cell = match cell.reference(0) {
+            Ok(cell) => cell.clone(),
+            Err(_) => break,
+        };
+    }
+
+    String::from_utf8(data).ok()
 }
 
 pub fn create_boc_payload(cell: &str) -> ContractResult<SliceData> {
