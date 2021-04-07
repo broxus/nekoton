@@ -4,112 +4,27 @@ use std::time::Duration;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use graphql_client::*;
-use tokio::sync::Mutex;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
-use ton_executor::BlockchainConfig;
 
+use super::utils::ConfigCache;
 use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
 use crate::external::GqlConnection;
 use crate::transport::models::*;
 use crate::transport::Transport;
-use crate::utils::TrustMe;
+use crate::utils::*;
 
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
-    last_config: Mutex<Option<ConfigCache>>,
-}
-
-#[derive(Clone)]
-struct ConfigCache {
-    config: ton_executor::BlockchainConfig,
-    deadline: DateTime<Utc>,
-}
-
-async fn query_from_cache(
-    cache: &Mutex<Option<ConfigCache>>,
-    trasnport: &GqlTransport,
-) -> Result<ton_executor::BlockchainConfig> {
-    async fn update(
-        transport: &GqlTransport,
-    ) -> Result<(Option<ConfigCache>, ton_executor::BlockchainConfig)> {
-        let config = transport.get_config().await?;
-        let now = chrono::Utc::now();
-        Ok((
-            Some(ConfigCache {
-                config: config.clone(),
-                deadline: now, //todo fixme get deadline from network
-            }),
-            config,
-        ))
-    }
-
-    let mut cache = cache.lock().await;
-    let config = match &*cache {
-        None => {
-            let (cached, res) = update(trasnport).await?;
-            *cache = cached;
-            res
-        }
-        Some(a) => {
-            let now = chrono::Utc::now();
-            if now < a.deadline {
-                a.config.clone()
-            } else {
-                let (cached, res) = update(trasnport).await?;
-                *cache = cached;
-                res
-            }
-        }
-    };
-    Ok(config)
+    config_cache: ConfigCache,
 }
 
 impl GqlTransport {
     pub fn new(connection: Arc<dyn GqlConnection>) -> Self {
         Self {
             connection,
-            last_config: Mutex::default(),
+            config_cache: ConfigCache::new(),
         }
-    }
-
-    async fn get_config(&self) -> Result<BlockchainConfig> {
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_latest_key_block.graphql"
-        )]
-        struct QueryLatestKeyBlock;
-        let boc = self
-            .fetch::<QueryLatestKeyBlock>(query_latest_key_block::Variables)
-            .await?
-            .blocks
-            .and_then(|block| block.into_iter().flatten().next())
-            .ok_or_else(no_blocks_found)?
-            .boc
-            .ok_or_else(invalid_response)?;
-
-        let block = ton_block::Block::construct_from_base64(&boc)
-            .map_err(|_| NodeClientError::InvalidBlock)?;
-
-        let extra = block
-            .read_extra()
-            .map_err(|_| NodeClientError::InvalidBlock)?;
-
-        let master = extra
-            .read_custom()
-            .map_err(|_| NodeClientError::InvalidBlock)?
-            .ok_or(NodeClientError::InvalidBlock)?;
-
-        let params = master
-            .config()
-            .ok_or(NodeClientError::InvalidBlock)?
-            .clone();
-
-        let config =
-            BlockchainConfig::with_config(params).map_err(|_| NodeClientError::InvalidConfig)?;
-        Ok(config)
     }
 
     async fn fetch<T>(&self, params: T::Variables) -> Result<T::ResponseData>
@@ -285,10 +200,6 @@ impl Transport for GqlTransport {
         50
     }
 
-    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
-        query_from_cache(&self.last_config, self).await
-    }
-
     async fn send_message(&self, message: &Message) -> Result<()> {
         let cell = message
             .serialize()
@@ -382,6 +293,31 @@ impl Transport for GqlTransport {
             })
         })
         .collect::<Result<Vec<_>, _>>()
+    }
+
+    async fn get_latest_key_block(&self) -> Result<ton_block::Block> {
+        #[derive(GraphQLQuery)]
+        #[graphql(
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_latest_key_block.graphql"
+        )]
+        struct QueryLatestKeyBlock;
+        let boc = self
+            .fetch::<QueryLatestKeyBlock>(query_latest_key_block::Variables)
+            .await?
+            .blocks
+            .and_then(|block| block.into_iter().flatten().next())
+            .ok_or_else(no_blocks_found)?
+            .boc
+            .ok_or_else(invalid_response)?;
+
+        let block = ton_block::Block::construct_from_base64(&boc)
+            .map_err(|_| NodeClientError::InvalidBlock)?;
+        Ok(block)
+    }
+
+    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
+        self.config_cache.get_blockchain_config(self).await
     }
 }
 

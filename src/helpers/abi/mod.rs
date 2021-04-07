@@ -312,7 +312,7 @@ impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod test {
-    use ton_block::{Deserializable, Message, Serializable, Transaction};
+    use ton_block::{Deserializable, Message, Transaction};
 
     use super::*;
 
