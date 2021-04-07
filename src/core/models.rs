@@ -79,7 +79,22 @@ pub struct TokenWalletDetails {
     pub owner_address: MsgAddressInt,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct RootTokenContractDetails {
+    /// Token ecosystem version
+    pub version: TokenWalletVersion,
+    /// Full currency name
+    pub name: String,
+    /// Short currency name
+    pub symbol: String,
+    /// Decimals
+    pub decimals: u8,
+    /// Root owner contract address. Used as proxy address in Tip3v1
+    #[serde(with = "serde_address")]
+    pub owner_address: MsgAddressInt,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TokenWalletState {
     /// Balance in tokens
     pub balance: BigUint,
@@ -90,7 +105,7 @@ pub struct TokenWalletState {
     pub account_state: AccountState,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AccountState {
     /// Full account balance in nano TON
     pub balance: u64,
@@ -109,6 +124,12 @@ pub enum GenTimings {
     Unknown,
     /// There is a known point in time at which this specific state was obtained
     Known { gen_lt: u64, gen_utime: u32 },
+}
+
+impl Default for GenTimings {
+    fn default() -> Self {
+        Self::Unknown
+    }
 }
 
 /// Additional estimated lag for the pending message to be expired

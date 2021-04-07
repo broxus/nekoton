@@ -3,31 +3,47 @@ use ton_abi::Contract;
 
 use crate::utils::TrustMe;
 
+const SAFE_MULTISIG_WALLET_ABI: &[u8] = include_bytes!("./SafeMultisigWallet.abi.json");
+
 pub fn safe_multisig_wallet() -> &'static Contract {
     static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.get_or_init(|| {
-        Contract::load(&mut std::io::Cursor::new(SAFE_MULTISIG_WALLET_ABI)).trust_me()
-    })
+    ABI.load(SAFE_MULTISIG_WALLET_ABI)
 }
+
+const SETCODE_MULTISIG_WALLET_ABI: &[u8] = include_bytes!("./SetcodeMultisigWallet.abi.json");
 
 pub fn setcode_multisig_wallet() -> &'static Contract {
     static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.get_or_init(|| {
-        Contract::load(&mut std::io::Cursor::new(SETCODE_MULTISIG_WALLET_ABI)).trust_me()
-    })
+    ABI.load(SETCODE_MULTISIG_WALLET_ABI)
 }
+
+const TON_TOKEN_WALLET: &[u8] = include_bytes!("./TONTokenWallet.abi.json");
 
 pub fn ton_token_wallet() -> &'static Contract {
     static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.get_or_init(|| Contract::load(&mut std::io::Cursor::new(TON_TOKKEN_WALLET)).trust_me())
+    ABI.load(TON_TOKEN_WALLET)
 }
+
+const ETH_ETH_EVENT: &[u8] = include_bytes!("./EthEvent.abi.json");
 
 pub fn eth_event() -> &'static Contract {
     static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.get_or_init(|| Contract::load(&mut std::io::Cursor::new(ETH_ETH_EVENT)).trust_me())
+    ABI.load(ETH_ETH_EVENT)
 }
 
-const SAFE_MULTISIG_WALLET_ABI: &[u8] = include_bytes!("./SafeMultisigWallet.abi.json");
-const SETCODE_MULTISIG_WALLET_ABI: &[u8] = include_bytes!("./SetcodeMultisigWallet.abi.json");
-const TON_TOKKEN_WALLET: &[u8] = include_bytes!("./TONTokenWallet.abi.json");
-const ETH_ETH_EVENT: &[u8] = include_bytes!("./EthEvent.abi.json");
+const ROOT_META: &[u8] = include_bytes!("./RootMeta.abi.json");
+
+pub fn root_meta() -> &'static Contract {
+    static ABI: OnceCell<Contract> = OnceCell::new();
+    ABI.load(ROOT_META)
+}
+
+trait OnceCellExt {
+    fn load(&self, data: &[u8]) -> &Contract;
+}
+
+impl OnceCellExt for OnceCell<Contract> {
+    fn load(&self, data: &[u8]) -> &Contract {
+        self.get_or_init(|| Contract::load(&mut std::io::Cursor::new(data)).trust_me())
+    }
+}

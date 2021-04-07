@@ -22,6 +22,8 @@ pub struct FunctionBuilder {
     input_id: u32,
     /// Function ID for outbound messages
     output_id: u32,
+    /// Whether answer_id is set
+    responsible: bool,
 }
 
 impl FunctionBuilder {
@@ -33,19 +35,26 @@ impl FunctionBuilder {
         }
     }
 
+    pub fn new_responsible(function_name: &str) -> Self {
+        let mut function = Self::new(function_name);
+        function.make_responsible();
+        function
+    }
+
     pub fn default_headers(self) -> Self {
         self.header("pubkey", ParamType::PublicKey)
             .header("time", ParamType::Time)
             .header("expire", ParamType::Expire)
     }
 
-    pub fn responsible(mut self) -> Self {
-        self.make_responsible();
-        self
-    }
-
     pub fn make_responsible(&mut self) {
-        self.inputs.push(Param::new(ANSWER_ID, ParamType::Uint(32)));
+        if self.inputs.is_empty() {
+            self.inputs.push(Param::new(ANSWER_ID, ParamType::Uint(32)));
+        } else if !self.responsible {
+            self.inputs
+                .insert(0, Param::new(ANSWER_ID, ParamType::Uint(32)));
+        }
+        self.responsible = true;
     }
 
     pub fn in_arg(mut self, name: &str, arg_type: ParamType) -> Self {
