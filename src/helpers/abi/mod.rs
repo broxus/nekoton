@@ -1,8 +1,3 @@
-mod function_builder;
-mod message_builder;
-mod token_parser;
-mod tvm;
-
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
@@ -13,13 +8,34 @@ use num_bigint::{BigInt, BigUint};
 use ton_abi::{Function, Token, TokenValue};
 use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_types::UInt256;
+use ton_types::{BuilderData, Cell, CellData, IBitstring, SliceData, UInt256};
+
+use crate::core::models::{GenTimings, LastTransactionId};
+use crate::utils::*;
 
 pub use self::function_builder::*;
 pub use self::message_builder::*;
 pub use self::token_parser::*;
-use crate::core::models::{GenTimings, LastTransactionId};
-use crate::utils::*;
+
+mod function_builder;
+mod message_builder;
+mod token_parser;
+mod tvm;
+
+pub fn add_comment(comment: &str) -> Result<SliceData, anyhow::Error> {
+    let mut data = BuilderData::new();
+    let comment_data = SliceData::from(comment.as_bytes());
+    data.append_u32(0)
+        .trust_me()
+        .append_bytestring(&comment_data)
+        .map_err(|e| anyhow::Error::msg(e))
+        .map(|data| data.into())
+}
+
+pub fn add_cell_data(cell: &str) -> ContractResult<SliceData> {
+    let cell = Cell::construct_from_base64(cell).map_err(|_| ParserError::InvalidAbi)?;
+    Ok(SliceData::from(cell))
+}
 
 pub trait FunctionExt {
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>>;
@@ -273,8 +289,9 @@ impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod test {
+    use ton_block::{Deserializable, Message, Serializable, Transaction};
+
     use super::*;
-    use ton_block::{Deserializable, Message, Transaction};
 
     #[test]
     fn test_run_local() {
@@ -338,5 +355,13 @@ mod test {
             },
         );
         dbg!(executor.run(&Message::construct_from_bytes(&*msg_code).unwrap())).unwrap();
+    }
+    #[test]
+    fn test_comment() {
+        let comment = "i love memes and 🦀";
+        assert_eq!(
+            base64::encode(&add_comment(comment).unwrap().storage()),
+            "AAAAAGkgbG92ZSBtZW1lcyBhbmQg8J+mgIA="
+        );
     }
 }
