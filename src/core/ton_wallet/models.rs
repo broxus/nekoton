@@ -1,19 +1,17 @@
 use std::convert::TryFrom;
 
 use anyhow::Result;
-
+use num_traits::ToPrimitive;
 use ton_abi::{Token, TokenValue, Uint};
 use ton_block::MsgAddress;
-
 use ton_types::Cell;
-
-use num_traits::ToPrimitive;
 
 #[derive(Copy, Clone, Debug)]
 pub enum ParsingContext {
     MainWallet,
     TokenWallet,
     Event,
+    Multisig,
 }
 
 ///Transactions from bridge
@@ -44,11 +42,151 @@ pub enum TransactionAdditionalInfo {
     DePoolOnRoundCompleteTransaction, //
 
     // Multisig transaction
-    MultisigDeploymentTransaction,
+    MultisigConfirmTransaction(ConfirmTransaction),
     //
-    MultisigSubmitTransaction,
+    MultisigSubmitTransaction(SubmitTransaction),
     //
-    MultisigConfirmTransaction,
+    MultisigSendTransaction(SendTransaction),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ConfirmTransaction {
+    transaction_id: u64,
+}
+
+impl TryFrom<Vec<Token>> for ConfirmTransaction {
+    type Error = ();
+
+    fn try_from(mut value: Vec<Token>) -> Result<Self, Self::Error> {
+        if value.len() != 1 {
+            return Err(());
+        }
+        let transaction_id = value.remove(0).value;
+
+        let transaction_id = match transaction_id {
+            TokenValue::Uint(a) => a.number.to_u64().ok_or(())?,
+            _ => return Err(()),
+        };
+
+        Ok(Self { transaction_id })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SubmitTransaction {
+    dest: MsgAddress,
+    value: Uint,
+    bounce: bool,
+    all_balance: bool,
+    payload: Cell,
+    trans_id: u64,
+}
+
+impl TryFrom<(Vec<Token>, Vec<Token>)> for SubmitTransaction {
+    type Error = ();
+
+    fn try_from(value: (Vec<Token>, Vec<Token>)) -> Result<Self, Self::Error> {
+        let mut out = value.1;
+        let mut value = value.0;
+        if value.len() != 5 {
+            return Err(());
+        }
+        dbg!();
+        let dest = value.remove(0).value;
+        let value_field = value.remove(0).value;
+        let bounce = value.remove(0).value;
+        let all_balance = value.remove(0).value;
+        let payload = value.remove(0).value;
+
+        let dest = match dest {
+            TokenValue::Address(a) => a,
+            _ => return Err(()),
+        };
+        let value = match value_field {
+            TokenValue::Uint(a) => a,
+            _ => return Err(()),
+        };
+        let bounce = match bounce {
+            TokenValue::Bool(a) => a,
+            _ => return Err(()),
+        };
+        let all_balance = match all_balance {
+            TokenValue::Bool(a) => a,
+            _ => return Err(()),
+        };
+        let payload = match payload {
+            TokenValue::Cell(a) => a,
+            _ => return Err(()),
+        };
+
+        let trans_id = out.remove(0).value;
+        let trans_id = match trans_id {
+            TokenValue::Uint(a) => a.number.to_u64().ok_or(())?,
+            _ => return Err(()),
+        };
+
+        Ok(Self {
+            dest,
+            value,
+            bounce,
+            all_balance,
+            payload,
+            trans_id,
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SendTransaction {
+    dest: MsgAddress,
+    value: Uint,
+    bounce: bool,
+    flags: u8,
+    payload: Cell,
+}
+
+impl TryFrom<Vec<Token>> for SendTransaction {
+    type Error = ();
+
+    fn try_from(mut value: Vec<Token>) -> Result<Self, Self::Error> {
+        if value.len() != 5 {
+            return Err(());
+        }
+        let dest = value.remove(0).value;
+        let value_field = value.remove(0).value;
+        let bounce = value.remove(0).value;
+        let flags = value.remove(0).value;
+        let payload = value.remove(0).value;
+
+        let dest = match dest {
+            TokenValue::Address(a) => a,
+            _ => return Err(()),
+        };
+        let value = match value_field {
+            TokenValue::Uint(a) => a,
+            _ => return Err(()),
+        };
+        let bounce = match bounce {
+            TokenValue::Bool(a) => a,
+            _ => return Err(()),
+        };
+        let flags = match flags {
+            TokenValue::Uint(a) => a.number.to_u8().ok_or(())?,
+            _ => return Err(()),
+        };
+        let payload = match payload {
+            TokenValue::Cell(a) => a,
+            _ => return Err(()),
+        };
+
+        Ok(Self {
+            dest,
+            value,
+            bounce,
+            flags,
+            payload,
+        })
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
