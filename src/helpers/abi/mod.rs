@@ -8,7 +8,7 @@ use num_bigint::{BigInt, BigUint};
 use ton_abi::{Function, Token, TokenValue};
 use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_types::{BuilderData, Cell, CellData, IBitstring, SliceData, UInt256};
+use ton_types::{Cell, SliceData, UInt256};
 
 use crate::core::models::{GenTimings, LastTransactionId};
 use crate::utils::*;
@@ -22,17 +22,35 @@ mod message_builder;
 mod token_parser;
 mod tvm;
 
-pub fn add_comment(comment: &str) -> Result<SliceData, anyhow::Error> {
-    let mut data = BuilderData::new();
-    let comment_data = SliceData::from(comment.as_bytes());
-    data.append_u32(0)
-        .trust_me()
-        .append_bytestring(&comment_data)
-        .map_err(|e| anyhow::Error::msg(e))
-        .map(|data| data.into())
+pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
+    ton_abi::TokenValue::pack_values_into_chain(
+        &[
+            0u32.token_value().unnamed(),
+            comment.token_value().unnamed(),
+        ],
+        Vec::new(),
+        2,
+    )
+    .convert()
+    .map(SliceData::from)
 }
 
-pub fn add_cell_data(cell: &str) -> ContractResult<SliceData> {
+pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
+    if payload.get_next_u32().ok()? != 0 {
+        return None;
+    }
+    ton_abi::TokenValue::decode_params(
+        &vec![ton_abi::Param::new("comment", ton_abi::ParamType::Bytes)],
+        payload,
+        2,
+    )
+    .ok()?
+    .into_parser()
+    .parse_next()
+    .ok()
+}
+
+pub fn create_boc_payload(cell: &str) -> ContractResult<SliceData> {
     let cell = Cell::construct_from_base64(cell).map_err(|_| ParserError::InvalidAbi)?;
     Ok(SliceData::from(cell))
 }
@@ -359,9 +377,14 @@ mod test {
     #[test]
     fn test_comment() {
         let comment = "i love memes and 🦀";
+
+        let encoded_comment = create_comment_payload(comment).unwrap();
         assert_eq!(
-            base64::encode(&add_comment(comment).unwrap().storage()),
-            "AAAAAGkgbG92ZSBtZW1lcyBhbmQg8J+mgIA="
+            base64::encode(ton_types::serialize_toc(&encoded_comment.clone().into_cell()).unwrap()),
+            "te6ccgEBAgEAHgABCAAAAAABACppIGxvdmUgbWVtZXMgYW5kIPCfpoA="
         );
+
+        let decoded_comment = parse_comment_payload(encoded_comment).unwrap();
+        assert_eq!(decoded_comment, comment);
     }
 }
