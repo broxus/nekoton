@@ -1,10 +1,10 @@
 use std::borrow::Borrow;
+use std::num::NonZeroU32;
 
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use ring::{digest, pbkdf2};
 use secstr::{SecStr, SecVec};
-use std::num::NonZeroU32;
 use thiserror::Error;
 
 const NONCE_LENGTH: usize = 12;
@@ -65,6 +65,8 @@ pub fn symmetric_key_from_password(password: SecStr, salt: &[u8]) -> Key {
 
 #[derive(Error, Debug)]
 pub enum SymmetricCryptoError {
+    #[error("Failed to decrypt data")]
     FailedToDecryptData,
+    #[error("Failed to encrypt data")]
     FailedToEncryptData,
 }
