@@ -12,6 +12,9 @@ use ring::{digest, pbkdf2};
 use secstr::{SecStr, SecVec};
 use serde::{Deserialize, Serialize};
 
+use crate::crypto::symmetric::{
+    decrypt, decrypt_secure, encrypt, symmetric_key_from_password, SymmetricCryptoError,
+};
 use crate::crypto::*;
 use crate::utils::TrustMe;
 
@@ -33,7 +36,6 @@ pub struct EncryptedKey {
 }
 
 impl EncryptedKey {
-    /// Initializes signer from key pair
     pub fn new(
         name: &str,
         password: SecStr,
@@ -252,54 +254,14 @@ fn decrypt_key_pair(
 ) -> Result<ed25519_dalek::Keypair, EncryptedKeyError> {
     let decrypter = ChaCha20Poly1305::new(&key);
 
-    decrypt(&decrypter, nonce, encrypted_key).and_then(|data| {
-        let secret = ed25519_dalek::SecretKey::from_bytes(&data)
-            .map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
-        let public = ed25519_dalek::PublicKey::from(&secret);
-        Ok(Keypair { secret, public })
-    })
-}
-
-/// Decrypts data using specified decrypter and nonce
-fn decrypt_secure(
-    dec: &ChaCha20Poly1305,
-    nonce: &Nonce,
-    data: &[u8],
-) -> Result<SecVec<u8>, EncryptedKeyError> {
-    decrypt(dec, nonce, data).map(SecVec::new)
-}
-
-/// Decrypts data using specified decrypter and nonce
-fn decrypt(
-    dec: &ChaCha20Poly1305,
-    nonce: &Nonce,
-    data: &[u8],
-) -> Result<Vec<u8>, EncryptedKeyError> {
-    dec.decrypt(nonce, data)
-        .map_err(|_| EncryptedKeyError::FailedToDecryptData)
-}
-
-/// Encrypts data using specified encryptor and nonce
-fn encrypt(
-    enc: &ChaCha20Poly1305,
-    nonce: &Nonce,
-    data: &[u8],
-) -> Result<Vec<u8>, EncryptedKeyError> {
-    enc.encrypt(nonce, data)
-        .map_err(|_| EncryptedKeyError::FailedToEncryptData)
-}
-
-/// Calculates symmetric key from user password, using pbkdf2
-fn symmetric_key_from_password(password: SecStr, salt: &[u8]) -> Key {
-    let mut pbkdf2_hash = SecVec::new(vec![0; CREDENTIAL_LEN]);
-    pbkdf2::derive(
-        pbkdf2::PBKDF2_HMAC_SHA256,
-        N_ITER,
-        salt,
-        password.unsecure(),
-        &mut pbkdf2_hash.unsecure_mut(),
-    );
-    chacha20poly1305::Key::clone_from_slice(&pbkdf2_hash.unsecure())
+    decrypt(&decrypter, nonce, encrypted_key)
+        .and_then(|data| {
+            let secret = ed25519_dalek::SecretKey::from_bytes(&data)
+                .map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
+            let public = ed25519_dalek::PublicKey::from(&secret);
+            Ok(Keypair { secret, public })
+        })
+        .into()
 }
 
 mod hex_encode {
@@ -387,6 +349,15 @@ pub enum EncryptedKeyError {
     FailedToEncryptData,
 }
 
+impl From<SymmetricCryptoError> for EncryptedKeyError {
+    fn from(a: SymmetricCryptoError) -> Self {
+        match a {
+            SymmetricCryptoError::FailedToDecryptData => Self::FailedToDecryptData,
+            SymmetricCryptoError::FailedToEncryptData => Self::FailedToEncryptData,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -407,6 +378,7 @@ mod test {
         let signer =
             EncryptedKey::new(KEY_NAME, password, MnemonicType::Legacy, TEST_MNEMONIC).unwrap();
 
+        println!("{}", signer.as_json());
         let result = signer.sign(b"lol", "lol".into());
         assert!(result.is_err());
     }

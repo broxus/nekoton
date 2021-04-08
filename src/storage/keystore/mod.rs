@@ -29,8 +29,8 @@ pub trait Signer: SignerStorage {
 
 #[async_trait]
 pub trait SignerStorage: Downcast {
-    fn load(&mut self, data: &str) -> Result<()>;
-    fn store(&self) -> String;
+    fn load_state(&mut self, data: &str) -> Result<()>;
+    fn store_state(&self) -> String;
 
     fn get_entries(&self) -> Vec<SignerEntry>;
     async fn remove_key(&mut self, public_key: &PublicKey) -> bool;
@@ -145,7 +145,7 @@ impl KeyStore {
             {
                 let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
                 for (name, signer) in self.0.values() {
-                    seq.serialize_element(&StoredDataItem(name.as_str(), &signer.store()))?;
+                    seq.serialize_element(&StoredDataItem(name.as_str(), &signer.store_state()))?;
                 }
                 seq.end()
             }
@@ -242,7 +242,7 @@ impl KeyStoreBuilder {
 
         for (name, data) in data.into_iter() {
             if let Some((storage, type_id)) = self.signers.get_mut(&name) {
-                storage.load(&data)?;
+                storage.load_state(&data)?;
 
                 entries.extend(
                     storage
@@ -269,7 +269,7 @@ impl KeyStoreBuilder {
 
         for (name, data) in data.into_iter() {
             if let Some((storage, type_id)) = self.signers.get_mut(&name) {
-                if storage.load(&data).is_ok() {
+                if storage.load_state(&data).is_ok() {
                     entries.extend(
                         storage
                             .get_entries()
