@@ -7,10 +7,14 @@ use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 
 use super::{TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
+use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
 use crate::utils::*;
 
-pub fn prepare_deploy(public_key: &PublicKey, expire_at: u32) -> Result<Box<dyn UnsignedMessage>> {
+pub fn prepare_deploy(
+    public_key: &PublicKey,
+    expiration: Expiration,
+) -> Result<Box<dyn UnsignedMessage>> {
     let dst = compute_contract_address(public_key, DEFAULT_WORKCHAIN);
     let mut message =
         ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
@@ -24,24 +28,36 @@ pub fn prepare_deploy(public_key: &PublicKey, expire_at: u32) -> Result<Box<dyn 
             .make_state_init()?,
     );
 
-    Ok(Box::new(UnsignedWalletV3Deploy { message, expire_at }))
+    Ok(Box::new(UnsignedWalletV3Deploy {
+        message,
+        expire_at: ExpireAt::new(expiration),
+    }))
 }
 
 #[derive(Clone)]
 struct UnsignedWalletV3Deploy {
     message: ton_block::Message,
-    expire_at: u32,
+    expire_at: ExpireAt,
 }
 
 impl UnsignedMessage for UnsignedWalletV3Deploy {
+    fn refresh_timeout(&mut self) {
+        self.expire_at.refresh();
+    }
+
+    fn expire_at(&self) -> u32 {
+        self.expire_at.timestamp
+    }
+
     fn hash(&self) -> &[u8] {
-        &[]
+        // return empty hash, because there is no message body
+        &[0; 32]
     }
 
     fn sign(&self, _: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
         Ok(SignedMessage {
             message: self.message.clone(),
-            expire_at: self.expire_at,
+            expire_at: self.expire_at(),
         })
     }
 }
@@ -53,7 +69,7 @@ pub fn prepare_transfer(
     amount: u64,
     bounce: bool,
     body: Option<SliceData>,
-    expire_at: u32,
+    expiration: Expiration,
 ) -> Result<TransferAction> {
     let (init_data, with_state_init) = match &current_state.storage.state {
         ton_block::AccountState::AccountActive(active) => match &active.data {
@@ -79,21 +95,23 @@ pub fn prepare_transfer(
         message.set_state_init(init_data.make_state_init()?);
     }
 
-    let (hash, payload) = init_data.make_transfer_payload(
-        Gift {
-            flags: 3,
-            bounce,
-            destination,
-            amount,
-            body,
-            state_init: None,
-        },
-        expire_at,
-    )?;
+    let gift = Gift {
+        flags: 3,
+        bounce,
+        destination,
+        amount,
+        body,
+        state_init: None,
+    };
+
+    let expire_at = ExpireAt::new(expiration);
+    let (hash, payload) = init_data.make_transfer_payload(gift.clone(), expire_at.timestamp)?;
 
     Ok(TransferAction::Sign(Box::new(UnsignedWalletV3Message {
-        hash,
+        init_data,
+        gift,
         payload,
+        hash,
         expire_at,
         message,
     })))
@@ -101,13 +119,32 @@ pub fn prepare_transfer(
 
 #[derive(Clone)]
 struct UnsignedWalletV3Message {
-    hash: UInt256,
+    init_data: InitData,
+    gift: Gift,
     payload: BuilderData,
-    expire_at: u32,
+    hash: UInt256,
+    expire_at: ExpireAt,
     message: ton_block::Message,
 }
 
 impl UnsignedMessage for UnsignedWalletV3Message {
+    fn refresh_timeout(&mut self) {
+        if !self.expire_at.refresh() {
+            return;
+        }
+
+        let (hash, payload) = self
+            .init_data
+            .make_transfer_payload(self.gift.clone(), self.expire_at())
+            .trust_me();
+        self.hash = hash;
+        self.payload = payload;
+    }
+
+    fn expire_at(&self) -> u32 {
+        self.expire_at.timestamp
+    }
+
     fn hash(&self) -> &[u8] {
         self.hash.as_slice()
     }
@@ -123,7 +160,7 @@ impl UnsignedMessage for UnsignedWalletV3Message {
 
         Ok(SignedMessage {
             message,
-            expire_at: self.expire_at,
+            expire_at: self.expire_at(),
         })
     }
 }
@@ -136,6 +173,7 @@ pub fn compute_contract_address(public_key: &PublicKey, workchain_id: i8) -> Msg
 }
 
 /// WalletV3 init data
+#[derive(Clone)]
 pub struct InitData {
     pub seqno: u32,
     pub wallet_id: u32,
@@ -206,7 +244,7 @@ impl InitData {
             ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
                 ihr_disabled: true,
                 bounce: gift.bounce,
-                dst: gift.destination.clone(),
+                dst: gift.destination,
                 value: gift.amount.into(),
                 ..Default::default()
             });
@@ -245,6 +283,7 @@ impl TryFrom<&Cell> for InitData {
 }
 
 /// WalletV3 transfer info
+#[derive(Clone)]
 pub struct Gift {
     pub flags: u8,
     pub bounce: bool,

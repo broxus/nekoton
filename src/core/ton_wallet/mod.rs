@@ -17,8 +17,8 @@ use ton_types::SliceData;
 
 pub use self::multisig::MultisigType;
 use super::models::{
-    AccountState, AccountSubscriptionError, GenTimings, PendingTransaction, Transaction,
-    TransactionId, TransactionsBatchInfo,
+    AccountState, AccountSubscriptionError, Expiration, GenTimings, PendingTransaction,
+    Transaction, TransactionId, TransactionsBatchInfo,
 };
 use super::{utils, AccountSubscription, PollingMethod};
 use crate::core::utils::PendingTransactionsExt;
@@ -54,12 +54,12 @@ impl TonWallet {
         self.contract_type
     }
 
-    pub fn prepare_deploy(&self, expire_at: u32) -> Result<Box<dyn UnsignedMessage>> {
+    pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
         match self.contract_type {
             ContractType::Multisig(multisig_type) => {
-                multisig::prepare_deploy(&self.public_key, multisig_type, expire_at)
+                multisig::prepare_deploy(&self.public_key, multisig_type, expiration)
             }
-            ContractType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expire_at),
+            ContractType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expiration),
         }
     }
 
@@ -70,7 +70,7 @@ impl TonWallet {
         amount: u64,
         bounce: bool,
         body: Option<SliceData>,
-        expire_at: u32,
+        expiration: Expiration,
     ) -> Result<TransferAction> {
         match self.contract_type {
             ContractType::Multisig(_) => multisig::prepare_transfer(
@@ -80,7 +80,7 @@ impl TonWallet {
                 amount,
                 bounce,
                 body,
-                expire_at,
+                expiration,
             ),
             ContractType::WalletV3 => wallet_v3::prepare_transfer(
                 &self.public_key,
@@ -89,7 +89,7 @@ impl TonWallet {
                 amount,
                 bounce,
                 body,
-                expire_at,
+                expiration,
             ),
         }
     }
@@ -195,19 +195,19 @@ impl TonWalletSubscription {
     /// Calculate message execution fees
     pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
         let blockchain_config = self.transport.get_blockchain_config().await?;
-        let (account, timings, last_transaction_id) =
-            match self.transport.get_account_state(&self.address).await? {
-                ContractState::Exists {
-                    account,
-                    timings,
-                    last_transaction_id,
-                } => (account, timings, last_transaction_id),
-                _ => return Err(ContractExecutionError::ContractNotFound.into()),
-            };
+        let state = match self.transport.get_account_state(&self.address).await? {
+            ContractState::Exists(state) => state,
+            _ => return Err(ContractExecutionError::ContractNotFound.into()),
+        };
 
-        let transaction = Executor::new(blockchain_config, account, timings, &last_transaction_id)
-            .disable_signature_check()
-            .run(message)?;
+        let transaction = Executor::new(
+            blockchain_config,
+            state.account,
+            state.timings,
+            &state.last_transaction_id,
+        )
+        .disable_signature_check()
+        .run(message)?;
 
         Ok(transaction.total_fees.grams.0 as u64)
     }
@@ -215,39 +215,17 @@ impl TonWalletSubscription {
     /// Requests current account state and notifies the handler if it was changed
     pub async fn refresh_account_state(&mut self) -> Result<bool> {
         let new_state = match self.transport.get_account_state(&self.address).await? {
-            ContractState::NotExists => AccountState {
-                balance: 0,
-                gen_timings: GenTimings::Unknown,
-                last_transaction_id: None,
-                is_deployed: false,
-            },
-            ContractState::Exists {
-                account,
-                timings,
-                last_transaction_id,
-            } => AccountState {
-                balance: account.storage.balance.grams.0 as u64,
-                gen_timings: timings,
-                last_transaction_id: Some(last_transaction_id),
-                is_deployed: matches!(
-                    account.storage.state,
-                    ton_block::AccountState::AccountActive(_)
-                ),
-            },
+            ContractState::NotExists => AccountState::default(),
+            ContractState::Exists(state) => state.account_state(),
         };
 
-        match (
-            &self.account_state.last_transaction_id,
-            &new_state.last_transaction_id,
-        ) {
-            (None, Some(_)) => self.account_state = new_state,
-            (Some(current), Some(new)) if current < new => self.account_state = new_state,
-            _ => return Ok(false),
-        }
-
-        self.handler.on_state_changed(self.account_state.clone());
-
-        Ok(true)
+        Ok(if new_state != self.account_state {
+            self.account_state = new_state;
+            self.handler.on_state_changed(self.account_state.clone());
+            true
+        } else {
+            false
+        })
     }
 
     /// Requests the latest transactions and notifies the handler if some were found

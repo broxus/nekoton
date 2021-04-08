@@ -143,7 +143,7 @@ impl Transport for AdnlTransport {
                     .map_err(|_| QueryAccountStateError::InvalidAccountStateProof)?;
 
                 Ok(if let Some(shard_info) = shard_info {
-                    ContractState::Exists {
+                    ContractState::Exists(ExistingContract {
                         account,
                         timings: GenTimings::Known {
                             gen_lt: ss.gen_lt(),
@@ -153,7 +153,7 @@ impl Transport for AdnlTransport {
                             lt: shard_info.last_trans_lt(),
                             hash: *shard_info.last_trans_hash(),
                         }),
-                    }
+                    })
                 } else {
                     ContractState::NotExists
                 })

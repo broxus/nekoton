@@ -5,6 +5,10 @@ use anyhow::Error;
 use ton_block::MsgAddressInt;
 use ton_types::{SliceData, UInt256};
 
+pub fn now() -> u32 {
+    chrono::Utc::now().timestamp() as u32
+}
+
 pub trait NoFailure {
     type Output;
     fn convert(self) -> Result<Self::Output, Error>;

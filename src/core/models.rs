@@ -11,6 +11,7 @@ use ton_types::UInt256;
 use crate::utils::*;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum PollingMethod {
     /// Manual polling once a minute or by a click.
     /// Used when there are no pending transactions
@@ -18,6 +19,70 @@ pub enum PollingMethod {
     /// Block-walking for GQL or fast refresh for ADNL.
     /// Used when there are some pending transactions
     Reliable,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Expiration {
+    /// Message will never be expired. Not recommended to use
+    Never,
+    /// Interval after which the message will be invalid.
+    /// Expiration timestamp should be refreshed as close to
+    /// signing as possible
+    Timeout(u32),
+    /// The specific moment in time. Will stay the same after each
+    /// refresh
+    Timestamp(u32),
+}
+
+impl Expiration {
+    pub fn timestamp(&self) -> u32 {
+        match self {
+            Self::Never => u32::MAX,
+            Self::Timeout(timeout) => now() + timeout,
+            &Self::Timestamp(timestamp) => timestamp,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct ExpireAt {
+    pub expiration: Expiration,
+    pub timestamp: u32,
+}
+
+impl ExpireAt {
+    pub fn new(expiration: Expiration) -> Self {
+        Self {
+            expiration,
+            timestamp: expiration.timestamp(),
+        }
+    }
+
+    pub fn new_from_millis(expiration: Expiration, time: u64) -> Self {
+        let mut expire_at = Self {
+            expiration,
+            timestamp: 0,
+        };
+        expire_at.refresh_from_millis(time);
+        expire_at
+    }
+
+    pub fn refresh(&mut self) -> bool {
+        let old_timestamp = self.timestamp;
+        self.timestamp = self.expiration.timestamp();
+        self.timestamp != old_timestamp
+    }
+
+    pub fn refresh_from_millis(&mut self, time: u64) -> bool {
+        let old_timestamp = self.timestamp;
+        self.timestamp = if let Expiration::Timeout(timeout) = self.expiration {
+            (time / 1000) as u32 + timeout
+        } else {
+            self.expiration.timestamp()
+        };
+        self.timestamp != old_timestamp
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -98,11 +163,14 @@ pub struct RootTokenContractDetails {
 pub struct TokenWalletState {
     /// Balance in tokens
     pub balance: BigUint,
-    /// Address of tokens proxy contract
-    #[serde(with = "serde_optional_address")]
-    pub proxy_address: Option<MsgAddressInt>,
     /// Underlying contract state
     pub account_state: AccountState,
+}
+
+impl PartialEq for TokenWalletState {
+    fn eq(&self, other: &Self) -> bool {
+        self.account_state.eq(&other.account_state)
+    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -115,6 +183,16 @@ pub struct AccountState {
     pub last_transaction_id: Option<LastTransactionId>,
     /// Whether the contract is deployed
     pub is_deployed: bool,
+}
+
+impl PartialEq for AccountState {
+    fn eq(&self, other: &Self) -> bool {
+        match (&self.last_transaction_id, &other.last_transaction_id) {
+            (None, Some(_)) => true,
+            (Some(current), Some(new)) if current < new => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]

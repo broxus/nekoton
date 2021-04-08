@@ -247,11 +247,11 @@ impl Transport for GqlTransport {
                     latest_lt: account.storage.last_trans_lt,
                 };
 
-                Ok(ContractState::Exists {
+                Ok(ContractState::Exists(ExistingContract {
                     account,
                     timings: GenTimings::Unknown,
                     last_transaction_id,
-                })
+                }))
             }
             Ok(_) => Ok(ContractState::NotExists),
             Err(_) => Err(NodeClientError::InvalidAccountState.into()),
