@@ -23,7 +23,7 @@ pub trait Signer: SignerStorage {
     type CreateKeyInput;
     type SignInput: WithPublicKey;
 
-    async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<KeyStoreEntry>;
+    async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey>;
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;
 }
 
@@ -32,7 +32,7 @@ pub trait SignerStorage: Downcast {
     fn load(&mut self, data: &str) -> Result<()>;
     fn store(&self) -> String;
 
-    fn get_entries(&self) -> Vec<KeyStoreEntry>;
+    fn get_entries(&self) -> Vec<SignerEntry>;
     async fn remove_key(&mut self, public_key: &PublicKey) -> bool;
     async fn clear(&mut self);
 }
@@ -59,13 +59,17 @@ impl KeyStore {
 
     pub async fn get_entries(&self) -> Vec<KeyStoreEntry> {
         let state = self.state.read().await;
-
         state
             .entries
             .iter()
-            .map(|(public_key, (name, _))| KeyStoreEntry {
-                name: name.clone(),
-                public_key: PublicKey::from_bytes(public_key).trust_me(),
+            .filter_map(|(public_key, (name, type_id))| {
+                let signer_name = state.signers.get(type_id)?.0.clone();
+
+                Some(KeyStoreEntry {
+                    name: name.clone(),
+                    public_key: PublicKey::from_bytes(public_key).trust_me(),
+                    signer_name,
+                })
             })
             .collect()
     }
@@ -76,14 +80,19 @@ impl KeyStore {
     {
         let mut state = self.state.write().await;
 
-        let entry: KeyStoreEntry = state.get_signer_mut::<T>()?.add_key(name, input).await?;
-        state.entries.insert(
-            entry.public_key.to_bytes(),
-            (entry.name.clone(), TypeId::of::<T>()),
-        );
+        let (signer_name, signer): (_, &mut T) = state.get_signer_mut::<T>()?;
+
+        let public_key = signer.add_key(name, input).await?;
+        state
+            .entries
+            .insert(public_key.to_bytes(), (name.to_owned(), TypeId::of::<T>()));
 
         self.save(&state.signers).await?;
-        Ok(entry)
+        Ok(KeyStoreEntry {
+            name: name.to_owned(),
+            public_key,
+            signer_name,
+        })
     }
 
     pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<Signature>
@@ -168,23 +177,34 @@ impl KeyStoreState {
         Ok(signer)
     }
 
-    fn get_signer_mut<T>(&mut self) -> Result<&mut T>
+    fn get_signer_mut<T>(&mut self) -> Result<(String, &mut T)>
     where
         T: Signer,
     {
         let signer = self
             .signers
             .get_mut(&TypeId::of::<T>())
-            .and_then(|(_, signer)| signer.downcast_mut::<T>())
+            .and_then(|(name, signer)| {
+                signer
+                    .downcast_mut::<T>()
+                    .map(|signer| (name.clone(), signer))
+            })
             .ok_or(KeyStoreError::UnsupportedSigner)?;
         Ok(signer)
     }
 }
 
 #[derive(Clone)]
+pub struct SignerEntry {
+    pub name: String,
+    pub public_key: PublicKey,
+}
+
+#[derive(Clone)]
 pub struct KeyStoreEntry {
     pub name: String,
     pub public_key: PublicKey,
+    pub signer_name: String,
 }
 
 pub struct KeyStoreBuilder {
