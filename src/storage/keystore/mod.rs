@@ -1,131 +1,300 @@
+use std::any::TypeId;
 use std::collections::hash_map::{self, HashMap};
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use anyhow::Result;
-use tokio::sync::{RwLock, RwLockReadGuard};
+use async_trait::async_trait;
+use downcast_rs::{impl_downcast, Downcast};
+use ed25519_dalek::PublicKey;
+use futures::future;
+use serde::{Serialize, Serializer};
+use tokio::sync::RwLock;
 
-use crate::crypto::EncryptedKey;
 use crate::external::Storage;
-use crate::utils::*;
+use crate::utils::TrustMe;
 
 const STORAGE_KEYSTORE: &str = "keystore";
 
+type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
+
+#[async_trait]
+pub trait Signer: SignerStorage {
+    type CreateKeyInput;
+    type SignInput: WithPublicKey;
+
+    async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<KeyStoreEntry>;
+    async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;
+}
+
+#[async_trait]
+pub trait SignerStorage: Downcast {
+    fn load(&mut self, data: &str) -> Result<()>;
+    fn store(&self) -> String;
+
+    fn get_entries(&self) -> Vec<KeyStoreEntry>;
+    async fn remove_key(&mut self, public_key: &PublicKey) -> bool;
+    async fn clear(&mut self);
+}
+
+impl_downcast!(SignerStorage);
+
+pub trait WithPublicKey {
+    fn public_key(&self) -> &PublicKey;
+}
+
 pub struct KeyStore {
+    state: RwLock<KeyStoreState>,
     storage: Arc<dyn Storage>,
-    keys: RwLock<HashMap<String, EncryptedKey>>,
 }
 
 impl KeyStore {
-    /// Loads full keystore state from the storage. Fails on invalid data
-    pub async fn load(storage: Arc<dyn Storage>) -> Result<Self> {
-        struct KeysMap(HashMap<String, EncryptedKey>);
-
-        impl<'de> serde::Deserialize<'de> for KeysMap {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                use serde::de::Error;
-
-                let keys = HashMap::<String, String>::deserialize(deserializer)?;
-                let keys = keys
-                    .into_iter()
-                    .map(|(public_key, stored)| {
-                        let stored =
-                            EncryptedKey::from_reader(&mut std::io::Cursor::new(stored))
-                                .map_err(|_| D::Error::custom("Failed to deserialize StoredKey"))?;
-                        Ok((public_key, stored))
-                    })
-                    .collect::<Result<_, _>>()?;
-                Ok(KeysMap(keys))
-            }
+    pub fn new(storage: Arc<dyn Storage>) -> KeyStoreBuilder {
+        KeyStoreBuilder {
+            storage,
+            signers: Default::default(),
+            signer_types: Default::default(),
         }
+    }
 
-        let data = match storage.get(STORAGE_KEYSTORE).await? {
-            Some(data) => serde_json::from_str::<KeysMap>(&data)?.0,
-            None => Default::default(),
+    pub async fn get_entries(&self) -> Vec<KeyStoreEntry> {
+        let state = self.state.read().await;
+
+        state
+            .entries
+            .iter()
+            .map(|(public_key, (name, _))| KeyStoreEntry {
+                name: name.clone(),
+                public_key: PublicKey::from_bytes(public_key).trust_me(),
+            })
+            .collect()
+    }
+
+    pub async fn add_key<T>(&self, name: &str, input: T::CreateKeyInput) -> Result<KeyStoreEntry>
+    where
+        T: Signer,
+    {
+        let mut state = self.state.write().await;
+
+        let entry: KeyStoreEntry = state.get_signer_mut::<T>()?.add_key(name, input).await?;
+        state.entries.insert(
+            entry.public_key.to_bytes(),
+            (entry.name.clone(), TypeId::of::<T>()),
+        );
+
+        self.save(&state.signers).await?;
+        Ok(entry)
+    }
+
+    pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<Signature>
+    where
+        T: Signer,
+    {
+        let state = self.state.read().await;
+        state.get_signer_ref::<T>()?.sign(data, input).await
+    }
+
+    pub async fn remove_key(&self, public_key: &PublicKey) -> Result<()> {
+        let mut state = self.state.write().await;
+
+        let signer_id = match state.entries.remove(public_key.as_bytes()) {
+            Some((_, signer_id)) => signer_id,
+            None => return Ok(()),
         };
 
-        Ok(Self {
-            storage,
-            keys: RwLock::new(data),
-        })
+        let signer = match state.signers.get_mut(&signer_id) {
+            Some((_, signer)) => signer,
+            None => return Ok(()),
+        };
+
+        signer.remove_key(public_key).await;
+
+        self.save(&state.signers).await
     }
 
-    /// Loads full keystore state from the storage. Returns empty keystore on invalid data
-    pub async fn load_unchecked(storage: Arc<dyn Storage>) -> Self {
-        Self::load(storage.clone()).await.unwrap_or_else(|_| Self {
-            storage,
-            keys: Default::default(),
-        })
-    }
-
-    /// Adds new key to the keystore.
-    ///
-    /// Returns hex-encoded public key, which can be used as key id later
-    pub async fn add_key(&self, key: EncryptedKey) -> Result<String> {
-        let public_key = hex::encode(key.public_key());
-
-        let mut keys = self.keys.write().await;
-        match keys.entry(public_key.clone()) {
-            hash_map::Entry::Occupied(_) => return Err(KeyStoreError::KeyAlreadyExists.into()),
-            hash_map::Entry::Vacant(entry) => {
-                entry.insert(key);
-            }
-        }
-
-        self.save(&*keys).await?;
-        Ok(public_key)
-    }
-
-    /// Removes key from the keystore
-    ///
-    /// # Arguments
-    /// `public_key` - hex encoded public key
-    pub async fn remove_key(&self, public_key: &str) -> Result<Option<EncryptedKey>> {
-        let mut keys = self.keys.write().await;
-        let result = keys.remove(public_key);
-
-        self.save(&*keys).await?;
-        Ok(result)
-    }
-
-    /// Removes all keys
     pub async fn clear(&self) -> Result<()> {
-        self.storage.remove(STORAGE_KEYSTORE).await?;
-        self.keys.write().await.clear();
-        Ok(())
+        let mut state = self.state.write().await;
+
+        state.entries.clear();
+        future::join_all(state.signers.values_mut().map(|(_, signer)| signer.clear())).await;
+
+        self.save(&state.signers).await
     }
 
-    /// Returns handler to the inner keys map
-    pub async fn stored_keys(&'_ self) -> RwLockReadGuard<'_, HashMap<String, EncryptedKey>> {
-        self.keys.read().await
-    }
+    async fn save(&self, signers: &SignersMap) -> Result<()> {
+        use serde::ser::SerializeSeq;
 
-    async fn save(&self, keys: &HashMap<String, EncryptedKey>) -> Result<()> {
-        struct KeysMap<'a>(&'a HashMap<String, EncryptedKey>);
+        struct StoredData<'a>(&'a SignersMap);
 
-        impl<'a> serde::Serialize for KeysMap<'a> {
+        #[derive(Serialize)]
+        struct StoredDataItem<'a>(&'a str, &'a str);
+
+        impl<'a> Serialize for StoredData<'a> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: serde::Serializer,
+                S: Serializer,
             {
-                use serde::ser::SerializeMap;
-                let mut map = serializer.serialize_map(Some(self.0.len()))?;
-                for (key, value) in self.0.iter() {
-                    map.serialize_entry(key, &value.as_json())?;
+                let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+                for (name, signer) in self.0.values() {
+                    seq.serialize_element(&StoredDataItem(name.as_str(), &signer.store()))?;
                 }
-                map.end()
+                seq.end()
             }
         }
 
-        let data = serde_json::to_string(&KeysMap(keys)).trust_me();
+        let data = serde_json::to_string(&StoredData(signers))?;
         self.storage.set(STORAGE_KEYSTORE, &data).await
     }
 }
 
+struct KeyStoreState {
+    signers: SignersMap,
+    entries: EntriesMap,
+}
+
+type SignersMap = HashMap<TypeId, (String, Box<dyn SignerStorage>)>;
+type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, TypeId)>;
+
+impl KeyStoreState {
+    fn get_signer_ref<T>(&self) -> Result<&T>
+    where
+        T: Signer,
+    {
+        let signer = self
+            .signers
+            .get(&TypeId::of::<T>())
+            .and_then(|(_, signer)| signer.downcast_ref::<T>())
+            .ok_or(KeyStoreError::UnsupportedSigner)?;
+        Ok(signer)
+    }
+
+    fn get_signer_mut<T>(&mut self) -> Result<&mut T>
+    where
+        T: Signer,
+    {
+        let signer = self
+            .signers
+            .get_mut(&TypeId::of::<T>())
+            .and_then(|(_, signer)| signer.downcast_mut::<T>())
+            .ok_or(KeyStoreError::UnsupportedSigner)?;
+        Ok(signer)
+    }
+}
+
+#[derive(Clone)]
+pub struct KeyStoreEntry {
+    pub name: String,
+    pub public_key: PublicKey,
+}
+
+pub struct KeyStoreBuilder {
+    storage: Arc<dyn Storage>,
+    signers: HashMap<String, (Box<dyn SignerStorage>, TypeId)>,
+    signer_types: HashSet<TypeId>,
+}
+
+type BuilderSignersMap = HashMap<String, (Box<dyn SignerStorage>, TypeId)>;
+
+impl KeyStoreBuilder {
+    pub fn with_signer<T>(mut self, name: &str, signer: T) -> Result<Self, KeyStoreError>
+    where
+        T: Signer,
+    {
+        let type_id = TypeId::of::<T>();
+        if self.signer_types.insert(type_id) {
+            return Err(KeyStoreError::DuplicateSignerType);
+        }
+
+        match self.signers.entry(name.to_owned()) {
+            hash_map::Entry::Vacant(entry) => {
+                entry.insert((Box::new(signer), type_id));
+            }
+            hash_map::Entry::Occupied(_) => return Err(KeyStoreError::DuplicateSignerType),
+        }
+
+        Ok(self)
+    }
+
+    pub async fn load(mut self) -> Result<KeyStore> {
+        let data = self.load_stored_data().await?;
+
+        let mut entries = HashMap::new();
+
+        for (name, data) in data.into_iter() {
+            if let Some((storage, type_id)) = self.signers.get_mut(&name) {
+                storage.load(&data)?;
+
+                entries.extend(
+                    storage
+                        .get_entries()
+                        .into_iter()
+                        .map(|entry| (entry.public_key.to_bytes(), (entry.name, *type_id))),
+                );
+            }
+        }
+
+        Ok(KeyStore {
+            state: RwLock::new(KeyStoreState {
+                signers: transpose_signers(self.signers),
+                entries,
+            }),
+            storage: self.storage,
+        })
+    }
+
+    pub async fn load_unchecked(mut self) -> KeyStore {
+        let data = self.load_stored_data().await.unwrap_or_default();
+
+        let mut entries = HashMap::new();
+
+        for (name, data) in data.into_iter() {
+            if let Some((storage, type_id)) = self.signers.get_mut(&name) {
+                if storage.load(&data).is_ok() {
+                    entries.extend(
+                        storage
+                            .get_entries()
+                            .into_iter()
+                            .map(|entry| (entry.public_key.to_bytes(), (entry.name, *type_id))),
+                    );
+                }
+            }
+        }
+
+        KeyStore {
+            state: RwLock::new(KeyStoreState {
+                signers: transpose_signers(self.signers),
+                entries,
+            }),
+            storage: self.storage,
+        }
+    }
+
+    async fn load_stored_data(&self) -> Result<Vec<(String, String)>> {
+        match self.storage.get(STORAGE_KEYSTORE).await? {
+            Some(data) => {
+                let data = serde_json::from_str(&data)?;
+                Ok(data)
+            }
+            None => Ok(Default::default()),
+        }
+    }
+}
+
+fn transpose_signers(signers: BuilderSignersMap) -> SignersMap {
+    signers
+        .into_iter()
+        .map(|(name, (signer, type_id))| (type_id, (name, signer)))
+        .collect()
+}
+
 #[derive(thiserror::Error, Debug)]
-enum KeyStoreError {
-    #[error("Key already exists")]
-    KeyAlreadyExists,
+pub enum KeyStoreError {
+    #[error("Duplicate signer name")]
+    DuplicateSignerName,
+    #[error("Duplicate signer type")]
+    DuplicateSignerType,
+    #[error("Key not found")]
+    KeyNotFound,
+    #[error("Unsupported signer")]
+    UnsupportedSigner,
 }
