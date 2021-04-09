@@ -1,10 +1,12 @@
 use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
-use crate::core::models::{AccountState, GenTimings, LastTransactionId};
+use crate::core::models::{
+    AccountState, GenTimings, LastTransactionId, PendingTransaction, TransactionId,
+};
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum ContractState {
     NotExists,
     Exists(ExistingContract),
@@ -31,8 +33,46 @@ impl ExistingContract {
     }
 }
 
+impl PartialEq for ExistingContract {
+    fn eq(&self, other: &Self) -> bool {
+        self.account
+            .storage
+            .last_trans_lt
+            .eq(&other.account.storage.last_trans_lt)
+    }
+}
+
 #[derive(Clone)]
 pub struct TransactionFull {
     pub hash: UInt256,
     pub data: Transaction,
+}
+
+impl TransactionFull {
+    pub fn id(&self) -> TransactionId {
+        TransactionId {
+            lt: self.data.lt,
+            hash: self.hash,
+        }
+    }
+}
+
+impl PartialEq<TransactionFull> for PendingTransaction {
+    fn eq(&self, other: &TransactionFull) -> bool {
+        if self.expire_at >= other.data.now {
+            return false;
+        }
+
+        match other.data.in_msg.and_then(|msg| msg.read_struct().ok()) {
+            Some(msg) if self.src == msg.src() => {
+                let body_hash = msg
+                    .body()
+                    .map(|body| body.hash(ton_types::MAX_LEVEL))
+                    .unwrap_or_default();
+
+                self.body_hash == body_hash
+            }
+            _ => false,
+        }
+    }
 }

@@ -3,10 +3,11 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use async_trait::async_trait;
+use futures::{Stream, StreamExt};
 use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 
-use super::AccountSubscription;
+use super::utils;
 use crate::contracts;
 use crate::core::models::{
     AccountState, GenTimings, LastTransactionId, PendingTransaction, PollingMethod,
@@ -55,7 +56,7 @@ pub struct TokenWalletSubscription {
     symbol: Symbol,
     version: TokenWalletVersion,
     root_meta_address: MsgAddressInt,
-    account_state: TokenWalletState,
+    wallet_state: TokenWalletState,
     latest_known_transaction: Option<TransactionId>,
     pending_transactions: Vec<PendingTransaction>,
 }
@@ -74,9 +75,9 @@ impl TokenWalletSubscription {
             }
         };
 
-        Ok(if new_state != self.account_state {
-            self.account_state = new_state;
-            self.handler.on_state_changed(self.account_state.clone());
+        Ok(if new_state != self.wallet_state {
+            self.wallet_state = new_state;
+            self.handler.on_state_changed(self.wallet_state.clone());
             true
         } else {
             false
@@ -95,28 +96,56 @@ impl TokenWalletSubscription {
             _ => return Err(TokenWalletError::InvalidRootMetaContract.into()),
         }
     }
-}
 
-#[async_trait]
-impl AccountSubscription for TokenWalletSubscription {
-    async fn send(
+    pub async fn refresh_latest_transactions(
         &mut self,
-        message: &ton_block::Message,
-        expire_at: u32,
-    ) -> Result<PendingTransaction> {
-        todo!()
-    }
+        initial_count: u8,
+        limit: Option<usize>,
+    ) -> Result<()> {
+        let from = match self.wallet_state.account_state.last_transaction_id {
+            Some(id) => id.to_transaction_id(),
+            None => return Ok(()),
+        };
 
-    async fn refresh(&mut self) -> Result<()> {
-        todo!()
-    }
+        let mut new_latest_known_transaction = None;
 
-    async fn handle_block(&mut self, block: &ton_block::Block) -> Result<()> {
-        todo!()
-    }
+        // clone request context, because `&mut self` is needed later
+        let transport = self.transport.clone();
+        let address = self.address.clone();
+        let latest_known_transaction = self.latest_known_transaction;
 
-    fn polling_method(&self) -> PollingMethod {
-        todo!()
+        let mut transactions = utils::request_transactions(
+            transport.as_ref(),
+            &address,
+            from,
+            latest_known_transaction.as_ref(),
+            initial_count,
+            limit,
+        );
+
+        while let Some((new_transactions, batch_info)) = transactions.next().await {
+            let new_transactions =
+                utils::convert_transactions(new_transactions).collect::<Vec<_>>();
+            if new_transactions.is_empty() {
+                continue;
+            }
+
+            if new_latest_known_transaction.is_none() {
+                new_latest_known_transaction =
+                    new_transactions.first().map(|transaction| transaction.id);
+            }
+
+            self.handler
+                .on_transactions_found(new_transactions, batch_info);
+        }
+
+        std::mem::drop(transactions);
+
+        if let Some(id) = new_latest_known_transaction {
+            self.latest_known_transaction = Some(id);
+        }
+
+        Ok(())
     }
 }
 
