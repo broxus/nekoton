@@ -88,16 +88,12 @@ impl TokenWalletSubscription {
         let account_subscription = AccountSubscription::subscribe(
             transport.clone(),
             address,
-            |contract_state| {
-                if let ContractState::Exists(state) = contract_state {
-                    if let Ok(new_balance) = TokenWalletContractState(state).get_balance(version) {
-                        balance = new_balance;
-                    }
-                }
-            },
+            make_contract_state_handler(version, &mut balance),
             make_transactions_handler(&handler),
         )
         .await?;
+
+        handler.on_balance_changed(balance.clone());
 
         let symbol = Symbol {
             name: symbol,
@@ -116,6 +112,22 @@ impl TokenWalletSubscription {
         })
     }
 
+    pub fn address(&self) -> &MsgAddressInt {
+        &self.account_subscription.address()
+    }
+
+    pub fn balance(&self) -> &BigUint {
+        &self.balance
+    }
+
+    pub fn account_state(&self) -> &AccountState {
+        self.account_subscription.account_state()
+    }
+
+    pub fn polling_method(&self) -> PollingMethod {
+        self.account_subscription.polling_method()
+    }
+
     pub async fn get_proxy_address(&mut self) -> Result<MsgAddressInt> {
         match self
             .transport
@@ -128,11 +140,33 @@ impl TokenWalletSubscription {
             _ => return Err(TokenWalletError::InvalidRootMetaContract.into()),
         }
     }
+
+    pub async fn refresh(&mut self) -> Result<()> {
+        let mut balance = self.balance.clone();
+        self.account_subscription
+            .refresh(
+                make_contract_state_handler(self.version, &mut balance),
+                make_transactions_handler(&self.handler),
+                |_, _| {},
+                |_| {},
+            )
+            .await?;
+        if balance != self.balance {
+            self.balance = balance;
+            self.handler.on_balance_changed(self.balance.clone());
+        }
+        Ok(())
+    }
+
+    pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
+        self.account_subscription
+            .preload_transactions(from, make_transactions_handler(&self.handler))
+            .await
+    }
 }
 
 pub trait TokenWalletSubscriptionHandler: Send + Sync {
-    /// Called every time a new state is detected
-    fn on_state_changed(&self, new_state: TokenWalletState);
+    fn on_balance_changed(&self, balance: BigUint);
 
     /// Called every time new transactions are detected.
     /// - When new block found
@@ -143,6 +177,19 @@ pub trait TokenWalletSubscriptionHandler: Send + Sync {
         transactions: Vec<Transaction>,
         batch_info: TransactionsBatchInfo,
     );
+}
+
+fn make_contract_state_handler<'a>(
+    version: TokenWalletVersion,
+    balance: &'a mut BigUint,
+) -> impl FnMut(&ContractState) + 'a {
+    move |contract_state| {
+        if let ContractState::Exists(state) = contract_state {
+            if let Ok(new_balance) = TokenWalletContractState(state).get_balance(version) {
+                *balance = new_balance;
+            }
+        }
+    }
 }
 
 fn make_transactions_handler<'a, T>(
