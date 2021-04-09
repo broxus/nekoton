@@ -49,6 +49,7 @@ ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
 ton_executor = {git = "https://github.com/broxus/ton-labs-executor.git"}
 failure = "0.1.8"
 chrono = "0.4.19"
+zeroize = "1.2.0"
 
 [dev-dependencies]
 pretty_assertions = "0.7.1"

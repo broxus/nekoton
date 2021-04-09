@@ -8,12 +8,12 @@ use async_trait::async_trait;
 use downcast_rs::{impl_downcast, Downcast};
 use ed25519_dalek::PublicKey;
 use futures::future;
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::RwLock;
 
+use crate::crypto::ser::hex_pubkey;
 use crate::external::Storage;
 use crate::utils::TrustMe;
-
 const STORAGE_KEYSTORE: &str = "keystore";
 
 type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
@@ -21,7 +21,7 @@ type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
 #[async_trait]
 pub trait Signer: SignerStorage {
     type CreateKeyInput;
-    type SignInput: WithPublicKey;
+    type SignInput;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey>;
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;
@@ -29,8 +29,8 @@ pub trait Signer: SignerStorage {
 
 #[async_trait]
 pub trait SignerStorage: Downcast {
-    fn load(&mut self, data: &str) -> Result<()>;
-    fn store(&self) -> String;
+    fn load_state(&mut self, data: &str) -> Result<()>;
+    fn store_state(&self) -> String;
 
     fn get_entries(&self) -> Vec<SignerEntry>;
     async fn remove_key(&mut self, public_key: &PublicKey) -> bool;
@@ -145,7 +145,7 @@ impl KeyStore {
             {
                 let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
                 for (name, signer) in self.0.values() {
-                    seq.serialize_element(&StoredDataItem(name.as_str(), &signer.store()))?;
+                    seq.serialize_element(&StoredDataItem(name.as_str(), &signer.store_state()))?;
                 }
                 seq.end()
             }
@@ -194,9 +194,10 @@ impl KeyStoreState {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct SignerEntry {
     pub name: String,
+    #[serde(with = "hex_pubkey")]
     pub public_key: PublicKey,
 }
 
@@ -242,7 +243,7 @@ impl KeyStoreBuilder {
 
         for (name, data) in data.into_iter() {
             if let Some((storage, type_id)) = self.signers.get_mut(&name) {
-                storage.load(&data)?;
+                storage.load_state(&data)?;
 
                 entries.extend(
                     storage
@@ -269,7 +270,7 @@ impl KeyStoreBuilder {
 
         for (name, data) in data.into_iter() {
             if let Some((storage, type_id)) = self.signers.get_mut(&name) {
-                if storage.load(&data).is_ok() {
+                if storage.load_state(&data).is_ok() {
                     entries.extend(
                         storage
                             .get_entries()

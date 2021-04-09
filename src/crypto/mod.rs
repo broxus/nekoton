@@ -1,5 +1,8 @@
+mod derived_key;
 mod encrypted_key;
 mod mnemonic;
+pub(crate) mod ser;
+mod symmetric;
 
 pub use encrypted_key::EncryptedKey;
 pub use mnemonic::*;
