@@ -11,9 +11,9 @@ use futures::future;
 use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::RwLock;
 
-use crate::crypto::ser::hex_pubkey;
 use crate::external::Storage;
-use crate::utils::TrustMe;
+use crate::utils::*;
+
 const STORAGE_KEYSTORE: &str = "keystore";
 
 type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
@@ -197,7 +197,7 @@ impl KeyStoreState {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SignerEntry {
     pub name: String,
-    #[serde(with = "hex_pubkey")]
+    #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
 }
 

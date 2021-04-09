@@ -314,3 +314,54 @@ pub mod serde_optional_address {
         Option::<Wrapper>::deserialize(deserializer).map(|wrapper| wrapper.map(|data| data.0))
     }
 }
+
+pub mod serde_bytes {
+    pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: AsRef<[u8]> + Sized,
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&*hex::encode(&data.as_ref()))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        <String as serde::Deserialize>::deserialize(deserializer)
+            .and_then(|string| hex::decode(string).map_err(|e| D::Error::custom(e.to_string())))
+    }
+}
+
+pub mod serde_nonce {
+    use chacha20poly1305::Nonce;
+
+    use super::*;
+
+    pub fn serialize<S>(data: &Nonce, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serde_bytes::serialize(data, serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Nonce, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        serde_bytes::deserialize(deserializer).and_then(|x| {
+            if x.len() != NONCE_LENGTH {
+                Err(serde::de::Error::custom(format!(
+                    "Bad nonce len: {}, expected: 12",
+                    x.len()
+                )))
+            } else {
+                Ok(Nonce::clone_from_slice(&*x))
+            }
+        })
+    }
+}
+
+const NONCE_LENGTH: usize = 12;

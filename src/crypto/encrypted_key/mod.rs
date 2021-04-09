@@ -1,14 +1,7 @@
 use std::fmt;
 use std::fmt::{Debug, Formatter};
 use std::io::Read;
-use std::num::NonZeroU32;
 
-use super::ser::*;
-use crate::crypto::symmetric::{
-    decrypt, decrypt_secure, encrypt, symmetric_key_from_password, SymmetricCryptoError,
-};
-use crate::crypto::*;
-use crate::utils::TrustMe;
 use anyhow::Result;
 use chacha20poly1305::aead::NewAead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
@@ -17,6 +10,12 @@ use ring::digest;
 use ring::rand::SecureRandom;
 use secstr::SecStr;
 use serde::{Deserialize, Serialize};
+
+use crate::crypto::symmetric::{
+    decrypt, decrypt_secure, encrypt, symmetric_key_from_password, SymmetricCryptoError,
+};
+use crate::crypto::*;
+use crate::utils::*;
 
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
@@ -197,20 +196,20 @@ struct CryptoData {
     account_type: MnemonicType,
     name: String,
 
-    #[serde(with = "hex_pubkey")]
+    #[serde(with = "serde_public_key")]
     pubkey: ed25519_dalek::PublicKey,
 
-    #[serde(with = "hex_encode")]
+    #[serde(with = "serde_bytes")]
     encrypted_private_key: Vec<u8>,
-    #[serde(with = "hex_nonce")]
+    #[serde(with = "serde_nonce")]
     private_key_nonce: Nonce,
 
-    #[serde(with = "hex_encode")]
+    #[serde(with = "serde_bytes")]
     encrypted_seed_phrase: Vec<u8>,
-    #[serde(with = "hex_nonce")]
+    #[serde(with = "serde_nonce")]
     seed_phrase_nonce: Nonce,
 
-    #[serde(with = "hex_encode")]
+    #[serde(with = "serde_bytes")]
     salt: Vec<u8>,
 }
 

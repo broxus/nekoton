@@ -7,8 +7,6 @@ use ring::{digest, pbkdf2};
 use secstr::{SecStr, SecVec};
 use thiserror::Error;
 
-const NONCE_LENGTH: usize = 12;
-
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
 #[cfg(debug_assertions)]
@@ -18,8 +16,6 @@ const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1) };
 /// Initial value is optimal for the current machine, so you maybe want to change it.
 #[cfg(not(debug_assertions))]
 const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(100_000) };
-
-fn construct_chaha() {}
 
 /// Decrypts data using specified decrypter and nonce
 pub fn decrypt_secure(
