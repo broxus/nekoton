@@ -161,8 +161,8 @@ impl StoreSigner for MasterKey {
     type SignInput = MasterKeySignParams;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
-        let public = match input {
-            MasterKeySignParams::AddAccount {
+        let public = match input as MasterKeyCreateInput {
+            MasterKeyCreateInput::AddAccount {
                 account_id,
                 password,
             } => {
@@ -177,7 +177,7 @@ impl StoreSigner for MasterKey {
                 });
                 public_key
             }
-            MasterKeySignParams::Restore {
+            MasterKeyCreateInput::Restore {
                 mnemonics: phrase,
                 password,
             } => {
