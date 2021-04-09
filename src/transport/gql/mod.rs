@@ -218,7 +218,7 @@ impl Transport for GqlTransport {
         Ok(())
     }
 
-    async fn get_account_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
+    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
         #[derive(GraphQLQuery)]
         #[graphql(
             schema_path = "src/transport/gql/schema.graphql",

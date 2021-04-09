@@ -1,14 +1,13 @@
+pub mod account_subscription;
 pub mod models;
 pub mod token_wallet;
 pub mod ton_wallet;
 mod utils;
 
 use anyhow::Result;
-use async_trait::async_trait;
 
-use self::models::{
-    AccountState, PendingTransaction, PollingMethod, Transaction, TransactionsBatchInfo,
-};
+pub use self::account_subscription::AccountSubscription;
+use self::models::PollingMethod;
 use crate::transport::Transport;
 
 pub struct TonInterface {

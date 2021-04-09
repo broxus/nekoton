@@ -70,7 +70,7 @@ impl ParsedBlock {
 
 pub fn parse_block(
     address: &MsgAddressInt,
-    account_state: &ContractState,
+    account_state: &AccountState,
     block: &ton_block::Block,
 ) -> Result<ParsedBlock> {
     use ton_block::{Deserializable, HashmapAugType};

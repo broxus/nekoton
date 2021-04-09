@@ -17,7 +17,7 @@ pub trait Transport: Send + Sync {
 
     async fn send_message(&self, message: &ton_block::Message) -> Result<()>;
 
-    async fn get_account_state(&self, address: &MsgAddressInt) -> Result<ContractState>;
+    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<ContractState>;
 
     async fn get_transactions(
         &self,

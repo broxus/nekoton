@@ -63,7 +63,7 @@ pub struct TokenWalletSubscription {
 
 impl TokenWalletSubscription {
     pub async fn refresh_account_state(&mut self) -> Result<bool> {
-        let new_state = match self.transport.get_account_state(&self.address).await? {
+        let new_state = match self.transport.get_contract_state(&self.address).await? {
             ContractState::NotExists => TokenWalletState::default(),
             ContractState::Exists(state) => {
                 let account_state = state.account_state();
@@ -87,11 +87,11 @@ impl TokenWalletSubscription {
     pub async fn get_proxy_address(&mut self) -> Result<MsgAddressInt> {
         match self
             .transport
-            .get_account_state(&self.root_meta_address)
+            .get_contract_state(&self.root_meta_address)
             .await?
         {
             ContractState::Exists(state) => {
-                Ok({ RootMetaContractState(&state).get_details()?.proxy_address })
+                Ok(RootMetaContractState(&state).get_details()?.proxy_address)
             }
             _ => return Err(TokenWalletError::InvalidRootMetaContract.into()),
         }

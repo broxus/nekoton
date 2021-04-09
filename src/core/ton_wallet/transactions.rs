@@ -167,7 +167,7 @@ fn multisig_parse(data: SliceData, tx: &Transaction) -> Option<TransactionAdditi
 #[cfg(test)]
 mod test {
     use ton_block::MsgAddress::AddrStd;
-    use ton_block::{Deserializable, MsgAddrStd, Serializable, Transaction};
+    use ton_block::{Deserializable, MsgAddrStd, Transaction};
 
     use crate::core::ton_wallet::models::{
         EthereumStatusChanged, ParsingContext, TonEventStatus, TransactionAdditionalInfo,

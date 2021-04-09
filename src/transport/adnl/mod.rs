@@ -99,7 +99,7 @@ impl Transport for AdnlTransport {
         Ok(())
     }
 
-    async fn get_account_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
+    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
         use ton_block::{Deserializable, HashmapAugType};
 
         let last_block_id = self.last_block.get_last_block(self).await?;

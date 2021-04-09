@@ -12,6 +12,15 @@ pub enum ContractState {
     Exists(ExistingContract),
 }
 
+impl ContractState {
+    pub fn account_state(&self) -> AccountState {
+        match self {
+            Self::NotExists => AccountState::default(),
+            Self::Exists(state) => state.account_state(),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct ExistingContract {
     pub account: AccountStuff,
@@ -63,7 +72,12 @@ impl PartialEq<TransactionFull> for PendingTransaction {
             return false;
         }
 
-        match other.data.in_msg.and_then(|msg| msg.read_struct().ok()) {
+        match other
+            .data
+            .in_msg
+            .as_ref()
+            .and_then(|msg| msg.read_struct().ok())
+        {
             Some(msg) if self.src == msg.src() => {
                 let body_hash = msg
                     .body()
