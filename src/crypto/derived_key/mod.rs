@@ -17,7 +17,7 @@ use crate::crypto::symmetric::symmetric_key_from_password;
 use crate::crypto::{derive_from_phrase, derive_master_key, MnemonicType};
 use crate::utils::*;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct DerivedKeySigner {
     master_key: Option<MasterKey>,
 }
@@ -133,7 +133,7 @@ impl SignerStorage for DerivedKeySigner {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 struct MasterKey {
     #[serde(with = "serde_public_key")]
     public_key: PublicKey,
@@ -172,7 +172,8 @@ impl MasterKey {
 
         let key = symmetric_key_from_password(password, &*salt);
         let encryptor = ChaCha20Poly1305::new(&key);
-        let phrase = phrase.to_string();
+        let phrase = String::from_utf8(phrase.unsecure().to_vec())?;
+        println!("{}", phrase);
         let entropy = derive_master_key(&phrase)?;
         let enc_entropy = encrypt(&encryptor, &entropy_nonce, &entropy)?;
         let pair = derive_from_phrase(&phrase, MnemonicType::Labs(0))?;
@@ -313,4 +314,26 @@ fn decrypt(dec: &ChaCha20Poly1305, nonce: &Nonce, data: &[u8]) -> Result<Vec<u8>
 fn encrypt(enc: &ChaCha20Poly1305, nonce: &Nonce, data: &[u8]) -> Result<Vec<u8>, MasterKeyError> {
     enc.encrypt(nonce, data)
         .map_err(|_| MasterKeyError::FailedToEncryptData)
+}
+
+#[cfg(test)]
+mod test {
+    use super::StoreSigner;
+    use crate::crypto::{DerivedKeyCreateInput, DerivedKeySigner};
+
+    #[tokio::test]
+    async fn test_creation() {
+        let mut empty = DerivedKeySigner::new();
+        empty.add_key(
+            "lol",
+            DerivedKeyCreateInput::Import {
+                phrase:
+                "pioneer fever hazard scan install wise reform corn bubble leisure amazing note"
+                        .to_string()
+                        .into(),
+                password: "123".to_string().into(),
+            },
+        ).await.unwrap();
+        empty.master_key.unwrap();
+    }
 }

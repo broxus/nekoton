@@ -55,18 +55,13 @@ zeroize = "1.2.0"
 pretty_assertions = "0.7.1"
 hex = "0.4.3"
 criterion = "0.3"
+cargo-husky = "1"
+tokio = { version = "1.4.0", features =["rt-multi-thread", "macros"] }
 
 [features]
 default = []
 std = []
 web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
-
-[target.'cfg(not(target_arch = "wasm32"))'.features]
-default = ["std"]
-
-[target.'cfg(target_arch = "wasm32")'.features]
-default = ["web"]
-
 
 [[bench]]
 name = "words"

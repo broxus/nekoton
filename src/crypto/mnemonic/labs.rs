@@ -5,7 +5,9 @@ use tiny_hderive::bip32::ExtendedPrivKey;
 use crate::utils::TrustMe;
 use std::convert::TryInto;
 
-pub fn derive_master_key(phrase: &str) -> anyhow::Result<[u8; 32]> {
+pub fn derive_master_key(phrase: &str) -> anyhow::Result<[u8; 64]> {
+    let cnt = phrase.split_whitespace().count();
+    anyhow::ensure!(cnt == 12, "Provided {} words instead of 12", cnt);
     let mnemonic = bip39::Mnemonic::from_phrase(phrase, Language::English)?;
     let hd = Seed::new(&mnemonic, "");
     Ok(hd.as_bytes().try_into().trust_me())
@@ -48,6 +50,7 @@ fn ed25519_keys_from_secret_bytes(bytes: &[u8]) -> Result<ed25519_dalek::Keypair
 
 #[cfg(test)]
 mod test {
+    use crate::crypto::derive_master_key;
     use crate::crypto::mnemonic::labs::derive_from_phrase;
 
     #[test]
@@ -75,5 +78,11 @@ mod test {
         .unwrap();
 
         assert_eq!(secret.as_bytes(), target_secret.as_bytes())
+    }
+
+    #[test]
+    fn master_key_derive() {
+        let ph = "pioneer fever hazard scan install wise reform corn bubble leisure amazing note";
+        derive_master_key(&ph).unwrap();
     }
 }
