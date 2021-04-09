@@ -5,6 +5,8 @@ use anyhow::Error;
 use ton_block::MsgAddressInt;
 use ton_types::{SliceData, UInt256};
 
+pub const NONCE_LENGTH: usize = 12;
+
 pub fn now() -> u32 {
     chrono::Utc::now().timestamp() as u32
 }
@@ -363,5 +365,3 @@ pub mod serde_nonce {
         })
     }
 }
-
-const NONCE_LENGTH: usize = 12;

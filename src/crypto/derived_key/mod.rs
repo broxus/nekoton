@@ -29,46 +29,6 @@ impl DerivedKeySigner {
 }
 
 #[async_trait]
-impl SignerStorage for DerivedKeySigner {
-    fn load_state(&mut self, data: &str) -> Result<()> {
-        self.master_key = serde_json::from_str(data)?;
-        Ok(())
-    }
-
-    fn store_state(&self) -> String {
-        serde_json::to_string(&self.master_key).trust_me()
-    }
-
-    fn get_entries(&self) -> Vec<SignerEntry> {
-        self.master_key
-            .as_ref()
-            .map(|key| {
-                key.accounts_map
-                    .iter()
-                    .map(|(public_key, (name, _))| SignerEntry {
-                        name: name.clone(),
-                        public_key: PublicKey::from_bytes(public_key).trust_me(),
-                    })
-                    .collect()
-            })
-            .unwrap_or_default()
-    }
-
-    async fn remove_key(&mut self, public_key: &PublicKey) -> bool {
-        match &mut self.master_key {
-            Some(key) => key.accounts_map.remove(public_key.as_bytes()).is_some(),
-            None => false,
-        }
-    }
-
-    async fn clear(&mut self) {
-        if let Some(key) = &mut self.master_key {
-            key.accounts_map.clear();
-        }
-    }
-}
-
-#[async_trait]
 impl StoreSigner for DerivedKeySigner {
     type CreateKeyInput = DerivedKeyCreateInput;
     type SignInput = DerivedKeySignParams;
@@ -133,6 +93,46 @@ impl StoreSigner for DerivedKeySigner {
     }
 }
 
+#[async_trait]
+impl SignerStorage for DerivedKeySigner {
+    fn load_state(&mut self, data: &str) -> Result<()> {
+        self.master_key = serde_json::from_str(data)?;
+        Ok(())
+    }
+
+    fn store_state(&self) -> String {
+        serde_json::to_string(&self.master_key).trust_me()
+    }
+
+    fn get_entries(&self) -> Vec<SignerEntry> {
+        self.master_key
+            .as_ref()
+            .map(|key| {
+                key.accounts_map
+                    .iter()
+                    .map(|(public_key, (name, _))| SignerEntry {
+                        name: name.clone(),
+                        public_key: PublicKey::from_bytes(public_key).trust_me(),
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    async fn remove_key(&mut self, public_key: &PublicKey) -> bool {
+        match &mut self.master_key {
+            Some(key) => key.accounts_map.remove(public_key.as_bytes()).is_some(),
+            None => false,
+        }
+    }
+
+    async fn clear(&mut self) {
+        if let Some(key) = &mut self.master_key {
+            key.accounts_map.clear();
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 struct MasterKey {
     #[serde(with = "serde_public_key")]
@@ -159,11 +159,11 @@ impl MasterKey {
         rng.fill(salt.as_mut_slice())
             .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
 
-        let mut entropy_nonce = [0u8; 12];
+        let mut entropy_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut entropy_nonce)
             .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
 
-        let mut mnemonic_nonce = [0u8; 12];
+        let mut mnemonic_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut mnemonic_nonce)
             .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
 

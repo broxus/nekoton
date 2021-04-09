@@ -33,12 +33,12 @@ impl EncryptedKey {
     ) -> Result<Self> {
         let rng = ring::rand::SystemRandom::new();
         // prepare nonce
-        let mut private_key_nonce = [0u8; 12];
+        let mut private_key_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut private_key_nonce)
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
         let private_key_nonce = Nonce::clone_from_slice(&private_key_nonce);
 
-        let mut seed_phrase_nonce = [0u8; 12];
+        let mut seed_phrase_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut seed_phrase_nonce)
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
         let seed_phrase_nonce = Nonce::clone_from_slice(&seed_phrase_nonce);
@@ -109,12 +109,12 @@ impl EncryptedKey {
         let rng = ring::rand::SystemRandom::new();
 
         // prepare nonce
-        let mut new_private_key_nonce = vec![0u8; 12];
+        let mut new_private_key_nonce = vec![0u8; NONCE_LENGTH];
         rng.fill(&mut new_private_key_nonce)
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
         let new_private_key_nonce = Nonce::clone_from_slice(&new_private_key_nonce);
 
-        let mut new_seed_phrase_nonce = [0u8; 12];
+        let mut new_seed_phrase_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut new_seed_phrase_nonce)
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
         let new_seed_phrase_nonce = Nonce::clone_from_slice(&new_seed_phrase_nonce);
