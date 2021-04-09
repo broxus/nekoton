@@ -90,6 +90,9 @@ pub struct Symbol {
     /// Symbol name, e.g. USDT, DAI, etc.
     pub name: String,
 
+    /// Fixed decimals count
+    pub decimals: u8,
+
     /// Address of the root token contract
     #[serde(with = "serde_address")]
     pub root_token_contract: MsgAddressInt,

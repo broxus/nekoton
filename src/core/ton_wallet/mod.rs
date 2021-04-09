@@ -18,6 +18,7 @@ use super::models::{
     AccountState, Expiration, PendingTransaction, Transaction, TransactionId, TransactionsBatchInfo,
 };
 use super::{AccountSubscription, PollingMethod};
+use crate::core::utils;
 use crate::crypto::UnsignedMessage;
 use crate::transport::models::{ContractState, TransactionFull};
 use crate::transport::Transport;
@@ -200,12 +201,7 @@ where
     T: AsRef<dyn TonWalletSubscriptionHandler>,
 {
     move |transactions, batch_info| {
-        let transactions = transactions
-            .into_iter()
-            .filter_map(|transaction| {
-                Transaction::try_from((transaction.hash, transaction.data)).ok()
-            })
-            .collect();
+        let transactions = utils::convert_transactions(transactions).collect();
         handler
             .as_ref()
             .on_transactions_found(transactions, batch_info)

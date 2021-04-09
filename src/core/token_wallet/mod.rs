@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -7,6 +7,7 @@ use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 
 use super::utils;
+use super::AccountSubscription;
 use crate::contracts;
 use crate::core::models::{
     AccountState, GenTimings, LastTransactionId, PendingTransaction, PollingMethod,
@@ -15,7 +16,7 @@ use crate::core::models::{
 };
 use crate::helpers::abi;
 use crate::helpers::abi::{FunctionArg, FunctionExt, IntoParser, TokenValueExt, TupleBuilder};
-use crate::transport::models::{ContractState, ExistingContract};
+use crate::transport::models::{ContractState, ExistingContract, TransactionFull};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
 
@@ -50,36 +51,68 @@ impl TokenWallet {
 #[derive(Clone)]
 pub struct TokenWalletSubscription {
     transport: Arc<dyn Transport>,
+    account_subscription: AccountSubscription,
     handler: Arc<dyn TokenWalletSubscriptionHandler>,
-    address: MsgAddressInt,
     symbol: Symbol,
     version: TokenWalletVersion,
     root_meta_address: MsgAddressInt,
-    wallet_state: TokenWalletState,
-    latest_known_transaction: Option<TransactionId>,
-    pending_transactions: Vec<PendingTransaction>,
+    balance: BigUint,
 }
 
 impl TokenWalletSubscription {
-    pub async fn refresh_account_state(&mut self) -> Result<bool> {
-        let new_state = match self.transport.get_contract_state(&self.address).await? {
-            ContractState::NotExists => TokenWalletState::default(),
-            ContractState::Exists(state) => {
-                let account_state = state.account_state();
-                let balance = TokenWalletContractState(&state).get_balance(self.version)?;
-                TokenWalletState {
-                    balance,
-                    account_state,
-                }
+    pub async fn subscribe(
+        transport: Arc<dyn Transport>,
+        owner: MsgAddressInt,
+        root_token_contract: MsgAddressInt,
+        handler: Arc<dyn TokenWalletSubscriptionHandler>,
+    ) -> Result<TokenWalletSubscription> {
+        let state = match transport.get_contract_state(&root_token_contract).await? {
+            ContractState::Exists(state) => state,
+            ContractState::NotExists => {
+                return Err(TokenWalletError::InvalidRootTokenContract.into())
             }
         };
+        let state = RootTokenContractState(&state);
+        let RootTokenContractDetails {
+            symbol,
+            decimals,
+            version,
+            ..
+        } = state.guess_details()?;
 
-        Ok(if new_state != self.wallet_state {
-            self.wallet_state = new_state;
-            self.handler.on_state_changed(self.wallet_state.clone());
-            true
-        } else {
-            false
+        let address = state.get_wallet_address(version, &owner)?;
+
+        let root_meta_address = compute_root_meta_address(&root_token_contract);
+
+        let mut balance = Default::default();
+        let account_subscription = AccountSubscription::subscribe(
+            transport.clone(),
+            address,
+            |contract_state| {
+                if let ContractState::Exists(state) = contract_state {
+                    if let Ok(new_balance) = TokenWalletContractState(state).get_balance(version) {
+                        balance = new_balance;
+                    }
+                }
+            },
+            make_transactions_handler(&handler),
+        )
+        .await?;
+
+        let symbol = Symbol {
+            name: symbol,
+            decimals,
+            root_token_contract,
+        };
+
+        Ok(Self {
+            transport,
+            account_subscription,
+            handler,
+            symbol,
+            version,
+            root_meta_address,
+            balance,
         })
     }
 
@@ -94,57 +127,6 @@ impl TokenWalletSubscription {
             }
             _ => return Err(TokenWalletError::InvalidRootMetaContract.into()),
         }
-    }
-
-    pub async fn refresh_latest_transactions(
-        &mut self,
-        initial_count: u8,
-        limit: Option<usize>,
-    ) -> Result<()> {
-        let from = match self.wallet_state.account_state.last_transaction_id {
-            Some(id) => id.to_transaction_id(),
-            None => return Ok(()),
-        };
-
-        let mut new_latest_known_transaction = None;
-
-        // clone request context, because `&mut self` is needed later
-        let transport = self.transport.clone();
-        let address = self.address.clone();
-        let latest_known_transaction = self.latest_known_transaction;
-
-        let mut transactions = utils::request_transactions(
-            transport.as_ref(),
-            &address,
-            from,
-            latest_known_transaction.as_ref(),
-            initial_count,
-            limit,
-        );
-
-        while let Some((new_transactions, batch_info)) = transactions.next().await {
-            let new_transactions =
-                utils::convert_transactions(new_transactions).collect::<Vec<_>>();
-            if new_transactions.is_empty() {
-                continue;
-            }
-
-            if new_latest_known_transaction.is_none() {
-                new_latest_known_transaction =
-                    new_transactions.first().map(|transaction| transaction.id);
-            }
-
-            self.handler
-                .on_transactions_found(new_transactions, batch_info);
-        }
-
-        std::mem::drop(transactions);
-
-        if let Some(id) = new_latest_known_transaction {
-            self.latest_known_transaction = Some(id);
-        }
-
-        Ok(())
     }
 }
 
@@ -161,6 +143,23 @@ pub trait TokenWalletSubscriptionHandler: Send + Sync {
         transactions: Vec<Transaction>,
         batch_info: TransactionsBatchInfo,
     );
+}
+
+fn make_transactions_handler<'a, T>(
+    handler: &'a T,
+) -> impl FnMut(Vec<TransactionFull>, TransactionsBatchInfo) + 'a
+where
+    T: AsRef<dyn TokenWalletSubscriptionHandler>,
+{
+    move |transactions, batch_info| {
+        let transactions = utils::convert_transactions(transactions).collect();
+
+        // TODO: inject additional info
+
+        handler
+            .as_ref()
+            .on_transactions_found(transactions, batch_info)
+    }
 }
 
 struct RootTokenContractState<'a>(&'a ExistingContract);
