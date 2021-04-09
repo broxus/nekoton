@@ -1,8 +1,6 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
-use crate::external::Storage;
-use crate::storage::{Signer as StoreSigner, SignerEntry, SignerStorage, WithPublicKey};
+use crate::storage::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use anyhow::Result;
 use async_trait::async_trait;
 use chacha20poly1305::aead::{Aead, NewAead};
@@ -16,12 +14,6 @@ use super::ser::*;
 use crate::utils::TrustMe;
 
 pub type AccountMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], u32>;
-
-#[derive(Clone)]
-struct MasterKeyStore {
-    key: MasterKey,
-    storage: Arc<dyn Storage>,
-}
 
 #[derive(Clone, Serialize, Deserialize)]
 struct MasterKey {
@@ -43,7 +35,6 @@ struct MasterKey {
 
 mod hex_map_string {
     use crate::crypto::derived_key::AccountMap;
-    use crate::crypto::ser::hex_encode;
     use serde::de::Error;
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
@@ -68,7 +59,7 @@ mod hex_map_string {
                 hex::decode(k)
                     .map_err(|e| D::Error::custom(e.to_string()))?
                     .try_into()
-                    .map_err(|e| D::Error::custom("Failed mapping vec to salt"))?,
+                    .map_err(|_e| D::Error::custom("Failed mapping vec to salt"))?,
                 v,
             );
         }
@@ -77,30 +68,30 @@ mod hex_map_string {
 }
 
 #[async_trait]
-impl SignerStorage for MasterKeyStore {
+impl SignerStorage for MasterKey {
     fn load_state(&mut self, data: &str) -> Result<()> {
-        let key = serde_json::from_str(data)?;
-        self.key = key;
+        let key: MasterKey = serde_json::from_str(data)?;
+        *self = key;
         Ok(())
     }
 
     fn store_state(&self) -> String {
-        serde_json::to_string(&self.key).trust_me()
+        serde_json::to_string(&self).trust_me()
     }
 
     fn get_entries(&self) -> Vec<SignerEntry> {
-        self.key.entries.clone()
+        self.entries.clone()
     }
 
     async fn remove_key(&mut self, public_key: &PublicKey) -> bool {
-        let map = &mut self.key.account_map;
+        let map = &mut self.account_map;
         map.remove(public_key.as_bytes()).is_some()
     }
 
     async fn clear(&mut self) {
-        let map = &mut self.key.account_map;
+        let map = &mut self.account_map;
         map.clear();
-        self.key.entries.clear();
+        self.entries.clear();
     }
 }
 
@@ -115,18 +106,18 @@ pub struct MasterKeyCreateInput {
 }
 
 #[async_trait]
-impl StoreSigner for MasterKeyStore {
+impl StoreSigner for MasterKey {
     type CreateKeyInput = MasterKeyCreateInput;
     type SignInput = MasterKeySignParams;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
         let decrypter = ChaCha20Poly1305::new(&super::symmetric::symmetric_key_from_password(
             input.password,
-            &self.key.salt,
+            &self.salt,
         ));
-        let master = decrypt_secure(&decrypter, &self.key.entropy_nonce, &*self.key.enc_entropy)?;
+        let master = decrypt_secure(&decrypter, &self.entropy_nonce, &*self.enc_entropy)?;
         let public_key = derive_from_master(input.account_id, master)?.public;
-        self.key.entries.push(SignerEntry {
+        self.entries.push(SignerEntry {
             name: name.to_string(),
             public_key,
         });
@@ -136,10 +127,10 @@ impl StoreSigner for MasterKeyStore {
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<[u8; 64]> {
         let decrypter = ChaCha20Poly1305::new(&super::symmetric::symmetric_key_from_password(
             input.password,
-            &self.key.salt,
+            &self.salt,
         ));
 
-        let master = decrypt_secure(&decrypter, &self.key.entropy_nonce, &*self.key.enc_entropy)?;
+        let master = decrypt_secure(&decrypter, &self.entropy_nonce, &*self.enc_entropy)?;
         let signer = derive_from_master(input.account_id, master)?;
         Ok(signer.sign(data).to_bytes())
     }
@@ -148,8 +139,8 @@ impl StoreSigner for MasterKeyStore {
 fn derive_from_master(id: u32, master: SecVec<u8>) -> Result<ed25519_dalek::Keypair> {
     use tiny_hderive::bip32;
 
-    let path = format!("m/44'/396'/0'/0/{}", id).as_str();
-    let key = bip32::ExtendedPrivKey::derive(master.unsecure(), path)
+    let path = format!("m/44'/396'/0'/0/{}", id);
+    let key = bip32::ExtendedPrivKey::derive(master.unsecure(), path.as_str())
         .map_err(|_| MasterKeyError::DerivationError)?
         .secret();
     drop(master);

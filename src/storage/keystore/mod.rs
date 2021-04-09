@@ -21,7 +21,7 @@ type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
 #[async_trait]
 pub trait Signer: SignerStorage {
     type CreateKeyInput;
-    type SignInput: WithPublicKey;
+    type SignInput;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey>;
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;

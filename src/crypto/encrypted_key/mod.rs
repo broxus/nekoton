@@ -10,25 +10,15 @@ use crate::crypto::symmetric::{
 use crate::crypto::*;
 use crate::utils::TrustMe;
 use anyhow::Result;
-use chacha20poly1305::aead::{Aead, NewAead};
+use chacha20poly1305::aead::NewAead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use ed25519_dalek::{ed25519, Keypair, Signer};
+use ring::digest;
 use ring::rand::SecureRandom;
-use ring::{digest, pbkdf2};
-use secstr::{SecStr, SecVec};
+use secstr::SecStr;
 use serde::{Deserialize, Serialize};
 
-const NONCE_LENGTH: usize = 12;
-
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
-
-#[cfg(debug_assertions)]
-const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1) };
-
-///Change it to tune number of iterations in pbkdf2 function. Higher number - password bruteforce becomes slower.
-/// Initial value is optimal for the current machine, so you maybe want to change it.
-#[cfg(not(debug_assertions))]
-const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(100_000) };
 
 #[derive(Clone)]
 pub struct EncryptedKey {
@@ -96,7 +86,7 @@ impl EncryptedKey {
             &self.inner.seed_phrase_nonce,
             &self.inner.encrypted_seed_phrase,
         )
-        .and_then(|x| String::from_utf8(x).map_err(|_| EncryptedKeyError::FailedToDecryptData))
+        .map(|x| String::from_utf8(x).map_err(|_| EncryptedKeyError::FailedToDecryptData))?
     }
 
     pub fn get_key_pair(&self, password: SecStr) -> Result<Keypair, EncryptedKeyError> {
@@ -229,16 +219,13 @@ impl CryptoData {
         let key = symmetric_key_from_password(password, &*self.salt);
         let decrypter = ChaCha20Poly1305::new(&key);
 
-        let secret = decrypt_secure(
+        let bytes = decrypt_secure(
             &decrypter,
             &self.private_key_nonce,
             &self.encrypted_private_key,
-        )
-        .and_then(|x| {
-            ed25519_dalek::SecretKey::from_bytes(x.unsecure())
-                .map_err(|_| EncryptedKeyError::InvalidPrivateKey)
-        })?;
-
+        )?;
+        let secret = ed25519_dalek::SecretKey::from_bytes(bytes.unsecure())
+            .map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
         let pair = Keypair {
             secret,
             public: self.pubkey,
@@ -253,15 +240,11 @@ fn decrypt_key_pair(
     nonce: &Nonce,
 ) -> Result<ed25519_dalek::Keypair, EncryptedKeyError> {
     let decrypter = ChaCha20Poly1305::new(&key);
-
-    decrypt(&decrypter, nonce, encrypted_key)
-        .and_then(|data| {
-            let secret = ed25519_dalek::SecretKey::from_bytes(&data)
-                .map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
-            let public = ed25519_dalek::PublicKey::from(&secret);
-            Ok(Keypair { secret, public })
-        })
-        .into()
+    let bytes = decrypt(&decrypter, nonce, encrypted_key)?;
+    let secret = ed25519_dalek::SecretKey::from_bytes(&bytes)
+        .map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
+    let public = ed25519_dalek::PublicKey::from(&secret);
+    Ok(Keypair { secret, public })
 }
 
 #[derive(thiserror::Error, Debug)]

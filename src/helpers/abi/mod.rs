@@ -385,7 +385,7 @@ mod test {
 
         let encoded_comment = create_comment_payload(comment).unwrap();
         assert_eq!(
-            base64::encode(ton_types::serialize_toc(&encoded_comment.clone().into_cell()).unwrap()),
+            base64::encode(ton_types::serialize_toc(&encoded_comment.into_cell()).unwrap()),
             "te6ccgEBAgEAHgABCAAAAAABACppIGxvdmUgbWVtZXMgYW5kIPCfpoA="
         );
 

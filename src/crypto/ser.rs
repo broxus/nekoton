@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 const NONCE_LENGTH: usize = 12;
 
 pub mod hex_encode {
