@@ -3,6 +3,13 @@ use bip39::{Language, Seed};
 use tiny_hderive::bip32::ExtendedPrivKey;
 
 use crate::utils::TrustMe;
+use std::convert::TryInto;
+
+pub fn derive_master_key(phrase: &str) -> anyhow::Result<[u8; 32]> {
+    let mnemonic = bip39::Mnemonic::from_phrase(phrase, Language::English)?;
+    let hd = Seed::new(&mnemonic, "");
+    Ok(hd.as_bytes().try_into().trust_me())
+}
 
 pub fn derive_from_phrase(phrase: &str, account_id: u16) -> Result<ed25519_dalek::Keypair, Error> {
     let mnemonic = bip39::Mnemonic::from_phrase(phrase, Language::English)?;

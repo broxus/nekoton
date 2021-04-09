@@ -7,6 +7,7 @@ mod labs;
 mod legacy;
 mod util;
 pub use hints::get_hints;
+pub(super) use labs::derive_master_key;
 #[derive(Serialize, Deserialize, Copy, Clone)]
 pub enum MnemonicType {
     /// Phrase with 24 words, used in Crystal Wallet

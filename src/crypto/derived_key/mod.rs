@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
 use crate::storage::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use anyhow::Result;
@@ -11,7 +12,11 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::ser::*;
+use crate::crypto::symmetric::symmetric_key_from_password;
+use crate::crypto::{derive_from_phrase, derive_master_key, MnemonicType};
 use crate::utils::TrustMe;
+use ring::digest;
+use ring::rand::SecureRandom;
 
 pub type AccountMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], u32>;
 
@@ -20,7 +25,7 @@ struct MasterKey {
     #[serde(with = "hex_encode")]
     enc_entropy: Vec<u8>,
     #[serde(with = "hex_encode")]
-    enc_mnemonics: Vec<u8>,
+    enc_phrase: Vec<u8>,
     #[serde(with = "hex_nonce")]
     entropy_nonce: Nonce,
     #[serde(with = "hex_nonce")]
@@ -31,6 +36,51 @@ struct MasterKey {
     account_map: AccountMap,
     #[serde(skip)]
     entries: Vec<SignerEntry>,
+}
+
+impl MasterKey {
+    fn new(password: SecStr, phrase: SecStr, name: String) -> Result<Self> {
+        let rng = ring::rand::SystemRandom::new();
+        let mut salt = vec![0u8; CREDENTIAL_LEN];
+        rng.fill(salt.as_mut_slice())
+            .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+        let mut entropy_nonce = [0u8; 12];
+        let mut mnemonic_nonce = [0u8; 12];
+
+        rng.fill(&mut entropy_nonce)
+            .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+        rng.fill(&mut mnemonic_nonce)
+            .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+
+        let entropy_nonce = Nonce::clone_from_slice(entropy_nonce.as_ref());
+        let mnemonic_nonce = Nonce::clone_from_slice(mnemonic_nonce.as_ref());
+
+        let key = symmetric_key_from_password(password, &*salt);
+        let encryptor = ChaCha20Poly1305::new(&key);
+        let phrase = phrase.to_string();
+        let entropy = derive_master_key(&phrase)?;
+        let enc_entropy = encrypt(&encryptor, &entropy_nonce, &entropy)?;
+        let pair = derive_from_phrase(&phrase, MnemonicType::Labs(0))?;
+        let enc_phrase = encrypt(&encryptor, &mnemonic_nonce, &phrase.as_bytes())?;
+        SecStr::new(phrase.into_bytes()).zero_out();
+        let mut account_map = AccountMap::new();
+        account_map.insert(pair.public.to_bytes(), 0);
+        let entry = SignerEntry {
+            name,
+            public_key: pair.public,
+        };
+        let entries = vec![entry];
+
+        Ok(Self {
+            enc_entropy,
+            enc_phrase,
+            entropy_nonce,
+            mnemonic_nonce,
+            salt,
+            account_map,
+            entries,
+        })
+    }
 }
 
 mod hex_map_string {
@@ -100,9 +150,9 @@ pub struct MasterKeySignParams {
     pub password: SecStr,
 }
 
-pub struct MasterKeyCreateInput {
-    pub account_id: u32,
-    pub password: SecStr,
+pub enum MasterKeyCreateInput {
+    AddAccount { account_id: u32, password: SecStr },
+    Restore { mnemonics: SecStr, password: SecStr },
 }
 
 #[async_trait]
@@ -111,17 +161,32 @@ impl StoreSigner for MasterKey {
     type SignInput = MasterKeySignParams;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
-        let decrypter = ChaCha20Poly1305::new(&super::symmetric::symmetric_key_from_password(
-            input.password,
-            &self.salt,
-        ));
-        let master = decrypt_secure(&decrypter, &self.entropy_nonce, &*self.enc_entropy)?;
-        let public_key = derive_from_master(input.account_id, master)?.public;
-        self.entries.push(SignerEntry {
-            name: name.to_string(),
-            public_key,
-        });
-        Ok(public_key)
+        let public = match input {
+            MasterKeySignParams::AddAccount {
+                account_id,
+                password,
+            } => {
+                let decrypter = ChaCha20Poly1305::new(
+                    &super::symmetric::symmetric_key_from_password(password, &self.salt),
+                );
+                let master = decrypt_secure(&decrypter, &self.entropy_nonce, &*self.enc_entropy)?;
+                let public_key = derive_from_master(account_id, master)?.public;
+                self.entries.push(SignerEntry {
+                    name: name.to_string(),
+                    public_key,
+                });
+                public_key
+            }
+            MasterKeySignParams::Restore {
+                mnemonics: phrase,
+                password,
+            } => {
+                let key = MasterKey::new(password, phrase, name.to_string())?;
+                *self = key;
+                self.entries[0].public_key
+            }
+        };
+        Ok(public)
     }
 
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<[u8; 64]> {
@@ -158,6 +223,8 @@ enum MasterKeyError {
     FailedToEncryptData,
     #[error("Failed to decrypt data")]
     FailedToDecryptData,
+    #[error("Failed to generate random bytes")]
+    FailedToGenerateRandomBytes,
 }
 
 /// Decrypts data using specified decrypter and nonce
