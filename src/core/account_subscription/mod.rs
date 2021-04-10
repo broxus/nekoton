@@ -153,7 +153,9 @@ impl AccountSubscription {
             if let Some((mut new_transactions, batch_info)) = new_transactions {
                 new_transactions.reverse();
                 self.check_executed_transactions(&new_transactions, &mut on_message_sent);
-                if !new_transactions.is_empty() {
+
+                if let Some(first) = new_transactions.first() {
+                    self.latest_known_transaction = Some(first.id());
                     on_transactions_found(new_transactions, batch_info);
                 }
             }

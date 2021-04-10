@@ -68,7 +68,7 @@ impl TransactionFull {
 
 impl PartialEq<TransactionFull> for PendingTransaction {
     fn eq(&self, other: &TransactionFull) -> bool {
-        if self.expire_at >= other.data.now {
+        if other.data.now >= self.expire_at {
             return false;
         }
 
@@ -78,10 +78,10 @@ impl PartialEq<TransactionFull> for PendingTransaction {
             .as_ref()
             .and_then(|msg| msg.read_struct().ok())
         {
-            Some(msg) if self.src == msg.src() => {
-                let body_hash = msg
+            Some(message) if self.src == message.src() => {
+                let body_hash = message
                     .body()
-                    .map(|body| body.hash(ton_types::MAX_LEVEL))
+                    .map(|body| body.into_cell().repr_hash())
                     .unwrap_or_default();
 
                 self.body_hash == body_hash

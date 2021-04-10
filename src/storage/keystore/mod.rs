@@ -234,7 +234,7 @@ impl KeyStoreBuilder {
         T: Signer,
     {
         let type_id = TypeId::of::<T>();
-        if self.signer_types.insert(type_id) {
+        if !self.signer_types.insert(type_id) {
             return Err(KeyStoreError::DuplicateSignerType);
         }
 
