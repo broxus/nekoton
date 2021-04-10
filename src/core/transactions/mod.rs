@@ -9,8 +9,8 @@ use crate::contracts::abi::safe_multisig_wallet;
 use crate::helpers::abi::{FunctionBuilder, FunctionExt};
 use crate::utils::*;
 
-use super::models::*;
-
+mod models;
+use models::*;
 //todo normal name
 fn main_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
     let wallet_deploy = FunctionBuilder::new("notifyWalletDeployed")
@@ -169,12 +169,11 @@ mod test {
     use ton_block::MsgAddress::AddrStd;
     use ton_block::{Deserializable, MsgAddrStd, Transaction};
 
-    use crate::core::ton_wallet::models::{
+    use super::models::{
         EthereumStatusChanged, ParsingContext, TonEventStatus, TransactionAdditionalInfo,
         TransferFamily,
     };
-    use crate::core::ton_wallet::transactions::parse_additional_info;
-
+    use super::*;
     #[test]
     fn test_main_wallet_parse() {
         let tx = Transaction::construct_from_base64("te6ccgECBQEAATAAA7F44lhmAlE+maVfor4IVhRpx85Rp9WiWXdVjnfvK8k4e0AAALc5peDsFNAtcF1BRBGfRP73+ljNPUUc+ir7FmHntIcbeh/ba28gAAC3OZS2ZBYGofQAABQgSAMCAQAVBECIicQJoBh6EgIAgnIIhWuBGHA/f3IsyBPHr57C3d7pcU83NmIoz5CkFu+Hsn742ILtpOsOCyUw6fEN9VwMZzJ8dj6MuR/kKlztR9sKAQGgBAD3aAHILrQNhiymjQB0/Pw/ubdxFv4FXRIQhcVcOMZMH8eJ5wAjiWGYCUT6ZpV+ivghWFGnHzlGn1aJZd1WOd+8ryTh7QicQAYUWGAAABbnNEILiMDUPm4kKd2bwA7tPzMWNNSaXaK1RvRlLdSIlIehh8LvndIgPP8XtYTj2A==").unwrap();

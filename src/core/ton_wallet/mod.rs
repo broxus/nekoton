@@ -1,6 +1,4 @@
-pub mod models;
 mod multisig;
-pub mod transactions;
 mod wallet_v3;
 
 use std::convert::TryFrom;
