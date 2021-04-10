@@ -81,17 +81,18 @@ pub fn parse_block(
         .read_struct()
         .map_err(|_| BlockParsingError::InvalidBlockStructure)?;
 
-    let (account_block, balance) = match block
+    let account_block = match block
         .extra
         .read_struct()
         .and_then(|extra| extra.read_account_blocks())
         .and_then(|account_blocks| {
             account_blocks.get_with_aug(&address.address().get_bytestring(0).into())
         }) {
-        Ok(Some(extra)) => extra,
+        Ok(Some((extra, _))) => extra,
         _ => return Ok(ParsedBlock::empty(info.gen_utime().0)),
     };
 
+    let mut balance = account_state.balance;
     let mut new_transactions = Vec::new();
 
     let mut latest_transaction_id: Option<TransactionId> = None;
@@ -109,6 +110,30 @@ pub fn parse_block(
             Err(_) => continue,
         };
 
+        if let Some(in_msg) = transaction
+            .data
+            .in_msg
+            .as_ref()
+            .and_then(|data| data.read_struct().ok())
+        {
+            if let ton_block::CommonMsgInfo::IntMsgInfo(header) = in_msg.header() {
+                balance += header.value.grams.0 as u64;
+            }
+        }
+
+        let _ = transaction.data.out_msgs.iterate(|out_msg| {
+            if let ton_block::CommonMsgInfo::IntMsgInfo(header) = out_msg.0.header() {
+                balance = balance
+                    .checked_sub(header.value.grams.0 as u64)
+                    .unwrap_or_default();
+            }
+            Ok(true)
+        });
+
+        balance = balance
+            .checked_sub(transaction.data.total_fees.grams.0 as u64)
+            .unwrap_or_default();
+
         is_deployed = transaction.data.end_status == ton_block::AccountStatus::AccStateActive;
 
         if matches!(&latest_transaction_id, Some(id) if transaction.data.lt > id.lt) {
@@ -122,7 +147,7 @@ pub fn parse_block(
     }
 
     let new_account_state = AccountState {
-        balance: balance.grams.0 as u64,
+        balance,
         gen_timings: GenTimings::Known {
             gen_lt: info.end_lt(),
             gen_utime: info.gen_utime().0,
