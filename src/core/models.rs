@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
+use super::utils;
 use crate::utils::*;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
@@ -301,6 +302,8 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             return Err(TransactionError::Unsupported);
         };
 
+        let total_fees = utils::compute_total_transaction_fees(&data, &desc);
+
         let in_msg = match data.in_msg.take() {
             Some(message) => message
                 .read_struct()
@@ -335,7 +338,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             aborted: desc.aborted,
             orig_status: data.orig_status.into(),
             end_status: data.end_status.into(),
-            total_fees: data.total_fees.grams.0 as u64,
+            total_fees,
             in_msg,
             out_msgs,
         })

@@ -92,7 +92,7 @@ pub fn parse_block(
         _ => return Ok(ParsedBlock::empty(info.gen_utime().0)),
     };
 
-    let mut balance = account_state.balance;
+    let mut balance = account_state.balance as i64;
     let mut new_transactions = Vec::new();
 
     let mut latest_transaction_id: Option<TransactionId> = None;
@@ -110,29 +110,7 @@ pub fn parse_block(
             Err(_) => continue,
         };
 
-        if let Some(in_msg) = transaction
-            .data
-            .in_msg
-            .as_ref()
-            .and_then(|data| data.read_struct().ok())
-        {
-            if let ton_block::CommonMsgInfo::IntMsgInfo(header) = in_msg.header() {
-                balance += header.value.grams.0 as u64;
-            }
-        }
-
-        let _ = transaction.data.out_msgs.iterate(|out_msg| {
-            if let ton_block::CommonMsgInfo::IntMsgInfo(header) = out_msg.0.header() {
-                balance = balance
-                    .checked_sub(header.value.grams.0 as u64)
-                    .unwrap_or_default();
-            }
-            Ok(true)
-        });
-
-        balance = balance
-            .checked_sub(transaction.data.total_fees.grams.0 as u64)
-            .unwrap_or_default();
+        balance += compute_balance_change(&transaction.data);
 
         is_deployed = transaction.data.end_status == ton_block::AccountStatus::AccStateActive;
 
@@ -147,7 +125,7 @@ pub fn parse_block(
     }
 
     let new_account_state = AccountState {
-        balance,
+        balance: balance as u64,
         gen_timings: GenTimings::Known {
             gen_lt: info.end_lt(),
             gen_utime: info.gen_utime().0,
@@ -175,6 +153,56 @@ pub fn parse_block(
         new_account_state,
         new_transactions,
     ))
+}
+
+pub fn compute_balance_change(transaction: &ton_block::Transaction) -> i64 {
+    let mut diff = 0;
+
+    if let Some(in_msg) = transaction
+        .in_msg
+        .as_ref()
+        .and_then(|data| data.read_struct().ok())
+    {
+        if let ton_block::CommonMsgInfo::IntMsgInfo(header) = in_msg.header() {
+            diff += header.value.grams.0 as i64;
+        }
+    }
+
+    let _ = transaction.out_msgs.iterate(|out_msg| {
+        if let ton_block::CommonMsgInfo::IntMsgInfo(header) = out_msg.0.header() {
+            diff -= header.value.grams.0 as i64;
+        }
+        Ok(true)
+    });
+
+    if let Ok(ton_block::TransactionDescr::Ordinary(description)) =
+        transaction.description.read_struct()
+    {
+        diff -= compute_total_transaction_fees(transaction, &description) as i64;
+    }
+
+    diff
+}
+
+/// Calculate total transaction fee which is charged from the account
+pub fn compute_total_transaction_fees(
+    transaction: &ton_block::Transaction,
+    description: &ton_block::TransactionDescrOrdinary,
+) -> u64 {
+    let mut total_fees = transaction.total_fees.grams.0;
+    if let Some(phase) = &description.action {
+        total_fees += phase
+            .total_fwd_fees
+            .as_ref()
+            .map(|grams| grams.0)
+            .unwrap_or_default();
+        total_fees -= phase
+            .total_action_fees
+            .as_ref()
+            .map(|grams| grams.0)
+            .unwrap_or_default();
+    };
+    total_fees as u64
 }
 
 #[derive(thiserror::Error, Debug)]
