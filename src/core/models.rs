@@ -5,7 +5,7 @@ use anyhow::Result;
 use chrono::Utc;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
-use ton_block::{Deserializable, MsgAddressInt, Serializable};
+use ton_block::{Deserializable, MsgAddressInt};
 use ton_types::UInt256;
 
 use super::utils;
@@ -457,9 +457,7 @@ impl TryFrom<ton_types::SliceData> for MessageBody {
     type Error = MessageBodyError;
 
     fn try_from(s: ton_types::SliceData) -> Result<Self, Self::Error> {
-        let cell = s
-            .serialize()
-            .map_err(|_| MessageBodyError::FailedToSerialize)?;
+        let cell = s.into_cell();
         let hash = cell.repr_hash();
         let bytes =
             ton_types::serialize_toc(&cell).map_err(|_| MessageBodyError::FailedToSerialize)?;

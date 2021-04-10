@@ -344,7 +344,7 @@ impl PendingTransactionsExt for Vec<PendingTransaction> {
 
         let body_hash = message
             .body()
-            .map(|body| body.hash(ton_types::cell::MAX_LEVEL))
+            .map(|body| body.into_cell().repr_hash())
             .unwrap_or_default();
 
         let pending_transaction = PendingTransaction {
