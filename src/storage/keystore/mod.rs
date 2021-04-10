@@ -21,9 +21,13 @@ type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
 #[async_trait]
 pub trait Signer: SignerStorage {
     type CreateKeyInput;
+    type ExportKeyInput;
+    type ExportKeyOutput;
     type SignInput;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey>;
+    async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput>;
+
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;
 }
 
@@ -93,6 +97,14 @@ impl KeyStore {
             public_key,
             signer_name,
         })
+    }
+
+    pub async fn export_key<T>(&self, input: T::ExportKeyInput) -> Result<T::ExportKeyOutput>
+    where
+        T: Signer,
+    {
+        let state = self.state.read().await;
+        state.get_signer_ref::<T>()?.export_key(input).await
     }
 
     pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<Signature>

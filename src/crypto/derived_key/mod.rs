@@ -31,6 +31,8 @@ impl DerivedKeySigner {
 #[async_trait]
 impl StoreSigner for DerivedKeySigner {
     type CreateKeyInput = DerivedKeyCreateInput;
+    type ExportKeyInput = DerivedKeyExportParams;
+    type ExportKeyOutput = DerivedKeyExportOutput;
     type SignInput = DerivedKeySignParams;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
@@ -69,6 +71,26 @@ impl StoreSigner for DerivedKeySigner {
             }
         };
         Ok(public)
+    }
+
+    async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
+        let master_key = match &self.master_key {
+            Some(key) => key,
+            None => return Err(MasterKeyError::MasterKeyNotFound.into()),
+        };
+
+        let decrypter = ChaCha20Poly1305::new(&super::symmetric::symmetric_key_from_password(
+            input.password,
+            &master_key.salt,
+        ));
+
+        let phrase = decrypt_secure(
+            &decrypter,
+            &master_key.phrase_nonce,
+            &*master_key.enc_phrase,
+        )?;
+
+        Ok(Self::ExportKeyOutput { phrase })
     }
 
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<[u8; 64]> {
@@ -144,7 +166,7 @@ struct MasterKey {
     #[serde(with = "serde_nonce")]
     entropy_nonce: Nonce,
     #[serde(with = "serde_nonce")]
-    mnemonic_nonce: Nonce,
+    phrase_nonce: Nonce,
     #[serde(with = "serde_bytes")]
     salt: Vec<u8>,
     #[serde(with = "serde_accounts_map")]
@@ -163,21 +185,20 @@ impl MasterKey {
         rng.fill(&mut entropy_nonce)
             .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
 
-        let mut mnemonic_nonce = [0u8; NONCE_LENGTH];
-        rng.fill(&mut mnemonic_nonce)
+        let mut phrase_nonce = [0u8; NONCE_LENGTH];
+        rng.fill(&mut phrase_nonce)
             .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
 
         let entropy_nonce = Nonce::clone_from_slice(entropy_nonce.as_ref());
-        let mnemonic_nonce = Nonce::clone_from_slice(mnemonic_nonce.as_ref());
+        let phrase_nonce = Nonce::clone_from_slice(phrase_nonce.as_ref());
 
         let key = symmetric_key_from_password(password, &*salt);
         let encryptor = ChaCha20Poly1305::new(&key);
         let phrase = String::from_utf8(phrase.unsecure().to_vec())?;
-        println!("{}", phrase);
         let entropy = derive_master_key(&phrase)?;
         let enc_entropy = encrypt(&encryptor, &entropy_nonce, &entropy)?;
         let pair = derive_from_phrase(&phrase, MnemonicType::Labs(0))?;
-        let enc_phrase = encrypt(&encryptor, &mnemonic_nonce, &phrase.as_bytes())?;
+        let enc_phrase = encrypt(&encryptor, &phrase_nonce, &phrase.as_bytes())?;
         SecStr::new(phrase.into_bytes()).zero_out();
 
         let mut account_map = AccountsMap::new();
@@ -188,7 +209,7 @@ impl MasterKey {
             enc_entropy,
             enc_phrase,
             entropy_nonce,
-            mnemonic_nonce,
+            phrase_nonce,
             salt,
             accounts_map: account_map,
         })
@@ -200,6 +221,14 @@ type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, u32)
 pub struct DerivedKeySignParams {
     pub account_id: u32,
     pub password: SecStr,
+}
+
+pub struct DerivedKeyExportParams {
+    pub password: SecStr,
+}
+
+pub struct DerivedKeyExportOutput {
+    pub phrase: SecStr,
 }
 
 pub enum DerivedKeyCreateInput {
