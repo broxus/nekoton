@@ -31,7 +31,7 @@ fn from_reader() {
 }
 
 fn create_function(name: &str) {
-    nekoton::contracts::abi::ton_token_wallet()
+    nekoton::contracts::abi::ton_token_wallet_v3()
         .function(name)
         .unwrap();
 }

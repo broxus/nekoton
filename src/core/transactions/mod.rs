@@ -8,8 +8,8 @@ use crate::contracts::abi;
 use crate::contracts::abi::safe_multisig_wallet;
 use crate::helpers::abi::{FunctionBuilder, FunctionExt};
 use crate::utils::*;
-
 mod models;
+mod token_parse;
 use models::*;
 //todo normal name
 fn main_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
@@ -28,7 +28,7 @@ fn main_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
 }
 
 fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
-    let transfer = abi::ton_token_wallet().function("transfer").trust_me();
+    let transfer = abi::ton_token_wallet_v3().function("transfer").trust_me();
 
     if let Ok(a) = transfer.decode_input(tx.clone(), true) {
         let info = Transfer::try_from(a).ok()?;
@@ -36,7 +36,9 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
             TransferFamily::Transfer(info),
         ));
     }
-    let transfer = abi::ton_token_wallet().function("transferFrom").trust_me();
+    let transfer = abi::ton_token_wallet_v3()
+        .function("transferFrom")
+        .trust_me();
     if let Ok(a) = transfer.decode_input(tx.clone(), true) {
         let info = TransferFrom::try_from(a).ok()?;
         return Some(TransactionAdditionalInfo::TokenTransfer(
@@ -44,7 +46,7 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         ));
     }
 
-    let transfer = abi::ton_token_wallet()
+    let transfer = abi::ton_token_wallet_v3()
         .function("transferToRecipient")
         .trust_me();
 
@@ -55,7 +57,7 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         ));
     }
 
-    let transfer = abi::ton_token_wallet()
+    let transfer = abi::ton_token_wallet_v3()
         .function("internalTransferFrom")
         .trust_me();
 
@@ -88,7 +90,9 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         return Some(TransactionAdditionalInfo::TokenMint(info));
     }
 
-    let token_swap_back = abi::ton_token_wallet().function("burnByOwner").trust_me();
+    let token_swap_back = abi::ton_token_wallet_v3()
+        .function("burnByOwner")
+        .trust_me();
     if let Ok(a) = token_swap_back.decode_input(tx, true) {
         let info = TokenSwapBack::try_from(a).ok()?;
         return Some(TransactionAdditionalInfo::TokenSwapBack(info));
@@ -98,7 +102,8 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
 
 fn event_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
     let eth_event = FunctionBuilder::new("notifyEthereumEventStatusChanged")
-        .in_arg("EthereumEventStatus", ParamType::Uint(8))
+        .in_arg("EthereumEventStatus", P
+
         .build();
 
     if let Ok(a) = eth_event.decode_input(tx.clone(), true) {
