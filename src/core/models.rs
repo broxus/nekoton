@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 
 use anyhow::Result;
 use chrono::Utc;
+use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
@@ -10,6 +11,7 @@ use ton_types::UInt256;
 use crate::utils::*;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum PollingMethod {
     /// Manual polling once a minute or by a click.
     /// Used when there are no pending transactions
@@ -19,10 +21,77 @@ pub enum PollingMethod {
     Reliable,
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Expiration {
+    /// Message will never be expired. Not recommended to use
+    Never,
+    /// Interval after which the message will be invalid.
+    /// Expiration timestamp should be refreshed as close to
+    /// signing as possible
+    Timeout(u32),
+    /// The specific moment in time. Will stay the same after each
+    /// refresh
+    Timestamp(u32),
+}
+
+impl Expiration {
+    pub fn timestamp(&self) -> u32 {
+        match self {
+            Self::Never => u32::MAX,
+            Self::Timeout(timeout) => now() + timeout,
+            &Self::Timestamp(timestamp) => timestamp,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct ExpireAt {
+    pub expiration: Expiration,
+    pub timestamp: u32,
+}
+
+impl ExpireAt {
+    pub fn new(expiration: Expiration) -> Self {
+        Self {
+            expiration,
+            timestamp: expiration.timestamp(),
+        }
+    }
+
+    pub fn new_from_millis(expiration: Expiration, time: u64) -> Self {
+        let mut expire_at = Self {
+            expiration,
+            timestamp: 0,
+        };
+        expire_at.refresh_from_millis(time);
+        expire_at
+    }
+
+    pub fn refresh(&mut self) -> bool {
+        let old_timestamp = self.timestamp;
+        self.timestamp = self.expiration.timestamp();
+        self.timestamp != old_timestamp
+    }
+
+    pub fn refresh_from_millis(&mut self, time: u64) -> bool {
+        let old_timestamp = self.timestamp;
+        self.timestamp = if let Expiration::Timeout(timeout) = self.expiration {
+            (time / 1000) as u32 + timeout
+        } else {
+            self.expiration.timestamp()
+        };
+        self.timestamp != old_timestamp
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Symbol {
     /// Symbol name, e.g. USDT, DAI, etc.
     pub name: String,
+
+    /// Fixed decimals count
+    pub decimals: u8,
 
     /// Address of the root token contract
     #[serde(with = "serde_address")]
@@ -38,7 +107,76 @@ pub struct WalletState {
     pub pending_transactions: Vec<PendingTransaction>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, Ord, PartialOrd, PartialEq, Hash, Serialize, Deserialize)]
+pub enum TokenWalletVersion {
+    /// First stable iteration of token wallets.
+    /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/34e466bd42789413f02aeec0051b9d1212fe6de9)
+    Tip3v1,
+    /// Second iteration of token wallets with extended transfer messages payload.
+    /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/97ee321a2d8619372cdd2db8df30bd543e5c7417)
+    Tip3v2,
+    /// Third iteration of token wallets with updated compiler version and responsible getters.
+    /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/e7ef0506081fb36de94ea92d1bc1c50888ca65bc)
+    Tip3v3,
+}
+
+impl TryFrom<u32> for TokenWalletVersion {
+    type Error = anyhow::Error;
+
+    fn try_from(version: u32) -> Result<Self, Self::Error> {
+        Ok(match version {
+            1 => Self::Tip3v1,
+            2 => Self::Tip3v2,
+            3 => Self::Tip3v3,
+            _ => return Err(UnknownTokenWalletVersion.into()),
+        })
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+#[error("Unknown token wallet version")]
+struct UnknownTokenWalletVersion;
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TokenWalletDetails {
+    /// Linked root token contract address
+    #[serde(with = "serde_address")]
+    pub root_address: MsgAddressInt,
+    /// Owner wallet address
+    #[serde(with = "serde_address")]
+    pub owner_address: MsgAddressInt,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct RootTokenContractDetails {
+    /// Token ecosystem version
+    pub version: TokenWalletVersion,
+    /// Full currency name
+    pub name: String,
+    /// Short currency name
+    pub symbol: String,
+    /// Decimals
+    pub decimals: u8,
+    /// Root owner contract address. Used as proxy address in Tip3v1
+    #[serde(with = "serde_address")]
+    pub owner_address: MsgAddressInt,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct TokenWalletState {
+    /// Balance in tokens
+    pub balance: BigUint,
+    /// Underlying contract state
+    pub account_state: AccountState,
+}
+
+impl PartialEq for TokenWalletState {
+    fn eq(&self, other: &Self) -> bool {
+        self.account_state.eq(&other.account_state)
+    }
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AccountState {
     /// Full account balance in nano TON
     pub balance: u64,
@@ -50,6 +188,16 @@ pub struct AccountState {
     pub is_deployed: bool,
 }
 
+impl PartialEq for AccountState {
+    fn eq(&self, other: &Self) -> bool {
+        match (&self.last_transaction_id, &other.last_transaction_id) {
+            (None, Some(_)) => true,
+            (Some(current), Some(new)) if current < new => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "type")]
 pub enum GenTimings {
@@ -57,6 +205,12 @@ pub enum GenTimings {
     Unknown,
     /// There is a known point in time at which this specific state was obtained
     Known { gen_lt: u64, gen_utime: u32 },
+}
+
+impl Default for GenTimings {
+    fn default() -> Self {
+        Self::Unknown
+    }
 }
 
 /// Additional estimated lag for the pending message to be expired

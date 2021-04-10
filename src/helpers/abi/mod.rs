@@ -1,7 +1,3 @@
-mod function_builder;
-mod message_builder;
-mod token_parser;
-
 use std::collections::HashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
@@ -12,22 +8,85 @@ use num_bigint::{BigInt, BigUint};
 use ton_abi::{Function, Token, TokenValue};
 use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_types::UInt256;
+use ton_types::{Cell, SliceData, UInt256};
+
+use crate::core::models::{GenTimings, LastTransactionId};
+use crate::utils::*;
 
 pub use self::function_builder::*;
 pub use self::message_builder::*;
 pub use self::token_parser::*;
-use crate::core::models::{GenTimings, LastTransactionId};
-use crate::utils::*;
+
+mod function_builder;
+mod message_builder;
+mod token_parser;
+mod tvm;
+
+pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
+    ton_abi::TokenValue::pack_values_into_chain(
+        &[
+            0u32.token_value().unnamed(),
+            comment.token_value().unnamed(),
+        ],
+        Vec::new(),
+        2,
+    )
+    .convert()
+    .map(SliceData::from)
+}
+
+pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
+    if payload.get_next_u32().ok()? != 0 {
+        return None;
+    }
+
+    let mut cell = payload.checked_drain_reference().ok()?;
+
+    let mut data = Vec::new();
+    loop {
+        data.extend_from_slice(cell.data());
+        data.pop();
+        cell = match cell.reference(0) {
+            Ok(cell) => cell.clone(),
+            Err(_) => break,
+        };
+    }
+
+    String::from_utf8(data).ok()
+}
+
+pub fn create_boc_payload(cell: &str) -> ContractResult<SliceData> {
+    let cell = Cell::construct_from_base64(cell).map_err(|_| ParserError::InvalidAbi)?;
+    Ok(SliceData::from(cell))
+}
 
 pub trait FunctionExt {
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>>;
+
+    fn run_local(
+        &self,
+        account_state: ton_block::AccountStuff,
+        timings: GenTimings,
+        last_transaction_id: &LastTransactionId,
+        input: &[Token],
+    ) -> Result<Vec<Token>>;
 }
 
 impl FunctionExt for &Function {
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
         let abi = FunctionAbi::new(self);
         abi.parse(tx)
+    }
+
+    fn run_local(
+        &self,
+        account_state: ton_block::AccountStuff,
+        timings: GenTimings,
+        last_transaction_id: &LastTransactionId,
+        input: &[Token],
+    ) -> Result<Vec<Token>> {
+        let abi = FunctionAbi::new(self);
+        abi.run_local(account_state, timings, last_transaction_id, input)
     }
 }
 
@@ -36,34 +95,43 @@ impl FunctionExt for Function {
         let abi = FunctionAbi::new(self);
         abi.parse(tx)
     }
+
+    fn run_local(
+        &self,
+        account: ton_block::AccountStuff,
+        timings: GenTimings,
+        last_transaction_id: &LastTransactionId,
+        input: &[Token],
+    ) -> Result<Vec<Token>> {
+        let abi = FunctionAbi::new(self);
+        abi.run_local(account, timings, last_transaction_id, input)
+    }
 }
 
-pub struct FunctionAbi<'a> {
+struct FunctionAbi<'a> {
     fun: &'a Function,
 }
 
 impl<'a> FunctionAbi<'a> {
-    pub fn new(fun: &'a Function) -> Self {
+    fn new(fun: &'a Function) -> Self {
         Self { fun }
     }
 
-    pub fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
+    fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
         let messages = parse_transaction_messages(&tx)?;
         process_out_messages(&*messages, &self.fun)
     }
 
-    pub fn run_local(
+    fn run_local(
         &self,
-        address: MsgAddressInt,
-        account_state: ton_block::AccountStuff,
+        account: ton_block::AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
-        config: BlockchainConfig,
         input: &[Token],
     ) -> Result<Vec<Token>> {
         let mut msg =
             ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
-                dst: address,
+                dst: account.addr.clone(),
                 ..Default::default()
             });
 
@@ -74,10 +142,12 @@ impl<'a> FunctionAbi<'a> {
                 .into(),
         );
 
-        let mut executor = Executor::new(config, account_state, timings, &last_transaction_id);
-        let transaction = executor.run(&msg)?;
+        let BlockStats {
+            gen_utime, gen_lt, ..
+        } = get_block_stats(timings, last_transaction_id);
 
-        self.parse(&transaction)
+        let messages = tvm::call_msg(gen_utime, gen_lt, account, &msg)?.0;
+        process_out_messages(&messages, self.fun)
     }
 }
 
@@ -148,6 +218,35 @@ pub struct Executor {
     disable_signature_check: bool,
 }
 
+struct BlockStats {
+    gen_utime: u32,
+    gen_lt: u64,
+    last_transaction_lt: u64,
+}
+
+fn get_block_stats(timings: GenTimings, last_transaction_id: &LastTransactionId) -> BlockStats {
+    // Additional estimated logical time offset for the latest transaction id
+    pub const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
+
+    let last_transaction_lt = match last_transaction_id {
+        LastTransactionId::Exact(id) => id.lt,
+        LastTransactionId::Inexact { latest_lt } => *latest_lt,
+    };
+
+    match timings {
+        GenTimings::Unknown => BlockStats {
+            gen_utime: Utc::now().timestamp() as u32,
+            gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
+            last_transaction_lt,
+        },
+        GenTimings::Known { gen_lt, gen_utime } => BlockStats {
+            gen_utime,
+            gen_lt,
+            last_transaction_lt,
+        },
+    }
+}
+
 impl Executor {
     pub fn new(
         config: BlockchainConfig,
@@ -155,26 +254,17 @@ impl Executor {
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
     ) -> Self {
-        const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
-
-        let last_transaction_lt = match last_transaction_id {
-            LastTransactionId::Exact(id) => id.lt,
-            LastTransactionId::Inexact { latest_lt } => *latest_lt,
-        };
-
-        let (block_utime, block_lt) = match timings {
-            GenTimings::Unknown => (
-                Utc::now().timestamp() as u32,
-                last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
-            ),
-            GenTimings::Known { gen_lt, gen_utime } => (gen_utime, gen_lt),
-        };
+        let BlockStats {
+            gen_utime,
+            gen_lt,
+            last_transaction_lt,
+        } = get_block_stats(timings, last_transaction_id);
 
         Self {
             config,
             account: Account::Account(account),
-            block_utime,
-            block_lt,
+            block_utime: gen_utime,
+            block_lt: gen_lt,
             last_transaction_lt: Arc::new(AtomicU64::new(last_transaction_lt)),
             disable_signature_check: false,
         }
@@ -222,8 +312,9 @@ impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use ton_block::{Deserializable, Message, Transaction};
+
+    use super::*;
 
     #[test]
     fn test_run_local() {
@@ -287,5 +378,18 @@ mod test {
             },
         );
         dbg!(executor.run(&Message::construct_from_bytes(&*msg_code).unwrap())).unwrap();
+    }
+    #[test]
+    fn test_comment() {
+        let comment = "i love memes and 🦀";
+
+        let encoded_comment = create_comment_payload(comment).unwrap();
+        assert_eq!(
+            base64::encode(ton_types::serialize_toc(&encoded_comment.into_cell()).unwrap()),
+            "te6ccgEBAgEAHgABCAAAAAABACppIGxvdmUgbWVtZXMgYW5kIPCfpoA="
+        );
+
+        let decoded_comment = parse_comment_payload(encoded_comment).unwrap();
+        assert_eq!(decoded_comment, comment);
     }
 }

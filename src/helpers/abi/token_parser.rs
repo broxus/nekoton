@@ -42,6 +42,20 @@ pub trait IgnoreOutput: Sized {
 
 impl IgnoreOutput for Vec<Token> {}
 
+pub trait IntoParser: Sized {
+    type Iter: Iterator<Item = Token>;
+
+    fn into_parser(self) -> ContractOutputParser<Self::Iter>;
+}
+
+impl IntoParser for Vec<Token> {
+    type Iter = std::vec::IntoIter<Token>;
+
+    fn into_parser(self) -> ContractOutputParser<Self::Iter> {
+        ContractOutputParser(self.into_iter())
+    }
+}
+
 pub struct ContractOutputParser<I>(I);
 
 impl<I: Iterator<Item = Token>> ContractOutputParser<I> {
@@ -259,7 +273,7 @@ where
     }
 }
 
-type ContractResult<T> = Result<T, ParserError>;
+pub type ContractResult<T> = Result<T, ParserError>;
 
 #[derive(thiserror::Error, Debug)]
 pub enum ParserError {

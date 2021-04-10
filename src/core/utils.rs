@@ -7,7 +7,8 @@ use futures::{Future, FutureExt, Stream};
 use ton_block::MsgAddressInt;
 
 use crate::core::models::{
-    AccountState, GenTimings, LastTransactionId, Transaction, TransactionId, TransactionsBatchInfo,
+    AccountState, AccountSubscriptionError, GenTimings, LastTransactionId, PendingTransaction,
+    Transaction, TransactionId, TransactionsBatchInfo,
 };
 use crate::transport::models::TransactionFull;
 use crate::transport::Transport;
@@ -256,5 +257,56 @@ impl<'a> Stream for LatestTransactions<'a> {
 
         // Return result
         Poll::Ready(Some((new_transactions, info)))
+    }
+}
+
+pub trait PendingTransactionsExt {
+    fn add_message(
+        &mut self,
+        target: &MsgAddressInt,
+        message: &ton_block::Message,
+        expire_at: u32,
+    ) -> Result<PendingTransaction>;
+
+    fn cancel(&mut self, pending_transaction: &PendingTransaction);
+}
+
+impl PendingTransactionsExt for Vec<PendingTransaction> {
+    fn add_message(
+        &mut self,
+        target: &MsgAddressInt,
+        message: &ton_block::Message,
+        expire_at: u32,
+    ) -> Result<PendingTransaction> {
+        let src = match message.header() {
+            ton_block::CommonMsgInfo::ExtInMsgInfo(header) => {
+                if &header.dst == target {
+                    None
+                } else {
+                    return Err(AccountSubscriptionError::InvalidMessageDestination.into());
+                }
+            }
+            _ => return Err(AccountSubscriptionError::InvalidMessageType.into()),
+        };
+
+        let body_hash = message
+            .body()
+            .map(|body| body.hash(ton_types::cell::MAX_LEVEL))
+            .unwrap_or_default();
+
+        let pending_transaction = PendingTransaction {
+            src,
+            body_hash,
+            expire_at,
+        };
+
+        self.push(pending_transaction.clone());
+        Ok(pending_transaction)
+    }
+
+    fn cancel(&mut self, pending_transaction: &PendingTransaction) {
+        if let Some(i) = self.iter().position(|item| item.eq(pending_transaction)) {
+            self.remove(i);
+        }
     }
 }

@@ -12,11 +12,12 @@ anyhow = "1.0"
 async-trait = "0.1"
 aes-ctr = "0.6"
 base64 = "0.13"
-num-bigint = "0.2"
+num-bigint = { version = "0.2", features = ["serde"] }
 curve25519-dalek = "3.0"
 chacha20poly1305 = "0.7.1"
 ed25519-dalek = "1.0"
 dyn-clone = "1.0"
+downcast-rs = "1.2"
 graphql_client = "0.9"
 hex = "0.4"
 futures = "0.3"
@@ -48,18 +49,20 @@ ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
 ton_executor = {git = "https://github.com/broxus/ton-labs-executor.git"}
 failure = "0.1.8"
 chrono = "0.4.19"
+zeroize = "1.2.0"
 
 [dev-dependencies]
 pretty_assertions = "0.7.1"
 hex = "0.4.3"
+criterion = "0.3"
+cargo-husky = "1"
+tokio = { version = "1.4.0", features =["rt-multi-thread", "macros"] }
 
 [features]
 default = []
 std = []
 web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
 
-[target.'cfg(not(target_arch = "wasm32"))'.features]
-default = ["std"]
-
-[target.'cfg(target_arch = "wasm32")'.features]
-default = ["web"]
+[[bench]]
+name = "words"
+harness = false

@@ -7,19 +7,24 @@ use async_trait::async_trait;
 use graphql_client::*;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
+use super::utils::ConfigCache;
 use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
 use crate::external::GqlConnection;
 use crate::transport::models::*;
 use crate::transport::Transport;
-use crate::utils::TrustMe;
+use crate::utils::*;
 
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
+    config_cache: ConfigCache,
 }
 
 impl GqlTransport {
     pub fn new(connection: Arc<dyn GqlConnection>) -> Self {
-        Self { connection }
+        Self {
+            connection,
+            config_cache: ConfigCache::new(),
+        }
     }
 
     async fn fetch<T>(&self, params: T::Variables) -> Result<T::ResponseData>
@@ -195,56 +200,16 @@ impl Transport for GqlTransport {
         50
     }
 
-    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_latest_key_block.graphql"
-        )]
-        struct QueryLatestKeyBlock;
-
-        let boc = self
-            .fetch::<QueryLatestKeyBlock>(query_latest_key_block::Variables)
-            .await?
-            .blocks
-            .and_then(|block| block.into_iter().flatten().next())
-            .ok_or_else(no_blocks_found)?
-            .boc
-            .ok_or_else(invalid_response)?;
-
-        let block = ton_block::Block::construct_from_base64(&boc)
-            .map_err(|_| NodeClientError::InvalidBlock)?;
-
-        let extra = block
-            .read_extra()
-            .map_err(|_| NodeClientError::InvalidBlock)?;
-
-        let master = extra
-            .read_custom()
-            .map_err(|_| NodeClientError::InvalidBlock)?
-            .ok_or(NodeClientError::InvalidBlock)?;
-
-        let params = master
-            .config()
-            .ok_or(NodeClientError::InvalidBlock)?
-            .clone();
-
-        let config = ton_executor::BlockchainConfig::with_config(params)
-            .map_err(|_| NodeClientError::InvalidConfig)?;
-
-        Ok(config)
-    }
-
     async fn send_message(&self, message: &Message) -> Result<()> {
         let cell = message
-            .serialize()
-            .map_err(|_| NodeClientError::FailedToSerialize)?;
-        let id = base64::encode(&cell.repr_hash());
+            .write_to_new_cell()
+            .map_err(|_| NodeClientError::FailedToSerialize)?
+            .into();
+
         let boc = base64::encode(
-            &cell
-                .write_to_bytes()
-                .map_err(|_| NodeClientError::FailedToSerialize)?,
+            ton_types::serialize_toc(&cell).map_err(|_| NodeClientError::FailedToSerialize)?,
         );
+        let id = base64::encode(&cell.repr_hash());
 
         let _ = self
             .fetch::<MutationSendMessage>(mutation_send_message::Variables { id, boc })
@@ -253,7 +218,7 @@ impl Transport for GqlTransport {
         Ok(())
     }
 
-    async fn get_account_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
+    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
         #[derive(GraphQLQuery)]
         #[graphql(
             schema_path = "src/transport/gql/schema.graphql",
@@ -282,11 +247,11 @@ impl Transport for GqlTransport {
                     latest_lt: account.storage.last_trans_lt,
                 };
 
-                Ok(ContractState::Exists {
+                Ok(ContractState::Exists(ExistingContract {
                     account,
                     timings: GenTimings::Unknown,
                     last_transaction_id,
-                })
+                }))
             }
             Ok(_) => Ok(ContractState::NotExists),
             Err(_) => Err(NodeClientError::InvalidAccountState.into()),
@@ -328,6 +293,31 @@ impl Transport for GqlTransport {
             })
         })
         .collect::<Result<Vec<_>, _>>()
+    }
+
+    async fn get_latest_key_block(&self) -> Result<ton_block::Block> {
+        #[derive(GraphQLQuery)]
+        #[graphql(
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_latest_key_block.graphql"
+        )]
+        struct QueryLatestKeyBlock;
+        let boc = self
+            .fetch::<QueryLatestKeyBlock>(query_latest_key_block::Variables)
+            .await?
+            .blocks
+            .and_then(|block| block.into_iter().flatten().next())
+            .ok_or_else(no_blocks_found)?
+            .boc
+            .ok_or_else(invalid_response)?;
+
+        let block = ton_block::Block::construct_from_base64(&boc)
+            .map_err(|_| NodeClientError::InvalidBlock)?;
+        Ok(block)
+    }
+
+    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
+        self.config_cache.get_blockchain_config(self).await
     }
 }
 

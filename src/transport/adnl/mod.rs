@@ -11,6 +11,7 @@ use tokio::sync::Mutex;
 use ton_api::{ton, BoxedSerialize, Deserializer, IntoBoxed};
 use ton_block::{Deserializable, Message, MsgAddressInt, Serializable};
 
+use super::utils::ConfigCache;
 use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
 use crate::external::AdnlConnection;
 use crate::transport::models::*;
@@ -21,7 +22,8 @@ const LAST_BLOCK_THRESHOLD: u64 = 1;
 
 pub struct AdnlTransport {
     connection: Arc<dyn AdnlConnection>,
-    last_block: Arc<LastBlock>,
+    last_block: LastBlock,
+    config_cache: ConfigCache,
 }
 
 impl AdnlTransport {
@@ -30,7 +32,8 @@ impl AdnlTransport {
 
         Self {
             connection,
-            last_block: Arc::new(LastBlock::new(&threshold)),
+            last_block: LastBlock::new(&threshold),
+            config_cache: ConfigCache::new(),
         }
     }
 
@@ -83,50 +86,6 @@ impl Transport for AdnlTransport {
         16
     }
 
-    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
-        const MASTERCHAIN_SHARD: u64 = 0x8000000000000000;
-
-        let last_block_id = self.last_block.get_last_block(self).await?;
-
-        let mut block = self.get_block(last_block_id).await?;
-
-        {
-            let info = block
-                .info
-                .read_struct()
-                .map_err(|_| QueryConfigError::InvalidBlock)?;
-
-            if !info.key_block() {
-                block = self
-                    .get_block_by_seqno(ton::ton_node::blockid::BlockId {
-                        workchain: -1,
-                        shard: MASTERCHAIN_SHARD as i64,
-                        seqno: info.prev_key_block_seqno() as i32,
-                    })
-                    .await?;
-            }
-        }
-
-        let extra = block
-            .read_extra()
-            .map_err(|_| QueryConfigError::InvalidBlock)?;
-
-        let master = extra
-            .read_custom()
-            .map_err(|_| QueryConfigError::InvalidBlock)?
-            .ok_or(QueryConfigError::InvalidBlock)?;
-
-        let params = master
-            .config()
-            .ok_or(QueryConfigError::InvalidBlock)?
-            .clone();
-
-        let config = ton_executor::BlockchainConfig::with_config(params)
-            .map_err(|_| QueryConfigError::InvalidConfig)?;
-
-        Ok(config)
-    }
-
     async fn send_message(&self, message: &Message) -> Result<()> {
         let data = message
             .serialize()
@@ -140,7 +99,7 @@ impl Transport for AdnlTransport {
         Ok(())
     }
 
-    async fn get_account_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
+    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
         use ton_block::{Deserializable, HashmapAugType};
 
         let last_block_id = self.last_block.get_last_block(self).await?;
@@ -184,7 +143,7 @@ impl Transport for AdnlTransport {
                     .map_err(|_| QueryAccountStateError::InvalidAccountStateProof)?;
 
                 Ok(if let Some(shard_info) = shard_info {
-                    ContractState::Exists {
+                    ContractState::Exists(ExistingContract {
                         account,
                         timings: GenTimings::Known {
                             gen_lt: ss.gen_lt(),
@@ -194,7 +153,7 @@ impl Transport for AdnlTransport {
                             lt: shard_info.last_trans_lt(),
                             hash: *shard_info.last_trans_hash(),
                         }),
-                    }
+                    })
                 } else {
                     ContractState::NotExists
                 })
@@ -238,6 +197,34 @@ impl Transport for AdnlTransport {
             });
         }
         Ok(result)
+    }
+
+    async fn get_latest_key_block(&self) -> Result<ton_block::Block> {
+        const MASTERCHAIN_SHARD: u64 = 0x8000000000000000;
+
+        let last_block_id = self.last_block.get_last_block(self).await?;
+
+        let block = self.get_block(last_block_id).await?;
+
+        let info = block
+            .info
+            .read_struct()
+            .map_err(|_| QueryConfigError::InvalidBlock)?;
+
+        if info.key_block() {
+            Ok(block)
+        } else {
+            self.get_block_by_seqno(ton::ton_node::blockid::BlockId {
+                workchain: -1,
+                shard: MASTERCHAIN_SHARD as i64,
+                seqno: info.prev_key_block_seqno() as i32,
+            })
+            .await
+        }
+    }
+
+    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
+        self.config_cache.get_blockchain_config(self).await
     }
 }
 
