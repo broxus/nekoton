@@ -13,8 +13,8 @@ use secstr::{SecStr, SecVec};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::crypto::symmetric::symmetric_key_from_password;
-use crate::crypto::{derive_from_phrase, derive_master_key, MnemonicType};
+use crate::crypto::mnemonic::*;
+use crate::crypto::symmetric::*;
 use crate::utils::*;
 
 #[derive(Default, Clone, Debug)]
@@ -195,7 +195,7 @@ impl MasterKey {
         let key = symmetric_key_from_password(password, &*salt);
         let encryptor = ChaCha20Poly1305::new(&key);
         let phrase = String::from_utf8(phrase.unsecure().to_vec())?;
-        let entropy = derive_master_key(&phrase)?;
+        let entropy = labs::derive_master_key(&phrase)?;
         let enc_entropy = encrypt(&encryptor, &entropy_nonce, &entropy)?;
         let pair = derive_from_phrase(&phrase, MnemonicType::Labs(0))?;
         let enc_phrase = encrypt(&encryptor, &phrase_nonce, &phrase.as_bytes())?;

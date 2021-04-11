@@ -2,7 +2,7 @@ use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
 use anyhow::Result;
-use futures::{Stream, StreamExt};
+use futures::Stream;
 use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 

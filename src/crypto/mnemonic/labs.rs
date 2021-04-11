@@ -1,9 +1,10 @@
+use std::convert::TryInto;
+
 use anyhow::Error;
 use bip39::{Language, Seed};
 use tiny_hderive::bip32::ExtendedPrivKey;
 
-use crate::utils::TrustMe;
-use std::convert::TryInto;
+use crate::utils::*;
 
 pub fn derive_master_key(phrase: &str) -> anyhow::Result<[u8; 64]> {
     let cnt = phrase.split_whitespace().count();
@@ -50,8 +51,7 @@ fn ed25519_keys_from_secret_bytes(bytes: &[u8]) -> Result<ed25519_dalek::Keypair
 
 #[cfg(test)]
 mod test {
-    use crate::crypto::derive_master_key;
-    use crate::crypto::mnemonic::labs::derive_from_phrase;
+    use super::*;
 
     #[test]
     fn bad_mnemonic() {
