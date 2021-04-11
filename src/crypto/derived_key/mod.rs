@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
-use crate::storage::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use anyhow::Result;
 use async_trait::async_trait;
 use chacha20poly1305::aead::{Aead, NewAead};
@@ -15,6 +14,7 @@ use thiserror::Error;
 
 use crate::crypto::mnemonic::*;
 use crate::crypto::symmetric::*;
+use crate::storage::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::utils::*;
 
 #[derive(Default, Clone, Debug)]
@@ -33,6 +33,7 @@ impl StoreSigner for DerivedKeySigner {
     type CreateKeyInput = DerivedKeyCreateInput;
     type ExportKeyInput = DerivedKeyExportParams;
     type ExportKeyOutput = DerivedKeyExportOutput;
+    type UpdateKeyInput = DerivedKeyUpdateParams;
     type SignInput = DerivedKeySignParams;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
@@ -71,6 +72,20 @@ impl StoreSigner for DerivedKeySigner {
             }
         };
         Ok(public)
+    }
+
+    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<()> {
+        let master_key = match &mut self.master_key {
+            Some(key) => key,
+            None => return Err(MasterKeyError::MasterKeyNotFound.into()),
+        };
+
+        match input {
+            DerivedKeyUpdateParams::ChangePassword {
+                old_password,
+                new_password,
+            } => master_key.change_password(old_password, new_password),
+        }
     }
 
     async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
@@ -159,61 +174,121 @@ impl SignerStorage for DerivedKeySigner {
 struct MasterKey {
     #[serde(with = "serde_public_key")]
     public_key: PublicKey,
-    #[serde(with = "serde_bytes")]
-    enc_entropy: Vec<u8>,
-    #[serde(with = "serde_bytes")]
-    enc_phrase: Vec<u8>,
-    #[serde(with = "serde_nonce")]
-    entropy_nonce: Nonce,
-    #[serde(with = "serde_nonce")]
-    phrase_nonce: Nonce,
+
     #[serde(with = "serde_bytes")]
     salt: Vec<u8>,
+
+    #[serde(with = "serde_bytes")]
+    enc_entropy: Vec<u8>,
+
+    #[serde(with = "serde_nonce")]
+    entropy_nonce: Nonce,
+
+    #[serde(with = "serde_bytes")]
+    enc_phrase: Vec<u8>,
+
+    #[serde(with = "serde_nonce")]
+    phrase_nonce: Nonce,
+
     #[serde(with = "serde_accounts_map")]
     accounts_map: AccountsMap,
 }
 
 impl MasterKey {
     fn new(password: SecStr, phrase: SecStr, name: String) -> Result<Self> {
-        let rng = ring::rand::SystemRandom::new();
+        use zeroize::Zeroize;
 
-        let mut salt = vec![0u8; CREDENTIAL_LEN];
-        rng.fill(salt.as_mut_slice())
-            .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+        let mut phrase = String::from_utf8(phrase.unsecure().to_vec())?;
 
-        let mut entropy_nonce = [0u8; NONCE_LENGTH];
-        rng.fill(&mut entropy_nonce)
-            .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+        // SECURITY: private key will be zeroized here
+        let public_key = derive_from_phrase(&phrase, MnemonicType::Labs(0))?.public;
 
-        let mut phrase_nonce = [0u8; NONCE_LENGTH];
-        rng.fill(&mut phrase_nonce)
-            .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+        let mut entropy = labs::derive_master_key(&phrase)?;
+        let EncryptedPart {
+            salt,
+            enc_entropy,
+            entropy_nonce,
+            enc_phrase,
+            phrase_nonce,
+        } = compute_encrypted_part(&entropy, phrase.as_bytes(), password)?;
 
-        let entropy_nonce = Nonce::clone_from_slice(entropy_nonce.as_ref());
-        let phrase_nonce = Nonce::clone_from_slice(phrase_nonce.as_ref());
+        phrase.zeroize();
+        entropy.zeroize();
 
-        let key = symmetric_key_from_password(password, &*salt);
-        let encryptor = ChaCha20Poly1305::new(&key);
-        let phrase = String::from_utf8(phrase.unsecure().to_vec())?;
-        let entropy = labs::derive_master_key(&phrase)?;
-        let enc_entropy = encrypt(&encryptor, &entropy_nonce, &entropy)?;
-        let pair = derive_from_phrase(&phrase, MnemonicType::Labs(0))?;
-        let enc_phrase = encrypt(&encryptor, &phrase_nonce, &phrase.as_bytes())?;
-        SecStr::new(phrase.into_bytes()).zero_out();
-
-        let mut account_map = AccountsMap::new();
-        account_map.insert(pair.public.to_bytes(), (name, 0));
+        let mut accounts_map = AccountsMap::new();
+        accounts_map.insert(public_key.to_bytes(), (name, 0));
 
         Ok(Self {
-            public_key: pair.public,
-            enc_entropy,
-            enc_phrase,
-            entropy_nonce,
-            phrase_nonce,
+            public_key,
             salt,
-            accounts_map: account_map,
+            enc_entropy,
+            entropy_nonce,
+            enc_phrase,
+            phrase_nonce,
+            accounts_map,
         })
     }
+
+    fn change_password(&mut self, old_password: SecStr, new_password: SecStr) -> Result<()> {
+        let decrypter =
+            ChaCha20Poly1305::new(&symmetric_key_from_password(old_password, &self.salt));
+
+        let entropy = decrypt_secure(&decrypter, &self.entropy_nonce, &self.enc_entropy)?;
+        let phrase = decrypt_secure(&decrypter, &self.phrase_nonce, &self.enc_phrase)?;
+
+        let encrypted_part =
+            compute_encrypted_part(entropy.unsecure(), phrase.unsecure(), new_password)?;
+        self.salt = encrypted_part.salt;
+        self.enc_entropy = encrypted_part.enc_entropy;
+        self.entropy_nonce = encrypted_part.entropy_nonce;
+        self.enc_phrase = encrypted_part.enc_phrase;
+        self.phrase_nonce = encrypted_part.phrase_nonce;
+
+        Ok(())
+    }
+}
+
+fn compute_encrypted_part(
+    entropy: &[u8],
+    phrase: &[u8],
+    password: SecStr,
+) -> Result<EncryptedPart> {
+    let rng = ring::rand::SystemRandom::new();
+
+    let mut salt = vec![0u8; CREDENTIAL_LEN];
+    rng.fill(salt.as_mut_slice())
+        .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+
+    let mut entropy_nonce = [0u8; NONCE_LENGTH];
+    rng.fill(&mut entropy_nonce)
+        .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+
+    let mut phrase_nonce = [0u8; NONCE_LENGTH];
+    rng.fill(&mut phrase_nonce)
+        .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+
+    let entropy_nonce = Nonce::clone_from_slice(entropy_nonce.as_ref());
+    let phrase_nonce = Nonce::clone_from_slice(phrase_nonce.as_ref());
+
+    let encryptor = ChaCha20Poly1305::new(&symmetric_key_from_password(password, &salt));
+    let enc_entropy = encrypt(&encryptor, &entropy_nonce, entropy)?;
+    let enc_phrase = encrypt(&encryptor, &phrase_nonce, phrase)?;
+
+    Ok(EncryptedPart {
+        salt,
+        enc_entropy,
+        entropy_nonce,
+        enc_phrase,
+        phrase_nonce,
+    })
+}
+
+struct EncryptedPart {
+    salt: Vec<u8>,
+    enc_entropy: Vec<u8>,
+    entropy_nonce: Nonce,
+    enc_phrase: Vec<u8>,
+    phrase_nonce: Nonce,
 }
 
 type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, u32)>;
@@ -229,6 +304,13 @@ pub struct DerivedKeyExportParams {
 
 pub struct DerivedKeyExportOutput {
     pub phrase: SecStr,
+}
+
+pub enum DerivedKeyUpdateParams {
+    ChangePassword {
+        old_password: SecStr,
+        new_password: SecStr,
+    },
 }
 
 pub enum DerivedKeyCreateInput {
@@ -347,22 +429,62 @@ fn encrypt(enc: &ChaCha20Poly1305, nonce: &Nonce, data: &[u8]) -> Result<Vec<u8>
 
 #[cfg(test)]
 mod test {
-    use super::StoreSigner;
-    use crate::crypto::{DerivedKeyCreateInput, DerivedKeySigner};
+    use super::*;
+
+    const TEST_PHRASE: &str =
+        "pioneer fever hazard scan install wise reform corn bubble leisure amazing note";
+
+    fn make_sec_str(data: &str) -> SecStr {
+        data.to_owned().into()
+    }
 
     #[tokio::test]
-    async fn test_creation() {
-        let mut empty = DerivedKeySigner::new();
-        empty.add_key(
-            "lol",
-            DerivedKeyCreateInput::Import {
-                phrase:
-                "pioneer fever hazard scan install wise reform corn bubble leisure amazing note"
-                        .to_string()
-                        .into(),
-                password: "123".to_string().into(),
-            },
-        ).await.unwrap();
-        empty.master_key.unwrap();
+    async fn test_creation() -> Result<()> {
+        let mut signer = DerivedKeySigner::new();
+
+        signer
+            .add_key(
+                "lol",
+                DerivedKeyCreateInput::Import {
+                    phrase: make_sec_str(TEST_PHRASE),
+                    password: make_sec_str("123"),
+                },
+            )
+            .await?;
+
+        assert!(signer.master_key.is_some());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_change_password() -> Result<()> {
+        let mut signer = DerivedKeySigner::new();
+        signer
+            .add_key(
+                "lol",
+                DerivedKeyCreateInput::Import {
+                    phrase: make_sec_str(TEST_PHRASE),
+                    password: make_sec_str("123"),
+                },
+            )
+            .await?;
+
+        signer
+            .update_key(DerivedKeyUpdateParams::ChangePassword {
+                old_password: "123".to_owned().into(),
+                new_password: "321".to_owned().into(),
+            })
+            .await?;
+
+        assert!(signer
+            .update_key(DerivedKeyUpdateParams::ChangePassword {
+                old_password: make_sec_str("totally different"),
+                new_password: make_sec_str("321"),
+            })
+            .await
+            .is_err());
+
+        Ok(())
     }
 }

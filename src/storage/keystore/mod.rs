@@ -23,9 +23,11 @@ pub trait Signer: SignerStorage {
     type CreateKeyInput;
     type ExportKeyInput;
     type ExportKeyOutput;
+    type UpdateKeyInput;
     type SignInput;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey>;
+    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<()>;
     async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput>;
 
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;
@@ -84,7 +86,7 @@ impl KeyStore {
     {
         let mut state = self.state.write().await;
 
-        let (signer_name, signer): (_, &mut T) = state.get_signer_mut::<T>()?;
+        let (signer_name, signer): (_, &mut T) = state.get_signer_entry::<T>()?;
 
         let public_key = signer.add_key(name, input).await?;
         state
@@ -97,6 +99,14 @@ impl KeyStore {
             public_key,
             signer_name,
         })
+    }
+
+    pub async fn update_key<T>(&self, input: T::UpdateKeyInput) -> Result<()>
+    where
+        T: Signer,
+    {
+        let mut state = self.state.write().await;
+        state.get_signer_mut::<T>()?.update_key(input).await
     }
 
     pub async fn export_key<T>(&self, input: T::ExportKeyInput) -> Result<T::ExportKeyOutput>
@@ -189,7 +199,19 @@ impl KeyStoreState {
         Ok(signer)
     }
 
-    fn get_signer_mut<T>(&mut self) -> Result<(String, &mut T)>
+    fn get_signer_mut<T>(&mut self) -> Result<&mut T>
+    where
+        T: Signer,
+    {
+        let signer = self
+            .signers
+            .get_mut(&TypeId::of::<T>())
+            .and_then(|(_, signer)| signer.downcast_mut::<T>())
+            .ok_or(KeyStoreError::UnsupportedSigner)?;
+        Ok(signer)
+    }
+
+    fn get_signer_entry<T>(&mut self) -> Result<(String, &mut T)>
     where
         T: Signer,
     {
