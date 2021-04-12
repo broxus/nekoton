@@ -379,6 +379,14 @@ impl TryFrom<Vec<Token>> for BounceCallback {
     }
 }
 
+pub enum TokenWallet{
+    Transfer(TransferFamily),
+    TokenSwapBack(TokenSwapBack),
+    TokenMint(Mint),
+    TokensBounced(BounceCallback),
+
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum TransferFamily {
     Transfer(Transfer),

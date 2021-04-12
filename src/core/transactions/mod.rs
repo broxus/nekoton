@@ -10,7 +10,9 @@ use crate::helpers::abi::{FunctionBuilder, FunctionExt};
 use crate::utils::*;
 mod models;
 mod token_parse;
+
 use models::*;
+
 //todo normal name
 fn main_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
     let wallet_deploy = FunctionBuilder::new("notifyWalletDeployed")
@@ -102,8 +104,7 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
 
 fn event_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
     let eth_event = FunctionBuilder::new("notifyEthereumEventStatusChanged")
-        .in_arg("EthereumEventStatus", P
-
+        .in_arg("EthereumEventStatus",ParamType::Uint(8))
         .build();
 
     if let Ok(a) = eth_event.decode_input(tx.clone(), true) {
