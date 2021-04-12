@@ -1,0 +1,46 @@
+{
+  "ABI version": 2,
+  "header": [
+    "time",
+    "expire"
+  ],
+  "functions": [
+    {
+      "name": "notifyWalletDeployed",
+      "inputs": [
+        {
+          "name": "root",
+          "type": "address"
+        }
+      ],
+      "outputs": [
+      ]
+    },
+    {
+      "name": "notifyEthereumEventStatusChanged",
+      "inputs": [
+        {
+          "name": "status",
+          "type": "uint8"
+        }
+      ],
+      "outputs": [
+      ]
+    },
+    {
+      "name": "notifyTonEventStatusChanged",
+      "inputs": [
+        {
+          "name": "status",
+          "type": "uint8"
+        }
+      ],
+      "outputs": [
+      ]
+    }
+  ],
+  "data": [
+  ],
+  "events": [
+  ]
+}
