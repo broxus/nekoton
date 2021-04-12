@@ -11,10 +11,8 @@ use ring::rand::SecureRandom;
 use secstr::SecStr;
 use serde::{Deserialize, Serialize};
 
-use crate::crypto::symmetric::{
-    decrypt, decrypt_secure, encrypt, symmetric_key_from_password, SymmetricCryptoError,
-};
-use crate::crypto::*;
+use super::mnemonic::*;
+use super::symmetric::*;
 use crate::utils::*;
 
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;

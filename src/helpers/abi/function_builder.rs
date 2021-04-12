@@ -141,7 +141,7 @@ mod test {
     //     ]
     #[test]
     fn build() {
-        let original = crate::contracts::abi::ton_token_wallet()
+        let original = crate::contracts::abi::ton_token_wallet_v3()
             .function("transfer")
             .unwrap();
         let imposter = FunctionBuilder::new("transfer")

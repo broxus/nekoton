@@ -8,7 +8,7 @@ use num_bigint::{BigInt, BigUint};
 use ton_abi::{Function, Token, TokenValue};
 use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_types::{Cell, SliceData, UInt256};
+use ton_types::{SliceData, UInt256};
 
 use crate::core::models::{GenTimings, LastTransactionId};
 use crate::utils::*;
@@ -55,8 +55,10 @@ pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
     String::from_utf8(data).ok()
 }
 
-pub fn create_boc_payload(cell: &str) -> ContractResult<SliceData> {
-    let cell = Cell::construct_from_base64(cell).map_err(|_| ParserError::InvalidAbi)?;
+pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
+    let bytes = base64::decode(&cell)?;
+    let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
+        .map_err(|_| ParserError::InvalidAbi)?;
     Ok(SliceData::from(cell))
 }
 
@@ -353,7 +355,7 @@ mod test {
         let _msg_code = base64::decode("te6ccgEBBAEA0QABRYgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4MAQHhkN2GJNWURKaCKnkZsRQhhRpn6THu/L5UVbrQqftLTfUQT74cmHie7f1G6gzgchbLtyMtLAADdEgyd74v9hADgPx2uNPC/rcj5o9MEu0xQtT7O4QxICY7yPkDTSqLNRfNQAAAXh+Daz0/////xMdgs2ACAWOAAxkzX//CemECbh7vgh+JqjeKnKVxwwO21B0Xbqitsj/gAAAAAAAAAAAAAAADuaygBAMAAA==").unwrap();
         let tx = Transaction::construct_from_base64("te6ccgECDwEAArcAA7dxjJmv/+E9MIE3D3fBD8TVG8VOUrjhgdtqDou3VFbZH/AAALPVJCfkGksT3Y8aHAm7mnKfGA/AccQcwRmJeHov8yXElkW09QQwAACz0BBMOBYGHORAAFSAICXTqAUEAQIRDINHRh4pg8RAAwIAb8mPQkBMUWFAAAAAAAAEAAAAAAAEDt5ElKCY0ANTjCaw8ltpBJRSPdcEmknKxwOoduRmHbJAkCSUAJ1GT2MTiAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAIJy3y4B4TEhaY3M9HQMWqBpVJc3IUvntA5EtNHkjN1t4sqjUitqEc3Fb6TafRVFXMJNDjglljNUbcLzalj6ghNYgAIB4AsGAgHdCQcBASAIAHXgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4AAAWeqSE/IbAw5yISY7BZoAAAAAAAAAAQAEBIAoAsUgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/8ABjJmv/+E9MIE3D3fBD8TVG8VOUrjhgdtqDou3VFbZH/QdzWUAAYUWGAAABZ6pIT8hMDDnIhAAUWIADGTNf/8J6YQJuHu+CH4mqN4qcpXHDA7bUHRduqK2yP+DAwB4ZDdhiTVlESmgip5GbEUIYUaZ+kx7vy+VFW60Kn7S031EE++HJh4nu39RuoM4HIWy7cjLSwAA3RIMne+L/YQA4D8drjTwv63I+aPTBLtMULU+zuEMSAmO8j5A00qizUXzUAAAF4fg2s9P////8THYLNgDQFjgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4AAAAAAAAAAAAAAAA7msoAQOAAA=").trust_me();
         let parser = FunctionAbi::new(function);
-        dbg!(parser.parse(&tx).unwrap());
+        parser.parse(&tx).unwrap();
     }
 
     #[test]
@@ -377,7 +379,9 @@ mod test {
                 latest_lt: 12356916000001,
             },
         );
-        dbg!(executor.run(&Message::construct_from_bytes(&*msg_code).unwrap())).unwrap();
+        executor
+            .run(&Message::construct_from_bytes(&*msg_code).unwrap())
+            .unwrap();
     }
     #[test]
     fn test_comment() {

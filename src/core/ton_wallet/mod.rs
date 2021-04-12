@@ -1,6 +1,4 @@
-pub mod models;
 mod multisig;
-pub mod transactions;
 mod wallet_v3;
 
 use std::convert::TryFrom;
@@ -18,28 +16,48 @@ use super::models::{
     AccountState, Expiration, PendingTransaction, Transaction, TransactionId, TransactionsBatchInfo,
 };
 use super::{AccountSubscription, PollingMethod};
-use crate::core::utils;
+use crate::core::{utils, InternalMessage};
 use crate::crypto::UnsignedMessage;
 use crate::transport::models::{ContractState, TransactionFull};
 use crate::transport::Transport;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
+#[derive(Clone)]
 pub struct TonWallet {
     public_key: PublicKey,
     contract_type: ContractType,
+    account_subscription: AccountSubscription,
+    handler: Arc<dyn TonWalletSubscriptionHandler>,
 }
 
 impl TonWallet {
-    pub fn new(public_key: PublicKey, contract_type: ContractType) -> Self {
-        Self {
+    pub async fn subscribe(
+        transport: Arc<dyn Transport>,
+        public_key: PublicKey,
+        contract_type: ContractType,
+        handler: Arc<dyn TonWalletSubscriptionHandler>,
+    ) -> Result<Self> {
+        let address = compute_address(&public_key, contract_type, DEFAULT_WORKCHAIN);
+
+        let account_subscription = AccountSubscription::subscribe(
+            transport,
+            address,
+            make_contract_state_handler(&handler),
+            make_transactions_handler(&handler),
+        )
+        .await?;
+
+        Ok(Self {
             public_key,
             contract_type,
-        }
+            account_subscription,
+            handler,
+        })
     }
 
-    pub fn compute_address(&self) -> MsgAddressInt {
-        compute_address(&self.public_key, self.contract_type, DEFAULT_WORKCHAIN)
+    pub fn address(&self) -> &MsgAddressInt {
+        &self.account_subscription.address()
     }
 
     pub fn public_key(&self) -> &PublicKey {
@@ -48,6 +66,18 @@ impl TonWallet {
 
     pub fn contract_type(&self) -> ContractType {
         self.contract_type
+    }
+
+    pub fn account_state(&self) -> &AccountState {
+        &self.account_subscription.account_state()
+    }
+
+    pub fn pending_transactions(&self) -> &[PendingTransaction] {
+        &self.account_subscription.pending_transactions()
+    }
+
+    pub fn polling_method(&self) -> PollingMethod {
+        self.account_subscription.polling_method()
     }
 
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
@@ -89,49 +119,6 @@ impl TonWallet {
             ),
         }
     }
-}
-
-#[derive(Clone)]
-pub struct TonWalletSubscription {
-    account_subscription: AccountSubscription,
-    handler: Arc<dyn TonWalletSubscriptionHandler>,
-}
-
-impl TonWalletSubscription {
-    pub async fn subscribe(
-        transport: Arc<dyn Transport>,
-        address: MsgAddressInt,
-        handler: Arc<dyn TonWalletSubscriptionHandler>,
-    ) -> Result<Self> {
-        let account_subscription = AccountSubscription::subscribe(
-            transport,
-            address,
-            make_contract_state_handler(&handler),
-            make_transactions_handler(&handler),
-        )
-        .await?;
-
-        Ok(Self {
-            account_subscription,
-            handler,
-        })
-    }
-
-    pub fn address(&self) -> &MsgAddressInt {
-        &self.account_subscription.address()
-    }
-
-    pub fn account_state(&self) -> &AccountState {
-        &self.account_subscription.account_state()
-    }
-
-    pub fn pending_transactions(&self) -> &[PendingTransaction] {
-        &self.account_subscription.pending_transactions()
-    }
-
-    pub fn polling_method(&self) -> PollingMethod {
-        self.account_subscription.polling_method()
-    }
 
     pub async fn send(
         &mut self,
@@ -155,15 +142,12 @@ impl TonWalletSubscription {
     }
 
     pub async fn handle_block(&mut self, block: &ton_block::Block) -> Result<()> {
-        let new_account_state = self
-            .account_subscription
-            .handle_block(
-                block,
-                make_transactions_handler(&self.handler),
-                make_message_sent_handler(&self.handler),
-                make_message_expired_handler(&self.handler),
-            )
-            .await?;
+        let new_account_state = self.account_subscription.handle_block(
+            block,
+            make_transactions_handler(&self.handler),
+            make_message_sent_handler(&self.handler),
+            make_message_expired_handler(&self.handler),
+        )?;
 
         if let Some(account_state) = new_account_state {
             self.handler.on_state_changed(account_state);
@@ -181,6 +165,43 @@ impl TonWalletSubscription {
     pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
         self.account_subscription.estimate_fees(message).await
     }
+}
+
+pub trait InternalMessageSender {
+    fn prepare_transfer(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        message: InternalMessage,
+        expiration: Expiration,
+    ) -> Result<TransferAction>;
+}
+
+impl InternalMessageSender for TonWallet {
+    fn prepare_transfer(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        message: InternalMessage,
+        expiration: Expiration,
+    ) -> Result<TransferAction> {
+        if matches!(message.source, Some(source) if &source != self.address()) {
+            return Err(InternalMessageSenderError::InvalidSender.into());
+        }
+
+        self.prepare_transfer(
+            current_state,
+            message.destination,
+            message.amount,
+            message.bounce,
+            Some(message.body),
+            expiration,
+        )
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+enum InternalMessageSenderError {
+    #[error("Invalid sender")]
+    InvalidSender,
 }
 
 fn make_contract_state_handler<'a, T>(handler: &'a T) -> impl FnMut(&ContractState) + 'a

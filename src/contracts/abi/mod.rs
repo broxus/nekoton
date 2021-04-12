@@ -3,39 +3,26 @@ use ton_abi::Contract;
 
 use crate::utils::TrustMe;
 
-const SAFE_MULTISIG_WALLET_ABI: &[u8] = include_bytes!("./SafeMultisigWallet.abi.json");
-
-pub fn safe_multisig_wallet() -> &'static Contract {
-    static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.load(SAFE_MULTISIG_WALLET_ABI)
+macro_rules! declare_abi {
+    ($($contract:ident => $source:literal),*$(,)?) => {$(
+        pub fn $contract() -> &'static Contract {
+            static ABI: OnceCell<Contract> = OnceCell::new();
+            ABI.load(include_bytes!($source))
+        }
+    )*};
 }
 
-const SETCODE_MULTISIG_WALLET_ABI: &[u8] = include_bytes!("./SetcodeMultisigWallet.abi.json");
-
-pub fn setcode_multisig_wallet() -> &'static Contract {
-    static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.load(SETCODE_MULTISIG_WALLET_ABI)
-}
-
-const TON_TOKEN_WALLET: &[u8] = include_bytes!("./TONTokenWallet.abi.json");
-
-pub fn ton_token_wallet() -> &'static Contract {
-    static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.load(TON_TOKEN_WALLET)
-}
-
-const ETH_ETH_EVENT: &[u8] = include_bytes!("./EthEvent.abi.json");
-
-pub fn eth_event() -> &'static Contract {
-    static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.load(ETH_ETH_EVENT)
-}
-
-const ROOT_META: &[u8] = include_bytes!("./RootMeta.abi.json");
-
-pub fn root_meta() -> &'static Contract {
-    static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.load(ROOT_META)
+declare_abi! {
+    safe_multisig_wallet => "./SafeMultisigWallet.abi.json",
+    setcode_multisig_wallet => "./SetcodeMultisigWallet.abi.json",
+    wallet_notifications => "./WalletNotifications.abi.json",
+    ethereum_event => "./EthereumEvent.abi.json",
+    ton_event => "./TonEvent.abi.json",
+    root_meta => "./RootMeta.abi.json",
+    ton_token_wallet_v2 => "./TONTokenWalletV2.abi.json",
+    root_token_contract_v2 => "./RootTokenContractV2.abi.json",
+    ton_token_wallet_v3 => "./TONTokenWalletV3.abi.json",
+    root_token_contract_v3 => "./RootTokenContractV3.abi.json",
 }
 
 trait OnceCellExt {

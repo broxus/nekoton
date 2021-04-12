@@ -1,17 +1,21 @@
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use anyhow::Result;
+use ed25519_dalek::PublicKey;
 use futures::{Future, FutureExt, Stream};
 use ton_block::MsgAddressInt;
 
 use crate::core::models::{
-    AccountState, AccountSubscriptionError, GenTimings, LastTransactionId, PendingTransaction,
-    Transaction, TransactionId, TransactionsBatchInfo,
+    AccountState, AccountSubscriptionError, Expiration, ExpireAt, GenTimings, LastTransactionId,
+    PendingTransaction, Transaction, TransactionId, TransactionsBatchInfo,
 };
+use crate::crypto::{SignedMessage, UnsignedMessage};
 use crate::transport::models::TransactionFull;
 use crate::transport::Transport;
+use crate::utils::*;
 
 pub fn convert_transactions(
     transactions: Vec<TransactionFull>,
@@ -363,3 +367,103 @@ impl PendingTransactionsExt for Vec<PendingTransaction> {
         }
     }
 }
+
+pub fn make_labs_unsigned_message(
+    message: ton_block::Message,
+    expiration: Expiration,
+    public_key: &PublicKey,
+    function: &'static ton_abi::Function,
+    input: Vec<ton_abi::Token>,
+) -> Result<Box<dyn UnsignedMessage>> {
+    let time = chrono::Utc::now().timestamp_millis() as u64;
+    let (expire_at, header) = default_headers(time, expiration, public_key);
+
+    let (payload, hash) = function
+        .create_unsigned_call(&header, &input, false, true)
+        .convert()?;
+
+    Ok(Box::new(LabsUnsignedMessage {
+        function,
+        header,
+        input,
+        payload,
+        hash,
+        expire_at,
+        message,
+    }))
+}
+
+#[derive(Clone)]
+struct LabsUnsignedMessage {
+    function: &'static ton_abi::Function,
+    header: HeadersMap,
+    input: Vec<ton_abi::Token>,
+    payload: ton_types::BuilderData,
+    hash: Vec<u8>,
+    expire_at: ExpireAt,
+    message: ton_block::Message,
+}
+
+impl UnsignedMessage for LabsUnsignedMessage {
+    fn refresh_timeout(&mut self) {
+        let time = chrono::Utc::now().timestamp_millis() as u64;
+
+        if !self.expire_at.refresh_from_millis(time) {
+            return;
+        }
+
+        *self.header.get_mut("time").trust_me() = ton_abi::TokenValue::Time(time);
+        *self.header.get_mut("expire").trust_me() = ton_abi::TokenValue::Expire(self.expire_at());
+
+        let (payload, hash) = self
+            .function
+            .create_unsigned_call(&self.header, &self.input, false, true)
+            .trust_me();
+        self.payload = payload;
+        self.hash = hash;
+    }
+
+    fn expire_at(&self) -> u32 {
+        self.expire_at.timestamp
+    }
+
+    fn hash(&self) -> &[u8] {
+        self.hash.as_slice()
+    }
+
+    fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
+        let payload = self.payload.clone();
+        let payload = ton_abi::Function::fill_sign(2, Some(signature), None, payload).convert()?;
+
+        let mut message = self.message.clone();
+        message.set_body(payload.into());
+
+        Ok(SignedMessage {
+            message,
+            expire_at: self.expire_at(),
+        })
+    }
+}
+
+fn default_headers(
+    time: u64,
+    expiration: Expiration,
+    public_key: &PublicKey,
+) -> (ExpireAt, HeadersMap) {
+    let expire_at = ExpireAt::new_from_millis(expiration, time);
+
+    let mut header = HashMap::with_capacity(3);
+    header.insert("time".to_string(), ton_abi::TokenValue::Time(time));
+    header.insert(
+        "expire".to_string(),
+        ton_abi::TokenValue::Expire(expire_at.timestamp),
+    );
+    header.insert(
+        "pubkey".to_string(),
+        ton_abi::TokenValue::PublicKey(Some(*public_key)),
+    );
+
+    (expire_at, header)
+}
+
+type HeadersMap = HashMap<String, ton_abi::TokenValue>;

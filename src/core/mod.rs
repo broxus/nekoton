@@ -2,8 +2,8 @@ pub mod account_subscription;
 pub mod models;
 pub mod token_wallet;
 pub mod ton_wallet;
+pub mod transactions;
 mod utils;
-
 use anyhow::Result;
 
 pub use self::account_subscription::AccountSubscription;
@@ -26,4 +26,13 @@ impl TonInterface {
     pub fn set_transport(&mut self, transport: Box<dyn Transport>) {
         self.transport = transport;
     }
+}
+
+#[derive(Clone)]
+pub struct InternalMessage {
+    pub source: Option<ton_block::MsgAddressInt>,
+    pub destination: ton_block::MsgAddressInt,
+    pub amount: u64,
+    pub bounce: bool,
+    pub body: ton_types::SliceData,
 }
