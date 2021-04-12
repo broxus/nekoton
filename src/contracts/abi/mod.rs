@@ -17,11 +17,11 @@ pub fn setcode_multisig_wallet() -> &'static Contract {
     ABI.load(SETCODE_MULTISIG_WALLET_ABI)
 }
 
-const TON_TOKEN_WALLET: &[u8] = include_bytes!("./TONTokenWallet.abi.json");
+const TON_TOKEN_WALLET_V3: &[u8] = include_bytes!("./TONTokenWallet.abi.json");
 
-pub fn ton_token_wallet() -> &'static Contract {
+pub fn ton_token_wallet_v3() -> &'static Contract {
     static ABI: OnceCell<Contract> = OnceCell::new();
-    ABI.load(TON_TOKEN_WALLET)
+    ABI.load(TON_TOKEN_WALLET_V3)
 }
 
 const ETH_ETH_EVENT: &[u8] = include_bytes!("./EthEvent.abi.json");
@@ -36,6 +36,13 @@ const ROOT_META: &[u8] = include_bytes!("./RootMeta.abi.json");
 pub fn root_meta() -> &'static Contract {
     static ABI: OnceCell<Contract> = OnceCell::new();
     ABI.load(ROOT_META)
+}
+
+const TON_TOKEN_WALLET_V2: &[u8] = include_bytes!("./TONTokenWalletV2.abi.json");
+
+pub fn ton_token_wallet_v2() -> &'static Contract {
+    static ABI: OnceCell<Contract> = OnceCell::new();
+    ABI.load(TON_TOKEN_WALLET_V2)
 }
 
 trait OnceCellExt {

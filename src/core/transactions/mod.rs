@@ -8,8 +8,10 @@ use crate::contracts::abi;
 use crate::contracts::abi::safe_multisig_wallet;
 use crate::helpers::abi::{FunctionBuilder, FunctionExt};
 use crate::utils::*;
+mod models;
+mod token_parse;
 
-use super::models::*;
+use models::*;
 
 //todo normal name
 fn main_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
@@ -28,7 +30,7 @@ fn main_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
 }
 
 fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
-    let transfer = abi::ton_token_wallet().function("transfer").trust_me();
+    let transfer = abi::ton_token_wallet_v3().function("transfer").trust_me();
 
     if let Ok(a) = transfer.decode_input(tx.clone(), true) {
         let info = Transfer::try_from(a).ok()?;
@@ -36,7 +38,9 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
             TransferFamily::Transfer(info),
         ));
     }
-    let transfer = abi::ton_token_wallet().function("transferFrom").trust_me();
+    let transfer = abi::ton_token_wallet_v3()
+        .function("transferFrom")
+        .trust_me();
     if let Ok(a) = transfer.decode_input(tx.clone(), true) {
         let info = TransferFrom::try_from(a).ok()?;
         return Some(TransactionAdditionalInfo::TokenTransfer(
@@ -44,7 +48,7 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         ));
     }
 
-    let transfer = abi::ton_token_wallet()
+    let transfer = abi::ton_token_wallet_v3()
         .function("transferToRecipient")
         .trust_me();
 
@@ -55,7 +59,7 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         ));
     }
 
-    let transfer = abi::ton_token_wallet()
+    let transfer = abi::ton_token_wallet_v3()
         .function("internalTransferFrom")
         .trust_me();
 
@@ -88,7 +92,9 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
         return Some(TransactionAdditionalInfo::TokenMint(info));
     }
 
-    let token_swap_back = abi::ton_token_wallet().function("burnByOwner").trust_me();
+    let token_swap_back = abi::ton_token_wallet_v3()
+        .function("burnByOwner")
+        .trust_me();
     if let Ok(a) = token_swap_back.decode_input(tx, true) {
         let info = TokenSwapBack::try_from(a).ok()?;
         return Some(TransactionAdditionalInfo::TokenSwapBack(info));
@@ -98,7 +104,7 @@ fn token_wallet_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
 
 fn event_parse(tx: SliceData) -> Option<TransactionAdditionalInfo> {
     let eth_event = FunctionBuilder::new("notifyEthereumEventStatusChanged")
-        .in_arg("EthereumEventStatus", ParamType::Uint(8))
+        .in_arg("EthereumEventStatus",ParamType::Uint(8))
         .build();
 
     if let Ok(a) = eth_event.decode_input(tx.clone(), true) {
@@ -169,12 +175,11 @@ mod test {
     use ton_block::MsgAddress::AddrStd;
     use ton_block::{Deserializable, MsgAddrStd, Transaction};
 
-    use crate::core::ton_wallet::models::{
+    use super::models::{
         EthereumStatusChanged, ParsingContext, TonEventStatus, TransactionAdditionalInfo,
         TransferFamily,
     };
-    use crate::core::ton_wallet::transactions::parse_additional_info;
-
+    use super::*;
     #[test]
     fn test_main_wallet_parse() {
         let tx = Transaction::construct_from_base64("te6ccgECBQEAATAAA7F44lhmAlE+maVfor4IVhRpx85Rp9WiWXdVjnfvK8k4e0AAALc5peDsFNAtcF1BRBGfRP73+ljNPUUc+ir7FmHntIcbeh/ba28gAAC3OZS2ZBYGofQAABQgSAMCAQAVBECIicQJoBh6EgIAgnIIhWuBGHA/f3IsyBPHr57C3d7pcU83NmIoz5CkFu+Hsn742ILtpOsOCyUw6fEN9VwMZzJ8dj6MuR/kKlztR9sKAQGgBAD3aAHILrQNhiymjQB0/Pw/ubdxFv4FXRIQhcVcOMZMH8eJ5wAjiWGYCUT6ZpV+ivghWFGnHzlGn1aJZd1WOd+8ryTh7QicQAYUWGAAABbnNEILiMDUPm4kKd2bwA7tPzMWNNSaXaK1RvRlLdSIlIehh8LvndIgPP8XtYTj2A==").unwrap();

@@ -36,7 +36,9 @@ fn from_reader() {
 }
 
 fn create_function(name: &str) {
-    contracts::abi::ton_token_wallet().function(name).unwrap();
+    nekoton::contracts::abi::ton_token_wallet_v3()
+        .function(name)
+        .unwrap();
 }
 
 criterion_group!(benches, criterion_benchmark);

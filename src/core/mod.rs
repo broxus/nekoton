@@ -2,8 +2,8 @@ pub mod account_subscription;
 pub mod models;
 pub mod token_wallet;
 pub mod ton_wallet;
+pub mod transactions;
 mod utils;
-
 use anyhow::Result;
 
 pub use self::account_subscription::AccountSubscription;
