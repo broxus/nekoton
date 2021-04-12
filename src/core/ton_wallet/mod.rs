@@ -23,21 +23,41 @@ use crate::transport::Transport;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
+#[derive(Clone)]
 pub struct TonWallet {
     public_key: PublicKey,
     contract_type: ContractType,
+    account_subscription: AccountSubscription,
+    handler: Arc<dyn TonWalletSubscriptionHandler>,
 }
 
 impl TonWallet {
-    pub fn new(public_key: PublicKey, contract_type: ContractType) -> Self {
-        Self {
+    pub async fn subscribe(
+        transport: Arc<dyn Transport>,
+        public_key: PublicKey,
+        contract_type: ContractType,
+        handler: Arc<dyn TonWalletSubscriptionHandler>,
+    ) -> Result<Self> {
+        let address = compute_address(&public_key, contract_type, DEFAULT_WORKCHAIN);
+
+        let account_subscription = AccountSubscription::subscribe(
+            transport,
+            address,
+            make_contract_state_handler(&handler),
+            make_transactions_handler(&handler),
+        )
+        .await?;
+
+        Ok(Self {
             public_key,
             contract_type,
-        }
+            account_subscription,
+            handler,
+        })
     }
 
-    pub fn compute_address(&self) -> MsgAddressInt {
-        compute_address(&self.public_key, self.contract_type, DEFAULT_WORKCHAIN)
+    pub fn address(&self) -> &MsgAddressInt {
+        &self.account_subscription.address()
     }
 
     pub fn public_key(&self) -> &PublicKey {
@@ -46,6 +66,18 @@ impl TonWallet {
 
     pub fn contract_type(&self) -> ContractType {
         self.contract_type
+    }
+
+    pub fn account_state(&self) -> &AccountState {
+        &self.account_subscription.account_state()
+    }
+
+    pub fn pending_transactions(&self) -> &[PendingTransaction] {
+        &self.account_subscription.pending_transactions()
+    }
+
+    pub fn polling_method(&self) -> PollingMethod {
+        self.account_subscription.polling_method()
     }
 
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
@@ -86,49 +118,6 @@ impl TonWallet {
                 expiration,
             ),
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct TonWalletSubscription {
-    account_subscription: AccountSubscription,
-    handler: Arc<dyn TonWalletSubscriptionHandler>,
-}
-
-impl TonWalletSubscription {
-    pub async fn subscribe(
-        transport: Arc<dyn Transport>,
-        address: MsgAddressInt,
-        handler: Arc<dyn TonWalletSubscriptionHandler>,
-    ) -> Result<Self> {
-        let account_subscription = AccountSubscription::subscribe(
-            transport,
-            address,
-            make_contract_state_handler(&handler),
-            make_transactions_handler(&handler),
-        )
-        .await?;
-
-        Ok(Self {
-            account_subscription,
-            handler,
-        })
-    }
-
-    pub fn address(&self) -> &MsgAddressInt {
-        &self.account_subscription.address()
-    }
-
-    pub fn account_state(&self) -> &AccountState {
-        &self.account_subscription.account_state()
-    }
-
-    pub fn pending_transactions(&self) -> &[PendingTransaction] {
-        &self.account_subscription.pending_transactions()
-    }
-
-    pub fn polling_method(&self) -> PollingMethod {
-        self.account_subscription.polling_method()
     }
 
     pub async fn send(

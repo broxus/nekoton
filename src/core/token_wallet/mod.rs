@@ -14,42 +14,15 @@ use crate::core::models::{
     RootTokenContractDetails, Symbol, TokenWalletDetails, TokenWalletState, TokenWalletVersion,
     Transaction, TransactionId, TransactionsBatchInfo,
 };
+use crate::crypto::UnsignedMessage;
 use crate::helpers::abi;
 use crate::helpers::abi::{FunctionArg, FunctionExt, IntoParser, TokenValueExt, TupleBuilder};
 use crate::transport::models::{ContractState, ExistingContract, TransactionFull};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
 
-pub struct TokenWallet {
-    address: MsgAddressInt,
-    symbol: Symbol,
-    owner: MsgAddressInt,
-}
-
-impl TokenWallet {
-    pub fn new(address: MsgAddressInt, symbol: Symbol, owner: MsgAddressInt) -> Self {
-        Self {
-            address,
-            symbol,
-            owner,
-        }
-    }
-
-    pub fn address(&self) -> &MsgAddressInt {
-        &self.address
-    }
-
-    pub fn symbol(&self) -> &Symbol {
-        &self.symbol
-    }
-
-    pub fn owner(&self) -> &MsgAddressInt {
-        &self.owner
-    }
-}
-
 #[derive(Clone)]
-pub struct TokenWalletSubscription {
+pub struct TokenWallet {
     transport: Arc<dyn Transport>,
     account_subscription: AccountSubscription,
     handler: Arc<dyn TokenWalletSubscriptionHandler>,
@@ -59,13 +32,13 @@ pub struct TokenWalletSubscription {
     balance: BigUint,
 }
 
-impl TokenWalletSubscription {
+impl TokenWallet {
     pub async fn subscribe(
         transport: Arc<dyn Transport>,
         owner: MsgAddressInt,
         root_token_contract: MsgAddressInt,
         handler: Arc<dyn TokenWalletSubscriptionHandler>,
-    ) -> Result<TokenWalletSubscription> {
+    ) -> Result<TokenWallet> {
         let state = match transport.get_contract_state(&root_token_contract).await? {
             ContractState::Exists(state) => state,
             ContractState::NotExists => {
@@ -114,6 +87,14 @@ impl TokenWalletSubscription {
 
     pub fn address(&self) -> &MsgAddressInt {
         &self.account_subscription.address()
+    }
+
+    pub fn symbol(&self) -> &Symbol {
+        &self.symbol
+    }
+
+    pub fn version(&self) -> TokenWalletVersion {
+        self.version
     }
 
     pub fn balance(&self) -> &BigUint {
