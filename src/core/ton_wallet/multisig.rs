@@ -1,16 +1,13 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
-use chrono::Utc;
 use ed25519_dalek::PublicKey;
-use ton_abi::TokenValue;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
-use ton_types::{BuilderData, SliceData, UInt256};
+use ton_types::{SliceData, UInt256};
 
+use super::utils::*;
 use super::{TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
-use crate::core::models::{Expiration, ExpireAt};
-use crate::crypto::{SignedMessage, UnsignedMessage};
+use crate::core::models::Expiration;
+use crate::crypto::UnsignedMessage;
 use crate::helpers::abi::{BigUint128, MessageBuilder};
 use crate::utils::*;
 
@@ -43,22 +40,9 @@ pub fn prepare_deploy(
             .arg(1u8) // reqConfirms
             .build();
 
-    let time = Utc::now().timestamp_millis() as u64;
-    let (expire_at, header) = default_headers(time, expiration, public_key);
-
-    let (payload, hash) = function
-        .create_unsigned_call(&header, &input, false, true)
-        .convert()?;
-
-    Ok(Box::new(UnsignedMultisigMessage {
-        function,
-        header,
-        input,
-        payload,
-        hash,
-        expire_at,
-        message,
-    }))
+    Ok(make_labs_unsigned_message(
+        message, expiration, public_key, function, input,
+    )?)
 }
 
 pub fn prepare_transfer(
@@ -93,98 +77,10 @@ pub fn prepare_transfer(
             .arg(body.unwrap_or_default().serialize().convert()?)
             .build();
 
-    let time = Utc::now().timestamp_millis() as u64;
-    let (expire_at, header) = default_headers(time, expiration, public_key);
-
-    let (payload, hash) = function
-        .create_unsigned_call(&header, &input, false, true)
-        .convert()?;
-
-    Ok(TransferAction::Sign(Box::new(UnsignedMultisigMessage {
-        function,
-        header,
-        input,
-        payload,
-        hash,
-        expire_at,
-        message,
-    })))
+    Ok(TransferAction::Sign(make_labs_unsigned_message(
+        message, expiration, public_key, function, input,
+    )?))
 }
-
-#[derive(Clone)]
-struct UnsignedMultisigMessage {
-    function: &'static ton_abi::Function,
-    header: HashMap<String, TokenValue>,
-    input: Vec<ton_abi::Token>,
-    payload: BuilderData,
-    hash: Vec<u8>,
-    expire_at: ExpireAt,
-    message: ton_block::Message,
-}
-
-impl UnsignedMessage for UnsignedMultisigMessage {
-    fn refresh_timeout(&mut self) {
-        let time = Utc::now().timestamp_millis() as u64;
-
-        if !self.expire_at.refresh_from_millis(time) {
-            return;
-        }
-
-        *self.header.get_mut("time").trust_me() = TokenValue::Time(time);
-        *self.header.get_mut("expire").trust_me() = TokenValue::Expire(self.expire_at());
-
-        let (payload, hash) = self
-            .function
-            .create_unsigned_call(&self.header, &self.input, false, true)
-            .trust_me();
-        self.payload = payload;
-        self.hash = hash;
-    }
-
-    fn expire_at(&self) -> u32 {
-        self.expire_at.timestamp
-    }
-
-    fn hash(&self) -> &[u8] {
-        self.hash.as_slice()
-    }
-
-    fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
-        let payload = self.payload.clone();
-        let payload = ton_abi::Function::fill_sign(2, Some(signature), None, payload).convert()?;
-
-        let mut message = self.message.clone();
-        message.set_body(payload.into());
-
-        Ok(SignedMessage {
-            message,
-            expire_at: self.expire_at(),
-        })
-    }
-}
-
-fn default_headers(
-    time: u64,
-    expiration: Expiration,
-    public_key: &PublicKey,
-) -> (ExpireAt, HeadersMap) {
-    let expire_at = ExpireAt::new_from_millis(expiration, time);
-
-    let mut header = HashMap::with_capacity(3);
-    header.insert("time".to_string(), TokenValue::Time(time));
-    header.insert(
-        "expire".to_string(),
-        TokenValue::Expire(expire_at.timestamp),
-    );
-    header.insert(
-        "pubkey".to_string(),
-        TokenValue::PublicKey(Some(*public_key)),
-    );
-
-    (expire_at, header)
-}
-
-type HeadersMap = HashMap<String, TokenValue>;
 
 crate::define_string_enum!(
     pub enum MultisigType {

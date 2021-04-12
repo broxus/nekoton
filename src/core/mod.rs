@@ -27,3 +27,12 @@ impl TonInterface {
         self.transport = transport;
     }
 }
+
+#[derive(Clone)]
+pub struct InternalMessage {
+    pub source: Option<ton_block::MsgAddressInt>,
+    pub destination: ton_block::MsgAddressInt,
+    pub amount: u64,
+    pub bounce: bool,
+    pub body: ton_types::SliceData,
+}

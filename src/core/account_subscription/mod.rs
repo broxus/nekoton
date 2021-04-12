@@ -132,7 +132,7 @@ impl AccountSubscription {
         Ok(())
     }
 
-    pub async fn handle_block<FT, FM, FE>(
+    pub fn handle_block<FT, FM, FE>(
         &mut self,
         block: &ton_block::Block,
         mut on_transactions_found: FT,

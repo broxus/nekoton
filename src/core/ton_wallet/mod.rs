@@ -16,7 +16,7 @@ use super::models::{
     AccountState, Expiration, PendingTransaction, Transaction, TransactionId, TransactionsBatchInfo,
 };
 use super::{AccountSubscription, PollingMethod};
-use crate::core::utils;
+use crate::core::{utils, InternalMessage};
 use crate::crypto::UnsignedMessage;
 use crate::transport::models::{ContractState, TransactionFull};
 use crate::transport::Transport;
@@ -142,15 +142,12 @@ impl TonWallet {
     }
 
     pub async fn handle_block(&mut self, block: &ton_block::Block) -> Result<()> {
-        let new_account_state = self
-            .account_subscription
-            .handle_block(
-                block,
-                make_transactions_handler(&self.handler),
-                make_message_sent_handler(&self.handler),
-                make_message_expired_handler(&self.handler),
-            )
-            .await?;
+        let new_account_state = self.account_subscription.handle_block(
+            block,
+            make_transactions_handler(&self.handler),
+            make_message_sent_handler(&self.handler),
+            make_message_expired_handler(&self.handler),
+        )?;
 
         if let Some(account_state) = new_account_state {
             self.handler.on_state_changed(account_state);
@@ -168,6 +165,43 @@ impl TonWallet {
     pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
         self.account_subscription.estimate_fees(message).await
     }
+}
+
+pub trait InternalMessageSender {
+    fn prepare_transfer(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        message: InternalMessage,
+        expiration: Expiration,
+    ) -> Result<TransferAction>;
+}
+
+impl InternalMessageSender for TonWallet {
+    fn prepare_transfer(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        message: InternalMessage,
+        expiration: Expiration,
+    ) -> Result<TransferAction> {
+        if matches!(message.source, Some(source) if &source != self.address()) {
+            return Err(InternalMessageSenderError::InvalidSender.into());
+        }
+
+        self.prepare_transfer(
+            current_state,
+            message.destination,
+            message.amount,
+            message.bounce,
+            Some(message.body),
+            expiration,
+        )
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+enum InternalMessageSenderError {
+    #[error("Invalid sender")]
+    InvalidSender,
 }
 
 fn make_contract_state_handler<'a, T>(handler: &'a T) -> impl FnMut(&ContractState) + 'a

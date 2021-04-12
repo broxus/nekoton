@@ -1,22 +1,21 @@
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryInto;
 use std::sync::Arc;
 
 use anyhow::Result;
-use futures::Stream;
-use num_bigint::BigUint;
+use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 
-use super::utils;
-use super::AccountSubscription;
+use super::{AccountSubscription, InternalMessage};
 use crate::contracts;
 use crate::core::models::{
-    AccountState, GenTimings, LastTransactionId, PendingTransaction, PollingMethod,
-    RootTokenContractDetails, Symbol, TokenWalletDetails, TokenWalletState, TokenWalletVersion,
-    Transaction, TransactionId, TransactionsBatchInfo,
+    AccountState, PollingMethod, RootTokenContractDetails, Symbol, TokenWalletDetails,
+    TokenWalletVersion, TransactionId, TransactionsBatchInfo,
 };
-use crate::crypto::UnsignedMessage;
-use crate::helpers::abi;
-use crate::helpers::abi::{FunctionArg, FunctionExt, IntoParser, TokenValueExt, TupleBuilder};
+use crate::core::transactions::*;
+use crate::helpers::abi::{
+    self, BigUint128, BigUint256, FunctionArg, FunctionExt, IntoParser, MessageBuilder,
+    TokenValueExt, TupleBuilder,
+};
 use crate::transport::models::{ContractState, ExistingContract, TransactionFull};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
@@ -26,6 +25,7 @@ pub struct TokenWallet {
     transport: Arc<dyn Transport>,
     account_subscription: AccountSubscription,
     handler: Arc<dyn TokenWalletSubscriptionHandler>,
+    owner: MsgAddressInt,
     symbol: Symbol,
     version: TokenWalletVersion,
     root_meta_address: MsgAddressInt,
@@ -62,7 +62,7 @@ impl TokenWallet {
             transport.clone(),
             address,
             make_contract_state_handler(version, &mut balance),
-            make_transactions_handler(&handler),
+            make_transactions_handler(&handler, version),
         )
         .await?;
 
@@ -78,6 +78,7 @@ impl TokenWallet {
             transport,
             account_subscription,
             handler,
+            owner,
             symbol,
             version,
             root_meta_address,
@@ -109,6 +110,121 @@ impl TokenWallet {
         self.account_subscription.polling_method()
     }
 
+    pub fn prepare_deploy(&self) -> Result<InternalMessage> {
+        const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
+
+        let (_, input) = MessageBuilder::new(
+            contracts::abi::root_token_contract_v3(),
+            "deployEmptyWallet",
+        )
+        .trust_me()
+        .arg(BigUint128(INITIAL_BALANCE.into()))
+        .arg(BigUint256(Default::default()))
+        .arg(&self.owner)
+        .arg(&self.owner)
+        .build();
+
+        let body = ton_abi::TokenValue::pack_values_into_chain(&input, Vec::new(), 2)
+            .convert()?
+            .into();
+
+        Ok(InternalMessage {
+            source: Some(self.owner.clone()),
+            destination: self.symbol.root_token_contract.clone(),
+            amount: ATTACHED_AMOUNT,
+            bounce: true,
+            body,
+        })
+    }
+
+    pub fn prepare_transfer(
+        &self,
+        destination: TransferRecipient,
+        tokens: BigUint,
+    ) -> Result<InternalMessage> {
+        const ATTACHED_AMOUNT: u64 = 100_000_000; // 0.5 TON
+
+        let contract = select_token_contract(self.version)?;
+
+        let (_, input) = match destination {
+            TransferRecipient::TokenWallet(token_wallet) => {
+                MessageBuilder::new(contract, "transfer")
+                    .trust_me()
+                    .arg(token_wallet) // to
+                    .arg(BigUint128(tokens)) // tokens
+            }
+            TransferRecipient::OwnerWallet(owner_wallet) => {
+                MessageBuilder::new(contract, "transferToRecipient")
+                    .trust_me()
+                    .arg(BigUint256(Default::default())) // recipient_public_key
+                    .arg(owner_wallet) // recipient_address
+                    .arg(BigUint128(tokens)) // tokens
+                    .arg(BigUint128(INITIAL_BALANCE.into())) // deploy_grams
+            }
+        }
+        .arg(BigUint128(Default::default())) // grams / transfer_grams
+        .arg(&self.owner) // send_gas_to
+        .arg(false) // notify_receiver
+        .arg(ton_types::Cell::default()) // payload
+        .build();
+
+        let body = ton_abi::TokenValue::pack_values_into_chain(&input, Vec::new(), 2)
+            .convert()?
+            .into();
+
+        Ok(InternalMessage {
+            source: Some(self.owner.clone()),
+            destination: self.address().clone(),
+            amount: ATTACHED_AMOUNT,
+            bounce: true,
+            body,
+        })
+    }
+
+    pub fn prepare_swap_back(
+        &self,
+        destination: String,
+        tokens: BigUint,
+        proxy_address: MsgAddressInt,
+    ) -> Result<InternalMessage> {
+        const ATTACHED_AMOUNT: u64 = 100_000_000; // 0.5 TON
+
+        let destination = hex::decode(destination.trim_start_matches("0x"))
+            .ok()
+            .and_then(|data| if data.len() == 20 { Some(data) } else { None })
+            .ok_or_else(|| TokenWalletError::InvalidSwapBackDestination)?;
+
+        let callback_payload = ton_abi::TokenValue::pack_values_into_chain(
+            &[destination.token_value().unnamed()],
+            Vec::new(),
+            2,
+        )
+        .map_err(|_| TokenWalletError::InvalidSwapBackDestination)?;
+
+        let contract = select_token_contract(self.version)?;
+
+        let (_, input) = MessageBuilder::new(contract, "burnByOwner")
+            .trust_me()
+            .arg(BigUint128(tokens)) // tokens
+            .arg(BigUint128(Default::default())) // grams
+            .arg(&self.owner) // send_gas_to
+            .arg(proxy_address) // callback_address
+            .arg(callback_payload) // callback_payload
+            .build();
+
+        let body = ton_abi::TokenValue::pack_values_into_chain(&input, Vec::new(), 2)
+            .convert()?
+            .into();
+
+        Ok(InternalMessage {
+            source: Some(self.owner.clone()),
+            destination: self.address().clone(),
+            amount: ATTACHED_AMOUNT,
+            bounce: true,
+            body,
+        })
+    }
+
     pub async fn get_proxy_address(&mut self) -> Result<MsgAddressInt> {
         match self
             .transport
@@ -124,24 +240,86 @@ impl TokenWallet {
 
     pub async fn refresh(&mut self) -> Result<()> {
         let mut balance = self.balance.clone();
+
         self.account_subscription
             .refresh(
                 make_contract_state_handler(self.version, &mut balance),
-                make_transactions_handler(&self.handler),
+                make_transactions_handler(&self.handler, self.version),
                 |_, _| {},
                 |_| {},
             )
             .await?;
+
         if balance != self.balance {
             self.balance = balance;
             self.handler.on_balance_changed(self.balance.clone());
         }
+
+        Ok(())
+    }
+
+    pub async fn handle_block(&mut self, block: &ton_block::Block) -> Result<()> {
+        let version = self.version;
+        let mut balance: BigInt = self.balance.clone().into();
+
+        let handler = &self.handler;
+        self.account_subscription.handle_block(
+            block,
+            |transactions, batch_info| {
+                let transactions = transactions
+                    .into_iter()
+                    .filter_map(|transaction| {
+                        let description = match transaction.data.description.read_struct().ok()? {
+                            ton_block::TransactionDescr::Ordinary(description) => description,
+                            _ => return None,
+                        };
+
+                        let transaction =
+                            parse_token_transaction(&transaction.data, &description, version)?;
+
+                        match &transaction {
+                            TokenWalletTransaction::IncomingTransfer(IncomingTransfer {
+                                tokens,
+                                ..
+                            })
+                            | TokenWalletTransaction::Accept(Accept { tokens })
+                            | TokenWalletTransaction::SwapBackBounced(tokens)
+                            | TokenWalletTransaction::TransferBounced(tokens) => {
+                                balance += tokens.clone().to_bigint().trust_me();
+                            }
+                            TokenWalletTransaction::OutgoingTransfer(OutgoingTransfer {
+                                tokens,
+                                ..
+                            })
+                            | TokenWalletTransaction::SwapBack(TokenSwapBack { tokens, .. }) => {
+                                balance -= tokens.clone().to_bigint().trust_me();
+                            }
+                        }
+
+                        Some(transaction)
+                    })
+                    .collect();
+
+                handler
+                    .as_ref()
+                    .on_transactions_found(transactions, batch_info)
+            },
+            |_, _| {},
+            |_| {},
+        )?;
+
+        let balance = balance.to_biguint().unwrap_or_default();
+        if balance != self.balance {
+            self.balance = balance;
+            self.handler.on_balance_changed(self.balance.clone());
+        }
+
         Ok(())
     }
 
     pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
         self.account_subscription
-            .preload_transactions(from, make_transactions_handler(&self.handler))
+            .preload_transactions(from, make_transactions_handler(&self.handler, self.version))
             .await
     }
 }
@@ -155,10 +333,38 @@ pub trait TokenWalletSubscriptionHandler: Send + Sync {
     /// - When preloading transactions
     fn on_transactions_found(
         &self,
-        transactions: Vec<Transaction>,
+        transactions: Vec<TokenWalletTransaction>,
         batch_info: TransactionsBatchInfo,
     );
 }
+
+pub fn make_collect_tokens_call(eth_event_address: MsgAddressInt) -> InternalMessage {
+    const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
+
+    let function = abi::FunctionBuilder::new("executeProxyCallback").build();
+    let body = function
+        .encode_input(&Default::default(), &[], true, None)
+        .trust_me()
+        .into();
+
+    InternalMessage {
+        source: None,
+        destination: eth_event_address,
+        amount: ATTACHED_AMOUNT,
+        bounce: true,
+        body,
+    }
+}
+
+fn select_token_contract(version: TokenWalletVersion) -> Result<&'static ton_abi::Contract> {
+    Ok(match version {
+        TokenWalletVersion::Tip3v1 => return Err(TokenWalletError::UnsupportedVersion.into()),
+        TokenWalletVersion::Tip3v2 => contracts::abi::ton_token_wallet_v2(),
+        TokenWalletVersion::Tip3v3 => contracts::abi::ton_token_wallet_v3(),
+    })
+}
+
+const INITIAL_BALANCE: u64 = 100_000_000; // 0.1 TON
 
 fn make_contract_state_handler<'a>(
     version: TokenWalletVersion,
@@ -175,14 +381,23 @@ fn make_contract_state_handler<'a>(
 
 fn make_transactions_handler<'a, T>(
     handler: &'a T,
+    version: TokenWalletVersion,
 ) -> impl FnMut(Vec<TransactionFull>, TransactionsBatchInfo) + 'a
 where
     T: AsRef<dyn TokenWalletSubscriptionHandler>,
 {
     move |transactions, batch_info| {
-        let transactions = utils::convert_transactions(transactions).collect();
-
-        // TODO: inject additional info
+        let transactions = transactions
+            .into_iter()
+            .filter_map(
+                |transaction| match transaction.data.description.read_struct().ok()? {
+                    ton_block::TransactionDescr::Ordinary(description) => {
+                        parse_token_transaction(&transaction.data, &description, version)
+                    }
+                    _ => None,
+                },
+            )
+            .collect();
 
         handler
             .as_ref()
@@ -366,6 +581,7 @@ impl<'a> TokenWalletContractState<'a> {
         Ok(details)
     }
 
+    #[allow(dead_code)]
     fn get_version(&self) -> Result<TokenWalletVersion> {
         // check Tip3v3+ version via direct call
         match get_version_direct(self.0) {
@@ -522,10 +738,14 @@ impl ExistingContractExt for ExistingContract {
 enum TokenWalletError {
     #[error("Unknown version")]
     UnknownVersion,
+    #[error("Unsupported version")]
+    UnsupportedVersion,
     #[error("Invalid root token contract")]
     InvalidRootTokenContract,
     #[error("Invalid root meta contract")]
     InvalidRootMetaContract,
+    #[error("Invalid swap back destination")]
+    InvalidSwapBackDestination,
 }
 
 #[cfg(test)]
@@ -533,6 +753,7 @@ mod tests {
     use std::str::FromStr;
 
     use super::*;
+    use crate::core::models::LastTransactionId;
 
     fn convert_address(addr: &str) -> MsgAddressInt {
         MsgAddressInt::from_str(addr).unwrap()
