@@ -114,10 +114,22 @@ impl StoreSigner for DerivedKeySigner {
             None => return Err(MasterKeyError::MasterKeyNotFound.into()),
         };
 
-        let decrypter = ChaCha20Poly1305::new(&super::symmetric::symmetric_key_from_password(
-            input.password,
-            &master_key.salt,
-        ));
+        let (account_id, password) = match input {
+            Self::SignInput::ByAccountId {
+                account_id,
+                password,
+            } => (account_id, password),
+            Self::SignInput::ByPublicKey {
+                public_key,
+                password,
+            } => match master_key.accounts_map.get(public_key.as_bytes()) {
+                Some((_, account_id)) => (*account_id, password),
+                None => return Err(MasterKeyError::DerivedKeyNotFound.into()),
+            },
+        };
+
+        let decrypter =
+            ChaCha20Poly1305::new(&symmetric_key_from_password(password, &master_key.salt));
 
         let master = decrypt_secure(
             &decrypter,
@@ -125,7 +137,7 @@ impl StoreSigner for DerivedKeySigner {
             &*master_key.enc_entropy,
         )?;
 
-        let signer = derive_from_master(input.account_id, master)?;
+        let signer = derive_from_master(account_id, master)?;
         Ok(signer.sign(data).to_bytes())
     }
 }
@@ -293,9 +305,15 @@ struct EncryptedPart {
 
 type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, u32)>;
 
-pub struct DerivedKeySignParams {
-    pub account_id: u32,
-    pub password: SecStr,
+pub enum DerivedKeySignParams {
+    ByAccountId {
+        account_id: u32,
+        password: SecStr,
+    },
+    ByPublicKey {
+        public_key: PublicKey,
+        password: SecStr,
+    },
 }
 
 pub struct DerivedKeyExportParams {
@@ -396,6 +414,8 @@ fn derive_from_master(id: u32, master: SecVec<u8>) -> Result<ed25519_dalek::Keyp
 enum MasterKeyError {
     #[error("Master key not found")]
     MasterKeyNotFound,
+    #[error("Derived key not found")]
+    DerivedKeyNotFound,
     #[error("Failed to derive account from master key")]
     DerivationError,
     #[error("Failed to encrypt data")]
