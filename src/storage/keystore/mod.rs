@@ -55,7 +55,7 @@ pub struct KeyStore {
 }
 
 impl KeyStore {
-    pub fn new(storage: Arc<dyn Storage>) -> KeyStoreBuilder {
+    pub fn builder(storage: Arc<dyn Storage>) -> KeyStoreBuilder {
         KeyStoreBuilder {
             storage,
             signers: Default::default(),
