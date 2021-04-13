@@ -8,3 +8,4 @@ nekoton/.idea/
 nekoton/target/
 node_modules/
 dist/
+tests/secret_data.json

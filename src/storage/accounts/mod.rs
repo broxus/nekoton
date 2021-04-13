@@ -200,6 +200,7 @@ impl AccountsStorage {
     }
 }
 
+#[derive(Debug)]
 pub struct StoredAccountsData<'a>(RwLockReadGuard<'a, (AssetsMap, Option<String>)>);
 
 impl<'a> StoredAccountsData<'a> {

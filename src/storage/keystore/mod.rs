@@ -235,7 +235,7 @@ pub struct SignerEntry {
     pub public_key: PublicKey,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct KeyStoreEntry {
     pub name: String,
     pub public_key: PublicKey,
