@@ -196,7 +196,7 @@ impl TokenWallet {
         let destination = hex::decode(destination.trim_start_matches("0x"))
             .ok()
             .and_then(|data| if data.len() == 20 { Some(data) } else { None })
-            .ok_or_else(|| TokenWalletError::InvalidSwapBackDestination)?;
+            .ok_or(TokenWalletError::InvalidSwapBackDestination)?;
 
         let callback_payload = ton_abi::TokenValue::pack_values_into_chain(
             &[destination.token_value().unnamed()],
@@ -370,10 +370,10 @@ fn select_token_contract(version: TokenWalletVersion) -> Result<&'static ton_abi
 
 const INITIAL_BALANCE: u64 = 100_000_000; // 0.1 TON
 
-fn make_contract_state_handler<'a>(
+fn make_contract_state_handler(
     version: TokenWalletVersion,
-    balance: &'a mut BigUint,
-) -> impl FnMut(&ContractState) + 'a {
+    balance: &'_ mut BigUint,
+) -> impl FnMut(&ContractState) + '_ {
     move |contract_state| {
         if let ContractState::Exists(state) = contract_state {
             if let Ok(new_balance) = TokenWalletContractState(state).get_balance(version) {
@@ -383,10 +383,10 @@ fn make_contract_state_handler<'a>(
     }
 }
 
-fn make_transactions_handler<'a, T>(
-    handler: &'a T,
+fn make_transactions_handler<T>(
+    handler: &'_ T,
     version: TokenWalletVersion,
-) -> impl FnMut(Vec<TransactionFull>, TransactionsBatchInfo) + 'a
+) -> impl FnMut(Vec<TransactionFull>, TransactionsBatchInfo) + '_
 where
     T: AsRef<dyn TokenWalletSubscriptionHandler>,
 {

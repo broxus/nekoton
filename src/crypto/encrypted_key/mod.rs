@@ -134,7 +134,7 @@ impl SignerStorage for EncryptedKeySigner {
             .values()
             .map(|key| SignerEntry {
                 name: key.name().to_string(),
-                public_key: key.public_key().clone(),
+                public_key: *key.public_key(),
             })
             .collect()
     }

@@ -40,9 +40,7 @@ pub fn prepare_deploy(
             .arg(1u8) // reqConfirms
             .build();
 
-    Ok(make_labs_unsigned_message(
-        message, expiration, public_key, function, input,
-    )?)
+    make_labs_unsigned_message(message, expiration, public_key, function, input)
 }
 
 pub fn prepare_transfer(

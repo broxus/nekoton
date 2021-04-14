@@ -366,43 +366,41 @@ pub fn parse_token_transaction(
         } else {
             None
         }
+    } else if function_id == functions.accept.input_id {
+        let inputs = functions.accept.decode_input(body, true).ok()?;
+
+        Accept::try_from(InputMessage(inputs))
+            .map(TokenWalletTransaction::Accept)
+            .ok()
+    } else if function_id == functions.transfer.input_id {
+        let inputs = functions.transfer.decode_input(body, true).ok()?;
+
+        OutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByTokenWalletAddress))
+            .map(TokenWalletTransaction::OutgoingTransfer)
+            .ok()
+    } else if function_id == functions.transfer_to_recipient.input_id {
+        let inputs = functions
+            .transfer_to_recipient
+            .decode_input(body, true)
+            .ok()?;
+
+        OutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByOwnerWalletAddress))
+            .map(TokenWalletTransaction::OutgoingTransfer)
+            .ok()
+    } else if function_id == functions.internal_transfer.input_id {
+        let inputs = functions.internal_transfer.decode_input(body, true).ok()?;
+
+        IncomingTransfer::try_from(InputMessage(inputs))
+            .map(TokenWalletTransaction::IncomingTransfer)
+            .ok()
+    } else if function_id == functions.burn_by_owner.input_id {
+        let inputs = functions.burn_by_owner.decode_input(body, true).ok()?;
+
+        TokenSwapBack::try_from(InputMessage(inputs))
+            .map(TokenWalletTransaction::SwapBack)
+            .ok()
     } else {
-        if function_id == functions.accept.input_id {
-            let inputs = functions.accept.decode_input(body, true).ok()?;
-
-            Accept::try_from(InputMessage(inputs))
-                .map(TokenWalletTransaction::Accept)
-                .ok()
-        } else if function_id == functions.transfer.input_id {
-            let inputs = functions.transfer.decode_input(body, true).ok()?;
-
-            OutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByTokenWalletAddress))
-                .map(TokenWalletTransaction::OutgoingTransfer)
-                .ok()
-        } else if function_id == functions.transfer_to_recipient.input_id {
-            let inputs = functions
-                .transfer_to_recipient
-                .decode_input(body, true)
-                .ok()?;
-
-            OutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByOwnerWalletAddress))
-                .map(TokenWalletTransaction::OutgoingTransfer)
-                .ok()
-        } else if function_id == functions.internal_transfer.input_id {
-            let inputs = functions.internal_transfer.decode_input(body, true).ok()?;
-
-            IncomingTransfer::try_from(InputMessage(inputs))
-                .map(TokenWalletTransaction::IncomingTransfer)
-                .ok()
-        } else if function_id == functions.burn_by_owner.input_id {
-            let inputs = functions.burn_by_owner.decode_input(body, true).ok()?;
-
-            TokenSwapBack::try_from(InputMessage(inputs))
-                .map(TokenWalletTransaction::SwapBack)
-                .ok()
-        } else {
-            None
-        }
+        None
     }
 }
 
