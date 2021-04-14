@@ -15,6 +15,7 @@ pub fn prepare_deploy(
     public_key: &PublicKey,
     expiration: Expiration,
 ) -> Result<Box<dyn UnsignedMessage>> {
+    let init_data = InitData::from_key(public_key).with_wallet_id(WALLET_ID);
     let dst = compute_contract_address(public_key, DEFAULT_WORKCHAIN);
     let mut message =
         ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
@@ -28,9 +29,16 @@ pub fn prepare_deploy(
             .make_state_init()?,
     );
 
-    Ok(Box::new(UnsignedWalletV3Deploy {
+    let expire_at = ExpireAt::new(expiration);
+    let (hash, payload) = init_data.make_transfer_payload(None, expire_at.timestamp)?;
+
+    Ok(Box::new(UnsignedWalletV3Message {
+        init_data,
+        gift: None,
+        payload,
         message,
-        expire_at: ExpireAt::new(expiration),
+        expire_at,
+        hash,
     }))
 }
 
@@ -95,14 +103,14 @@ pub fn prepare_transfer(
         message.set_state_init(init_data.make_state_init()?);
     }
 
-    let gift = Gift {
+    let gift = Some(Gift {
         flags: 3,
         bounce,
         destination,
         amount,
         body,
         state_init: None,
-    };
+    });
 
     let expire_at = ExpireAt::new(expiration);
     let (hash, payload) = init_data.make_transfer_payload(gift.clone(), expire_at.timestamp)?;
@@ -120,7 +128,7 @@ pub fn prepare_transfer(
 #[derive(Clone)]
 struct UnsignedWalletV3Message {
     init_data: InitData,
-    gift: Gift,
+    gift: Option<Gift>,
     payload: BuilderData,
     hash: UInt256,
     expire_at: ExpireAt,
@@ -225,7 +233,7 @@ impl InitData {
 
     pub fn make_transfer_payload(
         &self,
-        gift: Gift,
+        gift: Option<Gift>,
         expire_at: u32,
     ) -> Result<(UInt256, BuilderData)> {
         let mut payload = BuilderData::new();
@@ -240,28 +248,30 @@ impl InitData {
             .convert()?;
 
         // create internal message
-        let mut internal_message =
-            ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
-                ihr_disabled: true,
-                bounce: gift.bounce,
-                dst: gift.destination,
-                value: gift.amount.into(),
-                ..Default::default()
-            });
+        if let Some(gift) = gift {
+            let mut internal_message =
+                ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
+                    ihr_disabled: true,
+                    bounce: gift.bounce,
+                    dst: gift.destination,
+                    value: gift.amount.into(),
+                    ..Default::default()
+                });
 
-        if let Some(body) = gift.body {
-            internal_message.set_body(body);
+            if let Some(body) = gift.body {
+                internal_message.set_body(body);
+            }
+
+            if let Some(state_init) = gift.state_init {
+                internal_message.set_state_init(state_init);
+            }
+
+            // append it to the body
+            payload
+                .append_u8(gift.flags)
+                .convert()?
+                .append_reference_cell(internal_message.serialize().convert()?);
         }
-
-        if let Some(state_init) = gift.state_init {
-            internal_message.set_state_init(state_init);
-        }
-
-        // append it to the body
-        payload
-            .append_u8(gift.flags)
-            .convert()?
-            .append_reference_cell(internal_message.serialize().convert()?);
 
         let hash = payload.clone().into_cell().convert()?.repr_hash();
 
