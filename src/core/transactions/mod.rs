@@ -5,7 +5,7 @@ use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use once_cell::sync::OnceCell;
 use ton_abi::{Token, TokenValue};
-use ton_block::MsgAddressInt;
+use ton_block::{MsgAddressInt, Serializable};
 use ton_types::Cell;
 
 use crate::contracts;
@@ -366,43 +366,41 @@ pub fn parse_token_transaction(
         } else {
             None
         }
+    } else if function_id == functions.accept.input_id {
+        let inputs = functions.accept.decode_input(body, true).ok()?;
+
+        Accept::try_from(InputMessage(inputs))
+            .map(TokenWalletTransaction::Accept)
+            .ok()
+    } else if function_id == functions.transfer.input_id {
+        let inputs = functions.transfer.decode_input(body, true).ok()?;
+
+        OutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByTokenWalletAddress))
+            .map(TokenWalletTransaction::OutgoingTransfer)
+            .ok()
+    } else if function_id == functions.transfer_to_recipient.input_id {
+        let inputs = functions
+            .transfer_to_recipient
+            .decode_input(body, true)
+            .ok()?;
+
+        OutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByOwnerWalletAddress))
+            .map(TokenWalletTransaction::OutgoingTransfer)
+            .ok()
+    } else if function_id == functions.internal_transfer.input_id {
+        let inputs = functions.internal_transfer.decode_input(body, true).ok()?;
+
+        IncomingTransfer::try_from(InputMessage(inputs))
+            .map(TokenWalletTransaction::IncomingTransfer)
+            .ok()
+    } else if function_id == functions.burn_by_owner.input_id {
+        let inputs = functions.burn_by_owner.decode_input(body, true).ok()?;
+
+        TokenSwapBack::try_from(InputMessage(inputs))
+            .map(TokenWalletTransaction::SwapBack)
+            .ok()
     } else {
-        if function_id == functions.accept.input_id {
-            let inputs = functions.accept.decode_input(body, true).ok()?;
-
-            Accept::try_from(InputMessage(inputs))
-                .map(TokenWalletTransaction::Accept)
-                .ok()
-        } else if function_id == functions.transfer.input_id {
-            let inputs = functions.transfer.decode_input(body, true).ok()?;
-
-            OutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByTokenWalletAddress))
-                .map(TokenWalletTransaction::OutgoingTransfer)
-                .ok()
-        } else if function_id == functions.transfer_to_recipient.input_id {
-            let inputs = functions
-                .transfer_to_recipient
-                .decode_input(body, true)
-                .ok()?;
-
-            OutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByOwnerWalletAddress))
-                .map(TokenWalletTransaction::OutgoingTransfer)
-                .ok()
-        } else if function_id == functions.internal_transfer.input_id {
-            let inputs = functions.internal_transfer.decode_input(body, true).ok()?;
-
-            IncomingTransfer::try_from(InputMessage(inputs))
-                .map(TokenWalletTransaction::IncomingTransfer)
-                .ok()
-        } else if function_id == functions.burn_by_owner.input_id {
-            let inputs = functions.burn_by_owner.decode_input(body, true).ok()?;
-
-            TokenSwapBack::try_from(InputMessage(inputs))
-                .map(TokenWalletTransaction::SwapBack)
-                .ok()
-        } else {
-            None
-        }
+        None
     }
 }
 
@@ -487,10 +485,7 @@ pub enum TokenWalletTransaction {
 #[derive(Clone, Debug, PartialEq)]
 pub struct TokenSwapBack {
     pub tokens: BigUint,
-    pub grams: BigUint,
-    pub send_gas_to: MsgAddressInt,
-    pub callback_address: MsgAddressInt,
-    pub callback_payload: Cell,
+    pub to: String,
 }
 
 impl TryFrom<InputMessage> for TokenSwapBack {
@@ -499,13 +494,28 @@ impl TryFrom<InputMessage> for TokenSwapBack {
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
         let mut input = value.0.into_parser();
 
-        Ok(TokenSwapBack {
-            tokens: input.parse_next()?,
-            grams: input.parse_next()?,
-            send_gas_to: input.parse_next()?,
-            callback_address: input.parse_next()?,
-            callback_payload: input.parse_next()?,
-        })
+        let tokens = input.parse_next()?;
+        let _grams: BigUint = input.parse_next()?;
+        let _send_grams_to: MsgAddressInt = input.parse_next()?;
+        let _callback_address: MsgAddressInt = input.parse_next()?;
+        let callback_payload: Cell = input.parse_next()?;
+
+        let to = match TokenValue::read_from(
+            &ton_abi::ParamType::Bytes,
+            callback_payload
+                .write_to_new_cell()
+                .map_err(|_| ParserError::InvalidAbi)?
+                .into(),
+            true,
+            2,
+        ) {
+            Ok((TokenValue::Bytes(destination), _)) if destination.len() == 20 => {
+                format!("0x{}", hex::encode(&destination))
+            }
+            _ => return Err(ParserError::InvalidAbi),
+        };
+
+        Ok(TokenSwapBack { tokens, to })
     }
 }
 
@@ -570,7 +580,7 @@ impl TryFrom<(InputMessage, TransferType)> for OutgoingTransfer {
 #[derive(Clone, Debug, PartialEq)]
 pub struct IncomingTransfer {
     pub tokens: BigUint,
-    pub sender_address: BigUint,
+    pub sender_address: MsgAddressInt,
 }
 
 impl TryFrom<InputMessage> for IncomingTransfer {
@@ -622,6 +632,16 @@ mod test {
         assert!(matches!(
             parse_token_transaction(&tx, &description, TokenWalletVersion::Tip3v3).unwrap(),
             TokenWalletTransaction::OutgoingTransfer(a) if matches!(a.to, TransferRecipient::TokenWallet(_))
+        ));
+    }
+
+    #[test]
+    fn test_parse_incoming_transfer() {
+        let (tx, description) = parse_transaction("te6ccgECCwEAAn4AA7d8pes9HKc2S/0aVZ8Rf93UttPUUPhRej8NZfmnzVAP9HAAALt1bZRAGBQoWWE11kL6dy/rc17Pb+y5GPGOMwtHXfUpmAfLiZBwAACydC5gGBYHSIVgADSAMt4wKAUEAQIdBMf4JkkHK7bemIAuP1sRAwIAb8mHoSBMFFhAAAAAAAAEAAIAAAADP+Ts4Qh/QhuWIOvCaHwME9511EJ6C72woKICsN947BxAUBYMAJ5L1uwdXxQAAAAAAAAAAX4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIJy8qOA5vv341sfhzftSqNs/G66PvpQ+QAxLSRo88qdaGlXBAKr4nKvE6BzA+luIJ+6jZo3czvgOH3/Y1+Ws+6xVwIB4AgGAQHfBwCxaAGUvWejlObJf6NKs+Iv+7qW2nqKHwovR+GsvzT5qgH+jwAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tBstnmIBhRYYAAAF26tsogEwOkQrEABsWgB4GNR2inaCc7D2ATBq1cSD8m8AMhtPKIB/OKLKK7ASEsAMpes9HKc2S/0aVZ8Rf93UttPUUPhRej8NZfmnzVAP9HQcrtt6AYrwzYAABdurTh2BMDpEJzACQHtGNIXAgAAAAAAAAAAAAAAAAAPQkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeXACpIUU0cjZrf+7sFTI6lrXc8XGXyI3A1FeN+lKQC4ozy0KAAA=");
+
+        assert!(matches!(
+            parse_token_transaction(&tx, &description, TokenWalletVersion::Tip3v3).unwrap(),
+            TokenWalletTransaction::IncomingTransfer(_)
         ));
     }
 

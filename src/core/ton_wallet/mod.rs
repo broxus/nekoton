@@ -204,7 +204,7 @@ enum InternalMessageSenderError {
     InvalidSender,
 }
 
-fn make_contract_state_handler<'a, T>(handler: &'a T) -> impl FnMut(&ContractState) + 'a
+fn make_contract_state_handler<T>(handler: &'_ T) -> impl FnMut(&ContractState) + '_
 where
     T: AsRef<dyn TonWalletSubscriptionHandler>,
 {
@@ -215,9 +215,9 @@ where
     }
 }
 
-fn make_transactions_handler<'a, T>(
-    handler: &'a T,
-) -> impl FnMut(Vec<TransactionFull>, TransactionsBatchInfo) + 'a
+fn make_transactions_handler<T>(
+    handler: &'_ T,
+) -> impl FnMut(Vec<TransactionFull>, TransactionsBatchInfo) + '_
 where
     T: AsRef<dyn TonWalletSubscriptionHandler>,
 {
@@ -229,9 +229,9 @@ where
     }
 }
 
-fn make_message_sent_handler<'a, T>(
-    handler: &'a T,
-) -> impl FnMut(PendingTransaction, TransactionFull) + 'a
+fn make_message_sent_handler<T>(
+    handler: &'_ T,
+) -> impl FnMut(PendingTransaction, TransactionFull) + '_
 where
     T: AsRef<dyn TonWalletSubscriptionHandler>,
 {
@@ -243,7 +243,7 @@ where
     }
 }
 
-fn make_message_expired_handler<'a, T>(handler: &'a T) -> impl FnMut(PendingTransaction) + 'a
+fn make_message_expired_handler<T>(handler: &'_ T) -> impl FnMut(PendingTransaction) + '_
 where
     T: AsRef<dyn TonWalletSubscriptionHandler>,
 {

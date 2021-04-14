@@ -108,18 +108,19 @@ pub struct WalletState {
     pub pending_transactions: Vec<PendingTransaction>,
 }
 
-#[derive(Debug, Copy, Clone, Eq, Ord, PartialOrd, PartialEq, Hash, Serialize, Deserialize)]
-pub enum TokenWalletVersion {
-    /// First stable iteration of token wallets.
-    /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/34e466bd42789413f02aeec0051b9d1212fe6de9)
-    Tip3v1,
-    /// Second iteration of token wallets with extended transfer messages payload.
-    /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/97ee321a2d8619372cdd2db8df30bd543e5c7417)
-    Tip3v2,
-    /// Third iteration of token wallets with updated compiler version and responsible getters.
-    /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/e7ef0506081fb36de94ea92d1bc1c50888ca65bc)
-    Tip3v3,
-}
+crate::define_string_enum!(
+    pub enum TokenWalletVersion {
+        /// First stable iteration of token wallets.
+        /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/34e466bd42789413f02aeec0051b9d1212fe6de9)
+        Tip3v1,
+        /// Second iteration of token wallets with extended transfer messages payload.
+        /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/97ee321a2d8619372cdd2db8df30bd543e5c7417)
+        Tip3v2,
+        /// Third iteration of token wallets with updated compiler version and responsible getters.
+        /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/e7ef0506081fb36de94ea92d1bc1c50888ca65bc)
+        Tip3v3,
+    }
+);
 
 impl TryFrom<u32> for TokenWalletVersion {
     type Error = anyhow::Error;

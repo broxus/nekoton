@@ -1,6 +1,6 @@
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
-use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
+use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
 use ton_types::{SliceData, UInt256};
 
 use super::utils::*;
@@ -40,9 +40,7 @@ pub fn prepare_deploy(
             .arg(1u8) // reqConfirms
             .build();
 
-    Ok(make_labs_unsigned_message(
-        message, expiration, public_key, function, input,
-    )?)
+    make_labs_unsigned_message(message, expiration, public_key, function, input)
 }
 
 pub fn prepare_transfer(
@@ -74,7 +72,7 @@ pub fn prepare_transfer(
             .arg(BigUint128(amount.into()))
             .arg(bounce)
             .arg(3u8) // flags
-            .arg(body.unwrap_or_default().serialize().convert()?)
+            .arg(body.unwrap_or_default().into_cell())
             .build();
 
     Ok(TransferAction::Sign(make_labs_unsigned_message(

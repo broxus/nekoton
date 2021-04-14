@@ -1,11 +1,12 @@
-use std::fmt;
-use std::fmt::{Debug, Formatter};
+use std::collections::hash_map::{self, HashMap};
+use std::convert::TryInto;
 use std::io::Read;
 
 use anyhow::Result;
+use async_trait::async_trait;
 use chacha20poly1305::aead::NewAead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
-use ed25519_dalek::{ed25519, Keypair, Signer};
+use ed25519_dalek::{ed25519, Keypair, PublicKey, SecretKey, Signer};
 use ring::digest;
 use ring::rand::SecureRandom;
 use secstr::SecStr;
@@ -13,7 +14,161 @@ use serde::{Deserialize, Serialize};
 
 use super::mnemonic::*;
 use super::symmetric::*;
+use crate::storage::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::utils::*;
+
+#[derive(Default, Clone, Debug)]
+pub struct EncryptedKeySigner {
+    keys: KeysMap,
+}
+
+type KeysMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], EncryptedKey>;
+
+impl EncryptedKeySigner {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    fn get_key(&self, public_key: &PublicKey) -> Result<&EncryptedKey> {
+        match self.keys.get(public_key.as_bytes()) {
+            Some(key) => Ok(key),
+            None => Err(EncryptedKeyError::KeyNotFound.into()),
+        }
+    }
+
+    fn get_key_mut(&mut self, public_key: &PublicKey) -> Result<&mut EncryptedKey> {
+        match self.keys.get_mut(public_key.as_bytes()) {
+            Some(key) => Ok(key),
+            None => Err(EncryptedKeyError::KeyNotFound.into()),
+        }
+    }
+}
+
+#[async_trait]
+impl StoreSigner for EncryptedKeySigner {
+    type CreateKeyInput = EncryptedKeyCreateInput;
+    type ExportKeyInput = EncryptedKeyPassword;
+    type ExportKeyOutput = EncryptedKeyExportOutput;
+    type UpdateKeyInput = EncryptedKeyUpdateParams;
+    type SignInput = EncryptedKeyPassword;
+
+    async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
+        let key = EncryptedKey::new(name, input.password, input.mnemonic_type, input.phrase)?;
+
+        let public_key = *key.public_key();
+
+        match self.keys.entry(public_key.to_bytes()) {
+            hash_map::Entry::Vacant(entry) => {
+                entry.insert(key);
+                Ok(public_key)
+            }
+            hash_map::Entry::Occupied(_) => return Err(EncryptedKeyError::KeyAlreadyExists.into()),
+        }
+    }
+
+    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<()> {
+        let key = self.get_key_mut(&input.public_key)?;
+        key.change_password(input.old_password, input.new_password)
+    }
+
+    async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
+        let key = self.get_key(&input.public_key)?;
+        Ok(Self::ExportKeyOutput {
+            phrase: key.get_mnemonic(input.password)?,
+            mnemonic_type: key.mnemonic_type(),
+        })
+    }
+
+    async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<[u8; 64]> {
+        let key = self.get_key(&input.public_key)?;
+        key.sign(data, input.password)
+    }
+}
+
+#[async_trait]
+impl SignerStorage for EncryptedKeySigner {
+    fn load_state(&mut self, data: &str) -> Result<()> {
+        let data = serde_json::from_str::<Vec<(String, String)>>(data)?;
+
+        self.keys = data
+            .into_iter()
+            .map(|(public_key, data)| {
+                let public_key = hex::decode(&public_key)?
+                    .try_into()
+                    .map_err(|_| EncryptedKeyError::InvalidPublicKey)?;
+                let data = EncryptedKey::from_reader(&mut std::io::Cursor::new(data))?;
+                Ok((public_key, data))
+            })
+            .collect::<Result<_>>()?;
+
+        Ok(())
+    }
+
+    fn store_state(&self) -> String {
+        use serde::ser::SerializeSeq;
+
+        struct StoredData<'a>(&'a KeysMap);
+        #[derive(Serialize)]
+        struct StoredDataItem<'a>(&'a str, &'a str);
+
+        impl<'a> Serialize for StoredData<'a> {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+                for (public_key, signer) in self.0.iter() {
+                    let public_key = hex::encode(public_key);
+                    let signer = signer.as_json();
+                    seq.serialize_element(&StoredDataItem(&public_key, &signer))?;
+                }
+                seq.end()
+            }
+        }
+
+        serde_json::to_string(&StoredData(&self.keys)).trust_me()
+    }
+
+    fn get_entries(&self) -> Vec<SignerEntry> {
+        self.keys
+            .values()
+            .map(|key| SignerEntry {
+                name: key.name().to_string(),
+                public_key: *key.public_key(),
+            })
+            .collect()
+    }
+
+    async fn remove_key(&mut self, public_key: &PublicKey) -> bool {
+        self.keys.remove(public_key.as_bytes()).is_some()
+    }
+
+    async fn clear(&mut self) {
+        self.keys.clear();
+    }
+}
+
+pub struct EncryptedKeyCreateInput {
+    pub phrase: SecStr,
+    pub mnemonic_type: MnemonicType,
+    pub password: SecStr,
+}
+
+pub struct EncryptedKeyPassword {
+    pub public_key: PublicKey,
+    pub password: SecStr,
+}
+
+pub struct EncryptedKeyExportOutput {
+    pub phrase: SecStr,
+    pub mnemonic_type: MnemonicType,
+}
+
+pub struct EncryptedKeyUpdateParams {
+    pub public_key: PublicKey,
+    pub old_password: SecStr,
+    pub new_password: SecStr,
+}
 
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
@@ -26,10 +181,11 @@ impl EncryptedKey {
     pub fn new(
         name: &str,
         password: SecStr,
-        account_type: MnemonicType,
-        phrase: &str,
+        mnemonic_type: MnemonicType,
+        phrase: SecStr,
     ) -> Result<Self> {
         let rng = ring::rand::SystemRandom::new();
+
         // prepare nonce
         let mut private_key_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut private_key_nonce)
@@ -46,23 +202,22 @@ impl EncryptedKey {
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
 
         // prepare encryptor
-        let key = symmetric_key_from_password(password, &salt);
-        let encryptor = ChaCha20Poly1305::new(&key);
+        let encryptor = ChaCha20Poly1305::new(&symmetric_key_from_password(password, &salt));
 
-        let keypair = derive_from_phrase(&phrase, account_type)?;
+        let phrase = std::str::from_utf8(phrase.unsecure())?;
+        let keypair = derive_from_phrase(phrase, mnemonic_type)?;
+
         // encrypt private key
         let pubkey = keypair.public;
         let encrypted_private_key =
             encrypt(&encryptor, &private_key_nonce, keypair.secret.as_ref())?;
-
-        drop(keypair);
 
         // encrypt seed phrase
         let encrypted_seed_phrase = encrypt(&encryptor, &seed_phrase_nonce, phrase.as_ref())?;
 
         Ok(Self {
             inner: CryptoData {
-                account_type,
+                mnemonic_type,
                 name: name.to_owned(),
                 pubkey,
                 encrypted_private_key,
@@ -74,16 +229,16 @@ impl EncryptedKey {
         })
     }
 
-    pub fn get_mnemonic(&self, password: SecStr) -> Result<String, EncryptedKeyError> {
+    pub fn get_mnemonic(&self, password: SecStr) -> Result<SecStr, EncryptedKeyError> {
         let salt = &self.inner.salt;
         let password = symmetric_key_from_password(password, salt);
         let dec = ChaCha20Poly1305::new(&password);
-        decrypt(
+        decrypt_secure(
             &dec,
             &self.inner.seed_phrase_nonce,
             &self.inner.encrypted_seed_phrase,
         )
-        .map(|x| String::from_utf8(x).map_err(|_| EncryptedKeyError::FailedToDecryptData))?
+        .map_err(|_| EncryptedKeyError::FailedToDecryptData)
     }
 
     pub fn get_key_pair(&self, password: SecStr) -> Result<Keypair, EncryptedKeyError> {
@@ -169,12 +324,12 @@ impl EncryptedKey {
         &self.inner.name
     }
 
-    pub fn public_key(&self) -> &[u8; 32] {
-        self.inner.pubkey.as_bytes()
+    pub fn public_key(&self) -> &PublicKey {
+        &self.inner.pubkey
     }
 
-    pub fn account_type(&self) -> MnemonicType {
-        self.inner.account_type
+    pub fn mnemonic_type(&self) -> MnemonicType {
+        self.inner.mnemonic_type
     }
 
     pub fn as_json(&self) -> String {
@@ -182,8 +337,8 @@ impl EncryptedKey {
     }
 }
 
-impl Debug for EncryptedKey {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl std::fmt::Debug for EncryptedKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self.inner.pubkey)
     }
 }
@@ -191,11 +346,11 @@ impl Debug for EncryptedKey {
 ///Data, stored on disk in `encrypted_data` filed of config.
 #[derive(Serialize, Deserialize, Clone)]
 struct CryptoData {
-    account_type: MnemonicType,
+    mnemonic_type: MnemonicType,
     name: String,
 
     #[serde(with = "serde_public_key")]
-    pubkey: ed25519_dalek::PublicKey,
+    pubkey: PublicKey,
 
     #[serde(with = "serde_bytes")]
     encrypted_private_key: Vec<u8>,
@@ -221,7 +376,7 @@ impl CryptoData {
             &self.private_key_nonce,
             &self.encrypted_private_key,
         )?;
-        let secret = ed25519_dalek::SecretKey::from_bytes(bytes.unsecure())
+        let secret = SecretKey::from_bytes(bytes.unsecure())
             .map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
         let pair = Keypair {
             secret,
@@ -238,9 +393,8 @@ fn decrypt_key_pair(
 ) -> Result<ed25519_dalek::Keypair, EncryptedKeyError> {
     let decrypter = ChaCha20Poly1305::new(&key);
     let bytes = decrypt(&decrypter, nonce, encrypted_key)?;
-    let secret = ed25519_dalek::SecretKey::from_bytes(&bytes)
-        .map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
-    let public = ed25519_dalek::PublicKey::from(&secret);
+    let secret = SecretKey::from_bytes(&bytes).map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
+    let public = PublicKey::from(&secret);
     Ok(Keypair { secret, public })
 }
 
@@ -254,6 +408,12 @@ pub enum EncryptedKeyError {
     FailedToDecryptData,
     #[error("Failed to encrypt data")]
     FailedToEncryptData,
+    #[error("Key already exists")]
+    KeyAlreadyExists,
+    #[error("Key not found")]
+    KeyNotFound,
+    #[error("Invalid public key")]
+    InvalidPublicKey,
 }
 
 impl From<SymmetricCryptoError> for EncryptedKeyError {
@@ -276,14 +436,25 @@ mod test {
     #[test]
     fn test_init() {
         let password = SecStr::new(TEST_PASSWORD.into());
-        EncryptedKey::new(KEY_NAME, password, MnemonicType::Legacy, TEST_MNEMONIC).unwrap();
+        EncryptedKey::new(
+            KEY_NAME,
+            password,
+            MnemonicType::Legacy,
+            TEST_MNEMONIC.into(),
+        )
+        .unwrap();
     }
 
     #[test]
     fn test_bad_password() {
         let password = SecStr::new(TEST_PASSWORD.into());
-        let signer =
-            EncryptedKey::new(KEY_NAME, password, MnemonicType::Legacy, TEST_MNEMONIC).unwrap();
+        let signer = EncryptedKey::new(
+            KEY_NAME,
+            password,
+            MnemonicType::Legacy,
+            TEST_MNEMONIC.into(),
+        )
+        .unwrap();
 
         println!("{}", signer.as_json());
         let result = signer.sign(b"lol", "lol".into());
