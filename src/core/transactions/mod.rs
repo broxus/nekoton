@@ -582,7 +582,7 @@ impl TryFrom<(InputMessage, TransferType)> for OutgoingTransfer {
 #[derive(Clone, Debug, PartialEq)]
 pub struct IncomingTransfer {
     pub tokens: BigUint,
-    pub sender_address: BigUint,
+    pub sender_address: MsgAddressInt,
 }
 
 impl TryFrom<InputMessage> for IncomingTransfer {
@@ -634,6 +634,16 @@ mod test {
         assert!(matches!(
             parse_token_transaction(&tx, &description, TokenWalletVersion::Tip3v3).unwrap(),
             TokenWalletTransaction::OutgoingTransfer(a) if matches!(a.to, TransferRecipient::TokenWallet(_))
+        ));
+    }
+
+    #[test]
+    fn test_parse_incoming_transfer() {
+        let (tx, description) = parse_transaction("te6ccgECCwEAAn4AA7d8pes9HKc2S/0aVZ8Rf93UttPUUPhRej8NZfmnzVAP9HAAALt1bZRAGBQoWWE11kL6dy/rc17Pb+y5GPGOMwtHXfUpmAfLiZBwAACydC5gGBYHSIVgADSAMt4wKAUEAQIdBMf4JkkHK7bemIAuP1sRAwIAb8mHoSBMFFhAAAAAAAAEAAIAAAADP+Ts4Qh/QhuWIOvCaHwME9511EJ6C72woKICsN947BxAUBYMAJ5L1uwdXxQAAAAAAAAAAX4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIJy8qOA5vv341sfhzftSqNs/G66PvpQ+QAxLSRo88qdaGlXBAKr4nKvE6BzA+luIJ+6jZo3czvgOH3/Y1+Ws+6xVwIB4AgGAQHfBwCxaAGUvWejlObJf6NKs+Iv+7qW2nqKHwovR+GsvzT5qgH+jwAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tBstnmIBhRYYAAAF26tsogEwOkQrEABsWgB4GNR2inaCc7D2ATBq1cSD8m8AMhtPKIB/OKLKK7ASEsAMpes9HKc2S/0aVZ8Rf93UttPUUPhRej8NZfmnzVAP9HQcrtt6AYrwzYAABdurTh2BMDpEJzACQHtGNIXAgAAAAAAAAAAAAAAAAAPQkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeXACpIUU0cjZrf+7sFTI6lrXc8XGXyI3A1FeN+lKQC4ozy0KAAA=");
+
+        assert!(matches!(
+            parse_token_transaction(&tx, &description, TokenWalletVersion::Tip3v3).unwrap(),
+            TokenWalletTransaction::IncomingTransfer(_)
         ));
     }
 
