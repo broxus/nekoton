@@ -187,10 +187,10 @@ impl std::convert::AsRef<[u8]> for &UInt128 {
 
 #[macro_export]
 macro_rules! define_string_enum {
-    ($vis:vis enum $type:ident { $($variant:ident),*$(,)? }) => {
+    ($vis:vis enum $type:ident { $($(#[$inner:ident $($args:tt)*])* $variant:ident),*$(,)? }) => {
         #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
         $vis enum $type {
-            $($variant),*,
+            $($(#[$inner $($args)*])* $variant),*,
         }
 
         impl std::str::FromStr for $type {

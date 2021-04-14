@@ -86,6 +86,10 @@ impl TokenWallet {
         })
     }
 
+    pub fn owner(&self) -> &MsgAddressInt {
+        &self.owner
+    }
+
     pub fn address(&self) -> &MsgAddressInt {
         &self.account_subscription.address()
     }

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
-use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
+use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
 use ton_types::{SliceData, UInt256};
 
 use super::utils::*;
