@@ -74,7 +74,7 @@ pub fn prepare_transfer(
             .arg(BigUint128(amount.into()))
             .arg(bounce)
             .arg(3u8) // flags
-            .arg(body.unwrap_or_default().serialize().convert()?)
+            .arg(body.unwrap_or_default().into_cell())
             .build();
 
     Ok(TransferAction::Sign(make_labs_unsigned_message(
