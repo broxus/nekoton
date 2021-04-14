@@ -5,7 +5,7 @@ use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use once_cell::sync::OnceCell;
 use ton_abi::{Token, TokenValue};
-use ton_block::MsgAddressInt;
+use ton_block::{MsgAddressInt, Serializable};
 use ton_types::Cell;
 
 use crate::contracts;
@@ -487,10 +487,7 @@ pub enum TokenWalletTransaction {
 #[derive(Clone, Debug, PartialEq)]
 pub struct TokenSwapBack {
     pub tokens: BigUint,
-    pub grams: BigUint,
-    pub send_gas_to: MsgAddressInt,
-    pub callback_address: MsgAddressInt,
-    pub callback_payload: Cell,
+    pub to: String,
 }
 
 impl TryFrom<InputMessage> for TokenSwapBack {
@@ -499,13 +496,28 @@ impl TryFrom<InputMessage> for TokenSwapBack {
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
         let mut input = value.0.into_parser();
 
-        Ok(TokenSwapBack {
-            tokens: input.parse_next()?,
-            grams: input.parse_next()?,
-            send_gas_to: input.parse_next()?,
-            callback_address: input.parse_next()?,
-            callback_payload: input.parse_next()?,
-        })
+        let tokens = input.parse_next()?;
+        let _grams: BigUint = input.parse_next()?;
+        let _send_grams_to: MsgAddressInt = input.parse_next()?;
+        let _callback_address: MsgAddressInt = input.parse_next()?;
+        let callback_payload: Cell = input.parse_next()?;
+
+        let to = match TokenValue::read_from(
+            &ton_abi::ParamType::Bytes,
+            callback_payload
+                .write_to_new_cell()
+                .map_err(|_| ParserError::InvalidAbi)?
+                .into(),
+            true,
+            2,
+        ) {
+            Ok((TokenValue::Bytes(destination), _)) if destination.len() == 20 => {
+                format!("0x{}", hex::encode(&destination))
+            }
+            _ => return Err(ParserError::InvalidAbi),
+        };
+
+        Ok(TokenSwapBack { tokens, to })
     }
 }
 
