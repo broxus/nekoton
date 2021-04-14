@@ -4,7 +4,7 @@ mod mnemonic;
 mod symmetric;
 
 pub use derived_key::*;
-pub use encrypted_key::EncryptedKey;
+pub use encrypted_key::*;
 pub use mnemonic::*;
 
 use anyhow::Result;
