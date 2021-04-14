@@ -80,6 +80,13 @@ impl TonWallet {
         self.account_subscription.polling_method()
     }
 
+    pub fn details(&self) -> TonWalletDetails {
+        match self.contract_type {
+            ContractType::Multisig(_) => multisig::DETAILS,
+            ContractType::WalletV3 => wallet_v3::DETAILS,
+        }
+    }
+
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
         match self.contract_type {
             ContractType::Multisig(multisig_type) => {
@@ -254,6 +261,13 @@ where
 pub enum TransferAction {
     DeployFirst,
     Sign(Box<dyn UnsignedMessage>),
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TonWalletDetails {
+    pub requires_separate_deploy: bool,
+    pub min_amount: u64,
+    pub supports_payload: bool,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
