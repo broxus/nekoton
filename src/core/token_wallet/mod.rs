@@ -117,7 +117,7 @@ impl TokenWallet {
     pub fn prepare_deploy(&self) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
 
-        let (_, input) = MessageBuilder::new(
+        let (function, input) = MessageBuilder::new(
             contracts::abi::root_token_contract_v3(),
             "deployEmptyWallet",
         )
@@ -128,7 +128,8 @@ impl TokenWallet {
         .arg(&self.owner)
         .build();
 
-        let body = ton_abi::TokenValue::pack_values_into_chain(&input, Vec::new(), 2)
+        let body = function
+            .encode_input(&Default::default(), &input, true, None)
             .convert()?
             .into();
 
@@ -150,7 +151,7 @@ impl TokenWallet {
 
         let contract = select_token_contract(self.version)?;
 
-        let (_, input) = match destination {
+        let (function, input) = match destination {
             TransferRecipient::TokenWallet(token_wallet) => {
                 MessageBuilder::new(contract, "transfer")
                     .trust_me()
@@ -172,7 +173,8 @@ impl TokenWallet {
         .arg(ton_types::Cell::default()) // payload
         .build();
 
-        let body = ton_abi::TokenValue::pack_values_into_chain(&input, Vec::new(), 2)
+        let body = function
+            .encode_input(&Default::default(), &input, true, None)
             .convert()?
             .into();
 
@@ -207,7 +209,7 @@ impl TokenWallet {
 
         let contract = select_token_contract(self.version)?;
 
-        let (_, input) = MessageBuilder::new(contract, "burnByOwner")
+        let (function, input) = MessageBuilder::new(contract, "burnByOwner")
             .trust_me()
             .arg(BigUint128(tokens)) // tokens
             .arg(BigUint128(Default::default())) // grams
@@ -216,7 +218,8 @@ impl TokenWallet {
             .arg(callback_payload) // callback_payload
             .build();
 
-        let body = ton_abi::TokenValue::pack_values_into_chain(&input, Vec::new(), 2)
+        let body = function
+            .encode_input(&Default::default(), &input, true, None)
             .convert()?
             .into();
 
