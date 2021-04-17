@@ -532,10 +532,10 @@ impl BriefRootTokenContractDetails {
     }
 }
 
-struct TokenWalletContractState<'a>(&'a ExistingContract);
+pub struct TokenWalletContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> TokenWalletContractState<'a> {
-    fn get_balance(&self, version: TokenWalletVersion) -> Result<BigUint> {
+    pub fn get_balance(&self, version: TokenWalletVersion) -> Result<BigUint> {
         let mut function = abi::FunctionBuilder::new("balance")
             .default_headers()
             .out_arg("value0", ton_abi::ParamType::Uint(128));
@@ -551,7 +551,7 @@ impl<'a> TokenWalletContractState<'a> {
         Ok(balance)
     }
 
-    fn get_details(&self, version: TokenWalletVersion) -> Result<TokenWalletDetails> {
+    pub fn get_details(&self, version: TokenWalletVersion) -> Result<TokenWalletDetails> {
         let mut details_abi = abi::TupleBuilder::new()
             .arg("root_address", ton_abi::ParamType::Address)
             .arg("code", ton_abi::ParamType::Cell)
@@ -584,8 +584,7 @@ impl<'a> TokenWalletContractState<'a> {
         Ok(details)
     }
 
-    #[allow(dead_code)]
-    fn get_version(&self) -> Result<TokenWalletVersion> {
+    pub fn get_version(&self) -> Result<TokenWalletVersion> {
         // check Tip3v3+ version via direct call
         match get_version_direct(self.0) {
             Ok(GotVersion::Known(version)) => return Ok(version),

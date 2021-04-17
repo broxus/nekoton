@@ -1,14 +1,16 @@
 use std::collections::hash_map::{self, HashMap};
+use std::collections::HashSet;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Result;
+use futures::stream::{FuturesUnordered, StreamExt};
 use serde::Deserialize;
-use tokio::sync::RwLock;
+use tokio::sync::{RwLock, Semaphore};
 use ton_block::MsgAddressInt;
 
 use super::models::TokenWalletVersion;
-use crate::core::token_wallet::RootTokenContractState;
+use crate::core::token_wallet::{RootTokenContractState, TokenWalletContractState};
 use crate::external::Storage;
 use crate::transport::models::{ContractState, ExistingContract};
 use crate::transport::Transport;
@@ -22,10 +24,15 @@ pub struct OwnersCache {
     transport: Arc<dyn Transport>,
     owners: RwLock<HashMap<MsgAddressInt, MsgAddressInt>>,
     token_contract_states: RwLock<HashMap<MsgAddressInt, (ExistingContract, TokenWalletVersion)>>,
+    resolver_semaphore: Semaphore,
 }
 
 impl OwnersCache {
-    pub async fn load(storage: Arc<dyn Storage>, transport: Arc<dyn Transport>) -> Result<Self> {
+    pub async fn load(
+        storage: Arc<dyn Storage>,
+        transport: Arc<dyn Transport>,
+        concurrent_resolvers: usize,
+    ) -> Result<Self> {
         #[derive(Deserialize)]
         #[serde(transparent)]
         struct OwnersMap(Vec<OwnersMapItem>);
@@ -49,17 +56,23 @@ impl OwnersCache {
             transport,
             owners: RwLock::new(data),
             token_contract_states: Default::default(),
+            resolver_semaphore: Semaphore::new(concurrent_resolvers),
         })
     }
 
-    pub async fn load_unchecked(storage: Arc<dyn Storage>, transport: Arc<dyn Transport>) -> Self {
-        Self::load(storage.clone(), transport.clone())
+    pub async fn load_unchecked(
+        storage: Arc<dyn Storage>,
+        transport: Arc<dyn Transport>,
+        concurrent_resolvers: usize,
+    ) -> Self {
+        Self::load(storage.clone(), transport.clone(), concurrent_resolvers)
             .await
             .unwrap_or_else(|_| Self {
                 storage,
                 transport,
                 owners: Default::default(),
                 token_contract_states: Default::default(),
+                resolver_semaphore: Semaphore::new(concurrent_resolvers),
             })
     }
 
@@ -102,6 +115,47 @@ impl OwnersCache {
                 .await
             }
         }
+    }
+
+    /// Returns map with token wallet as key and its owner as value.
+    /// Populates the cache during the search
+    pub async fn resolve_owners(
+        &self,
+        token_wallets: &[MsgAddressInt],
+    ) -> HashMap<MsgAddressInt, MsgAddressInt> {
+        let semaphore = &self.resolver_semaphore;
+        let transport = self.transport.as_ref();
+        let owners = &self.owners;
+
+        let token_wallets = token_wallets.iter().collect::<HashSet<_>>();
+
+        token_wallets
+            .into_iter()
+            .map(|token_wallet| async move {
+                if let Some(owner) = owners.read().await.get(token_wallet) {
+                    return Some((token_wallet.clone(), owner.clone()));
+                }
+
+                let _permit = semaphore.acquire().await.ok()?;
+                let contract_state = match transport.get_contract_state(token_wallet).await.ok()? {
+                    ContractState::Exists(state) => state,
+                    ContractState::NotExists => return None,
+                };
+                let state = TokenWalletContractState(&contract_state);
+                let version = state.get_version().ok()?;
+                let details = state.get_details(version).ok()?;
+
+                owners
+                    .write()
+                    .await
+                    .insert(token_wallet.clone(), details.owner_address.clone());
+
+                Some((token_wallet.clone(), details.owner_address))
+            })
+            .collect::<FuturesUnordered<_>>()
+            .filter_map(|value| async move { value })
+            .collect()
+            .await
     }
 
     pub async fn get_owner(&self, token_wallet: &MsgAddressInt) -> Option<MsgAddressInt> {
@@ -170,7 +224,7 @@ async fn check_token_wallet<'a>(
 
     {
         let mut owners = owners.write().await;
-        owners.insert(owner_wallet.clone(), token_wallet.clone());
+        owners.insert(token_wallet.clone(), owner_wallet.clone());
     }
 
     Ok(match transport.get_contract_state(&token_wallet).await? {
