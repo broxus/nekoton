@@ -11,6 +11,100 @@ use ton_types::UInt256;
 use super::utils;
 use crate::utils::*;
 
+#[derive(Clone, Debug)]
+pub enum WalletNotification {
+    TokenWalletDeployed(TokenWalletDeployedNotification),
+    EthEventStatusChanged(EthEventStatus),
+    TonEventStatusChanged(TonEventStatus),
+}
+
+#[derive(Clone, Debug)]
+pub struct TokenWalletDeployedNotification {
+    pub root_token_contract: MsgAddressInt,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum EthEventStatus {
+    InProcess,
+    Confirmed,
+    Executed,
+    Rejected,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum TonEventStatus {
+    InProcess,
+    Confirmed,
+    Rejected,
+}
+
+#[derive(Clone, Debug)]
+pub enum MultisigTransaction {
+    Send(MultisigSendTransaction),
+    Submit(MultisigSubmitTransaction),
+    Confirm(MultisigConfirmTransaction),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct MultisigConfirmTransaction {
+    pub transaction_id: u64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct MultisigSubmitTransaction {
+    pub dest: MsgAddressInt,
+    pub value: BigUint,
+    pub bounce: bool,
+    pub all_balance: bool,
+    pub payload: ton_types::Cell,
+    pub trans_id: u64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct MultisigSendTransaction {
+    pub dest: MsgAddressInt,
+    pub value: BigUint,
+    pub bounce: bool,
+    pub flags: u8,
+    pub payload: ton_types::Cell,
+}
+
+#[derive(Clone, Debug)]
+pub enum TokenWalletTransaction {
+    IncomingTransfer(TokenIncomingTransfer),
+    OutgoingTransfer(TokenOutgoingTransfer),
+    SwapBack(TokenSwapBack),
+    Accept(BigUint),
+    TransferBounced(BigUint),
+    SwapBackBounced(BigUint),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct TokenIncomingTransfer {
+    pub tokens: BigUint,
+    /// Not the address of the token wallet, but the address of its owner
+    pub sender_address: MsgAddressInt,
+}
+
+#[derive(Clone, Debug)]
+pub struct TokenOutgoingTransfer {
+    pub to: TransferRecipient,
+    pub tokens: BigUint,
+}
+
+#[derive(Clone, Debug)]
+pub enum TransferRecipient {
+    OwnerWallet(MsgAddressInt),
+    TokenWallet(MsgAddressInt),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct TokenSwapBack {
+    pub tokens: BigUint,
+    /// ETH address
+    pub to: String,
+}
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PollingMethod {
@@ -99,15 +193,6 @@ pub struct Symbol {
     pub root_token_contract: MsgAddressInt,
 }
 
-pub struct WalletState {
-    /// Brief account state
-    pub account_state: AccountState,
-    /// List of the latest transactions (not complete, only about 16 elements)
-    pub last_transactions: Vec<Transaction>,
-    /// List of pending transactions
-    pub pending_transactions: Vec<PendingTransaction>,
-}
-
 crate::define_string_enum!(
     pub enum TokenWalletVersion {
         /// First stable iteration of token wallets.
@@ -162,20 +247,6 @@ pub struct RootTokenContractDetails {
     /// Root owner contract address. Used as proxy address in Tip3v1
     #[serde(with = "serde_address")]
     pub owner_address: MsgAddressInt,
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct TokenWalletState {
-    /// Balance in tokens
-    pub balance: BigUint,
-    /// Underlying contract state
-    pub account_state: AccountState,
-}
-
-impl PartialEq for TokenWalletState {
-    fn eq(&self, other: &Self) -> bool {
-        self.account_state.eq(&other.account_state)
-    }
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

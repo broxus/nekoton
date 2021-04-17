@@ -5,16 +5,12 @@ use anyhow::Result;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 
+use super::utils::*;
 use super::{AccountSubscription, InternalMessage};
 use crate::contracts;
-use crate::core::models::{
-    AccountState, PollingMethod, RootTokenContractDetails, Symbol, TokenWalletDetails,
-    TokenWalletVersion, TransactionId, TransactionsBatchInfo,
-};
-use crate::core::transactions::*;
+use crate::core::models::*;
 use crate::helpers::abi::{
-    self, BigUint128, BigUint256, FunctionArg, FunctionExt, IntoParser, MessageBuilder,
-    TokenValueExt, TupleBuilder,
+    self, BigUint128, BigUint256, FunctionArg, FunctionExt, IntoParser, TokenValueExt,
 };
 use crate::transport::models::{ContractState, ExistingContract, TransactionFull};
 use crate::transport::Transport;
@@ -117,7 +113,7 @@ impl TokenWallet {
     pub fn prepare_deploy(&self) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
 
-        let (function, input) = MessageBuilder::new(
+        let (function, input) = abi::MessageBuilder::new(
             contracts::abi::root_token_contract_v3(),
             "deployEmptyWallet",
         )
@@ -153,13 +149,13 @@ impl TokenWallet {
 
         let (function, input) = match destination {
             TransferRecipient::TokenWallet(token_wallet) => {
-                MessageBuilder::new(contract, "transfer")
+                abi::MessageBuilder::new(contract, "transfer")
                     .trust_me()
                     .arg(token_wallet) // to
                     .arg(BigUint128(tokens)) // tokens
             }
             TransferRecipient::OwnerWallet(owner_wallet) => {
-                MessageBuilder::new(contract, "transferToRecipient")
+                abi::MessageBuilder::new(contract, "transferToRecipient")
                     .trust_me()
                     .arg(BigUint256(Default::default())) // recipient_public_key
                     .arg(owner_wallet) // recipient_address
@@ -209,7 +205,7 @@ impl TokenWallet {
 
         let contract = select_token_contract(self.version)?;
 
-        let (function, input) = MessageBuilder::new(contract, "burnByOwner")
+        let (function, input) = abi::MessageBuilder::new(contract, "burnByOwner")
             .trust_me()
             .arg(BigUint128(tokens)) // tokens
             .arg(BigUint128(Default::default())) // grams
@@ -285,16 +281,16 @@ impl TokenWallet {
                             parse_token_transaction(&transaction.data, &description, version)?;
 
                         match &transaction {
-                            TokenWalletTransaction::IncomingTransfer(IncomingTransfer {
+                            TokenWalletTransaction::IncomingTransfer(TokenIncomingTransfer {
                                 tokens,
                                 ..
                             })
-                            | TokenWalletTransaction::Accept(Accept { tokens })
+                            | TokenWalletTransaction::Accept(tokens)
                             | TokenWalletTransaction::SwapBackBounced(tokens)
                             | TokenWalletTransaction::TransferBounced(tokens) => {
                                 balance += tokens.clone().to_bigint().trust_me();
                             }
-                            TokenWalletTransaction::OutgoingTransfer(OutgoingTransfer {
+                            TokenWalletTransaction::OutgoingTransfer(TokenOutgoingTransfer {
                                 tokens,
                                 ..
                             })
@@ -412,11 +408,11 @@ where
     }
 }
 
-struct RootTokenContractState<'a>(&'a ExistingContract);
+pub struct RootTokenContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> RootTokenContractState<'a> {
     /// Calculates token wallet address
-    fn get_wallet_address(
+    pub fn get_wallet_address(
         &self,
         version: TokenWalletVersion,
         owner: &MsgAddressInt,
@@ -444,7 +440,7 @@ impl<'a> RootTokenContractState<'a> {
     }
 
     /// Tries to guess version and retrieve details
-    fn guess_details(&self) -> Result<RootTokenContractDetails> {
+    pub fn guess_details(&self) -> Result<RootTokenContractDetails> {
         // check Tip3v3+ version via direct call
         match get_version_direct(self.0) {
             Ok(GotVersion::Known(version)) => return self.get_details(version),
@@ -462,8 +458,8 @@ impl<'a> RootTokenContractState<'a> {
     }
 
     /// Retrieve details using specified version
-    fn get_details(&self, version: TokenWalletVersion) -> Result<RootTokenContractDetails> {
-        let mut details_abi = TupleBuilder::new()
+    pub fn get_details(&self, version: TokenWalletVersion) -> Result<RootTokenContractDetails> {
+        let mut details_abi = abi::TupleBuilder::new()
             .arg("name", ton_abi::ParamType::Bytes)
             .arg("symbol", ton_abi::ParamType::Bytes)
             .arg("decimals", ton_abi::ParamType::Uint(8))
@@ -556,7 +552,7 @@ impl<'a> TokenWalletContractState<'a> {
     }
 
     fn get_details(&self, version: TokenWalletVersion) -> Result<TokenWalletDetails> {
-        let mut details_abi = TupleBuilder::new()
+        let mut details_abi = abi::TupleBuilder::new()
             .arg("root_address", ton_abi::ParamType::Address)
             .arg("code", ton_abi::ParamType::Cell)
             .arg("wallet_public_key", ton_abi::ParamType::Uint(256))

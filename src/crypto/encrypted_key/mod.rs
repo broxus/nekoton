@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 
 use super::mnemonic::*;
 use super::symmetric::*;
-use crate::storage::{Signer as StoreSigner, SignerEntry, SignerStorage};
+use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::utils::*;
 
 #[derive(Default, Clone, Debug)]
