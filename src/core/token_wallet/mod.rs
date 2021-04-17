@@ -147,7 +147,7 @@ impl TokenWallet {
         destination: TransferRecipient,
         tokens: BigUint,
     ) -> Result<InternalMessage> {
-        const ATTACHED_AMOUNT: u64 = 100_000_000; // 0.5 TON
+        const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
 
         let contract = select_token_contract(self.version)?;
 
@@ -193,7 +193,7 @@ impl TokenWallet {
         tokens: BigUint,
         proxy_address: MsgAddressInt,
     ) -> Result<InternalMessage> {
-        const ATTACHED_AMOUNT: u64 = 100_000_000; // 0.5 TON
+        const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
 
         let destination = hex::decode(destination.trim_start_matches("0x"))
             .ok()
