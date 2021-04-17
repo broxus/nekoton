@@ -170,7 +170,7 @@ async fn check_token_wallet<'a>(
 
     {
         let mut owners = owners.write().await;
-        owners.insert(owner_wallet.clone(), token_wallet.clone());
+        owners.insert(token_wallet.clone(), owner_wallet.clone());
     }
 
     Ok(match transport.get_contract_state(&token_wallet).await? {
