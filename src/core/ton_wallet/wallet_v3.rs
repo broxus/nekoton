@@ -5,7 +5,7 @@ use ed25519_dalek::PublicKey;
 use ton_block::{MsgAddrStd, MsgAddressInt, Serializable};
 use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 
-use super::{TransferAction, DEFAULT_WORKCHAIN};
+use super::{TonWalletDetails, TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
 use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
@@ -179,6 +179,12 @@ pub fn compute_contract_address(public_key: &PublicKey, workchain_id: i8) -> Msg
         .compute_addr(workchain_id)
         .trust_me()
 }
+
+pub static DETAILS: TonWalletDetails = TonWalletDetails {
+    requires_separate_deploy: false,
+    min_amount: 1, // 0.000000001 TON
+    supports_payload: true,
+};
 
 /// WalletV3 init data
 #[derive(Clone)]

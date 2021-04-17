@@ -4,50 +4,16 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use anyhow::Result;
-use async_trait::async_trait;
-use downcast_rs::{impl_downcast, Downcast};
 use ed25519_dalek::PublicKey;
 use futures::future;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Serialize, Serializer};
 use tokio::sync::RwLock;
 
+use crate::crypto::{Signature, Signer, SignerStorage};
 use crate::external::Storage;
 use crate::utils::*;
 
 const STORAGE_KEYSTORE: &str = "keystore";
-
-type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
-
-#[async_trait]
-pub trait Signer: SignerStorage {
-    type CreateKeyInput;
-    type ExportKeyInput;
-    type ExportKeyOutput;
-    type UpdateKeyInput;
-    type SignInput;
-
-    async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey>;
-    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<()>;
-    async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput>;
-
-    async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;
-}
-
-#[async_trait]
-pub trait SignerStorage: Downcast {
-    fn load_state(&mut self, data: &str) -> Result<()>;
-    fn store_state(&self) -> String;
-
-    fn get_entries(&self) -> Vec<SignerEntry>;
-    async fn remove_key(&mut self, public_key: &PublicKey) -> bool;
-    async fn clear(&mut self);
-}
-
-impl_downcast!(SignerStorage);
-
-pub trait WithPublicKey {
-    fn public_key(&self) -> &PublicKey;
-}
 
 pub struct KeyStore {
     state: RwLock<KeyStoreState>,
@@ -226,13 +192,6 @@ impl KeyStoreState {
             .ok_or(KeyStoreError::UnsupportedSigner)?;
         Ok(signer)
     }
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct SignerEntry {
-    pub name: String,
-    #[serde(with = "serde_public_key")]
-    pub public_key: PublicKey,
 }
 
 #[derive(Clone)]

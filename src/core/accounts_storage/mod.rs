@@ -159,7 +159,7 @@ impl AccountsStorage {
         assets.clear();
         *keys = None;
 
-        Ok(())
+        self.storage.remove(STORAGE_ACCOUNTS).await
     }
 
     /// Returns handler to the inner data

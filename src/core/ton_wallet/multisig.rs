@@ -4,7 +4,7 @@ use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
 use ton_types::{SliceData, UInt256};
 
 use super::utils::*;
-use super::{TransferAction, DEFAULT_WORKCHAIN};
+use super::{TonWalletDetails, TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
 use crate::core::models::Expiration;
 use crate::crypto::UnsignedMessage;
@@ -103,6 +103,12 @@ pub fn compute_contract_address(
         address: hash.into(),
     })
 }
+
+pub static DETAILS: TonWalletDetails = TonWalletDetails {
+    requires_separate_deploy: true,
+    min_amount: 1000000, // 0.001 TON
+    supports_payload: true,
+};
 
 fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> ton_block::StateInit {
     let mut code = match multisig_type {

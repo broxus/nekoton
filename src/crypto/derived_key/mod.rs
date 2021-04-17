@@ -14,7 +14,7 @@ use thiserror::Error;
 
 use crate::crypto::mnemonic::*;
 use crate::crypto::symmetric::*;
-use crate::storage::{Signer as StoreSigner, SignerEntry, SignerStorage};
+use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::utils::*;
 
 #[derive(Default, Clone, Debug)]

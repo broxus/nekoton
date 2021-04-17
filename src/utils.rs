@@ -365,3 +365,32 @@ pub mod serde_nonce {
         })
     }
 }
+
+pub mod serde_boc {
+    use serde::de::Deserialize;
+
+    use super::*;
+
+    pub fn serialize<S>(data: SliceData, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::Error;
+
+        let bytes = ton_types::serialize_toc(&data.into_cell()).map_err(S::Error::custom)?;
+        serializer.serialize_str(&hex::encode(bytes))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<SliceData, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let data = String::deserialize(deserializer)?;
+        let bytes = base64::decode(&data).map_err(D::Error::custom)?;
+        let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
+            .map_err(D::Error::custom)?;
+        Ok(cell.into())
+    }
+}
