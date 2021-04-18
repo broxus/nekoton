@@ -47,8 +47,8 @@ impl KeyStore {
     }
 
     pub async fn add_key<T>(&self, name: &str, input: T::CreateKeyInput) -> Result<KeyStoreEntry>
-    where
-        T: Signer,
+        where
+            T: Signer,
     {
         let mut state = self.state.write().await;
 
@@ -68,24 +68,24 @@ impl KeyStore {
     }
 
     pub async fn update_key<T>(&self, input: T::UpdateKeyInput) -> Result<()>
-    where
-        T: Signer,
+        where
+            T: Signer,
     {
         let mut state = self.state.write().await;
         state.get_signer_mut::<T>()?.update_key(input).await
     }
 
     pub async fn export_key<T>(&self, input: T::ExportKeyInput) -> Result<T::ExportKeyOutput>
-    where
-        T: Signer,
+        where
+            T: Signer,
     {
         let state = self.state.read().await;
         state.get_signer_ref::<T>()?.export_key(input).await
     }
 
     pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<Signature>
-    where
-        T: Signer,
+        where
+            T: Signer,
     {
         let state = self.state.read().await;
         state.get_signer_ref::<T>()?.sign(data, input).await
@@ -128,8 +128,8 @@ impl KeyStore {
 
         impl<'a> Serialize for StoredData<'a> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer,
+                where
+                    S: Serializer,
             {
                 let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
                 for (name, signer) in self.0.values() {
@@ -154,8 +154,8 @@ type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, TypeI
 
 impl KeyStoreState {
     fn get_signer_ref<T>(&self) -> Result<&T>
-    where
-        T: Signer,
+        where
+            T: Signer,
     {
         let signer = self
             .signers
@@ -166,8 +166,8 @@ impl KeyStoreState {
     }
 
     fn get_signer_mut<T>(&mut self) -> Result<&mut T>
-    where
-        T: Signer,
+        where
+            T: Signer,
     {
         let signer = self
             .signers
@@ -178,8 +178,8 @@ impl KeyStoreState {
     }
 
     fn get_signer_entry<T>(&mut self) -> Result<(String, &mut T)>
-    where
-        T: Signer,
+        where
+            T: Signer,
     {
         let signer = self
             .signers
@@ -194,9 +194,10 @@ impl KeyStoreState {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize)]
 pub struct KeyStoreEntry {
     pub name: String,
+    #[serde(with ="crate::utils::serde_public_key")]
     pub public_key: PublicKey,
     pub signer_name: String,
 }
@@ -211,8 +212,8 @@ type BuilderSignersMap = HashMap<String, (Box<dyn SignerStorage>, TypeId)>;
 
 impl KeyStoreBuilder {
     pub fn with_signer<T>(mut self, name: &str, signer: T) -> Result<Self, KeyStoreError>
-    where
-        T: Signer,
+        where
+            T: Signer,
     {
         let type_id = TypeId::of::<T>();
         if !self.signer_types.insert(type_id) {
