@@ -197,7 +197,9 @@ impl TokenWallet {
             .ok_or(TokenWalletError::InvalidSwapBackDestination)?;
 
         let callback_payload = match destination.token_value().write_to_cells(2) {
-            Ok(mut cells) if cells.len() == 1 => cells.pop().trust_me(),
+            Ok(cells) if cells.len() == 1 && cells[0].references().len() == 1 => {
+                cells[0].references()[0].clone()
+            }
             _ => return Err(TokenWalletError::InvalidSwapBackDestination.into()),
         };
 
