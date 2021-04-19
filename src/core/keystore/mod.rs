@@ -194,9 +194,10 @@ impl KeyStoreState {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize)]
 pub struct KeyStoreEntry {
     pub name: String,
+    #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
     pub signer_name: String,
 }

@@ -55,7 +55,7 @@ zeroize = "1.2.0"
 pretty_assertions = "0.7.1"
 hex = "0.4.3"
 criterion = {version= "0.3",features=["async_tokio","html_reports"] }
-cargo-husky = "1"
+cargo-husky = {version= "1",features=["default","run-cargo-fmt","run-cargo-check"] }
 tokio = { version = "1.4.0", features =["rt-multi-thread", "macros"] }
 
 [features]

@@ -136,11 +136,14 @@ impl OwnersCache {
                     return Some((token_wallet.clone(), owner.clone()));
                 }
 
-                let _permit = semaphore.acquire().await.ok()?;
-                let contract_state = match transport.get_contract_state(token_wallet).await.ok()? {
-                    ContractState::Exists(state) => state,
-                    ContractState::NotExists => return None,
+                let contract_state = {
+                    let _permit = semaphore.acquire().await.ok()?;
+                    match transport.get_contract_state(token_wallet).await.ok()? {
+                        ContractState::Exists(state) => state,
+                        ContractState::NotExists => return None,
+                    }
                 };
+
                 let state = TokenWalletContractState(&contract_state);
                 let version = state.get_version().ok()?;
                 let details = state.get_details(version).ok()?;

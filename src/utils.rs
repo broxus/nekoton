@@ -367,21 +367,38 @@ pub mod serde_nonce {
 }
 
 pub mod serde_boc {
-    use serde::de::Deserialize;
-
     use super::*;
 
-    pub fn serialize<S>(data: SliceData, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &SliceData, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        use serde::ser::Error;
-
-        let bytes = ton_types::serialize_toc(&data.into_cell()).map_err(S::Error::custom)?;
-        serializer.serialize_str(&hex::encode(bytes))
+        serde_cell::serialize(&data.into_cell(), serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<SliceData, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        serde_cell::deserialize(deserializer).map(From::from)
+    }
+}
+
+pub mod serde_cell {
+    use serde::de::Deserialize;
+    use ton_types::Cell;
+
+    pub fn serialize<S>(data: &Cell, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        use serde::ser::Error;
+
+        let bytes = ton_types::serialize_toc(data).map_err(S::Error::custom)?;
+        serializer.serialize_str(&hex::encode(bytes))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Cell, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
@@ -391,6 +408,6 @@ pub mod serde_boc {
         let bytes = base64::decode(&data).map_err(D::Error::custom)?;
         let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
             .map_err(D::Error::custom)?;
-        Ok(cell.into())
+        Ok(cell)
     }
 }

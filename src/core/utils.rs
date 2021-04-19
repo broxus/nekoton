@@ -14,7 +14,7 @@ use ton_block::{MsgAddressInt, Serializable};
 use crate::contracts;
 use crate::core::models::*;
 use crate::crypto::{SignedMessage, UnsignedMessage};
-use crate::helpers::abi::{ContractResult, FunctionExt, IntoParser, ParseToken, ParserError};
+use crate::helpers::abi::{self, ContractResult, FunctionExt, IntoParser, ParseToken, ParserError};
 use crate::transport::models::TransactionFull;
 use crate::transport::Transport;
 use crate::utils::*;
@@ -592,7 +592,9 @@ impl TryFrom<InputMessage> for MultisigSendTransaction {
     }
 }
 
-pub fn parse_wallet_notification(tx: &ton_block::Transaction) -> Option<WalletNotification> {
+pub fn parse_transaction_additional_info(
+    tx: &ton_block::Transaction,
+) -> Option<TransactionAdditionalInfo> {
     let functions = WalletNotificationFunctions::instance();
 
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
@@ -604,14 +606,16 @@ pub fn parse_wallet_notification(tx: &ton_block::Transaction) -> Option<WalletNo
     let body = in_msg.body()?;
     let function_id = read_u32(&body).ok()?;
 
-    if function_id == functions.notify_wallet_deployed.input_id {
+    if function_id == 0 {
+        abi::parse_comment_payload(body).map(TransactionAdditionalInfo::Comment)
+    } else if function_id == functions.notify_wallet_deployed.input_id {
         let inputs = functions
             .notify_wallet_deployed
             .decode_input(body, true)
             .ok()?;
 
         TokenWalletDeployedNotification::try_from(InputMessage(inputs))
-            .map(WalletNotification::TokenWalletDeployed)
+            .map(TransactionAdditionalInfo::TokenWalletDeployed)
             .ok()
     } else if function_id == functions.notify_ethereum_event_status_changed.input_id {
         let inputs = functions
@@ -620,7 +624,7 @@ pub fn parse_wallet_notification(tx: &ton_block::Transaction) -> Option<WalletNo
             .ok()?;
 
         EthEventStatusChanged::try_from(InputMessage(inputs))
-            .map(|event| WalletNotification::EthEventStatusChanged(event.new_status))
+            .map(|event| TransactionAdditionalInfo::EthEventStatusChanged(event.new_status))
             .ok()
     } else if function_id == functions.notify_ton_event_status_changed.input_id {
         let inputs = functions
@@ -629,7 +633,7 @@ pub fn parse_wallet_notification(tx: &ton_block::Transaction) -> Option<WalletNo
             .ok()?;
 
         TonEventStatusChanged::try_from(InputMessage(inputs))
-            .map(|event| WalletNotification::TonEventStatusChanged(event.new_status))
+            .map(|event| TransactionAdditionalInfo::TonEventStatusChanged(event.new_status))
             .ok()
     } else {
         None
@@ -1041,12 +1045,22 @@ mod test {
     }
 
     #[test]
+    fn test_transaction_with_comment() {
+        let tx = Transaction::construct_from_base64("te6ccgECCAEAAa0AA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAALi67rDsNGkd3DyaHde6qGSNyU7rxIrKKUFCg2XCiOWm8qj/wgcwAAC4uu6w7BYG3S5AABRh6EgIBQQBAhUECQ7msoAYYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzD0JAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnI6oOa5hnaAmb92gCQ5BlaDDjAmDoH5UvSJNuK95TfvcajtZ/eBLgOpVpjmuIPSjgFKd0RzU/MXZ1uRuop7DU5HAQGgBgG5aAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlwAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDuaygABhnMOAAAFxdd1h2EwNulyAAAAABABwAqaSBsb3ZlIG1lbWVzIGFuZCDwn6aA").unwrap();
+
+        assert!(matches!(
+            parse_transaction_additional_info(&tx).unwrap(),
+            TransactionAdditionalInfo::Comment(_)
+        ));
+    }
+
+    #[test]
     fn test_parse_wallet_deployment() {
         let tx = Transaction::construct_from_base64("te6ccgECBQEAATAAA7F44lhmAlE+maVfor4IVhRpx85Rp9WiWXdVjnfvK8k4e0AAALc5peDsFNAtcF1BRBGfRP73+ljNPUUc+ir7FmHntIcbeh/ba28gAAC3OZS2ZBYGofQAABQgSAMCAQAVBECIicQJoBh6EgIAgnIIhWuBGHA/f3IsyBPHr57C3d7pcU83NmIoz5CkFu+Hsn742ILtpOsOCyUw6fEN9VwMZzJ8dj6MuR/kKlztR9sKAQGgBAD3aAHILrQNhiymjQB0/Pw/ubdxFv4FXRIQhcVcOMZMH8eJ5wAjiWGYCUT6ZpV+ivghWFGnHzlGn1aJZd1WOd+8ryTh7QicQAYUWGAAABbnNEILiMDUPm4kKd2bwA7tPzMWNNSaXaK1RvRlLdSIlIehh8LvndIgPP8XtYTj2A==").unwrap();
 
         assert!(matches!(
-            parse_wallet_notification(&tx).unwrap(),
-            WalletNotification::TokenWalletDeployed(_)
+            parse_transaction_additional_info(&tx).unwrap(),
+            TransactionAdditionalInfo::TokenWalletDeployed(_)
         ));
     }
 
@@ -1055,8 +1069,8 @@ mod test {
         let tx = Transaction::construct_from_base64("te6ccgECBQEAARIAA7F3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpY0FkF0icFNiz9eyMoHQj/XjOgvfd/Ty/FCTLIWVObMZeWYygAAAoKVP/JBYFZCYQABQgSAMCAQAXBECIwGGoCaAYehICAIJyfS8JL8YlmU0DmZFQVw8vxQ/7HiHzKY43/AS+wp7M2ylauXc4qj/KSRi2zF7A/86IuQtXzsWopEYjhgirgz9e7AEBoAQAuWgANCX2CqQaEevZ1UVg2Lqddhy1GwOCKNcFg+tItZwPrSsAHZ4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCMBhqABhRYYAAABQUsDJ8EwKyEtCQz2A0AQA==").unwrap();
 
         assert!(matches!(
-            parse_wallet_notification(&tx).unwrap(),
-            WalletNotification::TonEventStatusChanged(TonEventStatus::InProcess)
+            parse_transaction_additional_info(&tx).unwrap(),
+            TransactionAdditionalInfo::TonEventStatusChanged(TonEventStatus::InProcess)
         ));
     }
 
@@ -1065,8 +1079,8 @@ mod test {
         let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpY0FkKsGZIkbgb+dAhZwgZ18EGe+NGsuMOe6ebP1mZa9VGBSAAAAoKWNBZBYFZCYQABQIAwIBABUECMBhqAmgGHoSAgCCclq5dziqP8pJGLbMXsD/zoi5C1fOxaikRiOGCKuDP17sST2OxTOw8znrkarFBXwMMjxqG+Yjk6CZ5llzQdlgia8BAaAEALloADQl9gqkGhHr2dVFYNi6nXYctRsDgijXBYPrSLWcD60rAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwjAYagAYUWGAAAAUFLAyfEMCshLQkM9gNAMA=").unwrap();
 
         assert!(matches!(
-            parse_wallet_notification(&tx).unwrap(),
-            WalletNotification::TonEventStatusChanged(TonEventStatus::Confirmed)
+            parse_transaction_additional_info(&tx).unwrap(),
+            TransactionAdditionalInfo::TonEventStatusChanged(TonEventStatus::Confirmed)
         ));
     }
 
@@ -1075,8 +1089,8 @@ mod test {
         let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA7F3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpJyyIHVER8kq3HiJ7CLh63f0L6FNuFHClVei7uztOlIVx5IAgAAAoKR2jIBYFZB0QABQgKAMCAQAVBEBIicQJoBh6EgIAgnJ5eeKyWbIdllmQpwd9nH4qJGD/wzlQHDOWGC8QCKLnKVPlKWjgh4Ae4SGip4eNs+wh2HRqN6GU/Wffzz3PQ0+cAQGgBAC3aADXzfj3weHPfUJKipSKRpGGpGAwOVdhrobopP5lBZqZQQAdni4Be7O/IRDIKFt+HlRYLVRJWtA232uCnysW/gTGMIicQAYUWGAAAAUFJGt/BMCsg5ImeLTNAUA=").unwrap();
 
         assert!(matches!(
-            parse_wallet_notification(&tx).unwrap(),
-            WalletNotification::EthEventStatusChanged(EthEventStatus::Executed)
+            parse_transaction_additional_info(&tx).unwrap(),
+            TransactionAdditionalInfo::EthEventStatusChanged(EthEventStatus::Executed)
         ));
     }
 
@@ -1085,8 +1099,8 @@ mod test {
         let tx = Transaction::construct_from_base64("te6ccgECBQEAARIAA7N3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoHa2hZg3hyGFZxbZG8DRavBlR+G7vy+yz9PJyQrxh/W4QAAAnbUG/sCYFZBnwABRCRugDAgEAFwSEjciJxAmgGHoSAgCCcp0VD3BI01U2YOaQOUOy9/YQkmqW/wL8IERbo0LGwN/gcu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDgBAaAEALdoANfN+PfB4c99QkqKlIpGkYakYDA5V2Guhuik/mUFmplBAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwiJxABhRYYAAABQUhjxMEwKyDMiZ4tM0AQA==").unwrap();
 
         assert!(matches!(
-            parse_wallet_notification(&tx).unwrap(),
-            WalletNotification::EthEventStatusChanged(EthEventStatus::InProcess)
+            parse_transaction_additional_info(&tx).unwrap(),
+            TransactionAdditionalInfo::EthEventStatusChanged(EthEventStatus::InProcess)
         ));
     }
 
@@ -1095,8 +1109,8 @@ mod test {
         let tx = Transaction::construct_from_base64("te6ccgECBQEAAQ4AA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoLbKTCjolcexnodkGoK58txUv9GyQgugOZ9EMrSi3GIHgAAAoKRBJKBYFZBnwABQIAwIBABMECInECaAYehICAIJycu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDir/Oq0GrRrpS+ymd9014DHJx3FvKJnpwSicuDNwT4phgEBoAQAt2gA183498Hhz31CSoqUikaRhqRgMDlXYa6G6KT+ZQWamUEAHZ4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCInEAGFFhgAAAFBSGPExDArIMyJni0zQDA").unwrap();
 
         assert!(matches!(
-            parse_wallet_notification(&tx).unwrap(),
-            WalletNotification::EthEventStatusChanged(EthEventStatus::Confirmed)
+            parse_transaction_additional_info(&tx).unwrap(),
+            TransactionAdditionalInfo::EthEventStatusChanged(EthEventStatus::Confirmed)
         ));
     }
 
