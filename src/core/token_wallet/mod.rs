@@ -196,12 +196,10 @@ impl TokenWallet {
             .and_then(|data| if data.len() == 20 { Some(data) } else { None })
             .ok_or(TokenWalletError::InvalidSwapBackDestination)?;
 
-        let callback_payload = ton_abi::TokenValue::pack_values_into_chain(
-            &[destination.token_value().unnamed()],
-            Vec::new(),
-            2,
-        )
-        .map_err(|_| TokenWalletError::InvalidSwapBackDestination)?;
+        let callback_payload = match destination.token_value().write_to_cells(2) {
+            Ok(mut cells) if cells.len() == 1 => cells.pop().trust_me(),
+            _ => return Err(TokenWalletError::InvalidSwapBackDestination.into()),
+        };
 
         let contract = select_token_contract(self.version)?;
 
