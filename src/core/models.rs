@@ -11,19 +11,21 @@ use ton_types::UInt256;
 use super::utils;
 use crate::utils::*;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum WalletNotification {
     TokenWalletDeployed(TokenWalletDeployedNotification),
     EthEventStatusChanged(EthEventStatus),
     TonEventStatusChanged(TonEventStatus),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TokenWalletDeployedNotification {
+    #[serde(with = "serde_address")]
     pub root_token_contract: MsgAddressInt,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum EthEventStatus {
     InProcess,
     Confirmed,
@@ -31,45 +33,51 @@ pub enum EthEventStatus {
     Rejected,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum TonEventStatus {
     InProcess,
     Confirmed,
     Rejected,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum MultisigTransaction {
     Send(MultisigSendTransaction),
     Submit(MultisigSubmitTransaction),
     Confirm(MultisigConfirmTransaction),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MultisigConfirmTransaction {
     pub transaction_id: u64,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MultisigSubmitTransaction {
+    #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
     pub value: BigUint,
     pub bounce: bool,
     pub all_balance: bool,
+    #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
     pub trans_id: u64,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MultisigSendTransaction {
+    #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
     pub value: BigUint,
     pub bounce: bool,
     pub flags: u8,
+    #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum TokenWalletTransaction {
     IncomingTransfer(TokenIncomingTransfer),
     OutgoingTransfer(TokenOutgoingTransfer),
@@ -79,14 +87,15 @@ pub enum TokenWalletTransaction {
     SwapBackBounced(BigUint),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TokenIncomingTransfer {
     pub tokens: BigUint,
     /// Not the address of the token wallet, but the address of its owner
+    #[serde(with = "serde_address")]
     pub sender_address: MsgAddressInt,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TokenOutgoingTransfer {
     pub to: TransferRecipient,
     pub tokens: BigUint,
@@ -98,8 +107,91 @@ pub enum TransferRecipient {
     TokenWallet(MsgAddressInt),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+impl Serialize for TransferRecipient {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        #[derive(Serialize)]
+        #[serde(transparent)]
+        struct StoredItem<'a>(#[serde(with = "serde_address")] &'a MsgAddressInt);
+
+        #[derive(Serialize)]
+        enum StoredTransferRecipient<'a> {
+            OwnerWallet(StoredItem<'a>),
+            TokenWallet(StoredItem<'a>),
+        }
+
+        match self {
+            TransferRecipient::OwnerWallet(address) => {
+                StoredTransferRecipient::OwnerWallet(StoredItem(address))
+            }
+            TransferRecipient::TokenWallet(address) => {
+                StoredTransferRecipient::TokenWallet(StoredItem(address))
+            }
+        }
+        .serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for TransferRecipient {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(transparent)]
+        struct StoredItem(#[serde(with = "serde_address")] MsgAddressInt);
+
+        #[derive(Deserialize)]
+        enum StoredTransferRecipient {
+            OwnerWallet(StoredItem),
+            TokenWallet(StoredItem),
+        }
+
+        Ok(match StoredTransferRecipient::deserialize(deserializer)? {
+            StoredTransferRecipient::OwnerWallet(item) => TransferRecipient::OwnerWallet(item.0),
+            StoredTransferRecipient::TokenWallet(item) => TransferRecipient::TokenWallet(item.0),
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TokenSwapBack {
+    pub tokens: BigUint,
+    /// ETH address
+    pub to: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct EthEventDetails {
+    pub status: EthEventStatus,
+    pub required_confirmation_count: u16,
+    pub required_rejection_count: u16,
+    pub confirmation_count: u16,
+    pub rejection_count: u16,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct EthEventData {
+    #[serde(with = "serde_address")]
+    pub root_token_contract: MsgAddressInt,
+    pub tokens: BigUint,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct TonEventDetails {
+    pub status: TonEventStatus,
+    pub required_confirmation_count: u16,
+    pub required_rejection_count: u16,
+    pub confirmation_count: u16,
+    pub rejection_count: u16,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct TonEventData {
+    #[serde(with = "serde_address")]
+    pub root_token_contract: MsgAddressInt,
     pub tokens: BigUint,
     /// ETH address
     pub to: String,
