@@ -12,7 +12,9 @@ use super::utils;
 use crate::utils::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum WalletNotification {
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum TransactionAdditionalInfo {
+    Comment(String),
     TokenWalletDeployed(TokenWalletDeployedNotification),
     EthEventStatusChanged(EthEventStatus),
     TonEventStatusChanged(TonEventStatus),
@@ -42,6 +44,7 @@ pub enum TonEventStatus {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum MultisigTransaction {
     Send(MultisigSendTransaction),
     Submit(MultisigSubmitTransaction),
@@ -117,6 +120,7 @@ impl Serialize for TransferRecipient {
         struct StoredItem<'a>(#[serde(with = "serde_address")] &'a MsgAddressInt);
 
         #[derive(Serialize)]
+        #[serde(rename_all = "snake_case", tag = "type", content = "data")]
         enum StoredTransferRecipient<'a> {
             OwnerWallet(StoredItem<'a>),
             TokenWallet(StoredItem<'a>),
@@ -144,6 +148,7 @@ impl<'de> Deserialize<'de> for TransferRecipient {
         struct StoredItem(#[serde(with = "serde_address")] MsgAddressInt);
 
         #[derive(Deserialize)]
+        #[serde(rename_all = "snake_case", tag = "type", content = "data")]
         enum StoredTransferRecipient {
             OwnerWallet(StoredItem),
             TokenWallet(StoredItem),
@@ -641,7 +646,7 @@ pub enum MessageBodyError {
 }
 
 #[derive(Debug, Copy, Clone, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase", tag = "type")]
+#[serde(rename_all = "lowercase", tag = "type", content = "data")]
 pub enum LastTransactionId {
     Exact(TransactionId),
     Inexact { latest_lt: u64 },
