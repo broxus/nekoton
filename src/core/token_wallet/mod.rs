@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -341,6 +341,30 @@ pub trait TokenWalletSubscriptionHandler: Send + Sync {
     );
 }
 
+pub async fn get_eth_event_data<'a>(
+    transport: &'a dyn Transport,
+    event_address: &'a MsgAddressInt,
+) -> Result<EthEventData> {
+    let state = match transport.get_contract_state(event_address).await? {
+        ContractState::Exists(state) => state,
+        ContractState::NotExists => return Err(TokenWalletError::InvalidEthEventContract.into()),
+    };
+
+    EthEventContractState(&state).get_event_data()
+}
+
+pub async fn get_ton_event_details<'a>(
+    transport: &'a dyn Transport,
+    event_address: &'a MsgAddressInt,
+) -> Result<TonEventData> {
+    let state = match transport.get_contract_state(event_address).await? {
+        ContractState::Exists(state) => state,
+        ContractState::NotExists => return Err(TokenWalletError::InvalidTonEventContract.into()),
+    };
+
+    TonEventContractState(&state).get_event_data()
+}
+
 pub fn make_collect_tokens_call(eth_event_address: MsgAddressInt) -> InternalMessage {
     const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
 
@@ -647,6 +671,205 @@ struct RootMetaDetails {
     proxy_address: MsgAddressInt,
 }
 
+pub struct TonEventContractState<'a>(pub &'a ExistingContract);
+
+impl<'a> TonEventContractState<'a> {
+    pub fn get_details(&self) -> Result<TonEventDetails> {
+        let function = contracts::abi::ton_event()
+            .function("getDetails")
+            .trust_me();
+
+        let details = self.0.run_local(function, &[])?.try_into()?;
+        Ok(details)
+    }
+
+    pub fn get_event_data(&self) -> Result<TonEventData> {
+        let function = contracts::abi::ethereum_event()
+            .function("getDecodedData")
+            .trust_me();
+
+        let data = self.0.run_local(function, &[])?.try_into()?;
+        Ok(data)
+    }
+}
+
+impl TryFrom<Vec<ton_abi::Token>> for TonEventData {
+    type Error = abi::ParserError;
+
+    fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
+        let mut tuple = tokens.into_parser();
+
+        let root_token_contract: MsgAddressInt = tuple.parse_next()?;
+        let _wid: BigUint = tuple.parse_next()?;
+        let _addr: BigUint = tuple.parse_next()?;
+        let tokens: BigUint = tuple.parse_next()?;
+
+        let to = {
+            let address: BigUint = tuple.parse_next()?;
+            let bytes = address.to_bytes_be();
+            if bytes.len() > 20 {
+                return Err(abi::ParserError::InvalidAbi);
+            }
+
+            let mut padded_data = [0u8; 20];
+            let offset = padded_data.len() - bytes.len();
+            padded_data[offset..20].copy_from_slice(&bytes);
+            hex::encode(padded_data)
+        };
+
+        Ok(Self {
+            root_token_contract,
+            tokens,
+            to,
+        })
+    }
+}
+
+impl TryFrom<Vec<ton_abi::Token>> for TonEventDetails {
+    type Error = abi::ParserError;
+
+    fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
+        let mut tuple = tokens.into_parser();
+
+        let init_data: TonEventInitData = tuple.parse_next()?;
+        let status: TonEventStatus = tuple.parse_next()?;
+
+        let confirmation_count = parse_vote_count(&mut tuple)?;
+        let rejection_count = parse_vote_count(&mut tuple)?;
+
+        Ok(Self {
+            status,
+            required_confirmation_count: init_data.required_confirmations,
+            required_rejection_count: init_data.required_rejects,
+            confirmation_count,
+            rejection_count,
+        })
+    }
+}
+
+struct TonEventInitData {
+    required_confirmations: u16,
+    required_rejects: u16,
+}
+
+impl abi::ParseToken<TonEventInitData> for ton_abi::TokenValue {
+    fn try_parse(self) -> abi::ContractResult<TonEventInitData> {
+        let mut tuple = match self {
+            ton_abi::TokenValue::Tuple(tokens) => tokens.into_parser(),
+            _ => return Err(abi::ParserError::InvalidAbi),
+        };
+
+        let _event_transaction: BigUint = tuple.parse_next()?;
+        let _event_transaction_lt: BigUint = tuple.parse_next()?;
+        let _event_timestamp: BigUint = tuple.parse_next()?;
+        let _event_index: BigUint = tuple.parse_next()?;
+        let _event_data: ton_types::Cell = tuple.parse_next()?;
+        let _ton_event_configuration: MsgAddressInt = tuple.parse_next()?;
+        let required_confirmations: u16 = tuple.parse_next()?;
+        let required_rejects: u16 = tuple.parse_next()?;
+
+        Ok(TonEventInitData {
+            required_confirmations,
+            required_rejects,
+        })
+    }
+}
+
+pub struct EthEventContractState<'a>(pub &'a ExistingContract);
+
+impl<'a> EthEventContractState<'a> {
+    pub fn get_details(&self) -> Result<EthEventDetails> {
+        let function = contracts::abi::ethereum_event()
+            .function("getDetails")
+            .trust_me();
+
+        let details = self.0.run_local(function, &[])?.try_into()?;
+        Ok(details)
+    }
+
+    pub fn get_event_data(&self) -> Result<EthEventData> {
+        let function = contracts::abi::ethereum_event()
+            .function("getDecodedData")
+            .trust_me();
+
+        let data = self.0.run_local(function, &[])?.try_into()?;
+        Ok(data)
+    }
+}
+
+impl TryFrom<Vec<ton_abi::Token>> for EthEventData {
+    type Error = abi::ParserError;
+
+    fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
+        let mut tuple = tokens.into_parser();
+
+        Ok(Self {
+            root_token_contract: tuple.parse_next()?,
+            tokens: tuple.parse_next()?,
+        })
+    }
+}
+
+impl TryFrom<Vec<ton_abi::Token>> for EthEventDetails {
+    type Error = abi::ParserError;
+
+    fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
+        let mut tuple = tokens.into_parser();
+
+        let init_data: EthEventInitData = tuple.parse_next()?;
+        let status: EthEventStatus = tuple.parse_next()?;
+
+        let confirmation_count = parse_vote_count(&mut tuple)?;
+        let rejection_count = parse_vote_count(&mut tuple)?;
+
+        Ok(Self {
+            status,
+            required_confirmation_count: init_data.required_confirmations,
+            required_rejection_count: init_data.required_rejects,
+            confirmation_count,
+            rejection_count,
+        })
+    }
+}
+
+struct EthEventInitData {
+    required_confirmations: u16,
+    required_rejects: u16,
+}
+
+impl abi::ParseToken<EthEventInitData> for ton_abi::TokenValue {
+    fn try_parse(self) -> abi::ContractResult<EthEventInitData> {
+        let mut tuple = match self {
+            ton_abi::TokenValue::Tuple(items) => items.into_parser(),
+            _ => return Err(abi::ParserError::InvalidAbi),
+        };
+
+        let _event_transaction: BigUint = tuple.parse_next()?;
+        let _event_index: BigUint = tuple.parse_next()?;
+        let _event_data: ton_types::Cell = tuple.parse_next()?;
+        let _event_block_number: BigUint = tuple.parse_next()?;
+        let _event_block: BigUint = tuple.parse_next()?;
+        let _ethereum_event_configuration: MsgAddressInt = tuple.parse_next()?;
+        let required_confirmations: u16 = tuple.parse_next()?;
+        let required_rejects: u16 = tuple.parse_next()?;
+
+        Ok(EthEventInitData {
+            required_confirmations,
+            required_rejects,
+        })
+    }
+}
+
+fn parse_vote_count<I>(tuple: &mut abi::ContractOutputParser<I>) -> abi::ContractResult<u16>
+where
+    I: Iterator<Item = ton_abi::Token>,
+{
+    match tuple.parse_next::<ton_abi::TokenValue>()? {
+        ton_abi::TokenValue::Array(votes) => Ok(votes.len() as u16),
+        _ => Err(abi::ParserError::InvalidAbi),
+    }
+}
+
 fn adjust_responsible(
     function: &mut abi::FunctionBuilder,
     version: TokenWalletVersion,
@@ -748,6 +971,10 @@ enum TokenWalletError {
     InvalidRootMetaContract,
     #[error("Invalid swap back destination")]
     InvalidSwapBackDestination,
+    #[error("Invalid ETH event contract")]
+    InvalidEthEventContract,
+    #[error("Invalid TON event contract")]
+    InvalidTonEventContract,
 }
 
 #[cfg(test)]
