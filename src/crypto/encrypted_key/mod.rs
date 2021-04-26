@@ -12,10 +12,11 @@ use ring::rand::SecureRandom;
 use secstr::SecStr;
 use serde::{Deserialize, Serialize};
 
-use super::mnemonic::*;
-use super::symmetric::*;
 use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::utils::*;
+
+use super::mnemonic::*;
+use super::symmetric::*;
 
 #[derive(Default, Clone, Debug)]
 pub struct EncryptedKeySigner {
@@ -154,7 +155,7 @@ pub struct EncryptedKeyCreateInput {
     pub password: SecStr,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct EncryptedKeyPassword {
     pub public_key: PublicKey,
     pub password: SecStr,
