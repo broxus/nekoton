@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -16,6 +15,8 @@ use crate::crypto::mnemonic::*;
 use crate::crypto::symmetric::*;
 use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::utils::*;
+
+const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
 #[derive(Default, Clone, Debug)]
 pub struct DerivedKeySigner {
@@ -305,6 +306,7 @@ struct EncryptedPart {
 
 type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, u32)>;
 
+#[derive(Clone)]
 pub enum DerivedKeySignParams {
     ByAccountId {
         account_id: u32,
@@ -337,13 +339,14 @@ pub enum DerivedKeyCreateInput {
 }
 
 mod serde_accounts_map {
-    use super::*;
+    use std::collections::HashMap;
+    use std::convert::TryInto;
 
     use serde::de::Error;
     use serde::ser::SerializeMap;
     use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
-    use std::convert::TryInto;
+
+    use super::*;
 
     pub fn serialize<S>(data: &AccountsMap, serializer: S) -> Result<S::Ok, S::Error>
     where

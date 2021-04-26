@@ -154,6 +154,7 @@ pub struct EncryptedKeyCreateInput {
     pub password: SecStr,
 }
 
+#[derive(Clone)]
 pub struct EncryptedKeyPassword {
     pub public_key: PublicKey,
     pub password: SecStr,
