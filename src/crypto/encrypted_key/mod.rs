@@ -9,7 +9,7 @@ use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use ed25519_dalek::{ed25519, Keypair, PublicKey, SecretKey, Signer};
 use ring::digest;
 use ring::rand::SecureRandom;
-use secstr::{SecUtf8};
+use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
 use super::mnemonic::*;
@@ -113,8 +113,8 @@ impl SignerStorage for EncryptedKeySigner {
 
         impl<'a> Serialize for StoredData<'a> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-                where
-                    S: serde::Serializer,
+            where
+                S: serde::Serializer,
             {
                 let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
                 for (public_key, signer) in self.0.iter() {
@@ -240,8 +240,11 @@ impl EncryptedKey {
             &self.inner.seed_phrase_nonce,
             &self.inner.encrypted_seed_phrase,
         )
-            .map_err(|_| EncryptedKeyError::FailedToDecryptData)?;
-        Ok(SecUtf8::from(String::from_utf8(data.unsecure().to_vec()).map_err(|_| EncryptedKeyError::FailedToDecryptData)?))
+        .map_err(|_| EncryptedKeyError::FailedToDecryptData)?;
+        Ok(SecUtf8::from(
+            String::from_utf8(data.unsecure().to_vec())
+                .map_err(|_| EncryptedKeyError::FailedToDecryptData)?,
+        ))
     }
 
     pub fn get_key_pair(&self, password: SecUtf8) -> Result<Keypair, EncryptedKeyError> {
@@ -254,8 +257,8 @@ impl EncryptedKey {
     }
 
     pub fn from_reader<T>(reader: T) -> Result<Self>
-        where
-            T: Read,
+    where
+        T: Read,
     {
         let crypto_data: CryptoData = serde_json::from_reader(reader)?;
         Ok(EncryptedKey { inner: crypto_data })
@@ -445,7 +448,7 @@ mod test {
             MnemonicType::Legacy,
             TEST_MNEMONIC.into(),
         )
-            .unwrap();
+        .unwrap();
     }
 
     #[test]
@@ -457,7 +460,7 @@ mod test {
             MnemonicType::Legacy,
             TEST_MNEMONIC.into(),
         )
-            .unwrap();
+        .unwrap();
 
         println!("{}", signer.as_json());
         let result = signer.sign(b"lol", "lol".into());

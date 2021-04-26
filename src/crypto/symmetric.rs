@@ -4,7 +4,7 @@ use std::num::NonZeroU32;
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use ring::{digest, pbkdf2};
-use secstr::{ SecVec, SecUtf8};
+use secstr::{SecUtf8, SecVec};
 use thiserror::Error;
 
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;

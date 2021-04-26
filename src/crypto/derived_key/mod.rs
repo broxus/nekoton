@@ -106,7 +106,9 @@ impl StoreSigner for DerivedKeySigner {
             &*master_key.enc_phrase,
         )?;
 
-        Ok(Self::ExportKeyOutput { phrase: SecUtf8::from(String::from_utf8(phrase.unsecure().to_vec())?) })
+        Ok(Self::ExportKeyOutput {
+            phrase: SecUtf8::from(String::from_utf8(phrase.unsecure().to_vec())?),
+        })
     }
 
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<[u8; 64]> {
@@ -306,14 +308,14 @@ struct EncryptedPart {
 
 type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, u32)>;
 
-#[derive(Clone, Serialize,Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum DerivedKeySignParams {
     ByAccountId {
         account_id: u32,
         password: SecUtf8,
     },
     ByPublicKey {
-        #[serde(with="crate::utils::serde_public_key")]
+        #[serde(with = "crate::utils::serde_public_key")]
         public_key: PublicKey,
         password: SecUtf8,
     },
@@ -457,7 +459,6 @@ mod test {
 
     const TEST_PHRASE: &str =
         "pioneer fever hazard scan install wise reform corn bubble leisure amazing note";
-
 
     #[tokio::test]
     async fn test_creation() -> Result<()> {
