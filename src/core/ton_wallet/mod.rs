@@ -81,10 +81,7 @@ impl TonWallet {
     }
 
     pub fn details(&self) -> TonWalletDetails {
-        match self.contract_type {
-            ContractType::Multisig(_) => multisig::DETAILS,
-            ContractType::WalletV3 => wallet_v3::DETAILS,
-        }
+        self.contract_type.details()
     }
 
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
@@ -274,6 +271,15 @@ pub struct TonWalletDetails {
 pub enum ContractType {
     Multisig(MultisigType),
     WalletV3,
+}
+
+impl ContractType {
+    pub fn details(&self) -> TonWalletDetails {
+        match self {
+            ContractType::Multisig(_) => multisig::DETAILS,
+            ContractType::WalletV3 => wallet_v3::DETAILS,
+        }
+    }
 }
 
 impl FromStr for ContractType {

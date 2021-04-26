@@ -9,7 +9,7 @@ use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use ed25519_dalek::{ed25519, Keypair, PublicKey, SecretKey, Signer};
 use ring::digest;
 use ring::rand::SecureRandom;
-use secstr::SecStr;
+use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
 use super::mnemonic::*;
@@ -149,25 +149,27 @@ impl SignerStorage for EncryptedKeySigner {
 }
 
 pub struct EncryptedKeyCreateInput {
-    pub phrase: SecStr,
+    pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
-    pub password: SecStr,
+    pub password: SecUtf8,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct EncryptedKeyPassword {
+    #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
-    pub password: SecStr,
+    pub password: SecUtf8,
 }
 
 pub struct EncryptedKeyExportOutput {
-    pub phrase: SecStr,
+    pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
 }
 
 pub struct EncryptedKeyUpdateParams {
     pub public_key: PublicKey,
-    pub old_password: SecStr,
-    pub new_password: SecStr,
+    pub old_password: SecUtf8,
+    pub new_password: SecUtf8,
 }
 
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
@@ -180,9 +182,9 @@ pub struct EncryptedKey {
 impl EncryptedKey {
     pub fn new(
         name: &str,
-        password: SecStr,
+        password: SecUtf8,
         mnemonic_type: MnemonicType,
-        phrase: SecStr,
+        phrase: SecUtf8,
     ) -> Result<Self> {
         let rng = ring::rand::SystemRandom::new();
 
@@ -204,7 +206,7 @@ impl EncryptedKey {
         // prepare encryptor
         let encryptor = ChaCha20Poly1305::new(&symmetric_key_from_password(password, &salt));
 
-        let phrase = std::str::from_utf8(phrase.unsecure())?;
+        let phrase = phrase.unsecure();
         let keypair = derive_from_phrase(phrase, mnemonic_type)?;
 
         // encrypt private key
@@ -229,19 +231,23 @@ impl EncryptedKey {
         })
     }
 
-    pub fn get_mnemonic(&self, password: SecStr) -> Result<SecStr, EncryptedKeyError> {
+    pub fn get_mnemonic(&self, password: SecUtf8) -> Result<SecUtf8, EncryptedKeyError> {
         let salt = &self.inner.salt;
         let password = symmetric_key_from_password(password, salt);
         let dec = ChaCha20Poly1305::new(&password);
-        decrypt_secure(
+        let data = decrypt_secure(
             &dec,
             &self.inner.seed_phrase_nonce,
             &self.inner.encrypted_seed_phrase,
         )
-        .map_err(|_| EncryptedKeyError::FailedToDecryptData)
+        .map_err(|_| EncryptedKeyError::FailedToDecryptData)?;
+        Ok(SecUtf8::from(
+            String::from_utf8(data.unsecure().to_vec())
+                .map_err(|_| EncryptedKeyError::FailedToDecryptData)?,
+        ))
     }
 
-    pub fn get_key_pair(&self, password: SecStr) -> Result<Keypair, EncryptedKeyError> {
+    pub fn get_key_pair(&self, password: SecUtf8) -> Result<Keypair, EncryptedKeyError> {
         let password = symmetric_key_from_password(password, &self.inner.salt);
         decrypt_key_pair(
             &self.inner.encrypted_private_key,
@@ -258,7 +264,7 @@ impl EncryptedKey {
         Ok(EncryptedKey { inner: crypto_data })
     }
 
-    pub fn change_password(&mut self, old_password: SecStr, new_password: SecStr) -> Result<()> {
+    pub fn change_password(&mut self, old_password: SecUtf8, new_password: SecUtf8) -> Result<()> {
         let rng = ring::rand::SystemRandom::new();
 
         // prepare nonce
@@ -316,7 +322,7 @@ impl EncryptedKey {
         Ok(())
     }
 
-    pub fn sign(&self, data: &[u8], password: SecStr) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
+    pub fn sign(&self, data: &[u8], password: SecUtf8) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
         self.inner.sign(data, password)
     }
 
@@ -367,7 +373,7 @@ struct CryptoData {
 }
 
 impl CryptoData {
-    pub fn sign(&self, data: &[u8], password: SecStr) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
+    pub fn sign(&self, data: &[u8], password: SecUtf8) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
         let key = symmetric_key_from_password(password, &*self.salt);
         let decrypter = ChaCha20Poly1305::new(&key);
 
@@ -435,7 +441,7 @@ mod test {
 
     #[test]
     fn test_init() {
-        let password = SecStr::new(TEST_PASSWORD.into());
+        let password = SecUtf8::from(TEST_PASSWORD);
         EncryptedKey::new(
             KEY_NAME,
             password,
@@ -447,7 +453,7 @@ mod test {
 
     #[test]
     fn test_bad_password() {
-        let password = SecStr::new(TEST_PASSWORD.into());
+        let password = SecUtf8::from(TEST_PASSWORD);
         let signer = EncryptedKey::new(
             KEY_NAME,
             password,
