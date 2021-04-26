@@ -7,7 +7,7 @@ use chacha20poly1305::{ChaCha20Poly1305, Nonce};
 use ed25519_dalek::{PublicKey, Signer};
 use ring::digest;
 use ring::rand::SecureRandom;
-use secstr::{SecStr, SecVec};
+use secstr::{SecUtf8, SecVec};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -106,7 +106,7 @@ impl StoreSigner for DerivedKeySigner {
             &*master_key.enc_phrase,
         )?;
 
-        Ok(Self::ExportKeyOutput { phrase })
+        Ok(Self::ExportKeyOutput { phrase: SecUtf8::from(String::from_utf8(phrase.unsecure().to_vec())?) })
     }
 
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<[u8; 64]> {
@@ -208,10 +208,10 @@ struct MasterKey {
 }
 
 impl MasterKey {
-    fn new(password: SecStr, phrase: SecStr, name: String) -> Result<Self> {
+    fn new(password: SecUtf8, phrase: SecUtf8, name: String) -> Result<Self> {
         use zeroize::Zeroize;
 
-        let mut phrase = String::from_utf8(phrase.unsecure().to_vec())?;
+        let mut phrase = phrase.unsecure().to_string();
 
         // SECURITY: private key will be zeroized here
         let public_key = derive_from_phrase(&phrase, MnemonicType::Labs(0))?.public;
@@ -242,7 +242,7 @@ impl MasterKey {
         })
     }
 
-    fn change_password(&mut self, old_password: SecStr, new_password: SecStr) -> Result<()> {
+    fn change_password(&mut self, old_password: SecUtf8, new_password: SecUtf8) -> Result<()> {
         let decrypter =
             ChaCha20Poly1305::new(&symmetric_key_from_password(old_password, &self.salt));
 
@@ -264,7 +264,7 @@ impl MasterKey {
 fn compute_encrypted_part(
     entropy: &[u8],
     phrase: &[u8],
-    password: SecStr,
+    password: SecUtf8,
 ) -> Result<EncryptedPart> {
     let rng = ring::rand::SystemRandom::new();
 
@@ -306,36 +306,37 @@ struct EncryptedPart {
 
 type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, u32)>;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize,Deserialize)]
 pub enum DerivedKeySignParams {
     ByAccountId {
         account_id: u32,
-        password: SecStr,
+        password: SecUtf8,
     },
     ByPublicKey {
+        #[serde(with="crate::utils::serde_public_key")]
         public_key: PublicKey,
-        password: SecStr,
+        password: SecUtf8,
     },
 }
 
 pub struct DerivedKeyExportParams {
-    pub password: SecStr,
+    pub password: SecUtf8,
 }
 
 pub struct DerivedKeyExportOutput {
-    pub phrase: SecStr,
+    pub phrase: SecUtf8,
 }
 
 pub enum DerivedKeyUpdateParams {
     ChangePassword {
-        old_password: SecStr,
-        new_password: SecStr,
+        old_password: SecUtf8,
+        new_password: SecUtf8,
     },
 }
 
 pub enum DerivedKeyCreateInput {
-    Import { phrase: SecStr, password: SecStr },
-    Derive { account_id: u32, password: SecStr },
+    Import { phrase: SecUtf8, password: SecUtf8 },
+    Derive { account_id: u32, password: SecUtf8 },
 }
 
 mod serde_accounts_map {
@@ -457,9 +458,6 @@ mod test {
     const TEST_PHRASE: &str =
         "pioneer fever hazard scan install wise reform corn bubble leisure amazing note";
 
-    fn make_sec_str(data: &str) -> SecStr {
-        data.to_owned().into()
-    }
 
     #[tokio::test]
     async fn test_creation() -> Result<()> {
@@ -469,8 +467,8 @@ mod test {
             .add_key(
                 "lol",
                 DerivedKeyCreateInput::Import {
-                    phrase: make_sec_str(TEST_PHRASE),
-                    password: make_sec_str("123"),
+                    phrase: SecUtf8::from(TEST_PHRASE),
+                    password: SecUtf8::from("123"),
                 },
             )
             .await?;
@@ -487,8 +485,8 @@ mod test {
             .add_key(
                 "lol",
                 DerivedKeyCreateInput::Import {
-                    phrase: make_sec_str(TEST_PHRASE),
-                    password: make_sec_str("123"),
+                    phrase: SecUtf8::from(TEST_PHRASE),
+                    password: SecUtf8::from("123"),
                 },
             )
             .await?;
@@ -502,8 +500,8 @@ mod test {
 
         assert!(signer
             .update_key(DerivedKeyUpdateParams::ChangePassword {
-                old_password: make_sec_str("totally different"),
-                new_password: make_sec_str("321"),
+                old_password: SecUtf8::from("totally different"),
+                new_password: SecUtf8::from("321"),
             })
             .await
             .is_err());
