@@ -58,7 +58,7 @@ pub trait Signer: SignerStorage {
 }
 
 #[async_trait]
-pub trait SignerStorage: Downcast {
+pub trait SignerStorage: Downcast + Send {
     fn load_state(&mut self, data: &str) -> Result<()>;
     fn store_state(&self) -> String;
 
