@@ -4,7 +4,7 @@ use std::num::NonZeroU32;
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use ring::{digest, pbkdf2};
-use secstr::{SecStr, SecVec};
+use secstr::{SecUtf8, SecVec};
 use thiserror::Error;
 
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
@@ -47,13 +47,13 @@ pub fn encrypt(
 }
 
 // Calculates symmetric key from user password, using pbkdf2
-pub fn symmetric_key_from_password(password: SecStr, salt: &[u8]) -> Key {
+pub fn symmetric_key_from_password(password: SecUtf8, salt: &[u8]) -> Key {
     let mut pbkdf2_hash = SecVec::new(vec![0; CREDENTIAL_LEN]);
     pbkdf2::derive(
         pbkdf2::PBKDF2_HMAC_SHA256,
         N_ITER,
         salt,
-        password.unsecure(),
+        password.unsecure().as_bytes(),
         &mut pbkdf2_hash.unsecure_mut(),
     );
     Key::clone_from_slice((&pbkdf2_hash).borrow())

@@ -12,7 +12,7 @@ use crate::core::ton_wallet;
 use crate::external::Storage;
 use crate::utils::*;
 
-const STORAGE_ACCOUNTS: &str = "accounts";
+const STORAGE_ACCOUNTS: &str = "__core__accounts";
 
 pub struct AccountsStorage {
     storage: Arc<dyn Storage>,

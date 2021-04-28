@@ -18,7 +18,7 @@ use crate::utils::*;
 
 pub type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
 
-pub trait UnsignedMessage: DynClone {
+pub trait UnsignedMessage: DynClone + Send {
     /// Adjust expiration timestamp from now
     fn refresh_timeout(&mut self);
 
@@ -58,7 +58,7 @@ pub trait Signer: SignerStorage {
 }
 
 #[async_trait]
-pub trait SignerStorage: Downcast {
+pub trait SignerStorage: Downcast + Send {
     fn load_state(&mut self, data: &str) -> Result<()>;
     fn store_state(&self) -> String;
 
