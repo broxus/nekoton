@@ -1,12 +1,3 @@
-mod derived_key;
-mod encrypted_key;
-mod mnemonic;
-mod symmetric;
-
-pub use derived_key::*;
-pub use encrypted_key::*;
-pub use mnemonic::*;
-
 use anyhow::Result;
 use async_trait::async_trait;
 use downcast_rs::{impl_downcast, Downcast};
@@ -14,7 +5,16 @@ use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 
+pub use derived_key::*;
+pub use encrypted_key::*;
+pub use mnemonic::*;
+
 use crate::utils::*;
+
+mod derived_key;
+mod encrypted_key;
+mod mnemonic;
+mod symmetric;
 
 pub type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
 
@@ -58,7 +58,7 @@ pub trait Signer: SignerStorage {
 }
 
 #[async_trait]
-pub trait SignerStorage: Downcast + Send {
+pub trait SignerStorage: Downcast + Send + Sync {
     fn load_state(&mut self, data: &str) -> Result<()>;
     fn store_state(&self) -> String;
 
