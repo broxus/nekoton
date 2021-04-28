@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use ton_api::ton;
 
 #[async_trait]
-pub trait Storage {
+pub trait Storage: Send {
     /// Retrieve data from storage
     async fn get(&self, key: &str) -> Result<Option<String>>;
 

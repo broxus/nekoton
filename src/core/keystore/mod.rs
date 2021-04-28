@@ -13,7 +13,7 @@ use crate::crypto::{Signature, Signer, SignerStorage};
 use crate::external::Storage;
 use crate::utils::*;
 
-const STORAGE_KEYSTORE: &str = "keystore";
+const STORAGE_KEYSTORE: &str = "__core__keystore";
 
 pub struct KeyStore {
     state: RwLock<KeyStoreState>,

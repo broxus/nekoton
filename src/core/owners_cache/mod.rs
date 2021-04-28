@@ -16,7 +16,7 @@ use crate::transport::models::{ContractState, ExistingContract};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
 
-const STORAGE_OWNERS_CACHE: &str = "owners_cache";
+const STORAGE_OWNERS_CACHE: &str = "__core__owners_cache";
 
 /// Stores a map to resolve owner's wallet address from token wallet address
 pub struct OwnersCache {
