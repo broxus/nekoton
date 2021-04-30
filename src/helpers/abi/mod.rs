@@ -71,7 +71,7 @@ pub trait FunctionExt {
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
-    ) -> Result<Vec<Token>>;
+    ) -> Result<ExecutionOutput>;
 }
 
 impl FunctionExt for &Function {
@@ -86,7 +86,7 @@ impl FunctionExt for &Function {
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
-    ) -> Result<Vec<Token>> {
+    ) -> Result<ExecutionOutput> {
         let abi = FunctionAbi::new(self);
         abi.run_local(account_state, timings, last_transaction_id, input)
     }
@@ -104,7 +104,7 @@ impl FunctionExt for Function {
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
-    ) -> Result<Vec<Token>> {
+    ) -> Result<ExecutionOutput> {
         let abi = FunctionAbi::new(self);
         abi.run_local(account, timings, last_transaction_id, input)
     }
@@ -130,7 +130,7 @@ impl<'a> FunctionAbi<'a> {
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
-    ) -> Result<Vec<Token>> {
+    ) -> Result<ExecutionOutput> {
         let mut msg =
             ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
                 dst: account.addr.clone(),
@@ -148,9 +148,25 @@ impl<'a> FunctionAbi<'a> {
             gen_utime, gen_lt, ..
         } = get_block_stats(timings, last_transaction_id);
 
-        let messages = tvm::call_msg(gen_utime, gen_lt, account, &msg)?.0;
-        process_out_messages(&messages, self.fun)
+        let tvm::ActionPhaseOutput {
+            messages,
+            result_code,
+        } = tvm::call_msg(gen_utime, gen_lt, account, &msg)?;
+
+        let tokens = messages
+            .map(|messages| process_out_messages(&messages, self.fun))
+            .transpose()?;
+
+        Ok(ExecutionOutput {
+            tokens,
+            result_code,
+        })
     }
+}
+
+pub struct ExecutionOutput {
+    pub tokens: Option<Vec<Token>>,
+    pub result_code: i32,
 }
 
 fn process_out_messages(

@@ -950,12 +950,15 @@ impl ExistingContractExt for ExistingContract {
         function: &ton_abi::Function,
         input: &[ton_abi::Token],
     ) -> Result<Vec<ton_abi::Token>> {
-        function.run_local(
+        let output = function.run_local(
             self.account.clone(),
             self.timings,
             &self.last_transaction_id,
             input,
-        )
+        )?;
+        output
+            .tokens
+            .ok_or_else(|| TokenWalletError::NonZeroResultCode.into())
     }
 }
 
@@ -975,6 +978,8 @@ enum TokenWalletError {
     InvalidEthEventContract,
     #[error("Invalid TON event contract")]
     InvalidTonEventContract,
+    #[error("Non-zero execution result code")]
+    NonZeroResultCode,
 }
 
 #[cfg(test)]

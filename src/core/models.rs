@@ -445,6 +445,8 @@ pub struct Transaction {
     pub created_at: u32,
     /// Whether transaction execution was unsuccessful
     pub aborted: bool,
+    /// Action phrase exit code. `None` if action phase was skipped
+    pub result_code: Option<i32>,
     /// Account status before transaction execution
     pub orig_status: AccountStatus,
     /// Account status after transaction execution
@@ -481,7 +483,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             None => return Err(TransactionError::Unsupported),
         };
 
-        // TODO: parse and store tvm execution code?
+        let result_code = desc.action.map(|action| action.result_code);
 
         let mut out_msgs = Vec::new();
         data.out_msgs
@@ -505,6 +507,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             }),
             created_at: data.now,
             aborted: desc.aborted,
+            result_code,
             orig_status: data.orig_status.into(),
             end_status: data.end_status.into(),
             total_fees,
@@ -733,4 +736,16 @@ pub(super) enum AccountSubscriptionError {
     InvalidMessageDestination,
     #[error("Invalid message type")]
     InvalidMessageType,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_transaction() {
+        let transaction =  ton_block::Transaction::construct_from_base64("te6ccgECCgEAAmIAA7VxDMDpxVKoQf1ESN4flYWnx79MwznjFCnHv2LMYnj5e/AAAMAPptS0HL7tNWkkUnpwkWevWy0v6QllFeZdkxpKd3jABu53GMiwAADABeYcjBYH/izgADRpb9DoBQQBAhEMgEHGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAJdRbUJwB114ymQlNQVCfa9Moy2h4xlzAjFN0wo4BiqckBQGUwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnIKnXiVk1PWmbnJrrJ8ZuP6tVF8xWwdT4FzwpwwbcybITXW+aJKu2Ai+6iWudx7E+cmmtyYoMFlMnA6RJvjslElAgHgCAYBAd8HAMtoACGYHTiqVQg/qIkbw/KwtPj36ZhnPGKFOPfsWYxPHy9/AC7y/frS28SA7otT/U3XeMKVAioEwv3n4cO+8/UnsFk6VAnHZSQABhRYYAAAGAH02paEwP/FnAVWDH6AAAABKgXyAEAB34gAIZgdOKpVCD+oiRvD8rC0+PfpmGc8YoU49+xZjE8fL34FEnWHwu7iFVw1r2O1eQN6i3g5Ib9nJIGpQqRtpYG36Pjrmo9/vgPWf5ev1vhedfPUgkaxeInhVroDrGaLYfhoEl1JbFYH/i5IAAADOBwJAIJiAF3l+/Wlt4kB3Ran+puu8YUqBFQJhfvPw4d95+pPYLJ0qBOOykgAAAAAAAAAAAAAAAAAAAqsGP0AAAACVAvkAA==").unwrap();
+        let parsed = Transaction::try_from((Default::default(), transaction)).unwrap();
+        assert!(parsed.in_msg.body.is_some())
+    }
 }
