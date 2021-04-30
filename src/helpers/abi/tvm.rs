@@ -15,8 +15,8 @@ pub fn call(
     lt: u64,
     mut account: AccountStuff,
     stack: Stack,
-) -> Result<(ton_vm::executor::Engine, AccountStuff), ExecutionError> {
-    let mut state = match &mut account.storage.state {
+) -> Result<(ton_vm::executor::Engine, i32, bool), ExecutionError> {
+    let state = match &mut account.storage.state {
         ton_block::AccountState::AccountActive(state) => Ok(state),
         _ => Err(ExecutionError::AccountIsNotActive),
     }?;
@@ -47,7 +47,7 @@ pub fn call(
 
     let result = engine.execute();
 
-    match result {
+    Ok(match result {
         Err(err) => {
             let exception = ton_vm::error::tvm_exception(err)
                 .map_err(|_| ExecutionError::FailedToParseException)?;
@@ -59,19 +59,10 @@ pub fn call(
                     .unwrap_or(ton_types::ExceptionCode::UnknownError) as i32)
             };
 
-            Err(ExecutionError::NonZeroResultCode {
-                exception: exception.to_string(),
-                code,
-            })
+            (engine, code, false)
         }
-        Ok(_) => {
-            match engine.get_committed_state().get_root() {
-                StackItem::Cell(cell) => state.data = Some(cell),
-                _ => return Err(ExecutionError::InvalidCommittedState),
-            };
-            Ok((engine, account))
-        }
-    }
+        Ok(code) => (engine, code, true),
+    })
 }
 
 pub fn call_msg(
@@ -79,7 +70,7 @@ pub fn call_msg(
     lt: u64,
     account: AccountStuff,
     msg: &Message,
-) -> Result<(Vec<Message>, AccountStuff), ExecutionError> {
+) -> Result<ActionPhaseOutput, ExecutionError> {
     let msg_cell = msg
         .write_to_new_cell()
         .map_err(|_| ExecutionError::FailedToSerializeMessage)?;
@@ -98,7 +89,13 @@ pub fn call_msg(
         .push(StackItem::Slice(msg.body().unwrap_or_default())) // message body
         .push(function_selector); // function selector
 
-    let (engine, account) = call(utime, lt, account, stack)?;
+    let (engine, result_code, success) = call(utime, lt, account, stack)?;
+    if !success {
+        return Ok(ActionPhaseOutput {
+            messages: None,
+            result_code,
+        });
+    }
 
     // process out actions to get out messages
     let actions_cell = engine
@@ -117,7 +114,10 @@ pub fn call_msg(
     }
 
     msgs.reverse();
-    Ok((msgs, account))
+    Ok(ActionPhaseOutput {
+        messages: Some(msgs),
+        result_code,
+    })
 }
 
 fn build_contract_info(
@@ -138,6 +138,11 @@ fn build_contract_info(
     info
 }
 
+pub struct ActionPhaseOutput {
+    pub messages: Option<Vec<Message>>,
+    pub result_code: i32,
+}
+
 #[derive(thiserror::Error, Debug)]
 pub enum ExecutionError {
     #[error("Failed to serialize message")]
@@ -154,10 +159,6 @@ pub enum ExecutionError {
     FailedToPutSciIntoRegisters,
     #[error("Failed to parse exception")]
     FailedToParseException,
-    #[error("Non-zero result code. {}. {}", exception, code)]
-    NonZeroResultCode { exception: String, code: i32 },
-    #[error("Invalid committed state")]
-    InvalidCommittedState,
     #[error("Failed to retrieve actions")]
     FailedToRetrieveActions,
 }

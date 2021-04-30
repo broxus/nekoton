@@ -445,6 +445,8 @@ pub struct Transaction {
     pub created_at: u32,
     /// Whether transaction execution was unsuccessful
     pub aborted: bool,
+    /// Action phrase exit code. `None` if action phase was skipped
+    pub result_code: Option<i32>,
     /// Account status before transaction execution
     pub orig_status: AccountStatus,
     /// Account status after transaction execution
@@ -481,7 +483,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             None => return Err(TransactionError::Unsupported),
         };
 
-        // TODO: parse and store tvm execution code?
+        let result_code = desc.action.map(|action| action.result_code);
 
         let mut out_msgs = Vec::new();
         data.out_msgs
@@ -505,6 +507,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             }),
             created_at: data.now,
             aborted: desc.aborted,
+            result_code,
             orig_status: data.orig_status.into(),
             end_status: data.end_status.into(),
             total_fees,
