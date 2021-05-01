@@ -11,6 +11,14 @@ pub fn now() -> u32 {
     chrono::Utc::now().timestamp() as u32
 }
 
+pub fn read_u32(data: &ton_types::SliceData) -> ton_types::Result<u32> {
+    let mut value: u32 = 0;
+    for i in 0..4 {
+        value |= (data.get_byte(8 * i)? as u32) << (8 * (3 - i));
+    }
+    Ok(value)
+}
+
 pub trait NoFailure {
     type Output;
     fn convert(self) -> Result<Self::Output, Error>;

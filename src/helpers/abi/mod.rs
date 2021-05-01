@@ -169,7 +169,7 @@ pub struct ExecutionOutput {
     pub result_code: i32,
 }
 
-fn process_out_messages(
+pub fn process_out_messages(
     messages: &[ton_block::Message],
     abi_function: &Function,
 ) -> Result<Vec<Token>> {
@@ -191,6 +191,29 @@ fn process_out_messages(
             output = Some(tokens);
             break;
         }
+    }
+
+    match output {
+        Some(a) => Ok(a),
+        None if !abi_function.has_output() => Ok(Default::default()),
+        _ => Err(AbiError::NoMessagesProduced.into()),
+    }
+}
+
+pub fn process_raw_outputs(
+    ext_out_msg_bodies: &[SliceData],
+    abi_function: &Function,
+) -> Result<Vec<Token>> {
+    let mut output = None;
+
+    for body in ext_out_msg_bodies {
+        let function_id = read_u32(body).map_err(|_| AbiError::InvalidOutputMessage)?;
+        if abi_function.output_id != function_id {
+            continue;
+        }
+
+        output = Some(abi_function.decode_output(body.clone(), false).convert()?);
+        break;
     }
 
     match output {
