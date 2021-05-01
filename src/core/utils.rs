@@ -477,6 +477,7 @@ fn default_headers(
 
 type HeadersMap = HashMap<String, ton_abi::TokenValue>;
 
+#[allow(dead_code)]
 pub fn parse_multisig_transaction(tx: &ton_block::Transaction) -> Option<MultisigTransaction> {
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
     if !matches!(in_msg.header(), ton_block::CommonMsgInfo::ExtInMsgInfo(_)) {
@@ -806,14 +807,6 @@ pub fn parse_token_transaction(
     } else {
         None
     }
-}
-
-fn read_u32(data: &ton_types::SliceData) -> ton_types::Result<u32> {
-    let mut value: u32 = 0;
-    for i in 0..4 {
-        value |= (data.get_byte(8 * i)? as u32) << (8 * (3 - i));
-    }
-    Ok(value)
 }
 
 struct TokenWalletFunctions {

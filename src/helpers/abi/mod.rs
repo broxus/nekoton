@@ -169,7 +169,7 @@ pub struct ExecutionOutput {
     pub result_code: i32,
 }
 
-fn process_out_messages(
+pub fn process_out_messages(
     messages: &[ton_block::Message],
     abi_function: &Function,
 ) -> Result<Vec<Token>> {
@@ -191,6 +191,29 @@ fn process_out_messages(
             output = Some(tokens);
             break;
         }
+    }
+
+    match output {
+        Some(a) => Ok(a),
+        None if !abi_function.has_output() => Ok(Default::default()),
+        _ => Err(AbiError::NoMessagesProduced.into()),
+    }
+}
+
+pub fn process_raw_outputs(
+    ext_out_msg_bodies: &[SliceData],
+    abi_function: &Function,
+) -> Result<Vec<Token>> {
+    let mut output = None;
+
+    for body in ext_out_msg_bodies {
+        let function_id = read_u32(body).map_err(|_| AbiError::InvalidOutputMessage)?;
+        if abi_function.output_id != function_id {
+            continue;
+        }
+
+        output = Some(abi_function.decode_output(body.clone(), false).convert()?);
+        break;
     }
 
     match output {
@@ -372,6 +395,20 @@ mod test {
         let tx = Transaction::construct_from_base64("te6ccgECDwEAArcAA7dxjJmv/+E9MIE3D3fBD8TVG8VOUrjhgdtqDou3VFbZH/AAALPVJCfkGksT3Y8aHAm7mnKfGA/AccQcwRmJeHov8yXElkW09QQwAACz0BBMOBYGHORAAFSAICXTqAUEAQIRDINHRh4pg8RAAwIAb8mPQkBMUWFAAAAAAAAEAAAAAAAEDt5ElKCY0ANTjCaw8ltpBJRSPdcEmknKxwOoduRmHbJAkCSUAJ1GT2MTiAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAIJy3y4B4TEhaY3M9HQMWqBpVJc3IUvntA5EtNHkjN1t4sqjUitqEc3Fb6TafRVFXMJNDjglljNUbcLzalj6ghNYgAIB4AsGAgHdCQcBASAIAHXgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4AAAWeqSE/IbAw5yISY7BZoAAAAAAAAAAQAEBIAoAsUgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/8ABjJmv/+E9MIE3D3fBD8TVG8VOUrjhgdtqDou3VFbZH/QdzWUAAYUWGAAABZ6pIT8hMDDnIhAAUWIADGTNf/8J6YQJuHu+CH4mqN4qcpXHDA7bUHRduqK2yP+DAwB4ZDdhiTVlESmgip5GbEUIYUaZ+kx7vy+VFW60Kn7S031EE++HJh4nu39RuoM4HIWy7cjLSwAA3RIMne+L/YQA4D8drjTwv63I+aPTBLtMULU+zuEMSAmO8j5A00qizUXzUAAAF4fg2s9P////8THYLNgDQFjgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4AAAAAAAAAAAAAAAA7msoAQOAAA=").trust_me();
         let parser = FunctionAbi::new(function);
         parser.parse(&tx).unwrap();
+
+        let outputs = parse_transaction_messages(&tx).unwrap();
+        let raw_outputs = outputs
+            .into_iter()
+            .filter_map(|msg| {
+                if msg.dst().is_none() {
+                    msg.body()
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        assert!(process_raw_outputs(&raw_outputs, function).is_ok());
     }
 
     #[test]
