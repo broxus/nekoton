@@ -15,7 +15,7 @@ use crate::contracts;
 use crate::core::models::*;
 use crate::crypto::{SignedMessage, UnsignedMessage};
 use crate::helpers::abi::{self, ContractResult, FunctionExt, IntoParser, ParseToken, ParserError};
-use crate::transport::models::TransactionFull;
+use crate::transport::models::RawTransaction;
 use crate::transport::Transport;
 use crate::utils::*;
 
@@ -27,7 +27,7 @@ struct ContractCall {
 }
 
 pub fn convert_transactions(
-    transactions: Vec<TransactionFull>,
+    transactions: Vec<RawTransaction>,
 ) -> impl Iterator<Item = Transaction> + DoubleEndedIterator {
     transactions
         .into_iter()
@@ -56,7 +56,7 @@ pub fn request_transactions<'a>(
 
 pub struct ParsedBlock {
     pub current_utime: u32,
-    pub data: Option<(AccountState, Option<NewTransactions>)>,
+    pub data: Option<(ContractState, Option<NewTransactions>)>,
 }
 
 impl ParsedBlock {
@@ -71,19 +71,19 @@ impl ParsedBlock {
     #[inline]
     fn with_data(
         utime: u32,
-        account_state: AccountState,
+        contract_state: ContractState,
         new_transactions: Option<NewTransactions>,
     ) -> Self {
         Self {
             current_utime: utime,
-            data: Some((account_state, new_transactions)),
+            data: Some((contract_state, new_transactions)),
         }
     }
 }
 
 pub fn parse_block(
     address: &MsgAddressInt,
-    account_state: &AccountState,
+    contract_state: &ContractState,
     block: &ton_block::Block,
 ) -> Result<ParsedBlock> {
     use ton_block::{Deserializable, HashmapAugType};
@@ -105,11 +105,11 @@ pub fn parse_block(
         _ => return Ok(ParsedBlock::empty(info.gen_utime().0)),
     };
 
-    let mut balance = account_state.balance as i64;
+    let mut balance = contract_state.balance as i64;
     let mut new_transactions = Vec::new();
 
     let mut latest_transaction_id: Option<TransactionId> = None;
-    let mut is_deployed = account_state.is_deployed;
+    let mut is_deployed = contract_state.is_deployed;
 
     for item in account_block.transactions().iter() {
         let transaction = match item.and_then(|(_, value)| {
@@ -117,7 +117,7 @@ pub fn parse_block(
             let hash = cell.repr_hash();
 
             ton_block::Transaction::construct_from_cell(cell)
-                .map(|data| TransactionFull { hash, data })
+                .map(|data| RawTransaction { hash, data })
         }) {
             Ok(transaction) => transaction,
             Err(_) => continue,
@@ -137,7 +137,7 @@ pub fn parse_block(
         new_transactions.push(transaction)
     }
 
-    let new_account_state = AccountState {
+    let new_contract_state = ContractState {
         balance: balance as u64,
         gen_timings: GenTimings::Known {
             gen_lt: info.end_lt(),
@@ -145,7 +145,7 @@ pub fn parse_block(
         },
         last_transaction_id: latest_transaction_id
             .map(LastTransactionId::Exact)
-            .or(account_state.last_transaction_id),
+            .or(contract_state.last_transaction_id),
         is_deployed,
     };
 
@@ -163,7 +163,7 @@ pub fn parse_block(
 
     Ok(ParsedBlock::with_data(
         info.gen_utime().0,
-        new_account_state,
+        new_contract_state,
         new_transactions,
     ))
 }
@@ -224,7 +224,7 @@ pub enum BlockParsingError {
     InvalidBlockStructure,
 }
 
-type NewTransactions = (Vec<TransactionFull>, TransactionsBatchInfo);
+type NewTransactions = (Vec<RawTransaction>, TransactionsBatchInfo);
 
 struct LatestTransactions<'a> {
     address: &'a MsgAddressInt,
@@ -235,7 +235,7 @@ struct LatestTransactions<'a> {
     limit: Option<usize>,
 }
 
-type TransactionsFut<'a> = Pin<Box<dyn Future<Output = Result<Vec<TransactionFull>>> + Send + 'a>>;
+type TransactionsFut<'a> = Pin<Box<dyn Future<Output = Result<Vec<RawTransaction>>> + Send + 'a>>;
 
 impl<'a> Stream for LatestTransactions<'a> {
     type Item = NewTransactions;

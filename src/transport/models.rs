@@ -2,21 +2,21 @@ use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
 use crate::core::models::{
-    AccountState, GenTimings, LastTransactionId, PendingTransaction, TransactionId,
+    ContractState, GenTimings, LastTransactionId, PendingTransaction, TransactionId,
 };
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Clone, PartialEq)]
-pub enum ContractState {
+pub enum RawContractState {
     NotExists,
     Exists(ExistingContract),
 }
 
-impl ContractState {
-    pub fn account_state(&self) -> AccountState {
+impl RawContractState {
+    pub fn brief(&self) -> ContractState {
         match self {
-            Self::NotExists => AccountState::default(),
-            Self::Exists(state) => state.account_state(),
+            Self::NotExists => ContractState::default(),
+            Self::Exists(state) => state.brief(),
         }
     }
 }
@@ -29,8 +29,8 @@ pub struct ExistingContract {
 }
 
 impl ExistingContract {
-    pub fn account_state(&self) -> AccountState {
-        AccountState {
+    pub fn brief(&self) -> ContractState {
+        ContractState {
             balance: self.account.storage.balance.grams.0 as u64,
             gen_timings: self.timings,
             last_transaction_id: Some(self.last_transaction_id),
@@ -52,12 +52,12 @@ impl PartialEq for ExistingContract {
 }
 
 #[derive(Clone)]
-pub struct TransactionFull {
+pub struct RawTransaction {
     pub hash: UInt256,
     pub data: Transaction,
 }
 
-impl TransactionFull {
+impl RawTransaction {
     pub fn id(&self) -> TransactionId {
         TransactionId {
             lt: self.data.lt,
@@ -66,8 +66,8 @@ impl TransactionFull {
     }
 }
 
-impl PartialEq<TransactionFull> for PendingTransaction {
-    fn eq(&self, other: &TransactionFull) -> bool {
+impl PartialEq<RawTransaction> for PendingTransaction {
+    fn eq(&self, other: &RawTransaction) -> bool {
         if other.data.now >= self.expire_at {
             return false;
         }

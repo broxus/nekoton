@@ -218,7 +218,7 @@ impl Transport for GqlTransport {
         Ok(())
     }
 
-    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
+    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
         #[derive(GraphQLQuery)]
         #[graphql(
             schema_path = "src/transport/gql/schema.graphql",
@@ -238,7 +238,7 @@ impl Transport for GqlTransport {
             .and_then(|item| item.and_then(|account| account.boc))
         {
             Some(account_state) => account_state,
-            None => return Ok(ContractState::NotExists),
+            None => return Ok(RawContractState::NotExists),
         };
 
         match Account::construct_from_base64(&account_state) {
@@ -247,13 +247,13 @@ impl Transport for GqlTransport {
                     latest_lt: account.storage.last_trans_lt,
                 };
 
-                Ok(ContractState::Exists(ExistingContract {
+                Ok(RawContractState::Exists(ExistingContract {
                     account,
                     timings: GenTimings::Unknown,
                     last_transaction_id,
                 }))
             }
-            Ok(_) => Ok(ContractState::NotExists),
+            Ok(_) => Ok(RawContractState::NotExists),
             Err(_) => Err(NodeClientError::InvalidAccountState.into()),
         }
     }
@@ -263,7 +263,7 @@ impl Transport for GqlTransport {
         address: MsgAddressInt,
         from: TransactionId,
         count: u8,
-    ) -> Result<Vec<TransactionFull>> {
+    ) -> Result<Vec<RawTransaction>> {
         #[derive(GraphQLQuery)]
         #[graphql(
             schema_path = "src/transport/gql/schema.graphql",
@@ -286,7 +286,7 @@ impl Transport for GqlTransport {
             let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(bytes))
                 .map_err(|_| NodeClientError::InvalidTransaction)?;
             let hash = cell.repr_hash();
-            Ok(TransactionFull {
+            Ok(RawTransaction {
                 hash,
                 data: ton_block::Transaction::construct_from_cell(cell)
                     .map_err(|_| NodeClientError::InvalidTransaction)?,

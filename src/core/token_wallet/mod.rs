@@ -6,20 +6,20 @@ use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 
 use super::utils::*;
-use super::{AccountSubscription, InternalMessage};
+use super::{ContractSubscription, InternalMessage};
 use crate::contracts;
 use crate::core::models::*;
 use crate::helpers::abi::{
     self, BigUint128, BigUint256, FunctionArg, FunctionExt, IntoParser, TokenValueExt,
 };
-use crate::transport::models::{ContractState, ExistingContract, TransactionFull};
+use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
 
 #[derive(Clone)]
 pub struct TokenWallet {
     transport: Arc<dyn Transport>,
-    account_subscription: AccountSubscription,
+    contract_subscription: ContractSubscription,
     handler: Arc<dyn TokenWalletSubscriptionHandler>,
     owner: MsgAddressInt,
     symbol: Symbol,
@@ -36,8 +36,8 @@ impl TokenWallet {
         handler: Arc<dyn TokenWalletSubscriptionHandler>,
     ) -> Result<TokenWallet> {
         let state = match transport.get_contract_state(&root_token_contract).await? {
-            ContractState::Exists(state) => state,
-            ContractState::NotExists => {
+            RawContractState::Exists(state) => state,
+            RawContractState::NotExists => {
                 return Err(TokenWalletError::InvalidRootTokenContract.into())
             }
         };
@@ -54,7 +54,7 @@ impl TokenWallet {
         let root_meta_address = compute_root_meta_address(&root_token_contract);
 
         let mut balance = Default::default();
-        let account_subscription = AccountSubscription::subscribe(
+        let contract_subscription = ContractSubscription::subscribe(
             transport.clone(),
             address,
             make_contract_state_handler(version, &mut balance),
@@ -72,7 +72,7 @@ impl TokenWallet {
 
         Ok(Self {
             transport,
-            account_subscription,
+            contract_subscription,
             handler,
             owner,
             symbol,
@@ -87,7 +87,7 @@ impl TokenWallet {
     }
 
     pub fn address(&self) -> &MsgAddressInt {
-        &self.account_subscription.address()
+        &self.contract_subscription.address()
     }
 
     pub fn symbol(&self) -> &Symbol {
@@ -102,12 +102,12 @@ impl TokenWallet {
         &self.balance
     }
 
-    pub fn account_state(&self) -> &AccountState {
-        self.account_subscription.account_state()
+    pub fn contract_state(&self) -> &ContractState {
+        self.contract_subscription.contract_state()
     }
 
     pub fn polling_method(&self) -> PollingMethod {
-        self.account_subscription.polling_method()
+        self.contract_subscription.polling_method()
     }
 
     pub fn prepare_deploy(&self) -> Result<InternalMessage> {
@@ -234,7 +234,7 @@ impl TokenWallet {
             .get_contract_state(&self.root_meta_address)
             .await?
         {
-            ContractState::Exists(state) => {
+            RawContractState::Exists(state) => {
                 Ok(RootMetaContractState(&state).get_details()?.proxy_address)
             }
             _ => return Err(TokenWalletError::InvalidRootMetaContract.into()),
@@ -244,7 +244,7 @@ impl TokenWallet {
     pub async fn refresh(&mut self) -> Result<()> {
         let mut balance = self.balance.clone();
 
-        self.account_subscription
+        self.contract_subscription
             .refresh(
                 make_contract_state_handler(self.version, &mut balance),
                 make_transactions_handler(&self.handler, self.version),
@@ -266,7 +266,7 @@ impl TokenWallet {
         let mut balance: BigInt = self.balance.clone().into();
 
         let handler = &self.handler;
-        self.account_subscription.handle_block(
+        self.contract_subscription.handle_block(
             block,
             |transactions, batch_info| {
                 let transactions = transactions
@@ -321,7 +321,7 @@ impl TokenWallet {
     }
 
     pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
-        self.account_subscription
+        self.contract_subscription
             .preload_transactions(from, make_transactions_handler(&self.handler, self.version))
             .await
     }
@@ -346,8 +346,8 @@ pub async fn get_eth_event_data<'a>(
     event_address: &'a MsgAddressInt,
 ) -> Result<EthEventData> {
     let state = match transport.get_contract_state(event_address).await? {
-        ContractState::Exists(state) => state,
-        ContractState::NotExists => return Err(TokenWalletError::InvalidEthEventContract.into()),
+        RawContractState::Exists(state) => state,
+        RawContractState::NotExists => return Err(TokenWalletError::InvalidEthEventContract.into()),
     };
 
     EthEventContractState(&state).get_event_data()
@@ -358,8 +358,8 @@ pub async fn get_ton_event_details<'a>(
     event_address: &'a MsgAddressInt,
 ) -> Result<TonEventData> {
     let state = match transport.get_contract_state(event_address).await? {
-        ContractState::Exists(state) => state,
-        ContractState::NotExists => return Err(TokenWalletError::InvalidTonEventContract.into()),
+        RawContractState::Exists(state) => state,
+        RawContractState::NotExists => return Err(TokenWalletError::InvalidTonEventContract.into()),
     };
 
     TonEventContractState(&state).get_event_data()
@@ -396,9 +396,9 @@ const INITIAL_BALANCE: u64 = 100_000_000; // 0.1 TON
 fn make_contract_state_handler(
     version: TokenWalletVersion,
     balance: &'_ mut BigUint,
-) -> impl FnMut(&ContractState) + '_ {
+) -> impl FnMut(&RawContractState) + '_ {
     move |contract_state| {
-        if let ContractState::Exists(state) = contract_state {
+        if let RawContractState::Exists(state) = contract_state {
             if let Ok(new_balance) = TokenWalletContractState(state).get_balance(version) {
                 *balance = new_balance;
             }
@@ -409,7 +409,7 @@ fn make_contract_state_handler(
 fn make_transactions_handler<T>(
     handler: &'_ T,
     version: TokenWalletVersion,
-) -> impl FnMut(Vec<TransactionFull>, TransactionsBatchInfo) + '_
+) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_
 where
     T: AsRef<dyn TokenWalletSubscriptionHandler>,
 {

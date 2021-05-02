@@ -12,7 +12,7 @@ use ton_block::MsgAddressInt;
 use super::models::TokenWalletVersion;
 use crate::core::token_wallet::{RootTokenContractState, TokenWalletContractState};
 use crate::external::Storage;
-use crate::transport::models::{ContractState, ExistingContract};
+use crate::transport::models::{ExistingContract, RawContractState};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
 
@@ -98,8 +98,8 @@ impl OwnersCache {
                     .get_contract_state(root_token_contract)
                     .await?
                 {
-                    ContractState::Exists(state) => state,
-                    ContractState::NotExists => {
+                    RawContractState::Exists(state) => state,
+                    RawContractState::NotExists => {
                         return Err(OwnersCacheError::InvalidRootTokenContract.into())
                     }
                 };
@@ -139,8 +139,8 @@ impl OwnersCache {
                 let contract_state = {
                     let _permit = semaphore.acquire().await.ok()?;
                     match transport.get_contract_state(token_wallet).await.ok()? {
-                        ContractState::Exists(state) => state,
-                        ContractState::NotExists => return None,
+                        RawContractState::Exists(state) => state,
+                        RawContractState::NotExists => return None,
                     }
                 };
 
@@ -231,8 +231,8 @@ async fn check_token_wallet<'a>(
     }
 
     Ok(match transport.get_contract_state(&token_wallet).await? {
-        ContractState::NotExists => RecipientWallet::NotExists,
-        ContractState::Exists(_) => RecipientWallet::Exists(token_wallet),
+        RawContractState::NotExists => RecipientWallet::NotExists,
+        RawContractState::Exists(_) => RecipientWallet::Exists(token_wallet),
     })
 }
 

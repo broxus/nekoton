@@ -1,5 +1,6 @@
-pub mod account_subscription;
 pub mod accounts_storage;
+pub mod contract_subscription;
+pub mod generic_contract;
 pub mod keystore;
 pub mod models;
 pub mod owners_cache;
@@ -9,7 +10,7 @@ mod utils;
 
 use anyhow::Result;
 
-pub use self::account_subscription::AccountSubscription;
+pub use self::contract_subscription::ContractSubscription;
 use self::models::PollingMethod;
 use crate::transport::Transport;
 

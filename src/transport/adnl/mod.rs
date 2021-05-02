@@ -99,7 +99,7 @@ impl Transport for AdnlTransport {
         Ok(())
     }
 
-    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<ContractState> {
+    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
         use ton_block::{Deserializable, HashmapAugType};
 
         let last_block_id = self.last_block.get_last_block(self).await?;
@@ -143,7 +143,7 @@ impl Transport for AdnlTransport {
                     .map_err(|_| QueryAccountStateError::InvalidAccountStateProof)?;
 
                 Ok(if let Some(shard_info) = shard_info {
-                    ContractState::Exists(ExistingContract {
+                    RawContractState::Exists(ExistingContract {
                         account,
                         timings: GenTimings::Known {
                             gen_lt: ss.gen_lt(),
@@ -155,10 +155,10 @@ impl Transport for AdnlTransport {
                         }),
                     })
                 } else {
-                    ContractState::NotExists
+                    RawContractState::NotExists
                 })
             }
-            Ok(_) => Ok(ContractState::NotExists),
+            Ok(_) => Ok(RawContractState::NotExists),
             Err(_) => Err(QueryAccountStateError::InvalidAccountState.into()),
         }
     }
@@ -168,7 +168,7 @@ impl Transport for AdnlTransport {
         address: MsgAddressInt,
         from: TransactionId,
         count: u8,
-    ) -> Result<Vec<TransactionFull>> {
+    ) -> Result<Vec<RawTransaction>> {
         let response = self
             .query(ton::rpc::lite_server::GetTransactions {
                 count: count as i32,
@@ -190,7 +190,7 @@ impl Transport for AdnlTransport {
         let mut result = Vec::with_capacity(transactions.len());
         for item in transactions.into_iter() {
             let hash = item.repr_hash();
-            result.push(TransactionFull {
+            result.push(RawTransaction {
                 hash,
                 data: ton_block::Transaction::construct_from_cell(item)
                     .map_err(|_| QueryTransactionsError::InvalidTransaction)?,

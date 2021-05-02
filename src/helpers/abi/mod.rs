@@ -67,7 +67,7 @@ pub trait FunctionExt {
 
     fn run_local(
         &self,
-        account_state: ton_block::AccountStuff,
+        account_stuff: ton_block::AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
@@ -82,13 +82,13 @@ impl FunctionExt for &Function {
 
     fn run_local(
         &self,
-        account_state: ton_block::AccountStuff,
+        account_stuff: ton_block::AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
         let abi = FunctionAbi::new(self);
-        abi.run_local(account_state, timings, last_transaction_id, input)
+        abi.run_local(account_stuff, timings, last_transaction_id, input)
     }
 }
 
@@ -100,13 +100,13 @@ impl FunctionExt for Function {
 
     fn run_local(
         &self,
-        account: ton_block::AccountStuff,
+        account_stuff: ton_block::AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
         let abi = FunctionAbi::new(self);
-        abi.run_local(account, timings, last_transaction_id, input)
+        abi.run_local(account_stuff, timings, last_transaction_id, input)
     }
 }
 
@@ -126,14 +126,14 @@ impl<'a> FunctionAbi<'a> {
 
     fn run_local(
         &self,
-        account: ton_block::AccountStuff,
+        account_stuff: ton_block::AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
         let mut msg =
             ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
-                dst: account.addr.clone(),
+                dst: account_stuff.addr.clone(),
                 ..Default::default()
             });
 
@@ -151,7 +151,7 @@ impl<'a> FunctionAbi<'a> {
         let tvm::ActionPhaseOutput {
             messages,
             result_code,
-        } = tvm::call_msg(gen_utime, gen_lt, account, &msg)?;
+        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg)?;
 
         let tokens = messages
             .map(|messages| process_out_messages(&messages, self.fun))
@@ -291,7 +291,7 @@ fn get_block_stats(timings: GenTimings, last_transaction_id: &LastTransactionId)
 impl Executor {
     pub fn new(
         config: BlockchainConfig,
-        account: AccountStuff,
+        account_stuff: AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
     ) -> Self {
@@ -303,7 +303,7 @@ impl Executor {
 
         Self {
             config,
-            account: Account::Account(account),
+            account: Account::Account(account_stuff),
             block_utime: gen_utime,
             block_lt: gen_lt,
             last_transaction_lt: Arc::new(AtomicU64::new(last_transaction_lt)),
