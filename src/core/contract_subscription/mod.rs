@@ -4,23 +4,24 @@ use anyhow::Result;
 use futures::StreamExt;
 use ton_block::MsgAddressInt;
 
-use super::models::{AccountState, PendingTransaction, TransactionId, TransactionsBatchInfo};
+use super::models::{ContractState, PendingTransaction, TransactionId, TransactionsBatchInfo};
 use super::{utils, PollingMethod};
 use crate::core::utils::PendingTransactionsExt;
 use crate::helpers::abi::Executor;
-use crate::transport::models::{ContractState, TransactionFull};
+use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 
+/// Used as a base object for different listeners implementation
 #[derive(Clone)]
-pub struct AccountSubscription {
+pub struct ContractSubscription {
     transport: Arc<dyn Transport>,
     address: MsgAddressInt,
-    account_state: AccountState,
+    contract_state: ContractState,
     latest_known_transaction: Option<TransactionId>,
     pending_transactions: Vec<PendingTransaction>,
 }
 
-impl AccountSubscription {
+impl ContractSubscription {
     pub async fn subscribe<FC, FT>(
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
@@ -28,13 +29,13 @@ impl AccountSubscription {
         on_transactions_found: FT,
     ) -> Result<Self>
     where
-        FC: FnMut(&ContractState),
-        FT: FnMut(Vec<TransactionFull>, TransactionsBatchInfo),
+        FC: FnMut(&RawContractState),
+        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
     {
         let mut result = Self {
             transport,
             address,
-            account_state: Default::default(),
+            contract_state: Default::default(),
             latest_known_transaction: None,
             pending_transactions: Vec::new(),
         };
@@ -58,8 +59,8 @@ impl AccountSubscription {
         &self.address
     }
 
-    pub fn account_state(&self) -> &AccountState {
-        &self.account_state
+    pub fn contract_state(&self) -> &ContractState {
+        &self.contract_state
     }
 
     pub fn pending_transactions(&self) -> &[PendingTransaction] {
@@ -105,9 +106,9 @@ impl AccountSubscription {
         mut on_message_expired: FE,
     ) -> Result<()>
     where
-        FC: FnMut(&ContractState),
-        FT: FnMut(Vec<TransactionFull>, TransactionsBatchInfo),
-        FM: FnMut(PendingTransaction, TransactionFull),
+        FC: FnMut(&RawContractState),
+        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
+        FM: FnMut(PendingTransaction, RawTransaction),
         FE: FnMut(PendingTransaction),
     {
         // optimistic prediction, that there were at most N new transactions
@@ -125,7 +126,7 @@ impl AccountSubscription {
         }
 
         if !self.pending_transactions.is_empty() {
-            let current_utime = self.account_state.gen_timings.current_utime();
+            let current_utime = self.contract_state.gen_timings.current_utime();
             self.check_expired_transactions(current_utime, &mut on_message_expired);
         }
 
@@ -138,13 +139,13 @@ impl AccountSubscription {
         mut on_transactions_found: FT,
         mut on_message_sent: FM,
         mut on_message_expired: FE,
-    ) -> Result<Option<AccountState>>
+    ) -> Result<Option<ContractState>>
     where
-        FT: FnMut(Vec<TransactionFull>, TransactionsBatchInfo),
-        FM: FnMut(PendingTransaction, TransactionFull),
+        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
+        FM: FnMut(PendingTransaction, RawTransaction),
         FE: FnMut(PendingTransaction),
     {
-        let block = utils::parse_block(&self.address, &self.account_state, block)?;
+        let block = utils::parse_block(&self.address, &self.contract_state, block)?;
 
         let mut new_account_state = None;
         if let Some((account_state, new_transactions)) = block.data {
@@ -169,7 +170,7 @@ impl AccountSubscription {
     pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
         let blockchain_config = self.transport.get_blockchain_config().await?;
         let state = match self.transport.get_contract_state(&self.address).await? {
-            ContractState::Exists(state) => state,
+            RawContractState::Exists(state) => state,
             _ => return Err(ContractExecutionError::ContractNotFound.into()),
         };
 
@@ -187,14 +188,14 @@ impl AccountSubscription {
 
     pub async fn refresh_contract_state<FC>(&mut self, mut on_contract_state: FC) -> Result<bool>
     where
-        FC: FnMut(&ContractState),
+        FC: FnMut(&RawContractState),
     {
         let contract_state = self.transport.get_contract_state(&self.address).await?;
-        let new_account_state = contract_state.account_state();
+        let new_contract_state = contract_state.brief();
 
-        Ok(if new_account_state != self.account_state {
+        Ok(if new_contract_state != self.contract_state {
             on_contract_state(&contract_state);
-            self.account_state = new_account_state;
+            self.contract_state = new_contract_state;
             true
         } else {
             false
@@ -213,10 +214,10 @@ impl AccountSubscription {
         mut on_message_sent: FM,
     ) -> Result<()>
     where
-        FT: FnMut(Vec<TransactionFull>, TransactionsBatchInfo),
-        FM: FnMut(PendingTransaction, TransactionFull),
+        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
+        FM: FnMut(PendingTransaction, RawTransaction),
     {
-        let from = match self.account_state.last_transaction_id {
+        let from = match self.contract_state.last_transaction_id {
             Some(id) => id.to_transaction_id(),
             None => return Ok(()),
         };
@@ -271,7 +272,7 @@ impl AccountSubscription {
         mut on_transactions_found: FT,
     ) -> Result<()>
     where
-        FT: FnMut(Vec<TransactionFull>, TransactionsBatchInfo),
+        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
     {
         let transactions = self
             .transport
@@ -298,10 +299,10 @@ impl AccountSubscription {
     /// Searches executed pending transactions and notifies the handler if some were found
     fn check_executed_transactions<FM>(
         &mut self,
-        transactions: &[TransactionFull],
+        transactions: &[RawTransaction],
         on_message_sent: &mut FM,
     ) where
-        FM: FnMut(PendingTransaction, TransactionFull),
+        FM: FnMut(PendingTransaction, RawTransaction),
     {
         self.pending_transactions.retain(|pending| {
             let transaction = match transactions

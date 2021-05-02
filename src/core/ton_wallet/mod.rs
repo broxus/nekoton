@@ -13,12 +13,13 @@ use ton_types::SliceData;
 
 pub use self::multisig::MultisigType;
 use super::models::{
-    AccountState, Expiration, PendingTransaction, Transaction, TransactionId, TransactionsBatchInfo,
+    ContractState, Expiration, PendingTransaction, Transaction, TransactionId,
+    TransactionsBatchInfo,
 };
-use super::{AccountSubscription, PollingMethod};
+use super::{ContractSubscription, PollingMethod};
 use crate::core::{utils, InternalMessage};
 use crate::crypto::UnsignedMessage;
-use crate::transport::models::{ContractState, TransactionFull};
+use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
@@ -27,7 +28,7 @@ pub const DEFAULT_WORKCHAIN: i8 = 0;
 pub struct TonWallet {
     public_key: PublicKey,
     contract_type: ContractType,
-    account_subscription: AccountSubscription,
+    contract_subscription: ContractSubscription,
     handler: Arc<dyn TonWalletSubscriptionHandler>,
 }
 
@@ -40,7 +41,7 @@ impl TonWallet {
     ) -> Result<Self> {
         let address = compute_address(&public_key, contract_type, DEFAULT_WORKCHAIN);
 
-        let account_subscription = AccountSubscription::subscribe(
+        let contract_subscription = ContractSubscription::subscribe(
             transport,
             address,
             make_contract_state_handler(&handler),
@@ -51,13 +52,13 @@ impl TonWallet {
         Ok(Self {
             public_key,
             contract_type,
-            account_subscription,
+            contract_subscription,
             handler,
         })
     }
 
     pub fn address(&self) -> &MsgAddressInt {
-        &self.account_subscription.address()
+        &self.contract_subscription.address()
     }
 
     pub fn public_key(&self) -> &PublicKey {
@@ -68,16 +69,16 @@ impl TonWallet {
         self.contract_type
     }
 
-    pub fn account_state(&self) -> &AccountState {
-        &self.account_subscription.account_state()
+    pub fn contract_state(&self) -> &ContractState {
+        &self.contract_subscription.contract_state()
     }
 
     pub fn pending_transactions(&self) -> &[PendingTransaction] {
-        &self.account_subscription.pending_transactions()
+        &self.contract_subscription.pending_transactions()
     }
 
     pub fn polling_method(&self) -> PollingMethod {
-        self.account_subscription.polling_method()
+        self.contract_subscription.polling_method()
     }
 
     pub fn details(&self) -> TonWalletDetails {
@@ -129,11 +130,11 @@ impl TonWallet {
         message: &ton_block::Message,
         expire_at: u32,
     ) -> Result<PendingTransaction> {
-        self.account_subscription.send(message, expire_at).await
+        self.contract_subscription.send(message, expire_at).await
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
-        self.account_subscription
+        self.contract_subscription
             .refresh(
                 make_contract_state_handler(&self.handler),
                 make_transactions_handler(&self.handler),
@@ -146,7 +147,7 @@ impl TonWallet {
     }
 
     pub async fn handle_block(&mut self, block: &ton_block::Block) -> Result<()> {
-        let new_account_state = self.account_subscription.handle_block(
+        let new_account_state = self.contract_subscription.handle_block(
             block,
             make_transactions_handler(&self.handler),
             make_message_sent_handler(&self.handler),
@@ -161,13 +162,13 @@ impl TonWallet {
     }
 
     pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
-        self.account_subscription
+        self.contract_subscription
             .preload_transactions(from, make_transactions_handler(&self.handler))
             .await
     }
 
     pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
-        self.account_subscription.estimate_fees(message).await
+        self.contract_subscription.estimate_fees(message).await
     }
 }
 
@@ -208,20 +209,16 @@ enum InternalMessageSenderError {
     InvalidSender,
 }
 
-fn make_contract_state_handler<T>(handler: &'_ T) -> impl FnMut(&ContractState) + '_
+fn make_contract_state_handler<T>(handler: &'_ T) -> impl FnMut(&RawContractState) + '_
 where
     T: AsRef<dyn TonWalletSubscriptionHandler>,
 {
-    move |contract_state| {
-        handler
-            .as_ref()
-            .on_state_changed(contract_state.account_state())
-    }
+    move |contract_state| handler.as_ref().on_state_changed(contract_state.brief())
 }
 
 fn make_transactions_handler<T>(
     handler: &'_ T,
-) -> impl FnMut(Vec<TransactionFull>, TransactionsBatchInfo) + '_
+) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_
 where
     T: AsRef<dyn TonWalletSubscriptionHandler>,
 {
@@ -235,7 +232,7 @@ where
 
 fn make_message_sent_handler<T>(
     handler: &'_ T,
-) -> impl FnMut(PendingTransaction, TransactionFull) + '_
+) -> impl FnMut(PendingTransaction, RawTransaction) + '_
 where
     T: AsRef<dyn TonWalletSubscriptionHandler>,
 {
@@ -327,7 +324,7 @@ pub trait TonWalletSubscriptionHandler: Send + Sync {
     fn on_message_expired(&self, pending_transaction: PendingTransaction);
 
     /// Called every time a new state is detected
-    fn on_state_changed(&self, new_state: AccountState);
+    fn on_state_changed(&self, new_state: ContractState);
 
     /// Called every time new transactions are detected.
     /// - When new block found

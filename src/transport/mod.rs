@@ -17,14 +17,14 @@ pub trait Transport: Send + Sync {
 
     async fn send_message(&self, message: &ton_block::Message) -> Result<()>;
 
-    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<ContractState>;
+    async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState>;
 
     async fn get_transactions(
         &self,
         address: MsgAddressInt,
         from: TransactionId,
         count: u8,
-    ) -> Result<Vec<TransactionFull>>;
+    ) -> Result<Vec<RawTransaction>>;
 
     async fn get_latest_key_block(&self) -> Result<ton_block::Block>;
 

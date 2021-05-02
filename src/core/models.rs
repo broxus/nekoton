@@ -347,7 +347,7 @@ pub struct RootTokenContractDetails {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct AccountState {
+pub struct ContractState {
     /// Full account balance in nano TON
     pub balance: u64,
     /// At what point was this state obtained
@@ -358,7 +358,7 @@ pub struct AccountState {
     pub is_deployed: bool,
 }
 
-impl PartialEq for AccountState {
+impl PartialEq for ContractState {
     fn eq(&self, other: &Self) -> bool {
         match (&self.last_transaction_id, &other.last_transaction_id) {
             (None, Some(_)) => true,
