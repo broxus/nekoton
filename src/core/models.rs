@@ -11,6 +11,7 @@ use ton_types::UInt256;
 use super::utils;
 use crate::utils::*;
 
+#[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum TransactionAdditionalInfo {

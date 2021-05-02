@@ -6,7 +6,7 @@ pub mod models;
 pub mod owners_cache;
 pub mod token_wallet;
 pub mod ton_wallet;
-mod utils;
+pub mod utils;
 
 use anyhow::Result;
 
