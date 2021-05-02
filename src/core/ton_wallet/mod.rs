@@ -330,6 +330,7 @@ pub trait TonWalletSubscriptionHandler: Send + Sync {
     /// - When new block found
     /// - When manually requesting the latest transactions (can be called several times)
     /// - When preloading transactions
+    /// TODO: add additional transaction info
     fn on_transactions_found(
         &self,
         transactions: Vec<Transaction>,

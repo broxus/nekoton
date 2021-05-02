@@ -1,5 +1,6 @@
 pub mod accounts_storage;
 pub mod contract_subscription;
+pub mod generic_contract;
 pub mod keystore;
 pub mod models;
 pub mod owners_cache;
