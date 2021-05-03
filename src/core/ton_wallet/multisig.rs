@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
@@ -40,7 +42,13 @@ pub fn prepare_deploy(
             .arg(1u8) // reqConfirms
             .build();
 
-    make_labs_unsigned_message(message, expiration, public_key, function, input)
+    make_labs_unsigned_message(
+        message,
+        expiration,
+        public_key,
+        Cow::Borrowed(function),
+        input,
+    )
 }
 
 pub fn prepare_transfer(
@@ -76,7 +84,11 @@ pub fn prepare_transfer(
             .build();
 
     Ok(TransferAction::Sign(make_labs_unsigned_message(
-        message, expiration, public_key, function, input,
+        message,
+        expiration,
+        public_key,
+        Cow::Borrowed(function),
+        input,
     )?))
 }
 
