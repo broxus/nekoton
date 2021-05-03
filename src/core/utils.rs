@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::pin::Pin;
@@ -381,7 +382,7 @@ pub fn make_labs_unsigned_message(
     message: ton_block::Message,
     expiration: Expiration,
     public_key: &PublicKey,
-    function: &'static ton_abi::Function,
+    function: Cow<'static, ton_abi::Function>,
     input: Vec<ton_abi::Token>,
 ) -> Result<Box<dyn UnsignedMessage>> {
     let time = chrono::Utc::now().timestamp_millis() as u64;
@@ -404,7 +405,7 @@ pub fn make_labs_unsigned_message(
 
 #[derive(Clone)]
 struct LabsUnsignedMessage {
-    function: &'static ton_abi::Function,
+    function: Cow<'static, ton_abi::Function>,
     header: HeadersMap,
     input: Vec<ton_abi::Token>,
     payload: ton_types::BuilderData,
@@ -454,7 +455,7 @@ impl UnsignedMessage for LabsUnsignedMessage {
     }
 }
 
-fn default_headers(
+pub fn default_headers(
     time: u64,
     expiration: Expiration,
     public_key: &PublicKey,
