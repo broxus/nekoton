@@ -87,45 +87,48 @@ impl AccountsStorage {
         })
     }
 
-    pub async fn set_current_account(&self, address: &str) -> Result<()> {
+    pub async fn set_current_account(&self, address: &str) -> Result<AssetsList> {
         let (assets, current_account) = &mut *self.accounts.write().await;
-        if !assets.contains_key(address) {
-            return Err(AccountsStorageError::AccountNotFound.into());
-        }
+        let assets_list = match assets.get(address) {
+            Some(list) => list,
+            None => return Err(AccountsStorageError::AccountNotFound.into()),
+        };
 
         *current_account = Some(address.to_owned());
 
         self.save(assets, current_account).await?;
-        Ok(())
+        Ok(assets_list.clone())
     }
 
-    /// Add account
+    /// Add account. It can later be fetched by ton wallet address
     pub async fn add_account(
         &self,
         name: &str,
         public_key: ed25519_dalek::PublicKey,
         contract: ton_wallet::ContractType,
         update_current: bool,
-    ) -> Result<String> {
+    ) -> Result<AssetsList> {
         let address =
             ton_wallet::compute_address(&public_key, contract, ton_wallet::DEFAULT_WORKCHAIN);
         let key = address.to_string();
 
         let (accounts, current_account) = &mut *self.accounts.write().await;
-        match accounts.entry(key.clone()) {
+        let assets_list = match accounts.entry(key.clone()) {
             btree_map::Entry::Occupied(_) => {
                 return Err(AccountsStorageError::AccountAlreadyExists.into())
             }
-            btree_map::Entry::Vacant(entry) => entry.insert(AssetsList {
-                name: name.to_owned(),
-                ton_wallet: TonWalletAsset {
-                    address,
-                    public_key,
-                    contract,
-                },
-                token_wallets: Vec::new(),
-                depools: Vec::new(),
-            }),
+            btree_map::Entry::Vacant(entry) => entry
+                .insert(AssetsList {
+                    name: name.to_owned(),
+                    ton_wallet: TonWalletAsset {
+                        address,
+                        public_key,
+                        contract,
+                    },
+                    token_wallets: Vec::new(),
+                    depools: Vec::new(),
+                })
+                .clone(),
         };
 
         if update_current {
@@ -133,7 +136,7 @@ impl AccountsStorage {
         }
 
         self.save(accounts, current_account).await?;
-        Ok(key)
+        Ok(assets_list)
     }
 
     /// Removes specified from the storage and resets current account if needed
