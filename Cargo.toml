@@ -26,7 +26,7 @@ parking_lot = "0.11.1"
 pin-project-lite = "0.2"
 rand = { version = "0.7", features = ["getrandom"] }
 ring = "0.16"
-secstr = "0.4.0"
+secstr = { version = "0.4.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.9"
@@ -46,7 +46,7 @@ ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi.git" }
 ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
 ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
-ton_executor = {git = "https://github.com/broxus/ton-labs-executor.git"}
+ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
 failure = "0.1.8"
 chrono = "0.4.19"
 zeroize = "1.2.0"
@@ -54,9 +54,9 @@ zeroize = "1.2.0"
 [dev-dependencies]
 pretty_assertions = "0.7.1"
 hex = "0.4.3"
-criterion = {version= "0.3",features=["async_tokio","html_reports"] }
-cargo-husky = {version= "1",features=["default","run-cargo-fmt","run-cargo-check"] }
-tokio = { version = "1.4.0", features =["rt-multi-thread", "macros"] }
+criterion = { version = "0.3", features = ["async_tokio", "html_reports"] }
+cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
+tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 
 [features]
 default = []
