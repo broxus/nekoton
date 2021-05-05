@@ -10,6 +10,7 @@ pub use encrypted_key::*;
 pub use mnemonic::*;
 
 use crate::utils::*;
+use serde::de::DeserializeOwned;
 
 mod derived_key;
 mod encrypted_key;
@@ -44,11 +45,11 @@ pub struct SignedMessage {
 
 #[async_trait]
 pub trait Signer: SignerStorage {
-    type CreateKeyInput;
-    type ExportKeyInput;
-    type ExportKeyOutput;
-    type UpdateKeyInput;
-    type SignInput;
+    type CreateKeyInput: Serialize + DeserializeOwned;
+    type ExportKeyInput: Serialize + DeserializeOwned;
+    type ExportKeyOutput: Serialize + DeserializeOwned;
+    type UpdateKeyInput: Serialize + DeserializeOwned;
+    type SignInput: Serialize + DeserializeOwned;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey>;
     async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<()>;

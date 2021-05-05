@@ -149,6 +149,7 @@ impl SignerStorage for EncryptedKeySigner {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct EncryptedKeyCreateInput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
@@ -162,12 +163,15 @@ pub struct EncryptedKeyPassword {
     pub password: SecUtf8,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct EncryptedKeyExportOutput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct EncryptedKeyUpdateParams {
+    #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
     pub old_password: SecUtf8,
     pub new_password: SecUtf8,

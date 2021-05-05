@@ -321,21 +321,24 @@ pub enum DerivedKeySignParams {
     },
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct DerivedKeyExportParams {
     pub password: SecUtf8,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct DerivedKeyExportOutput {
     pub phrase: SecUtf8,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum DerivedKeyUpdateParams {
     ChangePassword {
         old_password: SecUtf8,
         new_password: SecUtf8,
     },
 }
-
+#[derive(Serialize, Deserialize)]
 pub enum DerivedKeyCreateInput {
     Import { phrase: SecUtf8, password: SecUtf8 },
     Derive { account_id: u32, password: SecUtf8 },
