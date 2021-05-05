@@ -19,6 +19,7 @@ pub struct ContractSubscription {
     contract_state: ContractState,
     latest_known_transaction: Option<TransactionId>,
     pending_transactions: Vec<PendingTransaction>,
+    initialized: bool,
 }
 
 impl ContractSubscription {
@@ -38,6 +39,7 @@ impl ContractSubscription {
             contract_state: Default::default(),
             latest_known_transaction: None,
             pending_transactions: Vec::new(),
+            initialized: false,
         };
 
         if result.refresh_contract_state(on_contract_state).await? {
@@ -51,6 +53,8 @@ impl ContractSubscription {
                 )
                 .await?;
         }
+
+        result.initialized = true;
 
         Ok(result)
     }
@@ -238,7 +242,7 @@ impl ContractSubscription {
             limit,
         );
 
-        while let Some((new_transactions, batch_info)) = transactions.next().await {
+        while let Some((new_transactions, mut batch_info)) = transactions.next().await {
             if new_transactions.is_empty() {
                 continue;
             }
@@ -250,6 +254,11 @@ impl ContractSubscription {
                 new_latest_known_transaction =
                     new_transactions.first().map(|transaction| transaction.id());
             }
+
+            // `utils::request_transactions` returns transactions which are marked new
+            // (`batch_info.old == false`). So, to mark first transactions we get as old,
+            // we should use initialization flag.
+            batch_info.old |= !self.initialized;
 
             on_transactions_found(new_transactions, batch_info);
         }
