@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 pub use derived_key::*;
 pub use encrypted_key::*;
+pub use ledger_key::*;
 pub use mnemonic::*;
 
 use crate::utils::*;
@@ -14,6 +15,7 @@ use serde::de::DeserializeOwned;
 
 mod derived_key;
 mod encrypted_key;
+mod ledger_key;
 mod mnemonic;
 mod symmetric;
 
