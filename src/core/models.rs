@@ -426,6 +426,13 @@ pub enum MessageType {
     External,
 }
 
+/// Transaction with additional data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TransactionWithData<T> {
+    pub transaction: Transaction,
+    pub data: Option<T>,
+}
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct TransactionsBatchInfo {
     /// The smallest lt in a group

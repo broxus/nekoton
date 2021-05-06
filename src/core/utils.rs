@@ -35,6 +35,20 @@ pub fn convert_transactions(
         .filter_map(|transaction| Transaction::try_from((transaction.hash, transaction.data)).ok())
 }
 
+pub fn convert_transactions_with_data<T, F>(
+    transactions: Vec<RawTransaction>,
+    mut extractor: F,
+) -> impl Iterator<Item = TransactionWithData<T>> + DoubleEndedIterator
+where
+    F: FnMut(&ton_block::Transaction) -> Option<T>,
+{
+    transactions.into_iter().filter_map(move |transaction| {
+        let data = extractor(&transaction.data);
+        let transaction = Transaction::try_from((transaction.hash, transaction.data)).ok()?;
+        Some(TransactionWithData { transaction, data })
+    })
+}
+
 pub fn request_transactions<'a>(
     transport: &'a dyn Transport,
     address: &'a MsgAddressInt,
