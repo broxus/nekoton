@@ -20,6 +20,7 @@ const STORAGE_OWNERS_CACHE: &str = "__core__owners_cache";
 
 /// Stores a map to resolve owner's wallet address from token wallet address
 pub struct OwnersCache {
+    key: String,
     storage: Arc<dyn Storage>,
     transport: Arc<dyn Transport>,
     owners: RwLock<HashMap<MsgAddressInt, MsgAddressInt>>,
@@ -29,6 +30,7 @@ pub struct OwnersCache {
 
 impl OwnersCache {
     pub async fn load(
+        network_name: &str,
         storage: Arc<dyn Storage>,
         transport: Arc<dyn Transport>,
         concurrent_resolvers: usize,
@@ -39,7 +41,9 @@ impl OwnersCache {
         #[derive(Deserialize)]
         struct OwnersMapItem(String, String);
 
-        let data = match storage.get(STORAGE_OWNERS_CACHE).await? {
+        let key = make_key(network_name);
+
+        let data = match storage.get(&key).await? {
             Some(data) => serde_json::from_str::<OwnersMap>(&data)?.0,
             None => Default::default(),
         }
@@ -52,6 +56,7 @@ impl OwnersCache {
         .collect::<Result<HashMap<_, _>, _>>()?;
 
         Ok(Self {
+            key,
             storage,
             transport,
             owners: RwLock::new(data),
@@ -61,19 +66,26 @@ impl OwnersCache {
     }
 
     pub async fn load_unchecked(
+        network_name: &str,
         storage: Arc<dyn Storage>,
         transport: Arc<dyn Transport>,
         concurrent_resolvers: usize,
     ) -> Self {
-        Self::load(storage.clone(), transport.clone(), concurrent_resolvers)
-            .await
-            .unwrap_or_else(|_| Self {
-                storage,
-                transport,
-                owners: Default::default(),
-                token_contract_states: Default::default(),
-                resolver_semaphore: Semaphore::new(concurrent_resolvers),
-            })
+        Self::load(
+            network_name,
+            storage.clone(),
+            transport.clone(),
+            concurrent_resolvers,
+        )
+        .await
+        .unwrap_or_else(|_| Self {
+            key: make_key(network_name),
+            storage,
+            transport,
+            owners: Default::default(),
+            token_contract_states: Default::default(),
+            resolver_semaphore: Semaphore::new(concurrent_resolvers),
+        })
     }
 
     pub async fn check_recipient_wallet(
@@ -213,7 +225,7 @@ impl OwnersCache {
         }
 
         let data = serde_json::to_string(&OwnersMap(owners)).trust_me();
-        self.storage.set_unchecked(STORAGE_OWNERS_CACHE, &data);
+        self.storage.set_unchecked(&self.key, &data);
     }
 }
 
@@ -234,6 +246,10 @@ async fn check_token_wallet<'a>(
         RawContractState::NotExists => RecipientWallet::NotExists,
         RawContractState::Exists(_) => RecipientWallet::Exists(token_wallet),
     })
+}
+
+fn make_key(network_name: &str) -> String {
+    format!("{}{}", STORAGE_OWNERS_CACHE, network_name)
 }
 
 pub enum RecipientWallet {
