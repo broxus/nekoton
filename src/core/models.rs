@@ -46,22 +46,22 @@ pub struct TokenWalletDeployedNotification {
     pub root_token_contract: MsgAddressInt,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum EthEventStatus {
-    InProcess,
-    Confirmed,
-    Executed,
-    Rejected,
-}
+crate::define_string_enum!(
+    pub enum EthEventStatus {
+        InProcess,
+        Confirmed,
+        Executed,
+        Rejected,
+    }
+);
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum TonEventStatus {
-    InProcess,
-    Confirmed,
-    Rejected,
-}
+crate::define_string_enum!(
+    pub enum TonEventStatus {
+        InProcess,
+        Confirmed,
+        Rejected,
+    }
+);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
