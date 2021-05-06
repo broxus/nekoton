@@ -106,10 +106,6 @@ impl TokenWallet {
         self.contract_subscription.contract_state()
     }
 
-    pub fn polling_method(&self) -> PollingMethod {
-        self.contract_subscription.polling_method()
-    }
-
     pub fn prepare_deploy(&self) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
 
