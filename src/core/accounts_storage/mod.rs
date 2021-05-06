@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{RwLock, RwLockReadGuard};
 use ton_block::MsgAddressInt;
 
-use crate::core::models::*;
 use crate::core::ton_wallet;
 use crate::external::Storage;
 use crate::utils::*;
@@ -234,7 +233,8 @@ pub struct TonWalletAsset {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TokenWalletAsset {
-    pub symbol: Symbol,
+    #[serde(with = "serde_address")]
+    pub root_token_contract: MsgAddressInt,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
