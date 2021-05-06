@@ -16,9 +16,28 @@ use crate::utils::*;
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum TransactionAdditionalInfo {
     Comment(String),
+    DePoolOnRoundComplete(DePoolOnRoundCompleteNotification),
+    DePoolReceiveAnswer(DePoolReceiveAnswerNotification),
     TokenWalletDeployed(TokenWalletDeployedNotification),
     EthEventStatusChanged(EthEventStatus),
     TonEventStatusChanged(TonEventStatus),
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DePoolOnRoundCompleteNotification {
+    pub round_id: u64,
+    pub reward: u64,
+    pub ordinary_stake: u64,
+    pub vesting_stake: u64,
+    pub lock_stake: u64,
+    pub reinvest: bool,
+    pub reason: u8,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DePoolReceiveAnswerNotification {
+    pub error_code: u64,
+    pub comment: u64,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
