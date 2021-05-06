@@ -273,29 +273,34 @@ impl TokenWallet {
                             _ => return None,
                         };
 
-                        let transaction =
-                            parse_token_transaction(&transaction.data, &description, version)?;
+                        let data =
+                            parse_token_transaction(&transaction.data, &description, version);
 
-                        match &transaction {
-                            TokenWalletTransaction::IncomingTransfer(TokenIncomingTransfer {
-                                tokens,
-                                ..
-                            })
-                            | TokenWalletTransaction::Accept(tokens)
-                            | TokenWalletTransaction::SwapBackBounced(tokens)
-                            | TokenWalletTransaction::TransferBounced(tokens) => {
-                                balance += tokens.clone().to_bigint().trust_me();
-                            }
-                            TokenWalletTransaction::OutgoingTransfer(TokenOutgoingTransfer {
-                                tokens,
-                                ..
-                            })
-                            | TokenWalletTransaction::SwapBack(TokenSwapBack { tokens, .. }) => {
-                                balance -= tokens.clone().to_bigint().trust_me();
+                        if let Some(data) = &data {
+                            match data {
+                                TokenWalletTransaction::IncomingTransfer(
+                                    TokenIncomingTransfer { tokens, .. },
+                                )
+                                | TokenWalletTransaction::Accept(tokens)
+                                | TokenWalletTransaction::SwapBackBounced(tokens)
+                                | TokenWalletTransaction::TransferBounced(tokens) => {
+                                    balance += tokens.clone().to_bigint().trust_me();
+                                }
+                                TokenWalletTransaction::OutgoingTransfer(
+                                    TokenOutgoingTransfer { tokens, .. },
+                                )
+                                | TokenWalletTransaction::SwapBack(TokenSwapBack {
+                                    tokens, ..
+                                }) => {
+                                    balance -= tokens.clone().to_bigint().trust_me();
+                                }
                             }
                         }
 
-                        Some(transaction)
+                        let transaction =
+                            Transaction::try_from((transaction.hash, transaction.data)).ok()?;
+
+                        Some(TransactionWithData { transaction, data })
                     })
                     .collect();
 
@@ -332,7 +337,7 @@ pub trait TokenWalletSubscriptionHandler: Send + Sync {
     /// - When preloading transactions
     fn on_transactions_found(
         &self,
-        transactions: Vec<TokenWalletTransaction>,
+        transactions: Vec<TransactionWithData<TokenWalletTransaction>>,
         batch_info: TransactionsBatchInfo,
     );
 }
@@ -415,7 +420,13 @@ where
             .filter_map(
                 |transaction| match transaction.data.description.read_struct().ok()? {
                     ton_block::TransactionDescr::Ordinary(description) => {
-                        parse_token_transaction(&transaction.data, &description, version)
+                        let data =
+                            parse_token_transaction(&transaction.data, &description, version);
+
+                        let transaction =
+                            Transaction::try_from((transaction.hash, transaction.data)).ok()?;
+
+                        Some(TransactionWithData { transaction, data })
                     }
                     _ => None,
                 },

@@ -13,6 +13,7 @@ macro_rules! declare_abi {
 }
 
 declare_abi! {
+    depool_v3_participant => "./DePoolV3Participant.abi.json",
     safe_multisig_wallet => "./SafeMultisigWallet.abi.json",
     setcode_multisig_wallet => "./SetcodeMultisigWallet.abi.json",
     wallet_notifications => "./WalletNotifications.abi.json",

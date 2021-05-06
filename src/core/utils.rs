@@ -35,6 +35,20 @@ pub fn convert_transactions(
         .filter_map(|transaction| Transaction::try_from((transaction.hash, transaction.data)).ok())
 }
 
+pub fn convert_transactions_with_data<T, F>(
+    transactions: Vec<RawTransaction>,
+    mut extractor: F,
+) -> impl Iterator<Item = TransactionWithData<T>> + DoubleEndedIterator
+where
+    F: FnMut(&ton_block::Transaction) -> Option<T>,
+{
+    transactions.into_iter().filter_map(move |transaction| {
+        let data = extractor(&transaction.data);
+        let transaction = Transaction::try_from((transaction.hash, transaction.data)).ok()?;
+        Some(TransactionWithData { transaction, data })
+    })
+}
+
 pub fn request_transactions<'a>(
     transport: &'a dyn Transport,
     address: &'a MsgAddressInt,
@@ -597,7 +611,8 @@ impl TryFrom<InputMessage> for MultisigSendTransaction {
 pub fn parse_transaction_additional_info(
     tx: &ton_block::Transaction,
 ) -> Option<TransactionAdditionalInfo> {
-    let functions = WalletNotificationFunctions::instance();
+    let depool_notifications = DePoolParticipantFunctions::instance();
+    let token_notifications = WalletNotificationFunctions::instance();
 
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
     let header = in_msg.int_header()?;
@@ -610,8 +625,26 @@ pub fn parse_transaction_additional_info(
 
     if function_id == 0 {
         abi::parse_comment_payload(body).map(TransactionAdditionalInfo::Comment)
-    } else if function_id == functions.notify_wallet_deployed.input_id {
-        let inputs = functions
+    } else if function_id == depool_notifications.on_round_complete.input_id {
+        let inputs = depool_notifications
+            .on_round_complete
+            .decode_input(body, true)
+            .ok()?;
+
+        DePoolOnRoundCompleteNotification::try_from(InputMessage(inputs))
+            .map(TransactionAdditionalInfo::DePoolOnRoundComplete)
+            .ok()
+    } else if function_id == depool_notifications.receive_answer.input_id {
+        let inputs = depool_notifications
+            .receive_answer
+            .decode_input(body, true)
+            .ok()?;
+
+        DePoolReceiveAnswerNotification::try_from(InputMessage(inputs))
+            .map(TransactionAdditionalInfo::DePoolReceiveAnswer)
+            .ok()
+    } else if function_id == token_notifications.notify_wallet_deployed.input_id {
+        let inputs = token_notifications
             .notify_wallet_deployed
             .decode_input(body, true)
             .ok()?;
@@ -619,8 +652,12 @@ pub fn parse_transaction_additional_info(
         TokenWalletDeployedNotification::try_from(InputMessage(inputs))
             .map(TransactionAdditionalInfo::TokenWalletDeployed)
             .ok()
-    } else if function_id == functions.notify_ethereum_event_status_changed.input_id {
-        let inputs = functions
+    } else if function_id
+        == token_notifications
+            .notify_ethereum_event_status_changed
+            .input_id
+    {
+        let inputs = token_notifications
             .notify_ethereum_event_status_changed
             .decode_input(body, true)
             .ok()?;
@@ -628,8 +665,8 @@ pub fn parse_transaction_additional_info(
         EthEventStatusChanged::try_from(InputMessage(inputs))
             .map(|event| TransactionAdditionalInfo::EthEventStatusChanged(event.new_status))
             .ok()
-    } else if function_id == functions.notify_ton_event_status_changed.input_id {
-        let inputs = functions
+    } else if function_id == token_notifications.notify_ton_event_status_changed.input_id {
+        let inputs = token_notifications
             .notify_ton_event_status_changed
             .decode_input(body, true)
             .ok()?;
@@ -639,6 +676,25 @@ pub fn parse_transaction_additional_info(
             .ok()
     } else {
         None
+    }
+}
+
+struct DePoolParticipantFunctions {
+    on_round_complete: &'static ton_abi::Function,
+    receive_answer: &'static ton_abi::Function,
+}
+
+impl DePoolParticipantFunctions {
+    fn new(contract: &'static ton_abi::Contract) -> Self {
+        Self {
+            on_round_complete: contract.function("onRoundComplete").trust_me(),
+            receive_answer: contract.function("receiveAnswer").trust_me(),
+        }
+    }
+
+    fn instance() -> &'static Self {
+        static IDS: OnceCell<DePoolParticipantFunctions> = OnceCell::new();
+        IDS.get_or_init(|| DePoolParticipantFunctions::new(contracts::abi::depool_v3_participant()))
     }
 }
 
@@ -664,6 +720,37 @@ impl WalletNotificationFunctions {
     fn instance() -> &'static Self {
         static IDS: OnceCell<WalletNotificationFunctions> = OnceCell::new();
         IDS.get_or_init(|| WalletNotificationFunctions::new(contracts::abi::wallet_notifications()))
+    }
+}
+
+impl TryFrom<InputMessage> for DePoolOnRoundCompleteNotification {
+    type Error = ParserError;
+
+    fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
+        let mut input = value.0.into_parser();
+
+        Ok(Self {
+            round_id: input.parse_next()?,
+            reward: input.parse_next()?,
+            ordinary_stake: input.parse_next()?,
+            vesting_stake: input.parse_next()?,
+            lock_stake: input.parse_next()?,
+            reinvest: input.parse_next()?,
+            reason: input.parse_next()?,
+        })
+    }
+}
+
+impl TryFrom<InputMessage> for DePoolReceiveAnswerNotification {
+    type Error = ParserError;
+
+    fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
+        let mut input = value.0.into_parser();
+
+        Ok(Self {
+            error_code: input.parse_next()?,
+            comment: input.parse_next()?,
+        })
     }
 }
 
@@ -1046,6 +1133,26 @@ mod test {
             parse_transaction_additional_info(&tx).unwrap(),
             TransactionAdditionalInfo::Comment(_)
         ));
+    }
+
+    #[test]
+    fn parse_depool_on_round_complete() {
+        let tx = Transaction::construct_from_base64("te6ccgECBgEAATYAA7F6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhcEbrIEikkn05Ku83ZEENvShriMSDo3Wrh+PZVqEZZFR73UDNgAADIW3VTuCYJRG2wABQiKAMCAQALDERIQEkgAIJy0W3rZziZMBhdOhOSsj9f2V3MqUZWvD39kx9ersOjLDlIhSvIB0KaWZELIJ7zw+I+Sy9Ykv6tSJbSpB49hDcHiQEBoAQBq0gBd5fv1pbeJAd0Wp/qbrvGFKgRUCYX7z8OHfefqT2CydMAKkhRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLEBAYduXAAABkLgdvLrMEojabABQBbRE1D9QAAAAAAAAB5AAAAAES7c48AAATFd7ZSmgAAAAAAAAAAAAAAAAAAAACCwA==").unwrap();
+
+        assert!(matches!(
+            parse_transaction_additional_info(&tx).unwrap(),
+            TransactionAdditionalInfo::DePoolOnRoundComplete(_)
+        ))
+    }
+
+    #[test]
+    fn parse_depool_receive_answer() {
+        let tx = Transaction::construct_from_base64("te6ccgECBwEAAaEAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhnsD1kVwt3ZSvzdkgOgwJsxv58wEM0BQZrsemU6arhBFJ4fxjwAADIZ7A9ZBYJRjLgABRh6EgIBQQBAhUMCQ66Pp4YYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzDxS7AAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIEOMO6fRXte5PGI5jiEUhiDtcNPCIWL5NWNQNOK9Xcl+MnFzrWwqjP3BjSUMj+iqVsHR/XXRK4EG15vN19dQTxAQGgBgDRSAFA+IzRUVgwA2vU75DcYvlAT67YURjbSaU6+j+uLV/oFQAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDro+ngBhRYYAAAGQz2B6yIwSjGXB+ITyIAAAADAAAAAAAAAABA").unwrap();
+
+        assert!(matches!(
+            parse_transaction_additional_info(&tx).unwrap(),
+            TransactionAdditionalInfo::DePoolReceiveAnswer(_)
+        ))
     }
 
     #[test]
