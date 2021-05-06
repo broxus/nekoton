@@ -39,9 +39,9 @@ impl LedgerKeySigner {
 #[async_trait]
 impl StoreSigner for LedgerKeySigner {
     type CreateKeyInput = LedgerKeyCreateInput;
-    type ExportKeyInput = LedgerKeyEmpty;
-    type ExportKeyOutput = LedgerKeyEmpty;
-    type UpdateKeyInput = LedgerKeyEmpty;
+    type ExportKeyInput = ();
+    type ExportKeyOutput = ();
+    type UpdateKeyInput = ();
     type SignInput = LedgerKeyPublic;
 
     async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
@@ -75,7 +75,7 @@ impl StoreSigner for LedgerKeySigner {
         input: Self::SignInput,
     ) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
         let key = self.get_key(&input.public_key)?;
-        let signature = self.connection.sign(key.inner.account, data).await?;
+        let signature = self.connection.sign(key.account, data).await?;
         Ok(signature)
     }
 }
@@ -143,6 +143,7 @@ impl SignerStorage for LedgerKeySigner {
     }
 }
 
+#[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct LedgerKeyCreateInput {
     pub account: u32,
 }
@@ -153,21 +154,21 @@ pub struct LedgerKeyPublic {
     pub public_key: PublicKey,
 }
 
-pub struct LedgerKeyEmpty {}
-
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LedgerKey {
-    inner: CryptoData,
+    pub name: String,
+    pub account: u32,
+
+    #[serde(with = "serde_public_key")]
+    pub pubkey: PublicKey,
 }
 
 impl LedgerKey {
     pub fn new(name: &str, account: u32, pubkey: PublicKey) -> Result<Self> {
         Ok(Self {
-            inner: CryptoData {
-                name: name.to_owned(),
-                account,
-                pubkey,
-            },
+            name: name.to_owned(),
+            account,
+            pubkey,
         })
     }
 
@@ -175,36 +176,21 @@ impl LedgerKey {
     where
         T: Read,
     {
-        let crypto_data: CryptoData = serde_json::from_reader(reader)?;
-        Ok(LedgerKey { inner: crypto_data })
+        let key: Self = serde_json::from_reader(reader)?;
+        Ok(key)
     }
 
     pub fn name(&self) -> &str {
-        &self.inner.name
+        &self.name
     }
 
     pub fn public_key(&self) -> &PublicKey {
-        &self.inner.pubkey
+        &self.pubkey
     }
 
     pub fn as_json(&self) -> String {
-        serde_json::to_string(&self.inner).trust_me()
+        serde_json::to_string(&self).trust_me()
     }
-}
-
-impl std::fmt::Debug for LedgerKey {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.inner.pubkey)
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct CryptoData {
-    name: String,
-    account: u32,
-
-    #[serde(with = "serde_public_key")]
-    pubkey: PublicKey,
 }
 
 #[derive(thiserror::Error, Debug)]
