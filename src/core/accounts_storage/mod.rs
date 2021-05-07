@@ -86,14 +86,14 @@ impl AccountsStorage {
         })
     }
 
-    pub async fn set_current_account(&self, address: &str) -> Result<AssetsList> {
+    pub async fn set_current_account(&self, account: &str) -> Result<AssetsList> {
         let (assets, current_account) = &mut *self.accounts.write().await;
-        let assets_list = match assets.get(address) {
+        let assets_list = match assets.get(account) {
             Some(list) => list,
             None => return Err(AccountsStorageError::AccountNotFound.into()),
         };
 
-        *current_account = Some(address.to_owned());
+        *current_account = Some(account.to_owned());
 
         self.save(assets, current_account).await?;
         Ok(assets_list.clone())
@@ -138,13 +138,73 @@ impl AccountsStorage {
         Ok(assets_list)
     }
 
-    /// Removes specified from the storage and resets current account if needed
-    pub async fn remove_account(&self, address: &str) -> Result<Option<AssetsList>> {
+    pub async fn add_token_wallet(
+        &self,
+        account: &str,
+        root_token_contract: MsgAddressInt,
+    ) -> Result<AssetsList> {
         let (assets, current_account) = &mut *self.accounts.write().await;
-        let result = assets.remove(address);
+
+        let (entry, should_save) = match assets.get_mut(account) {
+            Some(entry)
+                if !entry
+                    .token_wallets
+                    .iter()
+                    .find(|item| item.root_token_contract == root_token_contract)
+                    .is_some() =>
+            {
+                entry.token_wallets.push(TokenWalletAsset {
+                    root_token_contract,
+                });
+
+                (entry.clone(), true)
+            }
+            Some(entry) => (entry.clone(), false),
+            None => return Err(AccountsStorageError::AccountNotFound.into()),
+        };
+
+        if should_save {
+            self.save(assets, current_account).await?;
+        }
+        Ok(entry)
+    }
+
+    pub async fn remove_token_wallet(
+        &self,
+        account: &str,
+        root_token_contract: &MsgAddressInt,
+    ) -> Result<AssetsList> {
+        let (assets, current_account) = &mut *self.accounts.write().await;
+
+        let (entry, should_save) = match assets.get_mut(account) {
+            Some(entry) => {
+                let pos = entry
+                    .token_wallets
+                    .iter()
+                    .position(|item| item.root_token_contract == *root_token_contract);
+
+                if let Some(index) = pos {
+                    entry.token_wallets.remove(index);
+                }
+
+                (entry.clone(), pos.is_some())
+            }
+            None => return Err(AccountsStorageError::AccountNotFound.into()),
+        };
+
+        if should_save {
+            self.save(assets, current_account).await?;
+        }
+        Ok(entry)
+    }
+
+    /// Removes specified from the storage and resets current account if needed
+    pub async fn remove_account(&self, account: &str) -> Result<Option<AssetsList>> {
+        let (assets, current_account) = &mut *self.accounts.write().await;
+        let result = assets.remove(account);
 
         if result.is_some()
-            && matches!(current_account, Some(current_account) if address == current_account)
+            && matches!(current_account, Some(current_account) if account == current_account)
         {
             *current_account = None;
         }
