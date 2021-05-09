@@ -15,6 +15,7 @@ use crate::utils::*;
 
 const STORAGE_KEYSTORE: &str = "__core__keystore";
 
+#[repr(C)]
 pub struct KeyStore {
     state: RwLock<KeyStoreState>,
     storage: Arc<dyn Storage>,
