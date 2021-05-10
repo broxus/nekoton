@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use ed25519_dalek::{ed25519, PublicKey};
+use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 
 use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
@@ -76,7 +76,7 @@ impl StoreSigner for LedgerKeySigner {
         &self,
         data: &[u8],
         input: Self::SignInput,
-    ) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
+    ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let key = self.get_key(&input.public_key)?;
         let signature = self.connection.sign(key.account_id, data).await?;
         Ok(signature)

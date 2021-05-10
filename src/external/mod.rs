@@ -1,6 +1,5 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use ed25519_dalek::ed25519;
 use ton_api::ton;
 
 #[async_trait]
@@ -37,5 +36,10 @@ pub trait LedgerConnection: Send + Sync {
         &self,
         account_id: u16,
     ) -> Result<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH]>;
-    async fn sign(&self, account: u16, message: &[u8]) -> Result<[u8; ed25519::SIGNATURE_LENGTH]>;
+
+    async fn sign(
+        &self,
+        account: u16,
+        message: &[u8],
+    ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
 }

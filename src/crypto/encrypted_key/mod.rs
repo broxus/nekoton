@@ -6,7 +6,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use chacha20poly1305::aead::NewAead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
-use ed25519_dalek::{ed25519, Keypair, PublicKey, SecretKey, Signer};
+use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signer};
 use ring::digest;
 use ring::rand::SecureRandom;
 use secstr::SecUtf8;
@@ -332,7 +332,11 @@ impl EncryptedKey {
         Ok(())
     }
 
-    pub fn sign(&self, data: &[u8], password: SecUtf8) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
+    pub fn sign(
+        &self,
+        data: &[u8],
+        password: SecUtf8,
+    ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         self.inner.sign(data, password)
     }
 
@@ -378,7 +382,11 @@ struct CryptoData {
 }
 
 impl CryptoData {
-    pub fn sign(&self, data: &[u8], password: SecUtf8) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
+    pub fn sign(
+        &self,
+        data: &[u8],
+        password: SecUtf8,
+    ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let key = symmetric_key_from_password(password, &*self.salt);
         let decrypter = ChaCha20Poly1305::new(&key);
 
