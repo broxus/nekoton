@@ -44,24 +44,27 @@ impl StoreSigner for LedgerKeySigner {
     type UpdateKeyInput = ();
     type SignInput = LedgerKeyPublic;
 
-    async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
-        let pubkey_bytes = self.connection.get_public_key(input.account).await?;
+    async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
+        let pubkey_bytes = self.connection.get_public_key(input.account_id).await?;
         let pubkey = ed25519_dalek::PublicKey::from_bytes(&pubkey_bytes)?;
 
-        let key = LedgerKey::new(name, input.account, pubkey)?;
+        let key = LedgerKey::new(input.account_id, pubkey)?;
 
         let public_key = *key.public_key();
 
         match self.keys.entry(public_key.to_bytes()) {
             hash_map::Entry::Vacant(entry) => {
                 entry.insert(key);
-                Ok(public_key)
+                Ok(SignerEntry {
+                    public_key,
+                    account_id: input.account_id,
+                })
             }
             hash_map::Entry::Occupied(_) => return Err(LedgerKeyError::KeyAlreadyExists.into()),
         }
     }
 
-    async fn update_key(&mut self, _input: Self::UpdateKeyInput) -> Result<()> {
+    async fn update_key(&mut self, _input: Self::UpdateKeyInput) -> Result<SignerEntry> {
         Err(LedgerKeyError::MethodNotSupported.into())
     }
 
@@ -75,7 +78,7 @@ impl StoreSigner for LedgerKeySigner {
         input: Self::SignInput,
     ) -> Result<[u8; ed25519::SIGNATURE_LENGTH]> {
         let key = self.get_key(&input.public_key)?;
-        let signature = self.connection.sign(key.account, data).await?;
+        let signature = self.connection.sign(key.account_id, data).await?;
         Ok(signature)
     }
 }
@@ -128,14 +131,18 @@ impl SignerStorage for LedgerKeySigner {
         self.keys
             .values()
             .map(|key| SignerEntry {
-                name: key.name().to_string(),
                 public_key: *key.public_key(),
+                account_id: key.account_id,
             })
             .collect()
     }
 
-    async fn remove_key(&mut self, public_key: &PublicKey) -> bool {
-        self.keys.remove(public_key.as_bytes()).is_some()
+    async fn remove_key(&mut self, public_key: &PublicKey) -> Option<SignerEntry> {
+        let key = self.keys.remove(public_key.as_bytes())?;
+        Some(SignerEntry {
+            public_key: key.pubkey,
+            account_id: key.account_id,
+        })
     }
 
     async fn clear(&mut self) {
@@ -145,7 +152,7 @@ impl SignerStorage for LedgerKeySigner {
 
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub struct LedgerKeyCreateInput {
-    pub account: u32,
+    pub account_id: u16,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -156,20 +163,15 @@ pub struct LedgerKeyPublic {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LedgerKey {
-    pub name: String,
-    pub account: u32,
+    pub account_id: u16,
 
     #[serde(with = "serde_public_key")]
     pub pubkey: PublicKey,
 }
 
 impl LedgerKey {
-    pub fn new(name: &str, account: u32, pubkey: PublicKey) -> Result<Self> {
-        Ok(Self {
-            name: name.to_owned(),
-            account,
-            pubkey,
-        })
+    pub fn new(account_id: u16, pubkey: PublicKey) -> Result<Self> {
+        Ok(Self { account_id, pubkey })
     }
 
     pub fn from_reader<T>(reader: T) -> Result<Self>
@@ -178,10 +180,6 @@ impl LedgerKey {
     {
         let key: Self = serde_json::from_reader(reader)?;
         Ok(key)
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
     }
 
     pub fn public_key(&self) -> &PublicKey {

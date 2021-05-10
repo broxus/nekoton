@@ -53,23 +53,30 @@ impl StoreSigner for EncryptedKeySigner {
     type UpdateKeyInput = EncryptedKeyUpdateParams;
     type SignInput = EncryptedKeyPassword;
 
-    async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
-        let key = EncryptedKey::new(name, input.password, input.mnemonic_type, input.phrase)?;
+    async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
+        let key = EncryptedKey::new(input.password, input.mnemonic_type, input.phrase)?;
 
         let public_key = *key.public_key();
 
         match self.keys.entry(public_key.to_bytes()) {
             hash_map::Entry::Vacant(entry) => {
                 entry.insert(key);
-                Ok(public_key)
+                Ok(SignerEntry {
+                    public_key,
+                    account_id: input.mnemonic_type.account_id(),
+                })
             }
             hash_map::Entry::Occupied(_) => return Err(EncryptedKeyError::KeyAlreadyExists.into()),
         }
     }
 
-    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<()> {
+    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry> {
         let key = self.get_key_mut(&input.public_key)?;
-        key.change_password(input.old_password, input.new_password)
+        key.change_password(input.old_password, input.new_password)?;
+        Ok(SignerEntry {
+            public_key: input.public_key,
+            account_id: key.mnemonic_type().account_id(),
+        })
     }
 
     async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
@@ -134,14 +141,18 @@ impl SignerStorage for EncryptedKeySigner {
         self.keys
             .values()
             .map(|key| SignerEntry {
-                name: key.name().to_string(),
                 public_key: *key.public_key(),
+                account_id: key.inner.mnemonic_type.account_id(),
             })
             .collect()
     }
 
-    async fn remove_key(&mut self, public_key: &PublicKey) -> bool {
-        self.keys.remove(public_key.as_bytes()).is_some()
+    async fn remove_key(&mut self, public_key: &PublicKey) -> Option<SignerEntry> {
+        let entry = self.keys.remove(public_key.as_bytes())?;
+        Some(SignerEntry {
+            public_key: entry.inner.pubkey,
+            account_id: entry.inner.mnemonic_type.account_id(),
+        })
     }
 
     async fn clear(&mut self) {
@@ -185,12 +196,7 @@ pub struct EncryptedKey {
 }
 
 impl EncryptedKey {
-    pub fn new(
-        name: &str,
-        password: SecUtf8,
-        mnemonic_type: MnemonicType,
-        phrase: SecUtf8,
-    ) -> Result<Self> {
+    pub fn new(password: SecUtf8, mnemonic_type: MnemonicType, phrase: SecUtf8) -> Result<Self> {
         let rng = ring::rand::SystemRandom::new();
 
         // prepare nonce
@@ -225,7 +231,6 @@ impl EncryptedKey {
         Ok(Self {
             inner: CryptoData {
                 mnemonic_type,
-                name: name.to_owned(),
                 pubkey,
                 encrypted_private_key,
                 private_key_nonce,
@@ -331,10 +336,6 @@ impl EncryptedKey {
         self.inner.sign(data, password)
     }
 
-    pub fn name(&self) -> &str {
-        &self.inner.name
-    }
-
     pub fn public_key(&self) -> &PublicKey {
         &self.inner.pubkey
     }
@@ -358,7 +359,6 @@ impl std::fmt::Debug for EncryptedKey {
 #[derive(Serialize, Deserialize, Clone)]
 struct CryptoData {
     mnemonic_type: MnemonicType,
-    name: String,
 
     #[serde(with = "serde_public_key")]
     pubkey: PublicKey,
@@ -440,32 +440,20 @@ impl From<SymmetricCryptoError> for EncryptedKeyError {
 mod test {
     use super::*;
 
-    const KEY_NAME: &str = "Test key";
     const TEST_PASSWORD: &str = "123";
     const TEST_MNEMONIC: &str = "canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley";
 
     #[test]
     fn test_init() {
         let password = SecUtf8::from(TEST_PASSWORD);
-        EncryptedKey::new(
-            KEY_NAME,
-            password,
-            MnemonicType::Legacy,
-            TEST_MNEMONIC.into(),
-        )
-        .unwrap();
+        EncryptedKey::new(password, MnemonicType::Legacy, TEST_MNEMONIC.into()).unwrap();
     }
 
     #[test]
     fn test_bad_password() {
         let password = SecUtf8::from(TEST_PASSWORD);
-        let signer = EncryptedKey::new(
-            KEY_NAME,
-            password,
-            MnemonicType::Legacy,
-            TEST_MNEMONIC.into(),
-        )
-        .unwrap();
+        let signer =
+            EncryptedKey::new(password, MnemonicType::Legacy, TEST_MNEMONIC.into()).unwrap();
 
         println!("{}", signer.as_json());
         let result = signer.sign(b"lol", "lol".into());

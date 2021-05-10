@@ -33,6 +33,9 @@ pub trait GqlConnection: Send + Sync {
 
 #[async_trait]
 pub trait LedgerConnection: Send + Sync {
-    async fn get_public_key(&self, account: u32) -> Result<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH]>;
-    async fn sign(&self, account: u32, message: &[u8]) -> Result<[u8; ed25519::SIGNATURE_LENGTH]>;
+    async fn get_public_key(
+        &self,
+        account_id: u16,
+    ) -> Result<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH]>;
+    async fn sign(&self, account: u16, message: &[u8]) -> Result<[u8; ed25519::SIGNATURE_LENGTH]>;
 }

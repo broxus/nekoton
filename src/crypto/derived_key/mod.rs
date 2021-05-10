@@ -37,13 +37,17 @@ impl StoreSigner for DerivedKeySigner {
     type UpdateKeyInput = DerivedKeyUpdateParams;
     type SignInput = DerivedKeySignParams;
 
-    async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey> {
-        let public = match input {
+    async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
+        Ok(match input {
             DerivedKeyCreateInput::Import { phrase, password } => {
-                let master_key = MasterKey::new(password, phrase, name.to_string())?;
+                let master_key = MasterKey::new(password, phrase)?;
                 let public_key = master_key.public_key;
                 self.master_key = Some(master_key);
-                public_key
+
+                SignerEntry {
+                    public_key,
+                    account_id: 0,
+                }
             }
             DerivedKeyCreateInput::Derive {
                 account_id,
@@ -67,15 +71,17 @@ impl StoreSigner for DerivedKeySigner {
                 let public_key = derive_from_master(account_id, master)?.public;
                 master_key
                     .accounts_map
-                    .insert(public_key.to_bytes(), (name.to_owned(), account_id));
+                    .insert(public_key.to_bytes(), account_id);
 
-                public_key
+                SignerEntry {
+                    public_key,
+                    account_id,
+                }
             }
-        };
-        Ok(public)
+        })
     }
 
-    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<()> {
+    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry> {
         let master_key = match &mut self.master_key {
             Some(key) => key,
             None => return Err(MasterKeyError::MasterKeyNotFound.into()),
@@ -86,7 +92,12 @@ impl StoreSigner for DerivedKeySigner {
                 old_password,
                 new_password,
             } => master_key.change_password(old_password, new_password),
-        }
+        }?;
+
+        Ok(SignerEntry {
+            public_key: master_key.public_key,
+            account_id: 0,
+        })
     }
 
     async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
@@ -126,7 +137,7 @@ impl StoreSigner for DerivedKeySigner {
                 public_key,
                 password,
             } => match master_key.accounts_map.get(public_key.as_bytes()) {
-                Some((_, account_id)) => (*account_id, password),
+                Some(account_id) => (*account_id, password),
                 None => return Err(MasterKeyError::DerivedKeyNotFound.into()),
             },
         };
@@ -162,19 +173,26 @@ impl SignerStorage for DerivedKeySigner {
             .map(|key| {
                 key.accounts_map
                     .iter()
-                    .map(|(public_key, (name, _))| SignerEntry {
-                        name: name.clone(),
+                    .map(|(public_key, account_id)| SignerEntry {
                         public_key: PublicKey::from_bytes(public_key).trust_me(),
+                        account_id: *account_id,
                     })
                     .collect()
             })
             .unwrap_or_default()
     }
 
-    async fn remove_key(&mut self, public_key: &PublicKey) -> bool {
-        match &mut self.master_key {
-            Some(key) => key.accounts_map.remove(public_key.as_bytes()).is_some(),
-            None => false,
+    async fn remove_key(&mut self, public_key: &PublicKey) -> Option<SignerEntry> {
+        if let Some(master_key) = &mut self.master_key {
+            master_key
+                .accounts_map
+                .remove(public_key.as_bytes())
+                .map(|account_id| SignerEntry {
+                    public_key: *public_key,
+                    account_id,
+                })
+        } else {
+            None
         }
     }
 
@@ -210,7 +228,7 @@ struct MasterKey {
 }
 
 impl MasterKey {
-    fn new(password: SecUtf8, phrase: SecUtf8, name: String) -> Result<Self> {
+    fn new(password: SecUtf8, phrase: SecUtf8) -> Result<Self> {
         use zeroize::Zeroize;
 
         let mut phrase = phrase.unsecure().to_string();
@@ -231,7 +249,7 @@ impl MasterKey {
         entropy.zeroize();
 
         let mut accounts_map = AccountsMap::new();
-        accounts_map.insert(public_key.to_bytes(), (name, 0));
+        accounts_map.insert(public_key.to_bytes(), 0);
 
         Ok(Self {
             public_key,
@@ -306,12 +324,12 @@ struct EncryptedPart {
     phrase_nonce: Nonce,
 }
 
-type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, u32)>;
+type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], u16>;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum DerivedKeySignParams {
     ByAccountId {
-        account_id: u32,
+        account_id: u16,
         password: SecUtf8,
     },
     ByPublicKey {
@@ -341,7 +359,7 @@ pub enum DerivedKeyUpdateParams {
 #[derive(Serialize, Deserialize)]
 pub enum DerivedKeyCreateInput {
     Import { phrase: SecUtf8, password: SecUtf8 },
-    Derive { account_id: u32, password: SecUtf8 },
+    Derive { account_id: u16, password: SecUtf8 },
 }
 
 mod serde_accounts_map {
@@ -359,17 +377,15 @@ mod serde_accounts_map {
         S: serde::Serializer,
     {
         #[derive(Serialize)]
-        struct StoredItem<'a> {
-            name: &'a str,
-            account_id: u32,
+        struct StoredItem {
+            account_id: u16,
         }
 
         let mut map = serializer.serialize_map(Some(data.len()))?;
-        for (pubkey, (name, account_id)) in data.iter() {
+        for (pubkey, account_id) in data.iter() {
             map.serialize_entry(
                 &hex::encode(pubkey),
                 &StoredItem {
-                    name: name.as_ref(),
                     account_id: *account_id,
                 },
             )?;
@@ -384,14 +400,13 @@ mod serde_accounts_map {
     {
         #[derive(Deserialize)]
         struct StoredItem {
-            name: String,
-            account_id: u32,
+            account_id: u16,
         }
 
         let stored_data = HashMap::<String, StoredItem>::deserialize(deserializer)?;
         stored_data
             .into_iter()
-            .map(|(public_key, StoredItem { name, account_id })| {
+            .map(|(public_key, StoredItem { account_id })| {
                 let public_key = hex::decode(&public_key)
                     .map_err(D::Error::custom)
                     .and_then(|public_key| {
@@ -399,13 +414,13 @@ mod serde_accounts_map {
                             .try_into()
                             .map_err(|_| D::Error::custom("Invalid public key"))
                     })?;
-                Ok((public_key, (name, account_id)))
+                Ok((public_key, account_id))
             })
             .collect::<Result<_, _>>()
     }
 }
 
-fn derive_from_master(id: u32, master: SecVec<u8>) -> Result<ed25519_dalek::Keypair> {
+fn derive_from_master(id: u16, master: SecVec<u8>) -> Result<ed25519_dalek::Keypair> {
     use tiny_hderive::bip32;
 
     let path = format!("m/44'/396'/0'/0/{}", id);
@@ -468,13 +483,10 @@ mod test {
         let mut signer = DerivedKeySigner::new();
 
         signer
-            .add_key(
-                "lol",
-                DerivedKeyCreateInput::Import {
-                    phrase: SecUtf8::from(TEST_PHRASE),
-                    password: SecUtf8::from("123"),
-                },
-            )
+            .add_key(DerivedKeyCreateInput::Import {
+                phrase: SecUtf8::from(TEST_PHRASE),
+                password: SecUtf8::from("123"),
+            })
             .await?;
 
         assert!(signer.master_key.is_some());
@@ -486,13 +498,10 @@ mod test {
     async fn test_change_password() -> Result<()> {
         let mut signer = DerivedKeySigner::new();
         signer
-            .add_key(
-                "lol",
-                DerivedKeyCreateInput::Import {
-                    phrase: SecUtf8::from(TEST_PHRASE),
-                    password: SecUtf8::from("123"),
-                },
-            )
+            .add_key(DerivedKeyCreateInput::Import {
+                phrase: SecUtf8::from(TEST_PHRASE),
+                password: SecUtf8::from("123"),
+            })
             .await?;
 
         signer
