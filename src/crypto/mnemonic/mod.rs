@@ -16,6 +16,15 @@ pub enum MnemonicType {
     Labs(u16),
 }
 
+impl MnemonicType {
+    pub fn account_id(self) -> u16 {
+        match self {
+            Self::Legacy => 0,
+            Self::Labs(id) => id,
+        }
+    }
+}
+
 pub struct GeneratedKey {
     pub words: Vec<String>,
     pub account_type: MnemonicType,

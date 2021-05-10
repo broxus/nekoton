@@ -53,8 +53,8 @@ pub trait Signer: SignerStorage {
     type UpdateKeyInput: Serialize + DeserializeOwned;
     type SignInput: Serialize + DeserializeOwned;
 
-    async fn add_key(&mut self, name: &str, input: Self::CreateKeyInput) -> Result<PublicKey>;
-    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<()>;
+    async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry>;
+    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry>;
     async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput>;
 
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;
@@ -66,7 +66,7 @@ pub trait SignerStorage: Downcast + Send + Sync {
     fn store_state(&self) -> String;
 
     fn get_entries(&self) -> Vec<SignerEntry>;
-    async fn remove_key(&mut self, public_key: &PublicKey) -> bool;
+    async fn remove_key(&mut self, public_key: &PublicKey) -> Option<SignerEntry>;
     async fn clear(&mut self);
 }
 
@@ -78,7 +78,7 @@ pub trait WithPublicKey {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SignerEntry {
-    pub name: String,
     #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
+    pub account_id: u16,
 }

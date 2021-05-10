@@ -9,7 +9,7 @@ use futures::future;
 use serde::{Serialize, Serializer};
 use tokio::sync::RwLock;
 
-use crate::crypto::{Signature, Signer, SignerStorage};
+use crate::crypto::{Signature, Signer, SignerEntry, SignerStorage};
 use crate::external::Storage;
 use crate::utils::*;
 
@@ -35,19 +35,19 @@ impl KeyStore {
         state
             .entries
             .iter()
-            .filter_map(|(public_key, (name, type_id))| {
+            .filter_map(|(public_key, (account_id, type_id))| {
                 let signer_name = state.signers.get(type_id)?.0.clone();
 
                 Some(KeyStoreEntry {
-                    name: name.clone(),
-                    public_key: PublicKey::from_bytes(public_key).trust_me(),
                     signer_name,
+                    public_key: PublicKey::from_bytes(public_key).trust_me(),
+                    account_id: *account_id,
                 })
             })
             .collect()
     }
 
-    pub async fn add_key<T>(&self, name: &str, input: T::CreateKeyInput) -> Result<KeyStoreEntry>
+    pub async fn add_key<T>(&self, input: T::CreateKeyInput) -> Result<KeyStoreEntry>
     where
         T: Signer,
     {
@@ -55,25 +55,28 @@ impl KeyStore {
 
         let (signer_name, signer): (_, &mut T) = state.get_signer_entry::<T>()?;
 
-        let public_key = signer.add_key(name, input).await?;
-        state
-            .entries
-            .insert(public_key.to_bytes(), (name.to_owned(), TypeId::of::<T>()));
+        let signer_entry = signer.add_key(input).await?;
+        state.entries.insert(
+            signer_entry.public_key.to_bytes(),
+            (signer_entry.account_id, TypeId::of::<T>()),
+        );
 
         self.save(&state.signers).await?;
-        Ok(KeyStoreEntry {
-            name: name.to_owned(),
-            public_key,
-            signer_name,
-        })
+        Ok(KeyStoreEntry::from_signer_entry(signer_name, signer_entry))
     }
 
-    pub async fn update_key<T>(&self, input: T::UpdateKeyInput) -> Result<()>
+    pub async fn update_key<T>(&self, input: T::UpdateKeyInput) -> Result<KeyStoreEntry>
     where
         T: Signer,
     {
         let mut state = self.state.write().await;
-        state.get_signer_mut::<T>()?.update_key(input).await
+
+        let (signer_name, signer) = state.get_signer_entry::<T>()?;
+
+        let signer_entry = signer.update_key(input).await?;
+
+        self.save(&state.signers).await?;
+        Ok(KeyStoreEntry::from_signer_entry(signer_name, signer_entry))
     }
 
     pub async fn export_key<T>(&self, input: T::ExportKeyInput) -> Result<T::ExportKeyOutput>
@@ -92,22 +95,25 @@ impl KeyStore {
         state.get_signer_ref::<T>()?.sign(data, input).await
     }
 
-    pub async fn remove_key(&self, public_key: &PublicKey) -> Result<()> {
+    pub async fn remove_key(&self, public_key: &PublicKey) -> Result<Option<KeyStoreEntry>> {
         let mut state = self.state.write().await;
 
         let signer_id = match state.entries.remove(public_key.as_bytes()) {
             Some((_, signer_id)) => signer_id,
-            None => return Ok(()),
+            None => return Ok(None),
         };
 
-        let signer = match state.signers.get_mut(&signer_id) {
-            Some((_, signer)) => signer,
-            None => return Ok(()),
+        let (signer_name, signer) = match state.signers.get_mut(&signer_id) {
+            Some(entry) => entry,
+            None => return Ok(None),
         };
 
-        signer.remove_key(public_key).await;
+        let entry = signer.remove_key(public_key).await.map(|signer_entry| {
+            KeyStoreEntry::from_signer_entry(signer_name.clone(), signer_entry)
+        });
 
-        self.save(&state.signers).await
+        self.save(&state.signers).await?;
+        Ok(entry)
     }
 
     pub async fn clear(&self) -> Result<()> {
@@ -151,7 +157,7 @@ struct KeyStoreState {
 }
 
 type SignersMap = HashMap<TypeId, (String, Box<dyn SignerStorage>)>;
-type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (String, TypeId)>;
+type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (u16, TypeId)>;
 
 impl KeyStoreState {
     fn get_signer_ref<T>(&self) -> Result<&T>
@@ -162,18 +168,6 @@ impl KeyStoreState {
             .signers
             .get(&TypeId::of::<T>())
             .and_then(|(_, signer)| signer.downcast_ref::<T>())
-            .ok_or(KeyStoreError::UnsupportedSigner)?;
-        Ok(signer)
-    }
-
-    fn get_signer_mut<T>(&mut self) -> Result<&mut T>
-    where
-        T: Signer,
-    {
-        let signer = self
-            .signers
-            .get_mut(&TypeId::of::<T>())
-            .and_then(|(_, signer)| signer.downcast_mut::<T>())
             .ok_or(KeyStoreError::UnsupportedSigner)?;
         Ok(signer)
     }
@@ -195,12 +189,31 @@ impl KeyStoreState {
     }
 }
 
+impl SignerEntry {
+    fn into_plain(
+        self,
+        type_id: TypeId,
+    ) -> ([u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (u16, TypeId)) {
+        (self.public_key.to_bytes(), (self.account_id, type_id))
+    }
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct KeyStoreEntry {
-    pub name: String,
+    pub signer_name: String,
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
-    pub signer_name: String,
+    pub account_id: u16,
+}
+
+impl KeyStoreEntry {
+    fn from_signer_entry(signer_name: String, signer_entry: SignerEntry) -> Self {
+        Self {
+            signer_name,
+            public_key: signer_entry.public_key,
+            account_id: signer_entry.account_id,
+        }
+    }
 }
 
 pub struct KeyStoreBuilder {
@@ -244,7 +257,7 @@ impl KeyStoreBuilder {
                     storage
                         .get_entries()
                         .into_iter()
-                        .map(|entry| (entry.public_key.to_bytes(), (entry.name, *type_id))),
+                        .map(|entry| entry.into_plain(*type_id)),
                 );
             }
         }
@@ -270,7 +283,7 @@ impl KeyStoreBuilder {
                         storage
                             .get_entries()
                             .into_iter()
-                            .map(|entry| (entry.public_key.to_bytes(), (entry.name, *type_id))),
+                            .map(|entry| entry.into_plain(*type_id)),
                     );
                 }
             }
