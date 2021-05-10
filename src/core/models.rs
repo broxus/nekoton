@@ -380,13 +380,15 @@ pub struct ContractState {
 
 impl PartialEq for ContractState {
     fn eq(&self, other: &Self) -> bool {
-        match (&self.last_transaction_id, &other.last_transaction_id) {
-            (None, Some(_)) => true,
-            (Some(current), Some(new)) if current < new => true,
-            _ => false,
-        }
+        // Ignore timings change
+
+        self.balance == other.balance
+            && self.last_transaction_id == other.last_transaction_id
+            && self.is_deployed == other.is_deployed
     }
 }
+
+impl Eq for ContractState {}
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "type")]

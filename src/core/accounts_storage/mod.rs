@@ -147,11 +147,11 @@ impl AccountsStorage {
 
         let (entry, should_save) = match assets.get_mut(account) {
             Some(entry)
-                if !entry
+                if entry
                     .token_wallets
                     .iter()
                     .find(|item| item.root_token_contract == root_token_contract)
-                    .is_some() =>
+                    .is_none() =>
             {
                 entry.token_wallets.push(TokenWalletAsset {
                     root_token_contract,
