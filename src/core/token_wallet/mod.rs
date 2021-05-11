@@ -46,6 +46,7 @@ impl TokenWallet {
             symbol,
             decimals,
             version,
+            name,
             ..
         } = state.guess_details()?;
 
@@ -65,7 +66,8 @@ impl TokenWallet {
         handler.on_balance_changed(balance.clone());
 
         let symbol = Symbol {
-            name: symbol,
+            name,
+            symbol,
             decimals,
             root_token_contract,
         };

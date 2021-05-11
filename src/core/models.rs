@@ -299,8 +299,11 @@ impl ExpireAt {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Symbol {
-    /// Symbol name, e.g. USDT, DAI, etc.
+    /// Full name
     pub name: String,
+
+    /// Short name, e.g. USDT, DAI, etc.
+    pub symbol: String,
 
     /// Fixed decimals count
     pub decimals: u8,
