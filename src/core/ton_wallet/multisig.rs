@@ -74,12 +74,12 @@ pub fn prepare_transfer(
     });
 
     let (function, input) =
-        MessageBuilder::new(contracts::abi::safe_multisig_wallet(), "sendTransaction")
+        MessageBuilder::new(contracts::abi::safe_multisig_wallet(), "submitTransaction")
             .trust_me()
             .arg(destination)
             .arg(BigUint128(amount.into()))
             .arg(bounce)
-            .arg(3u8) // flags
+            .arg(false) // allBalance
             .arg(body.unwrap_or_default().into_cell())
             .build();
 
