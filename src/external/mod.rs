@@ -21,6 +21,11 @@ pub trait Storage: Sync + Send {
 }
 
 #[async_trait]
+pub trait JrpcAdnlConnection: Send + Sync {
+    async fn send(&self, method: &str, params: tiny_jsonrpc::params::Params) -> Result<String>;
+}
+
+#[async_trait]
 pub trait AdnlConnection: Send + Sync {
     async fn query(&self, request: ton::TLObject) -> Result<ton::TLObject>;
 }
