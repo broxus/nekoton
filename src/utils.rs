@@ -368,7 +368,7 @@ pub mod serde_nonce {
                     x.len()
                 )))
             } else {
-                Ok(Nonce::clone_from_slice(&*x))
+                Ok(Nonce::clone_from_slice(&x))
             }
         })
     }
