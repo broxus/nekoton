@@ -140,6 +140,8 @@ impl TokenWallet {
         &self,
         destination: TransferRecipient,
         tokens: BigUint,
+        notify_receiver: bool,
+        payload: ton_types::Cell,
     ) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
 
@@ -163,8 +165,8 @@ impl TokenWallet {
         }
         .arg(BigUint128(Default::default())) // grams / transfer_grams
         .arg(&self.owner) // send_gas_to
-        .arg(false) // notify_receiver
-        .arg(ton_types::Cell::default()) // payload
+        .arg(notify_receiver) // notify_receiver
+        .arg(payload) // payload
         .build();
 
         let body = function

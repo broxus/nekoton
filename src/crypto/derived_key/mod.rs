@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use chacha20poly1305::aead::{Aead, NewAead};
+use chacha20poly1305::aead::NewAead;
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
 use ed25519_dalek::{PublicKey, Signer};
 use ring::digest;
@@ -58,9 +58,8 @@ impl StoreSigner for DerivedKeySigner {
                     None => return Err(MasterKeyError::MasterKeyNotFound.into()),
                 };
 
-                let decrypter = ChaCha20Poly1305::new(
-                    &super::symmetric::symmetric_key_from_password(password, &master_key.salt),
-                );
+                let decrypter =
+                    ChaCha20Poly1305::new(&symmetric_key_from_password(password, &master_key.salt));
 
                 let master = decrypt_secure(
                     &decrypter,
@@ -106,7 +105,7 @@ impl StoreSigner for DerivedKeySigner {
             None => return Err(MasterKeyError::MasterKeyNotFound.into()),
         };
 
-        let decrypter = ChaCha20Poly1305::new(&super::symmetric::symmetric_key_from_password(
+        let decrypter = ChaCha20Poly1305::new(&symmetric_key_from_password(
             input.password,
             &master_key.salt,
         ));
@@ -148,7 +147,7 @@ impl StoreSigner for DerivedKeySigner {
         let master = decrypt_secure(
             &decrypter,
             &master_key.entropy_nonce,
-            &*master_key.enc_entropy,
+            &master_key.enc_entropy,
         )?;
 
         let signer = derive_from_master(account_id, master)?;
@@ -442,33 +441,8 @@ enum MasterKeyError {
     DerivedKeyNotFound,
     #[error("Failed to derive account from master key")]
     DerivationError,
-    #[error("Failed to encrypt data")]
-    FailedToEncryptData,
-    #[error("Failed to decrypt data")]
-    FailedToDecryptData,
     #[error("Failed to generate random bytes")]
     FailedToGenerateRandomBytes,
-}
-
-/// Decrypts data using specified decrypter and nonce
-fn decrypt_secure(
-    dec: &ChaCha20Poly1305,
-    nonce: &Nonce,
-    data: &[u8],
-) -> Result<SecVec<u8>, MasterKeyError> {
-    decrypt(dec, nonce, data).map(SecVec::new)
-}
-
-/// Decrypts data using specified decrypter and nonce
-fn decrypt(dec: &ChaCha20Poly1305, nonce: &Nonce, data: &[u8]) -> Result<Vec<u8>, MasterKeyError> {
-    dec.decrypt(nonce, data)
-        .map_err(|_| MasterKeyError::FailedToDecryptData)
-}
-
-/// Encrypts data using specified encryptor and nonce
-fn encrypt(enc: &ChaCha20Poly1305, nonce: &Nonce, data: &[u8]) -> Result<Vec<u8>, MasterKeyError> {
-    enc.encrypt(nonce, data)
-        .map_err(|_| MasterKeyError::FailedToEncryptData)
 }
 
 #[cfg(test)]
