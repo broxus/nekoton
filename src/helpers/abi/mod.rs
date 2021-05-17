@@ -510,15 +510,20 @@ mod test {
     #[test]
     fn test_decode_partial() {
         let tokens = [
-            Token::new("wa", TokenValue::Uint(Uint::new(12345, 256))),
-            Token::new("wa", TokenValue::Uint(Uint::new(1337, 64))),
+            Token::new("first", TokenValue::Uint(Uint::new(12345, 256))),
+            Token::new("second", TokenValue::Uint(Uint::new(1337, 64))),
         ];
         let cell = pack_into_cell(&tokens).unwrap();
-        let data = SliceData::construct_from_cell(cell).unwrap();
-        let params = &[Param::new("wa", ParamType::Uint(256))];
-        let got = unpack_from_cell(params, data, false).unwrap();
+
+        let data: SliceData = cell.into();
+
+        let partial_params = &[Param::new("first", ParamType::Uint(256))];
+
+        assert!(unpack_from_cell(partial_params, data.clone(), false).is_err());
+
+        let got = unpack_from_cell(partial_params, data, true).unwrap();
         assert_eq!(
-            &[Token::new("wa", TokenValue::Uint(Uint::new(12345, 256))),],
+            &[Token::new("first", TokenValue::Uint(Uint::new(12345, 256))),],
             got.as_slice()
         );
     }
