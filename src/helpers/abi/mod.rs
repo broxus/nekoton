@@ -21,6 +21,7 @@ mod function_builder;
 mod message_builder;
 mod token_parser;
 mod tvm;
+
 const TON_ABI_VERSION: u8 = 2;
 
 pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
@@ -36,20 +37,19 @@ pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
     .map(SliceData::from)
 }
 
-pub fn encode_cell(tokens: &[ton_abi::Token]) -> Result<ton_types::Cell> {
+pub fn pack_into_cell(tokens: &[ton_abi::Token]) -> Result<ton_types::Cell> {
     let cells = Vec::new();
     ton_abi::TokenValue::pack_values_into_chain(tokens, cells, TON_ABI_VERSION)
         .and_then(|x| x.into_cell())
         .convert()
 }
 
-//todo normal naming
-pub fn decode_cell(
+pub fn unpack_from_cell(
     params: &[Param],
     mut cursor: SliceData,
-    parse_whole: bool,
+    allow_partial: bool,
 ) -> Result<Vec<Token>> {
-    let mut tokens = vec![];
+    let mut tokens = Vec::new();
 
     for param in params {
         let last = Some(param) == params.last();
@@ -63,8 +63,8 @@ pub fn decode_cell(
         });
     }
 
-    if parse_whole && (cursor.remaining_references() != 0 || cursor.remaining_bits() != 0) {
-        anyhow::bail!(AbiError::IncompleteDeserialization(cursor))
+    if !allow_partial && (cursor.remaining_references() != 0 || cursor.remaining_bits() != 0) {
+        Err(AbiError::IncompleteDeserialization(cursor).into())
     } else {
         Ok(tokens)
     }
@@ -493,17 +493,17 @@ mod test {
     fn test_encode_cell() {
         let expected = "te6ccgEBAQEAIgAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA5";
         let tokens = &[Token::new("wa", TokenValue::Uint(Uint::new(12345, 256)))];
-        let got = base64::encode(serialize_toc(&encode_cell(tokens).unwrap()).unwrap());
+        let got = base64::encode(serialize_toc(&pack_into_cell(tokens).unwrap()).unwrap());
         assert_eq!(expected, got);
     }
 
     #[test]
     fn test_decode_cell() {
         let tokens = [Token::new("wa", TokenValue::Uint(Uint::new(12345, 256)))];
-        let cell = encode_cell(&tokens).unwrap();
+        let cell = pack_into_cell(&tokens).unwrap();
         let data = SliceData::construct_from_cell(cell).unwrap();
         let params = &[Param::new("wa", ParamType::Uint(256))];
-        let got = decode_cell(params, data, true).unwrap();
+        let got = unpack_from_cell(params, data, true).unwrap();
         assert_eq!(&tokens, got.as_slice());
     }
 
@@ -513,10 +513,10 @@ mod test {
             Token::new("wa", TokenValue::Uint(Uint::new(12345, 256))),
             Token::new("wa", TokenValue::Uint(Uint::new(1337, 64))),
         ];
-        let cell = encode_cell(&tokens).unwrap();
+        let cell = pack_into_cell(&tokens).unwrap();
         let data = SliceData::construct_from_cell(cell).unwrap();
         let params = &[Param::new("wa", ParamType::Uint(256))];
-        let got = decode_cell(params, data, false).unwrap();
+        let got = unpack_from_cell(params, data, false).unwrap();
         assert_eq!(
             &[Token::new("wa", TokenValue::Uint(Uint::new(12345, 256))),],
             got.as_slice()
