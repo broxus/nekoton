@@ -5,7 +5,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use chrono::Utc;
 use num_bigint::{BigInt, BigUint};
-use ton_abi::{Function, Token, TokenValue};
+use ton_abi::{Function, Param, Token, TokenValue};
 use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
 use ton_types::{SliceData, UInt256};
@@ -21,6 +21,7 @@ mod function_builder;
 mod message_builder;
 mod token_parser;
 mod tvm;
+const TON_ABI_VERSION: u8 = 2;
 
 pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
     ton_abi::TokenValue::pack_values_into_chain(
@@ -33,6 +34,40 @@ pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
     )
     .convert()
     .map(SliceData::from)
+}
+
+pub fn encode_cell(tokens: &[ton_abi::Token]) -> Result<ton_types::Cell> {
+    let cells = Vec::new();
+    ton_abi::TokenValue::pack_values_into_chain(tokens, cells, TON_ABI_VERSION)
+        .and_then(|x| x.into_cell())
+        .convert()
+}
+
+//todo normal naming
+pub fn decode_cell(
+    params: &[Param],
+    mut cursor: SliceData,
+    parse_whole: bool,
+) -> Result<Vec<Token>> {
+    let mut tokens = vec![];
+
+    for param in params {
+        let last = Some(param) == params.last();
+        let (token_value, new_cursor) =
+            TokenValue::read_from(&param.kind, cursor, last, TON_ABI_VERSION).convert()?;
+
+        cursor = new_cursor;
+        tokens.push(Token {
+            name: param.name.clone(),
+            value: token_value,
+        });
+    }
+
+    if parse_whole && (cursor.remaining_references() != 0 || cursor.remaining_bits() != 0) {
+        anyhow::bail!(AbiError::IncompleteDeserialization(cursor))
+    } else {
+        Ok(tokens)
+    }
 }
 
 pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
@@ -248,6 +283,8 @@ enum AbiError {
     InvalidOutputMessage,
     #[error("No external output messages")]
     NoMessagesProduced,
+    #[error("Incomplete Deserialization")]
+    IncompleteDeserialization(SliceData),
 }
 
 pub struct Executor {
@@ -353,7 +390,9 @@ impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod test {
+    use ton_abi::{Param, ParamType, Uint};
     use ton_block::{Deserializable, Message, Transaction};
+    use ton_types::serialize_toc;
 
     use super::*;
 
@@ -448,5 +487,39 @@ mod test {
 
         let decoded_comment = parse_comment_payload(encoded_comment).unwrap();
         assert_eq!(decoded_comment, comment);
+    }
+
+    #[test]
+    fn test_encode_cell() {
+        let expected = "te6ccgEBAQEAIgAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA5";
+        let tokens = &[Token::new("wa", TokenValue::Uint(Uint::new(12345, 256)))];
+        let got = base64::encode(serialize_toc(&encode_cell(tokens).unwrap()).unwrap());
+        assert_eq!(expected, got);
+    }
+
+    #[test]
+    fn test_decode_cell() {
+        let tokens = [Token::new("wa", TokenValue::Uint(Uint::new(12345, 256)))];
+        let cell = encode_cell(&tokens).unwrap();
+        let data = SliceData::construct_from_cell(cell).unwrap();
+        let params = &[Param::new("wa", ParamType::Uint(256))];
+        let got = decode_cell(params, data, true).unwrap();
+        assert_eq!(&tokens, got.as_slice());
+    }
+
+    #[test]
+    fn test_decode_partial() {
+        let tokens = [
+            Token::new("wa", TokenValue::Uint(Uint::new(12345, 256))),
+            Token::new("wa", TokenValue::Uint(Uint::new(1337, 64))),
+        ];
+        let cell = encode_cell(&tokens).unwrap();
+        let data = SliceData::construct_from_cell(cell).unwrap();
+        let params = &[Param::new("wa", ParamType::Uint(256))];
+        let got = decode_cell(params, data, false).unwrap();
+        assert_eq!(
+            &[Token::new("wa", TokenValue::Uint(Uint::new(12345, 256))),],
+            got.as_slice()
+        );
     }
 }
