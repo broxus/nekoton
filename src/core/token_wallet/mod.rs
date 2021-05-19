@@ -393,6 +393,7 @@ fn select_token_contract(version: TokenWalletVersion) -> Result<&'static ton_abi
         TokenWalletVersion::Tip3v1 => return Err(TokenWalletError::UnsupportedVersion.into()),
         TokenWalletVersion::Tip3v2 => contracts::abi::ton_token_wallet_v2(),
         TokenWalletVersion::Tip3v3 => contracts::abi::ton_token_wallet_v3(),
+        TokenWalletVersion::Tip3v4 => contracts::abi::ton_token_wallet_v4(),
     })
 }
 
@@ -497,8 +498,18 @@ impl<'a> RootTokenContractState<'a> {
         let mut details_abi = abi::TupleBuilder::new()
             .arg("name", ton_abi::ParamType::Bytes)
             .arg("symbol", ton_abi::ParamType::Bytes)
-            .arg("decimals", ton_abi::ParamType::Uint(8))
-            .arg("wallet_code", ton_abi::ParamType::Cell)
+            .arg("decimals", ton_abi::ParamType::Uint(8));
+
+        match version {
+            TokenWalletVersion::Tip3v1
+            | TokenWalletVersion::Tip3v2
+            | TokenWalletVersion::Tip3v3 => {
+                details_abi = details_abi.arg("wallet_code", ton_abi::ParamType::Cell);
+            }
+            _ => {}
+        };
+
+        details_abi = details_abi
             .arg("root_public_key", ton_abi::ParamType::Uint(256))
             .arg("root_owner_address", ton_abi::ParamType::Address)
             .arg("total_supply", ton_abi::ParamType::Uint(128));
@@ -587,8 +598,19 @@ impl<'a> TokenWalletContractState<'a> {
     }
 
     pub fn get_details(&self, version: TokenWalletVersion) -> Result<TokenWalletDetails> {
-        let mut details_abi = abi::TupleBuilder::new()
-            .arg("root_address", ton_abi::ParamType::Address)
+        let mut details_abi =
+            abi::TupleBuilder::new().arg("root_address", ton_abi::ParamType::Address);
+
+        match version {
+            TokenWalletVersion::Tip3v1
+            | TokenWalletVersion::Tip3v2
+            | TokenWalletVersion::Tip3v3 => {
+                details_abi = details_abi.arg("code", ton_abi::ParamType::Cell);
+            }
+            _ => {}
+        }
+
+        details_abi = details_abi
             .arg("code", ton_abi::ParamType::Cell)
             .arg("wallet_public_key", ton_abi::ParamType::Uint(256))
             .arg("owner_address", ton_abi::ParamType::Address)

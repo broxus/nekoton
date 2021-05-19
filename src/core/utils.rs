@@ -918,6 +918,10 @@ impl TokenWalletFunctions {
                 static IDS: OnceCell<TokenWalletFunctions> = OnceCell::new();
                 IDS.get_or_init(|| Self::new(contracts::abi::ton_token_wallet_v3()))
             }
+            TokenWalletVersion::Tip3v4 => {
+                static IDS: OnceCell<TokenWalletFunctions> = OnceCell::new();
+                IDS.get_or_init(|| Self::new(contracts::abi::ton_token_wallet_v4()))
+            }
         })
     }
 }
@@ -943,6 +947,10 @@ impl RootTokenContractFunctions {
             TokenWalletVersion::Tip3v3 => {
                 static IDS: OnceCell<RootTokenContractFunctions> = OnceCell::new();
                 IDS.get_or_init(|| Self::new(contracts::abi::root_token_contract_v3()))
+            }
+            TokenWalletVersion::Tip3v4 => {
+                static IDS: OnceCell<RootTokenContractFunctions> = OnceCell::new();
+                IDS.get_or_init(|| Self::new(contracts::abi::root_token_contract_v4()))
             }
         })
     }
