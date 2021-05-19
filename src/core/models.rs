@@ -338,6 +338,7 @@ impl TryFrom<u32> for TokenWalletVersion {
             1 => Self::Tip3v1,
             2 => Self::Tip3v2,
             3 => Self::Tip3v3,
+            4 => Self::Tip3v4,
             _ => return Err(UnknownTokenWalletVersion.into()),
         })
     }
