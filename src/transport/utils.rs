@@ -18,7 +18,7 @@ impl ConfigCache {
     pub async fn get_blockchain_config(
         &self,
         transport: &dyn Transport,
-    ) -> Result<ton_executor::BlockchainConfig> {
+    ) -> Result<ton_executor::Blockcha8inConfig> {
         let mut cache = self.state.lock().await;
 
         let now = chrono::Utc::now().timestamp() as u32;

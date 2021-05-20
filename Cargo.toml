@@ -38,12 +38,10 @@ sha2 = "0.9"
 thiserror = "1.0"
 tiny-bip39 = "0.8.0"
 tiny-hderive = "0.3.0"
-tiny-jsonrpc = {version = "0.3.0",  default-features = false }
 tokio = { version = "1.4", default-features = false, features = ["sync"] }
 x25519-dalek = "1.1"
 zeroize = "1.2.0"
 
-adnl_rpc_models = { git = "ssh://git@gitlab.dexpa.io/crystal-wallet/adnl_rpc.git" }
 ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi.git" }
 ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "original", package = "ton_api" }
 ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
