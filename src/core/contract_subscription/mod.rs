@@ -242,11 +242,21 @@ impl ContractSubscription {
             limit,
         );
 
-        while let Some((new_transactions, mut batch_info)) = transactions.next().await {
-            if new_transactions.is_empty() {
-                continue;
-            }
+        let mut new_transactions = Vec::new();
+        while let Some(transactions) = transactions.next().await {
+            new_transactions.extend(transactions.into_iter());
+        }
 
+        let batch_info = match (new_transactions.first(), new_transactions.last()) {
+            (Some(first), Some(last)) => Some(TransactionsBatchInfo {
+                min_lt: last.data.lt, // transactions in response are in descending order
+                max_lt: first.data.lt,
+                old: false,
+            }),
+            _ => None,
+        };
+
+        if let Some(mut batch_info) = batch_info {
             // requires `&mut self`, so `request_transactions` must use outer objects
             self.check_executed_transactions(&new_transactions, &mut on_message_sent);
 
@@ -255,10 +265,9 @@ impl ContractSubscription {
                     new_transactions.first().map(|transaction| transaction.id());
             }
 
-            // `utils::request_transactions` returns transactions which are marked new
-            // (`batch_info.old == false`). So, to mark first transactions we get as old,
-            // we should use initialization flag.
-            batch_info.old |= !self.initialized;
+            // `utils::request_transactions` returns new transactions. So, to mark
+            // first transactions we get as old, we should use initialization flag.
+            batch_info.old = !self.initialized;
 
             on_transactions_found(new_transactions, batch_info);
         }

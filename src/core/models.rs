@@ -324,6 +324,9 @@ crate::define_string_enum!(
         /// Third iteration of token wallets with updated compiler version and responsible getters.
         /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/e7ef0506081fb36de94ea92d1bc1c50888ca65bc)
         Tip3v3,
+        /// Third iteration of token wallets, but with fixed bugs
+        /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/74905260499d79cf7cb0d89a6eb572176fc1fcd5)
+        Tip3v4,
     }
 );
 
@@ -335,6 +338,7 @@ impl TryFrom<u32> for TokenWalletVersion {
             1 => Self::Tip3v1,
             2 => Self::Tip3v2,
             3 => Self::Tip3v3,
+            4 => Self::Tip3v4,
             _ => return Err(UnknownTokenWalletVersion.into()),
         })
     }

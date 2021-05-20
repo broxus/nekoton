@@ -56,7 +56,7 @@ pub fn request_transactions<'a>(
     until: Option<&'a TransactionId>,
     initial_count: u8,
     limit: Option<usize>,
-) -> impl Stream<Item = NewTransactions> + 'a {
+) -> impl Stream<Item = Vec<RawTransaction>> + 'a {
     let count = u8::min(initial_count, transport.max_transactions_per_fetch());
 
     LatestTransactions {
@@ -253,7 +253,7 @@ struct LatestTransactions<'a> {
 type TransactionsFut<'a> = Pin<Box<dyn Future<Output = Result<Vec<RawTransaction>>> + Send + 'a>>;
 
 impl<'a> Stream for LatestTransactions<'a> {
-    type Item = NewTransactions;
+    type Item = Vec<RawTransaction>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let new_transactions = match self.fut.take() {
@@ -291,17 +291,8 @@ impl<'a> Stream for LatestTransactions<'a> {
         }
 
         // get batch info
-        let (last, info) = match (new_transactions.first(), new_transactions.last()) {
-            (Some(first), Some(last)) => {
-                (
-                    last,
-                    TransactionsBatchInfo {
-                        min_lt: last.data.lt, // transactions in response are in descending order
-                        max_lt: first.data.lt,
-                        old: false,
-                    },
-                )
-            }
+        let last = match new_transactions.last() {
+            Some(last) => last,
             _ => return Poll::Ready(None),
         };
 
@@ -309,7 +300,7 @@ impl<'a> Stream for LatestTransactions<'a> {
         if last.data.prev_trans_lt == 0
             || matches!(self.until, Some(until) if last.data.prev_trans_lt <= until.lt)
         {
-            return Poll::Ready(Some((new_transactions, info)));
+            return Poll::Ready(Some(new_transactions));
         }
 
         // update counters
@@ -317,7 +308,7 @@ impl<'a> Stream for LatestTransactions<'a> {
 
         let next_count = match self.limit {
             Some(limit) if self.total_fetched >= limit => {
-                return Poll::Ready(Some((new_transactions, info)))
+                return Poll::Ready(Some(new_transactions))
             }
             Some(limit) => usize::min(
                 limit - self.total_fetched,
@@ -337,7 +328,7 @@ impl<'a> Stream for LatestTransactions<'a> {
         ));
 
         // Return result
-        Poll::Ready(Some((new_transactions, info)))
+        Poll::Ready(Some(new_transactions))
     }
 }
 
@@ -927,6 +918,10 @@ impl TokenWalletFunctions {
                 static IDS: OnceCell<TokenWalletFunctions> = OnceCell::new();
                 IDS.get_or_init(|| Self::new(contracts::abi::ton_token_wallet_v3()))
             }
+            TokenWalletVersion::Tip3v4 => {
+                static IDS: OnceCell<TokenWalletFunctions> = OnceCell::new();
+                IDS.get_or_init(|| Self::new(contracts::abi::ton_token_wallet_v4()))
+            }
         })
     }
 }
@@ -952,6 +947,10 @@ impl RootTokenContractFunctions {
             TokenWalletVersion::Tip3v3 => {
                 static IDS: OnceCell<RootTokenContractFunctions> = OnceCell::new();
                 IDS.get_or_init(|| Self::new(contracts::abi::root_token_contract_v3()))
+            }
+            TokenWalletVersion::Tip3v4 => {
+                static IDS: OnceCell<RootTokenContractFunctions> = OnceCell::new();
+                IDS.get_or_init(|| Self::new(contracts::abi::root_token_contract_v4()))
             }
         })
     }
