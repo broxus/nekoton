@@ -1092,12 +1092,12 @@ mod tests {
     #[test]
     fn root_meta_address() {
         let root_contract_address =
-            convert_address("0:5b325f4f364366d9b3fe46cc77f622b013da7a7edf99a3d5d25e5510dca50d13");
+            convert_address("0:53abe27ec16208973c9643911c35b5d033744fbb95b11b5672f71188db5a42dc");
 
         let root_meta_address = compute_root_meta_address(&root_contract_address);
         assert_eq!(
             root_meta_address,
-            convert_address("0:2559c86528bdfbf9a69b5d7cf4141b7370d38d322d169421c7ded14c66266fbb")
+            convert_address("0:23be4163ef1512a1188d3e74a932e4a1df30403307d281304c388dd7fbe71e81")
         )
     }
 
