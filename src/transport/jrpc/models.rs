@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::core::models::TransactionId;
-use crate::utils::{serde_address, serde_bytes, serde_message, serde_ton_block};
+use crate::utils::{serde_address, serde_bytes_base64, serde_message, serde_ton_block};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct GetContractState {
@@ -26,7 +26,7 @@ pub struct GetTransactions {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RawTransactionsList {
-    #[serde(with = "serde_bytes")]
+    #[serde(with = "serde_bytes_base64")]
     pub transactions: Vec<u8>,
 }
 

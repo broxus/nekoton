@@ -1,11 +1,9 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use serde::Serialize;
-use ton_block::{Block, MsgAddressInt};
-use ton_executor::BlockchainConfig;
-
 use models::*;
+use serde::Serialize;
+use ton_block::{Block, Deserializable, MsgAddressInt};
 
 use crate::core::models::TransactionId;
 use crate::external::{JrpcConnection, JrpcRequest};
@@ -13,16 +11,21 @@ use crate::transport::models::{RawContractState, RawTransaction};
 use crate::utils::TrustMe;
 
 use super::Transport;
+use crate::transport::utils::ConfigCache;
 
 mod models;
 
 pub struct JrpcTransport {
     connection: Arc<dyn JrpcConnection>,
+    config_cache: ConfigCache,
 }
 
 impl JrpcTransport {
     pub fn new(connection: Arc<dyn JrpcConnection>) -> Self {
-        Self { connection }
+        Self {
+            connection,
+            config_cache: ConfigCache::new(),
+        }
     }
 }
 
@@ -56,7 +59,6 @@ impl Transport for JrpcTransport {
             .connection
             .post(request_data("getContractState", Some(message)))
             .await?;
-        println!("{}", data);
         tiny_jsonrpc::parse_response(&data)
     }
 
@@ -75,13 +77,25 @@ impl Transport for JrpcTransport {
             transaction_id,
             count,
         };
-        let data: RawTransactionsList = self
+        let data = self
             .connection
-            .post(request_data("getTransactions", Some(vec![(obj)])))
-            .await
-            .map(|data| tiny_jsonrpc::parse_response(&data))??;
-        // data.transactions
-        todo!("howto map")
+            .post(request_data("getTransactions", Some(obj)))
+            .await?;
+        let parsed: RawTransactionsList = tiny_jsonrpc::parse_response(&data)?;
+        let transactions =
+            ton_types::deserialize_cells_tree(&mut std::io::Cursor::new(&parsed.transactions))
+                .map_err(|_| anyhow::anyhow!("Invalid transaction list"))?;
+
+        let mut result = Vec::with_capacity(transactions.len());
+        for item in transactions.into_iter() {
+            let hash = item.repr_hash();
+            result.push(RawTransaction {
+                hash,
+                data: ton_block::Transaction::construct_from_cell(item)
+                    .map_err(|_| anyhow::anyhow!("Invalid transaction"))?,
+            });
+        }
+        Ok(result)
     }
 
     async fn get_latest_key_block(&self) -> Result<Block> {
@@ -92,25 +106,22 @@ impl Transport for JrpcTransport {
             .map(|block: RawBlock| block.block)
     }
 
-    async fn get_blockchain_config(&self) -> Result<BlockchainConfig> {
-        todo!("Not impleneted on server side")
+    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
+        self.config_cache.get_blockchain_config(self).await
     }
 }
 
 #[cfg(test)]
 #[cfg(feature = "integration_test")]
 mod test {
+    use super::Transport;
+    use crate::core::models::TransactionId;
+    use crate::external::{JrpcConnection, JrpcRequest};
+    use anyhow::Result;
     use std::str::FromStr;
     use std::sync::Arc;
-
-    use anyhow::Result;
-    use serde_json::Value;
     use ton_block::MsgAddressInt;
-
-    use crate::external::{JrpcConnection, JrpcRequest};
-    use crate::transport::jrpc::JrpcTransport;
-
-    use super::Transport;
+    use ton_types::UInt256;
 
     #[async_trait::async_trait]
     impl JrpcConnection for reqwest::Client {
@@ -134,7 +145,7 @@ mod test {
         let client = Arc::new(reqwest::Client::new());
         let transport = super::JrpcTransport::new(client);
         let id = transport.get_latest_key_block().await.unwrap().global_id;
-        print!("{}\n", id);
+        println!("{}", id);
     }
 
     #[tokio::test]
@@ -152,6 +163,45 @@ mod test {
             .unwrap()
             .brief()
             .balance;
-        print!("{}\n", id);
+        println!("{}", id);
+    }
+
+    #[tokio::test]
+    async fn test_get_tranactions() {
+        let client = Arc::new(reqwest::Client::new());
+        let transport = super::JrpcTransport::new(client);
+        let id = transport
+            .get_transactions(
+                MsgAddressInt::from_str(
+                    "-1:5555555555555555555555555555555555555555555555555555555555555555",
+                )
+                .unwrap(),
+                TransactionId {
+                    hash: UInt256::from_str(
+                        "0100be1d1d48389cace7370792caea3273bd071d000d1263cf6cda27cbb87a0e",
+                    )
+                    .unwrap(),
+                    lt: 14313437000003,
+                },
+                10,
+            )
+            .await
+            .unwrap()
+            .len();
+        println!("{}", id);
+    }
+
+    #[tokio::test]
+    async fn test_get_config() {
+        let client = Arc::new(reqwest::Client::new());
+        let transport = super::JrpcTransport::new(client);
+        let id = transport
+            .get_blockchain_config()
+            .await
+            .unwrap()
+            .get_fwd_prices(true)
+            .cell_price;
+
+        println!("{}", id);
     }
 }
