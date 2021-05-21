@@ -7,7 +7,7 @@ use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum RawContractState {
     NotExists,
@@ -23,7 +23,8 @@ impl RawContractState {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExistingContract {
     #[serde(with = "serde_ton_block")]
     pub account: AccountStuff,

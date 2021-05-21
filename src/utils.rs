@@ -403,7 +403,7 @@ pub mod serde_cell {
         use serde::ser::Error;
 
         let bytes = ton_types::serialize_toc(data).map_err(S::Error::custom)?;
-        serializer.serialize_str(&hex::encode(bytes))
+        serializer.serialize_str(&base64::encode(bytes))
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Cell, D::Error>

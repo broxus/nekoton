@@ -1,6 +1,7 @@
+use serde::{Deserialize, Serialize};
+
 use crate::core::models::TransactionId;
 use crate::utils::{serde_address, serde_bytes, serde_message, serde_ton_block};
-use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Clone)]
 pub struct GetContractState {
