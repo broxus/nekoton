@@ -32,7 +32,7 @@ pub trait GqlConnection: Send + Sync {
 
 #[async_trait]
 pub trait JrpcConnection: Send + Sync {
-    async fn post(&self, data: &str) -> Result<String>;
+    async fn post(&self, data: serde_json::Value) -> Result<String>;
 }
 
 #[async_trait]

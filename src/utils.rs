@@ -419,3 +419,55 @@ pub mod serde_cell {
         Ok(cell)
     }
 }
+
+pub mod serde_message {
+    use super::*;
+    use serde::Deserialize;
+    use ton_block::{Deserializable, Serializable};
+
+    pub fn serialize<S>(data: &ton_block::Message, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::Error;
+
+        serde_cell::serialize(&data.serialize().map_err(S::Error::custom)?, serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<ton_block::Message, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        let data = String::deserialize(deserializer)?;
+        ton_block::Message::construct_from_base64(&data).map_err(D::Error::custom)
+    }
+}
+
+pub mod serde_ton_block {
+    use super::*;
+    use serde::Deserialize;
+    use ton_block::{Deserializable, Serializable};
+
+    pub fn serialize<S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: Serializable,
+    {
+        use serde::ser::Error;
+
+        serde_cell::serialize(&data.serialize().map_err(S::Error::custom)?, serializer)
+    }
+
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+        T: Deserializable,
+    {
+        use serde::de::Error;
+
+        let data = String::deserialize(deserializer)?;
+        T::construct_from_base64(&data).map_err(D::Error::custom)
+    }
+}

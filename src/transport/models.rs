@@ -1,12 +1,14 @@
-use ton_block::{AccountStuff, Transaction};
-use ton_types::UInt256;
-
 use crate::core::models::{
     ContractState, GenTimings, LastTransactionId, PendingTransaction, TransactionId,
 };
+use crate::utils::serde_ton_block;
+use serde::{Deserialize, Serialize};
+use ton_block::{AccountStuff, Transaction};
+use ton_types::UInt256;
 
 #[allow(clippy::large_enum_variant)]
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
 pub enum RawContractState {
     NotExists,
     Exists(ExistingContract),
@@ -21,8 +23,9 @@ impl RawContractState {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ExistingContract {
+    #[serde(with = "serde_ton_block")]
     pub account: AccountStuff,
     pub timings: GenTimings,
     pub last_transaction_id: LastTransactionId,

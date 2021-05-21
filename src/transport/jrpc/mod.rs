@@ -1,16 +1,19 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use serde_json::Value;
-use ton_block::{Deserializable, MsgAddressInt, Serializable};
+use serde::Serialize;
+use ton_block::{Block, MsgAddressInt};
 use ton_executor::BlockchainConfig;
 
+use models::*;
+
 use crate::core::models::TransactionId;
-use crate::external::{AdnlConnection, JrpcConnection};
+use crate::external::JrpcConnection;
 use crate::transport::models::{RawContractState, RawTransaction};
-use crate::utils::*;
 
 use super::Transport;
+
+mod models;
 
 pub struct JrpcTransport {
     connection: Arc<dyn JrpcConnection>,
@@ -22,9 +25,18 @@ impl JrpcTransport {
     }
 }
 
-struct JrpcRequest<'a> {
-    pub method: &'a str,
-    pub params: &'a dyn serde::Serialize,
+fn request_data(method: &str, params: Option<Vec<serde_json::Value>>) -> serde_json::Value {
+    #[derive(Serialize)]
+    struct JrpcRequest<'a> {
+        pub method: &'a str,
+        pub params: serde_json::Value,
+    }
+
+    let data = JrpcRequest {
+        method,
+        params: serde_json::json!(params),
+    };
+    serde_json::json!(data)
 }
 
 #[async_trait::async_trait]
@@ -35,24 +47,22 @@ impl Transport for JrpcTransport {
 
     async fn send_message(&self, message: &ton_block::Message) -> Result<()> {
         let param = serde_json::to_value(SendMessage { message })?;
-
-        self.connection
-            .send("send_message", Params::Array(vec![param]))
-            .await
-            .map(|_| ())
+        let data = request_data("send_message", Some(vec![param]));
+        self.connection.post(data).await.map(|_| ())
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
-        let message = SendMessage {
-            message: message.clone(),
+        let message = GetContractState {
+            address: address.clone(),
         };
-
-        self.connection
-            .send(
+        let data = self
+            .connection
+            .post(request_data(
                 "get_contract_state",
-                Params::Array(vec![serde_json::json!(message)]),
-            )
-            .await;
+                Some(vec![serde_json::json!(message)]),
+            ))
+            .await?;
+        tiny_jsonrpc::parse_response(&data)
     }
 
     async fn get_transactions(
@@ -61,65 +71,36 @@ impl Transport for JrpcTransport {
         from: TransactionId,
         count: u8,
     ) -> Result<Vec<RawTransaction>> {
-        let transaction_id = adnl_rpc_models::TransactionId {
+        let transaction_id = TransactionId {
             hash: from.hash,
             lt: from.lt,
         };
-        let obj = serde_json::json!(GetTransactions {
+        let obj = GetTransactions {
             address,
             transaction_id,
             count,
-        });
-
-        self.connection
-            .send("send_message", Params::Array(vec![obj]))
+        };
+        let data: RawTransactionsList = self
+            .connection
+            .post(request_data(
+                "send_message",
+                Some(vec![serde_json::json!((obj))]),
+            ))
             .await
-            .map(|data| base64::decode(data))?
-            .map()
+            .map(|data| tiny_jsonrpc::parse_response(&data))??;
+        // data.transactions
+        todo!("howto map")
     }
 
     async fn get_latest_key_block(&self) -> Result<Block> {
         self.connection
-            .send("get_latest_key_block", Params::None)
+            .post(request_data("get_latest_key_block", None))
             .await
-            .map()
+            .map(|data| tiny_jsonrpc::parse_response(&data))?
+            .map(|block: RawBlock| block.block)
     }
 
     async fn get_blockchain_config(&self) -> Result<BlockchainConfig> {
-        self.connection
-            .send("get_blockchain_config", Params::None)
-            .await
-            .map()
+        todo!("Not impleneted on server side")
     }
-}
-
-#[derive(Serialize)]
-struct GetContractState {
-    #[serde(with = "serde_address")]
-    address: ton_block::MsgAddressInt,
-}
-
-#[derive(Serialize)]
-struct SendMessage<'a> {
-    #[serde(with = "serde_message")]
-    message: &'a ton_block::Message,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct GetTransactions {
-    #[serde(with = "serde_address")]
-    address: ton_block::MsgAddressInt,
-    transaction_id: TransactionId,
-    count: u8,
-}
-
-pub fn serialize_ton_block<S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-    T: Serializable,
-{
-    use serde::ser::Error;
-
-    serde_cell::serialize(&data.serialize().map_err(S::Error::custom)?, serializer)
 }

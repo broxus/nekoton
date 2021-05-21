@@ -48,6 +48,7 @@ ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
 ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
+tiny-jsonrpc = {version = "0.5.0", features = [] }
 
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
