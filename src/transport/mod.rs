@@ -8,6 +8,7 @@ use self::models::*;
 
 pub mod adnl;
 pub mod gql;
+pub mod jrpc;
 pub mod models;
 mod utils;
 
