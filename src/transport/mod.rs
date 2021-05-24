@@ -7,10 +7,18 @@ use crate::core::models::{ReliableBehavior, TransactionId};
 
 use self::models::*;
 
+#[cfg(feature = "adnl_transport")]
 pub mod adnl;
+#[cfg(feature = "gql_transport")]
 pub mod gql;
+#[cfg(feature = "jrpc_transport")]
 pub mod jrpc;
 pub mod models;
+#[cfg(any(
+    feature = "adnl_transport",
+    feature = "gql_transport",
+    feature = "jrpc_transport"
+))]
 mod utils;
 
 #[async_trait]

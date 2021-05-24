@@ -1,5 +1,6 @@
 use anyhow::Result;
 use async_trait::async_trait;
+#[cfg(feature = "adnl_transport")]
 use ton_api::ton;
 
 #[async_trait]
@@ -20,21 +21,25 @@ pub trait Storage: Sync + Send {
     fn remove_unchecked(&self, key: &str);
 }
 
+#[cfg(feature = "adnl_transport")]
 #[async_trait]
 pub trait AdnlConnection: Send + Sync {
     async fn query(&self, request: ton::TLObject) -> Result<ton::TLObject>;
 }
 
+#[cfg(feature = "gql_transport")]
 #[async_trait]
 pub trait GqlConnection: Send + Sync {
     async fn post(&self, data: &str) -> Result<String>;
 }
 
+#[cfg(feature = "jrpc_transport")]
 pub struct JrpcRequest<'a> {
     pub method: &'a str,
     pub params: serde_json::Value,
 }
 
+#[cfg(feature = "jrpc_transport")]
 #[async_trait]
 pub trait JrpcConnection: Send + Sync {
     async fn post<'a>(&self, req: JrpcRequest<'a>) -> Result<String>;
