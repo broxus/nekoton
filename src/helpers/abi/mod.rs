@@ -6,7 +6,7 @@ use anyhow::Result;
 use chrono::Utc;
 use num_bigint::{BigInt, BigUint};
 use ton_abi::{Function, Param, Token, TokenValue};
-use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt};
+use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt, Serializable};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
 use ton_types::{SliceData, UInt256};
 
@@ -35,6 +35,33 @@ pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
     )
     .convert()
     .map(SliceData::from)
+}
+
+pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
+    if payload.get_next_u32().ok()? != 0 {
+        return None;
+    }
+
+    let mut cell = payload.checked_drain_reference().ok()?;
+
+    let mut data = Vec::new();
+    loop {
+        data.extend_from_slice(cell.data());
+        data.pop();
+        cell = match cell.reference(0) {
+            Ok(cell) => cell.clone(),
+            Err(_) => break,
+        };
+    }
+
+    String::from_utf8(data).ok()
+}
+
+pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
+    let bytes = base64::decode(&cell)?;
+    let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
+        .map_err(|_| ParserError::InvalidAbi)?;
+    Ok(SliceData::from(cell))
 }
 
 pub fn pack_into_cell(tokens: &[ton_abi::Token]) -> Result<ton_types::Cell> {
@@ -70,31 +97,54 @@ pub fn unpack_from_cell(
     }
 }
 
-pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
-    if payload.get_next_u32().ok()? != 0 {
-        return None;
-    }
+pub fn extract_public_key(
+    account: &ton_block::AccountStuff,
+) -> Result<ed25519_dalek::PublicKey, ExtractionError> {
+    let state_init = match &account.storage.state {
+        ton_block::AccountState::AccountActive(state_init) => state_init,
+        _ => return Err(ExtractionError::AccountIsNotActive),
+    };
+    let mut data: ton_types::SliceData = match &state_init.data {
+        Some(data) => data.into(),
+        None => return Err(ExtractionError::AccountDataNotFound),
+    };
+    let data = data
+        .get_next_bytes(32)
+        .map_err(|_| ExtractionError::CellUnderflow)?;
 
-    let mut cell = payload.checked_drain_reference().ok()?;
-
-    let mut data = Vec::new();
-    loop {
-        data.extend_from_slice(cell.data());
-        data.pop();
-        cell = match cell.reference(0) {
-            Ok(cell) => cell.clone(),
-            Err(_) => break,
-        };
-    }
-
-    String::from_utf8(data).ok()
+    Ok(ed25519_dalek::PublicKey::from_bytes(&data).trust_me())
 }
 
-pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
-    let bytes = base64::decode(&cell)?;
-    let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
-        .map_err(|_| ParserError::InvalidAbi)?;
-    Ok(SliceData::from(cell))
+#[derive(thiserror::Error, Debug)]
+pub enum ExtractionError {
+    #[error("Account is not active")]
+    AccountIsNotActive,
+    #[error("Account data not found")]
+    AccountDataNotFound,
+    #[error("Cell underflow")]
+    CellUnderflow,
+}
+
+pub fn code_to_tvc(code: ton_types::Cell) -> Result<ton_block::StateInit> {
+    let pubkey_vec = vec![0; 32];
+    let pubkey_len = pubkey_vec.len() * 8;
+    let value = ton_types::BuilderData::with_raw(pubkey_vec, pubkey_len).unwrap_or_default();
+
+    let mut init_data = ton_types::HashmapE::with_bit_len(ton_abi::Contract::DATA_MAP_KEYLEN);
+    init_data
+        .set(0u64.write_to_new_cell().unwrap().into(), &value.into())
+        .convert()?;
+
+    let data = init_data
+        .write_to_new_cell()
+        .and_then(|data| data.into_cell())
+        .convert()?;
+
+    Ok(ton_block::StateInit {
+        code: Some(code),
+        data: Some(data),
+        ..Default::default()
+    })
 }
 
 pub trait FunctionExt {
