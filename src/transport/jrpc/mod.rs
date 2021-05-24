@@ -5,13 +5,12 @@ use models::*;
 use serde::Serialize;
 use ton_block::{Block, Deserializable, MsgAddressInt};
 
-use crate::core::models::TransactionId;
+use super::models::{RawContractState, RawTransaction};
+use super::{Transport, TransportInfo};
+use crate::core::models::{ReliableBehavior, TransactionId};
 use crate::external::{JrpcConnection, JrpcRequest};
-use crate::transport::models::{RawContractState, RawTransaction};
-use crate::utils::TrustMe;
-
-use super::Transport;
 use crate::transport::utils::ConfigCache;
+use crate::utils::TrustMe;
 
 mod models;
 
@@ -41,8 +40,11 @@ where
 
 #[async_trait::async_trait]
 impl Transport for JrpcTransport {
-    fn max_transactions_per_fetch(&self) -> u8 {
-        16
+    fn info(&self) -> TransportInfo {
+        TransportInfo {
+            max_transactions_per_fetch: 16,
+            reliable_behavior: ReliableBehavior::IntensivePolling,
+        }
     }
 
     async fn send_message(&self, message: &ton_block::Message) -> Result<()> {

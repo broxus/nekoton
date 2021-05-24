@@ -222,16 +222,25 @@ pub struct TonEventData {
     pub to: String,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum PollingMethod {
-    /// Manual polling once a minute or by a click.
-    /// Used when there are no pending transactions
-    Manual,
-    /// Block-walking for GQL or fast refresh for ADNL.
-    /// Used when there are some pending transactions
-    Reliable,
-}
+crate::define_string_enum!(
+    pub enum PollingMethod {
+        /// Manual polling once a minute or by a click.
+        /// Used when there are no pending transactions
+        Manual,
+        /// Block-walking for GQL or fast refresh for ADNL.
+        /// Used when there are some pending transactions
+        Reliable,
+    }
+);
+
+crate::define_string_enum!(
+    pub enum ReliableBehavior {
+        /// Used for transports which doesn't support getting blocks directly (ADNL)
+        IntensivePolling,
+        /// Used for transports which support getting blocks directly (GQL)
+        BlockWalking,
+    }
+);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

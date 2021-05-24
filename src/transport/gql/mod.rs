@@ -7,11 +7,11 @@ use async_trait::async_trait;
 use graphql_client::*;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
+use super::models::*;
 use super::utils::ConfigCache;
-use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
+use super::{Transport, TransportInfo};
+use crate::core::models::{GenTimings, LastTransactionId, ReliableBehavior, TransactionId};
 use crate::external::GqlConnection;
-use crate::transport::models::*;
-use crate::transport::Transport;
 use crate::utils::*;
 
 pub struct GqlTransport {
@@ -196,8 +196,11 @@ impl GqlTransport {
 
 #[async_trait]
 impl Transport for GqlTransport {
-    fn max_transactions_per_fetch(&self) -> u8 {
-        50
+    fn info(&self) -> TransportInfo {
+        TransportInfo {
+            max_transactions_per_fetch: 50,
+            reliable_behavior: ReliableBehavior::BlockWalking,
+        }
     }
 
     async fn send_message(&self, message: &Message) -> Result<()> {
