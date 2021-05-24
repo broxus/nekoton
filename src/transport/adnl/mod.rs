@@ -11,11 +11,11 @@ use tokio::sync::Mutex;
 use ton_api::{ton, BoxedSerialize, Deserializer, IntoBoxed};
 use ton_block::{Deserializable, Message, MsgAddressInt, Serializable};
 
+use super::models::*;
 use super::utils::ConfigCache;
-use crate::core::models::{GenTimings, LastTransactionId, TransactionId};
+use super::{Transport, TransportInfo};
+use crate::core::models::{GenTimings, LastTransactionId, ReliableBehavior, TransactionId};
 use crate::external::AdnlConnection;
-use crate::transport::models::*;
-use crate::transport::Transport;
 use crate::utils::TrustMe;
 
 const LAST_BLOCK_THRESHOLD: u64 = 1;
@@ -82,8 +82,11 @@ impl AdnlTransport {
 
 #[async_trait]
 impl Transport for AdnlTransport {
-    fn max_transactions_per_fetch(&self) -> u8 {
-        16
+    fn info(&self) -> TransportInfo {
+        TransportInfo {
+            max_transactions_per_fetch: 16,
+            reliable_behavior: ReliableBehavior::IntensivePolling,
+        }
     }
 
     async fn send_message(&self, message: &Message) -> Result<()> {

@@ -57,7 +57,7 @@ pub fn request_transactions<'a>(
     initial_count: u8,
     limit: Option<usize>,
 ) -> impl Stream<Item = Vec<RawTransaction>> + 'a {
-    let count = u8::min(initial_count, transport.max_transactions_per_fetch());
+    let count = u8::min(initial_count, transport.info().max_transactions_per_fetch);
 
     LatestTransactions {
         address,
@@ -312,9 +312,9 @@ impl<'a> Stream for LatestTransactions<'a> {
             }
             Some(limit) => usize::min(
                 limit - self.total_fetched,
-                self.transport.max_transactions_per_fetch() as usize,
+                self.transport.info().max_transactions_per_fetch as usize,
             ) as u8,
-            _ => self.transport.max_transactions_per_fetch(),
+            _ => self.transport.info().max_transactions_per_fetch,
         };
 
         // If there are some unprocessed transactions left we should request remaining

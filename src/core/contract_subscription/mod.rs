@@ -43,7 +43,7 @@ impl ContractSubscription {
         };
 
         if result.refresh_contract_state(on_contract_state).await? {
-            let count = result.transport.max_transactions_per_fetch();
+            let count = result.transport.info().max_transactions_per_fetch;
             result
                 .refresh_latest_transactions(
                     count,
@@ -120,7 +120,7 @@ impl ContractSubscription {
 
         if self.refresh_contract_state(on_contract_state).await? {
             let count = u8::min(
-                self.transport.max_transactions_per_fetch(),
+                self.transport.info().max_transactions_per_fetch,
                 INITIAL_TRANSACTION_COUNT,
             );
 
@@ -297,7 +297,7 @@ impl ContractSubscription {
             .get_transactions(
                 self.address.clone(),
                 from,
-                self.transport.max_transactions_per_fetch(),
+                self.transport.info().max_transactions_per_fetch,
             )
             .await?;
 
