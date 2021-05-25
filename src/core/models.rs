@@ -25,10 +25,15 @@ pub enum TransactionAdditionalInfo {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DePoolOnRoundCompleteNotification {
+    #[serde(with = "serde_u64")]
     pub round_id: u64,
+    #[serde(with = "serde_u64")]
     pub reward: u64,
+    #[serde(with = "serde_u64")]
     pub ordinary_stake: u64,
+    #[serde(with = "serde_u64")]
     pub vesting_stake: u64,
+    #[serde(with = "serde_u64")]
     pub lock_stake: u64,
     pub reinvest: bool,
     pub reason: u8,
@@ -36,7 +41,9 @@ pub struct DePoolOnRoundCompleteNotification {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DePoolReceiveAnswerNotification {
+    #[serde(with = "serde_u64")]
     pub error_code: u64,
+    #[serde(with = "serde_u64")]
     pub comment: u64,
 }
 
@@ -73,6 +80,7 @@ pub enum MultisigTransaction {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MultisigConfirmTransaction {
+    #[serde(with = "serde_u64")]
     pub transaction_id: u64,
 }
 
@@ -85,6 +93,7 @@ pub struct MultisigSubmitTransaction {
     pub all_balance: bool,
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
+    #[serde(with = "serde_u64")]
     pub trans_id: u64,
 }
 
@@ -385,6 +394,7 @@ pub struct RootTokenContractDetails {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ContractState {
     /// Full account balance in nano TON
+    #[serde(with = "serde_u64")]
     pub balance: u64,
     /// At what point was this state obtained
     pub gen_timings: GenTimings,
@@ -412,7 +422,11 @@ pub enum GenTimings {
     /// There is no way to determine the point in time at which this specific state was obtained
     Unknown,
     /// There is a known point in time at which this specific state was obtained
-    Known { gen_lt: u64, gen_utime: u32 },
+    Known {
+        #[serde(with = "serde_u64")]
+        gen_lt: u64,
+        gen_utime: u32,
+    },
 }
 
 impl Default for GenTimings {
@@ -473,8 +487,10 @@ pub struct TransactionWithData<T> {
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct TransactionsBatchInfo {
     /// The smallest lt in a group
+    #[serde(with = "serde_u64")]
     pub min_lt: u64,
     /// Maximum lt in a group
+    #[serde(with = "serde_u64")]
     pub max_lt: u64,
     /// Whether this batch was from the preload request
     pub old: bool,
@@ -497,6 +513,7 @@ pub struct Transaction {
     /// Account status after transaction execution
     pub end_status: AccountStatus,
     /// Sum of fees from all execution stages
+    #[serde(with = "serde_u64")]
     pub total_fees: u64,
     /// Incoming message
     pub in_msg: Message,
@@ -605,6 +622,7 @@ pub struct Message {
     pub dst: Option<MsgAddressInt>,
 
     /// Message value in nano TON
+    #[serde(with = "serde_u64")]
     pub value: u64,
 
     /// Message body
@@ -697,7 +715,10 @@ pub enum MessageBodyError {
 #[serde(rename_all = "lowercase", tag = "type", content = "data")]
 pub enum LastTransactionId {
     Exact(TransactionId),
-    Inexact { latest_lt: u64 },
+    Inexact {
+        #[serde(with = "serde_u64")]
+        latest_lt: u64,
+    },
 }
 
 impl LastTransactionId {
@@ -752,6 +773,7 @@ impl Ord for LastTransactionId {
 
 #[derive(Debug, Copy, Clone, Eq, Serialize, Deserialize)]
 pub struct TransactionId {
+    #[serde(with = "serde_u64")]
     pub lt: u64,
     #[serde(with = "serde_uint256")]
     pub hash: UInt256,
