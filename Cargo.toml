@@ -8,11 +8,13 @@ authors = [
 edition = "2018"
 
 [dependencies]
-aes-ctr = { version = "0.6", optional = true }
+aes = { version = "0.7.2", features = ["ctr"], default-features = false, optional = true }
+cipher = { version = "0.3.0", default-features = false, optional = true }
+
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.13"
-chacha20poly1305 = "0.7.1"
+chacha20poly1305 = "0.8.0"
 chrono = "0.4.19"
 curve25519-dalek = "3.0"
 downcast-rs = "1.2"
@@ -56,14 +58,14 @@ criterion = { version = "0.3", features = ["async_tokio", "html_reports"] }
 hex = "0.4.3"
 pretty_assertions = "0.7.1"
 tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
-reqwest = { version = "0.11.3", features = ["gzip"] }
+reqwest = { version = "0.11.3", features = ["gzip", "json"] }
 
 [features]
 default = ["gql_transport"]
 integration_test = []
 web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
 gql_transport = ["graphql_client"]
-adnl_transport = ["ton_api", "aes-ctr"]
+adnl_transport = ["ton_api", "aes", "cipher"]
 jrpc_transport = ["tiny-jsonrpc"]
 
 [[bench]]

@@ -226,6 +226,28 @@ macro_rules! define_string_enum {
 #[error("Unknown enum variant")]
 pub struct UnknownEnumVariant;
 
+pub mod serde_u64 {
+    use serde::de::Error;
+    use serde::{Deserialize, Serialize};
+
+    use super::*;
+
+    pub fn serialize<S>(data: &u64, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        data.to_string().serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<u64, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        String::deserialize(deserializer)
+            .and_then(|data| u64::from_str(&data).map_err(D::Error::custom))
+    }
+}
+
 pub mod serde_public_key {
     use serde::de::Error;
     use serde::Deserialize;

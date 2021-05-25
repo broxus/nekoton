@@ -21,6 +21,7 @@ use crate::core::{utils, InternalMessage};
 use crate::crypto::UnsignedMessage;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
+use crate::utils::*;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
@@ -264,6 +265,7 @@ pub enum TransferAction {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TonWalletDetails {
     pub requires_separate_deploy: bool,
+    #[serde(with = "serde_u64")]
     pub min_amount: u64,
     pub supports_payload: bool,
 }

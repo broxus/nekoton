@@ -1,8 +1,8 @@
+use cipher::{NewCipher, StreamCipher};
 use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use aes_ctr::cipher::SyncStreamCipher;
 use anyhow::Result;
 use async_trait::async_trait;
 use rand::{CryptoRng, Rng, RngCore};
@@ -470,8 +470,8 @@ where
 }
 
 struct AdnlStreamCrypto {
-    cipher_receive: aes_ctr::Aes256Ctr,
-    cipher_send: aes_ctr::Aes256Ctr,
+    cipher_receive: aes::Aes256Ctr,
+    cipher_send: aes::Aes256Ctr,
 }
 
 impl AdnlStreamCrypto {
@@ -643,7 +643,7 @@ fn calculate_shared_secret(private_key: &[u8; 64], public_key: &[u8; 32]) -> [u8
     x25519_dalek::x25519(buffer, point)
 }
 
-fn build_packet_cipher(shared_secret: &[u8; 32], checksum: &[u8; 32]) -> aes_ctr::Aes256Ctr {
+fn build_packet_cipher(shared_secret: &[u8; 32], checksum: &[u8; 32]) -> aes::Aes256Ctr {
     let mut aes_key_bytes = [0; 32];
     aes_key_bytes[..16].copy_from_slice(&shared_secret[..16]);
     aes_key_bytes[16..].copy_from_slice(&checksum[16..]);
@@ -655,9 +655,8 @@ fn build_packet_cipher(shared_secret: &[u8; 32], checksum: &[u8; 32]) -> aes_ctr
     build_cipher(&aes_key_bytes, &aes_ctr_bytes)
 }
 
-fn build_cipher(key: &[u8; 32], ctr: &[u8; 16]) -> aes_ctr::Aes256Ctr {
-    use aes_ctr::cipher::NewStreamCipher;
-    aes_ctr::Aes256Ctr::new(key.into(), ctr.into())
+fn build_cipher(key: &[u8; 32], ctr: &[u8; 16]) -> aes::Aes256Ctr {
+    aes::Aes256Ctr::new(key.into(), ctr.into())
 }
 
 pub const KEY_ED25519: i32 = 1209251014;
