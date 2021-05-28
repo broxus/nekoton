@@ -74,6 +74,20 @@ pub fn validate_address(address: &str) -> bool {
     regular | b64_def | b64_safe
 }
 
+/// repacks any `address` to `MsgAddressInt`
+pub fn repack_address(address: &str) -> Result<MsgAddressInt> {
+    if let Ok(a) = MsgAddressInt::from_str(address) {
+        return Ok(a);
+    }
+    if let Ok(a) = unpack_std_smc_addr(address, false) {
+        return Ok(a);
+    }
+    if let Ok(a) = unpack_std_smc_addr(address, true) {
+        return Ok(a);
+    }
+    anyhow::bail!("Invalid address")
+}
+
 #[derive(thiserror::Error, Debug)]
 enum AddressConversionError {
     #[error("Unsupported address type")]
@@ -152,5 +166,48 @@ mod test {
         let packed = pack_std_smc_addr(false, &addr, true).unwrap();
         let address = unpack_std_smc_addr(&packed, false).unwrap();
         assert_eq!(addr, address);
+    }
+
+    #[test]
+    pub fn repack_b64_safe() {
+        let res = super::repack_address("EQAC4_IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0")
+            .unwrap()
+            .to_string();
+        assert_eq!(
+            "0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c",
+            res
+        )
+    }
+
+    #[test]
+    pub fn repack_b64() {
+        let res = super::repack_address("EQAC4/IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0")
+            .unwrap()
+            .to_string();
+        assert_eq!(
+            "0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c",
+            res
+        )
+    }
+
+    #[test]
+    pub fn repack_normal() {
+        let res = super::repack_address(
+            "0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c",
+        )
+        .unwrap()
+        .to_string();
+        assert_eq!(
+            "0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c",
+            res
+        )
+    }
+
+    #[test]
+    pub fn repack_bad() {
+        let res = super::repack_address(
+            "0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686ca",
+        );
+        assert!(res.is_err())
     }
 }
