@@ -4,7 +4,9 @@ use anyhow::Result;
 use futures::StreamExt;
 use ton_block::MsgAddressInt;
 
-use super::models::{ContractState, PendingTransaction, TransactionId, TransactionsBatchInfo};
+use super::models::{
+    ContractState, GenTimings, PendingTransaction, TransactionId, TransactionsBatchInfo,
+};
 use super::{utils, PollingMethod};
 use crate::core::utils::PendingTransactionsExt;
 use crate::helpers::abi::Executor;
@@ -197,13 +199,30 @@ impl ContractSubscription {
         let contract_state = self.transport.get_contract_state(&self.address).await?;
         let new_contract_state = contract_state.brief();
 
-        Ok(if new_contract_state != self.contract_state {
-            on_contract_state(&contract_state);
-            self.contract_state = new_contract_state;
-            true
-        } else {
-            false
-        })
+        if new_contract_state == self.contract_state {
+            return Ok(false);
+        }
+
+        match (
+            new_contract_state.gen_timings,
+            self.contract_state.gen_timings,
+        ) {
+            // Do nothing if we received a state with the old logical time
+            (
+                GenTimings::Known {
+                    gen_lt: new_gen_lt, ..
+                },
+                GenTimings::Known {
+                    gen_lt: old_gen_lt, ..
+                },
+            ) if new_gen_lt <= old_gen_lt => Ok(false),
+            // Notify otherwise
+            _ => {
+                on_contract_state(&contract_state);
+                self.contract_state = new_contract_state;
+                Ok(true)
+            }
+        }
     }
 
     /// # Arguments
