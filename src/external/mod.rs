@@ -34,15 +34,9 @@ pub trait GqlConnection: Send + Sync {
 }
 
 #[cfg(feature = "jrpc_transport")]
-pub struct JrpcRequest<'a> {
-    pub method: &'a str,
-    pub params: serde_json::Value,
-}
-
-#[cfg(feature = "jrpc_transport")]
 #[async_trait]
 pub trait JrpcConnection: Send + Sync {
-    async fn post<'a>(&self, req: JrpcRequest<'a>) -> Result<String>;
+    async fn post(&self, data: &str) -> Result<String>;
 }
 
 #[async_trait]

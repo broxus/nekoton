@@ -6,11 +6,11 @@ use serde::Serialize;
 use ton_block::{Block, Deserializable, MsgAddressInt};
 
 use super::models::{RawContractState, RawTransaction};
+use super::utils::*;
 use super::{Transport, TransportInfo};
 use crate::core::models::{ReliableBehavior, TransactionId};
-use crate::external::{JrpcConnection, JrpcRequest};
-use crate::transport::utils::ConfigCache;
-use crate::utils::TrustMe;
+use crate::external::JrpcConnection;
+use crate::utils::*;
 
 mod models;
 
@@ -28,16 +28,6 @@ impl JrpcTransport {
     }
 }
 
-fn request_data<T>(method: &str, params: Option<T>) -> JrpcRequest
-where
-    T: Serialize,
-{
-    JrpcRequest {
-        method,
-        params: serde_json::to_value(params).trust_me(),
-    }
-}
-
 #[async_trait::async_trait]
 impl Transport for JrpcTransport {
     fn info(&self) -> TransportInfo {
@@ -48,18 +38,19 @@ impl Transport for JrpcTransport {
     }
 
     async fn send_message(&self, message: &ton_block::Message) -> Result<()> {
-        let param = SendMessage { message };
-        let data = request_data("sendMessage", Some(param));
-        self.connection.post(data).await.map(|_| ())
+        self.connection
+            .post(&make_request("sendMessage", &SendMessage { message }))
+            .await
+            .map(|_| ())
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
-        let message = GetContractState {
-            address: address.clone(),
-        };
         let data = self
             .connection
-            .post(request_data("getContractState", Some(message)))
+            .post(&make_request(
+                "getContractState",
+                &GetContractState { address },
+            ))
             .await?;
         tiny_jsonrpc::parse_response(&data)
     }
@@ -70,39 +61,41 @@ impl Transport for JrpcTransport {
         from: TransactionId,
         count: u8,
     ) -> Result<Vec<RawTransaction>> {
-        let transaction_id = TransactionId {
-            hash: from.hash,
-            lt: from.lt,
-        };
-        let obj = GetTransactions {
-            address,
-            transaction_id,
-            count,
-        };
-        let data = self
+        let response = self
             .connection
-            .post(request_data("getTransactions", Some(obj)))
+            .post(&make_request(
+                "getTransactions",
+                GetTransactions {
+                    address: &address,
+                    transaction_id: TransactionId {
+                        hash: from.hash,
+                        lt: from.lt,
+                    },
+                    count,
+                },
+            ))
             .await?;
-        let parsed: RawTransactionsList = tiny_jsonrpc::parse_response(&data)?;
+        let response: RawTransactionsList = tiny_jsonrpc::parse_response(&response)?;
+
         let transactions =
-            ton_types::deserialize_cells_tree(&mut std::io::Cursor::new(&parsed.transactions))
+            ton_types::deserialize_cells_tree(&mut std::io::Cursor::new(&response.transactions))
                 .map_err(|_| anyhow::anyhow!("Invalid transaction list"))?;
 
         let mut result = Vec::with_capacity(transactions.len());
-        for item in transactions.into_iter() {
-            let hash = item.repr_hash();
+        for item in transactions.into_iter().rev() {
             result.push(RawTransaction {
-                hash,
+                hash: item.repr_hash(),
                 data: ton_block::Transaction::construct_from_cell(item)
                     .map_err(|_| anyhow::anyhow!("Invalid transaction"))?,
             });
         }
+
         Ok(result)
     }
 
     async fn get_latest_key_block(&self) -> Result<Block> {
         self.connection
-            .post(request_data::<String>("getLatestKeyBlock", None))
+            .post(&make_request("getLatestKeyBlock", ()))
             .await
             .map(|data| tiny_jsonrpc::parse_response(&data))?
             .map(|block: RawBlock| block.block)
@@ -113,32 +106,64 @@ impl Transport for JrpcTransport {
     }
 }
 
+fn make_request<T>(method: &str, params: T) -> String
+where
+    T: Serialize,
+{
+    serde_json::to_string(&JrpcRequest { method, params }).trust_me()
+}
+
+struct JrpcRequest<'a, T> {
+    method: &'a str,
+    params: T,
+}
+
+impl<'a, T> Serialize for JrpcRequest<'a, T>
+where
+    T: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        let mut ser = serializer.serialize_struct("JrpcRequest", 4)?;
+        ser.serialize_field("jsonrpc", "2.0")?;
+        ser.serialize_field("id", &1)?;
+        ser.serialize_field("method", self.method)?;
+        ser.serialize_field("params", &self.params)?;
+        ser.end()
+    }
+}
+
 #[cfg(test)]
 #[cfg(feature = "integration_test")]
 mod test {
-    use super::Transport;
-    use crate::core::models::TransactionId;
-    use crate::external::{JrpcConnection, JrpcRequest};
-    use anyhow::Result;
     use std::str::FromStr;
     use std::sync::Arc;
+
+    use anyhow::Result;
     use ton_block::MsgAddressInt;
     use ton_types::UInt256;
 
+    use super::Transport;
+    use crate::core::models::TransactionId;
+    use crate::external::JrpcConnection;
+
     #[async_trait::async_trait]
     impl JrpcConnection for reqwest::Client {
-        async fn post<'a>(&self, req: JrpcRequest<'a>) -> Result<String> {
-            let url = "http://127.0.0.1:9000/rpc".to_string();
-            let data = serde_json::json!({
-                "jsonrpc": "2.0",
-                "method": req.method,
-                "params": req.params,
-                "id": 1
-            });
-            println!("{}", serde_json::to_string(&data).unwrap());
-            let res = self.post(url).json(&data).send().await?.text().await?;
-            // println!("{}", res);
-            Ok(res)
+        async fn post(&self, data: &str) -> Result<String> {
+            let url = "http://127.0.0.1:10000/rpc".to_string();
+
+            let response = self
+                .post(url)
+                .body(data.to_string())
+                .header("content-type", "application/json")
+                .send()
+                .await?;
+
+            Ok(response.text().await?)
         }
     }
 
@@ -169,10 +194,10 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_get_tranactions() {
+    async fn test_get_transactions() {
         let client = Arc::new(reqwest::Client::new());
         let transport = super::JrpcTransport::new(client);
-        let id = transport
+        let transactions = transport
             .get_transactions(
                 MsgAddressInt::from_str(
                     "-1:5555555555555555555555555555555555555555555555555555555555555555",
@@ -188,9 +213,14 @@ mod test {
                 10,
             )
             .await
-            .unwrap()
-            .len();
-        println!("{}", id);
+            .unwrap();
+
+        assert_eq!(transactions.len(), 10);
+
+        // Check if sorted in descending order
+        assert!(transactions
+            .windows(2)
+            .all(|pair| pair[0].data.lt > pair[1].data.lt))
     }
 
     #[tokio::test]
