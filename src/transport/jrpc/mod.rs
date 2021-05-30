@@ -5,10 +5,10 @@ use models::*;
 use serde::Serialize;
 use ton_block::{Block, Deserializable, MsgAddressInt};
 
-use super::models::{RawContractState, RawTransaction};
+use super::models::{ExistingContract, RawContractState, RawTransaction};
 use super::utils::*;
 use super::{Transport, TransportInfo};
-use crate::core::models::{ReliableBehavior, TransactionId};
+use crate::core::models::{GenTimings, LastTransactionId, ReliableBehavior, TransactionId};
 use crate::external::JrpcConnection;
 use crate::utils::*;
 
@@ -52,7 +52,18 @@ impl Transport for JrpcTransport {
                 GetContractState { address },
             ))
             .await?;
-        tiny_jsonrpc::parse_response(&data)
+        let response = tiny_jsonrpc::parse_response::<GetContractStateResponse>(&data)?;
+        Ok(match response {
+            GetContractStateResponse::NotExists => RawContractState::NotExists,
+            GetContractStateResponse::Exists(data) => RawContractState::Exists(ExistingContract {
+                account: data.account,
+                timings: GenTimings::Known {
+                    gen_lt: data.timings.gen_lt,
+                    gen_utime: data.timings.gen_utime,
+                },
+                last_transaction_id: LastTransactionId::Exact(data.last_transaction_id),
+            }),
+        })
     }
 
     async fn get_transactions(
@@ -67,15 +78,12 @@ impl Transport for JrpcTransport {
                 "getTransactions",
                 GetTransactions {
                     address: &address,
-                    transaction_id: TransactionId {
-                        hash: from.hash,
-                        lt: from.lt,
-                    },
+                    transaction_id: (from.lt != u64::MAX).then(|| from),
                     count,
                 },
             ))
             .await?;
-        let response: RawTransactionsList = tiny_jsonrpc::parse_response(&response)?;
+        let response: GetTransactionsResponse = tiny_jsonrpc::parse_response(&response)?;
 
         let transactions =
             ton_types::deserialize_cells_tree(&mut std::io::Cursor::new(&response.transactions))
@@ -98,7 +106,7 @@ impl Transport for JrpcTransport {
             .post(&make_request("getLatestKeyBlock", ()))
             .await
             .map(|data| tiny_jsonrpc::parse_response(&data))?
-            .map(|block: RawBlock| block.block)
+            .map(|block: GetBlockResponse| block.block)
     }
 
     async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
