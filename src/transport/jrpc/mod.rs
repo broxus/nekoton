@@ -39,7 +39,7 @@ impl Transport for JrpcTransport {
 
     async fn send_message(&self, message: &ton_block::Message) -> Result<()> {
         self.connection
-            .post(&make_request("sendMessage", &SendMessage { message }))
+            .post(&make_request("sendMessage", SendMessage { message }))
             .await
             .map(|_| ())
     }
@@ -49,7 +49,7 @@ impl Transport for JrpcTransport {
             .connection
             .post(&make_request(
                 "getContractState",
-                &GetContractState { address },
+                GetContractState { address },
             ))
             .await?;
         tiny_jsonrpc::parse_response(&data)
