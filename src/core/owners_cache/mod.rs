@@ -30,7 +30,7 @@ pub struct OwnersCache {
 
 impl OwnersCache {
     pub async fn load(
-        network_name: &str,
+        network_group: &str,
         storage: Arc<dyn Storage>,
         transport: Arc<dyn Transport>,
         concurrent_resolvers: usize,
@@ -41,7 +41,7 @@ impl OwnersCache {
         #[derive(Deserialize)]
         struct OwnersMapItem(String, String);
 
-        let key = make_key(network_name);
+        let key = make_key(network_group);
 
         let data = match storage.get(&key).await? {
             Some(data) => serde_json::from_str::<OwnersMap>(&data)?.0,
