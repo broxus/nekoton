@@ -13,9 +13,11 @@ use crate::utils::*;
 
 const STORAGE_ACCOUNTS: &str = "__core__accounts";
 
+const DEFAULT_NETWORK_GROUP: &str = "mainnet";
+
 pub struct AccountsStorage {
     storage: Arc<dyn Storage>,
-    accounts: RwLock<(AssetsMap, Option<String>)>,
+    accounts: RwLock<AssetsMap>,
 }
 
 type AssetsMap = BTreeMap<String, AssetsList>;
@@ -36,7 +38,7 @@ impl AccountsStorage {
                 let accounts = accounts
                     .into_iter()
                     .map(|(public_key, assets)| {
-                        let assets = serde_json::from_str(&assets)
+                        let assets = serde_json::from_str::<AssetsList>(&assets)
                             .map_err(|_| D::Error::custom("Failed to deserialize AssetsList"))?;
                         Ok((public_key, assets))
                     })
@@ -48,28 +50,11 @@ impl AccountsStorage {
         #[derive(Deserialize)]
         struct StoredData {
             assets: StoredAssetsMap,
-            #[serde(default)]
-            current_account: Option<String>,
         }
 
         let data = match storage.get(STORAGE_ACCOUNTS).await? {
-            Some(data) => {
-                let data = serde_json::from_str::<StoredData>(&data)?;
-                let assets = data.assets.0;
-                let current_account = data
-                    .current_account
-                    .and_then(|current| {
-                        if assets.contains_key(&current) {
-                            Some(current)
-                        } else {
-                            None
-                        }
-                    })
-                    .or_else(|| assets.keys().next().cloned());
-
-                (assets, current_account)
-            }
-            None => (Default::default(), None),
+            Some(data) => serde_json::from_str::<StoredData>(&data)?.assets.0,
+            None => Default::default(),
         };
 
         Ok(Self {
@@ -86,32 +71,18 @@ impl AccountsStorage {
         })
     }
 
-    pub async fn set_current_account(&self, account: &str) -> Result<AssetsList> {
-        let (assets, current_account) = &mut *self.accounts.write().await;
-        let assets_list = match assets.get(account) {
-            Some(list) => list,
-            None => return Err(AccountsStorageError::AccountNotFound.into()),
-        };
-
-        *current_account = Some(account.to_owned());
-
-        self.save(assets, current_account).await?;
-        Ok(assets_list.clone())
-    }
-
     /// Add account. It can later be fetched by ton wallet address
     pub async fn add_account(
         &self,
         name: &str,
         public_key: ed25519_dalek::PublicKey,
         contract: ton_wallet::ContractType,
-        update_current: bool,
     ) -> Result<AssetsList> {
         let address =
             ton_wallet::compute_address(&public_key, contract, ton_wallet::DEFAULT_WORKCHAIN);
         let key = address.to_string();
 
-        let (accounts, current_account) = &mut *self.accounts.write().await;
+        let accounts = &mut *self.accounts.write().await;
         let assets_list = match accounts.entry(key.clone()) {
             btree_map::Entry::Occupied(_) => {
                 return Err(AccountsStorageError::AccountAlreadyExists.into())
@@ -124,47 +95,44 @@ impl AccountsStorage {
                         public_key,
                         contract,
                     },
-                    token_wallets: Vec::new(),
-                    depools: Vec::new(),
+                    additional_assets: Default::default(),
                 })
                 .clone(),
         };
 
-        if update_current {
-            *current_account = Some(key.clone());
-        }
-
-        self.save(accounts, current_account).await?;
+        self.save(accounts).await?;
         Ok(assets_list)
     }
 
     pub async fn add_token_wallet(
         &self,
         account: &str,
+        network_group: &str,
         root_token_contract: MsgAddressInt,
     ) -> Result<AssetsList> {
-        let (assets, current_account) = &mut *self.accounts.write().await;
+        use std::collections::hash_map;
+
+        let assets = &mut *self.accounts.write().await;
 
         let (entry, should_save) = match assets.get_mut(account) {
-            Some(entry)
-                if entry
-                    .token_wallets
-                    .iter()
-                    .find(|item| item.root_token_contract == root_token_contract)
-                    .is_none() =>
-            {
-                entry.token_wallets.push(TokenWalletAsset {
-                    root_token_contract,
-                });
+            Some(entry) => {
+                let should_save = match entry.additional_assets.entry(network_group.to_owned()) {
+                    hash_map::Entry::Occupied(mut entry) => {
+                        entry.get_mut().add_token_wallet(root_token_contract)
+                    }
+                    hash_map::Entry::Vacant(entry) => {
+                        entry.insert(AdditionalAssets::with_token_wallet(root_token_contract));
+                        true
+                    }
+                };
 
-                (entry.clone(), true)
+                (entry.clone(), should_save)
             }
-            Some(entry) => (entry.clone(), false),
             None => return Err(AccountsStorageError::AccountNotFound.into()),
         };
 
         if should_save {
-            self.save(assets, current_account).await?;
+            self.save(assets).await?;
         }
         Ok(entry)
     }
@@ -172,44 +140,36 @@ impl AccountsStorage {
     pub async fn remove_token_wallet(
         &self,
         account: &str,
+        network_group: &str,
         root_token_contract: &MsgAddressInt,
     ) -> Result<AssetsList> {
-        let (assets, current_account) = &mut *self.accounts.write().await;
+        let assets = &mut *self.accounts.write().await;
 
         let (entry, should_save) = match assets.get_mut(account) {
             Some(entry) => {
-                let pos = entry
-                    .token_wallets
-                    .iter()
-                    .position(|item| item.root_token_contract == *root_token_contract);
+                let additional_assets = match entry.additional_assets.get_mut(network_group) {
+                    Some(additional_assets) => additional_assets,
+                    None => return Ok(entry.clone()),
+                };
 
-                if let Some(index) = pos {
-                    entry.token_wallets.remove(index);
-                }
-
-                (entry.clone(), pos.is_some())
+                let should_save = additional_assets.remove_token_wallet(root_token_contract);
+                (entry.clone(), should_save)
             }
             None => return Err(AccountsStorageError::AccountNotFound.into()),
         };
 
         if should_save {
-            self.save(assets, current_account).await?;
+            self.save(assets).await?;
         }
         Ok(entry)
     }
 
     /// Removes specified from the storage and resets current account if needed
     pub async fn remove_account(&self, account: &str) -> Result<Option<AssetsList>> {
-        let (assets, current_account) = &mut *self.accounts.write().await;
+        let assets = &mut *self.accounts.write().await;
         let result = assets.remove(account);
 
-        if result.is_some()
-            && matches!(current_account, Some(current_account) if account == current_account)
-        {
-            *current_account = None;
-        }
-
-        self.save(assets, current_account).await?;
+        self.save(assets).await?;
         Ok(result)
     }
 
@@ -217,9 +177,8 @@ impl AccountsStorage {
     pub async fn clear(&self) -> Result<()> {
         self.storage.remove(STORAGE_ACCOUNTS).await?;
 
-        let (assets, keys) = &mut *self.accounts.write().await;
+        let assets = &mut *self.accounts.write().await;
         assets.clear();
-        *keys = None;
 
         self.storage.remove(STORAGE_ACCOUNTS).await
     }
@@ -229,7 +188,7 @@ impl AccountsStorage {
         StoredAccountsData(self.accounts.read().await)
     }
 
-    async fn save(&self, assets: &AssetsMap, current_account: &Option<String>) -> Result<()> {
+    async fn save(&self, assets: &AssetsMap) -> Result<()> {
         struct StoredAssetsMap<'a>(&'a AssetsMap);
 
         impl<'a> serde::Serialize for StoredAssetsMap<'a> {
@@ -249,37 +208,135 @@ impl AccountsStorage {
         #[derive(Serialize)]
         struct StoredData<'a> {
             assets: StoredAssetsMap<'a>,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            current_account: &'a Option<String>,
         }
 
         let data = serde_json::to_string(&StoredData {
             assets: StoredAssetsMap(assets),
-            current_account,
         })
         .trust_me();
         self.storage.set(STORAGE_ACCOUNTS, &data).await
     }
 }
 
-pub struct StoredAccountsData<'a>(RwLockReadGuard<'a, (AssetsMap, Option<String>)>);
+pub struct StoredAccountsData<'a>(RwLockReadGuard<'a, AssetsMap>);
 
 impl<'a> StoredAccountsData<'a> {
     pub fn accounts(&self) -> &AssetsMap {
-        &(*self.0).0
-    }
-
-    pub fn current_account(&self) -> &Option<String> {
-        &(*self.0).1
+        &self.0
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct AssetsList {
     pub name: String,
     pub ton_wallet: TonWalletAsset,
+
+    /// Additional assets, grouped by network group
+    pub additional_assets: HashMap<String, AdditionalAssets>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct AdditionalAssets {
     pub token_wallets: Vec<TokenWalletAsset>,
     pub depools: Vec<DePoolAsset>,
+}
+
+impl AdditionalAssets {
+    pub fn has_token_wallet(&self, root_token_contract: &MsgAddressInt) -> bool {
+        self.token_wallets
+            .iter()
+            .any(|item| &item.root_token_contract == root_token_contract)
+    }
+
+    fn with_token_wallet(root_token_contract: MsgAddressInt) -> Self {
+        Self {
+            token_wallets: vec![TokenWalletAsset {
+                root_token_contract,
+            }],
+            ..Default::default()
+        }
+    }
+
+    fn add_token_wallet(&mut self, root_token_contract: MsgAddressInt) -> bool {
+        if !self.has_token_wallet(&root_token_contract) {
+            self.token_wallets.push(TokenWalletAsset {
+                root_token_contract,
+            });
+            true
+        } else {
+            false
+        }
+    }
+
+    fn remove_token_wallet(&mut self, root_token_contract: &MsgAddressInt) -> bool {
+        let pos = self
+            .token_wallets
+            .iter()
+            .position(|item| item.root_token_contract == *root_token_contract);
+
+        if let Some(index) = pos {
+            self.token_wallets.remove(index);
+            true
+        } else {
+            false
+        }
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for AssetsList {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum ParsedAssetsList {
+            Old {
+                name: String,
+                ton_wallet: TonWalletAsset,
+                token_wallets: Vec<TokenWalletAsset>,
+                depools: Vec<DePoolAsset>,
+            },
+            New {
+                name: String,
+                ton_wallet: TonWalletAsset,
+                additional_assets: HashMap<String, AdditionalAssets>,
+            },
+        }
+
+        Ok(match ParsedAssetsList::deserialize(deserializer)? {
+            ParsedAssetsList::Old {
+                name,
+                ton_wallet,
+                token_wallets,
+                depools,
+            } => {
+                let mut additional_assets = HashMap::with_capacity(1);
+                additional_assets.insert(
+                    DEFAULT_NETWORK_GROUP.to_owned(),
+                    AdditionalAssets {
+                        token_wallets,
+                        depools,
+                    },
+                );
+
+                AssetsList {
+                    name,
+                    ton_wallet,
+                    additional_assets,
+                }
+            }
+            ParsedAssetsList::New {
+                name,
+                ton_wallet,
+                additional_assets,
+            } => AssetsList {
+                name,
+                ton_wallet,
+                additional_assets,
+            },
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

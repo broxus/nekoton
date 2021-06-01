@@ -305,6 +305,7 @@ impl Transport for GqlTransport {
             query_path = "src/transport/gql/query_latest_key_block.graphql"
         )]
         struct QueryLatestKeyBlock;
+
         let boc = self
             .fetch::<QueryLatestKeyBlock>(query_latest_key_block::Variables)
             .await?
