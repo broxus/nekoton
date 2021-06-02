@@ -63,6 +63,7 @@ impl StoreSigner for EncryptedKeySigner {
                 entry.insert(key);
                 Ok(SignerEntry {
                     public_key,
+                    master_key: public_key,
                     account_id: input.mnemonic_type.account_id(),
                 })
             }
@@ -75,6 +76,7 @@ impl StoreSigner for EncryptedKeySigner {
         key.change_password(input.old_password, input.new_password)?;
         Ok(SignerEntry {
             public_key: input.public_key,
+            master_key: input.public_key,
             account_id: key.mnemonic_type().account_id(),
         })
     }
@@ -142,6 +144,7 @@ impl SignerStorage for EncryptedKeySigner {
             .values()
             .map(|key| SignerEntry {
                 public_key: *key.public_key(),
+                master_key: *key.public_key(),
                 account_id: key.inner.mnemonic_type.account_id(),
             })
             .collect()
@@ -151,6 +154,7 @@ impl SignerStorage for EncryptedKeySigner {
         let entry = self.keys.remove(public_key.as_bytes())?;
         Some(SignerEntry {
             public_key: entry.inner.pubkey,
+            master_key: entry.inner.pubkey,
             account_id: entry.inner.mnemonic_type.account_id(),
         })
     }

@@ -45,18 +45,19 @@ impl StoreSigner for LedgerKeySigner {
     type SignInput = LedgerKeyPublic;
 
     async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
+        let master_key =
+            ed25519_dalek::PublicKey::from_bytes(&self.connection.get_public_key(0).await?)?;
         let pubkey_bytes = self.connection.get_public_key(input.account_id).await?;
-        let pubkey = ed25519_dalek::PublicKey::from_bytes(&pubkey_bytes)?;
+        let public_key = ed25519_dalek::PublicKey::from_bytes(&pubkey_bytes)?;
 
-        let key = LedgerKey::new(input.account_id, pubkey)?;
-
-        let public_key = *key.public_key();
+        let key = LedgerKey::new(input.account_id, public_key, master_key)?;
 
         match self.keys.entry(public_key.to_bytes()) {
             hash_map::Entry::Vacant(entry) => {
                 entry.insert(key);
                 Ok(SignerEntry {
                     public_key,
+                    master_key,
                     account_id: input.account_id,
                 })
             }
@@ -131,7 +132,8 @@ impl SignerStorage for LedgerKeySigner {
         self.keys
             .values()
             .map(|key| SignerEntry {
-                public_key: *key.public_key(),
+                public_key: key.public_key,
+                master_key: key.master_key,
                 account_id: key.account_id,
             })
             .collect()
@@ -140,7 +142,8 @@ impl SignerStorage for LedgerKeySigner {
     async fn remove_key(&mut self, public_key: &PublicKey) -> Option<SignerEntry> {
         let key = self.keys.remove(public_key.as_bytes())?;
         Some(SignerEntry {
-            public_key: key.pubkey,
+            public_key: key.public_key,
+            master_key: key.master_key,
             account_id: key.account_id,
         })
     }
@@ -166,12 +169,19 @@ pub struct LedgerKey {
     pub account_id: u16,
 
     #[serde(with = "serde_public_key")]
-    pub pubkey: PublicKey,
+    pub public_key: PublicKey,
+
+    #[serde(with = "serde_public_key")]
+    pub master_key: PublicKey,
 }
 
 impl LedgerKey {
-    pub fn new(account_id: u16, pubkey: PublicKey) -> Result<Self> {
-        Ok(Self { account_id, pubkey })
+    pub fn new(account_id: u16, public_key: PublicKey, master_key: PublicKey) -> Result<Self> {
+        Ok(Self {
+            account_id,
+            public_key,
+            master_key,
+        })
     }
 
     pub fn from_reader<T>(reader: T) -> Result<Self>
@@ -180,10 +190,6 @@ impl LedgerKey {
     {
         let key: Self = serde_json::from_reader(reader)?;
         Ok(key)
-    }
-
-    pub fn public_key(&self) -> &PublicKey {
-        &self.pubkey
     }
 
     pub fn as_json(&self) -> String {
