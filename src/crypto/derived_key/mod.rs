@@ -532,7 +532,7 @@ mod test {
             })
             .await?;
 
-        assert!(signer.master_key.is_some());
+        assert!(!signer.master_keys.is_empty());
 
         Ok(())
     }
@@ -540,7 +540,7 @@ mod test {
     #[tokio::test]
     async fn test_change_password() -> Result<()> {
         let mut signer = DerivedKeySigner::new();
-        signer
+        let entry = signer
             .add_key(DerivedKeyCreateInput::Import {
                 phrase: SecUtf8::from(TEST_PHRASE),
                 password: SecUtf8::from("123"),
@@ -548,14 +548,16 @@ mod test {
             .await?;
 
         signer
-            .update_key(DerivedKeyUpdateParams::ChangePassword {
+            .update_key(DerivedKeyUpdateParams {
+                master_key: entry.master_key,
                 old_password: "123".to_owned().into(),
                 new_password: "321".to_owned().into(),
             })
             .await?;
 
         assert!(signer
-            .update_key(DerivedKeyUpdateParams::ChangePassword {
+            .update_key(DerivedKeyUpdateParams {
+                master_key: entry.master_key,
                 old_password: SecUtf8::from("totally different"),
                 new_password: SecUtf8::from("321"),
             })
