@@ -35,12 +35,13 @@ impl KeyStore {
         state
             .entries
             .iter()
-            .filter_map(|(public_key, (account_id, type_id))| {
+            .filter_map(|(public_key, (master_key, account_id, type_id))| {
                 let signer_name = state.signers.get(type_id)?.0.clone();
 
                 Some(KeyStoreEntry {
                     signer_name,
                     public_key: PublicKey::from_bytes(public_key).trust_me(),
+                    master_key: *master_key,
                     account_id: *account_id,
                 })
             })
@@ -58,7 +59,11 @@ impl KeyStore {
         let signer_entry = signer.add_key(input).await?;
         state.entries.insert(
             signer_entry.public_key.to_bytes(),
-            (signer_entry.account_id, TypeId::of::<T>()),
+            (
+                signer_entry.master_key,
+                signer_entry.account_id,
+                TypeId::of::<T>(),
+            ),
         );
 
         self.save(&state.signers).await?;
@@ -99,7 +104,7 @@ impl KeyStore {
         let mut state = self.state.write().await;
 
         let signer_id = match state.entries.remove(public_key.as_bytes()) {
-            Some((_, signer_id)) => signer_id,
+            Some((_, _, signer_id)) => signer_id,
             None => return Ok(None),
         };
 
@@ -157,7 +162,7 @@ struct KeyStoreState {
 }
 
 type SignersMap = HashMap<TypeId, (String, Box<dyn SignerStorage>)>;
-type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (u16, TypeId)>;
+type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (PublicKey, u16, TypeId)>;
 
 impl KeyStoreState {
     fn get_signer_ref<T>(&self) -> Result<&T>
@@ -193,8 +198,14 @@ impl SignerEntry {
     fn into_plain(
         self,
         type_id: TypeId,
-    ) -> ([u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (u16, TypeId)) {
-        (self.public_key.to_bytes(), (self.account_id, type_id))
+    ) -> (
+        [u8; ed25519_dalek::PUBLIC_KEY_LENGTH],
+        (PublicKey, u16, TypeId),
+    ) {
+        (
+            self.public_key.to_bytes(),
+            (self.master_key, self.account_id, type_id),
+        )
     }
 }
 
@@ -203,6 +214,8 @@ pub struct KeyStoreEntry {
     pub signer_name: String,
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
+    #[serde(with = "crate::utils::serde_public_key")]
+    pub master_key: PublicKey,
     pub account_id: u16,
 }
 
@@ -211,6 +224,7 @@ impl KeyStoreEntry {
         Self {
             signer_name,
             public_key: signer_entry.public_key,
+            master_key: signer_entry.master_key,
             account_id: signer_entry.account_id,
         }
     }

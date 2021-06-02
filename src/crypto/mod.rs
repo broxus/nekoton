@@ -80,5 +80,7 @@ pub trait WithPublicKey {
 pub struct SignerEntry {
     #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
+    #[serde(with = "serde_public_key")]
+    pub master_key: PublicKey,
     pub account_id: u16,
 }
