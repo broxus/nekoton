@@ -411,9 +411,9 @@ pub struct DerivedKeyExportOutput {
 #[derive(Serialize, Deserialize)]
 pub struct DerivedKeyUpdateParams {
     #[serde(with = "serde_public_key")]
-    master_key: PublicKey,
-    old_password: SecUtf8,
-    new_password: SecUtf8,
+    pub master_key: PublicKey,
+    pub old_password: SecUtf8,
+    pub new_password: SecUtf8,
 }
 
 #[derive(Serialize, Deserialize)]
