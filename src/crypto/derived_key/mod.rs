@@ -179,9 +179,10 @@ impl SignerStorage for DerivedKeySigner {
                 })
                 .collect::<Result<HashMap<_, _>, _>>()?;
         } else {
-            let master_key: MasterKey = serde_json::from_str(data)?;
             let mut master_keys = HashMap::with_capacity(1);
-            master_keys.insert(master_key.public_key.to_bytes(), master_key);
+            if let Some(master_key) = serde_json::from_str::<Option<MasterKey>>(data)? {
+                master_keys.insert(master_key.public_key.to_bytes(), master_key);
+            }
             self.master_keys = master_keys;
         }
 
