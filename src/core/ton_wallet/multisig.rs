@@ -17,7 +17,7 @@ pub fn prepare_deploy(
     public_key: &PublicKey,
     multisig_type: MultisigType,
     expiration: Expiration,
-    owners: &PublicKey,
+    owners: &Vec<PublicKey>,
 ) -> Result<Box<dyn UnsignedMessage>> {
     let state_init = prepare_state_init(public_key, multisig_type);
     let hash = state_init.hash().trust_me();
@@ -36,10 +36,15 @@ pub fn prepare_deploy(
 
     message.set_state_init(state_init);
 
+    let owners = owners
+        .into_iter()
+        .map(|public_key| UInt256::from(public_key.as_bytes()))
+        .collect::<Vec<UInt256>>();
+
     let (function, input) =
         MessageBuilder::new(contracts::abi::safe_multisig_wallet(), "constructor")
             .trust_me()
-            .arg(vec![UInt256::from(owners.as_bytes())])
+            .arg(owners)
             .arg(1u8) // reqConfirms
             .build();
 

@@ -31,7 +31,7 @@ pub struct TonWallet {
     contract_type: ContractType,
     contract_subscription: ContractSubscription,
     handler: Arc<dyn TonWalletSubscriptionHandler>,
-    owners: PublicKey
+    owners: Vec<PublicKey>,
 }
 
 impl TonWallet {
@@ -40,7 +40,7 @@ impl TonWallet {
         public_key: PublicKey,
         contract_type: ContractType,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
-        owners: PublicKey
+        owners: Vec<PublicKey>,
     ) -> Result<Self> {
         let address = compute_address(&public_key, contract_type, DEFAULT_WORKCHAIN);
 
@@ -73,7 +73,7 @@ impl TonWallet {
         self.contract_type
     }
 
-    pub fn owners(&self) -> &PublicKey {
+    pub fn owners(&self) -> &Vec<PublicKey> {
         &self.owners
     }
 
