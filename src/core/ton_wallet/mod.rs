@@ -31,6 +31,7 @@ pub struct TonWallet {
     contract_type: ContractType,
     contract_subscription: ContractSubscription,
     handler: Arc<dyn TonWalletSubscriptionHandler>,
+    owners: PublicKey
 }
 
 impl TonWallet {
@@ -39,6 +40,7 @@ impl TonWallet {
         public_key: PublicKey,
         contract_type: ContractType,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
+        owners: PublicKey
     ) -> Result<Self> {
         let address = compute_address(&public_key, contract_type, DEFAULT_WORKCHAIN);
 
@@ -55,6 +57,7 @@ impl TonWallet {
             contract_type,
             contract_subscription,
             handler,
+            owners,
         })
     }
 
@@ -68,6 +71,10 @@ impl TonWallet {
 
     pub fn contract_type(&self) -> ContractType {
         self.contract_type
+    }
+
+    pub fn owners(&self) -> &PublicKey {
+        &self.owners
     }
 
     pub fn contract_state(&self) -> &ContractState {
@@ -89,8 +96,8 @@ impl TonWallet {
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
         match self.contract_type {
             ContractType::Multisig(multisig_type) => {
-                multisig::prepare_deploy(&self.public_key, multisig_type, expiration)
-            }
+                multisig::prepare_deploy(&self.public_key, multisig_type, expiration, &self.owners)
+            },
             ContractType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expiration),
         }
     }

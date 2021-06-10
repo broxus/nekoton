@@ -77,6 +77,7 @@ impl AccountsStorage {
         name: &str,
         public_key: ed25519_dalek::PublicKey,
         contract: ton_wallet::ContractType,
+        owners: ed25519_dalek::PublicKey,
     ) -> Result<AssetsList> {
         let address =
             ton_wallet::compute_address(&public_key, contract, ton_wallet::DEFAULT_WORKCHAIN);
@@ -94,6 +95,7 @@ impl AccountsStorage {
                         address,
                         public_key,
                         contract,
+                        owners,
                     },
                     additional_assets: Default::default(),
                 })
@@ -346,6 +348,8 @@ pub struct TonWalletAsset {
     #[serde(with = "serde_public_key")]
     pub public_key: ed25519_dalek::PublicKey,
     pub contract: ton_wallet::ContractType,
+    #[serde(with = "serde_public_key")]
+    pub owners: ed25519_dalek::PublicKey,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
