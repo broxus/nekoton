@@ -8,16 +8,16 @@ use ton_types::{SliceData, UInt256};
 use super::utils::*;
 use super::{TonWalletDetails, TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
-use crate::core::models::Expiration;
+use crate::core::models::{Expiration, GenTimings, LastTransactionId};
 use crate::crypto::UnsignedMessage;
-use crate::helpers::abi::{BigUint128, MessageBuilder};
+use crate::helpers::abi::{self, BigUint128, FunctionExt, IntoParser, MessageBuilder, ParseToken};
 use crate::utils::*;
 
 pub fn prepare_deploy(
     public_key: &PublicKey,
     multisig_type: MultisigType,
     expiration: Expiration,
-    owners: &Vec<PublicKey>,
+    owners: &[PublicKey],
 ) -> Result<Box<dyn UnsignedMessage>> {
     let state_init = prepare_state_init(public_key, multisig_type);
     let hash = state_init.hash().trust_me();
@@ -37,7 +37,7 @@ pub fn prepare_deploy(
     message.set_state_init(state_init);
 
     let owners = owners
-        .into_iter()
+        .iter()
         .map(|public_key| UInt256::from(public_key.as_bytes()))
         .collect::<Vec<UInt256>>();
 
@@ -126,6 +126,7 @@ pub static DETAILS: TonWalletDetails = TonWalletDetails {
     requires_separate_deploy: true,
     min_amount: 1000000, // 0.001 TON
     supports_payload: true,
+    supports_multiple_owners: true,
 };
 
 fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> ton_block::StateInit {
@@ -149,8 +150,62 @@ fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> to
     state_init
 }
 
+pub fn get_custodians(
+    account_stuff: ton_block::AccountStuff,
+    gen_timings: GenTimings,
+    last_transaction_id: &LastTransactionId,
+) -> Result<Vec<ton_abi::Token>> {
+    let function: &ton_abi::Function = contracts::abi::safe_multisig_wallet()
+        .function("getCustodians")
+        .map_err(|err| err.compat())?;
+    let input = Vec::with_capacity(function.inputs.len());
+
+    let output = function.run_local(account_stuff, gen_timings, last_transaction_id, &input)?;
+    output
+        .tokens
+        .ok_or_else(|| MultisigError::NonZeroResultCode.into())
+}
+
+pub fn parse_multisig_contract_custodians(
+    tokens: Vec<ton_abi::Token>,
+) -> abi::ContractResult<Vec<UInt256>> {
+    let array = match tokens.into_parser().parse_next() {
+        Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
+        _ => return Err(abi::ParserError::InvalidAbi),
+    };
+
+    let mut custodians = array
+        .into_iter()
+        .map(|item| item.try_parse())
+        .collect::<Result<Vec<TonWalletCustodian>, _>>()?;
+
+    custodians.sort_by(|a, b| a.index.cmp(&b.index));
+
+    Ok(custodians.into_iter().map(|item| item.pubkey).collect())
+}
+
 #[derive(thiserror::Error, Debug)]
 enum MultisigError {
     #[error("Account is frozen")]
     AccountIsFrozen,
+    #[error("Non-zero execution result code")]
+    NonZeroResultCode,
+}
+
+struct TonWalletCustodian {
+    index: u8,
+    pubkey: UInt256,
+}
+
+impl ParseToken<TonWalletCustodian> for ton_abi::TokenValue {
+    fn try_parse(self) -> abi::ContractResult<TonWalletCustodian> {
+        let mut tokens = match self {
+            ton_abi::TokenValue::Tuple(tokens) => tokens.into_parser(),
+            _ => return Err(abi::ParserError::InvalidAbi),
+        };
+        Ok(TonWalletCustodian {
+            index: tokens.parse_next()?,
+            pubkey: tokens.parse_next()?,
+        })
+    }
 }

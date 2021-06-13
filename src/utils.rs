@@ -276,7 +276,7 @@ pub mod serde_vec_public_key {
     use serde::de::Visitor;
     use serde::ser::SerializeSeq;
 
-    pub fn serialize<S>(data: &Vec<ed25519_dalek::PublicKey>, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &[ed25519_dalek::PublicKey], serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -298,13 +298,15 @@ pub mod serde_vec_public_key {
                 formatter.write_str("vector of public keys")
             }
             fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
-                where
-                    V: SeqAccess<'de>,
+            where
+                V: SeqAccess<'de>,
             {
                 let mut vec = Vec::new();
                 while let Some(elem) = visitor.next_element::<String>()? {
-                    let bytes = hex::decode(&elem).map_err(|_| V::Error::custom("Invalid PublicKey"))?;
-                    let pubkey = ed25519_dalek::PublicKey::from_bytes(&bytes).map_err(|_| V::Error::custom("Invalid PublicKey"))?;
+                    let bytes =
+                        hex::decode(&elem).map_err(|_| V::Error::custom("Invalid PublicKey"))?;
+                    let pubkey = ed25519_dalek::PublicKey::from_bytes(&bytes)
+                        .map_err(|_| V::Error::custom("Invalid PublicKey"))?;
                     vec.push(pubkey);
                 }
                 Ok(vec)
