@@ -805,6 +805,23 @@ pub(super) enum AccountSubscriptionError {
     InvalidMessageType,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MultisigPendingTransaction {
+    #[serde(with = "serde_u64")]
+    pub id: u64,
+    pub confirmations_mask: u32,
+    pub signs_required: u8,
+    pub signs_received: u8,
+    #[serde(with = "serde_uint256")]
+    pub creator: UInt256,
+    pub index: u8,
+    #[serde(with = "serde_address")]
+    pub dest: MsgAddressInt,
+    pub value: BigUint,
+    pub send_flags: u16,
+    pub bounce: bool,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

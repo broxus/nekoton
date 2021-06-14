@@ -13,8 +13,8 @@ use ton_types::{SliceData, UInt256};
 
 pub use self::multisig::MultisigType;
 use super::models::{
-    ContractState, Expiration, PendingTransaction, Transaction, TransactionAdditionalInfo,
-    TransactionId, TransactionWithData, TransactionsBatchInfo,
+    ContractState, Expiration, MultisigPendingTransaction, PendingTransaction, Transaction,
+    TransactionAdditionalInfo, TransactionId, TransactionWithData, TransactionsBatchInfo,
 };
 use super::{ContractSubscription, PollingMethod};
 use crate::core::{utils, InternalMessage};
@@ -88,8 +88,6 @@ impl TonWallet {
         self.contract_type.details()
     }
 
-    // pub fn get_pending_transactions (getTransactions msig contact method)
-
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
         match self.contract_type {
             ContractType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expiration),
@@ -101,11 +99,16 @@ impl TonWallet {
         &self,
         expiration: Expiration,
         custodians: &[PublicKey],
+        req_confirms: u8,
     ) -> Result<Box<dyn UnsignedMessage>> {
         match self.contract_type {
-            ContractType::Multisig(multisig_type) => {
-                multisig::prepare_deploy(&self.public_key, multisig_type, expiration, custodians)
-            }
+            ContractType::Multisig(multisig_type) => multisig::prepare_deploy(
+                &self.public_key,
+                multisig_type,
+                expiration,
+                custodians,
+                req_confirms,
+            ),
             _ => Err(TonWalletError::InvalidContractType.into()),
         }
     }
@@ -144,29 +147,50 @@ impl TonWallet {
     pub async fn get_custodians(&self) -> Result<Vec<UInt256>> {
         match self.contract_type {
             ContractType::Multisig(_) => {
-                let account_stuff = match self
-                    .transport
-                    .get_contract_state(&self.contract_subscription.address())
-                    .await?
-                {
-                    RawContractState::Exists(state) => state.account,
-                    RawContractState::NotExists => {
-                        return Err(TonWalletError::ContractNotFound.into());
-                    }
-                };
-                let gen_timings = self.contract_state().gen_timings;
-                let last_transaction_id = &self
-                    .contract_state()
-                    .last_transaction_id
-                    .ok_or(TonWalletError::LastTransactionNotFound)?;
-                let output =
-                    multisig::get_custodians(account_stuff, gen_timings, last_transaction_id)?;
+                let output = self.run_local("getCustodians").await?;
                 let custodians = multisig::parse_multisig_contract_custodians(output)?;
 
                 Ok(custodians)
             }
             ContractType::WalletV3 => Err(TonWalletError::InvalidContractType.into()),
         }
+    }
+
+    pub async fn get_pending_transactions(&self) -> Result<Vec<MultisigPendingTransaction>> {
+        match self.contract_type {
+            ContractType::Multisig(_) => {
+                let output = self.run_local("getTransactions").await?;
+                let transactions = multisig::parse_multisig_contract_pending_transactions(output)?;
+
+                Ok(transactions)
+            }
+            ContractType::WalletV3 => Err(TonWalletError::InvalidContractType.into()),
+        }
+    }
+
+    async fn run_local(&self, contract_method: &str) -> Result<Vec<ton_abi::Token>> {
+        let account_stuff = match self
+            .transport
+            .get_contract_state(&self.contract_subscription.address())
+            .await?
+        {
+            RawContractState::Exists(state) => state.account,
+            RawContractState::NotExists => {
+                return Err(TonWalletError::ContractNotFound.into());
+            }
+        };
+        let gen_timings = self.contract_state().gen_timings;
+        let last_transaction_id = &self
+            .contract_state()
+            .last_transaction_id
+            .ok_or(TonWalletError::LastTransactionNotFound)?;
+
+        multisig::run_local(
+            contract_method,
+            account_stuff,
+            gen_timings,
+            last_transaction_id,
+        )
     }
 
     pub async fn send(
