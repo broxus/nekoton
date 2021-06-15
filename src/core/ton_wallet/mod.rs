@@ -9,16 +9,17 @@ use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
-use ton_types::SliceData;
+use ton_types::{SliceData, UInt256};
 
 pub use self::multisig::MultisigType;
 use super::models::{
-    ContractState, Expiration, PendingTransaction, Transaction, TransactionAdditionalInfo,
-    TransactionId, TransactionWithData, TransactionsBatchInfo,
+    ContractState, Expiration, MultisigPendingTransaction, PendingTransaction, Transaction,
+    TransactionAdditionalInfo, TransactionId, TransactionWithData, TransactionsBatchInfo,
 };
 use super::{ContractSubscription, PollingMethod};
 use crate::core::{utils, InternalMessage};
 use crate::crypto::UnsignedMessage;
+use crate::helpers;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::*;
@@ -27,6 +28,7 @@ pub const DEFAULT_WORKCHAIN: i8 = 0;
 
 #[derive(Clone)]
 pub struct TonWallet {
+    transport: Arc<dyn Transport>,
     public_key: PublicKey,
     contract_type: ContractType,
     contract_subscription: ContractSubscription,
@@ -43,7 +45,7 @@ impl TonWallet {
         let address = compute_address(&public_key, contract_type, DEFAULT_WORKCHAIN);
 
         let contract_subscription = ContractSubscription::subscribe(
-            transport,
+            transport.clone(),
             address,
             make_contract_state_handler(&handler),
             make_transactions_handler(&handler),
@@ -51,6 +53,56 @@ impl TonWallet {
         .await?;
 
         Ok(Self {
+            transport,
+            public_key,
+            contract_type,
+            contract_subscription,
+            handler,
+        })
+    }
+
+    pub async fn subscribe_by_address(
+        transport: Arc<dyn Transport>,
+        address: MsgAddressInt,
+        handler: Arc<dyn TonWalletSubscriptionHandler>,
+    ) -> Result<Self> {
+        let (public_key, contract_type) = match transport.get_contract_state(&address).await? {
+            RawContractState::Exists(contract) => {
+                let (code, data) = match &contract.account.storage.state {
+                    ton_block::AccountState::AccountActive(ton_block::StateInit {
+                        code: Some(code),
+                        data: Some(data),
+                        ..
+                    }) => (code, data),
+                    _ => return Err(TonWalletError::AccountNotExists.into()),
+                };
+
+                let code_hash = code.repr_hash();
+                if let Some(multisig_type) = multisig::guess_multisig_type(&code_hash) {
+                    let public_key = helpers::abi::extract_public_key(&contract.account)?;
+                    (public_key, ContractType::Multisig(multisig_type))
+                } else if wallet_v3::is_wallet_v3(&code_hash) {
+                    let public_key =
+                        PublicKey::from_bytes(wallet_v3::InitData::try_from(data)?.public_key())
+                            .trust_me();
+                    (public_key, ContractType::WalletV3)
+                } else {
+                    return Err(TonWalletError::InvalidContractType.into());
+                }
+            }
+            RawContractState::NotExists => return Err(TonWalletError::AccountNotExists.into()),
+        };
+
+        let contract_subscription = ContractSubscription::subscribe(
+            transport.clone(),
+            address,
+            make_contract_state_handler(&handler),
+            make_transactions_handler(&handler),
+        )
+        .await?;
+
+        Ok(Self {
+            transport,
             public_key,
             contract_type,
             contract_subscription,
@@ -88,16 +140,40 @@ impl TonWallet {
 
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
         match self.contract_type {
-            ContractType::Multisig(multisig_type) => {
-                multisig::prepare_deploy(&self.public_key, multisig_type, expiration)
-            }
             ContractType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expiration),
+            ContractType::Multisig(multisig_type) => multisig::prepare_deploy(
+                &self.public_key,
+                multisig_type,
+                expiration,
+                &[self.public_key],
+                1,
+            ),
         }
     }
 
+    pub fn prepare_deploy_with_multiple_owners(
+        &self,
+        expiration: Expiration,
+        custodians: &[PublicKey],
+        req_confirms: u8,
+    ) -> Result<Box<dyn UnsignedMessage>> {
+        match self.contract_type {
+            ContractType::Multisig(multisig_type) => multisig::prepare_deploy(
+                &self.public_key,
+                multisig_type,
+                expiration,
+                custodians,
+                req_confirms,
+            ),
+            _ => Err(TonWalletError::InvalidContractType.into()),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub fn prepare_transfer(
         &self,
         current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
         destination: MsgAddressInt,
         amount: u64,
         bounce: bool,
@@ -106,7 +182,7 @@ impl TonWallet {
     ) -> Result<TransferAction> {
         match self.contract_type {
             ContractType::Multisig(_) => multisig::prepare_transfer(
-                &self.public_key,
+                public_key,
                 current_state,
                 destination,
                 amount,
@@ -115,7 +191,7 @@ impl TonWallet {
                 expiration,
             ),
             ContractType::WalletV3 => wallet_v3::prepare_transfer(
-                &self.public_key,
+                public_key,
                 current_state,
                 destination,
                 amount,
@@ -123,6 +199,65 @@ impl TonWallet {
                 body,
                 expiration,
             ),
+        }
+    }
+
+    pub async fn get_custodians(&self) -> Result<Vec<UInt256>> {
+        match self.contract_type {
+            ContractType::Multisig(multisig_type) => {
+                let account_stuff = self.get_contract_state().await?;
+                let gen_timings = self.contract_state().gen_timings;
+                let last_transaction_id = &self
+                    .contract_state()
+                    .last_transaction_id
+                    .ok_or(TonWalletError::LastTransactionNotFound)?;
+
+                multisig::run_local(
+                    multisig_type,
+                    "getCustodians",
+                    account_stuff,
+                    gen_timings,
+                    last_transaction_id,
+                )
+                .and_then(multisig::parse_multisig_contract_custodians)
+            }
+            ContractType::WalletV3 => Ok(vec![self.public_key.to_bytes().into()]),
+        }
+    }
+
+    pub async fn get_pending_transactions(&self) -> Result<Vec<MultisigPendingTransaction>> {
+        match self.contract_type {
+            ContractType::Multisig(multisig_type) => {
+                let account_stuff = self.get_contract_state().await?;
+                let gen_timings = self.contract_state().gen_timings;
+                let last_transaction_id = &self
+                    .contract_state()
+                    .last_transaction_id
+                    .ok_or(TonWalletError::LastTransactionNotFound)?;
+
+                let custodians = multisig::run_local(
+                    multisig_type,
+                    "getCustodians",
+                    account_stuff.clone(),
+                    gen_timings,
+                    last_transaction_id,
+                )
+                .and_then(multisig::parse_multisig_contract_custodians)?;
+
+                let transactions = multisig::run_local(
+                    multisig_type,
+                    "getTransactions",
+                    account_stuff,
+                    gen_timings,
+                    last_transaction_id,
+                )
+                .and_then(|tokens| {
+                    multisig::parse_multisig_contract_pending_transactions(tokens, &custodians)
+                })?;
+
+                Ok(transactions)
+            }
+            ContractType::WalletV3 => Ok(Vec::new()),
         }
     }
 
@@ -171,12 +306,24 @@ impl TonWallet {
     pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
         self.contract_subscription.estimate_fees(message).await
     }
+
+    async fn get_contract_state(&self) -> Result<ton_block::AccountStuff> {
+        match self
+            .transport
+            .get_contract_state(&self.contract_subscription.address())
+            .await?
+        {
+            RawContractState::Exists(state) => Ok(state.account),
+            RawContractState::NotExists => Err(TonWalletError::ContractNotFound.into()),
+        }
+    }
 }
 
 pub trait InternalMessageSender {
     fn prepare_transfer(
         &self,
         current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
         message: InternalMessage,
         expiration: Expiration,
     ) -> Result<TransferAction>;
@@ -186,6 +333,7 @@ impl InternalMessageSender for TonWallet {
     fn prepare_transfer(
         &self,
         current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
         message: InternalMessage,
         expiration: Expiration,
     ) -> Result<TransferAction> {
@@ -195,6 +343,7 @@ impl InternalMessageSender for TonWallet {
 
         self.prepare_transfer(
             current_state,
+            public_key,
             message.destination,
             message.amount,
             message.bounce,
@@ -208,6 +357,18 @@ impl InternalMessageSender for TonWallet {
 enum InternalMessageSenderError {
     #[error("Invalid sender")]
     InvalidSender,
+}
+
+#[derive(thiserror::Error, Debug)]
+enum TonWalletError {
+    #[error("Account not exists")]
+    AccountNotExists,
+    #[error("Invalid contract type")]
+    InvalidContractType,
+    #[error("Contract not found")]
+    ContractNotFound,
+    #[error("Last transaction not found")]
+    LastTransactionNotFound,
 }
 
 fn make_contract_state_handler<T>(handler: &'_ T) -> impl FnMut(&RawContractState) + '_
@@ -268,6 +429,7 @@ pub struct TonWalletDetails {
     #[serde(with = "serde_u64")]
     pub min_amount: u64,
     pub supports_payload: bool,
+    pub supports_multiple_owners: bool,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
