@@ -160,7 +160,20 @@ impl TonWallet {
         match self.contract_type {
             ContractType::Multisig(_) => {
                 let output = self.run_local("getTransactions").await?;
-                let transactions = multisig::parse_multisig_contract_pending_transactions(output)?;
+                let mut transactions =
+                    multisig::parse_multisig_contract_pending_transactions(output)?;
+
+                let custodians = self.get_custodians().await?;
+                for transaction in &mut transactions {
+                    let confirmations = custodians
+                        .clone()
+                        .into_iter()
+                        .enumerate()
+                        .filter(|(i, _)| (0b1 << i) & transaction.confirmations_mask != 0)
+                        .map(|(_, item)| item)
+                        .collect::<Vec<UInt256>>();
+                    transaction.confirmations = confirmations;
+                }
 
                 Ok(transactions)
             }

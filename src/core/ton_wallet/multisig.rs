@@ -247,9 +247,12 @@ impl ParseToken<MultisigPendingTransaction> for ton_abi::TokenValue {
         let _payload: ton_types::Cell = tokens.parse_next()?;
         let bounce = tokens.parse_next()?;
 
+        let confirmations = vec![];
+
         Ok(MultisigPendingTransaction {
             id,
             confirmations_mask,
+            confirmations,
             signs_required,
             signs_received,
             creator,

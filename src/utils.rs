@@ -291,8 +291,8 @@ pub mod serde_vec_public_key {
     where
         D: serde::Deserializer<'de>,
     {
-        struct PublicKeyVecVisitor;
-        impl<'de> Visitor<'de> for PublicKeyVecVisitor {
+        struct VecVisitor;
+        impl<'de> Visitor<'de> for VecVisitor {
             type Value = Vec<ed25519_dalek::PublicKey>;
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                 formatter.write_str("vector of public keys")
@@ -313,7 +313,7 @@ pub mod serde_vec_public_key {
             }
         }
 
-        deserializer.deserialize_seq(PublicKeyVecVisitor)
+        deserializer.deserialize_seq(VecVisitor)
     }
 }
 
@@ -336,6 +336,53 @@ pub mod serde_uint256 {
     {
         let data = String::deserialize(deserializer)?;
         UInt256::from_str(&data).map_err(|_| D::Error::custom("Invalid uint256"))
+    }
+}
+
+pub mod serde_vec_uint256 {
+    use super::*;
+
+    use serde::de::Error;
+    use serde::de::SeqAccess;
+    use serde::de::Visitor;
+    use serde::ser::SerializeSeq;
+
+    pub fn serialize<S>(data: &[UInt256], serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(data.len()))?;
+        for item in data {
+            seq.serialize_element(&item.to_hex_string())?;
+        }
+        seq.end()
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<UInt256>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct VecVisitor;
+        impl<'de> Visitor<'de> for VecVisitor {
+            type Value = Vec<UInt256>;
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("vector of UInt256")
+            }
+            fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                let mut vec = Vec::new();
+                while let Some(elem) = visitor.next_element::<String>()? {
+                    let item = UInt256::from_str(&elem)
+                        .map_err(|_| V::Error::custom("Invalid uint256"))?;
+                    vec.push(item);
+                }
+                Ok(vec)
+            }
+        }
+
+        deserializer.deserialize_seq(VecVisitor)
     }
 }
 

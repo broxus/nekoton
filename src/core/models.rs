@@ -809,7 +809,10 @@ pub(super) enum AccountSubscriptionError {
 pub struct MultisigPendingTransaction {
     #[serde(with = "serde_u64")]
     pub id: u64,
+    #[serde(skip_serializing)]
     pub confirmations_mask: u32,
+    #[serde(with = "serde_vec_uint256")]
+    pub confirmations: Vec<UInt256>,
     pub signs_required: u8,
     pub signs_received: u8,
     #[serde(with = "serde_uint256")]
