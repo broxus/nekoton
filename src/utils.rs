@@ -294,7 +294,7 @@ pub mod serde_vec_public_key {
         struct VecVisitor;
         impl<'de> Visitor<'de> for VecVisitor {
             type Value = Vec<ed25519_dalek::PublicKey>;
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 formatter.write_str("vector of public keys")
             }
             fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
@@ -365,7 +365,7 @@ pub mod serde_vec_uint256 {
         struct VecVisitor;
         impl<'de> Visitor<'de> for VecVisitor {
             type Value = Vec<UInt256>;
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 formatter.write_str("vector of UInt256")
             }
             fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>

@@ -1,6 +1,3 @@
-mod multisig;
-mod wallet_v3;
-
 use std::convert::TryFrom;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -11,18 +8,23 @@ use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 use ton_types::{SliceData, UInt256};
 
-pub use self::multisig::MultisigType;
-use super::models::{
-    ContractState, Expiration, MultisigPendingTransaction, PendingTransaction, Transaction,
-    TransactionAdditionalInfo, TransactionId, TransactionWithData, TransactionsBatchInfo,
-};
-use super::{ContractSubscription, PollingMethod};
 use crate::core::{utils, InternalMessage};
 use crate::crypto::UnsignedMessage;
 use crate::helpers;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::*;
+
+use super::models::{
+    ContractState, Expiration, MultisigPendingTransaction, PendingTransaction, Transaction,
+    TransactionAdditionalInfo, TransactionId, TransactionWithData, TransactionsBatchInfo,
+};
+use super::{ContractSubscription, PollingMethod};
+
+pub use self::multisig::MultisigType;
+
+mod multisig;
+mod wallet_v3;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
@@ -166,7 +168,7 @@ impl TonWallet {
                 custodians,
                 req_confirms,
             ),
-            _ => Err(TonWalletError::InvalidContractType.into()),
+            ContractType::WalletV3 => Err(TonWalletError::InvalidContractType.into()),
         }
     }
 
@@ -311,7 +313,7 @@ impl TonWallet {
     async fn get_contract_state(&self) -> Result<ton_block::AccountStuff> {
         match self
             .transport
-            .get_contract_state(&self.contract_subscription.address())
+            .get_contract_state(self.contract_subscription.address())
             .await?
         {
             RawContractState::Exists(state) => Ok(state.account),
