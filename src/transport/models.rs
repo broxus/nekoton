@@ -1,10 +1,13 @@
+use std::cmp::Ordering;
+
+use serde::{Deserialize, Serialize};
+use ton_block::{AccountStuff, Transaction};
+use ton_types::UInt256;
+
 use crate::core::models::{
     ContractState, GenTimings, LastTransactionId, PendingTransaction, TransactionId,
 };
 use crate::utils::serde_ton_block;
-use serde::{Deserialize, Serialize};
-use ton_block::{AccountStuff, Transaction};
-use ton_types::UInt256;
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,6 +62,26 @@ impl PartialEq for ExistingContract {
 pub struct RawTransaction {
     pub hash: UInt256,
     pub data: Transaction,
+}
+
+impl PartialEq for RawTransaction {
+    fn eq(&self, other: &Self) -> bool {
+        self.data.lt == other.data.lt && self.hash == other.hash
+    }
+}
+
+impl Eq for RawTransaction {}
+
+impl PartialOrd for RawTransaction {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.data.lt.partial_cmp(&other.data.lt)
+    }
+}
+
+impl Ord for RawTransaction {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.data.lt.cmp(&other.data.lt)
+    }
 }
 
 impl RawTransaction {
