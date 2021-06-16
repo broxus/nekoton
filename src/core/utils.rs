@@ -69,6 +69,7 @@ pub fn request_transactions<'a>(
     }
 }
 
+#[derive(Debug)]
 pub struct ParsedBlock {
     pub current_utime: u32,
     pub data: Option<(ContractState, Option<NewTransactions>)>,
@@ -233,7 +234,7 @@ pub fn compute_total_transaction_fees(
     total_fees as u64
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum BlockParsingError {
     #[error("Invalid block structure")]
     InvalidBlockStructure,

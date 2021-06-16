@@ -164,27 +164,27 @@ impl SignerStorage for EncryptedKeySigner {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncryptedKeyCreateInput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
     pub password: SecUtf8,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct EncryptedKeyPassword {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
     pub password: SecUtf8,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncryptedKeyExportOutput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncryptedKeyUpdateParams {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
@@ -421,7 +421,7 @@ fn decrypt_key_pair(
     Ok(Keypair { secret, public })
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum EncryptedKeyError {
     #[error("Failed to generate random bytes")]
     FailedToGenerateRandomBytes(ring::error::Unspecified),

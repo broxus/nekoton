@@ -54,7 +54,7 @@ impl<T> TrustMe<T> for Option<T> {
 }
 
 #[allow(clippy::derive_hash_xor_eq)]
-#[derive(Clone, Default, PartialEq, Eq, Hash, Ord, PartialOrd)]
+#[derive(Clone, Default, PartialEq, Eq, Hash, Ord, PartialOrd, Copy)]
 pub struct UInt128([u8; 16]);
 
 impl PartialEq<SliceData> for UInt128 {
@@ -158,19 +158,19 @@ impl From<Vec<u8>> for UInt128 {
 }
 
 impl std::fmt::Debug for UInt128 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         LowerHex::fmt(self, f)
     }
 }
 
 impl std::fmt::Display for UInt128 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "UInt128[{:X?}]", self.as_slice())
     }
 }
 
 impl LowerHex for UInt128 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if f.alternate() {
             write!(f, "0x")?;
         }
@@ -179,7 +179,7 @@ impl LowerHex for UInt128 {
 }
 
 impl UpperHex for UInt128 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if f.alternate() {
             write!(f, "0x")?;
         }
@@ -213,7 +213,7 @@ macro_rules! define_string_enum {
         }
 
         impl std::fmt::Display for $type {
-            fn fmt(&self, f: &'_ mut std::fmt::Formatter) -> std::fmt::Result {
+            fn fmt(&self, f: &'_ mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match self {
                     $(Self::$variant => f.write_str(stringify!($variant))),*,
                 }
@@ -222,7 +222,7 @@ macro_rules! define_string_enum {
     };
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 #[error("Unknown enum variant")]
 pub struct UnknownEnumVariant;
 

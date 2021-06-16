@@ -19,6 +19,7 @@ use crate::utils::{NoFailure, TrustMe};
 const STORAGE_OWNERS_CACHE: &str = "__core__owners_cache";
 
 /// Stores a map to resolve owner's wallet address from token wallet address
+#[allow(missing_debug_implementations)]
 pub struct OwnersCache {
     key: String,
     storage: Arc<dyn Storage>,
@@ -252,12 +253,13 @@ fn make_key(network_name: &str) -> String {
     format!("{}{}", STORAGE_OWNERS_CACHE, network_name)
 }
 
+#[derive(Debug)]
 pub enum RecipientWallet {
     NotExists,
     Exists(MsgAddressInt),
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum OwnersCacheError {
     #[error("Invalid root token contract")]
     InvalidRootTokenContract,

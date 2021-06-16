@@ -23,7 +23,7 @@ pub enum TransactionAdditionalInfo {
     TonEventStatusChanged(TonEventStatus),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
 pub struct DePoolOnRoundCompleteNotification {
     #[serde(with = "serde_u64")]
     pub round_id: u64,
@@ -39,7 +39,7 @@ pub struct DePoolOnRoundCompleteNotification {
     pub reason: u8,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
 pub struct DePoolReceiveAnswerNotification {
     #[serde(with = "serde_u64")]
     pub error_code: u64,
@@ -78,7 +78,7 @@ pub enum MultisigTransaction {
     Confirm(MultisigConfirmTransaction),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
 pub struct MultisigConfirmTransaction {
     #[serde(with = "serde_u64")]
     pub transaction_id: u64,
@@ -197,7 +197,7 @@ pub struct TokenSwapBack {
     pub to: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
 pub struct EthEventDetails {
     pub status: EthEventStatus,
     pub required_confirmation_count: u16,
@@ -213,7 +213,7 @@ pub struct EthEventData {
     pub tokens: BigUint,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
 pub struct TonEventDetails {
     pub status: TonEventStatus,
     pub required_confirmation_count: u16,
@@ -391,7 +391,7 @@ pub struct RootTokenContractDetails {
     pub owner_address: MsgAddressInt,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]
 pub struct ContractState {
     /// Full account balance in nano TON
     #[serde(with = "serde_u64")]
@@ -579,7 +579,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum TransactionError {
     #[error("Invalid transaction structure")]
     InvalidStructure,
@@ -703,7 +703,7 @@ impl TryFrom<ton_types::SliceData> for MessageBody {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum MessageBodyError {
     #[error("Failed to serialize data")]
     FailedToSerialize,

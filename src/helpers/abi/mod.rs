@@ -115,7 +115,7 @@ pub fn extract_public_key(
     Ok(ed25519_dalek::PublicKey::from_bytes(&data).trust_me())
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum ExtractionError {
     #[error("Account is not active")]
     AccountIsNotActive,
@@ -249,6 +249,7 @@ impl<'a> FunctionAbi<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct ExecutionOutput {
     pub tokens: Option<Vec<Token>>,
     pub result_code: i32,
@@ -337,6 +338,7 @@ enum AbiError {
     IncompleteDeserialization(SliceData),
 }
 
+#[allow(missing_debug_implementations)]
 pub struct Executor {
     config: BlockchainConfig,
     account: Account,
