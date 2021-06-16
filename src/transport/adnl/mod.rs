@@ -191,7 +191,7 @@ impl Transport for AdnlTransport {
         .map_err(|_| QueryTransactionsError::InvalidTransactionsList)?;
 
         let mut result = Vec::with_capacity(transactions.len());
-        for item in transactions.into_iter() {
+        for item in transactions.into_iter().rev() {
             let hash = item.repr_hash();
             result.push(RawTransaction {
                 hash,
