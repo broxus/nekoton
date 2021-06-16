@@ -265,7 +265,7 @@ impl KeyStoreBuilder {
 
         let mut entries = HashMap::new();
 
-        for (name, data) in data.into_iter() {
+        for (name, data) in data {
             if let Some((storage, type_id)) = self.signers.get_mut(&name) {
                 storage.load_state(&data)?;
 
@@ -292,7 +292,7 @@ impl KeyStoreBuilder {
 
         let mut entries = HashMap::new();
 
-        for (name, data) in data.into_iter() {
+        for (name, data) in data {
             if let Some((storage, type_id)) = self.signers.get_mut(&name) {
                 if storage.load_state(&data).is_ok() {
                     entries.extend(

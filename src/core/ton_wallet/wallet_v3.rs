@@ -186,7 +186,7 @@ pub static DETAILS: TonWalletDetails = TonWalletDetails {
     supports_payload: true,
 };
 
-/// WalletV3 init data
+/// `WalletV3` init data
 #[derive(Clone)]
 pub struct InitData {
     pub seqno: u32,
@@ -298,7 +298,7 @@ impl TryFrom<&Cell> for InitData {
     }
 }
 
-/// WalletV3 transfer info
+/// `WalletV3` transfer info
 #[derive(Clone)]
 pub struct Gift {
     pub flags: u8,

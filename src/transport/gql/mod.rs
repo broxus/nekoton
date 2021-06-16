@@ -11,9 +11,9 @@ use crate::core::models::{GenTimings, LastTransactionId, ReliableBehavior, Trans
 use crate::external::GqlConnection;
 use crate::utils::*;
 
-use super::{Transport, TransportInfo};
 use super::models::*;
 use super::utils::ConfigCache;
+use super::{Transport, TransportInfo};
 
 #[allow(missing_debug_implementations)]
 pub struct GqlTransport {
@@ -30,8 +30,8 @@ impl GqlTransport {
     }
 
     async fn fetch<T>(&self, params: T::Variables) -> Result<T::ResponseData>
-        where
-            T: GraphQLQuery,
+    where
+        T: GraphQLQuery,
     {
         let request_body = T::build_query(params);
         let response = self
@@ -46,15 +46,15 @@ impl GqlTransport {
                 "Failed parsing api response: {}. Response data: {}",
                 e, response
             ))
-                .into()),
+            .into()),
         }
     }
 
     pub async fn get_latest_block(&self, addr: &MsgAddressInt) -> Result<LatestBlock> {
         #[derive(GraphQLQuery)]
         #[graphql(
-        schema_path = "src/transport/gql/schema.graphql",
-        query_path = "src/transport/gql/query_latest_masterchain_block.graphql"
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_latest_masterchain_block.graphql"
         )]
         struct QueryLatestMasterchainBlock;
 
@@ -117,8 +117,8 @@ impl GqlTransport {
     pub async fn get_block(&self, id: &str) -> Result<ton_block::Block> {
         #[derive(GraphQLQuery)]
         #[graphql(
-        schema_path = "src/transport/gql/schema.graphql",
-        query_path = "src/transport/gql/query_block.graphql"
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_block.graphql"
         )]
         struct QueryBlock;
 
@@ -143,8 +143,8 @@ impl GqlTransport {
     ) -> Result<String> {
         #[derive(GraphQLQuery)]
         #[graphql(
-        schema_path = "src/transport/gql/schema.graphql",
-        query_path = "src/transport/gql/query_next_block.graphql"
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_next_block.graphql"
         )]
         struct QueryNextBlock;
 
@@ -171,8 +171,8 @@ impl GqlTransport {
             (Some(block_id), Some(true), false) => {
                 #[derive(GraphQLQuery)]
                 #[graphql(
-                schema_path = "src/transport/gql/schema.graphql",
-                query_path = "src/transport/gql/query_block_after_split.graphql"
+                    schema_path = "src/transport/gql/schema.graphql",
+                    query_path = "src/transport/gql/query_block_after_split.graphql"
                 )]
                 struct QueryBlockAfterSplit;
 
@@ -226,8 +226,8 @@ impl Transport for GqlTransport {
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
         #[derive(GraphQLQuery)]
         #[graphql(
-        schema_path = "src/transport/gql/schema.graphql",
-        query_path = "src/transport/gql/query_account_state.graphql"
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_account_state.graphql"
         )]
         struct QueryAccountState;
 
@@ -271,8 +271,8 @@ impl Transport for GqlTransport {
     ) -> Result<Vec<RawTransaction>> {
         #[derive(GraphQLQuery)]
         #[graphql(
-        schema_path = "src/transport/gql/schema.graphql",
-        query_path = "src/transport/gql/query_account_transactions.graphql"
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_account_transactions.graphql"
         )]
         struct QueryAccountTransactions;
 
@@ -281,30 +281,30 @@ impl Transport for GqlTransport {
             last_transaction_lt: from.lt.to_string(),
             limit: count as i64,
         })
-            .await?
-            .transactions
-            .ok_or_else(invalid_response)?
-            .into_iter()
-            .flatten()
-            .map(|transaction| {
-                let bytes = base64::decode(&transaction.boc.ok_or_else(invalid_response)?)?;
-                let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(bytes))
-                    .map_err(|_| NodeClientError::InvalidTransaction)?;
-                let hash = cell.repr_hash();
-                Ok(RawTransaction {
-                    hash,
-                    data: ton_block::Transaction::construct_from_cell(cell)
-                        .map_err(|_| NodeClientError::InvalidTransaction)?,
-                })
+        .await?
+        .transactions
+        .ok_or_else(invalid_response)?
+        .into_iter()
+        .flatten()
+        .map(|transaction| {
+            let bytes = base64::decode(&transaction.boc.ok_or_else(invalid_response)?)?;
+            let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(bytes))
+                .map_err(|_| NodeClientError::InvalidTransaction)?;
+            let hash = cell.repr_hash();
+            Ok(RawTransaction {
+                hash,
+                data: ton_block::Transaction::construct_from_cell(cell)
+                    .map_err(|_| NodeClientError::InvalidTransaction)?,
             })
-            .collect::<Result<Vec<_>, _>>()
+        })
+        .collect::<Result<Vec<_>, _>>()
     }
 
     async fn get_latest_key_block(&self) -> Result<ton_block::Block> {
         #[derive(GraphQLQuery)]
         #[graphql(
-        schema_path = "src/transport/gql/schema.graphql",
-        query_path = "src/transport/gql/query_latest_key_block.graphql"
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_latest_key_block.graphql"
         )]
         struct QueryLatestKeyBlock;
 
@@ -336,13 +336,13 @@ pub struct LatestBlock {
 
 #[derive(GraphQLQuery)]
 #[graphql(
-schema_path = "src/transport/gql/schema.graphql",
-query_path = "src/transport/gql/mutation_send_message.graphql"
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/mutation_send_message.graphql"
 )]
 struct MutationSendMessage;
 
 fn check_shard_match(workchain_id: i64, shard: &str, addr: &MsgAddressInt) -> Result<bool> {
-    let shard = u64::from_str_radix(&shard, 16).map_err(|_| NodeClientError::NoBlocksFound)?;
+    let shard = u64::from_str_radix(shard, 16).map_err(|_| NodeClientError::NoBlocksFound)?;
 
     let ident = ton_block::ShardIdent::with_tagged_prefix(workchain_id as i32, shard)
         .map_err(api_failure)?;
@@ -352,8 +352,8 @@ fn check_shard_match(workchain_id: i64, shard: &str, addr: &MsgAddressInt) -> Re
 }
 
 fn api_failure<T>(e: T) -> NodeClientError
-    where
-        T: std::fmt::Display,
+where
+    T: std::fmt::Display,
 {
     NodeClientError::ApiFailure {
         reason: e.to_string(),

@@ -90,7 +90,7 @@ impl TokenWallet {
     }
 
     pub fn address(&self) -> &MsgAddressInt {
-        &self.contract_subscription.address()
+        self.contract_subscription.address()
     }
 
     pub fn symbol(&self) -> &Symbol {
@@ -238,7 +238,9 @@ impl TokenWallet {
             RawContractState::Exists(state) => {
                 Ok(RootMetaContractState(&state).get_details()?.proxy_address)
             }
-            _ => return Err(TokenWalletError::InvalidRootMetaContract.into()),
+            RawContractState::NotExists => {
+                return Err(TokenWalletError::InvalidRootMetaContract.into())
+            }
         }
     }
 

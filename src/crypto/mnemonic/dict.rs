@@ -2,7 +2,7 @@ pub fn get_hints(input: &str) -> Vec<String> {
     BIP39
         .iter()
         .filter(|x| x.starts_with(input))
-        .map(|x| x.to_string())
+        .map(|x| (*x).to_string())
         .collect()
 }
 

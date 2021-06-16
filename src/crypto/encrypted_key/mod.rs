@@ -405,7 +405,7 @@ impl CryptoData {
             secret,
             public: self.pubkey,
         };
-        Ok(pair.sign(&data).to_bytes())
+        Ok(pair.sign(data).to_bytes())
     }
 }
 
@@ -414,7 +414,7 @@ fn decrypt_key_pair(
     key: &Key,
     nonce: &Nonce,
 ) -> Result<ed25519_dalek::Keypair, EncryptedKeyError> {
-    let decrypter = ChaCha20Poly1305::new(&key);
+    let decrypter = ChaCha20Poly1305::new(key);
     let bytes = decrypt(&decrypter, nonce, encrypted_key)?;
     let secret = SecretKey::from_bytes(&bytes).map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
     let public = PublicKey::from(&secret);

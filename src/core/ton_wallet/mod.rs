@@ -60,7 +60,7 @@ impl TonWallet {
     }
 
     pub fn address(&self) -> &MsgAddressInt {
-        &self.contract_subscription.address()
+        self.contract_subscription.address()
     }
 
     pub fn public_key(&self) -> &PublicKey {
@@ -72,11 +72,11 @@ impl TonWallet {
     }
 
     pub fn contract_state(&self) -> &ContractState {
-        &self.contract_subscription.contract_state()
+        self.contract_subscription.contract_state()
     }
 
     pub fn pending_transactions(&self) -> &[PendingTransaction] {
-        &self.contract_subscription.pending_transactions()
+        self.contract_subscription.pending_transactions()
     }
 
     pub fn polling_method(&self) -> PollingMethod {

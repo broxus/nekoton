@@ -294,7 +294,7 @@ impl<'a> Stream for LatestTransactions<'a> {
         // get batch info
         let last = match new_transactions.last() {
             Some(last) => last,
-            _ => return Poll::Ready(None),
+            None => return Poll::Ready(None),
         };
 
         // check if there are no transactions left or all transactions were requested
@@ -315,7 +315,7 @@ impl<'a> Stream for LatestTransactions<'a> {
                 limit - self.total_fetched,
                 self.transport.info().max_transactions_per_fetch as usize,
             ) as u8,
-            _ => self.transport.info().max_transactions_per_fetch,
+            None => self.transport.info().max_transactions_per_fetch,
         };
 
         // If there are some unprocessed transactions left we should request remaining
