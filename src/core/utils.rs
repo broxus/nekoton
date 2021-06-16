@@ -69,6 +69,7 @@ pub fn request_transactions<'a>(
     }
 }
 
+#[derive(Debug)]
 pub struct ParsedBlock {
     pub current_utime: u32,
     pub data: Option<(ContractState, Option<NewTransactions>)>,
@@ -233,7 +234,7 @@ pub fn compute_total_transaction_fees(
     total_fees as u64
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum BlockParsingError {
     #[error("Invalid block structure")]
     InvalidBlockStructure,
@@ -293,7 +294,7 @@ impl<'a> Stream for LatestTransactions<'a> {
         // get batch info
         let last = match new_transactions.last() {
             Some(last) => last,
-            _ => return Poll::Ready(None),
+            None => return Poll::Ready(None),
         };
 
         // check if there are no transactions left or all transactions were requested
@@ -314,7 +315,7 @@ impl<'a> Stream for LatestTransactions<'a> {
                 limit - self.total_fetched,
                 self.transport.info().max_transactions_per_fetch as usize,
             ) as u8,
-            _ => self.transport.info().max_transactions_per_fetch,
+            None => self.transport.info().max_transactions_per_fetch,
         };
 
         // If there are some unprocessed transactions left we should request remaining

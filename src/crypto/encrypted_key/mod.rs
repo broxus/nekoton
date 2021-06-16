@@ -164,27 +164,27 @@ impl SignerStorage for EncryptedKeySigner {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncryptedKeyCreateInput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
     pub password: SecUtf8,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct EncryptedKeyPassword {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
     pub password: SecUtf8,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncryptedKeyExportOutput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct EncryptedKeyUpdateParams {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
@@ -405,7 +405,7 @@ impl CryptoData {
             secret,
             public: self.pubkey,
         };
-        Ok(pair.sign(&data).to_bytes())
+        Ok(pair.sign(data).to_bytes())
     }
 }
 
@@ -414,14 +414,14 @@ fn decrypt_key_pair(
     key: &Key,
     nonce: &Nonce,
 ) -> Result<ed25519_dalek::Keypair, EncryptedKeyError> {
-    let decrypter = ChaCha20Poly1305::new(&key);
+    let decrypter = ChaCha20Poly1305::new(key);
     let bytes = decrypt(&decrypter, nonce, encrypted_key)?;
     let secret = SecretKey::from_bytes(&bytes).map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
     let public = PublicKey::from(&secret);
     Ok(Keypair { secret, public })
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum EncryptedKeyError {
     #[error("Failed to generate random bytes")]
     FailedToGenerateRandomBytes(ring::error::Unspecified),

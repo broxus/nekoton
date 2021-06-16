@@ -15,6 +15,7 @@ use crate::transport::Transport;
 
 /// Used as a base object for different listeners implementation
 #[derive(Clone)]
+#[allow(missing_debug_implementations)]
 pub struct ContractSubscription {
     transport: Arc<dyn Transport>,
     address: MsgAddressInt,
@@ -177,7 +178,9 @@ impl ContractSubscription {
         let blockchain_config = self.transport.get_blockchain_config().await?;
         let state = match self.transport.get_contract_state(&self.address).await? {
             RawContractState::Exists(state) => state,
-            _ => return Err(ContractExecutionError::ContractNotFound.into()),
+            RawContractState::NotExists => {
+                return Err(ContractExecutionError::ContractNotFound.into())
+            }
         };
 
         let transaction = Executor::new(

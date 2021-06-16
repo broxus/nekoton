@@ -5,7 +5,7 @@ use super::{FunctionArg, TokenValueExt};
 const ANSWER_ID: &str = "_answer_id";
 
 #[allow(dead_code)]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct FunctionBuilder {
     /// Contract function specification.
     /// ABI version
@@ -99,7 +99,7 @@ impl FunctionBuilder {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct TupleBuilder {
     types: Vec<Param>,
 }

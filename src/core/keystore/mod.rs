@@ -16,6 +16,7 @@ use crate::utils::*;
 const STORAGE_KEYSTORE: &str = "__core__keystore";
 
 #[repr(C)]
+#[allow(missing_debug_implementations)]
 pub struct KeyStore {
     state: RwLock<KeyStoreState>,
     storage: Arc<dyn Storage>,
@@ -230,6 +231,7 @@ impl KeyStoreEntry {
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub struct KeyStoreBuilder {
     storage: Arc<dyn Storage>,
     signers: HashMap<String, (Box<dyn SignerStorage>, TypeId)>,
@@ -263,7 +265,7 @@ impl KeyStoreBuilder {
 
         let mut entries = HashMap::new();
 
-        for (name, data) in data.into_iter() {
+        for (name, data) in data {
             if let Some((storage, type_id)) = self.signers.get_mut(&name) {
                 storage.load_state(&data)?;
 
@@ -290,7 +292,7 @@ impl KeyStoreBuilder {
 
         let mut entries = HashMap::new();
 
-        for (name, data) in data.into_iter() {
+        for (name, data) in data {
             if let Some((storage, type_id)) = self.signers.get_mut(&name) {
                 if storage.load_state(&data).is_ok() {
                     entries.extend(
@@ -330,7 +332,7 @@ fn transpose_signers(signers: BuilderSignersMap) -> SignersMap {
         .collect()
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum KeyStoreError {
     #[error("Duplicate signer name")]
     DuplicateSignerName,

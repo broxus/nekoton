@@ -15,6 +15,7 @@ const STORAGE_ACCOUNTS: &str = "__core__accounts";
 
 const DEFAULT_NETWORK_GROUP: &str = "mainnet";
 
+#[allow(missing_debug_implementations)]
 pub struct AccountsStorage {
     storage: Arc<dyn Storage>,
     accounts: RwLock<AssetsMap>,
@@ -218,6 +219,7 @@ impl AccountsStorage {
     }
 }
 
+#[derive(Debug)]
 pub struct StoredAccountsData<'a>(RwLockReadGuard<'a, AssetsMap>);
 
 impl<'a> StoredAccountsData<'a> {

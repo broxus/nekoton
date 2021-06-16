@@ -7,6 +7,7 @@ use ton_types::{BuilderData, UInt256};
 use super::StandaloneToken;
 use crate::utils::*;
 
+#[derive(Debug)]
 pub struct MessageBuilder<'a> {
     function: &'a Function,
     inputs: Vec<Token>,
@@ -103,6 +104,7 @@ impl FunctionArg for UInt128 {
     }
 }
 
+#[derive(Debug)]
 pub struct BigUint256(pub BigUint);
 
 impl FunctionArg for BigUint256 {
@@ -114,6 +116,7 @@ impl FunctionArg for BigUint256 {
     }
 }
 
+#[derive(Debug)]
 pub struct BigUint128(pub BigUint);
 
 impl FunctionArg for BigUint128 {

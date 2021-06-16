@@ -380,7 +380,7 @@ struct EncryptedPart {
 
 type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], u16>;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum DerivedKeySignParams {
     ByAccountId {
         #[serde(with = "serde_public_key")]
@@ -397,19 +397,19 @@ pub enum DerivedKeySignParams {
     },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DerivedKeyExportParams {
     #[serde(with = "serde_public_key")]
     pub master_key: PublicKey,
     pub password: SecUtf8,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DerivedKeyExportOutput {
     pub phrase: SecUtf8,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DerivedKeyUpdateParams {
     #[serde(with = "serde_public_key")]
     pub master_key: PublicKey,
@@ -417,7 +417,7 @@ pub struct DerivedKeyUpdateParams {
     pub new_password: SecUtf8,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum DerivedKeyCreateInput {
     Import {
         phrase: SecUtf8,

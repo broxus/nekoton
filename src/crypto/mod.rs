@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use downcast_rs::{impl_downcast, Downcast};
 use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 pub use derived_key::*;
@@ -11,7 +12,6 @@ pub use ledger_key::*;
 pub use mnemonic::*;
 
 use crate::utils::*;
-use serde::de::DeserializeOwned;
 
 mod derived_key;
 mod encrypted_key;
@@ -39,7 +39,7 @@ pub trait UnsignedMessage: DynClone + Send {
 
 dyn_clone::clone_trait_object!(UnsignedMessage);
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SignedMessage {
     pub message: ton_block::Message,
     pub expire_at: u32,
@@ -76,7 +76,7 @@ pub trait WithPublicKey {
     fn public_key(&self) -> &PublicKey;
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, Copy)]
 pub struct SignerEntry {
     #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,

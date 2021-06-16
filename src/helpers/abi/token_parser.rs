@@ -56,6 +56,7 @@ impl IntoParser for Vec<Token> {
     }
 }
 
+#[derive(Debug)]
 pub struct ContractOutputParser<I>(I);
 
 impl<I: Iterator<Item = Token>> ContractOutputParser<I> {
@@ -275,7 +276,7 @@ where
 
 pub type ContractResult<T> = Result<T, ParserError>;
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum ParserError {
     #[error("Invalid ABI")]
     InvalidAbi,

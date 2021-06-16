@@ -26,6 +26,7 @@ use crate::utils::*;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
+#[allow(missing_debug_implementations)]
 #[derive(Clone)]
 pub struct TonWallet {
     transport: Arc<dyn Transport>,
@@ -111,7 +112,7 @@ impl TonWallet {
     }
 
     pub fn address(&self) -> &MsgAddressInt {
-        &self.contract_subscription.address()
+        self.contract_subscription.address()
     }
 
     pub fn public_key(&self) -> &PublicKey {
@@ -123,11 +124,11 @@ impl TonWallet {
     }
 
     pub fn contract_state(&self) -> &ContractState {
-        &self.contract_subscription.contract_state()
+        self.contract_subscription.contract_state()
     }
 
     pub fn pending_transactions(&self) -> &[PendingTransaction] {
-        &self.contract_subscription.pending_transactions()
+        self.contract_subscription.pending_transactions()
     }
 
     pub fn polling_method(&self) -> PollingMethod {
@@ -417,6 +418,7 @@ where
     move |pending_transaction| handler.as_ref().on_message_expired(pending_transaction)
 }
 
+#[allow(missing_debug_implementations)]
 #[derive(Clone)]
 pub enum TransferAction {
     DeployFirst,
@@ -459,7 +461,7 @@ impl FromStr for ContractType {
 }
 
 impl std::fmt::Display for ContractType {
-    fn fmt(&self, f: &'_ mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &'_ mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WalletV3 => f.write_str("WalletV3"),
             Self::Multisig(multisig_type) => multisig_type.fmt(f),

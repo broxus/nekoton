@@ -55,7 +55,7 @@ impl PartialEq for ExistingContract {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RawTransaction {
     pub hash: UInt256,
     pub data: Transaction,

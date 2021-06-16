@@ -14,6 +14,7 @@ pub use self::contract_subscription::ContractSubscription;
 use self::models::PollingMethod;
 use crate::transport::Transport;
 
+#[allow(missing_debug_implementations)]
 pub struct TonInterface {
     transport: Box<dyn Transport>,
 }
@@ -32,7 +33,7 @@ impl TonInterface {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct InternalMessage {
     pub source: Option<ton_block::MsgAddressInt>,
     pub destination: ton_block::MsgAddressInt,
