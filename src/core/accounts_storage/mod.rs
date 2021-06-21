@@ -228,9 +228,10 @@ impl<'a> StoredAccountsData<'a> {
     }
 }
 
+pub type NetworkGroup = String;
 #[derive(Debug, Clone, Serialize)]
 pub struct AssetsList {
-    pub name: String,
+    pub name: NetworkGroup,
     pub ton_wallet: TonWalletAsset,
 
     /// Additional assets, grouped by network group
