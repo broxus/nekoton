@@ -208,10 +208,9 @@ impl TonWallet {
         }
     }
 
-    pub async fn get_custodians(&self) -> Result<Vec<UInt256>> {
-        match &self.custodians {
-            Some(v) => Ok(v.clone()),
-            None => match self.contract_type {
+    pub async fn get_custodians(&mut self) -> Result<Vec<UInt256>> {
+        if self.custodians == None {
+            let custodians = match self.contract_type {
                 ContractType::Multisig(multisig_type) => {
                     let account_stuff = self.get_contract_state().await?;
                     let gen_timings = self.contract_state().gen_timings;
@@ -227,14 +226,20 @@ impl TonWallet {
                         gen_timings,
                         last_transaction_id,
                     )
-                    .and_then(multisig::parse_multisig_contract_custodians)
+                    .and_then(multisig::parse_multisig_contract_custodians)?
                 }
-                ContractType::WalletV3 => Ok(vec![self.public_key.to_bytes().into()]),
-            },
+                ContractType::WalletV3 => vec![self.public_key.to_bytes().into()],
+            };
+            self.custodians = Some(custodians)
         }
+
+        Ok(self
+            .custodians
+            .clone()
+            .ok_or(TonWalletError::CustodiansNotFound)?)
     }
 
-    pub async fn get_pending_transactions(&self) -> Result<Vec<MultisigPendingTransaction>> {
+    pub async fn get_pending_transactions(&mut self) -> Result<Vec<MultisigPendingTransaction>> {
         match self.contract_type {
             ContractType::Multisig(multisig_type) => {
                 let account_stuff = self.get_contract_state().await?;
@@ -244,17 +249,21 @@ impl TonWallet {
                     .last_transaction_id
                     .ok_or(TonWalletError::LastTransactionNotFound)?;
 
-                let custodians = match &self.custodians {
-                    Some(v) => v.clone(),
-                    None => multisig::run_local(
+                if self.custodians == None {
+                    let custodians = multisig::run_local(
                         multisig_type,
                         "getCustodians",
                         account_stuff.clone(),
                         gen_timings,
                         last_transaction_id,
                     )
-                    .and_then(multisig::parse_multisig_contract_custodians)?,
-                };
+                    .and_then(multisig::parse_multisig_contract_custodians)?;
+                    self.custodians = Some(custodians)
+                }
+                let custodians = self
+                    .custodians
+                    .as_ref()
+                    .ok_or(TonWalletError::CustodiansNotFound)?;
 
                 let transactions = multisig::run_local(
                     multisig_type,
@@ -264,7 +273,7 @@ impl TonWallet {
                     last_transaction_id,
                 )
                 .and_then(|tokens| {
-                    multisig::parse_multisig_contract_pending_transactions(tokens, &custodians)
+                    multisig::parse_multisig_contract_pending_transactions(tokens, custodians)
                 })?;
 
                 Ok(transactions)
@@ -381,6 +390,8 @@ enum TonWalletError {
     ContractNotFound,
     #[error("Last transaction not found")]
     LastTransactionNotFound,
+    #[error("Custodians not found")]
+    CustodiansNotFound,
 }
 
 fn make_contract_state_handler<T>(handler: &'_ T) -> impl FnMut(&RawContractState) + '_
