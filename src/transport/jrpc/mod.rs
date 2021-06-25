@@ -90,7 +90,7 @@ impl Transport for JrpcTransport {
                 .map_err(|_| anyhow::anyhow!("Invalid transaction list"))?;
 
         let mut result = Vec::with_capacity(transactions.len());
-        for item in transactions.into_iter().rev() {
+        for item in transactions.into_iter() {
             result.push(RawTransaction {
                 hash: item.repr_hash(),
                 data: ton_block::Transaction::construct_from_cell(item)

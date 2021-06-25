@@ -28,7 +28,6 @@ mod wallet_v3;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
-#[allow(missing_debug_implementations)]
 #[derive(Clone)]
 pub struct TonWallet {
     transport: Arc<dyn Transport>,
@@ -420,7 +419,6 @@ where
     move |pending_transaction| handler.as_ref().on_message_expired(pending_transaction)
 }
 
-#[allow(missing_debug_implementations)]
 #[derive(Clone)]
 pub enum TransferAction {
     DeployFirst,

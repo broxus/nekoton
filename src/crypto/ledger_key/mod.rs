@@ -12,7 +12,6 @@ use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::external::LedgerConnection;
 use crate::utils::*;
 
-#[allow(missing_debug_implementations)]
 #[derive(Clone)]
 pub struct LedgerKeySigner {
     keys: KeysMap,

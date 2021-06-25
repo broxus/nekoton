@@ -338,7 +338,6 @@ enum AbiError {
     IncompleteDeserialization(SliceData),
 }
 
-#[allow(missing_debug_implementations)]
 pub struct Executor {
     config: BlockchainConfig,
     account: Account,

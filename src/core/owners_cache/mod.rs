@@ -19,7 +19,6 @@ use crate::utils::{NoFailure, TrustMe};
 const STORAGE_OWNERS_CACHE: &str = "__core__owners_cache";
 
 /// Stores a map to resolve owner's wallet address from token wallet address
-#[allow(missing_debug_implementations)]
 pub struct OwnersCache {
     key: String,
     storage: Arc<dyn Storage>,

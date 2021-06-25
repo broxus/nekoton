@@ -1,5 +1,4 @@
 #![warn(
-    missing_debug_implementations,
     missing_copy_implementations,
     macro_use_extern_crate,
     keyword_idents,
@@ -57,6 +56,5 @@ pub mod core;
 pub mod crypto;
 pub mod external;
 pub mod helpers;
-mod lints;
 pub mod transport;
 pub mod utils;

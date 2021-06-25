@@ -14,7 +14,6 @@ pub use self::contract_subscription::ContractSubscription;
 use self::models::PollingMethod;
 use crate::transport::Transport;
 
-#[allow(missing_debug_implementations)]
 pub struct TonInterface {
     transport: Box<dyn Transport>,
 }

@@ -15,7 +15,6 @@ use crate::transport::Transport;
 
 /// Used as a base object for different listeners implementation
 #[derive(Clone)]
-#[allow(missing_debug_implementations)]
 pub struct ContractSubscription {
     transport: Arc<dyn Transport>,
     address: MsgAddressInt,

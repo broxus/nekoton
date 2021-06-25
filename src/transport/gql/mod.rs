@@ -15,7 +15,6 @@ use super::models::*;
 use super::utils::ConfigCache;
 use super::{Transport, TransportInfo};
 
-#[allow(missing_debug_implementations)]
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
     config_cache: ConfigCache,

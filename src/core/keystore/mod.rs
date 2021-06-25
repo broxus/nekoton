@@ -15,8 +15,6 @@ use crate::utils::*;
 
 const STORAGE_KEYSTORE: &str = "__core__keystore";
 
-#[repr(C)]
-#[allow(missing_debug_implementations)]
 pub struct KeyStore {
     state: RwLock<KeyStoreState>,
     storage: Arc<dyn Storage>,
@@ -231,7 +229,6 @@ impl KeyStoreEntry {
     }
 }
 
-#[allow(missing_debug_implementations)]
 pub struct KeyStoreBuilder {
     storage: Arc<dyn Storage>,
     signers: HashMap<String, (Box<dyn SignerStorage>, TypeId)>,

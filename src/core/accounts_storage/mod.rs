@@ -15,7 +15,6 @@ const STORAGE_ACCOUNTS: &str = "__core__accounts";
 
 const DEFAULT_NETWORK_GROUP: &str = "mainnet";
 
-#[allow(missing_debug_implementations)]
 pub struct AccountsStorage {
     storage: Arc<dyn Storage>,
     accounts: RwLock<AssetsMap>,
@@ -229,13 +228,14 @@ impl<'a> StoredAccountsData<'a> {
 }
 
 pub type NetworkGroup = String;
+
 #[derive(Debug, Clone, Serialize)]
 pub struct AssetsList {
-    pub name: NetworkGroup,
+    pub name: String,
     pub ton_wallet: TonWalletAsset,
 
     /// Additional assets, grouped by network group
-    pub additional_assets: HashMap<String, AdditionalAssets>,
+    pub additional_assets: HashMap<NetworkGroup, AdditionalAssets>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

@@ -16,7 +16,6 @@ use crate::transport::models::{ExistingContract, RawContractState, RawTransactio
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
 
-#[allow(missing_debug_implementations)]
 #[derive(Clone)]
 pub struct TokenWallet {
     transport: Arc<dyn Transport>,
@@ -447,7 +446,6 @@ where
     }
 }
 
-#[derive(Debug)]
 pub struct RootTokenContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> RootTokenContractState<'a> {
@@ -712,7 +710,6 @@ struct RootMetaDetails {
     proxy_address: MsgAddressInt,
 }
 
-#[derive(Debug)]
 pub struct TonEventContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> TonEventContractState<'a> {
@@ -817,7 +814,6 @@ impl abi::ParseToken<TonEventInitData> for ton_abi::TokenValue {
     }
 }
 
-#[derive(Debug)]
 pub struct EthEventContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> EthEventContractState<'a> {
