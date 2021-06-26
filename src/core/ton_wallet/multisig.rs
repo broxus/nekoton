@@ -59,29 +59,23 @@ pub fn prepare_deploy(
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn prepare_transfer(
     public_key: &PublicKey,
-    current_state: &ton_block::AccountStuff,
+    has_multiple_owners: bool,
+    address: MsgAddressInt,
     destination: MsgAddressInt,
     amount: u64,
     bounce: bool,
     body: Option<SliceData>,
     expiration: Expiration,
 ) -> Result<TransferAction> {
-    match &current_state.storage.state {
-        ton_block::AccountState::AccountFrozen(_) => {
-            return Err(MultisigError::AccountIsFrozen.into())
-        }
-        ton_block::AccountState::AccountUninit => return Ok(TransferAction::DeployFirst),
-        _ => {}
-    };
-
     let message = ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
-        dst: current_state.addr.clone(),
+        dst: address,
         ..Default::default()
     });
 
-    let (function, input) =
+    let (function, input) = if has_multiple_owners {
         MessageBuilder::new(contracts::abi::safe_multisig_wallet(), "submitTransaction")
             .trust_me()
             .arg(destination)
@@ -89,7 +83,17 @@ pub fn prepare_transfer(
             .arg(bounce)
             .arg(false) // allBalance
             .arg(body.unwrap_or_default().into_cell())
-            .build();
+            .build()
+    } else {
+        MessageBuilder::new(contracts::abi::safe_multisig_wallet(), "sendTransaction")
+            .trust_me()
+            .arg(destination)
+            .arg(BigUint128(amount.into()))
+            .arg(bounce)
+            .arg(3u16) // flags
+            .arg(body.unwrap_or_default().into_cell())
+            .build()
+    };
 
     Ok(TransferAction::Sign(make_labs_unsigned_message(
         message,
@@ -242,8 +246,6 @@ pub fn parse_multisig_contract_pending_transactions(
 
 #[derive(thiserror::Error, Debug)]
 enum MultisigError {
-    #[error("Account is frozen")]
-    AccountIsFrozen,
     #[error("Non-zero execution result code")]
     NonZeroResultCode,
 }

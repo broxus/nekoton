@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -176,7 +177,7 @@ impl TonWallet {
 
     #[allow(clippy::too_many_arguments)]
     pub fn prepare_transfer(
-        &self,
+        &mut self,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         destination: MsgAddressInt,
@@ -186,15 +187,34 @@ impl TonWallet {
         expiration: Expiration,
     ) -> Result<TransferAction> {
         match self.contract_type {
-            ContractType::Multisig(_) => multisig::prepare_transfer(
-                public_key,
-                current_state,
-                destination,
-                amount,
-                bounce,
-                body,
-                expiration,
-            ),
+            ContractType::Multisig(multisig_type) => {
+                match &current_state.storage.state {
+                    ton_block::AccountState::AccountFrozen(_) => {
+                        return Err(TonWalletError::AccountIsFrozen.into())
+                    }
+                    ton_block::AccountState::AccountUninit => {
+                        return Ok(TransferAction::DeployFirst)
+                    }
+                    _ => {}
+                };
+                self.update_custodians(Cow::Borrowed(current_state), multisig_type)?;
+
+                let has_multiple_owners = match &self.custodians {
+                    Some(custodians) => custodians.len() > 1,
+                    None => return Err(TonWalletError::CustodiansNotFound.into()),
+                };
+
+                multisig::prepare_transfer(
+                    public_key,
+                    has_multiple_owners,
+                    self.address().clone(),
+                    destination,
+                    amount,
+                    bounce,
+                    body,
+                    expiration,
+                )
+            }
             ContractType::WalletV3 => wallet_v3::prepare_transfer(
                 public_key,
                 current_state,
@@ -209,33 +229,21 @@ impl TonWallet {
 
     pub async fn get_custodians(&mut self) -> Result<Vec<UInt256>> {
         if self.custodians == None {
-            let custodians = match self.contract_type {
+            match self.contract_type {
                 ContractType::Multisig(multisig_type) => {
                     let account_stuff = self.get_contract_state().await?;
-                    let gen_timings = self.contract_state().gen_timings;
-                    let last_transaction_id = &self
-                        .contract_state()
-                        .last_transaction_id
-                        .ok_or(TonWalletError::LastTransactionNotFound)?;
-
-                    multisig::run_local(
-                        multisig_type,
-                        "getCustodians",
-                        account_stuff,
-                        gen_timings,
-                        last_transaction_id,
-                    )
-                    .and_then(multisig::parse_multisig_contract_custodians)?
+                    self.update_custodians(Cow::Owned(account_stuff), multisig_type)?;
                 }
-                ContractType::WalletV3 => vec![self.public_key.to_bytes().into()],
-            };
-            self.custodians = Some(custodians)
+                ContractType::WalletV3 => {
+                    self.custodians = Some(vec![self.public_key.to_bytes().into()]);
+                }
+            }
         }
 
-        Ok(self
-            .custodians
-            .clone()
-            .ok_or(TonWalletError::CustodiansNotFound)?)
+        match self.custodians.clone() {
+            Some(custodians) => Ok(custodians),
+            None => Err(TonWalletError::CustodiansNotFound.into()),
+        }
     }
 
     pub async fn get_pending_transactions(&mut self) -> Result<Vec<MultisigPendingTransaction>> {
@@ -248,17 +256,7 @@ impl TonWallet {
                     .last_transaction_id
                     .ok_or(TonWalletError::LastTransactionNotFound)?;
 
-                if self.custodians == None {
-                    let custodians = multisig::run_local(
-                        multisig_type,
-                        "getCustodians",
-                        account_stuff.clone(),
-                        gen_timings,
-                        last_transaction_id,
-                    )
-                    .and_then(multisig::parse_multisig_contract_custodians)?;
-                    self.custodians = Some(custodians)
-                }
+                self.update_custodians(Cow::Borrowed(&account_stuff), multisig_type)?;
                 let custodians = self
                     .custodians
                     .as_ref()
@@ -327,6 +325,35 @@ impl TonWallet {
         self.contract_subscription.estimate_fees(message).await
     }
 
+    fn update_custodians(
+        &mut self,
+        account_stuff: Cow<'_, ton_block::AccountStuff>,
+        multisig_type: multisig::MultisigType,
+    ) -> Result<()> {
+        if self.custodians.is_some() {
+            return Ok(());
+        }
+
+        let gen_timings = self.contract_state().gen_timings;
+        let last_transaction_id = &self
+            .contract_state()
+            .last_transaction_id
+            .ok_or(TonWalletError::LastTransactionNotFound)?;
+
+        self.custodians = Some(
+            multisig::run_local(
+                multisig_type,
+                "getCustodians",
+                account_stuff.into_owned(),
+                gen_timings,
+                last_transaction_id,
+            )
+            .and_then(multisig::parse_multisig_contract_custodians)?,
+        );
+
+        Ok(())
+    }
+
     async fn get_contract_state(&self) -> Result<ton_block::AccountStuff> {
         match self
             .transport
@@ -341,7 +368,7 @@ impl TonWallet {
 
 pub trait InternalMessageSender {
     fn prepare_transfer(
-        &self,
+        &mut self,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         message: InternalMessage,
@@ -351,7 +378,7 @@ pub trait InternalMessageSender {
 
 impl InternalMessageSender for TonWallet {
     fn prepare_transfer(
-        &self,
+        &mut self,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         message: InternalMessage,
@@ -387,6 +414,8 @@ enum TonWalletError {
     InvalidContractType,
     #[error("Contract not found")]
     ContractNotFound,
+    #[error("Account is frozen")]
+    AccountIsFrozen,
     #[error("Last transaction not found")]
     LastTransactionNotFound,
     #[error("Custodians not found")]

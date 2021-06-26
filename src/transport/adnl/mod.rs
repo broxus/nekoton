@@ -191,7 +191,7 @@ impl Transport for AdnlTransport {
         .map_err(|_| QueryTransactionsError::InvalidTransactionsList)?;
 
         let mut result = Vec::with_capacity(transactions.len());
-        for item in transactions.into_iter() {
+        for item in transactions {
             let hash = item.repr_hash();
             result.push(RawTransaction {
                 hash,
@@ -266,7 +266,7 @@ impl LastBlock {
                 .map(|result| result.only().last)
                 .map_err(|e| match e.downcast() {
                     Ok(e) => QueryLastBlockError::QueryError(e),
-                    _ => QueryLastBlockError::Unknown,
+                    Err(_) => QueryLastBlockError::Unknown,
                 }),
         };
 
