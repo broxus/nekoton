@@ -90,7 +90,7 @@ pub fn prepare_transfer(
             .arg(destination)
             .arg(BigUint128(amount.into()))
             .arg(bounce)
-            .arg(3u16) // flags
+            .arg(3u8) // flags
             .arg(body.unwrap_or_default().into_cell())
             .build()
     };
