@@ -237,9 +237,7 @@ impl TokenWallet {
             RawContractState::Exists(state) => {
                 Ok(RootMetaContractState(&state).get_details()?.proxy_address)
             }
-            RawContractState::NotExists => {
-                return Err(TokenWalletError::InvalidRootMetaContract.into())
-            }
+            RawContractState::NotExists => Err(TokenWalletError::InvalidRootMetaContract.into()),
         }
     }
 

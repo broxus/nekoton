@@ -92,7 +92,7 @@ impl UInt128 {
         &self.0
     }
 
-    pub fn to_hex_string(&self) -> String {
+    pub fn to_hex_string(self) -> String {
         hex::encode(self.0)
     }
 

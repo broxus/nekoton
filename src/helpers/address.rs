@@ -17,7 +17,9 @@ pub fn pack_std_smc_addr(
 ) -> Result<String> {
     let addr = match addr {
         MsgAddressInt::AddrStd(addr) => addr,
-        _ => return Err(AddressConversionError::UnsupportedAddressType.into()),
+        MsgAddressInt::AddrVar(_) => {
+            return Err(AddressConversionError::UnsupportedAddressType.into())
+        }
     };
 
     let testnet = false;
