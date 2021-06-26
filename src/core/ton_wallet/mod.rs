@@ -195,7 +195,7 @@ impl TonWallet {
                     ton_block::AccountState::AccountUninit => {
                         return Ok(TransferAction::DeployFirst)
                     }
-                    _ => {}
+                    ton_block::AccountState::AccountActive(_) => {}
                 };
                 self.update_custodians(Cow::Borrowed(current_state), multisig_type)?;
 
