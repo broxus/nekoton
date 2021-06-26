@@ -218,6 +218,7 @@ impl AccountsStorage {
     }
 }
 
+#[derive(Debug)]
 pub struct StoredAccountsData<'a>(RwLockReadGuard<'a, AssetsMap>);
 
 impl<'a> StoredAccountsData<'a> {
@@ -226,13 +227,15 @@ impl<'a> StoredAccountsData<'a> {
     }
 }
 
+pub type NetworkGroup = String;
+
 #[derive(Debug, Clone, Serialize)]
 pub struct AssetsList {
     pub name: String,
     pub ton_wallet: TonWalletAsset,
 
     /// Additional assets, grouped by network group
-    pub additional_assets: HashMap<String, AdditionalAssets>,
+    pub additional_assets: HashMap<NetworkGroup, AdditionalAssets>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

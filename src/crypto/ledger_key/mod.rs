@@ -153,18 +153,18 @@ impl SignerStorage for LedgerKeySigner {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
 pub struct LedgerKeyCreateInput {
     pub account_id: u16,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, Copy)]
 pub struct LedgerKeyPublic {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct LedgerKey {
     pub account_id: u16,
 
@@ -197,7 +197,7 @@ impl LedgerKey {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum LedgerKeyError {
     #[error("Key already exists")]
     KeyAlreadyExists,

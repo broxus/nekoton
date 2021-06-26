@@ -173,6 +173,15 @@ impl UnsignedMessage for UnsignedWalletV3Message {
     }
 }
 
+const WALLET_V3_HASH: [u8; 32] = [
+    0x84, 0xda, 0xfa, 0x44, 0x9f, 0x98, 0xa6, 0x98, 0x77, 0x89, 0xba, 0x23, 0x23, 0x58, 0x07, 0x2b,
+    0xc0, 0xf7, 0x6d, 0xc4, 0x52, 0x40, 0x02, 0xa5, 0xd0, 0x91, 0x8b, 0x9a, 0x75, 0xd2, 0xd5, 0x99,
+];
+
+pub fn is_wallet_v3(code_hash: &UInt256) -> bool {
+    code_hash.as_slice() == &WALLET_V3_HASH
+}
+
 pub fn compute_contract_address(public_key: &PublicKey, workchain_id: i8) -> MsgAddressInt {
     InitData::from_key(public_key)
         .with_wallet_id(WALLET_ID)
@@ -184,9 +193,10 @@ pub static DETAILS: TonWalletDetails = TonWalletDetails {
     requires_separate_deploy: false,
     min_amount: 1, // 0.000000001 TON
     supports_payload: true,
+    supports_multiple_owners: false,
 };
 
-/// WalletV3 init data
+/// `WalletV3` init data
 #[derive(Clone)]
 pub struct InitData {
     pub seqno: u32,
@@ -195,6 +205,10 @@ pub struct InitData {
 }
 
 impl InitData {
+    pub fn public_key(&self) -> &[u8; 32] {
+        self.public_key.as_slice()
+    }
+
     pub fn from_key(key: &PublicKey) -> Self {
         Self {
             seqno: 0,
@@ -298,7 +312,7 @@ impl TryFrom<&Cell> for InitData {
     }
 }
 
-/// WalletV3 transfer info
+/// `WalletV3` transfer info
 #[derive(Clone)]
 pub struct Gift {
     pub flags: u8,

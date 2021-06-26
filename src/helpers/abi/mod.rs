@@ -115,7 +115,7 @@ pub fn extract_public_key(
     Ok(ed25519_dalek::PublicKey::from_bytes(&data).trust_me())
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum ExtractionError {
     #[error("Account is not active")]
     AccountIsNotActive,
@@ -205,8 +205,8 @@ impl<'a> FunctionAbi<'a> {
     }
 
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
-        let messages = parse_transaction_messages(&tx)?;
-        process_out_messages(&*messages, &self.fun)
+        let messages = parse_transaction_messages(tx)?;
+        process_out_messages(&*messages, self.fun)
     }
 
     fn run_local(
@@ -224,7 +224,7 @@ impl<'a> FunctionAbi<'a> {
 
         msg.set_body(
             self.fun
-                .encode_input(&HashMap::default(), &input, false, None)
+                .encode_input(&HashMap::default(), input, false, None)
                 .convert()?
                 .into(),
         );
@@ -249,6 +249,7 @@ impl<'a> FunctionAbi<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct ExecutionOutput {
     pub tokens: Option<Vec<Token>>,
     pub result_code: i32,
@@ -281,7 +282,7 @@ pub fn process_out_messages(
     match output {
         Some(a) => Ok(a),
         None if !abi_function.has_output() => Ok(Default::default()),
-        _ => Err(AbiError::NoMessagesProduced.into()),
+        None => Err(AbiError::NoMessagesProduced.into()),
     }
 }
 
@@ -304,7 +305,7 @@ pub fn process_raw_outputs(
     match output {
         Some(a) => Ok(a),
         None if !abi_function.has_output() => Ok(Default::default()),
-        _ => Err(AbiError::NoMessagesProduced.into()),
+        None => Err(AbiError::NoMessagesProduced.into()),
     }
 }
 

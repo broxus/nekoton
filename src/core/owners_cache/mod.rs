@@ -235,7 +235,7 @@ async fn check_token_wallet<'a>(
     (state, version): &'a (ExistingContract, TokenWalletVersion),
     owner_wallet: &'a MsgAddressInt,
 ) -> Result<RecipientWallet> {
-    let token_wallet = RootTokenContractState(state).get_wallet_address(*version, &owner_wallet)?;
+    let token_wallet = RootTokenContractState(state).get_wallet_address(*version, owner_wallet)?;
 
     {
         let mut owners = owners.write().await;
@@ -252,12 +252,13 @@ fn make_key(network_name: &str) -> String {
     format!("{}{}", STORAGE_OWNERS_CACHE, network_name)
 }
 
+#[derive(Debug)]
 pub enum RecipientWallet {
     NotExists,
     Exists(MsgAddressInt),
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum OwnersCacheError {
     #[error("Invalid root token contract")]
     InvalidRootTokenContract,

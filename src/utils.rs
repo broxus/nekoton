@@ -54,7 +54,7 @@ impl<T> TrustMe<T> for Option<T> {
 }
 
 #[allow(clippy::derive_hash_xor_eq)]
-#[derive(Clone, Default, PartialEq, Eq, Hash, Ord, PartialOrd)]
+#[derive(Clone, Default, PartialEq, Eq, Hash, Ord, PartialOrd, Copy)]
 pub struct UInt128([u8; 16]);
 
 impl PartialEq<SliceData> for UInt128 {
@@ -158,19 +158,19 @@ impl From<Vec<u8>> for UInt128 {
 }
 
 impl std::fmt::Debug for UInt128 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         LowerHex::fmt(self, f)
     }
 }
 
 impl std::fmt::Display for UInt128 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "UInt128[{:X?}]", self.as_slice())
     }
 }
 
 impl LowerHex for UInt128 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if f.alternate() {
             write!(f, "0x")?;
         }
@@ -179,7 +179,7 @@ impl LowerHex for UInt128 {
 }
 
 impl UpperHex for UInt128 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if f.alternate() {
             write!(f, "0x")?;
         }
@@ -213,7 +213,7 @@ macro_rules! define_string_enum {
         }
 
         impl std::fmt::Display for $type {
-            fn fmt(&self, f: &'_ mut std::fmt::Formatter) -> std::fmt::Result {
+            fn fmt(&self, f: &'_ mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match self {
                     $(Self::$variant => f.write_str(stringify!($variant))),*,
                 }
@@ -222,7 +222,7 @@ macro_rules! define_string_enum {
     };
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 #[error("Unknown enum variant")]
 pub struct UnknownEnumVariant;
 
@@ -270,6 +270,53 @@ pub mod serde_public_key {
     }
 }
 
+pub mod serde_vec_public_key {
+    use serde::de::Error;
+    use serde::de::SeqAccess;
+    use serde::de::Visitor;
+    use serde::ser::SerializeSeq;
+
+    pub fn serialize<S>(data: &[ed25519_dalek::PublicKey], serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(data.len()))?;
+        for pubkey in data {
+            seq.serialize_element(&hex::encode(pubkey.as_bytes()))?;
+        }
+        seq.end()
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<ed25519_dalek::PublicKey>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct VecVisitor;
+        impl<'de> Visitor<'de> for VecVisitor {
+            type Value = Vec<ed25519_dalek::PublicKey>;
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("vector of public keys")
+            }
+            fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                let mut vec = Vec::new();
+                while let Some(elem) = visitor.next_element::<String>()? {
+                    let bytes =
+                        hex::decode(&elem).map_err(|_| V::Error::custom("Invalid PublicKey"))?;
+                    let pubkey = ed25519_dalek::PublicKey::from_bytes(&bytes)
+                        .map_err(|_| V::Error::custom("Invalid PublicKey"))?;
+                    vec.push(pubkey);
+                }
+                Ok(vec)
+            }
+        }
+
+        deserializer.deserialize_seq(VecVisitor)
+    }
+}
+
 pub mod serde_uint256 {
     use super::*;
 
@@ -289,6 +336,53 @@ pub mod serde_uint256 {
     {
         let data = String::deserialize(deserializer)?;
         UInt256::from_str(&data).map_err(|_| D::Error::custom("Invalid uint256"))
+    }
+}
+
+pub mod serde_vec_uint256 {
+    use super::*;
+
+    use serde::de::Error;
+    use serde::de::SeqAccess;
+    use serde::de::Visitor;
+    use serde::ser::SerializeSeq;
+
+    pub fn serialize<S>(data: &[UInt256], serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(data.len()))?;
+        for item in data {
+            seq.serialize_element(&item.to_hex_string())?;
+        }
+        seq.end()
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<UInt256>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct VecVisitor;
+        impl<'de> Visitor<'de> for VecVisitor {
+            type Value = Vec<UInt256>;
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("vector of UInt256")
+            }
+            fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                let mut vec = Vec::new();
+                while let Some(elem) = visitor.next_element::<String>()? {
+                    let item = UInt256::from_str(&elem)
+                        .map_err(|_| V::Error::custom("Invalid uint256"))?;
+                    vec.push(item);
+                }
+                Ok(vec)
+            }
+        }
+
+        deserializer.deserialize_seq(VecVisitor)
     }
 }
 

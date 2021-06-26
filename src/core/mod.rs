@@ -32,7 +32,7 @@ impl TonInterface {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct InternalMessage {
     pub source: Option<ton_block::MsgAddressInt>,
     pub destination: ton_block::MsgAddressInt,

@@ -129,7 +129,7 @@ impl Transport for AdnlTransport {
                     return Err(QueryAccountStateError::InvalidAccountStateProof.into());
                 }
 
-                let merkle_proof = ton_block::MerkleProof::construct_from_cell(q_roots[0].clone())
+                let merkle_proof = ton_block::MerkleProof::construct_from_cell(q_roots[1].clone())
                     .map_err(|_| QueryAccountStateError::InvalidAccountStateProof)?;
                 let proof_root = merkle_proof.proof.virtualize(1);
 
@@ -176,7 +176,7 @@ impl Transport for AdnlTransport {
             .query(ton::rpc::lite_server::GetTransactions {
                 count: count as i32,
                 account: ton::lite_server::accountid::AccountId {
-                    workchain: address.workchain_id() as i32,
+                    workchain: address.workchain_id(),
                     id: ton::int256(
                         ton_types::UInt256::from(address.address().get_bytestring(0)).into(),
                     ),
@@ -191,7 +191,7 @@ impl Transport for AdnlTransport {
         .map_err(|_| QueryTransactionsError::InvalidTransactionsList)?;
 
         let mut result = Vec::with_capacity(transactions.len());
-        for item in transactions.into_iter() {
+        for item in transactions {
             let hash = item.repr_hash();
             result.push(RawTransaction {
                 hash,
@@ -266,7 +266,7 @@ impl LastBlock {
                 .map(|result| result.only().last)
                 .map_err(|e| match e.downcast() {
                     Ok(e) => QueryLastBlockError::QueryError(e),
-                    _ => QueryLastBlockError::Unknown,
+                    Err(_) => QueryLastBlockError::Unknown,
                 }),
         };
 
@@ -275,7 +275,7 @@ impl LastBlock {
     }
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum QueryConfigError {
     #[error("Invalid block")]
     InvalidBlock,
@@ -283,13 +283,13 @@ pub enum QueryConfigError {
     InvalidConfig,
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum QuerySendMessageError {
     #[error("Failed to serialize message")]
     FailedToSerialize,
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum QueryAccountStateError {
     #[error("Invalid account state")]
     InvalidAccountState,
@@ -297,7 +297,7 @@ pub enum QueryAccountStateError {
     InvalidAccountStateProof,
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum QueryTransactionsError {
     #[error("Invalid transactions list")]
     InvalidTransactionsList,

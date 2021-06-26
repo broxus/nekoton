@@ -59,7 +59,7 @@ pub fn symmetric_key_from_password(password: SecUtf8, salt: &[u8]) -> Key {
     Key::clone_from_slice((&pbkdf2_hash).borrow())
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Copy, Clone)]
 pub enum SymmetricCryptoError {
     #[error("Failed to decrypt data")]
     FailedToDecryptData,

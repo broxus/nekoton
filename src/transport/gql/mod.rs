@@ -7,12 +7,13 @@ use async_trait::async_trait;
 use graphql_client::*;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
-use super::models::*;
-use super::utils::ConfigCache;
-use super::{Transport, TransportInfo};
 use crate::core::models::{GenTimings, LastTransactionId, ReliableBehavior, TransactionId};
 use crate::external::GqlConnection;
 use crate::utils::*;
+
+use super::models::*;
+use super::utils::ConfigCache;
+use super::{Transport, TransportInfo};
 
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
@@ -325,7 +326,7 @@ impl Transport for GqlTransport {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LatestBlock {
     pub id: String,
     pub end_lt: u64,
@@ -340,7 +341,7 @@ pub struct LatestBlock {
 struct MutationSendMessage;
 
 fn check_shard_match(workchain_id: i64, shard: &str, addr: &MsgAddressInt) -> Result<bool> {
-    let shard = u64::from_str_radix(&shard, 16).map_err(|_| NodeClientError::NoBlocksFound)?;
+    let shard = u64::from_str_radix(shard, 16).map_err(|_| NodeClientError::NoBlocksFound)?;
 
     let ident = ton_block::ShardIdent::with_tagged_prefix(workchain_id as i32, shard)
         .map_err(api_failure)?;

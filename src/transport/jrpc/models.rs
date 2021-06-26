@@ -26,6 +26,7 @@ pub struct GetTransactions<'a> {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
+#[allow(clippy::large_enum_variant)]
 pub enum GetContractStateResponse {
     NotExists,
     Exists(GetContractStateResponseData),
