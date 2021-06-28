@@ -227,6 +227,43 @@ impl TonWallet {
         }
     }
 
+    pub fn prepare_confirm_transaction(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
+        transaction_id: u64,
+        expiration: Expiration,
+    ) -> Result<Box<dyn UnsignedMessage>> {
+        match self.contract_type {
+            ContractType::Multisig(multisig_type) => {
+                let gen_timings = self.contract_state().gen_timings;
+                let last_transaction_id = &self
+                    .contract_state()
+                    .last_transaction_id
+                    .ok_or(TonWalletError::LastTransactionNotFound)?;
+
+                let has_pending_transaction = multisig::find_pending_transaction(
+                    multisig_type,
+                    Cow::Borrowed(current_state),
+                    gen_timings,
+                    last_transaction_id,
+                    transaction_id,
+                )?;
+                if !has_pending_transaction {
+                    return Err(TonWalletError::PendingTransactionNotFound.into());
+                }
+
+                multisig::prepare_confirm_transaction(
+                    public_key,
+                    self.address().clone(),
+                    transaction_id,
+                    expiration,
+                )
+            }
+            ContractType::WalletV3 => Err(TonWalletError::PendingTransactionNotFound.into()),
+        }
+    }
+
     pub async fn get_custodians(&mut self) -> Result<Vec<UInt256>> {
         if self.custodians == None {
             match self.contract_type {
@@ -262,18 +299,13 @@ impl TonWallet {
                     .as_ref()
                     .ok_or(TonWalletError::CustodiansNotFound)?;
 
-                let transactions = multisig::run_local(
+                Ok(multisig::get_pending_transaction(
                     multisig_type,
-                    "getTransactions",
-                    account_stuff,
+                    Cow::Owned(account_stuff),
                     gen_timings,
                     last_transaction_id,
-                )
-                .and_then(|tokens| {
-                    multisig::parse_multisig_contract_pending_transactions(tokens, custodians)
-                })?;
-
-                Ok(transactions)
+                    custodians,
+                )?)
             }
             ContractType::WalletV3 => Ok(Vec::new()),
         }
@@ -340,16 +372,12 @@ impl TonWallet {
             .last_transaction_id
             .ok_or(TonWalletError::LastTransactionNotFound)?;
 
-        self.custodians = Some(
-            multisig::run_local(
-                multisig_type,
-                "getCustodians",
-                account_stuff.into_owned(),
-                gen_timings,
-                last_transaction_id,
-            )
-            .and_then(multisig::parse_multisig_contract_custodians)?,
-        );
+        self.custodians = Some(multisig::get_custodians(
+            multisig_type,
+            account_stuff,
+            gen_timings,
+            last_transaction_id,
+        )?);
 
         Ok(())
     }
@@ -361,7 +389,7 @@ impl TonWallet {
             .await?
         {
             RawContractState::Exists(state) => Ok(state.account),
-            RawContractState::NotExists => Err(TonWalletError::ContractNotFound.into()),
+            RawContractState::NotExists => Err(TonWalletError::AccountNotExists.into()),
         }
     }
 }
@@ -410,16 +438,16 @@ enum InternalMessageSenderError {
 enum TonWalletError {
     #[error("Account not exists")]
     AccountNotExists,
-    #[error("Invalid contract type")]
-    InvalidContractType,
-    #[error("Contract not found")]
-    ContractNotFound,
     #[error("Account is frozen")]
     AccountIsFrozen,
+    #[error("Invalid contract type")]
+    InvalidContractType,
     #[error("Last transaction not found")]
     LastTransactionNotFound,
     #[error("Custodians not found")]
     CustodiansNotFound,
+    #[error("Pending transactino not found")]
+    PendingTransactionNotFound,
 }
 
 fn make_contract_state_handler<T>(handler: &'_ T) -> impl FnMut(&RawContractState) + '_
