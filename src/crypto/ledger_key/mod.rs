@@ -50,8 +50,8 @@ impl StoreSigner for LedgerKeySigner {
         let pubkey_bytes = self.connection.get_public_key(input.account_id).await?;
         let public_key = ed25519_dalek::PublicKey::from_bytes(&pubkey_bytes)?;
 
-        let key = LedgerKey::new(input.account_id, public_key, master_key)?;
-
+        let key = LedgerKey::new(input.account_id, public_key, master_key, input.name)?;
+        let name = key.name.clone();
         match self.keys.entry(public_key.to_bytes()) {
             hash_map::Entry::Vacant(entry) => {
                 entry.insert(key);
@@ -59,6 +59,7 @@ impl StoreSigner for LedgerKeySigner {
                     public_key,
                     master_key,
                     account_id: input.account_id,
+                    name,
                 })
             }
             hash_map::Entry::Occupied(_) => return Err(LedgerKeyError::KeyAlreadyExists.into()),
@@ -135,6 +136,7 @@ impl SignerStorage for LedgerKeySigner {
                 public_key: key.public_key,
                 master_key: key.master_key,
                 account_id: key.account_id,
+                name: key.name,
             })
             .collect()
     }
@@ -145,6 +147,7 @@ impl SignerStorage for LedgerKeySigner {
             public_key: key.public_key,
             master_key: key.master_key,
             account_id: key.account_id,
+            name: key.name.clone(),
         })
     }
 
@@ -153,9 +156,10 @@ impl SignerStorage for LedgerKeySigner {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct LedgerKeyCreateInput {
     pub account_id: u16,
+    pub name: String,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Copy)]
@@ -164,8 +168,9 @@ pub struct LedgerKeyPublic {
     pub public_key: PublicKey,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LedgerKey {
+    pub name: String,
     pub account_id: u16,
 
     #[serde(with = "serde_public_key")]
@@ -176,11 +181,17 @@ pub struct LedgerKey {
 }
 
 impl LedgerKey {
-    pub fn new(account_id: u16, public_key: PublicKey, master_key: PublicKey) -> Result<Self> {
+    pub fn new(
+        account_id: u16,
+        public_key: PublicKey,
+        master_key: PublicKey,
+        name: String,
+    ) -> Result<Self> {
         Ok(Self {
             account_id,
             public_key,
             master_key,
+            name,
         })
     }
 

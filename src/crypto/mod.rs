@@ -20,6 +20,7 @@ mod mnemonic;
 mod symmetric;
 
 pub type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
+pub type PubKey = [u8; ed25519_dalek::PUBLIC_KEY_LENGTH];
 
 pub trait UnsignedMessage: DynClone + Send {
     /// Adjust expiration timestamp from now
@@ -76,11 +77,12 @@ pub trait WithPublicKey {
     fn public_key(&self) -> &PublicKey;
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, Copy)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SignerEntry {
     #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
     #[serde(with = "serde_public_key")]
     pub master_key: PublicKey,
     pub account_id: u16,
+    pub name: String,
 }

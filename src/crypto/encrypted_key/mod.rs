@@ -12,18 +12,18 @@ use ring::rand::SecureRandom;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
-use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
-use crate::utils::*;
-
 use super::mnemonic::*;
 use super::symmetric::*;
+use super::PubKey;
+use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
+use crate::utils::*;
 
 #[derive(Default, Clone, Debug)]
 pub struct EncryptedKeySigner {
     keys: KeysMap,
 }
 
-type KeysMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], EncryptedKey>;
+type KeysMap = HashMap<PubKey, EncryptedKey>;
 
 impl EncryptedKeySigner {
     pub fn new() -> Self {
@@ -54,7 +54,12 @@ impl StoreSigner for EncryptedKeySigner {
     type SignInput = EncryptedKeyPassword;
 
     async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
-        let key = EncryptedKey::new(input.password, input.mnemonic_type, input.phrase)?;
+        let key = EncryptedKey::new(
+            input.password,
+            input.mnemonic_type,
+            input.phrase,
+            input.name,
+        )?;
 
         let public_key = *key.public_key();
 
@@ -65,6 +70,7 @@ impl StoreSigner for EncryptedKeySigner {
                     public_key,
                     master_key: public_key,
                     account_id: input.mnemonic_type.account_id(),
+                    name: key.name.clone(),
                 })
             }
             hash_map::Entry::Occupied(_) => return Err(EncryptedKeyError::KeyAlreadyExists.into()),
@@ -78,6 +84,7 @@ impl StoreSigner for EncryptedKeySigner {
             public_key: input.public_key,
             master_key: input.public_key,
             account_id: key.mnemonic_type().account_id(),
+            name: key.name.clone(),
         })
     }
 
@@ -146,6 +153,7 @@ impl SignerStorage for EncryptedKeySigner {
                 public_key: *key.public_key(),
                 master_key: *key.public_key(),
                 account_id: key.inner.mnemonic_type.account_id(),
+                name: key.name.clone(),
             })
             .collect()
     }
@@ -156,6 +164,7 @@ impl SignerStorage for EncryptedKeySigner {
             public_key: entry.inner.pubkey,
             master_key: entry.inner.pubkey,
             account_id: entry.inner.mnemonic_type.account_id(),
+            name: entry.name,
         })
     }
 
@@ -169,6 +178,7 @@ pub struct EncryptedKeyCreateInput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
     pub password: SecUtf8,
+    pub name: String,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -196,11 +206,17 @@ const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
 #[derive(Clone)]
 pub struct EncryptedKey {
+    pub name: String,
     inner: CryptoData,
 }
 
 impl EncryptedKey {
-    pub fn new(password: SecUtf8, mnemonic_type: MnemonicType, phrase: SecUtf8) -> Result<Self> {
+    pub fn new(
+        password: SecUtf8,
+        mnemonic_type: MnemonicType,
+        phrase: SecUtf8,
+        name: String,
+    ) -> Result<Self> {
         let rng = ring::rand::SystemRandom::new();
 
         // prepare nonce
@@ -233,6 +249,7 @@ impl EncryptedKey {
         let encrypted_seed_phrase = encrypt(&encryptor, &seed_phrase_nonce, phrase.as_ref())?;
 
         Ok(Self {
+            name,
             inner: CryptoData {
                 mnemonic_type,
                 pubkey,

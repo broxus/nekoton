@@ -10,6 +10,7 @@ use ring::rand::SecureRandom;
 use secstr::{SecUtf8, SecVec};
 use serde::{Deserialize, Serialize, Serializer};
 
+use super::PubKey;
 use crate::crypto::mnemonic::*;
 use crate::crypto::symmetric::*;
 use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
@@ -45,8 +46,12 @@ impl StoreSigner for DerivedKeySigner {
 
     async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
         Ok(match input {
-            DerivedKeyCreateInput::Import { phrase, password } => {
-                let master_key = MasterKey::new(password, phrase)?;
+            DerivedKeyCreateInput::Import {
+                phrase,
+                password,
+                name,
+            } => {
+                let master_key = MasterKey::new(password, phrase, name.clone())?;
                 let public_key = master_key.public_key;
                 self.master_keys.insert(public_key.to_bytes(), master_key);
 
@@ -54,12 +59,14 @@ impl StoreSigner for DerivedKeySigner {
                     public_key,
                     master_key: public_key,
                     account_id: 0,
+                    name,
                 }
             }
             DerivedKeyCreateInput::Derive {
                 master_key,
                 account_id,
                 password,
+                name,
             } => {
                 let master_key = match self.master_keys.get_mut(master_key.as_bytes()) {
                     Some(key) => key,
@@ -78,12 +85,13 @@ impl StoreSigner for DerivedKeySigner {
                 let public_key = derive_from_master(account_id, master)?.public;
                 master_key
                     .accounts_map
-                    .insert(public_key.to_bytes(), account_id);
+                    .insert(public_key.to_bytes(), Account(account_id, name.clone()));
 
                 SignerEntry {
                     public_key,
                     master_key: master_key.public_key,
                     account_id,
+                    name,
                 }
             }
         })
@@ -96,11 +104,11 @@ impl StoreSigner for DerivedKeySigner {
         };
 
         master_key.change_password(input.old_password, input.new_password)?;
-
         Ok(SignerEntry {
             public_key: master_key.public_key,
             master_key: master_key.public_key,
             account_id: 0,
+            name: "".to_string(), //todo where can i get name?
         })
     }
 
@@ -140,7 +148,7 @@ impl StoreSigner for DerivedKeySigner {
             } => {
                 let master_key = self.get_master_key(&master_key)?;
                 match master_key.accounts_map.get(public_key.as_bytes()) {
-                    Some(account_id) => (master_key, *account_id, password),
+                    Some(account_id) => (master_key, account_id.0, password),
                     None => return Err(MasterKeyError::DerivedKeyNotFound.into()),
                 }
             }
@@ -229,7 +237,8 @@ impl SignerStorage for DerivedKeySigner {
                     .map(move |(public_key, account_id)| SignerEntry {
                         public_key: PublicKey::from_bytes(public_key).trust_me(),
                         master_key,
-                        account_id: *account_id,
+                        account_id: account_id.0,
+                        name: account_id.1.clone(),
                     })
             })
             .collect()
@@ -241,7 +250,8 @@ impl SignerStorage for DerivedKeySigner {
                 return Some(SignerEntry {
                     public_key: *public_key,
                     master_key: master_key.public_key,
-                    account_id,
+                    account_id: account_id.0,
+                    name: account_id.1,
                 });
             }
         }
@@ -282,7 +292,7 @@ struct MasterKey {
 }
 
 impl MasterKey {
-    fn new(password: SecUtf8, phrase: SecUtf8) -> Result<Self> {
+    fn new(password: SecUtf8, phrase: SecUtf8, name: String) -> Result<Self> {
         use zeroize::Zeroize;
 
         let mut phrase = phrase.unsecure().to_string();
@@ -303,7 +313,7 @@ impl MasterKey {
         entropy.zeroize();
 
         let mut accounts_map = AccountsMap::new();
-        accounts_map.insert(public_key.to_bytes(), 0);
+        accounts_map.insert(public_key.to_bytes(), Account(0, name));
 
         Ok(Self {
             public_key,
@@ -378,7 +388,10 @@ struct EncryptedPart {
     phrase_nonce: Nonce,
 }
 
-type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], u16>;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Account(pub u16, pub String);
+
+type AccountsMap = HashMap<PubKey, Account>;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum DerivedKeySignParams {
@@ -422,12 +435,14 @@ pub enum DerivedKeyCreateInput {
     Import {
         phrase: SecUtf8,
         password: SecUtf8,
+        name: String,
     },
     Derive {
         #[serde(with = "serde_public_key")]
         master_key: PublicKey,
         account_id: u16,
         password: SecUtf8,
+        name: String,
     },
 }
 
@@ -448,6 +463,7 @@ mod serde_accounts_map {
         #[derive(Serialize)]
         struct StoredItem {
             account_id: u16,
+            name: String,
         }
 
         let mut map = serializer.serialize_map(Some(data.len()))?;
