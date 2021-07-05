@@ -147,7 +147,7 @@ where
 
 #[cfg(test)]
 #[cfg(feature = "integration_test")]
-mod test {
+mod tests {
     use std::str::FromStr;
     use std::sync::Arc;
 

@@ -124,7 +124,7 @@ pub fn answer_id() -> ton_abi::Token {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use crate::helpers::abi::FunctionBuilder;
     use ton_abi::ParamType;
 

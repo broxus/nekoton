@@ -462,7 +462,7 @@ impl From<SymmetricCryptoError> for EncryptedKeyError {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
 
     const TEST_PASSWORD: &str = "123";

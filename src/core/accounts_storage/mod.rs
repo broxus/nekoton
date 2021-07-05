@@ -104,6 +104,24 @@ impl AccountsStorage {
         Ok(assets_list)
     }
 
+    pub async fn rename_account(&self, account: &str, name: String) -> Result<AssetsList> {
+        let assets = &mut *self.accounts.write().await;
+
+        let (entry, should_save) = match assets.get_mut(account) {
+            Some(entry) => {
+                let should_save = entry.name != name;
+                entry.name = name;
+                (entry.clone(), should_save)
+            }
+            None => return Err(AccountsStorageError::AccountNotFound.into()),
+        };
+
+        if should_save {
+            self.save(assets).await?;
+        }
+        Ok(entry)
+    }
+
     pub async fn add_token_wallet(
         &self,
         account: &str,

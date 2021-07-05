@@ -2,16 +2,20 @@ use std::any::TypeId;
 use std::collections::hash_map::{self, HashMap};
 use std::collections::HashSet;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use futures::future;
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::RwLock;
 
+use self::password_cache::*;
 use crate::crypto::{Signature, Signer, SignerEntry, SignerStorage};
 use crate::external::Storage;
 use crate::utils::*;
+
+mod password_cache;
 
 const STORAGE_KEYSTORE: &str = "__core__keystore";
 
@@ -166,6 +170,7 @@ impl KeyStore {
 struct KeyStoreState {
     signers: SignersMap,
     entries: EntriesMap,
+    _password_cache: PasswordCache,
 }
 
 type SignersMap = HashMap<TypeId, (String, Box<dyn SignerStorage>)>;
@@ -287,6 +292,7 @@ impl KeyStoreBuilder {
             state: RwLock::new(KeyStoreState {
                 signers: transpose_signers(self.signers),
                 entries,
+                _password_cache: PasswordCache::new()?,
             }),
             storage: self.storage,
         })
@@ -314,6 +320,7 @@ impl KeyStoreBuilder {
             state: RwLock::new(KeyStoreState {
                 signers: transpose_signers(self.signers),
                 entries,
+                _password_cache: PasswordCache::new().trust_me(),
             }),
             storage: self.storage,
         }
@@ -335,6 +342,18 @@ fn transpose_signers(signers: BuilderSignersMap) -> SignersMap {
         .into_iter()
         .map(|(name, (signer, type_id))| (type_id, (name, signer)))
         .collect()
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub enum PasswordCacheBehavior {
+    Store(Duration),
+    Remove,
+}
+
+impl Default for PasswordCacheBehavior {
+    fn default() -> Self {
+        Self::Remove
+    }
 }
 
 #[derive(thiserror::Error, Debug, Copy, Clone)]
