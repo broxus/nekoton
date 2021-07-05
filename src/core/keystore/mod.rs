@@ -13,6 +13,8 @@ use crate::crypto::{Signature, Signer, SignerEntry, SignerStorage};
 use crate::external::Storage;
 use crate::utils::*;
 
+mod password_cache;
+
 const STORAGE_KEYSTORE: &str = "__core__keystore";
 
 pub struct KeyStore {

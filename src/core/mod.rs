@@ -1,3 +1,9 @@
+use anyhow::Result;
+
+pub use self::contract_subscription::ContractSubscription;
+use self::models::PollingMethod;
+use crate::transport::Transport;
+
 pub mod accounts_storage;
 pub mod contract_subscription;
 pub mod generic_contract;
@@ -7,12 +13,6 @@ pub mod owners_cache;
 pub mod token_wallet;
 pub mod ton_wallet;
 pub mod utils;
-
-use anyhow::Result;
-
-pub use self::contract_subscription::ContractSubscription;
-use self::models::PollingMethod;
-use crate::transport::Transport;
 
 pub struct TonInterface {
     transport: Box<dyn Transport>,

@@ -50,6 +50,7 @@
     nonstandard_style,
     rust_2018_idioms
 )]
+#![allow(clippy::enum_variant_names)]
 
 pub mod contracts;
 pub mod core;
