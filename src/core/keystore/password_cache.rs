@@ -1,3 +1,5 @@
+#![allow(dead_code)] // temp
+
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -6,7 +8,6 @@ use chacha20poly1305::aead::{Aead, NewAead};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
 use ring::rand::SecureRandom;
 use secstr::SecUtf8;
-use serde::{Deserialize, Serialize};
 
 pub struct PasswordCache {
     time: Instant,
@@ -79,18 +80,6 @@ impl PasswordCache {
     pub fn refresh(&mut self) {
         let now = Instant::now();
         self.passwords.retain(|_, item| item.expire_at > now);
-    }
-}
-
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-pub enum PasswordCacheBehavior {
-    Store(Duration),
-    Remove,
-}
-
-impl Default for PasswordCacheBehavior {
-    fn default() -> Self {
-        Self::Remove
     }
 }
 

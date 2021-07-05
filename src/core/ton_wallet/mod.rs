@@ -12,7 +12,7 @@ use ton_types::{SliceData, UInt256};
 use crate::core::{utils, InternalMessage};
 use crate::crypto::UnsignedMessage;
 use crate::helpers;
-use crate::transport::models::{RawContractState, RawTransaction};
+use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::*;
 
@@ -72,29 +72,7 @@ impl TonWallet {
         handler: Arc<dyn TonWalletSubscriptionHandler>,
     ) -> Result<Self> {
         let (public_key, contract_type) = match transport.get_contract_state(&address).await? {
-            RawContractState::Exists(contract) => {
-                let (code, data) = match &contract.account.storage.state {
-                    ton_block::AccountState::AccountActive(ton_block::StateInit {
-                        code: Some(code),
-                        data: Some(data),
-                        ..
-                    }) => (code, data),
-                    _ => return Err(TonWalletError::AccountNotExists.into()),
-                };
-
-                let code_hash = code.repr_hash();
-                if let Some(multisig_type) = multisig::guess_multisig_type(&code_hash) {
-                    let public_key = helpers::abi::extract_public_key(&contract.account)?;
-                    (public_key, ContractType::Multisig(multisig_type))
-                } else if wallet_v3::is_wallet_v3(&code_hash) {
-                    let public_key =
-                        PublicKey::from_bytes(wallet_v3::InitData::try_from(data)?.public_key())
-                            .trust_me();
-                    (public_key, ContractType::WalletV3)
-                } else {
-                    return Err(TonWalletError::InvalidContractType.into());
-                }
-            }
+            RawContractState::Exists(contract) => extract_wallet_init_data(&contract)?,
             RawContractState::NotExists => return Err(TonWalletError::AccountNotExists.into()),
         };
 
@@ -414,6 +392,29 @@ impl TonWallet {
             RawContractState::Exists(state) => Ok(state.account),
             RawContractState::NotExists => Err(TonWalletError::AccountNotExists.into()),
         }
+    }
+}
+
+pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKey, ContractType)> {
+    let (code, data) = match &contract.account.storage.state {
+        ton_block::AccountState::AccountActive(ton_block::StateInit {
+            code: Some(code),
+            data: Some(data),
+            ..
+        }) => (code, data),
+        _ => return Err(TonWalletError::AccountNotExists.into()),
+    };
+
+    let code_hash = code.repr_hash();
+    if let Some(multisig_type) = multisig::guess_multisig_type(&code_hash) {
+        let public_key = helpers::abi::extract_public_key(&contract.account)?;
+        Ok((public_key, ContractType::Multisig(multisig_type)))
+    } else if wallet_v3::is_wallet_v3(&code_hash) {
+        let public_key =
+            PublicKey::from_bytes(wallet_v3::InitData::try_from(data)?.public_key()).trust_me();
+        Ok((public_key, ContractType::WalletV3))
+    } else {
+        Err(TonWalletError::InvalidContractType.into())
     }
 }
 
