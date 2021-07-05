@@ -41,6 +41,7 @@ impl StoreSigner for LedgerKeySigner {
     type CreateKeyInput = LedgerKeyCreateInput;
     type ExportKeyInput = ();
     type ExportKeyOutput = ();
+    type GetPublicKeys = LedgerKeyGetPublicKeys;
     type UpdateKeyInput = ();
     type SignInput = LedgerKeyPublic;
 
@@ -71,6 +72,19 @@ impl StoreSigner for LedgerKeySigner {
 
     async fn export_key(&self, _input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
         Err(LedgerKeyError::MethodNotSupported.into())
+    }
+
+    async fn get_public_keys(&self, input: Self::GetPublicKeys) -> Result<Vec<PublicKey>> {
+        let mut result = Vec::with_capacity(input.limit as usize);
+        for account_id in input.offset..input.offset.saturating_add(input.limit) {
+            result.push(
+                ed25519_dalek::PublicKey::from_bytes(
+                    &self.connection.get_public_key(account_id).await?,
+                )
+                .trust_me(),
+            );
+        }
+        Ok(result)
     }
 
     async fn sign(
@@ -153,18 +167,24 @@ impl SignerStorage for LedgerKeySigner {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LedgerKeyCreateInput {
     pub account_id: u16,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct LedgerKeyGetPublicKeys {
+    pub offset: u16,
+    pub limit: u16,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LedgerKeyPublic {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LedgerKey {
     pub account_id: u16,
 

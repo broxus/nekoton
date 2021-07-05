@@ -59,6 +59,32 @@ pub fn prepare_deploy(
     )
 }
 
+pub fn prepare_confirm_transaction(
+    public_key: &PublicKey,
+    address: MsgAddressInt,
+    transaction_id: u64,
+    expiration: Expiration,
+) -> Result<Box<dyn UnsignedMessage>> {
+    let message = ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+        dst: address,
+        ..Default::default()
+    });
+
+    let (function, input) =
+        MessageBuilder::new(contracts::abi::safe_multisig_wallet(), "confirmTransaction")
+            .trust_me()
+            .arg(transaction_id)
+            .build();
+
+    make_labs_unsigned_message(
+        message,
+        expiration,
+        public_key,
+        Cow::Borrowed(function),
+        input,
+    )
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn prepare_transfer(
     public_key: &PublicKey,
@@ -183,7 +209,7 @@ fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> to
     state_init
 }
 
-pub fn run_local(
+fn run_local(
     multisig_type: MultisigType,
     contract_method: &str,
     account_stuff: ton_block::AccountStuff,
@@ -208,7 +234,23 @@ pub fn run_local(
         .ok_or_else(|| MultisigError::NonZeroResultCode.into())
 }
 
-pub fn parse_multisig_contract_custodians(tokens: Vec<ton_abi::Token>) -> Result<Vec<UInt256>> {
+pub fn get_custodians(
+    multisig_type: MultisigType,
+    account_stuff: Cow<'_, ton_block::AccountStuff>,
+    gen_timings: GenTimings,
+    last_transaction_id: &LastTransactionId,
+) -> Result<Vec<UInt256>> {
+    run_local(
+        multisig_type,
+        "getCustodians",
+        account_stuff.into_owned(),
+        gen_timings,
+        last_transaction_id,
+    )
+    .and_then(parse_multisig_contract_custodians)
+}
+
+fn parse_multisig_contract_custodians(tokens: Vec<ton_abi::Token>) -> Result<Vec<UInt256>> {
     let array = match tokens.into_parser().parse_next() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
         _ => return Err(abi::ParserError::InvalidAbi.into()),
@@ -224,7 +266,59 @@ pub fn parse_multisig_contract_custodians(tokens: Vec<ton_abi::Token>) -> Result
     Ok(custodians.into_iter().map(|item| item.pubkey).collect())
 }
 
-pub fn parse_multisig_contract_pending_transactions(
+pub fn find_pending_transaction(
+    multisig_type: MultisigType,
+    account_stuff: Cow<'_, ton_block::AccountStuff>,
+    gen_timings: GenTimings,
+    last_transaction_id: &LastTransactionId,
+    pending_transaction_id: u64,
+) -> Result<bool> {
+    let tokens = run_local(
+        multisig_type,
+        "getTransactions",
+        account_stuff.into_owned(),
+        gen_timings,
+        last_transaction_id,
+    )?;
+
+    let array = match tokens.into_parser().parse_next() {
+        Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
+        _ => return Err(abi::ParserError::InvalidAbi.into()),
+    };
+
+    for tokens in array {
+        let mut tokens = match tokens {
+            ton_abi::TokenValue::Tuple(tokens) => tokens.into_parser(),
+            _ => return Err(abi::ParserError::InvalidAbi.into()),
+        };
+
+        let id: u64 = tokens.parse_next()?;
+        if pending_transaction_id == id {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
+}
+
+pub fn get_pending_transaction(
+    multisig_type: MultisigType,
+    account_stuff: Cow<'_, ton_block::AccountStuff>,
+    gen_timings: GenTimings,
+    last_transaction_id: &LastTransactionId,
+    custodians: &[UInt256],
+) -> Result<Vec<MultisigPendingTransaction>> {
+    run_local(
+        multisig_type,
+        "getTransactions",
+        account_stuff.into_owned(),
+        gen_timings,
+        last_transaction_id,
+    )
+    .and_then(|tokens| parse_multisig_contract_pending_transactions(tokens, custodians))
+}
+
+fn parse_multisig_contract_pending_transactions(
     tokens: Vec<ton_abi::Token>,
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingTransaction>> {
@@ -316,7 +410,6 @@ impl PendingTransaction {
 
         MultisigPendingTransaction {
             id: self.id,
-            confirmations_mask: self.confirmations_mask,
             confirmations,
             signs_required: self.signs_required,
             signs_received: self.signs_received,

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::hash_map::{self, HashMap};
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -7,7 +7,7 @@ use chacha20poly1305::{ChaCha20Poly1305, Nonce};
 use ed25519_dalek::{PublicKey, Signer};
 use ring::digest;
 use ring::rand::SecureRandom;
-use secstr::{SecUtf8, SecVec};
+use secstr::SecUtf8;
 use serde::{Deserialize, Serialize, Serializer};
 
 use crate::crypto::mnemonic::*;
@@ -40,6 +40,7 @@ impl StoreSigner for DerivedKeySigner {
     type CreateKeyInput = DerivedKeyCreateInput;
     type ExportKeyInput = DerivedKeyExportParams;
     type ExportKeyOutput = DerivedKeyExportOutput;
+    type GetPublicKeys = DerivedKeyGetPublicKeys;
     type UpdateKeyInput = DerivedKeyUpdateParams;
     type SignInput = DerivedKeySignParams;
 
@@ -48,7 +49,15 @@ impl StoreSigner for DerivedKeySigner {
             DerivedKeyCreateInput::Import { phrase, password } => {
                 let master_key = MasterKey::new(password, phrase)?;
                 let public_key = master_key.public_key;
-                self.master_keys.insert(public_key.to_bytes(), master_key);
+
+                match self.master_keys.entry(public_key.to_bytes()) {
+                    hash_map::Entry::Vacant(entry) => {
+                        entry.insert(master_key);
+                    }
+                    hash_map::Entry::Occupied(_) => {
+                        return Err(MasterKeyError::MasterKeyAlreadyExists.into())
+                    }
+                };
 
                 SignerEntry {
                     public_key,
@@ -75,7 +84,7 @@ impl StoreSigner for DerivedKeySigner {
                     &*master_key.enc_entropy,
                 )?;
 
-                let public_key = derive_from_master(account_id, master)?.public;
+                let public_key = derive_from_master(account_id, master.unsecure())?.public;
                 master_key
                     .accounts_map
                     .insert(public_key.to_bytes(), account_id);
@@ -126,6 +135,30 @@ impl StoreSigner for DerivedKeySigner {
         })
     }
 
+    async fn get_public_keys(&self, input: Self::GetPublicKeys) -> Result<Vec<PublicKey>> {
+        let master_key = match self.master_keys.get(input.master_key.as_bytes()) {
+            Some(key) => key,
+            None => return Err(MasterKeyError::MasterKeyNotFound.into()),
+        };
+
+        let decrypter = ChaCha20Poly1305::new(&symmetric_key_from_password(
+            input.password,
+            &master_key.salt,
+        ));
+
+        let master = decrypt_secure(
+            &decrypter,
+            &master_key.entropy_nonce,
+            &*master_key.enc_entropy,
+        )?;
+
+        (input.offset..input.offset.saturating_add(input.limit))
+            .map(|account_id| {
+                derive_from_master(account_id, master.unsecure()).map(|key| key.public)
+            })
+            .collect()
+    }
+
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<[u8; 64]> {
         let (master_key, account_id, password) = match input {
             Self::SignInput::ByAccountId {
@@ -155,7 +188,7 @@ impl StoreSigner for DerivedKeySigner {
             &master_key.enc_entropy,
         )?;
 
-        let signer = derive_from_master(account_id, master)?;
+        let signer = derive_from_master(account_id, master.unsecure())?;
         Ok(signer.sign(data).to_bytes())
     }
 }
@@ -410,6 +443,15 @@ pub struct DerivedKeyExportOutput {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct DerivedKeyGetPublicKeys {
+    #[serde(with = "serde_public_key")]
+    pub master_key: PublicKey,
+    pub password: SecUtf8,
+    pub limit: u16,
+    pub offset: u16,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct DerivedKeyUpdateParams {
     #[serde(with = "serde_public_key")]
     pub master_key: PublicKey,
@@ -489,14 +531,14 @@ mod serde_accounts_map {
     }
 }
 
-fn derive_from_master(id: u16, master: SecVec<u8>) -> Result<ed25519_dalek::Keypair> {
+fn derive_from_master(id: u16, master: &[u8]) -> Result<ed25519_dalek::Keypair> {
     use tiny_hderive::bip32;
 
     let path = format!("m/44'/396'/0'/0/{}", id);
-    let key = bip32::ExtendedPrivKey::derive(master.unsecure(), path.as_str())
+    let key = bip32::ExtendedPrivKey::derive(master, path.as_str())
         .map_err(|_| MasterKeyError::DerivationError)?
         .secret();
-    drop(master);
+
     let secret =
         ed25519_dalek::SecretKey::from_bytes(&key).map_err(|_| MasterKeyError::DerivationError)?;
     let public = ed25519_dalek::PublicKey::from(&secret);
@@ -507,6 +549,8 @@ fn derive_from_master(id: u16, master: SecVec<u8>) -> Result<ed25519_dalek::Keyp
 enum MasterKeyError {
     #[error("Master key not found")]
     MasterKeyNotFound,
+    #[error("Master key already exists")]
+    MasterKeyAlreadyExists,
     #[error("Derived key not found")]
     DerivedKeyNotFound,
     #[error("Failed to derive account from master key")]

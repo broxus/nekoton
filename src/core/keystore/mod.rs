@@ -91,6 +91,14 @@ impl KeyStore {
         state.get_signer_ref::<T>()?.export_key(input).await
     }
 
+    pub async fn get_public_keys<T>(&self, input: T::GetPublicKeys) -> Result<Vec<PublicKey>>
+    where
+        T: Signer,
+    {
+        let state = self.state.read().await;
+        state.get_signer_ref::<T>()?.get_public_keys(input).await
+    }
+
     pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<Signature>
     where
         T: Signer,
