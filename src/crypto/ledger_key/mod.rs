@@ -34,6 +34,13 @@ impl LedgerKeySigner {
             None => Err(LedgerKeyError::KeyNotFound.into()),
         }
     }
+
+    fn get_key_mut(&mut self, public_key: &PublicKey) -> Result<&mut LedgerKey> {
+        match self.keys.get_mut(public_key.as_bytes()) {
+            Some(key) => Ok(key),
+            None => Err(LedgerKeyError::KeyNotFound.into()),
+        }
+    }
 }
 
 #[async_trait]
@@ -42,7 +49,7 @@ impl StoreSigner for LedgerKeySigner {
     type ExportKeyInput = ();
     type ExportKeyOutput = ();
     type GetPublicKeys = LedgerKeyGetPublicKeys;
-    type UpdateKeyInput = ();
+    type UpdateKeyInput = LedgerUpdateKeyInput;
     type SignInput = LedgerKeyPublic;
 
     async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
@@ -51,12 +58,13 @@ impl StoreSigner for LedgerKeySigner {
         let pubkey_bytes = self.connection.get_public_key(input.account_id).await?;
         let public_key = ed25519_dalek::PublicKey::from_bytes(&pubkey_bytes)?;
 
-        let key = LedgerKey::new(input.account_id, public_key, master_key)?;
-
+        let key = LedgerKey::new(input.name, input.account_id, public_key, master_key)?;
+        let name = key.name.clone();
         match self.keys.entry(public_key.to_bytes()) {
             hash_map::Entry::Vacant(entry) => {
                 entry.insert(key);
                 Ok(SignerEntry {
+                    name,
                     public_key,
                     master_key,
                     account_id: input.account_id,
@@ -66,8 +74,19 @@ impl StoreSigner for LedgerKeySigner {
         }
     }
 
-    async fn update_key(&mut self, _input: Self::UpdateKeyInput) -> Result<SignerEntry> {
-        Err(LedgerKeyError::MethodNotSupported.into())
+    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry> {
+        match input {
+            Self::UpdateKeyInput::Rename { public_key, name } => {
+                let key = self.get_key_mut(&public_key)?;
+                key.name = name.clone();
+                Ok(SignerEntry {
+                    name,
+                    public_key,
+                    master_key: key.master_key,
+                    account_id: key.account_id,
+                })
+            }
+        }
     }
 
     async fn export_key(&self, _input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
@@ -146,6 +165,7 @@ impl SignerStorage for LedgerKeySigner {
         self.keys
             .values()
             .map(|key| SignerEntry {
+                name: key.name.clone(),
                 public_key: key.public_key,
                 master_key: key.master_key,
                 account_id: key.account_id,
@@ -156,6 +176,7 @@ impl SignerStorage for LedgerKeySigner {
     async fn remove_key(&mut self, public_key: &PublicKey) -> Option<SignerEntry> {
         let key = self.keys.remove(public_key.as_bytes())?;
         Some(SignerEntry {
+            name: key.name.clone(),
             public_key: key.public_key,
             master_key: key.master_key,
             account_id: key.account_id,
@@ -167,8 +188,9 @@ impl SignerStorage for LedgerKeySigner {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LedgerKeyCreateInput {
+    pub name: String,
     pub account_id: u16,
 }
 
@@ -178,14 +200,26 @@ pub struct LedgerKeyGetPublicKeys {
     pub limit: u16,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum LedgerUpdateKeyInput {
+    Rename {
+        #[serde(with = "crate::utils::serde_public_key")]
+        public_key: PublicKey,
+        name: String,
+    },
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LedgerKeyPublic {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LedgerKey {
+    pub name: String,
+
     pub account_id: u16,
 
     #[serde(with = "serde_public_key")]
@@ -196,8 +230,14 @@ pub struct LedgerKey {
 }
 
 impl LedgerKey {
-    pub fn new(account_id: u16, public_key: PublicKey, master_key: PublicKey) -> Result<Self> {
+    pub fn new(
+        name: String,
+        account_id: u16,
+        public_key: PublicKey,
+        master_key: PublicKey,
+    ) -> Result<Self> {
         Ok(Self {
+            name,
             account_id,
             public_key,
             master_key,
