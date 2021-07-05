@@ -92,7 +92,7 @@ fn phrase_is_ok(phrase: &[&str]) -> Result<(), Error> {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use crate::crypto::mnemonic::legacy::{derive_from_phrase, phrase_is_ok};
 
     #[test]

@@ -1051,7 +1051,7 @@ impl TryFrom<InputMessage> for TokenIncomingTransfer {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use ton_block::{Deserializable, Transaction, TransactionDescrOrdinary};
 
     use super::*;

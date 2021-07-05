@@ -440,7 +440,7 @@ impl StandaloneToken for Vec<u8> {}
 impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
-mod test {
+mod tests {
     use ton_abi::{Param, ParamType, Uint};
     use ton_block::{Deserializable, Message, Transaction};
     use ton_types::serialize_toc;

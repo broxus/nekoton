@@ -61,6 +61,39 @@ impl ContractSubscription {
         Ok(result)
     }
 
+    pub async fn subscribe_by_existing<FT>(
+        transport: Arc<dyn Transport>,
+        address: MsgAddressInt,
+        contract_state: ContractState,
+        on_transactions_found: FT,
+    ) -> Result<Self>
+    where
+        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
+    {
+        let mut result = Self {
+            transport,
+            address,
+            contract_state,
+            latest_known_transaction: None,
+            pending_transactions: Vec::new(),
+            initialized: false,
+        };
+
+        let count = result.transport.info().max_transactions_per_fetch;
+        result
+            .refresh_latest_transactions(
+                count,
+                Some(count as usize),
+                on_transactions_found,
+                |_, _| {},
+            )
+            .await?;
+
+        result.initialized = true;
+
+        Ok(result)
+    }
+
     pub fn address(&self) -> &MsgAddressInt {
         &self.address
     }

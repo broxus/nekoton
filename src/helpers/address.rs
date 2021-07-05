@@ -103,7 +103,7 @@ enum AddressConversionError {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use std::str::FromStr;
 
     #[cfg(test)]

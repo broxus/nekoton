@@ -560,7 +560,7 @@ enum MasterKeyError {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
 
     const TEST_PHRASE: &str =

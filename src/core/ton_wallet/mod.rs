@@ -36,7 +36,7 @@ pub struct TonWallet {
     contract_type: ContractType,
     contract_subscription: ContractSubscription,
     handler: Arc<dyn TonWalletSubscriptionHandler>,
-    custodians: Option<Vec<UInt256>>,
+    cached_custodians: Option<Vec<UInt256>>,
 }
 
 impl TonWallet {
@@ -62,7 +62,7 @@ impl TonWallet {
             contract_type,
             contract_subscription,
             handler,
-            custodians: None,
+            cached_custodians: None,
         })
     }
 
@@ -112,7 +112,30 @@ impl TonWallet {
             contract_type,
             contract_subscription,
             handler,
-            custodians: None,
+            cached_custodians: None,
+        })
+    }
+
+    pub async fn subscribe_by_existing(
+        transport: Arc<dyn Transport>,
+        existing_wallet: ExistingWalletInfo,
+        handler: Arc<dyn TonWalletSubscriptionHandler>,
+    ) -> Result<Self> {
+        let contract_subscription = ContractSubscription::subscribe_by_existing(
+            transport.clone(),
+            existing_wallet.address,
+            existing_wallet.contract_state,
+            make_transactions_handler(&handler),
+        )
+        .await?;
+
+        Ok(Self {
+            transport,
+            public_key: existing_wallet.public_key,
+            contract_type: existing_wallet.contract_type,
+            contract_subscription,
+            handler,
+            cached_custodians: None,
         })
     }
 
@@ -197,9 +220,9 @@ impl TonWallet {
                     }
                     ton_block::AccountState::AccountActive(_) => {}
                 };
-                self.update_custodians(Cow::Borrowed(current_state), multisig_type)?;
+                self.update_cached_custodians(Cow::Borrowed(current_state), multisig_type)?;
 
-                let has_multiple_owners = match &self.custodians {
+                let has_multiple_owners = match &self.cached_custodians {
                     Some(custodians) => custodians.len() > 1,
                     None => return Err(TonWalletError::CustodiansNotFound.into()),
                 };
@@ -264,26 +287,26 @@ impl TonWallet {
         }
     }
 
-    pub async fn get_custodians(&mut self) -> Result<Vec<UInt256>> {
-        if self.custodians == None {
+    pub async fn fetch_custodians(&mut self) -> Result<Vec<UInt256>> {
+        if self.cached_custodians == None {
             match self.contract_type {
                 ContractType::Multisig(multisig_type) => {
                     let account_stuff = self.get_contract_state().await?;
-                    self.update_custodians(Cow::Owned(account_stuff), multisig_type)?;
+                    self.update_cached_custodians(Cow::Owned(account_stuff), multisig_type)?;
                 }
                 ContractType::WalletV3 => {
-                    self.custodians = Some(vec![self.public_key.to_bytes().into()]);
+                    self.cached_custodians = Some(vec![self.public_key.to_bytes().into()]);
                 }
             }
         }
 
-        match self.custodians.clone() {
+        match self.cached_custodians.clone() {
             Some(custodians) => Ok(custodians),
             None => Err(TonWalletError::CustodiansNotFound.into()),
         }
     }
 
-    pub async fn get_pending_transactions(&mut self) -> Result<Vec<MultisigPendingTransaction>> {
+    pub async fn fetch_pending_transactions(&mut self) -> Result<Vec<MultisigPendingTransaction>> {
         match self.contract_type {
             ContractType::Multisig(multisig_type) => {
                 let account_stuff = self.get_contract_state().await?;
@@ -293,9 +316,9 @@ impl TonWallet {
                     .last_transaction_id
                     .ok_or(TonWalletError::LastTransactionNotFound)?;
 
-                self.update_custodians(Cow::Borrowed(&account_stuff), multisig_type)?;
+                self.update_cached_custodians(Cow::Borrowed(&account_stuff), multisig_type)?;
                 let custodians = self
-                    .custodians
+                    .cached_custodians
                     .as_ref()
                     .ok_or(TonWalletError::CustodiansNotFound)?;
 
@@ -357,12 +380,12 @@ impl TonWallet {
         self.contract_subscription.estimate_fees(message).await
     }
 
-    fn update_custodians(
+    fn update_cached_custodians(
         &mut self,
         account_stuff: Cow<'_, ton_block::AccountStuff>,
         multisig_type: multisig::MultisigType,
     ) -> Result<()> {
-        if self.custodians.is_some() {
+        if self.cached_custodians.is_some() {
             return Ok(());
         }
 
@@ -372,7 +395,7 @@ impl TonWallet {
             .last_transaction_id
             .ok_or(TonWalletError::LastTransactionNotFound)?;
 
-        self.custodians = Some(multisig::get_custodians(
+        self.cached_custodians = Some(multisig::get_custodians(
             multisig_type,
             account_stuff,
             gen_timings,
@@ -392,6 +415,47 @@ impl TonWallet {
             RawContractState::NotExists => Err(TonWalletError::AccountNotExists.into()),
         }
     }
+}
+
+const WALLET_TYPES_BY_POPULARITY: [ContractType; 5] = [
+    ContractType::Multisig(MultisigType::SurfWallet),
+    ContractType::WalletV3,
+    ContractType::Multisig(MultisigType::SafeMultisigWallet),
+    ContractType::Multisig(MultisigType::SetcodeMultisigWallet),
+    ContractType::Multisig(MultisigType::SafeMultisigWallet24h),
+];
+
+pub async fn find_existing_wallets(
+    transport: &dyn Transport,
+    public_key: &PublicKey,
+    workchain_id: i8,
+) -> Result<Vec<ExistingWalletInfo>> {
+    use futures::stream::{FuturesUnordered, TryStreamExt};
+
+    WALLET_TYPES_BY_POPULARITY
+        .iter()
+        .map(|&contract_type| async move {
+            let address = compute_address(public_key, contract_type, workchain_id);
+
+            let contract_state = transport.get_contract_state(&address).await?;
+
+            Ok(ExistingWalletInfo {
+                address,
+                public_key: *public_key,
+                contract_type,
+                contract_state: contract_state.brief(),
+            })
+        })
+        .collect::<FuturesUnordered<_>>()
+        .try_collect::<Vec<ExistingWalletInfo>>()
+        .await
+}
+
+pub struct ExistingWalletInfo {
+    pub address: MsgAddressInt,
+    pub public_key: PublicKey,
+    pub contract_type: ContractType,
+    pub contract_state: ContractState,
 }
 
 pub trait InternalMessageSender {
