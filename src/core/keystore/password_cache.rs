@@ -1,11 +1,12 @@
 #![allow(dead_code)] // temp
 
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use anyhow::Result;
 use chacha20poly1305::aead::{Aead, NewAead};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
+use instant::Instant;
 use ring::rand::SecureRandom;
 use secstr::SecUtf8;
 
