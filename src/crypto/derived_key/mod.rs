@@ -678,7 +678,7 @@ mod tests {
             .await?;
 
         signer
-            .update_key(DerivedKeyUpdateParams {
+            .update_key(DerivedKeyUpdateParams::ChangePassword {
                 master_key: entry.master_key,
                 old_password: "123".to_owned().into(),
                 new_password: "321".to_owned().into(),
@@ -686,7 +686,7 @@ mod tests {
             .await?;
 
         assert!(signer
-            .update_key(DerivedKeyUpdateParams {
+            .update_key(DerivedKeyUpdateParams::ChangePassword {
                 master_key: entry.master_key,
                 old_password: SecUtf8::from("totally different"),
                 new_password: SecUtf8::from("321"),
