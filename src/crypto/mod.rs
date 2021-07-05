@@ -50,12 +50,14 @@ pub trait Signer: SignerStorage {
     type CreateKeyInput: Serialize + DeserializeOwned;
     type ExportKeyInput: Serialize + DeserializeOwned;
     type ExportKeyOutput: Serialize + DeserializeOwned;
+    type GetPublicKeys: Serialize + DeserializeOwned;
     type UpdateKeyInput: Serialize + DeserializeOwned;
     type SignInput: Serialize + DeserializeOwned;
 
     async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry>;
     async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry>;
     async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput>;
+    async fn get_public_keys(&self, input: Self::GetPublicKeys) -> Result<Vec<PublicKey>>;
 
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;
 }

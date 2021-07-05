@@ -50,6 +50,7 @@ impl StoreSigner for EncryptedKeySigner {
     type CreateKeyInput = EncryptedKeyCreateInput;
     type ExportKeyInput = EncryptedKeyPassword;
     type ExportKeyOutput = EncryptedKeyExportOutput;
+    type GetPublicKeys = EncryptedKeyGetPublicKeys;
     type UpdateKeyInput = EncryptedKeyUpdateParams;
     type SignInput = EncryptedKeyPassword;
 
@@ -87,6 +88,12 @@ impl StoreSigner for EncryptedKeySigner {
             phrase: key.get_mnemonic(input.password)?,
             mnemonic_type: key.mnemonic_type(),
         })
+    }
+
+    /// Does nothing useful, only exists for compatibility with other signers
+    async fn get_public_keys(&self, input: Self::GetPublicKeys) -> Result<Vec<PublicKey>> {
+        let _key = self.get_key(&input.public_key)?;
+        Ok(vec![input.public_key])
     }
 
     async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<[u8; 64]> {
@@ -164,27 +171,33 @@ impl SignerStorage for EncryptedKeySigner {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EncryptedKeyCreateInput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
     pub password: SecUtf8,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptedKeyPassword {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
     pub password: SecUtf8,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EncryptedKeyExportOutput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct EncryptedKeyGetPublicKeys {
+    #[serde(with = "serde_public_key")]
+    pub public_key: PublicKey,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EncryptedKeyUpdateParams {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
