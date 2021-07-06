@@ -12,18 +12,18 @@ use ring::rand::SecureRandom;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
+use super::mnemonic::*;
+use super::symmetric::*;
+use super::{default_key_name, PubKey};
 use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::utils::*;
 
-use super::mnemonic::*;
-use super::symmetric::*;
-
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, Eq, PartialEq)]
 pub struct EncryptedKeySigner {
     keys: KeysMap,
 }
 
-type KeysMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], EncryptedKey>;
+type KeysMap = HashMap<PubKey, EncryptedKey>;
 
 impl EncryptedKeySigner {
     pub fn new() -> Self {
@@ -55,14 +55,21 @@ impl StoreSigner for EncryptedKeySigner {
     type SignInput = EncryptedKeyPassword;
 
     async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
-        let key = EncryptedKey::new(input.password, input.mnemonic_type, input.phrase)?;
+        let key = EncryptedKey::new(
+            input.password,
+            input.mnemonic_type,
+            input.phrase,
+            input.name,
+        )?;
 
         let public_key = *key.public_key();
 
         match self.keys.entry(public_key.to_bytes()) {
             hash_map::Entry::Vacant(entry) => {
+                let name = key.inner.name.clone();
                 entry.insert(key);
                 Ok(SignerEntry {
+                    name,
                     public_key,
                     master_key: public_key,
                     account_id: input.mnemonic_type.account_id(),
@@ -73,13 +80,32 @@ impl StoreSigner for EncryptedKeySigner {
     }
 
     async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry> {
-        let key = self.get_key_mut(&input.public_key)?;
-        key.change_password(input.old_password, input.new_password)?;
-        Ok(SignerEntry {
-            public_key: input.public_key,
-            master_key: input.public_key,
-            account_id: key.mnemonic_type().account_id(),
-        })
+        match input {
+            Self::UpdateKeyInput::Rename { public_key, name } => {
+                let key = self.get_key_mut(&public_key)?;
+                key.inner.name = name.clone();
+                Ok(SignerEntry {
+                    name,
+                    public_key,
+                    master_key: public_key,
+                    account_id: key.mnemonic_type().account_id(),
+                })
+            }
+            Self::UpdateKeyInput::ChangePassword {
+                public_key,
+                old_password,
+                new_password,
+            } => {
+                let key = self.get_key_mut(&public_key)?;
+                key.change_password(old_password, new_password)?;
+                Ok(SignerEntry {
+                    name: key.inner.name.clone(),
+                    public_key,
+                    master_key: public_key,
+                    account_id: key.mnemonic_type().account_id(),
+                })
+            }
+        }
     }
 
     async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
@@ -150,6 +176,7 @@ impl SignerStorage for EncryptedKeySigner {
         self.keys
             .values()
             .map(|key| SignerEntry {
+                name: key.inner.name.clone(),
                 public_key: *key.public_key(),
                 master_key: *key.public_key(),
                 account_id: key.inner.mnemonic_type.account_id(),
@@ -160,6 +187,7 @@ impl SignerStorage for EncryptedKeySigner {
     async fn remove_key(&mut self, public_key: &PublicKey) -> Option<SignerEntry> {
         let entry = self.keys.remove(public_key.as_bytes())?;
         Some(SignerEntry {
+            name: entry.inner.name,
             public_key: entry.inner.pubkey,
             master_key: entry.inner.pubkey,
             account_id: entry.inner.mnemonic_type.account_id(),
@@ -173,6 +201,7 @@ impl SignerStorage for EncryptedKeySigner {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EncryptedKeyCreateInput {
+    pub name: String,
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
     pub password: SecUtf8,
@@ -198,22 +227,35 @@ pub struct EncryptedKeyGetPublicKeys {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct EncryptedKeyUpdateParams {
-    #[serde(with = "crate::utils::serde_public_key")]
-    pub public_key: PublicKey,
-    pub old_password: SecUtf8,
-    pub new_password: SecUtf8,
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum EncryptedKeyUpdateParams {
+    Rename {
+        #[serde(with = "crate::utils::serde_public_key")]
+        public_key: PublicKey,
+        name: String,
+    },
+    ChangePassword {
+        #[serde(with = "crate::utils::serde_public_key")]
+        public_key: PublicKey,
+        old_password: SecUtf8,
+        new_password: SecUtf8,
+    },
 }
 
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct EncryptedKey {
     inner: CryptoData,
 }
 
 impl EncryptedKey {
-    pub fn new(password: SecUtf8, mnemonic_type: MnemonicType, phrase: SecUtf8) -> Result<Self> {
+    pub fn new(
+        password: SecUtf8,
+        mnemonic_type: MnemonicType,
+        phrase: SecUtf8,
+        name: String,
+    ) -> Result<Self> {
         let rng = ring::rand::SystemRandom::new();
 
         // prepare nonce
@@ -247,6 +289,7 @@ impl EncryptedKey {
 
         Ok(Self {
             inner: CryptoData {
+                name,
                 mnemonic_type,
                 pubkey,
                 encrypted_private_key,
@@ -377,8 +420,10 @@ impl std::fmt::Debug for EncryptedKey {
 }
 
 ///Data, stored on disk in `encrypted_data` filed of config.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Clone, Eq, PartialEq)]
 struct CryptoData {
+    name: String,
+
     mnemonic_type: MnemonicType,
 
     #[serde(with = "serde_public_key")]
@@ -419,6 +464,49 @@ impl CryptoData {
             public: self.pubkey,
         };
         Ok(pair.sign(data).to_bytes())
+    }
+}
+
+impl<'de> Deserialize<'de> for CryptoData {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct StoredCryptoData {
+            #[serde(default)]
+            name: Option<String>,
+            mnemonic_type: MnemonicType,
+            #[serde(with = "serde_public_key")]
+            pubkey: PublicKey,
+            #[serde(with = "serde_bytes")]
+            encrypted_private_key: Vec<u8>,
+            #[serde(with = "serde_nonce")]
+            private_key_nonce: Nonce,
+            #[serde(with = "serde_bytes")]
+            encrypted_seed_phrase: Vec<u8>,
+            #[serde(with = "serde_nonce")]
+            seed_phrase_nonce: Nonce,
+            #[serde(with = "serde_bytes")]
+            salt: Vec<u8>,
+        }
+
+        let data = StoredCryptoData::deserialize(deserializer)?;
+        let name = match data.name {
+            Some(name) => name,
+            None => default_key_name(data.pubkey.as_bytes()),
+        };
+
+        Ok(CryptoData {
+            name,
+            mnemonic_type: data.mnemonic_type,
+            pubkey: data.pubkey,
+            encrypted_private_key: data.encrypted_private_key,
+            private_key_nonce: data.private_key_nonce,
+            encrypted_seed_phrase: data.encrypted_seed_phrase,
+            seed_phrase_nonce: data.seed_phrase_nonce,
+            salt: data.salt,
+        })
     }
 }
 
@@ -471,17 +559,87 @@ mod tests {
     #[test]
     fn test_init() {
         let password = SecUtf8::from(TEST_PASSWORD);
-        EncryptedKey::new(password, MnemonicType::Legacy, TEST_MNEMONIC.into()).unwrap();
+        EncryptedKey::new(
+            password,
+            MnemonicType::Legacy,
+            TEST_MNEMONIC.into(),
+            "Test".to_owned(),
+        )
+        .unwrap();
     }
 
     #[test]
     fn test_bad_password() {
         let password = SecUtf8::from(TEST_PASSWORD);
-        let signer =
-            EncryptedKey::new(password, MnemonicType::Legacy, TEST_MNEMONIC.into()).unwrap();
+        let signer = EncryptedKey::new(
+            password,
+            MnemonicType::Legacy,
+            TEST_MNEMONIC.into(),
+            "Test".to_owned(),
+        )
+        .unwrap();
 
         println!("{}", signer.as_json());
         let result = signer.sign(b"lol", "lol".into());
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn load_old() {
+        let json = r#"[
+    [
+        "122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0",
+        "{\"mnemonic_type\":{\"Labs\":1},\"pubkey\":\"122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0\",\"encrypted_private_key\":\"7a714b8e92a9ef54c5da539141817018be4846fcf8a964e833712b39d560f50ec67dbde7c1a695fcb9303ef5c2002c70\",\"private_key_nonce\":\"1abc471cb49672d8ada0bed8\",\"encrypted_seed_phrase\":\"db7d9e170734990bff07e98758122aeb47d617393e12e761a69f384825b1b7423d991fed2ffa14e34cb31a26ba84e6ff3e688662655f401a6d9dd22b281a2be70ebab5f170ceb9a69c4770433aff5125cd7d35b5e6cc8a5dc0e3458ee9362cb5a3f50ac32be824171118cf802b5322e86a08ad8c9ead4b9f3afe549305107097960807d9c9b440ddc5b1fb8df0a0d97f9697a0c206accccd3d1795b524683bc0d7ac\",\"seed_phrase_nonce\":\"63d7a96bd2e8bd824f01a330\",\"salt\":\"b3ccb59480f3d4d6d6725b8f70bfaf520476cfa246bb50723f55a14535158358\"}"
+    ],
+    [
+        "ef9ddfa972f424124033519c0190200d7e0f7964a637ebb131d1b0f999e02181",
+        "{\"name\":\"史萊克的模因\",\"mnemonic_type\":{\"Labs\":2},\"pubkey\":\"ef9ddfa972f424124033519c0190200d7e0f7964a637ebb131d1b0f999e02181\",\"encrypted_private_key\":\"5397c31290043841221ce797ad9c7dbed21dd460ed937d3d988fd6a26e371ae7d5a717018a91ed5ab1db3e9516e53782\",\"private_key_nonce\":\"818dc748e3bf30b4f9dfe8c9\",\"encrypted_seed_phrase\":\"3ed4d10cee5034f1a09e8758a6f9cca4918399f9884c4e7607f8e9ce44cd7dad5e6daa8f71ca2522eac64c820b4d1b4b012400252c8a3dedbf19d4026dcdf4c02bec654190b686bfc9949daa884679ef47b435cc419ce0b2b677b81a7068da1bd5cfcc4f7dc1c772c653fede224eb94608b420045abf11eef94ea044bd75cbd86be5dbb1e45a891ec241f281970a498fab3153591d9e6abf18e368ac46ef1b6b9f46\",\"seed_phrase_nonce\":\"c0c964e2bf869cccbb8bc019\",\"salt\":\"c9f141e6516f40ea0d8879cc1149b8e489e1c39325d3f79ced4cf1ec17affd81\"}"
+    ],
+    [
+        "93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190",
+        "{\"mnemonic_type\":{\"Labs\":0},\"pubkey\":\"93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190\",\"encrypted_private_key\":\"518d6158968995a815f022bf5d0f9ada40c3d779454d54abb7a17e32b5a83a9f6ca57756142515b8fc968f87a1bceef7\",\"private_key_nonce\":\"0eaa9fcda666b7715c41b56b\",\"encrypted_seed_phrase\":\"f4e394d118230a8acb8af95b126fbf2a62fd764c24be9627f2bc2cb6d2aa48ba6694ecbac7cdf5317f42062acb8bb4645381d2c0ae63dd0ed577001743de96bec8f5968e516e585153d264b0d48132ead1daea9dd0bd68fb49263c3cd92df74a358f1611e92905ac3dc1f1105b743c07a9e2e7cb33344d1e3e3d6cf072a43ecbd771662e03ff61f4613015a2fc0298bbdbe9de87051d2e76ef01edfb25316d0f5131\",\"seed_phrase_nonce\":\"6266222cb4fd6bebf2b3b67e\",\"salt\":\"d3a0e42f386cbbc332d8d873b3e80ed0cde2ee9c16804f8866c0901493f2b6a5\"}"
+    ]
+]"#;
+        let mut key = EncryptedKeySigner::new();
+        key.load_state(&json).unwrap();
+        let serialized = key.store_state();
+        println!("{}", serialized);
+    }
+
+    #[tokio::test]
+    async fn store_load() {
+        let mut key = EncryptedKeySigner::new();
+        let master = key
+            .add_key(EncryptedKeyCreateInput {
+                name: "from giver".to_string(),
+                phrase: TEST_MNEMONIC.into(),
+                mnemonic_type: MnemonicType::Labs(0),
+                password: "supasecret".into(),
+            })
+            .await
+            .unwrap()
+            .master_key;
+        key.add_key(EncryptedKeyCreateInput {
+            name: "all my money 🤑".to_string(),
+            phrase: TEST_MNEMONIC.into(),
+            mnemonic_type: MnemonicType::Labs(1),
+            password: "supasecret".into(),
+        })
+        .await
+        .unwrap();
+        key.add_key(EncryptedKeyCreateInput {
+            name: "史萊克的模因".to_string(),
+            phrase: TEST_MNEMONIC.into(),
+            mnemonic_type: MnemonicType::Labs(2),
+            password: "supasecret".into(),
+        })
+        .await
+        .unwrap();
+        let serialized = key.store_state();
+        println!("{}", serialized);
+
+        let mut loaded = EncryptedKeySigner::new();
+        loaded.load_state(&serialized).unwrap();
+        assert_eq!(loaded, key);
     }
 }

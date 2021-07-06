@@ -7,7 +7,7 @@ pub(super) mod labs;
 pub(super) mod legacy;
 mod utils;
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub enum MnemonicType {
     /// Phrase with 24 words, used in Crystal Wallet
     Legacy,

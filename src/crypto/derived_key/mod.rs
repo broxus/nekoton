@@ -15,9 +15,11 @@ use crate::crypto::symmetric::*;
 use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::utils::*;
 
+use super::{default_key_name, PubKey};
+
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, Eq, PartialEq)]
 pub struct DerivedKeySigner {
     master_keys: HashMap<[u8; 32], MasterKey>,
 }
@@ -46,8 +48,12 @@ impl StoreSigner for DerivedKeySigner {
 
     async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
         Ok(match input {
-            DerivedKeyCreateInput::Import { phrase, password } => {
-                let master_key = MasterKey::new(password, phrase)?;
+            DerivedKeyCreateInput::Import {
+                phrase,
+                password,
+                key_name,
+            } => {
+                let master_key = MasterKey::new(password, phrase, key_name.clone())?;
                 let public_key = master_key.public_key;
 
                 match self.master_keys.entry(public_key.to_bytes()) {
@@ -60,6 +66,7 @@ impl StoreSigner for DerivedKeySigner {
                 };
 
                 SignerEntry {
+                    name: key_name,
                     public_key,
                     master_key: public_key,
                     account_id: 0,
@@ -69,12 +76,20 @@ impl StoreSigner for DerivedKeySigner {
                 master_key,
                 account_id,
                 password,
+                key_name,
             } => {
                 let master_key = match self.master_keys.get_mut(master_key.as_bytes()) {
                     Some(key) => key,
                     None => return Err(MasterKeyError::MasterKeyNotFound.into()),
                 };
-
+                let found = master_key
+                    .accounts_map
+                    .values()
+                    .find(|x| x.account_id == account_id)
+                    .is_some();
+                if found {
+                    return Err(MasterKeyError::DerivedKeyExists.into());
+                }
                 let decrypter =
                     ChaCha20Poly1305::new(&symmetric_key_from_password(password, &master_key.salt));
 
@@ -85,11 +100,16 @@ impl StoreSigner for DerivedKeySigner {
                 )?;
 
                 let public_key = derive_from_master(account_id, master.unsecure())?.public;
-                master_key
-                    .accounts_map
-                    .insert(public_key.to_bytes(), account_id);
+                master_key.accounts_map.insert(
+                    public_key.to_bytes(),
+                    Account {
+                        name: key_name.clone(),
+                        account_id,
+                    },
+                );
 
                 SignerEntry {
+                    name: key_name,
                     public_key,
                     master_key: master_key.public_key,
                     account_id,
@@ -99,18 +119,57 @@ impl StoreSigner for DerivedKeySigner {
     }
 
     async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry> {
-        let master_key = match self.master_keys.get_mut(input.master_key.as_bytes()) {
-            Some(key) => key,
-            None => return Err(MasterKeyError::MasterKeyNotFound.into()),
-        };
+        match input {
+            Self::UpdateKeyInput::RenameKey {
+                master_key,
+                public_key,
+                name,
+            } => {
+                let entry = match self.master_keys.get_mut(master_key.as_bytes()) {
+                    Some(key) => key,
+                    None => return Err(MasterKeyError::MasterKeyNotFound.into()),
+                };
 
-        master_key.change_password(input.old_password, input.new_password)?;
+                let mut entry = match entry.accounts_map.get_mut(public_key.as_bytes()) {
+                    Some(entry) => entry,
+                    None => return Err(MasterKeyError::DerivedKeyNotFound.into()),
+                };
 
-        Ok(SignerEntry {
-            public_key: master_key.public_key,
-            master_key: master_key.public_key,
-            account_id: 0,
-        })
+                entry.name = name.clone();
+
+                Ok(SignerEntry {
+                    name,
+                    public_key,
+                    master_key,
+                    account_id: entry.account_id,
+                })
+            }
+            Self::UpdateKeyInput::ChangePassword {
+                master_key,
+                old_password,
+                new_password,
+            } => {
+                let entry = match self.master_keys.get_mut(master_key.as_bytes()) {
+                    Some(key) => key,
+                    None => return Err(MasterKeyError::MasterKeyNotFound.into()),
+                };
+
+                entry.change_password(old_password, new_password)?;
+
+                let name = entry
+                    .accounts_map
+                    .get(master_key.as_bytes())
+                    .map(|item| item.name.clone())
+                    .unwrap_or_default();
+
+                Ok(SignerEntry {
+                    name,
+                    public_key: entry.public_key,
+                    master_key: entry.public_key,
+                    account_id: 0,
+                })
+            }
+        }
     }
 
     async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
@@ -173,7 +232,7 @@ impl StoreSigner for DerivedKeySigner {
             } => {
                 let master_key = self.get_master_key(&master_key)?;
                 match master_key.accounts_map.get(public_key.as_bytes()) {
-                    Some(account_id) => (master_key, *account_id, password),
+                    Some(account) => (master_key, account.account_id, password),
                     None => return Err(MasterKeyError::DerivedKeyNotFound.into()),
                 }
             }
@@ -260,9 +319,10 @@ impl SignerStorage for DerivedKeySigner {
                 key.accounts_map
                     .iter()
                     .map(move |(public_key, account_id)| SignerEntry {
+                        name: account_id.name.clone(),
                         public_key: PublicKey::from_bytes(public_key).trust_me(),
                         master_key,
-                        account_id: *account_id,
+                        account_id: account_id.account_id,
                     })
             })
             .collect()
@@ -270,11 +330,12 @@ impl SignerStorage for DerivedKeySigner {
 
     async fn remove_key(&mut self, public_key: &PublicKey) -> Option<SignerEntry> {
         for master_key in self.master_keys.values_mut() {
-            if let Some(account_id) = master_key.accounts_map.remove(public_key.as_bytes()) {
+            if let Some(account) = master_key.accounts_map.remove(public_key.as_bytes()) {
                 return Some(SignerEntry {
+                    name: account.name,
                     public_key: *public_key,
                     master_key: master_key.public_key,
-                    account_id,
+                    account_id: account.account_id,
                 });
             }
         }
@@ -290,7 +351,7 @@ impl SignerStorage for DerivedKeySigner {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
 struct MasterKey {
     #[serde(with = "serde_public_key")]
     public_key: PublicKey,
@@ -315,7 +376,7 @@ struct MasterKey {
 }
 
 impl MasterKey {
-    fn new(password: SecUtf8, phrase: SecUtf8) -> Result<Self> {
+    fn new(password: SecUtf8, phrase: SecUtf8, key_name: String) -> Result<Self> {
         use zeroize::Zeroize;
 
         let mut phrase = phrase.unsecure().to_string();
@@ -336,7 +397,13 @@ impl MasterKey {
         entropy.zeroize();
 
         let mut accounts_map = AccountsMap::new();
-        accounts_map.insert(public_key.to_bytes(), 0);
+        accounts_map.insert(
+            public_key.to_bytes(),
+            Account {
+                name: key_name,
+                account_id: 0,
+            },
+        );
 
         Ok(Self {
             public_key,
@@ -411,7 +478,13 @@ struct EncryptedPart {
     phrase_nonce: Nonce,
 }
 
-type AccountsMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], u16>;
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+struct Account {
+    name: String,
+    account_id: u16,
+}
+
+type AccountsMap = HashMap<PubKey, Account>;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum DerivedKeySignParams {
@@ -452,20 +525,33 @@ pub struct DerivedKeyGetPublicKeys {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct DerivedKeyUpdateParams {
-    #[serde(with = "serde_public_key")]
-    pub master_key: PublicKey,
-    pub old_password: SecUtf8,
-    pub new_password: SecUtf8,
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum DerivedKeyUpdateParams {
+    RenameKey {
+        #[serde(with = "serde_public_key")]
+        master_key: PublicKey,
+        #[serde(with = "serde_public_key")]
+        public_key: PublicKey,
+        name: String,
+    },
+    ChangePassword {
+        #[serde(with = "serde_public_key")]
+        master_key: PublicKey,
+        old_password: SecUtf8,
+        new_password: SecUtf8,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum DerivedKeyCreateInput {
     Import {
+        key_name: String,
         phrase: SecUtf8,
         password: SecUtf8,
     },
     Derive {
+        key_name: String,
         #[serde(with = "serde_public_key")]
         master_key: PublicKey,
         account_id: u16,
@@ -483,21 +569,23 @@ mod serde_accounts_map {
 
     use super::*;
 
-    pub fn serialize<S>(data: &AccountsMap, serializer: S) -> Result<S::Ok, S::Error>
+    pub(super) fn serialize<S>(data: &AccountsMap, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
         #[derive(Serialize)]
-        struct StoredItem {
+        struct StoredItem<'a> {
+            name: &'a str,
             account_id: u16,
         }
 
         let mut map = serializer.serialize_map(Some(data.len()))?;
-        for (pubkey, account_id) in data.iter() {
+        for (pubkey, account) in data.iter() {
             map.serialize_entry(
                 &hex::encode(pubkey),
                 &StoredItem {
-                    account_id: *account_id,
+                    name: &account.name,
+                    account_id: account.account_id,
                 },
             )?;
         }
@@ -505,19 +593,21 @@ mod serde_accounts_map {
         map.end()
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<AccountsMap, D::Error>
+    pub(super) fn deserialize<'de, D>(deserializer: D) -> Result<AccountsMap, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
         #[derive(Deserialize)]
         struct StoredItem {
+            #[serde(default)]
+            name: Option<String>,
             account_id: u16,
         }
 
         let stored_data = HashMap::<String, StoredItem>::deserialize(deserializer)?;
         stored_data
             .into_iter()
-            .map(|(public_key, StoredItem { account_id })| {
+            .map(|(public_key, StoredItem { name, account_id })| {
                 let public_key = hex::decode(&public_key)
                     .map_err(D::Error::custom)
                     .and_then(|public_key| {
@@ -525,7 +615,8 @@ mod serde_accounts_map {
                             .try_into()
                             .map_err(|_| D::Error::custom("Invalid public key"))
                     })?;
-                Ok((public_key, account_id))
+                let name = name.unwrap_or_else(|| default_key_name(&public_key));
+                Ok((public_key, Account { name, account_id }))
             })
             .collect::<Result<_, _>>()
     }
@@ -557,10 +648,13 @@ enum MasterKeyError {
     DerivationError,
     #[error("Failed to generate random bytes")]
     FailedToGenerateRandomBytes,
+    #[error("Derived key already exists")]
+    DerivedKeyExists,
 }
 
 #[cfg(test)]
 mod tests {
+    use super::AccountsMap;
     use super::*;
 
     const TEST_PHRASE: &str =
@@ -572,6 +666,7 @@ mod tests {
 
         signer
             .add_key(DerivedKeyCreateInput::Import {
+                key_name: "Key".to_owned(),
                 phrase: SecUtf8::from(TEST_PHRASE),
                 password: SecUtf8::from("123"),
             })
@@ -587,13 +682,14 @@ mod tests {
         let mut signer = DerivedKeySigner::new();
         let entry = signer
             .add_key(DerivedKeyCreateInput::Import {
+                key_name: "Key".to_owned(),
                 phrase: SecUtf8::from(TEST_PHRASE),
                 password: SecUtf8::from("123"),
             })
             .await?;
 
         signer
-            .update_key(DerivedKeyUpdateParams {
+            .update_key(DerivedKeyUpdateParams::ChangePassword {
                 master_key: entry.master_key,
                 old_password: "123".to_owned().into(),
                 new_password: "321".to_owned().into(),
@@ -601,7 +697,7 @@ mod tests {
             .await?;
 
         assert!(signer
-            .update_key(DerivedKeyUpdateParams {
+            .update_key(DerivedKeyUpdateParams::ChangePassword {
                 master_key: entry.master_key,
                 old_password: SecUtf8::from("totally different"),
                 new_password: SecUtf8::from("321"),
@@ -610,5 +706,89 @@ mod tests {
             .is_err());
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn migrate_accounts_map() {
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Serialize, Deserialize, Debug)]
+        struct Wr(#[serde(with = "super::serde_accounts_map")] AccountsMap);
+
+        let map_str = r#"{"3030303030303030303030303030303030303030303030303030303030303030":{"account_id":0},"3030303030303030303030303030303030303030303030303030303030303031":{"account_id":1}}"#;
+        let wr: Wr = serde_json::from_str(map_str).unwrap();
+        assert_eq!(
+            wr.0[b"00000000000000000000000000000000"].name,
+            "3030...3030"
+        );
+        let map_str = r#"{"3030303030303030303030303030303030303030303030303030303030303030":{"account_id":0, "name":"lil"},"3030303030303030303030303030303030303030303030303030303030303031":{"account_id":1}}"#;
+        let wr: Wr = serde_json::from_str(map_str).unwrap();
+        assert_eq!(wr.0[b"00000000000000000000000000000000"].name, "lil");
+    }
+
+    #[tokio::test]
+    async fn store_load() {
+        let mut key = DerivedKeySigner::new();
+        let master = key
+            .add_key(DerivedKeyCreateInput::Import {
+                key_name: "from giver".into(),
+                phrase: TEST_PHRASE.into(),
+                password: "supasecret".into(),
+            })
+            .await
+            .unwrap()
+            .master_key;
+        key.add_key(DerivedKeyCreateInput::Derive {
+            key_name: "all my money 🤑".into(),
+            master_key: master,
+            password: "supasecret".into(),
+            account_id: 1,
+        })
+        .await
+        .unwrap();
+        key.add_key(DerivedKeyCreateInput::Derive {
+            key_name: "史萊克的模因.".into(),
+            master_key: master,
+            password: "supasecret".into(),
+            account_id: 2,
+        })
+        .await
+        .unwrap();
+        let serialized = key.store_state();
+
+        let mut loaded = DerivedKeySigner::new();
+        loaded.load_state(&serialized).unwrap();
+        assert_eq!(loaded, key);
+        println!("{}", serialized);
+    }
+
+    #[tokio::test]
+    async fn load_old() {
+        let json = r#"{
+    "master_keys": {
+        "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89": {
+            "public_key": "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89",
+            "salt": "c782d6aff7fac03173335ba42d6428ff7f67140e24f10cccd50d97275e55baaa",
+            "enc_entropy": "eb614567ea07d21b2df912462e375466d169c35fc93f8b5d2947c14580c5d0897f2fc13c4631ca4a1c264725523fc3acf2618e6c3957939b807ffbf1bff637d4899cfd75f4ea6d20f8a9774e7c5f13d1",
+            "entropy_nonce": "ba7e99f7e02fafc54f6118a9",
+            "enc_phrase": "8ae34ee2e87d80f1ef708a3025cd717e048522a0814529f5d27e04dad5b5d25628e80c5c022ed0bd2818348dca74729ec86e7d5537313c15079c305e9c3b982a518c9b3f2b9d5f1ab0be7065d6577ef58083e3f77d79a229b6216dbda961",
+            "phrase_nonce": "737a285244c779159a3904dd",
+            "accounts_map": {
+                "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89": {
+                    "name": "shrek",
+                    "account_id": 0
+                },
+                "4d5653ed69caaa8e0417d952728bd5dc99a6d53510328a059e3584450a6a0359": {
+                    "account_id": 2
+                },
+                "76fadb08e46bfeb71e63236a8bba9b2ce1f5025ea618837be24ead51ae7451fa": {
+                    "account_id": 1
+                }
+            }
+        }
+    }
+}"#;
+        let mut loaded = DerivedKeySigner::new();
+        loaded.load_state(&json).unwrap();
     }
 }
