@@ -268,3 +268,5 @@ pub enum LedgerKeyError {
     #[error("Method not supported")]
     MethodNotSupported,
 }
+
+mod test {}

@@ -10,15 +10,16 @@ use ring::rand::SecureRandom;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize, Serializer};
 
-use super::{default_key_name, PubKey};
 use crate::crypto::mnemonic::*;
 use crate::crypto::symmetric::*;
 use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
 use crate::utils::*;
 
+use super::{default_key_name, PubKey};
+
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, Eq, PartialEq)]
 pub struct DerivedKeySigner {
     master_keys: HashMap<[u8; 32], MasterKey>,
 }
@@ -81,7 +82,14 @@ impl StoreSigner for DerivedKeySigner {
                     Some(key) => key,
                     None => return Err(MasterKeyError::MasterKeyNotFound.into()),
                 };
-
+                let found = master_key
+                    .accounts_map
+                    .values()
+                    .find(|x| x.account_id == account_id)
+                    .is_some();
+                if found {
+                    return Err(MasterKeyError::DerivedKeyExists.into());
+                }
                 let decrypter =
                     ChaCha20Poly1305::new(&symmetric_key_from_password(password, &master_key.salt));
 
@@ -343,7 +351,7 @@ impl SignerStorage for DerivedKeySigner {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
 struct MasterKey {
     #[serde(with = "serde_public_key")]
     public_key: PublicKey,
@@ -470,7 +478,7 @@ struct EncryptedPart {
     phrase_nonce: Nonce,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 struct Account {
     name: String,
     account_id: u16,
@@ -640,10 +648,13 @@ enum MasterKeyError {
     DerivationError,
     #[error("Failed to generate random bytes")]
     FailedToGenerateRandomBytes,
+    #[error("Derived key already exists")]
+    DerivedKeyExists,
 }
 
 #[cfg(test)]
 mod tests {
+    use super::AccountsMap;
     use super::*;
 
     const TEST_PHRASE: &str =
@@ -695,5 +706,89 @@ mod tests {
             .is_err());
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn migrate_accounts_map() {
+        use serde::{Deserialize, Serialize};
+
+        #[derive(Serialize, Deserialize, Debug)]
+        struct Wr(#[serde(with = "super::serde_accounts_map")] AccountsMap);
+
+        let map_str = r#"{"3030303030303030303030303030303030303030303030303030303030303030":{"account_id":0},"3030303030303030303030303030303030303030303030303030303030303031":{"account_id":1}}"#;
+        let wr: Wr = serde_json::from_str(map_str).unwrap();
+        assert_eq!(
+            wr.0[b"00000000000000000000000000000000"].name,
+            "3030...3030"
+        );
+        let map_str = r#"{"3030303030303030303030303030303030303030303030303030303030303030":{"account_id":0, "name":"lil"},"3030303030303030303030303030303030303030303030303030303030303031":{"account_id":1}}"#;
+        let wr: Wr = serde_json::from_str(map_str).unwrap();
+        assert_eq!(wr.0[b"00000000000000000000000000000000"].name, "lil");
+    }
+
+    #[tokio::test]
+    async fn store_load() {
+        let mut key = DerivedKeySigner::new();
+        let master = key
+            .add_key(DerivedKeyCreateInput::Import {
+                key_name: "from giver".into(),
+                phrase: TEST_PHRASE.into(),
+                password: "supasecret".into(),
+            })
+            .await
+            .unwrap()
+            .master_key;
+        key.add_key(DerivedKeyCreateInput::Derive {
+            key_name: "all my money 🤑".into(),
+            master_key: master,
+            password: "supasecret".into(),
+            account_id: 1,
+        })
+        .await
+        .unwrap();
+        key.add_key(DerivedKeyCreateInput::Derive {
+            key_name: "史萊克的模因.".into(),
+            master_key: master,
+            password: "supasecret".into(),
+            account_id: 2,
+        })
+        .await
+        .unwrap();
+        let serialized = key.store_state();
+
+        let mut loaded = DerivedKeySigner::new();
+        loaded.load_state(&serialized).unwrap();
+        assert_eq!(loaded, key);
+        println!("{}", serialized);
+    }
+
+    #[tokio::test]
+    async fn load_old() {
+        let json = r#"{
+    "master_keys": {
+        "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89": {
+            "public_key": "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89",
+            "salt": "c782d6aff7fac03173335ba42d6428ff7f67140e24f10cccd50d97275e55baaa",
+            "enc_entropy": "eb614567ea07d21b2df912462e375466d169c35fc93f8b5d2947c14580c5d0897f2fc13c4631ca4a1c264725523fc3acf2618e6c3957939b807ffbf1bff637d4899cfd75f4ea6d20f8a9774e7c5f13d1",
+            "entropy_nonce": "ba7e99f7e02fafc54f6118a9",
+            "enc_phrase": "8ae34ee2e87d80f1ef708a3025cd717e048522a0814529f5d27e04dad5b5d25628e80c5c022ed0bd2818348dca74729ec86e7d5537313c15079c305e9c3b982a518c9b3f2b9d5f1ab0be7065d6577ef58083e3f77d79a229b6216dbda961",
+            "phrase_nonce": "737a285244c779159a3904dd",
+            "accounts_map": {
+                "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89": {
+                    "name": "shrek",
+                    "account_id": 0
+                },
+                "4d5653ed69caaa8e0417d952728bd5dc99a6d53510328a059e3584450a6a0359": {
+                    "account_id": 2
+                },
+                "76fadb08e46bfeb71e63236a8bba9b2ce1f5025ea618837be24ead51ae7451fa": {
+                    "account_id": 1
+                }
+            }
+        }
+    }
+}"#;
+        let mut loaded = DerivedKeySigner::new();
+        loaded.load_state(&json).unwrap();
     }
 }
