@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 
-use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
+use crate::crypto::{Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage};
 use crate::external::LedgerConnection;
 use crate::utils::*;
 
@@ -52,7 +52,11 @@ impl StoreSigner for LedgerKeySigner {
     type UpdateKeyInput = LedgerUpdateKeyInput;
     type SignInput = LedgerKeyPublic;
 
-    async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
+    async fn add_key(
+        &mut self,
+        _: SignerContext<'_>,
+        input: Self::CreateKeyInput,
+    ) -> Result<SignerEntry> {
         let master_key =
             ed25519_dalek::PublicKey::from_bytes(&self.connection.get_public_key(0).await?)?;
         let pubkey_bytes = self.connection.get_public_key(input.account_id).await?;
@@ -74,7 +78,11 @@ impl StoreSigner for LedgerKeySigner {
         }
     }
 
-    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry> {
+    async fn update_key(
+        &mut self,
+        _: SignerContext<'_>,
+        input: Self::UpdateKeyInput,
+    ) -> Result<SignerEntry> {
         match input {
             Self::UpdateKeyInput::Rename { public_key, name } => {
                 let key = self.get_key_mut(&public_key)?;
@@ -89,11 +97,19 @@ impl StoreSigner for LedgerKeySigner {
         }
     }
 
-    async fn export_key(&self, _input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
+    async fn export_key(
+        &self,
+        _: SignerContext<'_>,
+        _input: Self::ExportKeyInput,
+    ) -> Result<Self::ExportKeyOutput> {
         Err(LedgerKeyError::MethodNotSupported.into())
     }
 
-    async fn get_public_keys(&self, input: Self::GetPublicKeys) -> Result<Vec<PublicKey>> {
+    async fn get_public_keys(
+        &self,
+        _: SignerContext<'_>,
+        input: Self::GetPublicKeys,
+    ) -> Result<Vec<PublicKey>> {
         let mut result = Vec::with_capacity(input.limit as usize);
         for account_id in input.offset..input.offset.saturating_add(input.limit) {
             result.push(
@@ -108,6 +124,7 @@ impl StoreSigner for LedgerKeySigner {
 
     async fn sign(
         &self,
+        _: SignerContext<'_>,
         data: &[u8],
         input: Self::SignInput,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {

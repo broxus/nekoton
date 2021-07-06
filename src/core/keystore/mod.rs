@@ -2,26 +2,23 @@ use std::any::TypeId;
 use std::collections::hash_map::{self, HashMap};
 use std::collections::HashSet;
 use std::sync::Arc;
-use std::time::Duration;
 
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use futures::future;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Serialize, Serializer};
 use tokio::sync::RwLock;
 
-use self::password_cache::*;
-use crate::crypto::{Signature, Signer, SignerEntry, SignerStorage};
+use crate::crypto::{PasswordCache, Signature, Signer, SignerContext, SignerEntry, SignerStorage};
 use crate::external::Storage;
 use crate::utils::*;
-
-mod password_cache;
 
 const STORAGE_KEYSTORE: &str = "__core__keystore";
 
 pub struct KeyStore {
     state: RwLock<KeyStoreState>,
     storage: Arc<dyn Storage>,
+    password_cache: PasswordCache,
 }
 
 impl KeyStore {
@@ -59,7 +56,10 @@ impl KeyStore {
 
         let (signer_name, signer): (_, &mut T) = state.get_signer_entry::<T>()?;
 
-        let signer_entry = signer.add_key(input).await?;
+        let ctx = SignerContext {
+            password_cache: &self.password_cache,
+        };
+        let signer_entry = signer.add_key(ctx, input).await?;
         state.entries.insert(
             signer_entry.public_key.to_bytes(),
             (
@@ -81,7 +81,10 @@ impl KeyStore {
 
         let (signer_name, signer) = state.get_signer_entry::<T>()?;
 
-        let signer_entry = signer.update_key(input).await?;
+        let ctx = SignerContext {
+            password_cache: &self.password_cache,
+        };
+        let signer_entry = signer.update_key(ctx, input).await?;
 
         self.save(&state.signers).await?;
         Ok(KeyStoreEntry::from_signer_entry(signer_name, signer_entry))
@@ -92,7 +95,11 @@ impl KeyStore {
         T: Signer,
     {
         let state = self.state.read().await;
-        state.get_signer_ref::<T>()?.export_key(input).await
+
+        let ctx = SignerContext {
+            password_cache: &self.password_cache,
+        };
+        state.get_signer_ref::<T>()?.export_key(ctx, input).await
     }
 
     pub async fn get_public_keys<T>(&self, input: T::GetPublicKeys) -> Result<Vec<PublicKey>>
@@ -100,7 +107,14 @@ impl KeyStore {
         T: Signer,
     {
         let state = self.state.read().await;
-        state.get_signer_ref::<T>()?.get_public_keys(input).await
+
+        let ctx = SignerContext {
+            password_cache: &self.password_cache,
+        };
+        state
+            .get_signer_ref::<T>()?
+            .get_public_keys(ctx, input)
+            .await
     }
 
     pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<Signature>
@@ -108,7 +122,11 @@ impl KeyStore {
         T: Signer,
     {
         let state = self.state.read().await;
-        state.get_signer_ref::<T>()?.sign(data, input).await
+
+        let ctx = SignerContext {
+            password_cache: &self.password_cache,
+        };
+        state.get_signer_ref::<T>()?.sign(ctx, data, input).await
     }
 
     pub async fn remove_key(&self, public_key: &PublicKey) -> Result<Option<KeyStoreEntry>> {
@@ -170,7 +188,6 @@ impl KeyStore {
 struct KeyStoreState {
     signers: SignersMap,
     entries: EntriesMap,
-    _password_cache: PasswordCache,
 }
 
 type SignersMap = HashMap<TypeId, (String, Box<dyn SignerStorage>)>;
@@ -292,9 +309,9 @@ impl KeyStoreBuilder {
             state: RwLock::new(KeyStoreState {
                 signers: transpose_signers(self.signers),
                 entries,
-                _password_cache: PasswordCache::new()?,
             }),
             storage: self.storage,
+            password_cache: PasswordCache::new()?,
         })
     }
 
@@ -320,9 +337,9 @@ impl KeyStoreBuilder {
             state: RwLock::new(KeyStoreState {
                 signers: transpose_signers(self.signers),
                 entries,
-                _password_cache: PasswordCache::new().trust_me(),
             }),
             storage: self.storage,
+            password_cache: PasswordCache::new().trust_me(),
         }
     }
 
@@ -342,18 +359,6 @@ fn transpose_signers(signers: BuilderSignersMap) -> SignersMap {
         .into_iter()
         .map(|(name, (signer, type_id))| (type_id, (name, signer)))
         .collect()
-}
-
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-pub enum PasswordCacheBehavior {
-    Store(Duration),
-    Remove,
-}
-
-impl Default for PasswordCacheBehavior {
-    fn default() -> Self {
-        Self::Remove
-    }
 }
 
 #[derive(thiserror::Error, Debug, Copy, Clone)]

@@ -15,7 +15,10 @@ use serde::{Deserialize, Serialize};
 use super::mnemonic::*;
 use super::symmetric::*;
 use super::{default_key_name, PubKey};
-use crate::crypto::{Signer as StoreSigner, SignerEntry, SignerStorage};
+use crate::crypto::{
+    Password, PasswordCache, PasswordCacheTransaction, Signer as StoreSigner, SignerContext,
+    SignerEntry, SignerStorage,
+};
 use crate::utils::*;
 
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
@@ -54,8 +57,13 @@ impl StoreSigner for EncryptedKeySigner {
     type UpdateKeyInput = EncryptedKeyUpdateParams;
     type SignInput = EncryptedKeyPassword;
 
-    async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry> {
-        let key = EncryptedKey::new(
+    async fn add_key(
+        &mut self,
+        ctx: SignerContext<'_>,
+        input: Self::CreateKeyInput,
+    ) -> Result<SignerEntry> {
+        let (key, password) = EncryptedKey::new(
+            ctx.password_cache,
             input.password,
             input.mnemonic_type,
             input.phrase,
@@ -68,6 +76,8 @@ impl StoreSigner for EncryptedKeySigner {
             hash_map::Entry::Vacant(entry) => {
                 let name = key.inner.name.clone();
                 entry.insert(key);
+
+                password.proceed();
                 Ok(SignerEntry {
                     name,
                     public_key,
@@ -79,7 +89,11 @@ impl StoreSigner for EncryptedKeySigner {
         }
     }
 
-    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry> {
+    async fn update_key(
+        &mut self,
+        ctx: SignerContext<'_>,
+        input: Self::UpdateKeyInput,
+    ) -> Result<SignerEntry> {
         match input {
             Self::UpdateKeyInput::Rename { public_key, name } => {
                 let key = self.get_key_mut(&public_key)?;
@@ -96,8 +110,18 @@ impl StoreSigner for EncryptedKeySigner {
                 old_password,
                 new_password,
             } => {
+                let old_password = ctx
+                    .password_cache
+                    .process_password(public_key.to_bytes(), old_password)?;
+                let new_password = ctx
+                    .password_cache
+                    .process_password(public_key.to_bytes(), new_password)?;
+
                 let key = self.get_key_mut(&public_key)?;
-                key.change_password(old_password, new_password)?;
+                key.change_password(old_password.as_ref(), new_password.as_ref())?;
+
+                new_password.proceed();
+
                 Ok(SignerEntry {
                     name: key.inner.name.clone(),
                     public_key,
@@ -108,23 +132,51 @@ impl StoreSigner for EncryptedKeySigner {
         }
     }
 
-    async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput> {
+    async fn export_key(
+        &self,
+        ctx: SignerContext<'_>,
+        input: Self::ExportKeyInput,
+    ) -> Result<Self::ExportKeyOutput> {
         let key = self.get_key(&input.public_key)?;
+        let password = ctx
+            .password_cache
+            .process_password(input.public_key.to_bytes(), input.password)?;
+
+        let phrase = key.get_mnemonic(password.as_ref())?;
+
+        password.proceed();
         Ok(Self::ExportKeyOutput {
-            phrase: key.get_mnemonic(input.password)?,
+            phrase,
             mnemonic_type: key.mnemonic_type(),
         })
     }
 
     /// Does nothing useful, only exists for compatibility with other signers
-    async fn get_public_keys(&self, input: Self::GetPublicKeys) -> Result<Vec<PublicKey>> {
+    async fn get_public_keys(
+        &self,
+        _: SignerContext<'_>,
+        input: Self::GetPublicKeys,
+    ) -> Result<Vec<PublicKey>> {
         let _key = self.get_key(&input.public_key)?;
         Ok(vec![input.public_key])
     }
 
-    async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<[u8; 64]> {
+    async fn sign(
+        &self,
+        ctx: SignerContext<'_>,
+        data: &[u8],
+        input: Self::SignInput,
+    ) -> Result<[u8; 64]> {
         let key = self.get_key(&input.public_key)?;
-        key.sign(data, input.password)
+
+        let password = ctx
+            .password_cache
+            .process_password(input.public_key.to_bytes(), input.password)?;
+
+        let signature = key.sign(data, password.as_ref())?;
+
+        password.proceed();
+        Ok(signature)
     }
 }
 
@@ -204,14 +256,14 @@ pub struct EncryptedKeyCreateInput {
     pub name: String,
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
-    pub password: SecUtf8,
+    pub password: Password,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptedKeyPassword {
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
-    pub password: SecUtf8,
+    pub password: Password,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -237,8 +289,8 @@ pub enum EncryptedKeyUpdateParams {
     ChangePassword {
         #[serde(with = "crate::utils::serde_public_key")]
         public_key: PublicKey,
-        old_password: SecUtf8,
-        new_password: SecUtf8,
+        old_password: Password,
+        new_password: Password,
     },
 }
 
@@ -251,11 +303,12 @@ pub struct EncryptedKey {
 
 impl EncryptedKey {
     pub fn new(
-        password: SecUtf8,
+        password_cache: &'_ PasswordCache,
+        password: Password,
         mnemonic_type: MnemonicType,
         phrase: SecUtf8,
         name: String,
-    ) -> Result<Self> {
+    ) -> Result<(Self, PasswordCacheTransaction<'_>)> {
         let rng = ring::rand::SystemRandom::new();
 
         // prepare nonce
@@ -273,11 +326,14 @@ impl EncryptedKey {
         rng.fill(salt.as_mut_slice())
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
 
-        // prepare encryptor
-        let encryptor = ChaCha20Poly1305::new(&symmetric_key_from_password(password, &salt));
-
         let phrase = phrase.unsecure();
         let keypair = derive_from_phrase(phrase, mnemonic_type)?;
+
+        let password = password_cache.process_password(keypair.public.to_bytes(), password)?;
+
+        // prepare encryptor
+        let encryptor =
+            ChaCha20Poly1305::new(&symmetric_key_from_password(password.as_ref(), &salt));
 
         // encrypt private key
         let pubkey = keypair.public;
@@ -287,21 +343,24 @@ impl EncryptedKey {
         // encrypt seed phrase
         let encrypted_seed_phrase = encrypt(&encryptor, &seed_phrase_nonce, phrase.as_ref())?;
 
-        Ok(Self {
-            inner: CryptoData {
-                name,
-                mnemonic_type,
-                pubkey,
-                encrypted_private_key,
-                private_key_nonce,
-                encrypted_seed_phrase,
-                seed_phrase_nonce,
-                salt,
+        Ok((
+            Self {
+                inner: CryptoData {
+                    name,
+                    mnemonic_type,
+                    pubkey,
+                    encrypted_private_key,
+                    private_key_nonce,
+                    encrypted_seed_phrase,
+                    seed_phrase_nonce,
+                    salt,
+                },
             },
-        })
+            password,
+        ))
     }
 
-    pub fn get_mnemonic(&self, password: SecUtf8) -> Result<SecUtf8, EncryptedKeyError> {
+    pub fn get_mnemonic(&self, password: &str) -> Result<SecUtf8, EncryptedKeyError> {
         let salt = &self.inner.salt;
         let password = symmetric_key_from_password(password, salt);
         let dec = ChaCha20Poly1305::new(&password);
@@ -317,7 +376,7 @@ impl EncryptedKey {
         ))
     }
 
-    pub fn get_key_pair(&self, password: SecUtf8) -> Result<Keypair, EncryptedKeyError> {
+    pub fn get_key_pair(&self, password: &str) -> Result<Keypair, EncryptedKeyError> {
         let password = symmetric_key_from_password(password, &self.inner.salt);
         decrypt_key_pair(
             &self.inner.encrypted_private_key,
@@ -334,7 +393,7 @@ impl EncryptedKey {
         Ok(EncryptedKey { inner: crypto_data })
     }
 
-    pub fn change_password(&mut self, old_password: SecUtf8, new_password: SecUtf8) -> Result<()> {
+    pub fn change_password(&mut self, old_password: &str, new_password: &str) -> Result<()> {
         let rng = ring::rand::SystemRandom::new();
 
         // prepare nonce
@@ -395,7 +454,7 @@ impl EncryptedKey {
     pub fn sign(
         &self,
         data: &[u8],
-        password: SecUtf8,
+        password: &str,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         self.inner.sign(data, password)
     }
@@ -447,7 +506,7 @@ impl CryptoData {
     pub fn sign(
         &self,
         data: &[u8],
-        password: SecUtf8,
+        password: &str,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let key = symmetric_key_from_password(password, &*self.salt);
         let decrypter = ChaCha20Poly1305::new(&key);
@@ -558,8 +617,14 @@ mod tests {
 
     #[test]
     fn test_init() {
-        let password = SecUtf8::from(TEST_PASSWORD);
+        let cache = PasswordCache::new().unwrap();
+
+        let password = Password::Explicit {
+            password: SecUtf8::from(TEST_PASSWORD),
+            cache_behavior: Default::default(),
+        };
         EncryptedKey::new(
+            &cache,
             password,
             MnemonicType::Legacy,
             TEST_MNEMONIC.into(),
@@ -570,8 +635,14 @@ mod tests {
 
     #[test]
     fn test_bad_password() {
-        let password = SecUtf8::from(TEST_PASSWORD);
-        let signer = EncryptedKey::new(
+        let cache = PasswordCache::new().unwrap();
+
+        let password = Password::Explicit {
+            password: SecUtf8::from(TEST_PASSWORD),
+            cache_behavior: Default::default(),
+        };
+        let (signer, _) = EncryptedKey::new(
+            &cache,
             password,
             MnemonicType::Legacy,
             TEST_MNEMONIC.into(),
@@ -608,33 +679,60 @@ mod tests {
 
     #[tokio::test]
     async fn store_load() {
+        let cache = PasswordCache::new().unwrap();
+        let ctx = SignerContext {
+            password_cache: &cache,
+        };
+
         let mut key = EncryptedKeySigner::new();
+
         let master = key
-            .add_key(EncryptedKeyCreateInput {
-                name: "from giver".to_string(),
-                phrase: TEST_MNEMONIC.into(),
-                mnemonic_type: MnemonicType::Labs(0),
-                password: "supasecret".into(),
-            })
+            .add_key(
+                ctx,
+                EncryptedKeyCreateInput {
+                    name: "from giver".to_string(),
+                    phrase: TEST_MNEMONIC.into(),
+                    mnemonic_type: MnemonicType::Labs(0),
+                    password: Password::Explicit {
+                        password: SecUtf8::from("supasecret"),
+                        cache_behavior: Default::default(),
+                    },
+                },
+            )
             .await
             .unwrap()
             .master_key;
-        key.add_key(EncryptedKeyCreateInput {
-            name: "all my money 🤑".to_string(),
-            phrase: TEST_MNEMONIC.into(),
-            mnemonic_type: MnemonicType::Labs(1),
-            password: "supasecret".into(),
-        })
+
+        key.add_key(
+            ctx,
+            EncryptedKeyCreateInput {
+                name: "all my money 🤑".to_string(),
+                phrase: TEST_MNEMONIC.into(),
+                mnemonic_type: MnemonicType::Labs(1),
+                password: Password::Explicit {
+                    password: SecUtf8::from("supasecret"),
+                    cache_behavior: Default::default(),
+                },
+            },
+        )
         .await
         .unwrap();
-        key.add_key(EncryptedKeyCreateInput {
-            name: "史萊克的模因".to_string(),
-            phrase: TEST_MNEMONIC.into(),
-            mnemonic_type: MnemonicType::Labs(2),
-            password: "supasecret".into(),
-        })
+
+        key.add_key(
+            ctx,
+            EncryptedKeyCreateInput {
+                name: "史萊克的模因".to_string(),
+                phrase: TEST_MNEMONIC.into(),
+                mnemonic_type: MnemonicType::Labs(2),
+                password: Password::Explicit {
+                    password: SecUtf8::from("supasecret"),
+                    cache_behavior: Default::default(),
+                },
+            },
+        )
         .await
         .unwrap();
+
         let serialized = key.store_state();
         println!("{}", serialized);
 

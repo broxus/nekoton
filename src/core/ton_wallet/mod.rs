@@ -284,7 +284,9 @@ impl TonWallet {
         }
     }
 
-    pub async fn fetch_pending_transactions(&mut self) -> Result<Vec<MultisigPendingTransaction>> {
+    pub async fn fetch_unconfirmed_transactions(
+        &mut self,
+    ) -> Result<Vec<MultisigPendingTransaction>> {
         match self.contract_type {
             ContractType::Multisig(multisig_type) => {
                 let account_stuff = self.get_contract_state().await?;
