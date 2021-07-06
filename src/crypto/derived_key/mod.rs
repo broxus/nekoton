@@ -722,8 +722,10 @@ enum MasterKeyError {
 
 #[cfg(test)]
 mod tests {
-    use super::AccountsMap;
+    use std::time::Duration;
+
     use super::*;
+    use crate::crypto::PasswordCacheBehavior;
 
     const TEST_PHRASE: &str =
         "pioneer fever hazard scan install wise reform corn bubble leisure amazing note";
@@ -737,7 +739,7 @@ mod tests {
             password_cache: &cache,
         };
 
-        signer
+        let master_key = signer
             .add_key(
                 ctx,
                 DerivedKeyCreateInput::Import {
@@ -745,13 +747,25 @@ mod tests {
                     phrase: SecUtf8::from(TEST_PHRASE),
                     password: Password::Explicit {
                         password: SecUtf8::from("123"),
-                        cache_behavior: Default::default(),
+                        cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(1)),
                     },
                 },
             )
-            .await?;
+            .await?
+            .master_key;
 
         assert!(!signer.master_keys.is_empty());
+
+        signer
+            .export_key(
+                ctx,
+                DerivedKeyExportParams {
+                    master_key,
+                    password: Password::FromCache,
+                },
+            )
+            .await
+            .unwrap();
 
         Ok(())
     }

@@ -2,6 +2,7 @@ use std::any::TypeId;
 use std::collections::hash_map::{self, HashMap};
 use std::collections::HashSet;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
@@ -28,6 +29,10 @@ impl KeyStore {
             signers: Default::default(),
             signer_types: Default::default(),
         }
+    }
+
+    pub fn is_password_cached(&self, id: &[u8; 32], duration: Duration) -> bool {
+        self.password_cache.contains(id, duration)
     }
 
     pub async fn get_entries(&self) -> Vec<KeyStoreEntry> {

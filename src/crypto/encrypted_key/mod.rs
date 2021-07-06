@@ -686,22 +686,20 @@ mod tests {
 
         let mut key = EncryptedKeySigner::new();
 
-        let master = key
-            .add_key(
-                ctx,
-                EncryptedKeyCreateInput {
-                    name: "from giver".to_string(),
-                    phrase: TEST_MNEMONIC.into(),
-                    mnemonic_type: MnemonicType::Labs(0),
-                    password: Password::Explicit {
-                        password: SecUtf8::from("supasecret"),
-                        cache_behavior: Default::default(),
-                    },
+        key.add_key(
+            ctx,
+            EncryptedKeyCreateInput {
+                name: "from giver".to_string(),
+                phrase: TEST_MNEMONIC.into(),
+                mnemonic_type: MnemonicType::Labs(0),
+                password: Password::Explicit {
+                    password: SecUtf8::from("supasecret"),
+                    cache_behavior: Default::default(),
                 },
-            )
-            .await
-            .unwrap()
-            .master_key;
+            },
+        )
+        .await
+        .unwrap();
 
         key.add_key(
             ctx,
