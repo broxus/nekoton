@@ -5,7 +5,7 @@ use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
 use ton_types::{BuilderData, UInt256};
 
 use super::StandaloneToken;
-use crate::utils::*;
+use nekoton_utils::*;
 
 #[derive(Debug)]
 pub struct MessageBuilder<'a> {

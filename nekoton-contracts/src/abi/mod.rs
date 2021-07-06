@@ -1,8 +1,6 @@
 use once_cell::sync::OnceCell;
 use ton_abi::Contract;
 
-use crate::utils::TrustMe;
-
 macro_rules! declare_abi {
     ($($contract:ident => $source:literal),*$(,)?) => {$(
         pub fn $contract() -> &'static Contract {
@@ -34,6 +32,6 @@ trait OnceCellExt {
 
 impl OnceCellExt for OnceCell<Contract> {
     fn load(&self, data: &[u8]) -> &Contract {
-        self.get_or_init(|| Contract::load(&mut std::io::Cursor::new(data)).trust_me())
+        self.get_or_init(|| Contract::load(&mut std::io::Cursor::new(data)).expect("Trust me"))
     }
 }

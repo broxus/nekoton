@@ -5,7 +5,7 @@ use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::{Cell, UInt256};
 
 use super::StandaloneToken;
-use crate::utils::*;
+use nekoton_utils::*;
 
 pub trait TokenValueExt {
     fn unnamed(self) -> Token;

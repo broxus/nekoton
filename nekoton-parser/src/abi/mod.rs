@@ -10,8 +10,9 @@ use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
 use ton_types::{SliceData, UInt256};
 
-use crate::core::models::{GenTimings, LastTransactionId};
-use crate::utils::*;
+use nekoton_models::GenTimings;
+use nekoton_models::LastTransactionId;
+use nekoton_utils::*;
 
 pub use self::function_builder::*;
 pub use self::message_builder::*;

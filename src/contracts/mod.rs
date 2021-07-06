@@ -1,2 +1,1 @@
-pub mod abi;
-pub mod code;
+pub use nekoton_contracts::*;

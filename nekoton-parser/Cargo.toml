@@ -1,0 +1,37 @@
+[package]
+name = "nekoton-parser"
+version = "0.1.0"
+authors = ["Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.13"
+chrono = "0.4.19"
+ed25519-dalek = "1.0"
+failure = "0.1.8"
+hex = "0.4"
+log = "0.4"
+num-bigint = { version = "0.2", features = ["serde"] }
+num-traits = "0.2.14"
+serde = { version = "1.0", features = ["derive"] }
+sha2 = "0.9"
+thiserror = "1.0"
+
+ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi.git" }
+ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "original", package = "ton_api", optional = true }
+ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
+ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
+ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
+ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
+
+nekoton-utils = { path = "../nekoton-utils" }
+nekoton-models = { path = "../nekoton-models" }
+
+[dev-dependencies]
+cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
+hex = "0.4.3"
+pretty_assertions = "0.7.1"
+nekoton-contracts = {path ="../nekoton-contracts"}
