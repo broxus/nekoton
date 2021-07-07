@@ -1,10 +1,10 @@
-use std::borrow::Cow;
+use anyhow::Result;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use anyhow::Result;
+use crate::contracts;
 use ed25519_dalek::PublicKey;
 use futures::{Future, FutureExt, Stream};
 use num_bigint::BigUint;
@@ -12,7 +12,6 @@ use num_traits::ToPrimitive;
 use once_cell::sync::OnceCell;
 use ton_block::{MsgAddressInt, Serializable};
 
-use crate::contracts;
 use crate::core::models::*;
 #[cfg(feature = "wallet")]
 use crate::crypto::{SignedMessage, UnsignedMessage};
@@ -20,6 +19,8 @@ use crate::helpers::abi::{self, ContractResult, FunctionExt, IntoParser, ParseTo
 use crate::transport::models::RawTransaction;
 use crate::transport::Transport;
 use crate::utils::*;
+#[cfg(feature = "wallet")]
+use std::borrow::Cow;
 
 struct InputMessage(Vec<ton_abi::Token>);
 
