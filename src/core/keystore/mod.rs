@@ -39,16 +39,12 @@ impl KeyStore {
         let state = self.state.read().await;
         state
             .entries
-            .iter()
-            .filter_map(|(public_key, (master_key, account_id, type_id))| {
-                let signer_name = state.signers.get(type_id)?.0.clone();
-
-                Some(KeyStoreEntry {
-                    signer_name,
-                    public_key: PublicKey::from_bytes(public_key).trust_me(),
-                    master_key: *master_key,
-                    account_id: *account_id,
-                })
+            .values()
+            .filter_map(|(type_id, signer_entry)| {
+                Some(KeyStoreEntry::from_signer_entry(
+                    state.signers.get(type_id)?.0.clone(),
+                    signer_entry.clone(),
+                ))
             })
             .collect()
     }
@@ -59,7 +55,7 @@ impl KeyStore {
     {
         let mut state = self.state.write().await;
 
-        let (signer_name, signer): (_, &mut T) = state.get_signer_entry::<T>()?;
+        let (signer_name, signer): (_, &mut T) = state.get_signer_mut::<T>()?;
 
         let ctx = SignerContext {
             password_cache: &self.password_cache,
@@ -67,11 +63,7 @@ impl KeyStore {
         let signer_entry = signer.add_key(ctx, input).await?;
         state.entries.insert(
             signer_entry.public_key.to_bytes(),
-            (
-                signer_entry.master_key,
-                signer_entry.account_id,
-                TypeId::of::<T>(),
-            ),
+            (TypeId::of::<T>(), signer_entry.clone()),
         );
 
         self.save(&state.signers).await?;
@@ -84,12 +76,16 @@ impl KeyStore {
     {
         let mut state = self.state.write().await;
 
-        let (signer_name, signer) = state.get_signer_entry::<T>()?;
+        let (signer_name, signer): (_, &mut T) = state.get_signer_mut::<T>()?;
 
         let ctx = SignerContext {
             password_cache: &self.password_cache,
         };
         let signer_entry = signer.update_key(ctx, input).await?;
+        state.entries.insert(
+            signer_entry.public_key.to_bytes(),
+            (TypeId::of::<T>(), signer_entry.clone()),
+        );
 
         self.save(&state.signers).await?;
         Ok(KeyStoreEntry::from_signer_entry(signer_name, signer_entry))
@@ -138,7 +134,7 @@ impl KeyStore {
         let mut state = self.state.write().await;
 
         let signer_id = match state.entries.remove(public_key.as_bytes()) {
-            Some((_, _, signer_id)) => signer_id,
+            Some((signer_id, _)) => signer_id,
             None => return Ok(None),
         };
 
@@ -196,7 +192,7 @@ struct KeyStoreState {
 }
 
 type SignersMap = HashMap<TypeId, (String, Box<dyn SignerStorage>)>;
-type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (PublicKey, u16, TypeId)>;
+type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (TypeId, SignerEntry)>;
 
 impl KeyStoreState {
     fn get_signer_ref<T>(&self) -> Result<&T>
@@ -211,7 +207,7 @@ impl KeyStoreState {
         Ok(signer)
     }
 
-    fn get_signer_entry<T>(&mut self) -> Result<(String, &mut T)>
+    fn get_signer_mut<T>(&mut self) -> Result<(String, &mut T)>
     where
         T: Signer,
     {
@@ -232,20 +228,15 @@ impl SignerEntry {
     fn into_plain(
         self,
         type_id: TypeId,
-    ) -> (
-        [u8; ed25519_dalek::PUBLIC_KEY_LENGTH],
-        (PublicKey, u16, TypeId),
-    ) {
-        (
-            self.public_key.to_bytes(),
-            (self.master_key, self.account_id, type_id),
-        )
+    ) -> ([u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (TypeId, Self)) {
+        (self.public_key.to_bytes(), (type_id, self))
     }
 }
 
 #[derive(Clone, Debug, Serialize)]
 pub struct KeyStoreEntry {
     pub signer_name: String,
+    pub name: String,
     #[serde(with = "crate::utils::serde_public_key")]
     pub public_key: PublicKey,
     #[serde(with = "crate::utils::serde_public_key")]
@@ -257,6 +248,7 @@ impl KeyStoreEntry {
     fn from_signer_entry(signer_name: String, signer_entry: SignerEntry) -> Self {
         Self {
             signer_name,
+            name: signer_entry.name,
             public_key: signer_entry.public_key,
             master_key: signer_entry.master_key,
             account_id: signer_entry.account_id,
