@@ -14,10 +14,9 @@ use serde::{Deserialize, Serialize};
 
 use super::mnemonic::*;
 use super::symmetric::*;
-use super::{default_key_name, PubKey};
-use crate::crypto::{
-    Password, PasswordCache, PasswordCacheTransaction, Signer as StoreSigner, SignerContext,
-    SignerEntry, SignerStorage,
+use super::{
+    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey,
+    Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
 use crate::utils::*;
 
@@ -253,7 +252,7 @@ impl SignerStorage for EncryptedKeySigner {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EncryptedKeyCreateInput {
-    pub name: String,
+    pub name: Option<String>,
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
     pub password: Password,
@@ -307,7 +306,7 @@ impl EncryptedKey {
         password: Password,
         mnemonic_type: MnemonicType,
         phrase: SecUtf8,
-        name: String,
+        name: Option<String>,
     ) -> Result<(Self, PasswordCacheTransaction<'_>)> {
         let rng = ring::rand::SystemRandom::new();
 
@@ -328,6 +327,8 @@ impl EncryptedKey {
 
         let phrase = phrase.unsecure();
         let keypair = derive_from_phrase(phrase, mnemonic_type)?;
+
+        let name = name.unwrap_or_else(|| default_key_name(keypair.public.as_bytes()));
 
         let password = password_cache.process_password(keypair.public.to_bytes(), password)?;
 
@@ -628,7 +629,7 @@ mod tests {
             password,
             MnemonicType::Legacy,
             TEST_MNEMONIC.into(),
-            "Test".to_owned(),
+            Some("Test".to_owned()),
         )
         .unwrap();
     }
@@ -646,7 +647,7 @@ mod tests {
             password,
             MnemonicType::Legacy,
             TEST_MNEMONIC.into(),
-            "Test".to_owned(),
+            Some("Test".to_owned()),
         )
         .unwrap();
 
@@ -689,7 +690,7 @@ mod tests {
         key.add_key(
             ctx,
             EncryptedKeyCreateInput {
-                name: "from giver".to_string(),
+                name: Some("from giver".to_string()),
                 phrase: TEST_MNEMONIC.into(),
                 mnemonic_type: MnemonicType::Labs(0),
                 password: Password::Explicit {
@@ -704,7 +705,7 @@ mod tests {
         key.add_key(
             ctx,
             EncryptedKeyCreateInput {
-                name: "all my money 🤑".to_string(),
+                name: Some("all my money 🤑".to_string()),
                 phrase: TEST_MNEMONIC.into(),
                 mnemonic_type: MnemonicType::Labs(1),
                 password: Password::Explicit {
@@ -719,7 +720,7 @@ mod tests {
         key.add_key(
             ctx,
             EncryptedKeyCreateInput {
-                name: "史萊克的模因".to_string(),
+                name: Some("史萊克的模因".to_string()),
                 phrase: TEST_MNEMONIC.into(),
                 mnemonic_type: MnemonicType::Labs(2),
                 password: Password::Explicit {

@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 
-use crate::crypto::{Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage};
+use super::{default_key_name, Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage};
 use crate::external::LedgerConnection;
 use crate::utils::*;
 
@@ -62,7 +62,11 @@ impl StoreSigner for LedgerKeySigner {
         let pubkey_bytes = self.connection.get_public_key(input.account_id).await?;
         let public_key = ed25519_dalek::PublicKey::from_bytes(&pubkey_bytes)?;
 
-        let key = LedgerKey::new(input.name, input.account_id, public_key, master_key)?;
+        let name = input
+            .name
+            .unwrap_or_else(|| default_key_name(public_key.as_bytes()));
+
+        let key = LedgerKey::new(name, input.account_id, public_key, master_key)?;
         let name = key.name.clone();
         match self.keys.entry(public_key.to_bytes()) {
             hash_map::Entry::Vacant(entry) => {
@@ -207,7 +211,7 @@ impl SignerStorage for LedgerKeySigner {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LedgerKeyCreateInput {
-    pub name: String,
+    pub name: Option<String>,
     pub account_id: u16,
 }
 

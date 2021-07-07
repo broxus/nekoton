@@ -10,15 +10,13 @@ use ring::rand::SecureRandom;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::crypto::mnemonic::*;
-use crate::crypto::symmetric::*;
-use crate::crypto::{
-    Password, PasswordCache, PasswordCacheTransaction, Signer as StoreSigner, SignerContext,
-    SignerEntry, SignerStorage,
+use super::mnemonic::*;
+use super::symmetric::*;
+use super::{
+    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey,
+    Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
 use crate::utils::*;
-
-use super::{default_key_name, PubKey};
 
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
@@ -60,8 +58,8 @@ impl StoreSigner for DerivedKeySigner {
                 password,
                 key_name,
             } => {
-                let (master_key, password) =
-                    MasterKey::new(ctx.password_cache, password, phrase, key_name.clone())?;
+                let (master_key, key_name, password) =
+                    MasterKey::new(ctx.password_cache, password, phrase, key_name)?;
                 let public_key = master_key.public_key;
 
                 match self.master_keys.entry(public_key.to_bytes()) {
@@ -116,6 +114,9 @@ impl StoreSigner for DerivedKeySigner {
                 )?;
 
                 let public_key = derive_from_master(account_id, master.unsecure())?.public;
+
+                let key_name = key_name.unwrap_or_else(|| default_key_name(public_key.as_bytes()));
+
                 master_key.accounts_map.insert(
                     public_key.to_bytes(),
                     Account {
@@ -442,14 +443,16 @@ impl MasterKey {
         password_cache: &'_ PasswordCache,
         password: Password,
         phrase: SecUtf8,
-        key_name: String,
-    ) -> Result<(Self, PasswordCacheTransaction<'_>)> {
+        key_name: Option<String>,
+    ) -> Result<(Self, String, PasswordCacheTransaction<'_>)> {
         use zeroize::Zeroize;
 
         let mut phrase = phrase.unsecure().to_string();
 
         // SECURITY: private key will be zeroized here
         let public_key = derive_from_phrase(&phrase, MnemonicType::Labs(0))?.public;
+
+        let key_name = key_name.unwrap_or_else(|| default_key_name(public_key.as_bytes()));
 
         let password = password_cache.process_password(public_key.to_bytes(), password)?;
 
@@ -469,7 +472,7 @@ impl MasterKey {
         accounts_map.insert(
             public_key.to_bytes(),
             Account {
-                name: key_name,
+                name: key_name.clone(),
                 account_id: 0,
             },
         );
@@ -484,6 +487,7 @@ impl MasterKey {
                 phrase_nonce,
                 accounts_map,
             },
+            key_name,
             password,
         ))
     }
@@ -614,12 +618,12 @@ pub enum DerivedKeyUpdateParams {
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum DerivedKeyCreateInput {
     Import {
-        key_name: String,
+        key_name: Option<String>,
         phrase: SecUtf8,
         password: Password,
     },
     Derive {
-        key_name: String,
+        key_name: Option<String>,
         #[serde(with = "serde_public_key")]
         master_key: PublicKey,
         account_id: u16,
@@ -743,7 +747,7 @@ mod tests {
             .add_key(
                 ctx,
                 DerivedKeyCreateInput::Import {
-                    key_name: "Key".to_owned(),
+                    key_name: Some("Key".to_owned()),
                     phrase: SecUtf8::from(TEST_PHRASE),
                     password: Password::Explicit {
                         password: SecUtf8::from("123"),
@@ -783,7 +787,7 @@ mod tests {
             .add_key(
                 ctx,
                 DerivedKeyCreateInput::Import {
-                    key_name: "Key".to_owned(),
+                    key_name: Some("Key".to_owned()),
                     phrase: SecUtf8::from(TEST_PHRASE),
                     password: Password::Explicit {
                         password: SecUtf8::from("123"),
@@ -862,7 +866,7 @@ mod tests {
             .add_key(
                 ctx,
                 DerivedKeyCreateInput::Import {
-                    key_name: "from giver".into(),
+                    key_name: Some("from giver".into()),
                     phrase: TEST_PHRASE.into(),
                     password: Password::Explicit {
                         password: SecUtf8::from("supasecret"),
@@ -876,7 +880,7 @@ mod tests {
         key.add_key(
             ctx,
             DerivedKeyCreateInput::Derive {
-                key_name: "all my money 🤑".into(),
+                key_name: Some("all my money 🤑".into()),
                 master_key: master,
                 password: Password::Explicit {
                     password: SecUtf8::from("supasecret"),
@@ -890,7 +894,7 @@ mod tests {
         key.add_key(
             ctx,
             DerivedKeyCreateInput::Derive {
-                key_name: "史萊克的模因.".into(),
+                key_name: Some("史萊克的模因.".into()),
                 master_key: master,
                 password: Password::Explicit {
                     password: SecUtf8::from("supasecret"),
