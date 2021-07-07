@@ -602,6 +602,12 @@ impl TryFrom<InputMessage> for MultisigSendTransaction {
 pub fn parse_transaction_additional_info(
     tx: &ton_block::Transaction,
 ) -> Option<TransactionAdditionalInfo> {
+    if let Some(multisig_transaction) = parse_multisig_transaction(tx) {
+        return Some(TransactionAdditionalInfo::MultisigTransaction(
+            multisig_transaction,
+        ));
+    }
+
     let depool_notifications = DePoolParticipantFunctions::instance();
     let token_notifications = WalletNotificationFunctions::instance();
 
@@ -665,10 +671,6 @@ pub fn parse_transaction_additional_info(
         TonEventStatusChanged::try_from(InputMessage(inputs))
             .map(|event| TransactionAdditionalInfo::TonEventStatusChanged(event.new_status))
             .ok()
-    } else if let Some(multisig_transaction) = parse_multisig_transaction(tx) {
-        Some(TransactionAdditionalInfo::MultisigTransaction(
-            multisig_transaction,
-        ))
     } else {
         None
     }
