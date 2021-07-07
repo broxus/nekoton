@@ -10,6 +10,7 @@ pub use derived_key::*;
 pub use encrypted_key::*;
 pub use ledger_key::*;
 pub use mnemonic::*;
+pub use password_cache::*;
 
 use crate::utils::*;
 
@@ -17,6 +18,7 @@ mod derived_key;
 mod encrypted_key;
 mod ledger_key;
 mod mnemonic;
+mod password_cache;
 mod symmetric;
 
 pub type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
@@ -55,12 +57,36 @@ pub trait Signer: SignerStorage {
     type UpdateKeyInput: Serialize + DeserializeOwned;
     type SignInput: Serialize + DeserializeOwned;
 
-    async fn add_key(&mut self, input: Self::CreateKeyInput) -> Result<SignerEntry>;
-    async fn update_key(&mut self, input: Self::UpdateKeyInput) -> Result<SignerEntry>;
-    async fn export_key(&self, input: Self::ExportKeyInput) -> Result<Self::ExportKeyOutput>;
-    async fn get_public_keys(&self, input: Self::GetPublicKeys) -> Result<Vec<PublicKey>>;
+    async fn add_key(
+        &mut self,
+        ctx: SignerContext<'_>,
+        input: Self::CreateKeyInput,
+    ) -> Result<SignerEntry>;
 
-    async fn sign(&self, data: &[u8], input: Self::SignInput) -> Result<Signature>;
+    async fn update_key(
+        &mut self,
+        ctx: SignerContext<'_>,
+        input: Self::UpdateKeyInput,
+    ) -> Result<SignerEntry>;
+
+    async fn export_key(
+        &self,
+        ctx: SignerContext<'_>,
+        input: Self::ExportKeyInput,
+    ) -> Result<Self::ExportKeyOutput>;
+
+    async fn get_public_keys(
+        &self,
+        ctx: SignerContext<'_>,
+        input: Self::GetPublicKeys,
+    ) -> Result<Vec<PublicKey>>;
+
+    async fn sign(
+        &self,
+        ctx: SignerContext<'_>,
+        data: &[u8],
+        input: Self::SignInput,
+    ) -> Result<Signature>;
 }
 
 #[async_trait]
@@ -74,6 +100,11 @@ pub trait SignerStorage: Downcast + Send + Sync {
 }
 
 impl_downcast!(SignerStorage);
+
+#[derive(Copy, Clone)]
+pub struct SignerContext<'a> {
+    pub password_cache: &'a PasswordCache,
+}
 
 pub trait WithPublicKey {
     fn public_key(&self) -> &PublicKey;

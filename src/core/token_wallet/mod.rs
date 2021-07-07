@@ -16,7 +16,6 @@ use crate::transport::models::{ExistingContract, RawContractState, RawTransactio
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
 
-#[derive(Clone)]
 pub struct TokenWallet {
     transport: Arc<dyn Transport>,
     contract_subscription: ContractSubscription,

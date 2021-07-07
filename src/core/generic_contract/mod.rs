@@ -12,7 +12,6 @@ use crate::core::utils;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 
-#[derive(Clone)]
 pub struct GenericContract {
     contract_subscription: ContractSubscription,
     handler: Arc<dyn GenericContractSubscriptionHandler>,
