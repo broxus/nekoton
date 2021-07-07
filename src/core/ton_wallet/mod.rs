@@ -217,7 +217,7 @@ impl TonWallet {
                     &self.public_key,
                     self.contract_type,
                     current_state,
-                    self.contract_subscription.contract_state().clone(),
+                    *self.contract_subscription.contract_state(),
                 )?;
 
                 let has_multiple_owners = match &self.wallet_data.custodians {
@@ -382,6 +382,7 @@ impl WalletData {
             .last_transaction_id
             .ok_or(TonWalletError::LastTransactionNotFound)?;
 
+        // Extract custodians
         if self.custodians.is_none() {
             self.custodians = Some(multisig::get_custodians(
                 multisig_type,
@@ -398,6 +399,12 @@ impl WalletData {
             None => unsafe { std::hint::unreachable_unchecked() },
         };
 
+        // Skip pending transactions extraction for single custodian
+        if custodians.len() < 2 {
+            return Ok(());
+        }
+
+        // Extract pending transactions
         let pending_transactions = multisig::get_pending_transaction(
             multisig_type,
             Cow::Borrowed(account_stuff),
