@@ -1,5 +1,6 @@
 pub use nekoton_utils::*;
 
+#[cfg(feature = "wallet")]
 pub mod serde_nonce {
     use chacha20poly1305::Nonce;
 
@@ -29,6 +30,7 @@ pub mod serde_nonce {
     }
 }
 
+#[cfg(feature = "wallet")]
 pub mod serde_public_key {
     use serde::de::Error;
     use serde::Deserialize;
@@ -51,6 +53,7 @@ pub mod serde_public_key {
     }
 }
 
+#[cfg(feature = "wallet")]
 pub mod serde_vec_public_key {
     use serde::de::Error;
     use serde::de::SeqAccess;

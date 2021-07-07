@@ -54,7 +54,9 @@
 pub use nekoton_utils::define_string_enum;
 pub mod contracts;
 pub mod core;
+#[cfg(feature = "wallet")]
 pub mod crypto;
+#[cfg(feature = "wallet")]
 pub mod external;
 pub mod helpers;
 pub mod transport;
