@@ -9,7 +9,7 @@ use ton_types::UInt256;
 
 use super::utils;
 use crate::utils::*;
-pub use nekoton_models::*;
+pub use nekoton_parser::models::*;
 
 #[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]

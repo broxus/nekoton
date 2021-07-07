@@ -10,8 +10,7 @@ use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
 use ton_types::{SliceData, UInt256};
 
-use nekoton_models::GenTimings;
-use nekoton_models::LastTransactionId;
+use super::models::{GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
 pub use self::function_builder::*;
@@ -447,6 +446,7 @@ mod tests {
     use ton_types::serialize_toc;
 
     use super::*;
+    use crate::models::GenTimings;
 
     #[test]
     fn test_run_local() {

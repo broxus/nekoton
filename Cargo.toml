@@ -8,13 +8,13 @@ authors = [
 edition = "2018"
 
 [workspace]
-members = ["nekoton-utils", "nekoton-parser","nekoton-models", "nekoton-contracts"]
+members = ["nekoton-utils", "nekoton-parser","nekoton-contracts"]
 
 [dependencies]
 nekoton-utils = { path = "nekoton-utils" }
-nekoton-models = { path = "nekoton-models" }
 nekoton-parser = { path = "nekoton-parser" }
 nekoton-contracts = {path = "nekoton-contracts"}
+
 aes = { version = "0.7.2", features = ["ctr"], default-features = false, optional = true }
 cipher = { version = "0.3.0", default-features = false, optional = true }
 
