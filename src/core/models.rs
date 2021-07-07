@@ -21,6 +21,7 @@ pub enum TransactionAdditionalInfo {
     TokenWalletDeployed(TokenWalletDeployedNotification),
     EthEventStatusChanged(EthEventStatus),
     TonEventStatusChanged(TonEventStatus),
+    MultisigTransaction(MultisigTransaction),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Copy)]
