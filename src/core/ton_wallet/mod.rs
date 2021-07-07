@@ -294,35 +294,19 @@ impl TonWallet {
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
-        let mut wallet_data = WalletData {
-            custodians: self.wallet_data.custodians.take(),
-            unconfirmed_transactions: Vec::new(),
-        };
-
-        match self
-            .contract_subscription
+        self.contract_subscription
             .refresh(
                 make_contract_state_handler(
                     &self.handler,
                     &self.public_key,
                     self.contract_type,
-                    &mut wallet_data,
+                    &mut self.wallet_data,
                 ),
                 make_transactions_handler(&self.handler),
                 make_message_sent_handler(&self.handler),
                 make_message_expired_handler(&self.handler),
             )
             .await
-        {
-            Ok(_) => {
-                self.wallet_data = wallet_data;
-                Ok(())
-            }
-            Err(e) => {
-                self.wallet_data.custodians = wallet_data.custodians;
-                Err(e)
-            }
-        }
     }
 
     pub async fn handle_block(&mut self, block: &ton_block::Block) -> Result<()> {
