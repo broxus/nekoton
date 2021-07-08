@@ -181,12 +181,19 @@ pub fn compute_contract_address(
     })
 }
 
-pub static DETAILS: TonWalletDetails = TonWalletDetails {
-    requires_separate_deploy: true,
-    min_amount: 1000000, // 0.001 TON
-    supports_payload: true,
-    supports_multiple_owners: true,
-};
+pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
+    TonWalletDetails {
+        requires_separate_deploy: true,
+        min_amount: 1000000, // 0.001 TON
+        supports_payload: true,
+        supports_multiple_owners: true,
+        expiration_time: match multisig_type {
+            MultisigType::SafeMultisigWallet | MultisigType::SetcodeMultisigWallet => 3600,
+            MultisigType::SurfWallet => 3601,
+            MultisigType::SafeMultisigWallet24h => 86400,
+        },
+    }
+}
 
 fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> ton_block::StateInit {
     let mut code = match multisig_type {

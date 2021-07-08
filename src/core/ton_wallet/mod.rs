@@ -599,6 +599,7 @@ pub struct TonWalletDetails {
     pub min_amount: u64,
     pub supports_payload: bool,
     pub supports_multiple_owners: bool,
+    pub expiration_time: u32,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -610,7 +611,7 @@ pub enum ContractType {
 impl ContractType {
     pub fn details(&self) -> TonWalletDetails {
         match self {
-            ContractType::Multisig(_) => multisig::DETAILS,
+            ContractType::Multisig(multisig_type) => multisig::ton_wallet_details(*multisig_type),
             ContractType::WalletV3 => wallet_v3::DETAILS,
         }
     }
