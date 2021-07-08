@@ -194,6 +194,7 @@ pub static DETAILS: TonWalletDetails = TonWalletDetails {
     min_amount: 1, // 0.000000001 TON
     supports_payload: true,
     supports_multiple_owners: false,
+    expiration_time: 0,
 };
 
 /// `WalletV3` init data
