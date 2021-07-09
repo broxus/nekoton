@@ -1,6 +1,6 @@
 [package]
 name = "nekoton"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
     "Ivan Kalinin <i.kalinin@dexpa.io>"
