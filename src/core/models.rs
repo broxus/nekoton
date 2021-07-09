@@ -395,6 +395,8 @@ pub struct TokenWalletDetails {
     /// Owner wallet address
     #[serde(with = "serde_address")]
     pub owner_address: MsgAddressInt,
+    #[serde(skip)]
+    pub code: Option<ton_types::Cell>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
