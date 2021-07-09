@@ -45,7 +45,7 @@ tokio = { version = "1.4", default-features = false, features = ["sync"] }
 x25519-dalek = "1.1"
 zeroize = "1.2.0"
 
-ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi.git" }
+ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
 ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "original", package = "ton_api", optional = true }
 ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
