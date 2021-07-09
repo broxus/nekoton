@@ -665,12 +665,15 @@ fn parse_token_wallet_details(
 
     let root_address = tuple.parse_next()?;
 
-    if matches!(
+    let code = if matches!(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
     ) {
-        let _code: ton_types::Cell = tuple.parse_next()?;
-    }
+        let code: ton_types::Cell = tuple.parse_next()?;
+        Some(code)
+    } else {
+        None
+    };
 
     let _wallet_public_key: ton_types::UInt256 = tuple.parse_next()?;
     let owner_address = tuple.parse_next()?;
@@ -678,6 +681,7 @@ fn parse_token_wallet_details(
     Ok(TokenWalletDetails {
         root_address,
         owner_address,
+        code,
     })
 }
 
