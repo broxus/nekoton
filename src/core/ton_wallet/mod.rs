@@ -9,20 +9,19 @@ use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 use ton_types::{SliceData, UInt256};
 
-use crate::core::{utils, InternalMessage};
-use crate::crypto::UnsignedMessage;
-use crate::helpers;
-use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
-use crate::transport::Transport;
-use crate::utils::*;
-
+pub use self::multisig::MultisigType;
 use super::models::{
     ContractState, Expiration, MultisigPendingTransaction, PendingTransaction, Transaction,
     TransactionAdditionalInfo, TransactionId, TransactionWithData, TransactionsBatchInfo,
 };
 use super::{ContractSubscription, PollingMethod};
-
-pub use self::multisig::MultisigType;
+use crate::core::parsing::*;
+use crate::core::InternalMessage;
+use crate::crypto::UnsignedMessage;
+use crate::helpers;
+use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
+use crate::transport::Transport;
+use crate::utils::*;
 
 mod multisig;
 mod wallet_v3;
@@ -31,7 +30,7 @@ pub const DEFAULT_WORKCHAIN: i8 = 0;
 
 pub struct TonWallet {
     public_key: PublicKey,
-    contract_type: ContractType,
+    wallet_type: WalletType,
     contract_subscription: ContractSubscription,
     handler: Arc<dyn TonWalletSubscriptionHandler>,
     wallet_data: WalletData,
@@ -41,24 +40,24 @@ impl TonWallet {
     pub async fn subscribe(
         transport: Arc<dyn Transport>,
         public_key: PublicKey,
-        contract_type: ContractType,
+        wallet_type: WalletType,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
     ) -> Result<Self> {
-        let address = compute_address(&public_key, contract_type, DEFAULT_WORKCHAIN);
+        let address = compute_address(&public_key, wallet_type, DEFAULT_WORKCHAIN);
 
         let mut wallet_data = WalletData::default();
 
         let contract_subscription = ContractSubscription::subscribe(
             transport,
             address,
-            make_contract_state_handler(&handler, &public_key, contract_type, &mut wallet_data),
-            make_transactions_handler(&handler),
+            make_contract_state_handler(&handler, &public_key, wallet_type, &mut wallet_data),
+            make_transactions_handler(&handler, wallet_type),
         )
         .await?;
 
         Ok(Self {
             public_key,
-            contract_type,
+            wallet_type,
             contract_subscription,
             handler,
             wallet_data,
@@ -70,7 +69,7 @@ impl TonWallet {
         address: MsgAddressInt,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
     ) -> Result<Self> {
-        let (public_key, contract_type) = match transport.get_contract_state(&address).await? {
+        let (public_key, wallet_type) = match transport.get_contract_state(&address).await? {
             RawContractState::Exists(contract) => extract_wallet_init_data(&contract)?,
             RawContractState::NotExists => return Err(TonWalletError::AccountNotExists.into()),
         };
@@ -80,14 +79,14 @@ impl TonWallet {
         let contract_subscription = ContractSubscription::subscribe(
             transport,
             address,
-            make_contract_state_handler(&handler, &public_key, contract_type, &mut wallet_data),
-            make_transactions_handler(&handler),
+            make_contract_state_handler(&handler, &public_key, wallet_type, &mut wallet_data),
+            make_transactions_handler(&handler, wallet_type),
         )
         .await?;
 
         Ok(Self {
             public_key,
-            contract_type,
+            wallet_type,
             contract_subscription,
             handler,
             wallet_data,
@@ -107,16 +106,16 @@ impl TonWallet {
             make_contract_state_handler(
                 &handler,
                 &existing_wallet.public_key,
-                existing_wallet.contract_type,
+                existing_wallet.wallet_type,
                 &mut wallet_data,
             ),
-            make_transactions_handler(&handler),
+            make_transactions_handler(&handler, existing_wallet.wallet_type),
         )
         .await?;
 
         Ok(Self {
             public_key: existing_wallet.public_key,
-            contract_type: existing_wallet.contract_type,
+            wallet_type: existing_wallet.wallet_type,
             contract_subscription,
             handler,
             wallet_data,
@@ -131,8 +130,8 @@ impl TonWallet {
         &self.public_key
     }
 
-    pub fn contract_type(&self) -> ContractType {
-        self.contract_type
+    pub fn wallet_type(&self) -> WalletType {
+        self.wallet_type
     }
 
     pub fn contract_state(&self) -> &ContractState {
@@ -148,7 +147,7 @@ impl TonWallet {
     }
 
     pub fn details(&self) -> TonWalletDetails {
-        self.contract_type.details()
+        self.wallet_type.details()
     }
 
     pub fn get_unconfirmed_transactions(&self) -> &[MultisigPendingTransaction] {
@@ -160,9 +159,9 @@ impl TonWallet {
     }
 
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
-        match self.contract_type {
-            ContractType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expiration),
-            ContractType::Multisig(multisig_type) => multisig::prepare_deploy(
+        match self.wallet_type {
+            WalletType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expiration),
+            WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
                 &self.public_key,
                 multisig_type,
                 expiration,
@@ -178,15 +177,15 @@ impl TonWallet {
         custodians: &[PublicKey],
         req_confirms: u8,
     ) -> Result<Box<dyn UnsignedMessage>> {
-        match self.contract_type {
-            ContractType::Multisig(multisig_type) => multisig::prepare_deploy(
+        match self.wallet_type {
+            WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
                 &self.public_key,
                 multisig_type,
                 expiration,
                 custodians,
                 req_confirms,
             ),
-            ContractType::WalletV3 => Err(TonWalletError::InvalidContractType.into()),
+            WalletType::WalletV3 => Err(TonWalletError::InvalidContractType.into()),
         }
     }
 
@@ -201,8 +200,8 @@ impl TonWallet {
         body: Option<SliceData>,
         expiration: Expiration,
     ) -> Result<TransferAction> {
-        match self.contract_type {
-            ContractType::Multisig(_) => {
+        match self.wallet_type {
+            WalletType::Multisig(_) => {
                 match &current_state.storage.state {
                     ton_block::AccountState::AccountFrozen(_) => {
                         return Err(TonWalletError::AccountIsFrozen.into())
@@ -215,7 +214,7 @@ impl TonWallet {
 
                 self.wallet_data.update(
                     &self.public_key,
-                    self.contract_type,
+                    self.wallet_type,
                     current_state,
                     *self.contract_subscription.contract_state(),
                 )?;
@@ -236,7 +235,7 @@ impl TonWallet {
                     expiration,
                 )
             }
-            ContractType::WalletV3 => wallet_v3::prepare_transfer(
+            WalletType::WalletV3 => wallet_v3::prepare_transfer(
                 public_key,
                 current_state,
                 destination,
@@ -255,8 +254,8 @@ impl TonWallet {
         transaction_id: u64,
         expiration: Expiration,
     ) -> Result<Box<dyn UnsignedMessage>> {
-        match self.contract_type {
-            ContractType::Multisig(multisig_type) => {
+        match self.wallet_type {
+            WalletType::Multisig(multisig_type) => {
                 let gen_timings = self.contract_state().gen_timings;
                 let last_transaction_id = &self
                     .contract_state()
@@ -281,7 +280,7 @@ impl TonWallet {
                     expiration,
                 )
             }
-            ContractType::WalletV3 => Err(TonWalletError::PendingTransactionNotFound.into()),
+            WalletType::WalletV3 => Err(TonWalletError::PendingTransactionNotFound.into()),
         }
     }
 
@@ -299,10 +298,10 @@ impl TonWallet {
                 make_contract_state_handler(
                     &self.handler,
                     &self.public_key,
-                    self.contract_type,
+                    self.wallet_type,
                     &mut self.wallet_data,
                 ),
-                make_transactions_handler(&self.handler),
+                make_transactions_handler(&self.handler, self.wallet_type),
                 make_message_sent_handler(&self.handler),
                 make_message_expired_handler(&self.handler),
             )
@@ -314,7 +313,7 @@ impl TonWallet {
 
         let new_account_state = self.contract_subscription.handle_block(
             block,
-            make_transactions_handler(&self.handler),
+            make_transactions_handler(&self.handler, self.wallet_type),
             make_message_sent_handler(&self.handler),
             make_message_expired_handler(&self.handler),
         )?;
@@ -328,7 +327,10 @@ impl TonWallet {
 
     pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
         self.contract_subscription
-            .preload_transactions(from, make_transactions_handler(&self.handler))
+            .preload_transactions(
+                from,
+                make_transactions_handler(&self.handler, self.wallet_type),
+            )
             .await
     }
 
@@ -347,13 +349,13 @@ impl WalletData {
     fn update(
         &mut self,
         public_key: &PublicKey,
-        contract_type: ContractType,
+        wallet_type: WalletType,
         account_stuff: &ton_block::AccountStuff,
         contract_state: ContractState,
     ) -> Result<()> {
-        let multisig_type = match contract_type {
-            ContractType::Multisig(multisig_type) => multisig_type,
-            ContractType::WalletV3 => {
+        let multisig_type = match wallet_type {
+            WalletType::Multisig(multisig_type) => multisig_type,
+            WalletType::WalletV3 => {
                 if self.custodians.is_none() {
                     self.custodians = Some(vec![public_key.to_bytes().into()]);
                 }
@@ -403,7 +405,7 @@ impl WalletData {
     }
 }
 
-pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKey, ContractType)> {
+pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKey, WalletType)> {
     let (code, data) = match &contract.account.storage.state {
         ton_block::AccountState::AccountActive(ton_block::StateInit {
             code: Some(code),
@@ -416,22 +418,22 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
     let code_hash = code.repr_hash();
     if let Some(multisig_type) = multisig::guess_multisig_type(&code_hash) {
         let public_key = helpers::abi::extract_public_key(&contract.account)?;
-        Ok((public_key, ContractType::Multisig(multisig_type)))
+        Ok((public_key, WalletType::Multisig(multisig_type)))
     } else if wallet_v3::is_wallet_v3(&code_hash) {
         let public_key =
             PublicKey::from_bytes(wallet_v3::InitData::try_from(data)?.public_key()).trust_me();
-        Ok((public_key, ContractType::WalletV3))
+        Ok((public_key, WalletType::WalletV3))
     } else {
         Err(TonWalletError::InvalidContractType.into())
     }
 }
 
-const WALLET_TYPES_BY_POPULARITY: [ContractType; 5] = [
-    ContractType::Multisig(MultisigType::SurfWallet),
-    ContractType::WalletV3,
-    ContractType::Multisig(MultisigType::SafeMultisigWallet),
-    ContractType::Multisig(MultisigType::SetcodeMultisigWallet),
-    ContractType::Multisig(MultisigType::SafeMultisigWallet24h),
+const WALLET_TYPES_BY_POPULARITY: [WalletType; 5] = [
+    WalletType::Multisig(MultisigType::SurfWallet),
+    WalletType::WalletV3,
+    WalletType::Multisig(MultisigType::SafeMultisigWallet),
+    WalletType::Multisig(MultisigType::SetcodeMultisigWallet),
+    WalletType::Multisig(MultisigType::SafeMultisigWallet24h),
 ];
 
 pub async fn find_existing_wallets(
@@ -443,15 +445,15 @@ pub async fn find_existing_wallets(
 
     WALLET_TYPES_BY_POPULARITY
         .iter()
-        .map(|&contract_type| async move {
-            let address = compute_address(public_key, contract_type, workchain_id);
+        .map(|&wallet_type| async move {
+            let address = compute_address(public_key, wallet_type, workchain_id);
 
             let contract_state = transport.get_contract_state(&address).await?;
 
             Ok(ExistingWalletInfo {
                 address,
                 public_key: *public_key,
-                contract_type,
+                wallet_type,
                 contract_state: contract_state.brief(),
             })
         })
@@ -463,7 +465,7 @@ pub async fn find_existing_wallets(
 pub struct ExistingWalletInfo {
     pub address: MsgAddressInt,
     pub public_key: PublicKey,
-    pub contract_type: ContractType,
+    pub wallet_type: WalletType,
     pub contract_state: ContractState,
 }
 
@@ -526,7 +528,7 @@ enum TonWalletError {
 fn make_contract_state_handler<'a, T>(
     handler: &'a T,
     public_key: &'a PublicKey,
-    contract_type: ContractType,
+    wallet_type: WalletType,
     wallet_data: &'a mut WalletData,
 ) -> impl FnMut(&RawContractState) + 'a
 where
@@ -536,7 +538,7 @@ where
         if let RawContractState::Exists(contract_state) = contract_state {
             if let Err(e) = wallet_data.update(
                 public_key,
-                contract_type,
+                wallet_type,
                 &contract_state.account,
                 contract_state.brief(),
             ) {
@@ -549,16 +551,22 @@ where
 
 fn make_transactions_handler<T>(
     handler: &'_ T,
+    wallet_type: WalletType,
 ) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_
 where
     T: AsRef<dyn TonWalletSubscriptionHandler>,
 {
     move |transactions, batch_info| {
-        let transactions = utils::convert_transactions_with_data(
-            transactions,
-            utils::parse_transaction_additional_info,
-        )
-        .collect();
+        let transactions = transactions
+            .into_iter()
+            .filter_map(move |transaction| {
+                let data = parse_transaction_additional_info(&transaction.data, wallet_type);
+                let transaction =
+                    Transaction::try_from((transaction.hash, transaction.data)).ok()?;
+                Some(TransactionWithData { transaction, data })
+            })
+            .collect();
+
         handler
             .as_ref()
             .on_transactions_found(transactions, batch_info)
@@ -603,21 +611,21 @@ pub struct TonWalletDetails {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub enum ContractType {
+pub enum WalletType {
     Multisig(MultisigType),
     WalletV3,
 }
 
-impl ContractType {
+impl WalletType {
     pub fn details(&self) -> TonWalletDetails {
         match self {
-            ContractType::Multisig(multisig_type) => multisig::ton_wallet_details(*multisig_type),
-            ContractType::WalletV3 => wallet_v3::DETAILS,
+            WalletType::Multisig(multisig_type) => multisig::ton_wallet_details(*multisig_type),
+            WalletType::WalletV3 => wallet_v3::DETAILS,
         }
     }
 }
 
-impl FromStr for ContractType {
+impl FromStr for WalletType {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -628,7 +636,7 @@ impl FromStr for ContractType {
     }
 }
 
-impl std::fmt::Display for ContractType {
+impl std::fmt::Display for WalletType {
     fn fmt(&self, f: &'_ mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::WalletV3 => f.write_str("WalletV3"),
@@ -639,14 +647,14 @@ impl std::fmt::Display for ContractType {
 
 pub fn compute_address(
     public_key: &PublicKey,
-    contract_type: ContractType,
+    wallet_type: WalletType,
     workchain_id: i8,
 ) -> MsgAddressInt {
-    match contract_type {
-        ContractType::Multisig(multisig_type) => {
+    match wallet_type {
+        WalletType::Multisig(multisig_type) => {
             multisig::compute_contract_address(public_key, multisig_type, workchain_id)
         }
-        ContractType::WalletV3 => wallet_v3::compute_contract_address(public_key, workchain_id),
+        WalletType::WalletV3 => wallet_v3::compute_contract_address(public_key, workchain_id),
     }
 }
 

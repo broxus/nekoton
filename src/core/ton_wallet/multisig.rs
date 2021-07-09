@@ -6,10 +6,10 @@ use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
 use ton_types::{SliceData, UInt256};
 
-use super::utils::*;
 use super::{TonWalletDetails, TransferAction, DEFAULT_WORKCHAIN};
 use crate::contracts;
 use crate::core::models::{Expiration, GenTimings, LastTransactionId, MultisigPendingTransaction};
+use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
 use crate::helpers::abi::{self, BigUint128, FunctionExt, IntoParser, MessageBuilder, ParseToken};
 use crate::utils::*;
