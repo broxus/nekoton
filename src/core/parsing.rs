@@ -62,7 +62,7 @@ pub fn parse_transaction_additional_info(
 
     let int_header = match in_msg.header() {
         ton_block::CommonMsgInfo::ExtInMsgInfo(_) => {
-            let (known_payload, method) = match wallet_type {
+            let (recipient, known_payload, method) = match wallet_type {
                 WalletType::WalletV3 => {
                     let mut out_msg = None;
                     tx.out_msgs
@@ -73,32 +73,46 @@ pub fn parse_transaction_additional_info(
                         .ok()?;
 
                     let out_msg = out_msg?;
-                    if !matches!(out_msg.header(), ton_block::CommonMsgInfo::IntMsgInfo(_)) {
-                        return None;
-                    }
+                    let recipient = match out_msg.header() {
+                        ton_block::CommonMsgInfo::IntMsgInfo(header) => &header.dst,
+                        _ => return None,
+                    };
 
                     let known_payload = out_msg.body().and_then(parse_payload);
 
-                    (known_payload, WalletInteractionMethod::WalletV3Transfer)
+                    (
+                        Some(recipient.clone()),
+                        known_payload,
+                        WalletInteractionMethod::WalletV3Transfer,
+                    )
                 }
                 WalletType::Multisig(_) => {
                     let method = parse_multisig_transaction_impl(in_msg, tx)?;
-                    let known_payload = match &method {
+                    let (recipient, known_payload) = match &method {
                         MultisigTransaction::Submit(MultisigSubmitTransaction {
-                            payload, ..
+                            payload,
+                            dest,
+                            ..
                         })
-                        | MultisigTransaction::Send(MultisigSendTransaction { payload, .. }) => {
-                            parse_payload(payload.clone().into())
-                        }
-                        MultisigTransaction::Confirm(_) => None,
+                        | MultisigTransaction::Send(MultisigSendTransaction {
+                            payload,
+                            dest,
+                            ..
+                        }) => (Some(dest.clone()), parse_payload(payload.clone().into())),
+                        MultisigTransaction::Confirm(_) => (None, None),
                     };
 
-                    (known_payload, WalletInteractionMethod::Multisig(method))
+                    (
+                        recipient,
+                        known_payload,
+                        WalletInteractionMethod::Multisig(method),
+                    )
                 }
             };
 
             return Some(TransactionAdditionalInfo::WalletInteraction(Box::new(
                 WalletInteractionInfo {
+                    recipient,
                     known_payload,
                     method,
                 },
@@ -789,6 +803,7 @@ mod tests {
             TransactionAdditionalInfo::WalletInteraction(info) if matches!(
                 *info,
                 WalletInteractionInfo {
+                    recipient: Some(_),
                     known_payload: None,
                     method: WalletInteractionMethod::WalletV3Transfer,
                 }
@@ -809,6 +824,7 @@ mod tests {
             TransactionAdditionalInfo::WalletInteraction(info) if matches!(
                 *info,
                 WalletInteractionInfo {
+                    recipient: Some(_),
                     known_payload: None,
                     method: WalletInteractionMethod::Multisig(MultisigTransaction::Submit(_))
                 }
@@ -828,6 +844,7 @@ mod tests {
             TransactionAdditionalInfo::WalletInteraction(info) if matches!(
                 *info,
                 WalletInteractionInfo {
+                    recipient: None,
                     known_payload: None,
                     method: WalletInteractionMethod::Multisig(MultisigTransaction::Confirm(_))
                 }

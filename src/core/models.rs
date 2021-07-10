@@ -33,6 +33,8 @@ pub enum TransactionAdditionalInfo {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WalletInteractionInfo {
+    #[serde(with = "serde_optional_address")]
+    pub recipient: Option<MsgAddressInt>,
     pub known_payload: Option<KnownPayload>,
     pub method: WalletInteractionMethod,
 }
