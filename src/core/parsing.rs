@@ -64,7 +64,15 @@ pub fn parse_transaction_additional_info(
         ton_block::CommonMsgInfo::ExtInMsgInfo(_) => {
             let (known_payload, method) = match wallet_type {
                 WalletType::WalletV3 => {
-                    let out_msg = tx.out_msgs.get(&0).ok().flatten()?.0;
+                    let mut out_msg = None;
+                    tx.out_msgs
+                        .iterate(|item| {
+                            out_msg = Some(item.0);
+                            Ok(false)
+                        })
+                        .ok()?;
+
+                    let out_msg = out_msg?;
                     if !matches!(out_msg.header(), ton_block::CommonMsgInfo::IntMsgInfo(_)) {
                         return None;
                     }
@@ -770,6 +778,22 @@ mod tests {
             parse_transaction_additional_info(&tx, WalletType::WalletV3).unwrap(),
             TransactionAdditionalInfo::EthEventStatusChanged(EthEventStatus::Confirmed)
         ));
+    }
+
+    #[test]
+    fn test_parse_wallet_v3_transfer() {
+        let tx = Transaction::construct_from_base64("te6ccgECCgEAAkgAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAOsYeZvcH4TzG78Qm4432VnPT2nEy4Ms4gzZ+kR9Dc3m2ovCml6wAADqzLEDICYOmNuQADRpPeiIBQQBAhEMggEGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAPgixOHXZ98UI4dij2WkyFV1pxMvMnheV/eiEMi5McOJkBQFgwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnKb5t2GaSGpykknfbY8sbLCoUmDjRnHY8ac6h6aQu56Ln3v5XCybUkA/gfrXRR3FEMh6/ByWbJu6d1D4Gxa7IrOAgHgCAYBAd8HALFIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeXACpIUU0cjZrf+7sFTI6lrXc8XGXyI3A1FeN+lKQC4ozy0O5rKAAGFFhgAAAdYw8ze4TB0xtyQAHfiAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlgOVFdAK7dI4eTxuEFTOhLxRr9wbXDgGzg0hdU9yZ5Fh4kK1kUZwoNhGrMoZQuRfhZC579ikC131c9r3A1GPZdA6XUlsUwdMb1gAABcAHAkAaEIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeWh3NZQAAAAAAAAAAAAAAAAAAA=").unwrap();
+
+        assert!(matches!(
+            parse_transaction_additional_info(&tx, WalletType::WalletV3).unwrap(),
+            TransactionAdditionalInfo::WalletInteraction(info) if matches!(
+                *info,
+                WalletInteractionInfo {
+                    known_payload: None,
+                    method: WalletInteractionMethod::WalletV3Transfer,
+                }
+            )
+        ))
     }
 
     #[test]
