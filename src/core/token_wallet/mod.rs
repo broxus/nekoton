@@ -5,10 +5,10 @@ use anyhow::Result;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 
-use super::utils::*;
 use super::{ContractSubscription, InternalMessage};
 use crate::contracts;
 use crate::core::models::*;
+use crate::core::parsing::*;
 use crate::helpers::abi::{
     self, BigUint128, BigUint256, FunctionArg, FunctionExt, IntoParser, TokenValueExt,
 };

@@ -15,13 +15,42 @@ use crate::utils::*;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum TransactionAdditionalInfo {
+    /// Transaction with incoming message, which body is valid UTF-8 comment
     Comment(String),
+    /// DePool notification
     DePoolOnRoundComplete(DePoolOnRoundCompleteNotification),
+    /// DePool notification
     DePoolReceiveAnswer(DePoolReceiveAnswerNotification),
+    /// Token wallet notification
     TokenWalletDeployed(TokenWalletDeployedNotification),
+    /// Eth event notification
     EthEventStatusChanged(EthEventStatus),
+    /// Ton event notification
     TonEventStatusChanged(TonEventStatus),
-    MultisigTransaction(MultisigTransaction),
+    /// User interaction with wallet contract
+    WalletInteraction(Box<WalletInteractionInfo>),
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WalletInteractionInfo {
+    pub known_payload: Option<KnownPayload>,
+    pub method: WalletInteractionMethod,
+}
+
+#[non_exhaustive]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum KnownPayload {
+    Comment(String),
+    TokenOutgoingTransfer(TokenOutgoingTransfer),
+    TokenSwapBack(TokenSwapBack),
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum WalletInteractionMethod {
+    WalletV3Transfer,
+    Multisig(MultisigTransaction),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Copy)]
