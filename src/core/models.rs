@@ -428,6 +428,8 @@ pub struct TokenWalletDetails {
     pub owner_address: MsgAddressInt,
     #[serde(skip)]
     pub code: Option<ton_types::Cell>,
+    #[serde(skip)]
+    pub wallet_public_key: UInt256,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

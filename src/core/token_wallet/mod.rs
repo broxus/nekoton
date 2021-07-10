@@ -688,13 +688,14 @@ fn parse_token_wallet_details(
         None
     };
 
-    let _wallet_public_key: ton_types::UInt256 = tuple.parse_next()?;
+    let wallet_public_key: ton_types::UInt256 = tuple.parse_next()?;
     let owner_address = tuple.parse_next()?;
 
     Ok(TokenWalletDetails {
         root_address,
         owner_address,
         code,
+        wallet_public_key,
     })
 }
 
