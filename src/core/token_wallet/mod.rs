@@ -582,6 +582,19 @@ impl BriefRootTokenContractDetails {
 pub struct TokenWalletContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> TokenWalletContractState<'a> {
+    pub fn get_code_hash(&self) -> Result<ton_types::UInt256> {
+        match &self.0.account.storage.state {
+            ton_block::AccountState::AccountActive(state) => {
+                let code = state
+                    .code
+                    .as_ref()
+                    .ok_or(TokenWalletError::WalletNotDeployed)?;
+                Ok(code.repr_hash())
+            }
+            _ => Err(TokenWalletError::WalletNotDeployed.into()),
+        }
+    }
+
     pub fn get_balance(&self, version: TokenWalletVersion) -> Result<BigUint> {
         let mut function = abi::FunctionBuilder::new("balance")
             .default_headers()
@@ -1020,6 +1033,8 @@ enum TokenWalletError {
     InvalidTonEventContract,
     #[error("Non-zero execution result code")]
     NonZeroResultCode,
+    #[error("Wallet not deployed")]
+    WalletNotDeployed,
 }
 
 #[cfg(test)]
