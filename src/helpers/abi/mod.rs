@@ -212,7 +212,7 @@ impl<'a> FunctionAbi<'a> {
     fn run_local(
         &self,
         account_stuff: ton_block::AccountStuff,
-        timings: GenTimings,
+        _timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
@@ -231,7 +231,7 @@ impl<'a> FunctionAbi<'a> {
 
         let BlockStats {
             gen_utime, gen_lt, ..
-        } = get_block_stats(timings, last_transaction_id);
+        } = get_block_stats(None, last_transaction_id);
 
         let tvm::ActionPhaseOutput {
             messages,
@@ -353,7 +353,10 @@ struct BlockStats {
     last_transaction_lt: u64,
 }
 
-fn get_block_stats(timings: GenTimings, last_transaction_id: &LastTransactionId) -> BlockStats {
+fn get_block_stats(
+    timings: Option<GenTimings>,
+    last_transaction_id: &LastTransactionId,
+) -> BlockStats {
     // Additional estimated logical time offset for the latest transaction id
     pub const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
 
@@ -363,14 +366,14 @@ fn get_block_stats(timings: GenTimings, last_transaction_id: &LastTransactionId)
     };
 
     match timings {
-        GenTimings::Unknown => BlockStats {
-            gen_utime: Utc::now().timestamp() as u32,
-            gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
-            last_transaction_lt,
-        },
-        GenTimings::Known { gen_lt, gen_utime } => BlockStats {
+        Some(GenTimings::Known { gen_lt, gen_utime }) => BlockStats {
             gen_utime,
             gen_lt,
+            last_transaction_lt,
+        },
+        _ => BlockStats {
+            gen_utime: Utc::now().timestamp() as u32,
+            gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
             last_transaction_lt,
         },
     }
@@ -380,14 +383,14 @@ impl Executor {
     pub fn new(
         config: BlockchainConfig,
         account_stuff: AccountStuff,
-        timings: GenTimings,
+        _timings: GenTimings,
         last_transaction_id: &LastTransactionId,
     ) -> Self {
         let BlockStats {
             gen_utime,
             gen_lt,
             last_transaction_lt,
-        } = get_block_stats(timings, last_transaction_id);
+        } = get_block_stats(None, last_transaction_id);
 
         Self {
             config,
