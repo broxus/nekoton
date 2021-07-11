@@ -651,8 +651,8 @@ mod tests {
         )
         .unwrap();
 
-        println!("{}", signer.as_json());
-        let result = signer.sign(b"lol", "lol".into());
+        assert!(!signer.as_json().is_empty());
+        let result = signer.sign(b"lol", "lol");
         assert!(result.is_err());
     }
 
@@ -673,9 +673,8 @@ mod tests {
     ]
 ]"#;
         let mut key = EncryptedKeySigner::new();
-        key.load_state(&json).unwrap();
-        let serialized = key.store_state();
-        println!("{}", serialized);
+        key.load_state(json).unwrap();
+        assert!(!key.store_state().is_empty());
     }
 
     #[tokio::test]
@@ -733,7 +732,6 @@ mod tests {
         .unwrap();
 
         let serialized = key.store_state();
-        println!("{}", serialized);
 
         let mut loaded = EncryptedKeySigner::new();
         loaded.load_state(&serialized).unwrap();

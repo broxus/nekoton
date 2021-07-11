@@ -512,12 +512,15 @@ impl GenTimings {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct PendingTransaction {
-    /// Incoming message source
-    #[serde(with = "serde_optional_address")]
-    pub src: Option<MsgAddressInt>,
+    /// External message hash
+    #[serde(with = "serde_uint256")]
+    pub message_hash: UInt256,
     /// Hash of the external message body. Used to identify message in executed transactions
     #[serde(with = "serde_uint256")]
     pub body_hash: UInt256,
+    /// Incoming message source
+    #[serde(with = "serde_optional_address")]
+    pub src: Option<MsgAddressInt>,
     /// Expiration timestamp, unixtime
     pub expire_at: u32,
 }

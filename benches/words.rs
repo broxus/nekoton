@@ -1,13 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use criterion::async_executor;
-use criterion::async_executor::AsyncExecutor;
-use nekoton::contracts;
-use nekoton::crypto::{
-    self, DerivedKeyCreateInput, DerivedKeySignParams, DerivedKeySigner, DerivedKeyUpdateParams,
-    EncryptedKey, MnemonicType,
-};
-use nekoton::utils::*;
+use nekoton::crypto;
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("word_exists", |b| {

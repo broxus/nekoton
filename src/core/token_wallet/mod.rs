@@ -1052,7 +1052,7 @@ mod tests {
     fn prepare_contract(data: &str) -> ExistingContract {
         let account = match ton_block::Account::construct_from_base64(data).unwrap() {
             ton_block::Account::Account(stuff) => stuff,
-            _ => unreachable!(),
+            ton_block::Account::AccountNone => unreachable!(),
         };
         ExistingContract {
             account,

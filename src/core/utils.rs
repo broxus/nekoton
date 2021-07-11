@@ -7,7 +7,7 @@ use std::task::{Context, Poll};
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use futures::{Future, FutureExt, Stream};
-use ton_block::MsgAddressInt;
+use ton_block::{MsgAddressInt, Serializable};
 
 use crate::core::models::*;
 use crate::crypto::{SignedMessage, UnsignedMessage};
@@ -342,6 +342,7 @@ impl PendingTransactionsExt for Vec<PendingTransaction> {
             .unwrap_or_default();
 
         let pending_transaction = PendingTransaction {
+            message_hash: message.serialize().convert()?.repr_hash(),
             src,
             body_hash,
             expire_at,

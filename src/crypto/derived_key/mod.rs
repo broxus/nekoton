@@ -910,7 +910,6 @@ mod tests {
         let mut loaded = DerivedKeySigner::new();
         loaded.load_state(&serialized).unwrap();
         assert_eq!(loaded, key);
-        println!("{}", serialized);
     }
 
     #[tokio::test]
@@ -940,6 +939,6 @@ mod tests {
     }
 }"#;
         let mut loaded = DerivedKeySigner::new();
-        loaded.load_state(&json).unwrap();
+        loaded.load_state(json).unwrap();
     }
 }
