@@ -428,6 +428,31 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
     }
 }
 
+pub fn get_wallet_custodians(
+    contract: &ExistingContract,
+    public_key: &UInt256,
+    wallet_type: WalletType,
+) -> Result<Vec<UInt256>> {
+    let multisig_type = match wallet_type {
+        WalletType::Multisig(multisig_type) => multisig_type,
+        WalletType::WalletV3 => return Ok(vec![*public_key]),
+    };
+
+    let contract_state = contract.brief();
+    let gen_timings = contract_state.gen_timings;
+    let last_transaction_id = &contract_state
+        .last_transaction_id
+        .ok_or(TonWalletError::LastTransactionNotFound)?;
+
+    let custodians = multisig::get_custodians(
+        multisig_type,
+        Cow::Borrowed(&contract.account),
+        gen_timings,
+        last_transaction_id,
+    )?;
+    Ok(custodians)
+}
+
 const WALLET_TYPES_BY_POPULARITY: [WalletType; 5] = [
     WalletType::Multisig(MultisigType::SurfWallet),
     WalletType::WalletV3,
