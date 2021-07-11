@@ -28,7 +28,7 @@ pub enum TransactionAdditionalInfo {
     /// Ton event notification
     TonEventStatusChanged(TonEventStatus),
     /// User interaction with wallet contract
-    WalletInteraction(Box<WalletInteractionInfo>),
+    WalletInteraction(WalletInteractionInfo),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -52,7 +52,7 @@ pub enum KnownPayload {
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum WalletInteractionMethod {
     WalletV3Transfer,
-    Multisig(MultisigTransaction),
+    Multisig(Box<MultisigTransaction>),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Copy)]
@@ -112,12 +112,16 @@ pub enum MultisigTransaction {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
 pub struct MultisigConfirmTransaction {
+    #[serde(with = "serde_uint256")]
+    pub custodian: UInt256,
     #[serde(with = "serde_u64")]
     pub transaction_id: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MultisigSubmitTransaction {
+    #[serde(with = "serde_uint256")]
+    pub custodian: UInt256,
     #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
     pub value: BigUint,

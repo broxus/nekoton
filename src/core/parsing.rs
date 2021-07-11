@@ -5,6 +5,7 @@ use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use once_cell::sync::OnceCell;
 use ton_block::{MsgAddressInt, Serializable};
+use ton_types::UInt256;
 
 use crate::contracts;
 use crate::core::models::*;
@@ -105,18 +106,18 @@ pub fn parse_transaction_additional_info(
                     (
                         recipient,
                         known_payload,
-                        WalletInteractionMethod::Multisig(method),
+                        WalletInteractionMethod::Multisig(Box::new(method)),
                     )
                 }
             };
 
-            return Some(TransactionAdditionalInfo::WalletInteraction(Box::new(
+            return Some(TransactionAdditionalInfo::WalletInteraction(
                 WalletInteractionInfo {
                     recipient,
                     known_payload,
                     method,
                 },
-            )));
+            ));
         }
         ton_block::CommonMsgInfo::IntMsgInfo(header) => header,
         ton_block::CommonMsgInfo::ExtOutMsgInfo(_) => return None,
@@ -348,12 +349,17 @@ fn parse_multisig_transaction_impl(
     in_msg: ton_block::Message,
     tx: &ton_block::Transaction,
 ) -> Option<MultisigTransaction> {
-    let body = in_msg.body()?;
+    const PUBKEY_OFFSET: usize = 1 + ed25519_dalek::SIGNATURE_LENGTH * 8 + 1;
+    const PUBKEY_LENGTH: usize = 256;
+    const TIME_LENGTH: usize = 64;
+    const EXPIRE_LENGTH: usize = 32;
+
+    let mut body = in_msg.body()?;
     let function_id = {
         let mut body = body.clone();
 
         // Shift body by Maybe(signature), Maybe(pubkey), time and expire
-        body.move_by(1 + ed25519_dalek::SIGNATURE_LENGTH * 8 + 257 + 64 + 32)
+        body.move_by(PUBKEY_OFFSET + PUBKEY_LENGTH + TIME_LENGTH + EXPIRE_LENGTH)
             .ok()?;
 
         read_u32(&body).ok()?
@@ -370,20 +376,26 @@ fn parse_multisig_transaction_impl(
     } else if function_id == functions.submit_transaction.input_id {
         let inputs = functions
             .submit_transaction
-            .decode_input(body, false)
+            .decode_input(body.clone(), false)
             .ok()?;
         let outputs = functions.submit_transaction.parse(tx).ok()?;
 
-        MultisigSubmitTransaction::try_from(ContractCall { inputs, outputs })
+        body.move_by(PUBKEY_OFFSET).ok()?;
+
+        let custodian = body.get_next_hash().ok()?;
+        MultisigSubmitTransaction::try_from((custodian, ContractCall { inputs, outputs }))
             .map(MultisigTransaction::Submit)
             .ok()
     } else if function_id == functions.confirm_transaction.input_id {
         let inputs = functions
             .confirm_transaction
-            .decode_input(body, false)
+            .decode_input(body.clone(), false)
             .ok()?;
 
-        MultisigConfirmTransaction::try_from(InputMessage(inputs))
+        body.move_by(PUBKEY_OFFSET).ok()?;
+
+        let custodian = body.get_next_hash().ok()?;
+        MultisigConfirmTransaction::try_from((custodian, InputMessage(inputs)))
             .map(MultisigTransaction::Confirm)
             .ok()
     } else {
@@ -412,25 +424,27 @@ impl MultisigFunctions {
     }
 }
 
-impl TryFrom<InputMessage> for MultisigConfirmTransaction {
+impl TryFrom<(UInt256, InputMessage)> for MultisigConfirmTransaction {
     type Error = ParserError;
 
-    fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
+    fn try_from((custodian, value): (UInt256, InputMessage)) -> Result<Self, Self::Error> {
         let mut parser = value.0.into_parser();
         Ok(Self {
+            custodian,
             transaction_id: parser.parse_next()?,
         })
     }
 }
 
-impl TryFrom<ContractCall> for MultisigSubmitTransaction {
+impl TryFrom<(UInt256, ContractCall)> for MultisigSubmitTransaction {
     type Error = ParserError;
 
-    fn try_from(value: ContractCall) -> Result<Self, Self::Error> {
+    fn try_from((custodian, value): (UInt256, ContractCall)) -> Result<Self, Self::Error> {
         let mut input = value.inputs.into_parser();
         let mut output = value.outputs.into_parser();
 
         Ok(Self {
+            custodian,
             dest: input.parse_next()?,
             value: input.parse_next()?,
             bounce: input.parse_next()?,
@@ -800,14 +814,11 @@ mod tests {
 
         assert!(matches!(
             parse_transaction_additional_info(&tx, WalletType::WalletV3).unwrap(),
-            TransactionAdditionalInfo::WalletInteraction(info) if matches!(
-                *info,
-                WalletInteractionInfo {
-                    recipient: Some(_),
-                    known_payload: None,
-                    method: WalletInteractionMethod::WalletV3Transfer,
-                }
-            )
+            TransactionAdditionalInfo::WalletInteraction(WalletInteractionInfo {
+                recipient: Some(_),
+                known_payload: None,
+                method: WalletInteractionMethod::WalletV3Transfer,
+            })
         ))
     }
 
@@ -815,40 +826,43 @@ mod tests {
     fn test_parse_multisig_submit() {
         let tx = Transaction::construct_from_base64("te6ccgECDAEAAkMAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAEv38uN8H+CfBrFklcU0i9Vs4RZzxi5vtTa9PqJ/LpPctz/rat2wAABIjJ0UsBX2sytAADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAOylU78GhKKYOUuj1Rh3dLpOOzgJUEyoySchhaM60lDREBQDowAnUfXAxOIAAAAAAAAAABtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnJ5QDnTzA46E1KOsPz7QLrshaiw53aaaTNY7TZfFM9uf9wCstMqmz8MmfSmYLSpRuMah9ruqiOVsRPjzhTEdu9aAgHgCAYBAd8HAHXn+7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u4AAAJfv5cb4S+1mVoSY7BZq+1mVo/lxvgwAFFif7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7gwJAeGUlZeW3g4p7fOroeyZUZdj1hWrKWusR/Na6V9uRhKJvV3dgWDQ1/YR5hQfYLaM861DgLJMku/LPDKMt43TyJUH+ToLdTA3yCwRnsc9IMg9JIXlsbI92/1mZ+RrZF1GGY1AAABdLq+AHhfazLsEx2CzYAoBY4AVKmRhQN1a9YbnwdGmdH0KtPv2SINcG4FpEDjh70ON2qAAAAAAAAAAAAAdjv+NHoAUCwAA").unwrap();
 
+        let custodian =
+            UInt256::from_str("e4e82dd4c0df20b0467b1cf48320f4921796c6c8f76ff5999f91ad9175186635")
+                .unwrap();
+
         assert!(matches!(
             parse_transaction_additional_info(
                 &tx,
                 WalletType::Multisig(MultisigType::SafeMultisigWallet)
             )
             .unwrap(),
-            TransactionAdditionalInfo::WalletInteraction(info) if matches!(
-                *info,
-                WalletInteractionInfo {
-                    recipient: Some(_),
-                    known_payload: None,
-                    method: WalletInteractionMethod::Multisig(MultisigTransaction::Submit(_))
-                }
-            )
+            TransactionAdditionalInfo::WalletInteraction(WalletInteractionInfo {
+                recipient: Some(_),
+                known_payload: None,
+                method: WalletInteractionMethod::Multisig(data)
+            }) if matches!(&*data, MultisigTransaction::Submit(submit) if submit.custodian == custodian)
         ));
     }
 
     #[test]
     fn test_parse_multisig_confirm() {
         let tx = Transaction::construct_from_base64("te6ccgECCgEAAjAAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAJcbrc/8GSsRcwsaEKUmFwdbT9tmaf3vKqKpeWIR9/9GyMA8r2+gAACXGutDTBYBvSYwADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAI1K3sqU+I63UTJ+xkdHcyrkM2hxcBJu//z7hF+/hEtukBQFcwAnUYtYxOIAAAAAAAAAABSwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnITMJnhiVklA89yLWhQU+4BB1tJ3iPLRRZoWlPVKSkbvYENWnQphG03/JbEJJWwJbdhZCl+oH7UI7ARqCUcU6H/AgHgCAYBAd8HAK9J/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7vACa4ZyAEEjOHCY7aEkcDRTMruTfdNxrg9GyWxKU18Pes2WvMQekAAAAAABLjdbn/hMA3pMZAAUWJ/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7uDAkA8c+cpxQ8FYd2C/XWiibmIX4wPfvHIultapCNOhW5dJ5hl2YD+PHO24RUXdbY669yR8BUfGNuxVTwVkV1K0HA7QByTARuQhGj9eozhRteIImtsExhdcFckfL9FqBq5uNuaoAAAF3bK3Ps2Ab0p4ap0DtYBvF9mf0BgGA=").unwrap();
+
+        let custodian =
+            UInt256::from_str("c93011b908468fd7a8ce146d788226b6c13185d7057247cbf45a81ab9b8db9aa")
+                .unwrap();
+
         assert!(matches!(
             parse_transaction_additional_info(
                 &tx,
                 WalletType::Multisig(MultisigType::SafeMultisigWallet)
             )
             .unwrap(),
-            TransactionAdditionalInfo::WalletInteraction(info) if matches!(
-                *info,
-                WalletInteractionInfo {
-                    recipient: None,
-                    known_payload: None,
-                    method: WalletInteractionMethod::Multisig(MultisigTransaction::Confirm(_))
-                }
-            )
+            TransactionAdditionalInfo::WalletInteraction(WalletInteractionInfo {
+                recipient: None,
+                known_payload: None,
+                method: WalletInteractionMethod::Multisig(data)
+            }) if matches!(&*data, MultisigTransaction::Confirm(confirm) if confirm.custodian == custodian)
         ))
     }
 
