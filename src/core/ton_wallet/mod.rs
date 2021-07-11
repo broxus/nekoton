@@ -430,12 +430,12 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
 
 pub fn get_wallet_custodians(
     contract: &ExistingContract,
-    public_key: &UInt256,
+    public_key: &ed25519_dalek::PublicKey,
     wallet_type: WalletType,
 ) -> Result<Vec<UInt256>> {
     let multisig_type = match wallet_type {
         WalletType::Multisig(multisig_type) => multisig_type,
-        WalletType::WalletV3 => return Ok(vec![*public_key]),
+        WalletType::WalletV3 => return Ok(vec![public_key.to_bytes().into()]),
     };
 
     let contract_state = contract.brief();
