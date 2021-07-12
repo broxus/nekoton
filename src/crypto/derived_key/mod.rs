@@ -66,8 +66,18 @@ impl StoreSigner for DerivedKeySigner {
                     hash_map::Entry::Vacant(entry) => {
                         entry.insert(master_key);
                     }
-                    hash_map::Entry::Occupied(_) => {
-                        return Err(MasterKeyError::MasterKeyAlreadyExists.into())
+                    hash_map::Entry::Occupied(mut entry) => {
+                        let existing = entry.get_mut();
+                        existing.salt = master_key.salt;
+                        existing.enc_entropy = master_key.enc_entropy;
+                        existing.entropy_nonce = master_key.entropy_nonce;
+                        existing.enc_phrase = master_key.enc_phrase;
+                        existing.phrase_nonce = master_key.phrase_nonce;
+
+                        let first_key = existing.accounts_map.get_mut(public_key.as_bytes());
+                        if let Some(account) = first_key {
+                            account.name = key_name.clone();
+                        }
                     }
                 };
 
@@ -712,8 +722,6 @@ fn derive_from_master(id: u16, master: &[u8]) -> Result<ed25519_dalek::Keypair> 
 enum MasterKeyError {
     #[error("Master key not found")]
     MasterKeyNotFound,
-    #[error("Master key already exists")]
-    MasterKeyAlreadyExists,
     #[error("Derived key not found")]
     DerivedKeyNotFound,
     #[error("Failed to derive account from master key")]
@@ -743,7 +751,8 @@ mod tests {
             password_cache: &cache,
         };
 
-        let master_key = signer
+        // First import
+        let entry = signer
             .add_key(
                 ctx,
                 DerivedKeyCreateInput::Import {
@@ -755,8 +764,7 @@ mod tests {
                     },
                 },
             )
-            .await?
-            .master_key;
+            .await?;
 
         assert!(!signer.master_keys.is_empty());
 
@@ -764,8 +772,39 @@ mod tests {
             .export_key(
                 ctx,
                 DerivedKeyExportParams {
-                    master_key,
+                    master_key: entry.master_key,
                     password: Password::FromCache,
+                },
+            )
+            .await
+            .unwrap();
+
+        // Second import with same seed
+        let entry = signer
+            .add_key(
+                ctx,
+                DerivedKeyCreateInput::Import {
+                    key_name: Some("Key 2".to_owned()),
+                    phrase: SecUtf8::from(TEST_PHRASE),
+                    password: Password::Explicit {
+                        password: SecUtf8::from("321"),
+                        cache_behavior: PasswordCacheBehavior::Remove,
+                    },
+                },
+            )
+            .await?;
+
+        assert!(!signer.master_keys.is_empty());
+
+        signer
+            .export_key(
+                ctx,
+                DerivedKeyExportParams {
+                    master_key: entry.master_key,
+                    password: Password::Explicit {
+                        password: SecUtf8::from("321"),
+                        cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(1)),
+                    },
                 },
             )
             .await
