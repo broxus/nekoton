@@ -4,17 +4,18 @@ use std::sync::Arc;
 use anyhow::Result;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
+use ton_token_abi::UnpackAbi;
+use ton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
 
 use super::{ContractSubscription, InternalMessage};
 use crate::contracts;
 use crate::core::models::*;
 use crate::core::parsing::*;
-use crate::helpers::abi::{
-    self, BigUint128, BigUint256, FunctionArg, FunctionExt, IntoParser, TokenValueExt,
-};
+use crate::helpers::abi::{self, BigUint128, BigUint256, FunctionArg, FunctionExt, TokenValueExt};
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
+use ton_types::UInt256;
 
 pub struct TokenWallet {
     transport: Arc<dyn Transport>,
@@ -468,8 +469,8 @@ impl<'a> RootTokenContractState<'a> {
         let address = self
             .0
             .run_local(&function.build(), &inputs)?
-            .into_parser()
-            .parse_next()?;
+            .into_unpacker()
+            .unpack_next()?;
 
         Ok(address)
     }
@@ -524,58 +525,72 @@ impl<'a> RootTokenContractState<'a> {
         let inputs = adjust_responsible(&mut function, version);
         let outputs = self.0.run_local(&function.build(), &inputs)?;
 
-        Ok(parse_brief_root_token_contract_details(version, outputs)?.extend(version))
+        Ok(unpack_brief_root_token_contract_details(version, outputs)?)
     }
 }
 
-fn parse_brief_root_token_contract_details(
+fn unpack_brief_root_token_contract_details(
     version: TokenWalletVersion,
     tokens: Vec<ton_abi::Token>,
-) -> abi::ContractResult<BriefRootTokenContractDetails> {
-    let mut tuple = match tokens.into_parser().parse_next() {
-        Ok(ton_abi::TokenValue::Tuple(tokens)) => tokens.into_parser(),
-        _ => return Err(abi::ParserError::InvalidAbi),
-    };
-
-    let name = tuple.parse_next()?;
-    let symbol = tuple.parse_next()?;
-    let decimals = tuple.parse_next()?;
-
-    if matches!(
+) -> ContractResult<RootTokenContractDetails> {
+    let data = if matches!(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
     ) {
-        let _wallet_code: ton_types::Cell = tuple.parse_next()?;
-    }
-
-    let _root_public_key: ton_types::UInt256 = tuple.parse_next()?;
-    let owner_address = tuple.parse_next()?;
-
-    Ok(BriefRootTokenContractDetails {
-        name,
-        symbol,
-        decimals,
-        owner_address,
-    })
-}
-
-struct BriefRootTokenContractDetails {
-    name: String,
-    symbol: String,
-    decimals: u8,
-    owner_address: MsgAddressInt,
-}
-
-impl BriefRootTokenContractDetails {
-    pub fn extend(self, version: TokenWalletVersion) -> RootTokenContractDetails {
+        let data: BriefRootTokenContractDetails = tokens.into_unpacker().unpack_next()?;
         RootTokenContractDetails {
             version,
-            name: self.name,
-            symbol: self.symbol,
-            decimals: self.decimals,
-            owner_address: self.owner_address,
+            name: data.name,
+            symbol: data.symbol,
+            decimals: data.decimals,
+            owner_address: data.root_owner_address,
         }
-    }
+    } else {
+        let data: BriefRootTokenContractDetailsV4 = tokens.into_unpacker().unpack_next()?;
+        RootTokenContractDetails {
+            version,
+            name: data.name,
+            symbol: data.symbol,
+            decimals: data.decimals,
+            owner_address: data.root_owner_address,
+        }
+    };
+
+    Ok(data)
+}
+
+#[derive(UnpackAbi)]
+struct BriefRootTokenContractDetails {
+    #[abi]
+    name: String,
+    #[abi]
+    symbol: String,
+    #[abi(uint8)]
+    decimals: u8,
+    #[abi(cell, name = "wallet_code")]
+    _wallet_code: ton_types::Cell,
+    #[abi(uint256, name = "root_public_key")]
+    _root_public_key: UInt256,
+    #[abi(address)]
+    root_owner_address: MsgAddressInt,
+    /*#[abi(biguint128)]
+    _total_supply: BigUint,*/
+}
+
+#[derive(UnpackAbi)]
+struct BriefRootTokenContractDetailsV4 {
+    #[abi]
+    name: String,
+    #[abi]
+    symbol: String,
+    #[abi(uint8)]
+    decimals: u8,
+    #[abi(uint256, name = "root_public_key")]
+    _root_public_key: UInt256,
+    #[abi(address)]
+    root_owner_address: MsgAddressInt,
+    /*#[abi(biguint128)]
+    _total_supply: BigUint,*/
 }
 
 #[derive(Debug)]
@@ -602,13 +617,17 @@ impl<'a> TokenWalletContractState<'a> {
 
         let inputs = adjust_responsible(&mut function, version);
 
-        let balance = self
-            .0
-            .run_local(&function.build(), &inputs)?
-            .into_parser()
-            .parse_next()?;
+        #[derive(UnpackAbi)]
+        #[abi(plain)]
+        struct Balance {
+            #[abi(biguint128, name = "value0")]
+            balance: BigUint,
+        }
 
-        Ok(balance)
+        let tokens = self.0.run_local(&function.build(), &inputs)?;
+        let data: Balance = tokens.unpack()?;
+
+        Ok(data.balance)
     }
 
     pub fn get_details(&self, version: TokenWalletVersion) -> Result<TokenWalletDetails> {
@@ -644,7 +663,7 @@ impl<'a> TokenWalletContractState<'a> {
         let inputs = adjust_responsible(&mut function, version);
         let outputs = self.0.run_local(&function.build(), &inputs)?;
 
-        let details = parse_token_wallet_details(version, outputs)?;
+        let details = unpack_token_wallet_details(version, outputs)?;
 
         Ok(details)
     }
@@ -667,35 +686,68 @@ impl<'a> TokenWalletContractState<'a> {
     }
 }
 
-fn parse_token_wallet_details(
+#[derive(UnpackAbi)]
+struct TonTokenWalletDetails {
+    #[abi(address)]
+    root_address: MsgAddressInt,
+    #[abi(cell)]
+    code: ton_types::Cell,
+    #[abi(uint256, name = "wallet_public_key")]
+    _wallet_public_key: UInt256,
+    #[abi(address)]
+    owner_address: MsgAddressInt,
+    #[abi(biguint128, name = "balance")]
+    _balance: BigUint,
+    /*#[abi(address)]
+    _receive_callback: MsgAddressInt,
+    #[abi(address)]
+    _bounced_callback: MsgAddressInt,
+    #[abi(bool)]
+    _allow_non_notifiable: bool,*/
+}
+
+#[derive(UnpackAbi)]
+struct TonTokenWalletDetailsV4 {
+    #[abi(address)]
+    root_address: MsgAddressInt,
+    #[abi(uint256, name = "wallet_public_key")]
+    _wallet_public_key: UInt256,
+    #[abi(address)]
+    owner_address: MsgAddressInt,
+    #[abi(biguint128, name = "balance")]
+    _balance: BigUint,
+    /*#[abi(address)]
+    _receive_callback: MsgAddressInt,
+    #[abi(address)]
+    _bounced_callback: MsgAddressInt,
+    #[abi(bool)]
+    _allow_non_notifiable: bool,*/
+}
+
+fn unpack_token_wallet_details(
     version: TokenWalletVersion,
     tokens: Vec<ton_abi::Token>,
-) -> abi::ContractResult<TokenWalletDetails> {
-    let mut tuple = match tokens.into_parser().parse_next() {
-        Ok(ton_abi::TokenValue::Tuple(tokens)) => tokens.into_parser(),
-        _ => return Err(abi::ParserError::InvalidAbi),
-    };
-
-    let root_address = tuple.parse_next()?;
-
-    let code = if matches!(
+) -> ContractResult<TokenWalletDetails> {
+    let data = if matches!(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
     ) {
-        let code: ton_types::Cell = tuple.parse_next()?;
-        Some(code)
+        let data: TonTokenWalletDetails = tokens.into_unpacker().unpack_next()?;
+        TokenWalletDetails {
+            root_address: data.root_address,
+            owner_address: data.owner_address,
+            code: Some(data.code),
+        }
     } else {
-        None
+        let data: TonTokenWalletDetailsV4 = tokens.into_unpacker().unpack_next()?;
+        TokenWalletDetails {
+            root_address: data.root_address,
+            owner_address: data.owner_address,
+            code: None,
+        }
     };
 
-    let _wallet_public_key: ton_types::UInt256 = tuple.parse_next()?;
-    let owner_address = tuple.parse_next()?;
-
-    Ok(TokenWalletDetails {
-        root_address,
-        owner_address,
-        code,
-    })
+    Ok(data)
 }
 
 struct RootMetaContractState<'a>(&'a ExistingContract);
@@ -711,8 +763,8 @@ impl<'a> RootMetaContractState<'a> {
         let value: ton_types::Cell = self
             .0
             .run_local(&function, &[0u16.token_value().named("key")])?
-            .into_parser()
-            .parse_next()?;
+            .into_unpacker()
+            .unpack_next()?;
 
         let proxy_address = MsgAddressInt::construct_from_cell(value).convert()?;
 
@@ -746,22 +798,34 @@ impl<'a> TonEventContractState<'a> {
     }
 }
 
+#[derive(UnpackAbi)]
+#[abi(plain)]
+struct TonEventDecodedData {
+    #[abi(address, name = "rootToken")]
+    root_token: MsgAddressInt,
+    #[abi(int8, name = "wid")]
+    _wid: i8,
+    #[abi(uint256, name = "addr")]
+    _addr: UInt256,
+    #[abi(biguint128)]
+    tokens: BigUint,
+    #[abi(uint160)]
+    ethereum_address: BigUint,
+    #[abi(address, name = "owner_address")]
+    _owner_address: MsgAddressInt,
+}
+
 impl TryFrom<Vec<ton_abi::Token>> for TonEventData {
-    type Error = abi::ParserError;
+    type Error = UnpackerError;
 
     fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
-        let mut tuple = tokens.into_parser();
-
-        let root_token_contract: MsgAddressInt = tuple.parse_next()?;
-        let _wid: BigInt = tuple.parse_next()?;
-        let _addr: BigUint = tuple.parse_next()?;
-        let tokens: BigUint = tuple.parse_next()?;
+        let data: TonEventDecodedData = tokens.unpack()?;
 
         let to = {
-            let address: BigUint = tuple.parse_next()?;
+            let address: BigUint = data.ethereum_address;
             let bytes = address.to_bytes_be();
             if bytes.len() > 20 {
-                return Err(abi::ParserError::InvalidAbi);
+                return Err(UnpackerError::InvalidAbi);
             }
 
             let mut padded_data = [0u8; 20];
@@ -771,24 +835,24 @@ impl TryFrom<Vec<ton_abi::Token>> for TonEventData {
         };
 
         Ok(Self {
-            root_token_contract,
-            tokens,
+            root_token_contract: data.root_token,
+            tokens: data.tokens,
             to,
         })
     }
 }
 
 impl TryFrom<Vec<ton_abi::Token>> for TonEventDetails {
-    type Error = abi::ParserError;
+    type Error = UnpackerError;
 
     fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
-        let mut tuple = tokens.into_parser();
+        let mut tuple = tokens.into_unpacker();
 
-        let init_data: TonEventInitData = tuple.parse_next()?;
-        let status: TonEventStatus = tuple.parse_next()?;
+        let init_data: TonEventInitData = tuple.unpack_next()?;
+        let status: TonEventStatus = tuple.unpack_next()?;
 
-        let confirmation_count = parse_vote_count(&mut tuple)?;
-        let rejection_count = parse_vote_count(&mut tuple)?;
+        let confirmation_count = unpack_vote_count(&mut tuple)?;
+        let rejection_count = unpack_vote_count(&mut tuple)?;
 
         Ok(Self {
             status,
@@ -800,32 +864,26 @@ impl TryFrom<Vec<ton_abi::Token>> for TonEventDetails {
     }
 }
 
+#[derive(UnpackAbi)]
 struct TonEventInitData {
+    #[abi(uint256, name = "eventTransaction")]
+    _event_transaction: UInt256,
+    #[abi(uint64, name = "eventTransactionLt")]
+    _event_transaction_lt: u64,
+    #[abi(uint32, name = "eventTimestamp")]
+    _event_timestamp: u32,
+    #[abi(uint32, name = "eventIndex")]
+    _event_index: u32,
+    #[abi(cell, name = "eventData")]
+    _event_data: ton_types::Cell,
+    #[abi(address, name = "tonEventConfiguration")]
+    _ton_event_configuration: MsgAddressInt,
+    #[abi(uint16, name = "requiredConfirmations")]
     required_confirmations: u16,
+    #[abi(uint16, name = "requiredRejects")]
     required_rejects: u16,
-}
-
-impl abi::ParseToken<TonEventInitData> for ton_abi::TokenValue {
-    fn try_parse(self) -> abi::ContractResult<TonEventInitData> {
-        let mut tuple = match self {
-            ton_abi::TokenValue::Tuple(tokens) => tokens.into_parser(),
-            _ => return Err(abi::ParserError::InvalidAbi),
-        };
-
-        let _event_transaction: BigUint = tuple.parse_next()?;
-        let _event_transaction_lt: BigUint = tuple.parse_next()?;
-        let _event_timestamp: BigUint = tuple.parse_next()?;
-        let _event_index: BigUint = tuple.parse_next()?;
-        let _event_data: ton_types::Cell = tuple.parse_next()?;
-        let _ton_event_configuration: MsgAddressInt = tuple.parse_next()?;
-        let required_confirmations: u16 = tuple.parse_next()?;
-        let required_rejects: u16 = tuple.parse_next()?;
-
-        Ok(TonEventInitData {
-            required_confirmations,
-            required_rejects,
-        })
-    }
+    #[abi(cell, name = "configurationMeta")]
+    _configuration_meta: ton_types::Cell,
 }
 
 pub struct EthEventContractState<'a>(pub &'a ExistingContract);
@@ -850,30 +908,47 @@ impl<'a> EthEventContractState<'a> {
     }
 }
 
+#[derive(UnpackAbi)]
+#[abi(plain)]
+struct EthEventDecodedData {
+    #[abi(address, name = "rootToken")]
+    root_token: MsgAddressInt,
+    #[abi(biguint128)]
+    tokens: BigUint,
+    #[abi(int8, name = "wid")]
+    _wid: i8,
+    #[abi(uint256, name = "owner_addr")]
+    _owner_addr: UInt256,
+    #[abi(uint256, name = "owner_pubkey")]
+    _owner_pubkey: UInt256,
+    #[abi(address, name = "owner_address")]
+    _owner_address: MsgAddressInt,
+}
+
 impl TryFrom<Vec<ton_abi::Token>> for EthEventData {
-    type Error = abi::ParserError;
+    type Error = UnpackerError;
 
     fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
-        let mut tuple = tokens.into_parser();
+        let data: EthEventDecodedData = tokens.unpack()?;
 
         Ok(Self {
-            root_token_contract: tuple.parse_next()?,
-            tokens: tuple.parse_next()?,
+            root_token_contract: data.root_token,
+            tokens: data.tokens,
         })
     }
 }
 
 impl TryFrom<Vec<ton_abi::Token>> for EthEventDetails {
-    type Error = abi::ParserError;
+    type Error = UnpackerError;
 
     fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
-        let mut tuple = tokens.into_parser();
+        let mut tuple = tokens.into_unpacker();
 
-        let init_data: EthEventInitData = tuple.parse_next()?;
-        let status: EthEventStatus = tuple.parse_next()?;
+        let init_data: EthEventInitData = tuple.unpack_next()?;
+        let status: EthEventStatus = tuple.unpack_next()?;
 
-        let confirmation_count = parse_vote_count(&mut tuple)?;
-        let rejection_count = parse_vote_count(&mut tuple)?;
+        let confirmation_count = unpack_vote_count(&mut tuple)?;
+        let rejection_count = unpack_vote_count(&mut tuple)?;
 
         Ok(Self {
             status,
@@ -885,41 +960,39 @@ impl TryFrom<Vec<ton_abi::Token>> for EthEventDetails {
     }
 }
 
+#[derive(UnpackAbi)]
 struct EthEventInitData {
+    #[abi(uint256, name = "eventTransaction")]
+    _event_transaction: UInt256,
+    #[abi(uint32, name = "eventIndex")]
+    _event_index: u32,
+    #[abi(cell, name = "eventData")]
+    _event_data: ton_types::Cell,
+    #[abi(uint32, name = "eventBlockNumber")]
+    _event_block_number: u32,
+    #[abi(uint256, name = "eventBlock")]
+    _event_block: UInt256,
+    #[abi(address, name = "ethereumEventConfiguration")]
+    _ethereum_event_configuration: MsgAddressInt,
+    #[abi(uint16, name = "requiredConfirmations")]
     required_confirmations: u16,
+    #[abi(uint16, name = "requiredRejects")]
     required_rejects: u16,
+    #[abi(address, name = "proxyAddress")]
+    _proxy_address: MsgAddressInt,
+    #[abi(cell, name = "configurationMeta")]
+    _configuration_meta: ton_types::Cell,
 }
 
-impl abi::ParseToken<EthEventInitData> for ton_abi::TokenValue {
-    fn try_parse(self) -> abi::ContractResult<EthEventInitData> {
-        let mut tuple = match self {
-            ton_abi::TokenValue::Tuple(items) => items.into_parser(),
-            _ => return Err(abi::ParserError::InvalidAbi),
-        };
-
-        let _event_transaction: BigUint = tuple.parse_next()?;
-        let _event_index: BigUint = tuple.parse_next()?;
-        let _event_data: ton_types::Cell = tuple.parse_next()?;
-        let _event_block_number: BigUint = tuple.parse_next()?;
-        let _event_block: BigUint = tuple.parse_next()?;
-        let _ethereum_event_configuration: MsgAddressInt = tuple.parse_next()?;
-        let required_confirmations: u16 = tuple.parse_next()?;
-        let required_rejects: u16 = tuple.parse_next()?;
-
-        Ok(EthEventInitData {
-            required_confirmations,
-            required_rejects,
-        })
-    }
-}
-
-fn parse_vote_count<I>(tuple: &mut abi::ContractOutputParser<I>) -> abi::ContractResult<u16>
+fn unpack_vote_count<I>(
+    tuple: &mut ton_token_unpacker::ContractOutputUnpacker<I>,
+) -> ContractResult<u16>
 where
     I: Iterator<Item = ton_abi::Token>,
 {
-    match tuple.parse_next::<ton_abi::TokenValue>()? {
+    match tuple.unpack_next::<ton_abi::TokenValue>()? {
         ton_abi::TokenValue::Array(votes) => Ok(votes.len() as u16),
-        _ => Err(abi::ParserError::InvalidAbi),
+        _ => Err(UnpackerError::InvalidAbi),
     }
 }
 
@@ -946,8 +1019,8 @@ fn get_version_direct(contract: &ExistingContract) -> Result<GotVersion> {
 
     let version: u32 = contract
         .run_local(&function, &[abi::answer_id()])?
-        .into_parser()
-        .parse_next()?;
+        .into_unpacker()
+        .unpack_next()?;
 
     Ok(version
         .try_into()

@@ -5,11 +5,12 @@ use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use once_cell::sync::OnceCell;
 use ton_block::{MsgAddressInt, Serializable};
+use ton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
 
 use crate::contracts;
 use crate::core::models::*;
 use crate::core::ton_wallet::WalletType;
-use crate::helpers::abi::{self, ContractResult, FunctionExt, IntoParser, ParseToken, ParserError};
+use crate::helpers::abi::{self, FunctionExt, IntoParser, ParserError};
 use crate::utils::*;
 
 pub struct InputMessage(pub Vec<ton_abi::Token>);
@@ -280,28 +281,28 @@ struct EthEventStatusChanged {
 }
 
 impl TryFrom<InputMessage> for EthEventStatusChanged {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
+        let mut input = value.0.into_unpacker();
 
         Ok(Self {
-            new_status: input.parse_next()?,
+            new_status: input.unpack_next()?,
         })
     }
 }
 
-impl ParseToken<EthEventStatus> for ton_abi::TokenValue {
-    fn try_parse(self) -> ContractResult<EthEventStatus> {
+impl UnpackToken<EthEventStatus> for ton_abi::TokenValue {
+    fn unpack(self) -> ContractResult<EthEventStatus> {
         match self {
             ton_abi::TokenValue::Uint(int) => match int.number.to_u8() {
                 Some(0) => Ok(EthEventStatus::InProcess),
                 Some(1) => Ok(EthEventStatus::Confirmed),
                 Some(2) => Ok(EthEventStatus::Executed),
                 Some(3) => Ok(EthEventStatus::Rejected),
-                _ => Err(ParserError::InvalidAbi),
+                _ => Err(UnpackerError::InvalidAbi),
             },
-            _ => Err(ParserError::InvalidAbi),
+            _ => Err(UnpackerError::InvalidAbi),
         }
     }
 }
@@ -311,27 +312,27 @@ struct TonEventStatusChanged {
 }
 
 impl TryFrom<InputMessage> for TonEventStatusChanged {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
+        let mut input = value.0.into_unpacker();
 
         Ok(Self {
-            new_status: input.parse_next()?,
+            new_status: input.unpack_next()?,
         })
     }
 }
 
-impl ParseToken<TonEventStatus> for ton_abi::TokenValue {
-    fn try_parse(self) -> ContractResult<TonEventStatus> {
+impl UnpackToken<TonEventStatus> for ton_abi::TokenValue {
+    fn unpack(self) -> ContractResult<TonEventStatus> {
         match self {
             ton_abi::TokenValue::Uint(int) => match int.number.to_u8() {
                 Some(0) => Ok(TonEventStatus::InProcess),
                 Some(1) => Ok(TonEventStatus::Confirmed),
                 Some(2) => Ok(TonEventStatus::Rejected),
-                _ => Err(ParserError::InvalidAbi),
+                _ => Err(UnpackerError::InvalidAbi),
             },
-            _ => Err(ParserError::InvalidAbi),
+            _ => Err(UnpackerError::InvalidAbi),
         }
     }
 }
@@ -413,12 +414,12 @@ impl MultisigFunctions {
 }
 
 impl TryFrom<InputMessage> for MultisigConfirmTransaction {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut parser = value.0.into_parser();
+        let mut parser = value.0.into_unpacker();
         Ok(Self {
-            transaction_id: parser.parse_next()?,
+            transaction_id: parser.unpack_next()?,
         })
     }
 }
