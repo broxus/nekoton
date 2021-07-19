@@ -6,6 +6,7 @@ use chrono::Utc;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt};
+use ton_token_abi::UnpackAbi;
 use ton_types::UInt256;
 
 use super::utils;
@@ -55,32 +56,44 @@ pub enum WalletInteractionMethod {
     Multisig(MultisigTransaction),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
+#[derive(UnpackAbi, Clone, Debug, Serialize, Deserialize, Copy)]
+#[abi(plain)]
 pub struct DePoolOnRoundCompleteNotification {
+    #[abi(uint64, name = "roundId")]
     #[serde(with = "serde_u64")]
     pub round_id: u64,
+    #[abi(uint64, name = "reward")]
     #[serde(with = "serde_u64")]
     pub reward: u64,
+    #[abi(uint64, name = "ordinaryStake")]
     #[serde(with = "serde_u64")]
     pub ordinary_stake: u64,
+    #[abi(uint64, name = "vestingStake")]
     #[serde(with = "serde_u64")]
     pub vesting_stake: u64,
+    #[abi(uint64, name = "lockStake")]
     #[serde(with = "serde_u64")]
     pub lock_stake: u64,
+    #[abi(bool, name = "reinvest")]
     pub reinvest: bool,
+    #[abi(uint8, name = "reason")]
     pub reason: u8,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
+#[derive(UnpackAbi, Clone, Debug, Serialize, Deserialize, Copy)]
+#[abi(plain)]
 pub struct DePoolReceiveAnswerNotification {
-    #[serde(with = "serde_u64")]
-    pub error_code: u64,
+    #[abi(uint32, name = "errcode")]
+    pub error_code: u32,
+    #[abi(uint64, name = "comment")]
     #[serde(with = "serde_u64")]
     pub comment: u64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(UnpackAbi, Clone, Debug, Serialize, Deserialize)]
+#[abi(plain)]
 pub struct TokenWalletDeployedNotification {
+    #[abi(address, name = "root")]
     #[serde(with = "serde_address")]
     pub root_token_contract: MsgAddressInt,
 }
@@ -110,8 +123,10 @@ pub enum MultisigTransaction {
     Confirm(MultisigConfirmTransaction),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
+#[derive(UnpackAbi, Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
+#[abi(plain)]
 pub struct MultisigConfirmTransaction {
+    #[abi(uint64, name = "transactionId")]
     #[serde(with = "serde_u64")]
     pub transaction_id: u64,
 }
@@ -129,13 +144,19 @@ pub struct MultisigSubmitTransaction {
     pub trans_id: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(UnpackAbi, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[abi(plain)]
 pub struct MultisigSendTransaction {
+    #[abi(address)]
     #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
+    #[abi(biguint128)]
     pub value: BigUint,
+    #[abi(bool)]
     pub bounce: bool,
+    #[abi(uint8)]
     pub flags: u8,
+    #[abi(cell)]
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
 }

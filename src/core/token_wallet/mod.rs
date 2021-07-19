@@ -1,12 +1,14 @@
+mod models;
+
 use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
 use anyhow::Result;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
-use ton_token_abi::UnpackAbi;
 use ton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
 
+use self::models::*;
 use super::{ContractSubscription, InternalMessage};
 use crate::contracts;
 use crate::core::models::*;
@@ -15,7 +17,6 @@ use crate::helpers::abi::{self, BigUint128, BigUint256, FunctionArg, FunctionExt
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
-use ton_types::UInt256;
 
 pub struct TokenWallet {
     transport: Arc<dyn Transport>,
@@ -559,40 +560,6 @@ fn unpack_brief_root_token_contract_details(
     Ok(data)
 }
 
-#[derive(UnpackAbi)]
-struct BriefRootTokenContractDetails {
-    #[abi]
-    name: String,
-    #[abi]
-    symbol: String,
-    #[abi(uint8)]
-    decimals: u8,
-    #[abi(cell, name = "wallet_code")]
-    _wallet_code: ton_types::Cell,
-    #[abi(uint256, name = "root_public_key")]
-    _root_public_key: UInt256,
-    #[abi(address)]
-    root_owner_address: MsgAddressInt,
-    /*#[abi(biguint128)]
-    _total_supply: BigUint,*/
-}
-
-#[derive(UnpackAbi)]
-struct BriefRootTokenContractDetailsV4 {
-    #[abi]
-    name: String,
-    #[abi]
-    symbol: String,
-    #[abi(uint8)]
-    decimals: u8,
-    #[abi(uint256, name = "root_public_key")]
-    _root_public_key: UInt256,
-    #[abi(address)]
-    root_owner_address: MsgAddressInt,
-    /*#[abi(biguint128)]
-    _total_supply: BigUint,*/
-}
-
 #[derive(Debug)]
 pub struct TokenWalletContractState<'a>(pub &'a ExistingContract);
 
@@ -617,15 +584,8 @@ impl<'a> TokenWalletContractState<'a> {
 
         let inputs = adjust_responsible(&mut function, version);
 
-        #[derive(UnpackAbi)]
-        #[abi(plain)]
-        struct Balance {
-            #[abi(biguint128, name = "value0")]
-            balance: BigUint,
-        }
-
         let tokens = self.0.run_local(&function.build(), &inputs)?;
-        let data: Balance = tokens.unpack()?;
+        let data: TonTokenWalletBalance = tokens.unpack()?;
 
         Ok(data.balance)
     }
@@ -684,44 +644,6 @@ impl<'a> TokenWalletContractState<'a> {
 
         Err(TokenWalletError::UnknownVersion.into())
     }
-}
-
-#[derive(UnpackAbi)]
-struct TonTokenWalletDetails {
-    #[abi(address)]
-    root_address: MsgAddressInt,
-    #[abi(cell)]
-    code: ton_types::Cell,
-    #[abi(uint256, name = "wallet_public_key")]
-    _wallet_public_key: UInt256,
-    #[abi(address)]
-    owner_address: MsgAddressInt,
-    #[abi(biguint128, name = "balance")]
-    _balance: BigUint,
-    /*#[abi(address)]
-    _receive_callback: MsgAddressInt,
-    #[abi(address)]
-    _bounced_callback: MsgAddressInt,
-    #[abi(bool)]
-    _allow_non_notifiable: bool,*/
-}
-
-#[derive(UnpackAbi)]
-struct TonTokenWalletDetailsV4 {
-    #[abi(address)]
-    root_address: MsgAddressInt,
-    #[abi(uint256, name = "wallet_public_key")]
-    _wallet_public_key: UInt256,
-    #[abi(address)]
-    owner_address: MsgAddressInt,
-    #[abi(biguint128, name = "balance")]
-    _balance: BigUint,
-    /*#[abi(address)]
-    _receive_callback: MsgAddressInt,
-    #[abi(address)]
-    _bounced_callback: MsgAddressInt,
-    #[abi(bool)]
-    _allow_non_notifiable: bool,*/
 }
 
 fn unpack_token_wallet_details(
@@ -798,23 +720,6 @@ impl<'a> TonEventContractState<'a> {
     }
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
-struct TonEventDecodedData {
-    #[abi(address, name = "rootToken")]
-    root_token: MsgAddressInt,
-    #[abi(int8, name = "wid")]
-    _wid: i8,
-    #[abi(uint256, name = "addr")]
-    _addr: UInt256,
-    #[abi(biguint128)]
-    tokens: BigUint,
-    #[abi(uint160)]
-    ethereum_address: BigUint,
-    #[abi(address, name = "owner_address")]
-    _owner_address: MsgAddressInt,
-}
-
 impl TryFrom<Vec<ton_abi::Token>> for TonEventData {
     type Error = UnpackerError;
 
@@ -864,28 +769,6 @@ impl TryFrom<Vec<ton_abi::Token>> for TonEventDetails {
     }
 }
 
-#[derive(UnpackAbi)]
-struct TonEventInitData {
-    #[abi(uint256, name = "eventTransaction")]
-    _event_transaction: UInt256,
-    #[abi(uint64, name = "eventTransactionLt")]
-    _event_transaction_lt: u64,
-    #[abi(uint32, name = "eventTimestamp")]
-    _event_timestamp: u32,
-    #[abi(uint32, name = "eventIndex")]
-    _event_index: u32,
-    #[abi(cell, name = "eventData")]
-    _event_data: ton_types::Cell,
-    #[abi(address, name = "tonEventConfiguration")]
-    _ton_event_configuration: MsgAddressInt,
-    #[abi(uint16, name = "requiredConfirmations")]
-    required_confirmations: u16,
-    #[abi(uint16, name = "requiredRejects")]
-    required_rejects: u16,
-    #[abi(cell, name = "configurationMeta")]
-    _configuration_meta: ton_types::Cell,
-}
-
 pub struct EthEventContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> EthEventContractState<'a> {
@@ -906,23 +789,6 @@ impl<'a> EthEventContractState<'a> {
         let data = self.0.run_local(function, &[])?.try_into()?;
         Ok(data)
     }
-}
-
-#[derive(UnpackAbi)]
-#[abi(plain)]
-struct EthEventDecodedData {
-    #[abi(address, name = "rootToken")]
-    root_token: MsgAddressInt,
-    #[abi(biguint128)]
-    tokens: BigUint,
-    #[abi(int8, name = "wid")]
-    _wid: i8,
-    #[abi(uint256, name = "owner_addr")]
-    _owner_addr: UInt256,
-    #[abi(uint256, name = "owner_pubkey")]
-    _owner_pubkey: UInt256,
-    #[abi(address, name = "owner_address")]
-    _owner_address: MsgAddressInt,
 }
 
 impl TryFrom<Vec<ton_abi::Token>> for EthEventData {
@@ -958,30 +824,6 @@ impl TryFrom<Vec<ton_abi::Token>> for EthEventDetails {
             rejection_count,
         })
     }
-}
-
-#[derive(UnpackAbi)]
-struct EthEventInitData {
-    #[abi(uint256, name = "eventTransaction")]
-    _event_transaction: UInt256,
-    #[abi(uint32, name = "eventIndex")]
-    _event_index: u32,
-    #[abi(cell, name = "eventData")]
-    _event_data: ton_types::Cell,
-    #[abi(uint32, name = "eventBlockNumber")]
-    _event_block_number: u32,
-    #[abi(uint256, name = "eventBlock")]
-    _event_block: UInt256,
-    #[abi(address, name = "ethereumEventConfiguration")]
-    _ethereum_event_configuration: MsgAddressInt,
-    #[abi(uint16, name = "requiredConfirmations")]
-    required_confirmations: u16,
-    #[abi(uint16, name = "requiredRejects")]
-    required_rejects: u16,
-    #[abi(address, name = "proxyAddress")]
-    _proxy_address: MsgAddressInt,
-    #[abi(cell, name = "configurationMeta")]
-    _configuration_meta: ton_types::Cell,
 }
 
 fn unpack_vote_count<I>(
