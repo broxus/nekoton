@@ -179,15 +179,14 @@ mod tests {
     async fn test_key_block() {
         let client = Arc::new(reqwest::Client::new());
         let transport = super::JrpcTransport::new(client);
-        let id = transport.get_latest_key_block().await.unwrap().global_id;
-        println!("{}", id);
+        transport.get_latest_key_block().await.unwrap();
     }
 
     #[tokio::test]
     async fn test_get_state() {
         let client = Arc::new(reqwest::Client::new());
         let transport = super::JrpcTransport::new(client);
-        let id = transport
+        transport
             .get_contract_state(
                 &MsgAddressInt::from_str(
                     "-1:5555555555555555555555555555555555555555555555555555555555555555",
@@ -196,9 +195,7 @@ mod tests {
             )
             .await
             .unwrap()
-            .brief()
-            .balance;
-        println!("{}", id);
+            .brief();
     }
 
     #[tokio::test]
@@ -235,13 +232,10 @@ mod tests {
     async fn test_get_config() {
         let client = Arc::new(reqwest::Client::new());
         let transport = super::JrpcTransport::new(client);
-        let id = transport
+        transport
             .get_blockchain_config()
             .await
             .unwrap()
-            .get_fwd_prices(true)
-            .cell_price;
-
-        println!("{}", id);
+            .get_fwd_prices(true);
     }
 }

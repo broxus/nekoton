@@ -43,8 +43,8 @@ pub struct TonTokenWalletDetails {
     pub root_address: MsgAddressInt,
     #[abi(cell)]
     pub code: ton_types::Cell,
-    #[abi(uint256, name = "wallet_public_key")]
-    _wallet_public_key: UInt256,
+    #[abi(uint256)]
+    pub wallet_public_key: UInt256,
     #[abi(address)]
     pub owner_address: MsgAddressInt,
     #[abi(biguint128, name = "balance")]
@@ -61,8 +61,8 @@ pub struct TonTokenWalletDetails {
 pub struct TonTokenWalletDetailsV4 {
     #[abi(address)]
     pub root_address: MsgAddressInt,
-    #[abi(uint256, name = "wallet_public_key")]
-    _wallet_public_key: UInt256,
+    #[abi(uint256)]
+    pub wallet_public_key: UInt256,
     #[abi(address)]
     pub owner_address: MsgAddressInt,
     #[abi(biguint128, name = "balance")]

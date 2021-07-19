@@ -348,6 +348,30 @@ pub trait TokenWalletSubscriptionHandler: Send + Sync {
     );
 }
 
+pub async fn get_token_root_details_from_token_wallet(
+    transport: &dyn Transport,
+    token_wallet_address: &MsgAddressInt,
+) -> Result<(MsgAddressInt, RootTokenContractDetails)> {
+    let state = match transport.get_contract_state(token_wallet_address).await? {
+        RawContractState::Exists(state) => state,
+        RawContractState::NotExists => return Err(TokenWalletError::WalletNotDeployed.into()),
+    };
+    let state = TokenWalletContractState(&state);
+    let version = state.get_version()?;
+    let root_token_contract = state.get_details(version)?.root_address;
+
+    let state = match transport.get_contract_state(&root_token_contract).await? {
+        RawContractState::Exists(state) => state,
+        RawContractState::NotExists => {
+            return Err(TokenWalletError::InvalidRootTokenContract.into())
+        }
+    };
+    let state = RootTokenContractState(&state);
+    let details = state.get_details(version)?;
+
+    Ok((root_token_contract, details))
+}
+
 pub async fn get_eth_event_data<'a>(
     transport: &'a dyn Transport,
     event_address: &'a MsgAddressInt,
@@ -660,6 +684,7 @@ fn unpack_token_wallet_details(
             root_address: data.root_address,
             owner_address: data.owner_address,
             code: Some(data.code),
+            wallet_public_key: data.wallet_public_key,
         }
     } else {
         let data: TonTokenWalletDetailsV4 = tokens.into_unpacker().unpack_next()?;
@@ -667,6 +692,7 @@ fn unpack_token_wallet_details(
             root_address: data.root_address,
             owner_address: data.owner_address,
             code: None,
+            wallet_public_key: data.wallet_public_key,
         }
     };
 
@@ -967,7 +993,7 @@ mod tests {
     fn prepare_contract(data: &str) -> ExistingContract {
         let account = match ton_block::Account::construct_from_base64(data).unwrap() {
             ton_block::Account::Account(stuff) => stuff,
-            _ => unreachable!(),
+            ton_block::Account::AccountNone => unreachable!(),
         };
         ExistingContract {
             account,
