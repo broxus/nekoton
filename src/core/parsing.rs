@@ -2,11 +2,10 @@ use std::convert::TryFrom;
 
 use anyhow::Result;
 use num_bigint::BigUint;
-use num_traits::ToPrimitive;
 use once_cell::sync::OnceCell;
 use ton_block::{MsgAddressInt, Serializable};
 use ton_token_abi::UnpackAbi;
-use ton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
+use ton_token_unpacker::{UnpackToken, UnpackerError};
 
 use crate::contracts;
 use crate::core::models::*;
@@ -278,7 +277,10 @@ impl TryFrom<InputMessage> for TokenWalletDeployedNotification {
     }
 }
 
+#[derive(UnpackAbi)]
+#[abi(plain)]
 struct EthEventStatusChanged {
+    #[abi(name = "status")]
     new_status: EthEventStatus,
 }
 
@@ -286,30 +288,18 @@ impl TryFrom<InputMessage> for EthEventStatusChanged {
     type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_unpacker();
+        let input: EthEventStatusChanged = value.0.unpack()?;
 
         Ok(Self {
-            new_status: input.unpack_next()?,
+            new_status: input.new_status,
         })
     }
 }
 
-impl UnpackToken<EthEventStatus> for ton_abi::TokenValue {
-    fn unpack(self) -> ContractResult<EthEventStatus> {
-        match self {
-            ton_abi::TokenValue::Uint(int) => match int.number.to_u8() {
-                Some(0) => Ok(EthEventStatus::InProcess),
-                Some(1) => Ok(EthEventStatus::Confirmed),
-                Some(2) => Ok(EthEventStatus::Executed),
-                Some(3) => Ok(EthEventStatus::Rejected),
-                _ => Err(UnpackerError::InvalidAbi),
-            },
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-}
-
+#[derive(UnpackAbi)]
+#[abi(plain)]
 struct TonEventStatusChanged {
+    #[abi(name = "status")]
     new_status: TonEventStatus,
 }
 
@@ -317,25 +307,11 @@ impl TryFrom<InputMessage> for TonEventStatusChanged {
     type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_unpacker();
+        let input: TonEventStatusChanged = value.0.unpack()?;
 
         Ok(Self {
-            new_status: input.unpack_next()?,
+            new_status: input.new_status,
         })
-    }
-}
-
-impl UnpackToken<TonEventStatus> for ton_abi::TokenValue {
-    fn unpack(self) -> ContractResult<TonEventStatus> {
-        match self {
-            ton_abi::TokenValue::Uint(int) => match int.number.to_u8() {
-                Some(0) => Ok(TonEventStatus::InProcess),
-                Some(1) => Ok(TonEventStatus::Confirmed),
-                Some(2) => Ok(TonEventStatus::Rejected),
-                _ => Err(UnpackerError::InvalidAbi),
-            },
-            _ => Err(UnpackerError::InvalidAbi),
-        }
     }
 }
 

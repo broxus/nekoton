@@ -98,22 +98,20 @@ pub struct TokenWalletDeployedNotification {
     pub root_token_contract: MsgAddressInt,
 }
 
-crate::define_string_enum!(
-    pub enum EthEventStatus {
-        InProcess,
-        Confirmed,
-        Executed,
-        Rejected,
-    }
-);
+#[derive(UnpackAbi, Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum EthEventStatus {
+    InProcess = 0,
+    Confirmed = 1,
+    Executed = 2,
+    Rejected = 3,
+}
 
-crate::define_string_enum!(
-    pub enum TonEventStatus {
-        InProcess,
-        Confirmed,
-        Rejected,
-    }
-);
+#[derive(UnpackAbi, Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum TonEventStatus {
+    InProcess = 0,
+    Confirmed = 1,
+    Rejected = 2,
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

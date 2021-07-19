@@ -8,6 +8,7 @@ use num_bigint::{BigInt, BigUint};
 use ton_abi::{Function, Param, Token, TokenValue};
 use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt, Serializable};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
+use ton_token_unpacker::UnpackerError;
 use ton_types::{SliceData, UInt256};
 
 use crate::core::models::{GenTimings, LastTransactionId};
@@ -15,11 +16,11 @@ use crate::utils::*;
 
 pub use self::function_builder::*;
 pub use self::message_builder::*;
-pub use self::token_parser::*;
+pub use self::token_ext::*;
 
 mod function_builder;
 mod message_builder;
-mod token_parser;
+mod token_ext;
 mod tvm;
 
 const TON_ABI_VERSION: u8 = 2;
@@ -60,7 +61,7 @@ pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
 pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
     let bytes = base64::decode(&cell)?;
     let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
-        .map_err(|_| ParserError::InvalidAbi)?;
+        .map_err(|_| UnpackerError::InvalidAbi)?;
     Ok(SliceData::from(cell))
 }
 
