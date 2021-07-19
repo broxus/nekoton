@@ -70,10 +70,9 @@ pub fn unpack_std_smc_addr(packed: &str, base64_url: bool) -> Result<MsgAddressI
 }
 
 pub fn validate_address(address: &str) -> bool {
-    let regular = MsgAddressInt::from_str(address).is_ok();
-    let b64_def = unpack_std_smc_addr(address, false).is_ok();
-    let b64_safe = unpack_std_smc_addr(address, true).is_ok();
-    regular | b64_def | b64_safe
+    MsgAddressInt::from_str(address).is_ok()
+        || unpack_std_smc_addr(address, false).is_ok()
+        || unpack_std_smc_addr(address, true).is_ok()
 }
 
 /// repacks any `address` to `MsgAddressInt`

@@ -1,4 +1,4 @@
-use std::collections::hash_map::{self, HashMap};
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::io::Read;
 
@@ -70,22 +70,17 @@ impl StoreSigner for EncryptedKeySigner {
         )?;
 
         let public_key = *key.public_key();
+        let name = key.inner.name.clone();
+        self.keys.insert(public_key.to_bytes(), key);
 
-        match self.keys.entry(public_key.to_bytes()) {
-            hash_map::Entry::Vacant(entry) => {
-                let name = key.inner.name.clone();
-                entry.insert(key);
+        password.proceed();
 
-                password.proceed();
-                Ok(SignerEntry {
-                    name,
-                    public_key,
-                    master_key: public_key,
-                    account_id: input.mnemonic_type.account_id(),
-                })
-            }
-            hash_map::Entry::Occupied(_) => return Err(EncryptedKeyError::KeyAlreadyExists.into()),
-        }
+        Ok(SignerEntry {
+            name,
+            public_key,
+            master_key: public_key,
+            account_id: input.mnemonic_type.account_id(),
+        })
     }
 
     async fn update_key(
@@ -592,8 +587,6 @@ pub enum EncryptedKeyError {
     FailedToDecryptData,
     #[error("Failed to encrypt data")]
     FailedToEncryptData,
-    #[error("Key already exists")]
-    KeyAlreadyExists,
     #[error("Key not found")]
     KeyNotFound,
     #[error("Invalid public key")]
@@ -611,7 +604,10 @@ impl From<SymmetricCryptoError> for EncryptedKeyError {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::*;
+    use crate::crypto::PasswordCacheBehavior;
 
     const TEST_PASSWORD: &str = "123";
     const TEST_MNEMONIC: &str = "canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley";
@@ -651,8 +647,8 @@ mod tests {
         )
         .unwrap();
 
-        println!("{}", signer.as_json());
-        let result = signer.sign(b"lol", "lol".into());
+        assert!(!signer.as_json().is_empty());
+        let result = signer.sign(b"lol", "lol");
         assert!(result.is_err());
     }
 
@@ -673,9 +669,8 @@ mod tests {
     ]
 ]"#;
         let mut key = EncryptedKeySigner::new();
-        key.load_state(&json).unwrap();
-        let serialized = key.store_state();
-        println!("{}", serialized);
+        key.load_state(json).unwrap();
+        assert!(!key.store_state().is_empty());
     }
 
     #[tokio::test]
@@ -686,6 +681,58 @@ mod tests {
         };
 
         let mut key = EncryptedKeySigner::new();
+
+        let entry = key
+            .add_key(
+                ctx,
+                EncryptedKeyCreateInput {
+                    name: Some("from giver".to_string()),
+                    phrase: TEST_MNEMONIC.into(),
+                    mnemonic_type: MnemonicType::Labs(0),
+                    password: Password::Explicit {
+                        password: SecUtf8::from("supasecret"),
+                        cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(2)),
+                    },
+                },
+            )
+            .await
+            .unwrap();
+
+        key.export_key(
+            ctx,
+            EncryptedKeyPassword {
+                public_key: entry.public_key,
+                password: Password::FromCache,
+            },
+        )
+        .await
+        .unwrap();
+
+        let entry = key
+            .add_key(
+                ctx,
+                EncryptedKeyCreateInput {
+                    name: Some("new name. same mnemonic".to_string()),
+                    phrase: TEST_MNEMONIC.into(),
+                    mnemonic_type: MnemonicType::Labs(0),
+                    password: Password::Explicit {
+                        password: SecUtf8::from("123123123123123123"),
+                        cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(2)),
+                    },
+                },
+            )
+            .await
+            .unwrap();
+
+        key.export_key(
+            ctx,
+            EncryptedKeyPassword {
+                public_key: entry.public_key,
+                password: Password::FromCache,
+            },
+        )
+        .await
+        .unwrap();
 
         key.add_key(
             ctx,
@@ -733,7 +780,6 @@ mod tests {
         .unwrap();
 
         let serialized = key.store_state();
-        println!("{}", serialized);
 
         let mut loaded = EncryptedKeySigner::new();
         loaded.load_state(&serialized).unwrap();

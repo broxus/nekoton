@@ -1,6 +1,7 @@
 use ton_abi::{Function, Param, ParamType};
+use ton_token_packer::BuildTokenValue;
 
-use super::{FunctionArg, TokenValueExt};
+use super::TokenValueExt;
 
 const ANSWER_ID: &str = "_answer_id";
 

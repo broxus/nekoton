@@ -4,22 +4,23 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use chrono::Utc;
-use num_bigint::{BigInt, BigUint};
 use ton_abi::{Function, Param, Token, TokenValue};
-use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt, Serializable};
+use ton_block::{Account, AccountStuff, Deserializable, Serializable};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_types::{SliceData, UInt256};
+use ton_token_packer::BuildTokenValue;
+use ton_token_unpacker::UnpackerError;
+use ton_types::SliceData;
 
 use crate::core::models::{GenTimings, LastTransactionId};
 use crate::utils::*;
 
 pub use self::function_builder::*;
 pub use self::message_builder::*;
-pub use self::token_parser::*;
+pub use self::token_ext::*;
 
 mod function_builder;
 mod message_builder;
-mod token_parser;
+mod token_ext;
 mod tvm;
 
 const TON_ABI_VERSION: u8 = 2;
@@ -60,7 +61,7 @@ pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
 pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
     let bytes = base64::decode(&cell)?;
     let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
-        .map_err(|_| ParserError::InvalidAbi)?;
+        .map_err(|_| UnpackerError::InvalidAbi)?;
     Ok(SliceData::from(cell))
 }
 
@@ -212,7 +213,7 @@ impl<'a> FunctionAbi<'a> {
     fn run_local(
         &self,
         account_stuff: ton_block::AccountStuff,
-        timings: GenTimings,
+        _timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
@@ -231,7 +232,7 @@ impl<'a> FunctionAbi<'a> {
 
         let BlockStats {
             gen_utime, gen_lt, ..
-        } = get_block_stats(timings, last_transaction_id);
+        } = get_block_stats(None, last_transaction_id);
 
         let tvm::ActionPhaseOutput {
             messages,
@@ -353,7 +354,10 @@ struct BlockStats {
     last_transaction_lt: u64,
 }
 
-fn get_block_stats(timings: GenTimings, last_transaction_id: &LastTransactionId) -> BlockStats {
+fn get_block_stats(
+    timings: Option<GenTimings>,
+    last_transaction_id: &LastTransactionId,
+) -> BlockStats {
     // Additional estimated logical time offset for the latest transaction id
     pub const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
 
@@ -363,14 +367,14 @@ fn get_block_stats(timings: GenTimings, last_transaction_id: &LastTransactionId)
     };
 
     match timings {
-        GenTimings::Unknown => BlockStats {
-            gen_utime: Utc::now().timestamp() as u32,
-            gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
-            last_transaction_lt,
-        },
-        GenTimings::Known { gen_lt, gen_utime } => BlockStats {
+        Some(GenTimings::Known { gen_lt, gen_utime }) => BlockStats {
             gen_utime,
             gen_lt,
+            last_transaction_lt,
+        },
+        _ => BlockStats {
+            gen_utime: Utc::now().timestamp() as u32,
+            gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
             last_transaction_lt,
         },
     }
@@ -380,14 +384,14 @@ impl Executor {
     pub fn new(
         config: BlockchainConfig,
         account_stuff: AccountStuff,
-        timings: GenTimings,
+        _timings: GenTimings,
         last_transaction_id: &LastTransactionId,
     ) -> Self {
         let BlockStats {
             gen_utime,
             gen_lt,
             last_transaction_lt,
-        } = get_block_stats(timings, last_transaction_id);
+        } = get_block_stats(None, last_transaction_id);
 
         Self {
             config,
@@ -424,20 +428,6 @@ impl Executor {
             .convert()
     }
 }
-
-pub trait StandaloneToken {}
-impl StandaloneToken for MsgAddressInt {}
-impl StandaloneToken for MsgAddrStd {}
-impl StandaloneToken for UInt256 {}
-impl StandaloneToken for UInt128 {}
-impl StandaloneToken for BigUint {}
-impl StandaloneToken for BigInt {}
-impl StandaloneToken for u16 {}
-impl StandaloneToken for u32 {}
-impl StandaloneToken for u64 {}
-impl StandaloneToken for bool {}
-impl StandaloneToken for Vec<u8> {}
-impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod tests {

@@ -83,6 +83,6 @@ mod tests {
     #[test]
     fn master_key_derive() {
         let ph = "pioneer fever hazard scan install wise reform corn bubble leisure amazing note";
-        derive_master_key(&ph).unwrap();
+        derive_master_key(ph).unwrap();
     }
 }
