@@ -4,12 +4,12 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use chrono::Utc;
-use num_bigint::{BigInt, BigUint};
 use ton_abi::{Function, Param, Token, TokenValue};
-use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt, Serializable};
+use ton_block::{Account, AccountStuff, Deserializable, Serializable};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
+use ton_token_packer::BuildTokenValue;
 use ton_token_unpacker::UnpackerError;
-use ton_types::{SliceData, UInt256};
+use ton_types::SliceData;
 
 use crate::core::models::{GenTimings, LastTransactionId};
 use crate::utils::*;
@@ -425,20 +425,6 @@ impl Executor {
             .convert()
     }
 }
-
-pub trait StandaloneToken {}
-impl StandaloneToken for MsgAddressInt {}
-impl StandaloneToken for MsgAddrStd {}
-impl StandaloneToken for UInt256 {}
-impl StandaloneToken for UInt128 {}
-impl StandaloneToken for BigUint {}
-impl StandaloneToken for BigInt {}
-impl StandaloneToken for u16 {}
-impl StandaloneToken for u32 {}
-impl StandaloneToken for u64 {}
-impl StandaloneToken for bool {}
-impl StandaloneToken for Vec<u8> {}
-impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod tests {

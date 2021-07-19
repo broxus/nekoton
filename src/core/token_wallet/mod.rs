@@ -6,6 +6,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
+use ton_token_packer::BuildTokenValue;
 use ton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
 
 use self::models::*;
@@ -13,7 +14,7 @@ use super::{ContractSubscription, InternalMessage};
 use crate::contracts;
 use crate::core::models::*;
 use crate::core::parsing::*;
-use crate::helpers::abi::{self, BigUint128, BigUint256, FunctionArg, FunctionExt, TokenValueExt};
+use crate::helpers::abi::{self, BigUint128, BigUint256, FunctionExt, TokenValueExt};
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
