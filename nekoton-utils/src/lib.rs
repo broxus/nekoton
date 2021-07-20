@@ -2,6 +2,7 @@ use std::fmt::{LowerHex, UpperHex};
 use std::str::FromStr;
 
 use anyhow::Error;
+use num_bigint::BigUint;
 use ton_block::MsgAddressInt;
 use ton_types::{SliceData, UInt256};
 
@@ -508,5 +509,27 @@ pub mod serde_ton_block {
 
         let data = String::deserialize(deserializer)?;
         T::construct_from_base64(&data).map_err(D::Error::custom)
+    }
+}
+
+pub mod serde_biguint {
+    use super::*;
+
+    use serde::de::Error;
+    use serde::Deserialize;
+
+    pub fn serialize<S>(data: &BigUint, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&data.to_string())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<BigUint, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = String::deserialize(deserializer)?;
+        BigUint::from_str(&data).map_err(|_| D::Error::custom("Invalid uint256"))
     }
 }
