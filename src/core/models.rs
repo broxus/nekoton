@@ -479,6 +479,7 @@ pub struct RootTokenContractDetails {
     /// Root owner contract address. Used as proxy address in Tip3v1
     #[serde(with = "serde_address")]
     pub owner_address: MsgAddressInt,
+    #[serde(with = "serde_biguint")]
     pub total_supply: BigUint,
 }
 
