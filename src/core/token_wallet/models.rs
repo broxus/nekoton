@@ -17,8 +17,8 @@ pub struct BriefRootTokenContractDetails {
     _root_public_key: UInt256,
     #[abi(address)]
     pub root_owner_address: MsgAddressInt,
-    /*#[abi(biguint128)]
-    _total_supply: BigUint,*/
+    #[abi(biguint128)]
+    pub total_supply: BigUint,
 }
 
 #[derive(UnpackAbi)]
@@ -33,8 +33,8 @@ pub struct BriefRootTokenContractDetailsV4 {
     _root_public_key: UInt256,
     #[abi(address)]
     pub root_owner_address: MsgAddressInt,
-    /*#[abi(biguint128)]
-    _total_supply: BigUint,*/
+    #[abi(biguint128)]
+    pub total_supply: BigUint,
 }
 
 #[derive(UnpackAbi)]
