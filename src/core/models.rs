@@ -464,6 +464,8 @@ pub struct TokenWalletDetails {
     pub code: Option<ton_types::Cell>,
     #[serde(skip)]
     pub wallet_public_key: UInt256,
+    #[serde(with = "serde_biguint")]
+    pub balance: BigUint,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -481,6 +483,8 @@ pub struct RootTokenContractDetails {
     pub owner_address: MsgAddressInt,
     #[serde(with = "serde_biguint")]
     pub total_supply: BigUint,
+    #[serde(with = "serde_uint256")]
+    pub root_public_key: UInt256,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]
