@@ -98,20 +98,28 @@ pub struct TokenWalletDeployedNotification {
     pub root_token_contract: MsgAddressInt,
 }
 
-#[derive(UnpackAbi, Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-pub enum EthEventStatus {
-    InProcess = 0,
-    Confirmed = 1,
-    Executed = 2,
-    Rejected = 3,
-}
+crate::define_string_enum!(
+    #[derive(
+        Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
+    )]
+    pub enum EthEventStatus {
+        InProcess = 0,
+        Confirmed = 1,
+        Executed = 2,
+        Rejected = 3,
+    }
+);
 
-#[derive(UnpackAbi, Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-pub enum TonEventStatus {
-    InProcess = 0,
-    Confirmed = 1,
-    Rejected = 2,
-}
+crate::define_string_enum!(
+    #[derive(
+        Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
+    )]
+    pub enum TonEventStatus {
+        InProcess = 0,
+        Confirmed = 1,
+        Rejected = 2,
+    }
+);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -307,6 +315,7 @@ pub struct TonEventData {
 }
 
 crate::define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum PollingMethod {
         /// Manual polling once a minute or by a click.
         /// Used when there are no pending transactions
@@ -318,6 +327,7 @@ crate::define_string_enum!(
 );
 
 crate::define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum ReliableBehavior {
         /// Used for transports which doesn't support getting blocks directly (ADNL)
         IntensivePolling,
@@ -407,6 +417,7 @@ pub struct Symbol {
 }
 
 crate::define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum TokenWalletVersion {
         /// First stable iteration of token wallets.
         /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/34e466bd42789413f02aeec0051b9d1212fe6de9)

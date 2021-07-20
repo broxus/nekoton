@@ -133,6 +133,7 @@ pub fn prepare_transfer(
 }
 
 crate::define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum MultisigType {
         SafeMultisigWallet,
         SafeMultisigWallet24h,
