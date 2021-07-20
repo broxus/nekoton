@@ -45,10 +45,13 @@ tokio = { version = "1.4", default-features = false, features = ["sync"] }
 x25519-dalek = "1.1"
 zeroize = "1.2.0"
 
-ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi" }
+ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi", rev='a2b2a9dc2e8c30a070e9af79cf0c24a55bdd5a87' }
 ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "original", package = "ton_api", optional = true }
 ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
+ton_token_abi = { git = "https://github.com/broxus/ton-token-abi.git" }
+ton_token_packer = { git = "https://github.com/broxus/ton-token-abi.git" }
+ton_token_unpacker = { git = "https://github.com/broxus/ton-token-abi.git" }
 ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
 tiny-jsonrpc = { version = "0.5.0", default-features = false, optional = true }

@@ -2,15 +2,16 @@ use std::convert::TryFrom;
 
 use anyhow::Result;
 use num_bigint::BigUint;
-use num_traits::ToPrimitive;
 use once_cell::sync::OnceCell;
 use ton_block::{MsgAddressInt, Serializable};
+use ton_token_abi::UnpackAbi;
+use ton_token_unpacker::{UnpackToken, UnpackerError};
 use ton_types::UInt256;
 
 use crate::contracts;
 use crate::core::models::*;
 use crate::core::ton_wallet::WalletType;
-use crate::helpers::abi::{self, ContractResult, FunctionExt, IntoParser, ParseToken, ParserError};
+use crate::helpers::abi::{self, FunctionExt};
 use crate::utils::*;
 
 pub struct InputMessage(pub Vec<ton_abi::Token>);
@@ -234,106 +235,83 @@ impl WalletNotificationFunctions {
 }
 
 impl TryFrom<InputMessage> for DePoolOnRoundCompleteNotification {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
+        let input: DePoolOnRoundCompleteNotification = value.0.unpack()?;
 
         Ok(Self {
-            round_id: input.parse_next()?,
-            reward: input.parse_next()?,
-            ordinary_stake: input.parse_next()?,
-            vesting_stake: input.parse_next()?,
-            lock_stake: input.parse_next()?,
-            reinvest: input.parse_next()?,
-            reason: input.parse_next()?,
+            round_id: input.round_id,
+            reward: input.reward,
+            ordinary_stake: input.ordinary_stake,
+            vesting_stake: input.vesting_stake,
+            lock_stake: input.lock_stake,
+            reinvest: input.reinvest,
+            reason: input.reason,
         })
     }
 }
 
 impl TryFrom<InputMessage> for DePoolReceiveAnswerNotification {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
+        let input: DePoolReceiveAnswerNotification = value.0.unpack()?;
 
         Ok(Self {
-            error_code: input.parse_next()?,
-            comment: input.parse_next()?,
+            error_code: input.error_code,
+            comment: input.comment,
         })
     }
 }
 
 impl TryFrom<InputMessage> for TokenWalletDeployedNotification {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
+        let input: TokenWalletDeployedNotification = value.0.unpack()?;
 
         Ok(Self {
-            root_token_contract: input.parse_next()?,
+            root_token_contract: input.root_token_contract,
         })
     }
 }
 
+#[derive(UnpackAbi)]
+#[abi(plain)]
 struct EthEventStatusChanged {
+    #[abi(name = "status")]
     new_status: EthEventStatus,
 }
 
 impl TryFrom<InputMessage> for EthEventStatusChanged {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
+        let input: EthEventStatusChanged = value.0.unpack()?;
 
         Ok(Self {
-            new_status: input.parse_next()?,
+            new_status: input.new_status,
         })
     }
 }
 
-impl ParseToken<EthEventStatus> for ton_abi::TokenValue {
-    fn try_parse(self) -> ContractResult<EthEventStatus> {
-        match self {
-            ton_abi::TokenValue::Uint(int) => match int.number.to_u8() {
-                Some(0) => Ok(EthEventStatus::InProcess),
-                Some(1) => Ok(EthEventStatus::Confirmed),
-                Some(2) => Ok(EthEventStatus::Executed),
-                Some(3) => Ok(EthEventStatus::Rejected),
-                _ => Err(ParserError::InvalidAbi),
-            },
-            _ => Err(ParserError::InvalidAbi),
-        }
-    }
-}
-
+#[derive(UnpackAbi)]
+#[abi(plain)]
 struct TonEventStatusChanged {
+    #[abi(name = "status")]
     new_status: TonEventStatus,
 }
 
 impl TryFrom<InputMessage> for TonEventStatusChanged {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
+        let input: TonEventStatusChanged = value.0.unpack()?;
 
         Ok(Self {
-            new_status: input.parse_next()?,
+            new_status: input.new_status,
         })
-    }
-}
-
-impl ParseToken<TonEventStatus> for ton_abi::TokenValue {
-    fn try_parse(self) -> ContractResult<TonEventStatus> {
-        match self {
-            ton_abi::TokenValue::Uint(int) => match int.number.to_u8() {
-                Some(0) => Ok(TonEventStatus::InProcess),
-                Some(1) => Ok(TonEventStatus::Confirmed),
-                Some(2) => Ok(TonEventStatus::Rejected),
-                _ => Err(ParserError::InvalidAbi),
-            },
-            _ => Err(ParserError::InvalidAbi),
-        }
     }
 }
 
@@ -425,48 +403,70 @@ impl MultisigFunctions {
 }
 
 impl TryFrom<(UInt256, InputMessage)> for MultisigConfirmTransaction {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from((custodian, value): (UInt256, InputMessage)) -> Result<Self, Self::Error> {
-        let mut parser = value.0.into_parser();
+        let output: MultisigConfirmTransaction = value.0.unpack()?;
         Ok(Self {
             custodian,
-            transaction_id: parser.parse_next()?,
+            transaction_id: output.transaction_id,
         })
     }
 }
 
+#[derive(UnpackAbi)]
+#[abi(plain)]
+struct MultisigSubmitTransactionInput {
+    #[abi(address)]
+    dest: MsgAddressInt,
+    #[abi(biguint128)]
+    value: BigUint,
+    #[abi(bool)]
+    bounce: bool,
+    #[abi(bool, name = "allBalance")]
+    all_balance: bool,
+    #[abi(cell)]
+    payload: ton_types::Cell,
+}
+
+#[derive(UnpackAbi)]
+#[abi(plain)]
+struct MultisigSubmitTransactionOutput {
+    #[abi(uint64, name = "transId")]
+    trans_id: u64,
+}
+
 impl TryFrom<(UInt256, ContractCall)> for MultisigSubmitTransaction {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from((custodian, value): (UInt256, ContractCall)) -> Result<Self, Self::Error> {
-        let mut input = value.inputs.into_parser();
-        let mut output = value.outputs.into_parser();
+        let input: MultisigSubmitTransactionInput = value.inputs.unpack()?;
+        let output: MultisigSubmitTransactionOutput = value.outputs.unpack()?;
 
         Ok(Self {
             custodian,
-            dest: input.parse_next()?,
-            value: input.parse_next()?,
-            bounce: input.parse_next()?,
-            all_balance: input.parse_next()?,
-            payload: input.parse_next()?,
-            trans_id: output.parse_next()?,
+            dest: input.dest,
+            value: input.value,
+            bounce: input.bounce,
+            all_balance: input.all_balance,
+            payload: input.payload,
+            trans_id: output.trans_id,
         })
     }
 }
 
 impl TryFrom<InputMessage> for MultisigSendTransaction {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
+        let input: MultisigSendTransaction = value.0.unpack()?;
 
         Ok(Self {
-            dest: input.parse_next()?,
-            value: input.parse_next()?,
-            bounce: input.parse_next()?,
-            flags: input.parse_next()?,
-            payload: input.parse_next()?,
+            dest: input.dest,
+            value: input.value,
+            bounce: input.bounce,
+            flags: input.flags,
+            payload: input.payload,
         })
     }
 }
@@ -612,23 +612,33 @@ impl RootTokenContractFunctions {
     }
 }
 
+#[derive(UnpackAbi)]
+#[abi(plain)]
+struct TonTokenWalletBurnByOwner {
+    #[abi(biguint128)]
+    tokens: BigUint,
+    #[abi(biguint128, name = "grams")]
+    _grams: BigUint,
+    #[abi(address, name = "send_gas_to")]
+    _send_gas_to: MsgAddressInt,
+    #[abi(address, name = "callback_address")]
+    _callback_address: MsgAddressInt,
+    #[abi(cell)]
+    callback_payload: ton_types::Cell,
+}
+
 impl TryFrom<InputMessage> for TokenSwapBack {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
-
-        let tokens = input.parse_next()?;
-        let _grams: BigUint = input.parse_next()?;
-        let _send_grams_to: MsgAddressInt = input.parse_next()?;
-        let _callback_address: MsgAddressInt = input.parse_next()?;
-        let callback_payload: ton_types::Cell = input.parse_next()?;
+        let input: TonTokenWalletBurnByOwner = value.0.unpack()?;
 
         let to = match ton_abi::TokenValue::read_from(
             &ton_abi::ParamType::Bytes,
-            callback_payload
+            input
+                .callback_payload
                 .write_to_new_cell()
-                .map_err(|_| ParserError::InvalidAbi)?
+                .map_err(|_| UnpackerError::InvalidAbi)?
                 .into(),
             true,
             2,
@@ -636,25 +646,31 @@ impl TryFrom<InputMessage> for TokenSwapBack {
             Ok((ton_abi::TokenValue::Bytes(destination), _)) if destination.len() == 20 => {
                 format!("0x{}", hex::encode(&destination))
             }
-            _ => return Err(ParserError::InvalidAbi),
+            _ => return Err(UnpackerError::InvalidAbi),
         };
 
-        Ok(TokenSwapBack { tokens, to })
+        Ok(TokenSwapBack {
+            tokens: input.tokens,
+            to,
+        })
     }
 }
 
+#[derive(UnpackAbi)]
+#[abi(plain)]
 struct Accept {
+    #[abi(biguint128)]
     tokens: BigUint,
 }
 
 impl TryFrom<InputMessage> for Accept {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
+        let input: Accept = value.0.unpack()?;
 
         Ok(Accept {
-            tokens: input.parse_next()?,
+            tokens: input.tokens,
         })
     }
 }
@@ -664,43 +680,97 @@ enum TransferType {
     ByTokenWalletAddress,
 }
 
+#[derive(UnpackAbi)]
+#[abi(plain)]
+struct TonTokenWalletTransferToRecipient {
+    #[abi(uint256, name = "recipient_public_key")]
+    _recipient_public_key: UInt256,
+    #[abi(address)]
+    recipient_address: MsgAddressInt,
+    #[abi(biguint128)]
+    tokens: BigUint,
+    #[abi(biguint128, name = "deploy_grams")]
+    _deploy_grams: BigUint,
+    #[abi(biguint128, name = "transfer_grams")]
+    _transfer_grams: BigUint,
+    #[abi(address, name = "send_gas_to")]
+    _send_gas_to: MsgAddressInt,
+    #[abi(bool, name = "notify_receiver")]
+    _notify_receiver: bool,
+    #[abi(cell, name = "payload")]
+    _payload: ton_types::Cell,
+}
+
+#[derive(UnpackAbi)]
+#[abi(plain)]
+struct TonTokenWalletTransfer {
+    #[abi(address)]
+    to: MsgAddressInt,
+    #[abi(biguint128)]
+    tokens: BigUint,
+    #[abi(biguint128, name = "grams")]
+    _grams: BigUint,
+    #[abi(address, name = "send_gas_to")]
+    _send_gas_to: MsgAddressInt,
+    #[abi(bool, name = "notify_receiver")]
+    _notify_receiver: bool,
+    #[abi(cell, name = "payload")]
+    _payload: ton_types::Cell,
+}
+
 impl TryFrom<(InputMessage, TransferType)> for TokenOutgoingTransfer {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from((value, transfer_type): (InputMessage, TransferType)) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
-
-        let to = match transfer_type {
+        let data = match transfer_type {
             // "transferToRecipient"
             TransferType::ByOwnerWalletAddress => {
-                let _public_key: BigUint = input.parse_next()?; // recipient_public_key
-                TransferRecipient::OwnerWallet(input.parse_next()?) // recipient_address
+                let input: TonTokenWalletTransferToRecipient = value.0.unpack()?;
+                TokenOutgoingTransfer {
+                    to: TransferRecipient::OwnerWallet(input.recipient_address),
+                    tokens: input.tokens,
+                }
             }
             // "transfer
             TransferType::ByTokenWalletAddress => {
-                TransferRecipient::TokenWallet(input.parse_next()?) // to
+                let input: TonTokenWalletTransfer = value.0.unpack()?;
+                TokenOutgoingTransfer {
+                    to: TransferRecipient::TokenWallet(input.to),
+                    tokens: input.tokens,
+                }
             }
         };
 
-        let tokens = input.parse_next()?;
-
-        Ok(TokenOutgoingTransfer { to, tokens })
+        Ok(data)
     }
 }
 
+#[derive(UnpackAbi)]
+#[abi(plain)]
+struct TonTokenWalletInternalTransfer {
+    #[abi(biguint128)]
+    tokens: BigUint,
+    #[abi(uint256, name = "sender_public_key")]
+    _sender_public_key: UInt256,
+    #[abi(address, name = "sender_address")]
+    sender_address: MsgAddressInt,
+    #[abi(address, name = "send_gas_to")]
+    _send_gas_to: MsgAddressInt,
+    #[abi(bool, name = "notify_receiver")]
+    _notify_receiver: bool,
+    #[abi(cell, name = "payload")]
+    _payload: ton_types::Cell,
+}
+
 impl TryFrom<InputMessage> for TokenIncomingTransfer {
-    type Error = ParserError;
+    type Error = UnpackerError;
 
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let mut input = value.0.into_parser();
-
-        let tokens = input.parse_next()?;
-        let _sender_public_key: BigUint = input.parse_next()?;
-        let sender_address = input.parse_next()?;
+        let input: TonTokenWalletInternalTransfer = value.0.unpack()?;
 
         Ok(TokenIncomingTransfer {
-            tokens,
-            sender_address,
+            tokens: input.tokens,
+            sender_address: input.sender_address,
         })
     }
 }
@@ -932,11 +1002,6 @@ mod tests {
     #[test]
     fn test_parse_bounced_tokens_transfer() {
         let (tx, description) = parse_transaction("te6ccgECCQEAAiEAA7V9jKvgMYxeLukedeW/PRr7QyRzEpkal33nb9KfgpelA3AAAO1mmxCMEy4UbEGiIQKVpE2nzO2Ar32k7H36ni1NMpxrcPorUNuwAADtZo+e3BYO9BHwADRwGMkIBQQBAhcMSgkCmI36GG92AhEDAgBvyYehIEwUWEAAAAAAAAQAAgAAAAKLF5Ge7DorMQ9dbEzZTgWK7Jiugap8s4dRpkiQl7CNEEBQFgwAnkP1TAqiBAAAAAAAAAAAtgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIBZa/nTbAD2Vcr8A6p+uT7XD4tLowmBLZEuIHLxU1zbeHGgHFi5dfeWnrNgtL3FHE6zw6ysjTJJI3LFFDAgPi3AgHgCAYBAd8HALFoAbGVfAYxi8XdI868t+ejX2hkjmJTI1LvvO36U/BS9KBvABgzjiRJUfoXsV99CuD/WnKK4QN5mlferMiVbk0Y3Jc3ECddFmAGFFhgAAAdrNNiEYTB3oI+QAD5WAHF6/YBDYNj7TABzedO3/4+ENpaE0PhwRx5NFYisFNfpQA2Mq+AxjF4u6R515b89GvtDJHMSmRqXfedv0p+Cl6UDdApiN+gBhRYYAAAHazSjHIEwd6CFH////+MaQuBAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAEA=");
-
-        println!(
-            "{:?}",
-            parse_token_transaction(&tx, &description, TokenWalletVersion::Tip3v4).unwrap()
-        );
 
         assert!(matches!(
             parse_token_transaction(&tx, &description, TokenWalletVersion::Tip3v4).unwrap(),

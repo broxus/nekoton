@@ -1,17 +1,20 @@
+mod models;
+
 use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
 use anyhow::Result;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
+use ton_token_packer::BuildTokenValue;
+use ton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
 
+use self::models::*;
 use super::{ContractSubscription, InternalMessage};
 use crate::contracts;
 use crate::core::models::*;
 use crate::core::parsing::*;
-use crate::helpers::abi::{
-    self, BigUint128, BigUint256, FunctionArg, FunctionExt, IntoParser, TokenValueExt,
-};
+use crate::helpers::abi::{self, BigUint128, BigUint256, FunctionExt, TokenValueExt};
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
@@ -492,8 +495,8 @@ impl<'a> RootTokenContractState<'a> {
         let address = self
             .0
             .run_local(&function.build(), &inputs)?
-            .into_parser()
-            .parse_next()?;
+            .into_unpacker()
+            .unpack_next()?;
 
         Ok(address)
     }
@@ -548,58 +551,40 @@ impl<'a> RootTokenContractState<'a> {
         let inputs = adjust_responsible(&mut function, version);
         let outputs = self.0.run_local(&function.build(), &inputs)?;
 
-        Ok(parse_brief_root_token_contract_details(version, outputs)?.extend(version))
+        Ok(unpack_brief_root_token_contract_details(version, outputs)?)
     }
 }
 
-fn parse_brief_root_token_contract_details(
+fn unpack_brief_root_token_contract_details(
     version: TokenWalletVersion,
     tokens: Vec<ton_abi::Token>,
-) -> abi::ContractResult<BriefRootTokenContractDetails> {
-    let mut tuple = match tokens.into_parser().parse_next() {
-        Ok(ton_abi::TokenValue::Tuple(tokens)) => tokens.into_parser(),
-        _ => return Err(abi::ParserError::InvalidAbi),
-    };
-
-    let name = tuple.parse_next()?;
-    let symbol = tuple.parse_next()?;
-    let decimals = tuple.parse_next()?;
-
-    if matches!(
+) -> ContractResult<RootTokenContractDetails> {
+    let data = if matches!(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
     ) {
-        let _wallet_code: ton_types::Cell = tuple.parse_next()?;
-    }
-
-    let _root_public_key: ton_types::UInt256 = tuple.parse_next()?;
-    let owner_address = tuple.parse_next()?;
-
-    Ok(BriefRootTokenContractDetails {
-        name,
-        symbol,
-        decimals,
-        owner_address,
-    })
-}
-
-struct BriefRootTokenContractDetails {
-    name: String,
-    symbol: String,
-    decimals: u8,
-    owner_address: MsgAddressInt,
-}
-
-impl BriefRootTokenContractDetails {
-    pub fn extend(self, version: TokenWalletVersion) -> RootTokenContractDetails {
+        let data: BriefRootTokenContractDetails = tokens.into_unpacker().unpack_next()?;
         RootTokenContractDetails {
             version,
-            name: self.name,
-            symbol: self.symbol,
-            decimals: self.decimals,
-            owner_address: self.owner_address,
+            name: data.name,
+            symbol: data.symbol,
+            decimals: data.decimals,
+            owner_address: data.root_owner_address,
+            total_supply: data.total_supply,
         }
-    }
+    } else {
+        let data: BriefRootTokenContractDetailsV4 = tokens.into_unpacker().unpack_next()?;
+        RootTokenContractDetails {
+            version,
+            name: data.name,
+            symbol: data.symbol,
+            decimals: data.decimals,
+            owner_address: data.root_owner_address,
+            total_supply: data.total_supply,
+        }
+    };
+
+    Ok(data)
 }
 
 #[derive(Debug)]
@@ -626,13 +611,10 @@ impl<'a> TokenWalletContractState<'a> {
 
         let inputs = adjust_responsible(&mut function, version);
 
-        let balance = self
-            .0
-            .run_local(&function.build(), &inputs)?
-            .into_parser()
-            .parse_next()?;
+        let tokens = self.0.run_local(&function.build(), &inputs)?;
+        let data: TonTokenWalletBalance = tokens.unpack()?;
 
-        Ok(balance)
+        Ok(data.balance)
     }
 
     pub fn get_details(&self, version: TokenWalletVersion) -> Result<TokenWalletDetails> {
@@ -668,7 +650,7 @@ impl<'a> TokenWalletContractState<'a> {
         let inputs = adjust_responsible(&mut function, version);
         let outputs = self.0.run_local(&function.build(), &inputs)?;
 
-        let details = parse_token_wallet_details(version, outputs)?;
+        let details = unpack_token_wallet_details(version, outputs)?;
 
         Ok(details)
     }
@@ -691,36 +673,32 @@ impl<'a> TokenWalletContractState<'a> {
     }
 }
 
-fn parse_token_wallet_details(
+fn unpack_token_wallet_details(
     version: TokenWalletVersion,
     tokens: Vec<ton_abi::Token>,
-) -> abi::ContractResult<TokenWalletDetails> {
-    let mut tuple = match tokens.into_parser().parse_next() {
-        Ok(ton_abi::TokenValue::Tuple(tokens)) => tokens.into_parser(),
-        _ => return Err(abi::ParserError::InvalidAbi),
-    };
-
-    let root_address = tuple.parse_next()?;
-
-    let code = if matches!(
+) -> ContractResult<TokenWalletDetails> {
+    let data = if matches!(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
     ) {
-        let code: ton_types::Cell = tuple.parse_next()?;
-        Some(code)
+        let data: TonTokenWalletDetails = tokens.into_unpacker().unpack_next()?;
+        TokenWalletDetails {
+            root_address: data.root_address,
+            owner_address: data.owner_address,
+            code: Some(data.code),
+            wallet_public_key: data.wallet_public_key,
+        }
     } else {
-        None
+        let data: TonTokenWalletDetailsV4 = tokens.into_unpacker().unpack_next()?;
+        TokenWalletDetails {
+            root_address: data.root_address,
+            owner_address: data.owner_address,
+            code: None,
+            wallet_public_key: data.wallet_public_key,
+        }
     };
 
-    let wallet_public_key: ton_types::UInt256 = tuple.parse_next()?;
-    let owner_address = tuple.parse_next()?;
-
-    Ok(TokenWalletDetails {
-        root_address,
-        owner_address,
-        code,
-        wallet_public_key,
-    })
+    Ok(data)
 }
 
 struct RootMetaContractState<'a>(&'a ExistingContract);
@@ -736,8 +714,8 @@ impl<'a> RootMetaContractState<'a> {
         let value: ton_types::Cell = self
             .0
             .run_local(&function, &[0u16.token_value().named("key")])?
-            .into_parser()
-            .parse_next()?;
+            .into_unpacker()
+            .unpack_next()?;
 
         let proxy_address = MsgAddressInt::construct_from_cell(value).convert()?;
 
@@ -772,21 +750,16 @@ impl<'a> TonEventContractState<'a> {
 }
 
 impl TryFrom<Vec<ton_abi::Token>> for TonEventData {
-    type Error = abi::ParserError;
+    type Error = UnpackerError;
 
     fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
-        let mut tuple = tokens.into_parser();
-
-        let root_token_contract: MsgAddressInt = tuple.parse_next()?;
-        let _wid: BigInt = tuple.parse_next()?;
-        let _addr: BigUint = tuple.parse_next()?;
-        let tokens: BigUint = tuple.parse_next()?;
+        let data: TonEventDecodedData = tokens.unpack()?;
 
         let to = {
-            let address: BigUint = tuple.parse_next()?;
+            let address: BigUint = data.ethereum_address;
             let bytes = address.to_bytes_be();
             if bytes.len() > 20 {
-                return Err(abi::ParserError::InvalidAbi);
+                return Err(UnpackerError::InvalidAbi);
             }
 
             let mut padded_data = [0u8; 20];
@@ -796,24 +769,24 @@ impl TryFrom<Vec<ton_abi::Token>> for TonEventData {
         };
 
         Ok(Self {
-            root_token_contract,
-            tokens,
+            root_token_contract: data.root_token,
+            tokens: data.tokens,
             to,
         })
     }
 }
 
 impl TryFrom<Vec<ton_abi::Token>> for TonEventDetails {
-    type Error = abi::ParserError;
+    type Error = UnpackerError;
 
     fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
-        let mut tuple = tokens.into_parser();
+        let mut tuple = tokens.into_unpacker();
 
-        let init_data: TonEventInitData = tuple.parse_next()?;
-        let status: TonEventStatus = tuple.parse_next()?;
+        let init_data: TonEventInitData = tuple.unpack_next()?;
+        let status: TonEventStatus = tuple.unpack_next()?;
 
-        let confirmation_count = parse_vote_count(&mut tuple)?;
-        let rejection_count = parse_vote_count(&mut tuple)?;
+        let confirmation_count = unpack_vote_count(&mut tuple)?;
+        let rejection_count = unpack_vote_count(&mut tuple)?;
 
         Ok(Self {
             status,
@@ -821,34 +794,6 @@ impl TryFrom<Vec<ton_abi::Token>> for TonEventDetails {
             required_rejection_count: init_data.required_rejects,
             confirmation_count,
             rejection_count,
-        })
-    }
-}
-
-struct TonEventInitData {
-    required_confirmations: u16,
-    required_rejects: u16,
-}
-
-impl abi::ParseToken<TonEventInitData> for ton_abi::TokenValue {
-    fn try_parse(self) -> abi::ContractResult<TonEventInitData> {
-        let mut tuple = match self {
-            ton_abi::TokenValue::Tuple(tokens) => tokens.into_parser(),
-            _ => return Err(abi::ParserError::InvalidAbi),
-        };
-
-        let _event_transaction: BigUint = tuple.parse_next()?;
-        let _event_transaction_lt: BigUint = tuple.parse_next()?;
-        let _event_timestamp: BigUint = tuple.parse_next()?;
-        let _event_index: BigUint = tuple.parse_next()?;
-        let _event_data: ton_types::Cell = tuple.parse_next()?;
-        let _ton_event_configuration: MsgAddressInt = tuple.parse_next()?;
-        let required_confirmations: u16 = tuple.parse_next()?;
-        let required_rejects: u16 = tuple.parse_next()?;
-
-        Ok(TonEventInitData {
-            required_confirmations,
-            required_rejects,
         })
     }
 }
@@ -876,29 +821,29 @@ impl<'a> EthEventContractState<'a> {
 }
 
 impl TryFrom<Vec<ton_abi::Token>> for EthEventData {
-    type Error = abi::ParserError;
+    type Error = UnpackerError;
 
     fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
-        let mut tuple = tokens.into_parser();
+        let data: EthEventDecodedData = tokens.unpack()?;
 
         Ok(Self {
-            root_token_contract: tuple.parse_next()?,
-            tokens: tuple.parse_next()?,
+            root_token_contract: data.root_token,
+            tokens: data.tokens,
         })
     }
 }
 
 impl TryFrom<Vec<ton_abi::Token>> for EthEventDetails {
-    type Error = abi::ParserError;
+    type Error = UnpackerError;
 
     fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
-        let mut tuple = tokens.into_parser();
+        let mut tuple = tokens.into_unpacker();
 
-        let init_data: EthEventInitData = tuple.parse_next()?;
-        let status: EthEventStatus = tuple.parse_next()?;
+        let init_data: EthEventInitData = tuple.unpack_next()?;
+        let status: EthEventStatus = tuple.unpack_next()?;
 
-        let confirmation_count = parse_vote_count(&mut tuple)?;
-        let rejection_count = parse_vote_count(&mut tuple)?;
+        let confirmation_count = unpack_vote_count(&mut tuple)?;
+        let rejection_count = unpack_vote_count(&mut tuple)?;
 
         Ok(Self {
             status,
@@ -910,41 +855,15 @@ impl TryFrom<Vec<ton_abi::Token>> for EthEventDetails {
     }
 }
 
-struct EthEventInitData {
-    required_confirmations: u16,
-    required_rejects: u16,
-}
-
-impl abi::ParseToken<EthEventInitData> for ton_abi::TokenValue {
-    fn try_parse(self) -> abi::ContractResult<EthEventInitData> {
-        let mut tuple = match self {
-            ton_abi::TokenValue::Tuple(items) => items.into_parser(),
-            _ => return Err(abi::ParserError::InvalidAbi),
-        };
-
-        let _event_transaction: BigUint = tuple.parse_next()?;
-        let _event_index: BigUint = tuple.parse_next()?;
-        let _event_data: ton_types::Cell = tuple.parse_next()?;
-        let _event_block_number: BigUint = tuple.parse_next()?;
-        let _event_block: BigUint = tuple.parse_next()?;
-        let _ethereum_event_configuration: MsgAddressInt = tuple.parse_next()?;
-        let required_confirmations: u16 = tuple.parse_next()?;
-        let required_rejects: u16 = tuple.parse_next()?;
-
-        Ok(EthEventInitData {
-            required_confirmations,
-            required_rejects,
-        })
-    }
-}
-
-fn parse_vote_count<I>(tuple: &mut abi::ContractOutputParser<I>) -> abi::ContractResult<u16>
+fn unpack_vote_count<I>(
+    tuple: &mut ton_token_unpacker::ContractOutputUnpacker<I>,
+) -> ContractResult<u16>
 where
     I: Iterator<Item = ton_abi::Token>,
 {
-    match tuple.parse_next::<ton_abi::TokenValue>()? {
+    match tuple.unpack_next::<ton_abi::TokenValue>()? {
         ton_abi::TokenValue::Array(votes) => Ok(votes.len() as u16),
-        _ => Err(abi::ParserError::InvalidAbi),
+        _ => Err(UnpackerError::InvalidAbi),
     }
 }
 
@@ -971,8 +890,8 @@ fn get_version_direct(contract: &ExistingContract) -> Result<GotVersion> {
 
     let version: u32 = contract
         .run_local(&function, &[abi::answer_id()])?
-        .into_parser()
-        .parse_next()?;
+        .into_unpacker()
+        .unpack_next()?;
 
     Ok(version
         .try_into()
@@ -1230,5 +1149,20 @@ mod tests {
         let contract = TonEventContractState(&contract);
         assert!(contract.get_details().is_ok());
         assert!(contract.get_event_data().is_ok());
+    }
+
+    #[test]
+    fn get_root_contract_details() {
+        let root_state = r#"{"account":"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","timings":{"type":"known","gen_lt":"16518174000001","gen_utime":1626774889},"lastTransactionId":{"type":"exact","data":{"lt":"16515724000001","hash":"2629f4c24ab0bfd30c13d71256ba1c878f526aeb3050ed134c54a1d5231828e1"}}}"#;
+        let root_state: ExistingContract = serde_json::from_str(root_state).unwrap();
+        let root_state = RootTokenContractState(&root_state);
+        let details = root_state.guess_details().unwrap();
+        assert_eq!(
+            details.total_supply,
+            BigUint::from_str("6428633292").unwrap()
+        );
+        assert_eq!(details.decimals, 8);
+        assert_eq!(details.version, TokenWalletVersion::Tip3v4);
+        assert_eq!(details.symbol, "WBTC");
     }
 }

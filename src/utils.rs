@@ -2,6 +2,7 @@ use std::fmt::{LowerHex, UpperHex};
 use std::str::FromStr;
 
 use anyhow::Error;
+use num_bigint::BigUint;
 use ton_block::MsgAddressInt;
 use ton_types::{SliceData, UInt256};
 
@@ -195,10 +196,10 @@ impl std::convert::AsRef<[u8]> for &UInt128 {
 
 #[macro_export]
 macro_rules! define_string_enum {
-    ($vis:vis enum $type:ident { $($(#[$inner:ident $($args:tt)*])* $variant:ident),*$(,)? }) => {
-        #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+    ($(#[$outer:ident $($outer_args:tt)*])* $vis:vis enum $type:ident { $($(#[$inner:ident $($inner_args:tt)*])* $variant:ident$( = $value:literal)?),*$(,)? }) => {
+        $(#[$outer $($outer_args)*])*
         $vis enum $type {
-            $($(#[$inner $($args)*])* $variant),*,
+            $($(#[$inner $($inner_args)*])* $variant$( = $value)?),*,
         }
 
         impl std::str::FromStr for $type {
@@ -314,6 +315,28 @@ pub mod serde_vec_public_key {
         }
 
         deserializer.deserialize_seq(VecVisitor)
+    }
+}
+
+pub mod serde_biguint {
+    use super::*;
+
+    use serde::de::Error;
+    use serde::Deserialize;
+
+    pub fn serialize<S>(data: &BigUint, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&data.to_string())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<BigUint, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = String::deserialize(deserializer)?;
+        BigUint::from_str(&data).map_err(|_| D::Error::custom("Invalid uint256"))
     }
 }
 

@@ -6,6 +6,7 @@ use chrono::Utc;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt};
+use ton_token_abi::UnpackAbi;
 use ton_types::UInt256;
 
 use super::utils;
@@ -55,50 +56,68 @@ pub enum WalletInteractionMethod {
     Multisig(Box<MultisigTransaction>),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
+#[derive(UnpackAbi, Clone, Debug, Serialize, Deserialize, Copy)]
+#[abi(plain)]
 pub struct DePoolOnRoundCompleteNotification {
+    #[abi(uint64, name = "roundId")]
     #[serde(with = "serde_u64")]
     pub round_id: u64,
+    #[abi(uint64, name = "reward")]
     #[serde(with = "serde_u64")]
     pub reward: u64,
+    #[abi(uint64, name = "ordinaryStake")]
     #[serde(with = "serde_u64")]
     pub ordinary_stake: u64,
+    #[abi(uint64, name = "vestingStake")]
     #[serde(with = "serde_u64")]
     pub vesting_stake: u64,
+    #[abi(uint64, name = "lockStake")]
     #[serde(with = "serde_u64")]
     pub lock_stake: u64,
+    #[abi(bool, name = "reinvest")]
     pub reinvest: bool,
+    #[abi(uint8, name = "reason")]
     pub reason: u8,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
+#[derive(UnpackAbi, Clone, Debug, Serialize, Deserialize, Copy)]
+#[abi(plain)]
 pub struct DePoolReceiveAnswerNotification {
-    #[serde(with = "serde_u64")]
-    pub error_code: u64,
+    #[abi(uint32, name = "errcode")]
+    pub error_code: u32,
+    #[abi(uint64, name = "comment")]
     #[serde(with = "serde_u64")]
     pub comment: u64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(UnpackAbi, Clone, Debug, Serialize, Deserialize)]
+#[abi(plain)]
 pub struct TokenWalletDeployedNotification {
+    #[abi(address, name = "root")]
     #[serde(with = "serde_address")]
     pub root_token_contract: MsgAddressInt,
 }
 
 crate::define_string_enum!(
+    #[derive(
+        Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
+    )]
     pub enum EthEventStatus {
-        InProcess,
-        Confirmed,
-        Executed,
-        Rejected,
+        InProcess = 0,
+        Confirmed = 1,
+        Executed = 2,
+        Rejected = 3,
     }
 );
 
 crate::define_string_enum!(
+    #[derive(
+        Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
+    )]
     pub enum TonEventStatus {
-        InProcess,
-        Confirmed,
-        Rejected,
+        InProcess = 0,
+        Confirmed = 1,
+        Rejected = 2,
     }
 );
 
@@ -110,10 +129,12 @@ pub enum MultisigTransaction {
     Confirm(MultisigConfirmTransaction),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
+#[derive(UnpackAbi, Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
+#[abi(plain)]
 pub struct MultisigConfirmTransaction {
     #[serde(with = "serde_uint256")]
     pub custodian: UInt256,
+    #[abi(uint64, name = "transactionId")]
     #[serde(with = "serde_u64")]
     pub transaction_id: u64,
 }
@@ -133,13 +154,19 @@ pub struct MultisigSubmitTransaction {
     pub trans_id: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(UnpackAbi, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[abi(plain)]
 pub struct MultisigSendTransaction {
+    #[abi(address)]
     #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
+    #[abi(biguint128)]
     pub value: BigUint,
+    #[abi(bool)]
     pub bounce: bool,
+    #[abi(uint8)]
     pub flags: u8,
+    #[abi(cell)]
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
 }
@@ -288,6 +315,7 @@ pub struct TonEventData {
 }
 
 crate::define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum PollingMethod {
         /// Manual polling once a minute or by a click.
         /// Used when there are no pending transactions
@@ -299,6 +327,7 @@ crate::define_string_enum!(
 );
 
 crate::define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum ReliableBehavior {
         /// Used for transports which doesn't support getting blocks directly (ADNL)
         IntensivePolling,
@@ -388,6 +417,7 @@ pub struct Symbol {
 }
 
 crate::define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum TokenWalletVersion {
         /// First stable iteration of token wallets.
         /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/34e466bd42789413f02aeec0051b9d1212fe6de9)
@@ -449,6 +479,8 @@ pub struct RootTokenContractDetails {
     /// Root owner contract address. Used as proxy address in Tip3v1
     #[serde(with = "serde_address")]
     pub owner_address: MsgAddressInt,
+    #[serde(with = "serde_biguint")]
+    pub total_supply: BigUint,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]

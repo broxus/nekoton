@@ -4,6 +4,8 @@ use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
+use ton_token_abi::UnpackAbi;
+use ton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
 use ton_types::{SliceData, UInt256};
 
 use super::{TonWalletDetails, TransferAction, DEFAULT_WORKCHAIN};
@@ -11,7 +13,7 @@ use crate::contracts;
 use crate::core::models::{Expiration, GenTimings, LastTransactionId, MultisigPendingTransaction};
 use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
-use crate::helpers::abi::{self, BigUint128, FunctionExt, IntoParser, MessageBuilder, ParseToken};
+use crate::helpers::abi::{BigUint128, FunctionExt, MessageBuilder};
 use crate::utils::*;
 
 pub fn prepare_deploy(
@@ -131,6 +133,7 @@ pub fn prepare_transfer(
 }
 
 crate::define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum MultisigType {
         SafeMultisigWallet,
         SafeMultisigWallet24h,
@@ -258,14 +261,14 @@ pub fn get_custodians(
 }
 
 fn parse_multisig_contract_custodians(tokens: Vec<ton_abi::Token>) -> Result<Vec<UInt256>> {
-    let array = match tokens.into_parser().parse_next() {
+    let array = match tokens.into_unpacker().unpack_next() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
-        _ => return Err(abi::ParserError::InvalidAbi.into()),
+        _ => return Err(UnpackerError::InvalidAbi.into()),
     };
 
     let mut custodians = array
         .into_iter()
-        .map(|item| item.try_parse())
+        .map(|item| item.unpack())
         .collect::<Result<Vec<TonWalletCustodian>, _>>()?;
 
     custodians.sort_by(|a, b| a.index.cmp(&b.index));
@@ -288,19 +291,21 @@ pub fn find_pending_transaction(
         last_transaction_id,
     )?;
 
-    let array = match tokens.into_parser().parse_next() {
+    let array = match tokens.into_unpacker().unpack_next() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
-        _ => return Err(abi::ParserError::InvalidAbi.into()),
+        _ => return Err(UnpackerError::InvalidAbi.into()),
     };
 
-    for tokens in array {
-        let mut tokens = match tokens {
-            ton_abi::TokenValue::Tuple(tokens) => tokens.into_parser(),
-            _ => return Err(abi::ParserError::InvalidAbi.into()),
-        };
+    let transactions = array
+        .into_iter()
+        .map(|item| {
+            let transaction: PendingTransaction = item.unpack()?;
+            Ok(transaction)
+        })
+        .collect::<ContractResult<Vec<PendingTransaction>>>()?;
 
-        let id: u64 = tokens.parse_next()?;
-        if pending_transaction_id == id {
+    for transaction in transactions {
+        if pending_transaction_id == transaction.id {
             return Ok(true);
         }
     }
@@ -329,18 +334,18 @@ fn parse_multisig_contract_pending_transactions(
     tokens: Vec<ton_abi::Token>,
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingTransaction>> {
-    let array = match tokens.into_parser().parse_next() {
+    let array = match tokens.into_unpacker().unpack_next() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
-        _ => return Err(abi::ParserError::InvalidAbi.into()),
+        _ => return Err(UnpackerError::InvalidAbi.into()),
     };
 
     let transactions = array
         .into_iter()
         .map(|item| {
-            let transaction: PendingTransaction = item.try_parse()?;
+            let transaction: PendingTransaction = item.unpack()?;
             Ok(transaction.with_custodians(custodians))
         })
-        .collect::<abi::ContractResult<Vec<MultisigPendingTransaction>>>()?;
+        .collect::<ContractResult<Vec<MultisigPendingTransaction>>>()?;
 
     Ok(transactions)
 }
@@ -351,58 +356,37 @@ enum MultisigError {
     NonZeroResultCode,
 }
 
+#[derive(UnpackAbi)]
 struct TonWalletCustodian {
+    #[abi(uint8)]
     index: u8,
+    #[abi(uint256)]
     pubkey: UInt256,
 }
 
-impl ParseToken<TonWalletCustodian> for ton_abi::TokenValue {
-    fn try_parse(self) -> abi::ContractResult<TonWalletCustodian> {
-        let mut tokens = match self {
-            ton_abi::TokenValue::Tuple(tokens) => tokens.into_parser(),
-            _ => return Err(abi::ParserError::InvalidAbi),
-        };
-        Ok(TonWalletCustodian {
-            index: tokens.parse_next()?,
-            pubkey: tokens.parse_next()?,
-        })
-    }
-}
-
-impl ParseToken<PendingTransaction> for ton_abi::TokenValue {
-    fn try_parse(self) -> abi::ContractResult<PendingTransaction> {
-        let mut tokens = match self {
-            ton_abi::TokenValue::Tuple(tokens) => tokens.into_parser(),
-            _ => return Err(abi::ParserError::InvalidAbi),
-        };
-
-        Ok(PendingTransaction {
-            id: tokens.parse_next()?,
-            confirmations_mask: tokens.parse_next()?,
-            signs_required: tokens.parse_next()?,
-            signs_received: tokens.parse_next()?,
-            creator: tokens.parse_next()?,
-            index: tokens.parse_next()?,
-            dest: tokens.parse_next()?,
-            value: tokens.parse_next()?,
-            send_flags: tokens.parse_next()?,
-            payload: tokens.parse_next()?,
-            bounce: tokens.parse_next()?,
-        })
-    }
-}
-
+#[derive(UnpackAbi)]
 struct PendingTransaction {
+    #[abi(uint64)]
     id: u64,
+    #[abi(uint32, name = "confirmationsMask")]
     confirmations_mask: u32,
+    #[abi(uint8, name = "signsRequired")]
     signs_required: u8,
+    #[abi(uint8, name = "signsReceived")]
     signs_received: u8,
+    #[abi(uint256)]
     creator: UInt256,
+    #[abi(uint8)]
     index: u8,
+    #[abi(address)]
     dest: MsgAddressInt,
+    #[abi(biguint128)]
     value: BigUint,
+    #[abi(uint16, name = "sendFlags")]
     send_flags: u16,
+    #[abi(cell)]
     payload: ton_types::Cell,
+    #[abi(bool)]
     bounce: bool,
 }
 
