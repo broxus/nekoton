@@ -572,6 +572,7 @@ fn unpack_brief_root_token_contract_details(
             decimals: data.decimals,
             owner_address: data.root_owner_address,
             total_supply: data.total_supply,
+            root_public_key: data.root_public_key,
         }
     } else {
         let data: BriefRootTokenContractDetailsV4 = tokens.into_unpacker().unpack_next()?;
@@ -582,6 +583,7 @@ fn unpack_brief_root_token_contract_details(
             decimals: data.decimals,
             owner_address: data.root_owner_address,
             total_supply: data.total_supply,
+            root_public_key: data.root_public_key,
         }
     };
 
@@ -688,6 +690,7 @@ fn unpack_token_wallet_details(
             owner_address: data.owner_address,
             code: Some(data.code),
             wallet_public_key: data.wallet_public_key,
+            balance: data.balance,
         }
     } else {
         let data: TonTokenWalletDetailsV4 = tokens.into_unpacker().unpack_next()?;
@@ -696,6 +699,7 @@ fn unpack_token_wallet_details(
             owner_address: data.owner_address,
             code: None,
             wallet_public_key: data.wallet_public_key,
+            balance: data.balance,
         }
     };
 

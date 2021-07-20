@@ -15,7 +15,7 @@ pub struct BriefRootTokenContractDetails {
     #[abi(cell, name = "wallet_code")]
     _wallet_code: ton_types::Cell,
     #[abi(uint256, name = "root_public_key")]
-    _root_public_key: UInt256,
+    pub root_public_key: UInt256,
     #[abi(address)]
     pub root_owner_address: MsgAddressInt,
     #[abi(biguint128)]
@@ -31,7 +31,7 @@ pub struct BriefRootTokenContractDetailsV4 {
     #[abi(uint8)]
     pub decimals: u8,
     #[abi(uint256, name = "root_public_key")]
-    _root_public_key: UInt256,
+    pub root_public_key: UInt256,
     #[abi(address)]
     pub root_owner_address: MsgAddressInt,
     #[abi(biguint128)]
@@ -49,7 +49,7 @@ pub struct TonTokenWalletDetails {
     #[abi(address)]
     pub owner_address: MsgAddressInt,
     #[abi(biguint128, name = "balance")]
-    _balance: BigUint,
+    pub balance: BigUint,
     /*#[abi(address)]
     _receive_callback: MsgAddressInt,
     #[abi(address)]
@@ -67,7 +67,7 @@ pub struct TonTokenWalletDetailsV4 {
     #[abi(address)]
     pub owner_address: MsgAddressInt,
     #[abi(biguint128, name = "balance")]
-    _balance: BigUint,
+    pub balance: BigUint,
     /*#[abi(address)]
     _receive_callback: MsgAddressInt,
     #[abi(address)]
