@@ -1,7 +1,8 @@
 use anyhow::Result;
 use num_bigint::BigUint;
 use ton_abi::{Contract, Function, Token, TokenValue};
-use ton_token_packer::{BuildTokenValue, BuildTokenValues};
+
+use nekoton_token_packer::{BuildTokenValue, BuildTokenValues};
 
 #[derive(Debug)]
 pub struct MessageBuilder<'a> {

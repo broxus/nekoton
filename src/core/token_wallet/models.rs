@@ -1,7 +1,8 @@
 use num_bigint::BigUint;
 use ton_block::MsgAddressInt;
-use ton_token_abi::UnpackAbi;
 use ton_types::UInt256;
+
+use nekoton_token_abi::UnpackAbi;
 
 #[derive(UnpackAbi)]
 pub struct BriefRootTokenContractDetails {

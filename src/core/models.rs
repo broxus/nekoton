@@ -4,8 +4,9 @@ use anyhow::Result;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt};
-use ton_token_abi::UnpackAbi;
 use ton_types::UInt256;
+
+use nekoton_token_abi::UnpackAbi;
 
 use super::utils;
 use crate::utils::*;

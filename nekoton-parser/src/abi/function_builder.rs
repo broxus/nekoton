@@ -1,5 +1,6 @@
 use ton_abi::{Function, Param, ParamType};
-use ton_token_packer::BuildTokenValue;
+
+use nekoton_token_packer::BuildTokenValue;
 
 use super::TokenValueExt;
 

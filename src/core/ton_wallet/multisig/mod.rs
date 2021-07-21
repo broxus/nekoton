@@ -4,9 +4,10 @@ use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
-use ton_token_abi::UnpackAbi;
-use ton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
 use ton_types::UInt256;
+
+use nekoton_token_abi::UnpackAbi;
+use nekoton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
 
 use super::TonWalletDetails;
 use crate::contracts;
