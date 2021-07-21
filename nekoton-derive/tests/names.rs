@@ -1,8 +1,8 @@
 use std::fmt::Display;
 use ton_abi::{Token, TokenValue, Uint};
 
-use nekoton_token_abi::UnpackAbi;
-use nekoton_token_unpacker::{UnpackToken, UnpackerError};
+use nekoton_parser::abi::{UnpackToken, UnpackerError};
+use nekoton_parser::derive::UnpackAbi;
 
 #[derive(UnpackAbi)]
 struct ValidSt {

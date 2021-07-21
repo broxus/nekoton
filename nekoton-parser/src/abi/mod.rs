@@ -5,23 +5,20 @@ use std::sync::Arc;
 use anyhow::Result;
 use chrono::Utc;
 use ton_abi::{Function, Param, Token, TokenValue};
-use ton_block::{Account, AccountStuff, Deserializable, Serializable};
+use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt, Serializable};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_types::SliceData;
-
-use nekoton_token_packer::BuildTokenValue;
-use nekoton_token_unpacker::UnpackerError;
+use ton_types::{SliceData, UInt256};
 
 use super::models::{GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
 pub use self::function_builder::*;
 pub use self::message_builder::*;
-pub use self::token_ext::*;
+pub use self::token_parser::*;
 
 mod function_builder;
 mod message_builder;
-mod token_ext;
+mod token_parser;
 mod tvm;
 
 const TON_ABI_VERSION: u8 = 2;
@@ -429,6 +426,19 @@ impl Executor {
             .convert()
     }
 }
+
+pub trait StandaloneToken {}
+impl StandaloneToken for MsgAddressInt {}
+impl StandaloneToken for MsgAddrStd {}
+impl StandaloneToken for UInt256 {}
+impl StandaloneToken for UInt128 {}
+impl StandaloneToken for u16 {}
+impl StandaloneToken for u32 {}
+impl StandaloneToken for u64 {}
+impl StandaloneToken for u128 {}
+impl StandaloneToken for bool {}
+impl StandaloneToken for Vec<u8> {}
+impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod tests {

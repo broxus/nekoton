@@ -2,7 +2,7 @@ use num_bigint::BigUint;
 use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
-use nekoton_token_abi::UnpackAbi;
+use nekoton_derive::UnpackAbi;
 
 #[derive(UnpackAbi)]
 pub struct BriefRootTokenContractDetails {

@@ -6,13 +6,12 @@ use once_cell::sync::OnceCell;
 use ton_block::{MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
-use nekoton_token_abi::UnpackAbi;
-use nekoton_token_unpacker::{UnpackToken, UnpackerError};
+use nekoton_derive::UnpackAbi;
 
 use crate::contracts;
 use crate::core::models::*;
 use crate::core::ton_wallet::WalletType;
-use crate::helpers::abi::{self, FunctionExt};
+use crate::helpers::abi::{self, FunctionExt, UnpackToken, UnpackerError};
 use crate::utils::*;
 
 pub struct InputMessage(pub Vec<ton_abi::Token>);

@@ -1,9 +1,36 @@
-pub use num_traits;
-
 use num_traits::ToPrimitive;
 use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::{Cell, UInt256};
+
+use super::StandaloneToken;
+
+pub trait TokenValueExt {
+    fn unnamed(self) -> Token;
+
+    fn named<T>(self, name: T) -> Token
+    where
+        T: ToString;
+}
+
+impl TokenValueExt for TokenValue {
+    fn unnamed(self) -> Token {
+        Token {
+            name: String::new(),
+            value: self,
+        }
+    }
+
+    fn named<T>(self, name: T) -> Token
+    where
+        T: ToString,
+    {
+        Token {
+            name: name.to_string(),
+            value: self,
+        }
+    }
+}
 
 pub trait IgnoreOutput: Sized {
     fn ignore_output(self) -> Result<(), UnpackerError> {
@@ -231,18 +258,6 @@ where
         self.value.unpack()
     }
 }
-
-pub trait StandaloneToken {}
-impl StandaloneToken for MsgAddressInt {}
-impl StandaloneToken for MsgAddrStd {}
-impl StandaloneToken for UInt256 {}
-impl StandaloneToken for u16 {}
-impl StandaloneToken for u32 {}
-impl StandaloneToken for u64 {}
-impl StandaloneToken for u128 {}
-impl StandaloneToken for bool {}
-impl StandaloneToken for Vec<u8> {}
-impl StandaloneToken for TokenValue {}
 
 pub type ContractResult<T> = Result<T, UnpackerError>;
 

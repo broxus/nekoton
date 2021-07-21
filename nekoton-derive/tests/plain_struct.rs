@@ -7,8 +7,8 @@ use ton_abi::{Token, Uint};
 use ton_block::{MsgAddress, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_token_abi::UnpackAbi;
-use nekoton_token_unpacker::UnpackToken;
+use nekoton_parser::abi::UnpackToken;
+use nekoton_parser::derive::UnpackAbi;
 
 #[derive(UnpackAbi, Debug)]
 #[abi(plain)]

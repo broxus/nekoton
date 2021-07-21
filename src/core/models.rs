@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_token_abi::UnpackAbi;
+use nekoton_derive::UnpackAbi;
 
 use super::utils;
 use crate::utils::*;

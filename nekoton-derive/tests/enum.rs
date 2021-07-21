@@ -1,14 +1,15 @@
 use ton_abi::Uint;
 
-use nekoton_token_abi::{PackAbi, UnpackAbi};
-use nekoton_token_packer::BuildTokenValue;
-use nekoton_token_unpacker::UnpackToken;
+use nekoton_parser::abi::{BuildTokenValue, UnpackToken};
+use nekoton_parser::derive::{PackAbi, UnpackAbi};
 
 #[derive(PackAbi, UnpackAbi, PartialEq, Debug)]
 enum EventType {
     ETH = 0,
     TON = 1,
 }
+
+impl nekoton_parser::abi::StandaloneToken for EventType {}
 
 fn test() -> EventType {
     let event = EventType::TON;

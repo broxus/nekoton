@@ -7,15 +7,15 @@ use anyhow::Result;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
 
-use nekoton_token_packer::BuildTokenValue;
-use nekoton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
-
 use self::models::*;
 use super::{ContractSubscription, InternalMessage};
 use crate::contracts;
 use crate::core::models::*;
 use crate::core::parsing::*;
-use crate::helpers::abi::{self, BigUint128, BigUint256, FunctionExt, TokenValueExt};
+use crate::helpers::abi::{
+    self, BigUint128, BigUint256, BuildTokenValue, ContractOutputUnpacker, ContractResult,
+    FunctionExt, IntoUnpacker, TokenValueExt, UnpackToken, UnpackerError,
+};
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::{NoFailure, TrustMe};
@@ -856,9 +856,7 @@ impl TryFrom<Vec<ton_abi::Token>> for EthEventDetails {
     }
 }
 
-fn unpack_vote_count<I>(
-    tuple: &mut nekoton_token_unpacker::ContractOutputUnpacker<I>,
-) -> ContractResult<u16>
+fn unpack_vote_count<I>(tuple: &mut ContractOutputUnpacker<I>) -> ContractResult<u16>
 where
     I: Iterator<Item = ton_abi::Token>,
 {

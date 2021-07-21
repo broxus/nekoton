@@ -6,13 +6,12 @@ use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_token_abi::UnpackAbi;
-use nekoton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
+use nekoton_derive::UnpackAbi;
 
 use super::TonWalletDetails;
 use crate::contracts;
 use crate::core::models::{GenTimings, LastTransactionId, MultisigPendingTransaction};
-use crate::helpers::abi::FunctionExt;
+use crate::helpers::abi::{ContractResult, FunctionExt, IntoUnpacker, UnpackToken, UnpackerError};
 use crate::utils::*;
 
 #[cfg(feature = "wallet")]

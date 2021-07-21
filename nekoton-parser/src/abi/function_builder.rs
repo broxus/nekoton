@@ -1,7 +1,6 @@
 use ton_abi::{Function, Param, ParamType};
 
-use nekoton_token_packer::BuildTokenValue;
-
+use super::BuildTokenValue;
 use super::TokenValueExt;
 
 const ANSWER_ID: &str = "_answer_id";

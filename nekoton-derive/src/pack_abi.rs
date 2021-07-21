@@ -21,20 +21,18 @@ pub fn impl_derive_pack_abi(
         Data::Enum(variants) => {
             let body = serialize_enum(&container, variants);
             quote! {
-                impl nekoton_token_packer::BuildTokenValue for #ident {
+                impl nekoton_parser::abi::BuildTokenValue for #ident {
                     fn token_value(self) -> ton_abi::TokenValue {
                         #body
                     }
                 }
-
-                impl nekoton_token_packer::StandaloneToken for #ident {}
             }
         }
         Data::Struct(_, fields) => {
             if container.attrs.plain {
                 let body = serialize_struct(&container, fields, StructType::Plain);
                 quote! {
-                    impl nekoton_token_packer::PackTokens for #ident {
+                    impl nekoton_parser::abi::PackTokens for #ident {
                         fn pack(self) -> Vec<ton_abi::Token> {
                             #body
                         }
@@ -43,7 +41,7 @@ pub fn impl_derive_pack_abi(
             } else {
                 let body = serialize_struct(&container, fields, StructType::Tuple);
                 quote! {
-                    impl nekoton_token_packer::BuildTokenValue for #ident {
+                    impl nekoton_parser::abi::BuildTokenValue for #ident {
                         fn token_value(self) -> ton_abi::TokenValue {
                             #body
                         }
@@ -152,42 +150,42 @@ fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
     match type_name {
         TypeName::Int8 => {
             quote! {
-                ton_abi::TokenValue::Int(ton_abi::Int { number: nekoton_token_packer::num_bigint::BigInt::from(self.#name), size: 8 })
+                ton_abi::TokenValue::Int(ton_abi::Int { number: num_bigint::BigInt::from(self.#name), size: 8 })
             }
         }
         TypeName::Uint8 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: nekoton_token_packer::num_bigint::BigUint::from(self.#name), size: 8 })
+                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 8 })
             }
         }
         TypeName::Uint16 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: nekoton_token_packer::num_bigint::BigUint::from(self.#name), size: 16 })
+                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 16 })
             }
         }
         TypeName::Uint32 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: nekoton_token_packer::num_bigint::BigUint::from(self.#name), size: 32 })
+                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 32 })
             }
         }
         TypeName::Uint64 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: nekoton_token_packer::num_bigint::BigUint::from(self.#name), size: 64 })
+                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 64 })
             }
         }
         TypeName::Uint128 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: nekoton_token_packer::num_bigint::BigUint::from(self.#name), size: 128 })
+                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 128 })
             }
         }
         TypeName::Uint160 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: nekoton_token_packer::num_bigint::BigUint::from_bytes_be(self.#name.as_slice()), size: 160 })
+                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from_bytes_be(self.#name.as_slice()), size: 160 })
             }
         }
         TypeName::Uint256 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: nekoton_token_packer::num_bigint::BigUint::from_bytes_be(self.#name.as_slice()), size: 256 })
+                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from_bytes_be(self.#name.as_slice()), size: 256 })
             }
         }
         TypeName::Address => {
@@ -210,7 +208,7 @@ fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
         }
         TypeName::Biguint128 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: nekoton_token_packer::num_bigint::BigUint::from_bytes_be(self.#name.as_slice()), size: 128 })
+                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from_bytes_be(self.#name.as_slice()), size: 128 })
             }
         }
         TypeName::None => unreachable!(),

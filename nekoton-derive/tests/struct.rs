@@ -7,9 +7,9 @@ use ton_abi::{Token, Uint};
 use ton_block::{MsgAddress, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_token_abi::{PackAbi, UnpackAbi};
-use nekoton_token_packer::BuildTokenValue;
-use nekoton_token_unpacker::UnpackToken;
+use nekoton_parser::abi::BuildTokenValue;
+use nekoton_parser::abi::UnpackToken;
+use nekoton_parser::derive::{PackAbi, UnpackAbi};
 
 #[derive(PackAbi, UnpackAbi, Clone)]
 struct PendingTransaction {

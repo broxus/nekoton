@@ -2,8 +2,8 @@ use num_traits::ToPrimitive;
 use ton_abi::TokenValue;
 use ton_abi::{Token, Uint};
 
-use nekoton_token_abi::UnpackAbi;
-use nekoton_token_unpacker::{ContractResult, UnpackToken, UnpackerError};
+use nekoton_parser::abi::{ContractResult, UnpackToken, UnpackerError};
+use nekoton_parser::derive::UnpackAbi;
 
 #[derive(UnpackAbi)]
 struct Data {

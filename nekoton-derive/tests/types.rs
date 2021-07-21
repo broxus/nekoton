@@ -2,8 +2,8 @@ use num_bigint::BigUint;
 use ton_abi::{Int, Token, TokenValue, Uint};
 use ton_types::UInt256;
 
-use nekoton_token_abi::UnpackAbi;
-use nekoton_token_unpacker::UnpackToken;
+use nekoton_parser::abi::UnpackToken;
+use nekoton_parser::derive::UnpackAbi;
 
 #[derive(UnpackAbi)]
 #[abi(plain)]

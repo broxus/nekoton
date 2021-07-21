@@ -8,21 +8,12 @@ authors = [
 edition = "2018"
 
 [workspace]
-members = [
-    "nekoton-contracts",
-    "nekoton-parser",
-    "nekoton-derive/token-abi/token-abi",
-    "nekoton-derive/token-abi/token-packer",
-    "nekoton-derive/token-abi/token-unpacker",
-    "nekoton-utils"
-]
+members = ["nekoton-contracts", "nekoton-derive", "nekoton-parser", "nekoton-utils"]
 
 [dependencies]
 nekoton-contracts = { path = "nekoton-contracts" }
+nekoton-derive = { path = "nekoton-derive" }
 nekoton-parser = { path = "nekoton-parser" }
-nekoton-token-abi = { path = "nekoton-derive/token-abi/token-abi" }
-nekoton-token-packer = { path = "nekoton-derive/token-abi/token-packer" }
-nekoton-token-unpacker = { path = "nekoton-derive/token-abi/token-unpacker" }
 nekoton-utils = { path = "nekoton-utils" }
 
 aes = { version = "0.7.2", features = ["ctr"], default-features = false, optional = true }

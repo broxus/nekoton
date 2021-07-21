@@ -7,9 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nekoton-token-packer = { path = "../nekoton-derive/token-abi/token-packer" }
-nekoton-token-unpacker = { path = "../nekoton-derive/token-abi/token-unpacker" }
-
 anyhow = "1.0"
 base64 = "0.13"
 chrono = "0.4.19"
@@ -30,6 +27,7 @@ ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
 ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
 
+nekoton-derive = { path = "../nekoton-derive", optional = true }
 nekoton-utils = { path = "../nekoton-utils" }
 
 [dev-dependencies]
@@ -37,3 +35,6 @@ cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-carg
 hex = "0.4.3"
 pretty_assertions = "0.7.1"
 nekoton-contracts = {path ="../nekoton-contracts"}
+
+[features]
+derive = ["nekoton-derive"]
