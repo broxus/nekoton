@@ -30,7 +30,7 @@ pub struct BriefRootTokenContractDetailsV4 {
     pub symbol: String,
     #[abi(uint8)]
     pub decimals: u8,
-    #[abi(uint256, name = "root_public_key")]
+    #[abi(uint256)]
     pub root_public_key: UInt256,
     #[abi(address)]
     pub root_owner_address: MsgAddressInt,
