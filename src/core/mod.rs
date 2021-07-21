@@ -4,11 +4,14 @@ pub use self::contract_subscription::ContractSubscription;
 use self::models::PollingMethod;
 use crate::transport::Transport;
 
+#[cfg(feature = "wallet")]
 pub mod accounts_storage;
 pub mod contract_subscription;
 pub mod generic_contract;
+#[cfg(feature = "wallet")]
 pub mod keystore;
 pub mod models;
+#[cfg(feature = "wallet")]
 pub mod owners_cache;
 pub mod parsing;
 pub mod token_wallet;

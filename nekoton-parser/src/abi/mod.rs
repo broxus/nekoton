@@ -11,8 +11,8 @@ use ton_token_packer::BuildTokenValue;
 use ton_token_unpacker::UnpackerError;
 use ton_types::SliceData;
 
-use crate::core::models::{GenTimings, LastTransactionId};
-use crate::utils::*;
+use super::models::{GenTimings, LastTransactionId};
+use nekoton_utils::*;
 
 pub use self::function_builder::*;
 pub use self::message_builder::*;

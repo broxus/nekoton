@@ -1,0 +1,23 @@
+[package]
+name = "nekoton-utils"
+version = "0.1.0"
+authors = ["Alexey Pashinov <pashinov93@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.13"
+chrono = "0.4.19"
+failure = "0.1.8"
+hex = "0.4"
+log = "0.4"
+num-bigint = { version = "0.2", features = ["serde"] }
+num-traits = "0.2.14"
+serde = { version = "1.0", features = ["derive"] }
+sha2 = "0.9"
+thiserror = "1.0"
+
+ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
+ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }

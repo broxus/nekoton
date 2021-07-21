@@ -1,0 +1,39 @@
+[package]
+name = "nekoton-parser"
+version = "0.1.0"
+authors = ["Alexey Pashinov <pashinov93@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.13"
+chrono = "0.4.19"
+ed25519-dalek = "1.0"
+failure = "0.1.8"
+hex = "0.4"
+log = "0.4"
+num-bigint = { version = "0.2", features = ["serde"] }
+num-traits = "0.2.14"
+serde = { version = "1.0", features = ["derive"] }
+sha2 = "0.9"
+thiserror = "1.0"
+
+ton_token_packer = { git = "https://github.com/broxus/ton-token-abi.git" }
+ton_token_unpacker = { git = "https://github.com/broxus/ton-token-abi.git" }
+
+ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi", rev='a2b2a9dc2e8c30a070e9af79cf0c24a55bdd5a87' }
+ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "original", package = "ton_api", optional = true }
+ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
+ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
+ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
+ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
+
+nekoton-utils = { path = "../nekoton-utils" }
+
+[dev-dependencies]
+cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
+hex = "0.4.3"
+pretty_assertions = "0.7.1"
+nekoton-contracts = {path ="../nekoton-contracts"}

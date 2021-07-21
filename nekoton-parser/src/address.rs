@@ -5,7 +5,7 @@ use base64::URL_SAFE;
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::AccountId;
 
-use crate::helpers::crc::crc_16;
+use super::crc::crc_16;
 
 ///Packs std address to base64 format
 /// # Arguments
@@ -109,7 +109,7 @@ mod tests {
     use pretty_assertions::assert_eq;
     use ton_block::MsgAddressInt;
 
-    use crate::helpers::address::{pack_std_smc_addr, unpack_std_smc_addr};
+    use crate::address::{pack_std_smc_addr, unpack_std_smc_addr};
 
     fn test_addr() -> MsgAddressInt {
         MsgAddressInt::from_str(

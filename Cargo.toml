@@ -7,14 +7,21 @@ authors = [
 ]
 edition = "2018"
 
+[workspace]
+members = ["nekoton-contracts", "nekoton-parser", "nekoton-utils"]
+
 [dependencies]
+nekoton-contracts = { path = "nekoton-contracts" }
+nekoton-parser = { path = "nekoton-parser" }
+nekoton-utils = { path = "nekoton-utils" }
+
 aes = { version = "0.7.2", features = ["ctr"], default-features = false, optional = true }
 cipher = { version = "0.3.0", default-features = false, optional = true }
 
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.13"
-chacha20poly1305 = "0.8.0"
+chacha20poly1305 = { version = "0.8.0", optional = true }
 chrono = "0.4.19"
 curve25519-dalek = "3.0"
 downcast-rs = "1.2"
@@ -33,8 +40,8 @@ once_cell = "1.7"
 parking_lot = "0.11.1"
 pin-project-lite = "0.2"
 rand = { version = "0.7", features = ["getrandom"] }
-ring = "0.16"
-secstr = { version = "0.4.0", features = ["serde"] }
+ring = { version = "0.16", optional = true }
+secstr = { version = "0.4.0", features = ["serde"], optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.9"
@@ -68,9 +75,10 @@ reqwest = { version = "0.11.3", features = ["gzip", "json"] }
 default = ["gql_transport"]
 integration_test = []
 web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen", "instant/wasm-bindgen"]
-gql_transport = ["graphql_client"]
-adnl_transport = ["ton_api", "aes", "cipher"]
-jrpc_transport = ["tiny-jsonrpc"]
+gql_transport = ["graphql_client", "wallet"]
+adnl_transport = ["ton_api", "aes", "cipher", "wallet"]
+jrpc_transport = ["tiny-jsonrpc", "wallet"]
+wallet = ["ring", "secstr","chacha20poly1305"]
 
 [[bench]]
 name = "words"

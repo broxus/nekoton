@@ -1,0 +1,12 @@
+[package]
+name = "nekoton-contracts"
+version = "0.1.0"
+authors = ["Alexey Pashinov <pashinov93@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+once_cell = "1.8.0"
+ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
+ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi", rev='a2b2a9dc2e8c30a070e9af79cf0c24a55bdd5a87' }
