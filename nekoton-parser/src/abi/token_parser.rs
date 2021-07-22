@@ -114,9 +114,7 @@ impl UnpackToken<Vec<u8>> for TokenValue {
 impl UnpackToken<String> for TokenValue {
     fn unpack(self) -> ContractResult<String> {
         match self {
-            TokenValue::Bytes(bytes) => {
-                String::from_utf8(bytes).map_err(|_| UnpackerError::InvalidAbi)
-            }
+            TokenValue::Bytes(bytes) => Ok(String::from_utf8_lossy(&bytes).to_string()),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
