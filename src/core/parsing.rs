@@ -6,7 +6,7 @@ use once_cell::sync::OnceCell;
 use ton_block::{MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
-use nekoton_derive::UnpackAbi;
+use nekoton_parser::derive::UnpackAbi;
 
 use crate::contracts;
 use crate::core::models::*;

@@ -12,8 +12,7 @@ members = ["nekoton-contracts", "nekoton-derive", "nekoton-parser", "nekoton-uti
 
 [dependencies]
 nekoton-contracts = { path = "nekoton-contracts" }
-nekoton-derive = { path = "nekoton-derive" }
-nekoton-parser = { path = "nekoton-parser" }
+nekoton-parser = { path = "nekoton-parser", features = ["derive"]}
 nekoton-utils = { path = "nekoton-utils" }
 
 aes = { version = "0.7.2", features = ["ctr"], default-features = false, optional = true }

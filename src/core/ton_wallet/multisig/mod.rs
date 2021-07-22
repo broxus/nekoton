@@ -6,7 +6,7 @@ use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_derive::UnpackAbi;
+use nekoton_parser::derive::UnpackAbi;
 
 use super::TonWalletDetails;
 use crate::contracts;

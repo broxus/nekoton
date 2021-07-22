@@ -37,4 +37,5 @@ pretty_assertions = "0.7.1"
 nekoton-contracts = {path ="../nekoton-contracts"}
 
 [features]
+default = []
 derive = ["nekoton-derive"]
