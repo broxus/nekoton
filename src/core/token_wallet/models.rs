@@ -14,7 +14,7 @@ pub struct BriefRootTokenContractDetails {
     pub decimals: u8,
     #[abi(cell, name = "wallet_code")]
     _wallet_code: ton_types::Cell,
-    #[abi(uint256, name = "root_public_key")]
+    #[abi(uint256)]
     pub root_public_key: UInt256,
     #[abi(address)]
     pub root_owner_address: MsgAddressInt,
