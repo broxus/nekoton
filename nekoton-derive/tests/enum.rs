@@ -1,6 +1,6 @@
 use ton_abi::Uint;
 
-use nekoton_parser::abi::{BuildTokenValue, UnpackToken};
+use nekoton_parser::abi::{BuildTokenValue, StandaloneToken, UnpackToken};
 use nekoton_parser::derive::{PackAbi, UnpackAbi};
 
 #[derive(PackAbi, UnpackAbi, PartialEq, Debug)]
@@ -9,12 +9,28 @@ enum EventType {
     TON = 1,
 }
 
-impl nekoton_parser::abi::StandaloneToken for EventType {}
+impl StandaloneToken for EventType {}
 
-fn test() -> EventType {
+#[derive(PackAbi, UnpackAbi, PartialEq, Debug)]
+#[abi(boolean)]
+enum Voting {
+    Reject = 0,
+    Confirm = 1,
+}
+
+impl StandaloneToken for Voting {}
+
+fn test_event_type() -> EventType {
     let event = EventType::TON;
     let token = event.token_value();
     let parsed: EventType = token.unpack().unwrap();
+    parsed
+}
+
+fn test_voiting() -> Voting {
+    let vote = Voting::Confirm;
+    let token = vote.token_value();
+    let parsed: Voting = token.unpack().unwrap();
     parsed
 }
 
@@ -32,8 +48,11 @@ fn test_vec() -> Vec<EventType> {
 }
 
 fn main() {
-    let event = test();
+    let event = test_event_type();
     assert_eq!(event, EventType::TON);
+
+    let vote = test_voiting();
+    assert_eq!(vote, Voting::Confirm);
 
     let vec = test_vec();
     assert_eq!(vec[0], EventType::ETH);

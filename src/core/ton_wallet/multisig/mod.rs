@@ -11,7 +11,7 @@ use nekoton_parser::derive::UnpackAbi;
 use super::TonWalletDetails;
 use crate::contracts;
 use crate::core::models::{GenTimings, LastTransactionId, MultisigPendingTransaction};
-use crate::helpers::abi::{ContractResult, FunctionExt, IntoUnpacker, UnpackToken, UnpackerError};
+use crate::helpers::abi::{ContractResult, FunctionExt, UnpackFirst, UnpackToken, UnpackerError};
 use crate::utils::*;
 
 #[cfg(feature = "wallet")]
@@ -148,7 +148,7 @@ pub fn get_custodians(
 }
 
 fn parse_multisig_contract_custodians(tokens: Vec<ton_abi::Token>) -> Result<Vec<UInt256>> {
-    let array = match tokens.into_unpacker().unpack_next() {
+    let array = match tokens.unpack_first() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };
@@ -178,7 +178,7 @@ pub fn find_pending_transaction(
         last_transaction_id,
     )?;
 
-    let array = match tokens.into_unpacker().unpack_next() {
+    let array = match tokens.unpack_first() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };
@@ -221,7 +221,7 @@ fn parse_multisig_contract_pending_transactions(
     tokens: Vec<ton_abi::Token>,
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingTransaction>> {
-    let array = match tokens.into_unpacker().unpack_next() {
+    let array = match tokens.unpack_first() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };

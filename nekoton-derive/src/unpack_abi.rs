@@ -18,7 +18,12 @@ pub fn impl_derive_unpack_abi(
     let ident = &container.ident;
     let result = match &container.data {
         Data::Enum(variants) => {
-            let body = serialize_enum(&container, variants);
+            let enum_type = if container.attrs.enum_bool {
+                EnumType::Bool
+            } else {
+                EnumType::Int
+            };
+            let body = serialize_enum(&container, variants, enum_type);
             quote! {
                 impl nekoton_parser::abi::UnpackToken<#ident> for ton_abi::TokenValue {
                     fn unpack(self) -> nekoton_parser::abi::ContractResult<#ident> {
@@ -28,7 +33,7 @@ pub fn impl_derive_unpack_abi(
             }
         }
         Data::Struct(_, fields) => {
-            if container.attrs.plain {
+            if container.attrs.struct_plain {
                 let body = serialize_struct(&container, fields, StructType::Plain);
                 quote! {
                     impl nekoton_parser::abi::UnpackToken<#ident> for Vec<ton_abi::Token> {
@@ -52,12 +57,11 @@ pub fn impl_derive_unpack_abi(
     Ok(result)
 }
 
-enum StructType {
-    Tuple,
-    Plain,
-}
-
-fn serialize_enum(container: &Container, variants: &[Variant]) -> proc_macro2::TokenStream {
+fn serialize_enum(
+    container: &Container,
+    variants: &[Variant],
+    enum_type: EnumType,
+) -> proc_macro2::TokenStream {
     let name = &container.ident;
 
     let build_variants = variants
@@ -73,18 +77,45 @@ fn serialize_enum(container: &Container, variants: &[Variant]) -> proc_macro2::T
             let token = quote::ToTokens::to_token_stream(discriminant).to_string();
             let number = token.parse::<u8>().unwrap();
 
-            quote! {
-                Some(#number) => Ok(#name::#ident)
+            match enum_type {
+                EnumType::Int => {
+                    quote! {
+                        Some(#number) => Ok(#name::#ident)
+                    }
+                }
+                EnumType::Bool => {
+                    if number == 0 {
+                        quote! {
+                            ton_abi::TokenValue::Bool(false) => Ok(#name::#ident)
+                        }
+                    } else {
+                        quote! {
+                            ton_abi::TokenValue::Bool(true) => Ok(#name::#ident)
+                        }
+                    }
+                }
             }
         });
 
-    quote! {
-        match self {
-            ton_abi::TokenValue::Uint(int) => match num_traits::ToPrimitive::to_u8(&int.number) {
-                #(#build_variants,)*
-                _ => Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
-            },
-            _ => Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+    match enum_type {
+        EnumType::Int => {
+            quote! {
+                match self {
+                    ton_abi::TokenValue::Uint(int) => match num_traits::ToPrimitive::to_u8(&int.number) {
+                        #(#build_variants,)*
+                        _ => Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                    },
+                    _ => Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                }
+            }
+        }
+        EnumType::Bool => {
+            quote! {
+                match self {
+                    #(#build_variants,)*
+                    _ => Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                }
+            }
         }
     }
 }
@@ -280,6 +311,11 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         TypeName::Bool => {
             quote! {
                 ton_abi::TokenValue::Bool(value) => value,
+            }
+        }
+        TypeName::String => {
+            quote! {
+                ton_abi::TokenValue::Bytes(bytes) => String::from_utf8_lossy(&bytes).to_string(),
             }
         }
         TypeName::Biguint128 => {

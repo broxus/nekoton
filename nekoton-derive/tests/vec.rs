@@ -1,5 +1,4 @@
-use nekoton_parser::abi::BuildTokenValue;
-use nekoton_parser::abi::UnpackToken;
+use nekoton_parser::abi::{BuildTokenValue, TokenValueExt, UnpackToken};
 use nekoton_parser::derive::{PackAbi, UnpackAbi};
 
 #[derive(PackAbi, UnpackAbi)]

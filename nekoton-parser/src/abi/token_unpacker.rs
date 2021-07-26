@@ -32,15 +32,7 @@ impl TokenValueExt for TokenValue {
     }
 }
 
-pub trait IgnoreOutput: Sized {
-    fn ignore_output(self) -> Result<(), UnpackerError> {
-        Ok(())
-    }
-}
-
-impl IgnoreOutput for Vec<Token> {}
-
-pub trait IntoUnpacker: Sized {
+pub trait IntoUnpacker {
     type Iter: Iterator<Item = Token>;
 
     fn into_unpacker(self) -> ContractOutputUnpacker<Self::Iter>;
@@ -51,6 +43,21 @@ impl IntoUnpacker for Vec<Token> {
 
     fn into_unpacker(self) -> ContractOutputUnpacker<Self::Iter> {
         ContractOutputUnpacker(self.into_iter())
+    }
+}
+
+pub trait UnpackFirst {
+    fn unpack_first<T>(self) -> ContractResult<T>
+    where
+        TokenValue: UnpackToken<T>;
+}
+
+impl UnpackFirst for Vec<Token> {
+    fn unpack_first<T>(self) -> ContractResult<T>
+    where
+        TokenValue: UnpackToken<T>,
+    {
+        self.into_unpacker().unpack_next()
     }
 }
 
@@ -187,6 +194,52 @@ impl UnpackToken<u128> for TokenValue {
     fn unpack(self) -> ContractResult<u128> {
         match self {
             TokenValue::Uint(data) => Ok(data.number.to_u128().ok_or(UnpackerError::InvalidAbi)?),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
+impl UnpackToken<primitive_types::H160> for TokenValue {
+    fn unpack(self) -> ContractResult<primitive_types::H160> {
+        match self {
+            TokenValue::Uint(value) => {
+                let mut hash = primitive_types::H160::default();
+                let bytes = value.number.to_bytes_be();
+
+                const ADDRESS_SIZE: usize = 20;
+
+                // copy min(N,20) bytes into last min(N,20) elements of address
+
+                let size = bytes.len();
+                let src_offset = size - size.min(ADDRESS_SIZE);
+                let dest_offset = ADDRESS_SIZE - size.min(ADDRESS_SIZE);
+                hash.0[dest_offset..ADDRESS_SIZE].copy_from_slice(&bytes[src_offset..size]);
+
+                Ok(hash)
+            }
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
+impl UnpackToken<primitive_types::H256> for TokenValue {
+    fn unpack(self) -> ContractResult<primitive_types::H256> {
+        match self {
+            TokenValue::Uint(value) => {
+                let mut hash = primitive_types::H256::default();
+                let bytes = value.number.to_bytes_be();
+
+                const HASH_SIZE: usize = 32;
+
+                // copy min(N,32) bytes into last min(N,32) elements of address
+
+                let size = bytes.len();
+                let src_offset = size - HASH_SIZE.min(size);
+                let dest_offset = HASH_SIZE - HASH_SIZE.min(size);
+                hash.0[dest_offset..HASH_SIZE].copy_from_slice(&bytes[src_offset..size]);
+
+                Ok(hash)
+            }
             _ => Err(UnpackerError::InvalidAbi),
         }
     }

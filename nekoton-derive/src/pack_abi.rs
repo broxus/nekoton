@@ -19,7 +19,12 @@ pub fn impl_derive_pack_abi(
     let ident = &container.ident;
     let result = match &container.data {
         Data::Enum(variants) => {
-            let body = serialize_enum(&container, variants);
+            let enum_type = if container.attrs.enum_bool {
+                EnumType::Bool
+            } else {
+                EnumType::Int
+            };
+            let body = serialize_enum(&container, variants, enum_type);
             quote! {
                 impl nekoton_parser::abi::BuildTokenValue for #ident {
                     fn token_value(self) -> ton_abi::TokenValue {
@@ -29,7 +34,7 @@ pub fn impl_derive_pack_abi(
             }
         }
         Data::Struct(_, fields) => {
-            if container.attrs.plain {
+            if container.attrs.struct_plain {
                 let body = serialize_struct(&container, fields, StructType::Plain);
                 quote! {
                     impl nekoton_parser::abi::PackTokens for #ident {
@@ -53,12 +58,11 @@ pub fn impl_derive_pack_abi(
     Ok(result)
 }
 
-enum StructType {
-    Tuple,
-    Plain,
-}
-
-fn serialize_enum(container: &Container, variants: &[Variant]) -> proc_macro2::TokenStream {
+fn serialize_enum(
+    container: &Container,
+    variants: &[Variant],
+    enum_type: EnumType,
+) -> proc_macro2::TokenStream {
     let name = &container.ident;
 
     let build_variants = variants
@@ -74,8 +78,23 @@ fn serialize_enum(container: &Container, variants: &[Variant]) -> proc_macro2::T
             let token = quote::ToTokens::to_token_stream(discriminant).to_string();
             let number = token.parse::<u8>().unwrap();
 
-            quote! {
-                #name::#ident => #number.token_value()
+            match enum_type {
+                EnumType::Int => {
+                    quote! {
+                        #name::#ident => #number.token_value()
+                    }
+                }
+                EnumType::Bool => {
+                    if number == 0 {
+                        quote! {
+                            #name::#ident => false.token_value()
+                        }
+                    } else {
+                        quote! {
+                            #name::#ident => true.token_value()
+                        }
+                    }
+                }
             }
         });
 
@@ -118,7 +137,7 @@ fn serialize_struct(
                     }
                     None => {
                         quote! {
-                            tokens.push(ton_abi::Token::new(#field_name, self.#name.token_value()))
+                            tokens.push(self.#name.token_value().named(#field_name))
                         }
                     }
                 },
@@ -204,6 +223,11 @@ fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
         TypeName::Bool => {
             quote! {
                 ton_abi::TokenValue::Bool(self.#name)
+            }
+        }
+        TypeName::String => {
+            quote! {
+                ton_abi::TokenValue::Bytes(self.#name.as_bytes().into())
             }
         }
         TypeName::Biguint128 => {

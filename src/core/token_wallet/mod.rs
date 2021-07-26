@@ -14,7 +14,7 @@ use crate::core::models::*;
 use crate::core::parsing::*;
 use crate::helpers::abi::{
     self, BigUint128, BigUint256, BuildTokenValue, ContractOutputUnpacker, ContractResult,
-    FunctionExt, IntoUnpacker, TokenValueExt, UnpackToken, UnpackerError,
+    FunctionExt, IntoUnpacker, TokenValueExt, UnpackFirst, UnpackToken, UnpackerError,
 };
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
@@ -496,8 +496,7 @@ impl<'a> RootTokenContractState<'a> {
         let address = self
             .0
             .run_local(&function.build(), &inputs)?
-            .into_unpacker()
-            .unpack_next()?;
+            .unpack_first()?;
 
         Ok(address)
     }
@@ -564,7 +563,7 @@ fn unpack_brief_root_token_contract_details(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
     ) {
-        let data: BriefRootTokenContractDetails = tokens.into_unpacker().unpack_next()?;
+        let data: BriefRootTokenContractDetails = tokens.unpack_first()?;
         RootTokenContractDetails {
             version,
             name: data.name,
@@ -575,7 +574,7 @@ fn unpack_brief_root_token_contract_details(
             root_public_key: data.root_public_key,
         }
     } else {
-        let data: BriefRootTokenContractDetailsV4 = tokens.into_unpacker().unpack_next()?;
+        let data: BriefRootTokenContractDetailsV4 = tokens.unpack_first()?;
         RootTokenContractDetails {
             version,
             name: data.name,
@@ -684,7 +683,7 @@ fn unpack_token_wallet_details(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
     ) {
-        let data: TonTokenWalletDetails = tokens.into_unpacker().unpack_next()?;
+        let data: TonTokenWalletDetails = tokens.unpack_first()?;
         TokenWalletDetails {
             root_address: data.root_address,
             owner_address: data.owner_address,
@@ -693,7 +692,7 @@ fn unpack_token_wallet_details(
             balance: data.balance,
         }
     } else {
-        let data: TonTokenWalletDetailsV4 = tokens.into_unpacker().unpack_next()?;
+        let data: TonTokenWalletDetailsV4 = tokens.unpack_first()?;
         TokenWalletDetails {
             root_address: data.root_address,
             owner_address: data.owner_address,
@@ -719,8 +718,7 @@ impl<'a> RootMetaContractState<'a> {
         let value: ton_types::Cell = self
             .0
             .run_local(&function, &[0u16.token_value().named("key")])?
-            .into_unpacker()
-            .unpack_next()?;
+            .unpack_first()?;
 
         let proxy_address = MsgAddressInt::construct_from_cell(value).convert()?;
 
@@ -893,8 +891,7 @@ fn get_version_direct(contract: &ExistingContract) -> Result<GotVersion> {
 
     let version: u32 = contract
         .run_local(&function, &[abi::answer_id()])?
-        .into_unpacker()
-        .unpack_next()?;
+        .unpack_first()?;
 
     Ok(version
         .try_into()

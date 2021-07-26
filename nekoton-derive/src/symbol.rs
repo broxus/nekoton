@@ -13,6 +13,7 @@ define_symbols! {
 
     // container attributes
     PLAIN => "plain",
+    ENUM_BOOL => "boolean",
 
     // field attributes
     NAME => "name",
