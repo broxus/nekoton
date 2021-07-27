@@ -1,7 +1,8 @@
+use num_bigint::{BigInt, BigUint};
 use num_traits::ToPrimitive;
 use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddressInt};
-use ton_types::{Cell, UInt256};
+use ton_types::Cell;
 
 use super::StandaloneToken;
 
@@ -77,10 +78,67 @@ pub trait UnpackToken<T> {
     fn unpack(self) -> ContractResult<T>;
 }
 
-impl UnpackToken<MsgAddrStd> for TokenValue {
-    fn unpack(self) -> ContractResult<MsgAddrStd> {
+impl UnpackToken<i8> for TokenValue {
+    fn unpack(self) -> ContractResult<i8> {
+        UnpackToken::<BigInt>::unpack(self)?
+            .to_i8()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
+impl UnpackToken<u8> for TokenValue {
+    fn unpack(self) -> ContractResult<u8> {
+        UnpackToken::<BigUint>::unpack(self)?
+            .to_u8()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
+impl UnpackToken<u16> for TokenValue {
+    fn unpack(self) -> ContractResult<u16> {
+        UnpackToken::<BigUint>::unpack(self)?
+            .to_u16()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
+impl UnpackToken<u32> for TokenValue {
+    fn unpack(self) -> ContractResult<u32> {
+        UnpackToken::<BigUint>::unpack(self)?
+            .to_u32()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
+impl UnpackToken<u64> for TokenValue {
+    fn unpack(self) -> ContractResult<u64> {
+        UnpackToken::<BigUint>::unpack(self)?
+            .to_u64()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
+impl UnpackToken<u128> for TokenValue {
+    fn unpack(self) -> ContractResult<u128> {
+        UnpackToken::<BigUint>::unpack(self)?
+            .to_u128()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
+impl UnpackToken<bool> for TokenValue {
+    fn unpack(self) -> ContractResult<bool> {
         match self {
-            TokenValue::Address(ton_block::MsgAddress::AddrStd(address)) => Ok(address),
+            TokenValue::Bool(confirmed) => Ok(confirmed),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
+impl UnpackToken<Cell> for TokenValue {
+    fn unpack(self) -> ContractResult<Cell> {
+        match self {
+            TokenValue::Cell(cell) => Ok(cell),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
@@ -100,19 +158,10 @@ impl UnpackToken<MsgAddressInt> for TokenValue {
     }
 }
 
-impl UnpackToken<Cell> for TokenValue {
-    fn unpack(self) -> ContractResult<Cell> {
+impl UnpackToken<MsgAddrStd> for TokenValue {
+    fn unpack(self) -> ContractResult<MsgAddrStd> {
         match self {
-            TokenValue::Cell(cell) => Ok(cell),
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-}
-
-impl UnpackToken<Vec<u8>> for TokenValue {
-    fn unpack(self) -> ContractResult<Vec<u8>> {
-        match self {
-            TokenValue::Bytes(bytes) => Ok(bytes),
+            TokenValue::Address(ton_block::MsgAddress::AddrStd(addr)) => Ok(addr),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
@@ -127,128 +176,28 @@ impl UnpackToken<String> for TokenValue {
     }
 }
 
-impl UnpackToken<UInt256> for TokenValue {
-    fn unpack(self) -> ContractResult<UInt256> {
+impl UnpackToken<BigInt> for TokenValue {
+    fn unpack(self) -> ContractResult<BigInt> {
         match self {
-            TokenValue::Uint(data) => {
-                let mut result = [0; 32];
-                let data = data.number.to_bytes_be();
-
-                let len = std::cmp::min(data.len(), 32);
-                let offset = 32 - len;
-                (0..len).for_each(|i| result[i + offset] = data[i]);
-
-                Ok(result.into())
-            }
+            TokenValue::Int(data) => Ok(data.number),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
 }
 
-impl UnpackToken<i8> for TokenValue {
-    fn unpack(self) -> ContractResult<i8> {
+impl UnpackToken<BigUint> for TokenValue {
+    fn unpack(self) -> ContractResult<BigUint> {
         match self {
-            TokenValue::Int(data) => Ok(data.number.to_i8().ok_or(UnpackerError::InvalidAbi)?),
+            TokenValue::Uint(data) => Ok(data.number),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
 }
 
-impl UnpackToken<u8> for TokenValue {
-    fn unpack(self) -> ContractResult<u8> {
+impl UnpackToken<Vec<u8>> for TokenValue {
+    fn unpack(self) -> ContractResult<Vec<u8>> {
         match self {
-            TokenValue::Uint(data) => Ok(data.number.to_u8().ok_or(UnpackerError::InvalidAbi)?),
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-}
-
-impl UnpackToken<u16> for TokenValue {
-    fn unpack(self) -> ContractResult<u16> {
-        match self {
-            TokenValue::Uint(data) => Ok(data.number.to_u16().ok_or(UnpackerError::InvalidAbi)?),
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-}
-
-impl UnpackToken<u32> for TokenValue {
-    fn unpack(self) -> ContractResult<u32> {
-        match self {
-            TokenValue::Uint(data) => Ok(data.number.to_u32().ok_or(UnpackerError::InvalidAbi)?),
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-}
-
-impl UnpackToken<u64> for TokenValue {
-    fn unpack(self) -> ContractResult<u64> {
-        match self {
-            TokenValue::Uint(data) => Ok(data.number.to_u64().ok_or(UnpackerError::InvalidAbi)?),
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-}
-
-impl UnpackToken<u128> for TokenValue {
-    fn unpack(self) -> ContractResult<u128> {
-        match self {
-            TokenValue::Uint(data) => Ok(data.number.to_u128().ok_or(UnpackerError::InvalidAbi)?),
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-}
-
-impl UnpackToken<primitive_types::H160> for TokenValue {
-    fn unpack(self) -> ContractResult<primitive_types::H160> {
-        match self {
-            TokenValue::Uint(value) => {
-                let mut hash = primitive_types::H160::default();
-                let bytes = value.number.to_bytes_be();
-
-                const ADDRESS_SIZE: usize = 20;
-
-                // copy min(N,20) bytes into last min(N,20) elements of address
-
-                let size = bytes.len();
-                let src_offset = size - size.min(ADDRESS_SIZE);
-                let dest_offset = ADDRESS_SIZE - size.min(ADDRESS_SIZE);
-                hash.0[dest_offset..ADDRESS_SIZE].copy_from_slice(&bytes[src_offset..size]);
-
-                Ok(hash)
-            }
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-}
-
-impl UnpackToken<primitive_types::H256> for TokenValue {
-    fn unpack(self) -> ContractResult<primitive_types::H256> {
-        match self {
-            TokenValue::Uint(value) => {
-                let mut hash = primitive_types::H256::default();
-                let bytes = value.number.to_bytes_be();
-
-                const HASH_SIZE: usize = 32;
-
-                // copy min(N,32) bytes into last min(N,32) elements of address
-
-                let size = bytes.len();
-                let src_offset = size - HASH_SIZE.min(size);
-                let dest_offset = HASH_SIZE - HASH_SIZE.min(size);
-                hash.0[dest_offset..HASH_SIZE].copy_from_slice(&bytes[src_offset..size]);
-
-                Ok(hash)
-            }
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-}
-
-impl UnpackToken<bool> for TokenValue {
-    fn unpack(self) -> ContractResult<bool> {
-        match self {
-            TokenValue::Bool(confirmed) => Ok(confirmed),
+            TokenValue::Bytes(bytes) => Ok(bytes),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }

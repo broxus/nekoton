@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_parser::derive::UnpackAbi;
-
 use super::utils;
+use crate::helpers::abi::UnpackAbi;
 use crate::utils::*;
-pub use nekoton_parser::models::*;
+
+pub use crate::helpers::models::*;
 
 #[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -160,7 +160,7 @@ pub struct MultisigSendTransaction {
     #[abi(address)]
     #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
-    #[abi(biguint128)]
+    #[abi(with = "nekoton_parser::abi::uint128_number")]
     pub value: BigUint,
     #[abi(bool)]
     pub bounce: bool,

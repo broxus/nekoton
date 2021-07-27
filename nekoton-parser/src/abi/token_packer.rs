@@ -1,7 +1,7 @@
 use num_bigint::{BigInt, BigUint};
 use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
-use ton_types::{BuilderData, Cell, UInt256};
+use ton_types::{BuilderData, Cell};
 
 use super::StandaloneToken;
 
@@ -15,18 +15,6 @@ pub trait BuildTokenValue {
 
 pub trait BuildTokenValues {
     fn token_values(self) -> Vec<TokenValue>;
-}
-
-impl BuildTokenValue for bool {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Bool(self)
-    }
-}
-
-impl BuildTokenValue for &str {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Bytes(self.as_bytes().into())
-    }
 }
 
 impl BuildTokenValue for i8 {
@@ -83,15 +71,15 @@ impl BuildTokenValue for u128 {
     }
 }
 
-impl BuildTokenValue for Vec<u8> {
+impl BuildTokenValue for bool {
     fn token_value(self) -> TokenValue {
-        TokenValue::Bytes(self)
+        TokenValue::Bool(self)
     }
 }
 
-impl BuildTokenValue for MsgAddrStd {
+impl BuildTokenValue for Cell {
     fn token_value(self) -> TokenValue {
-        TokenValue::Address(MsgAddress::AddrStd(self))
+        TokenValue::Cell(self)
     }
 }
 
@@ -104,54 +92,27 @@ impl BuildTokenValue for MsgAddressInt {
     }
 }
 
-impl BuildTokenValue for Cell {
+impl BuildTokenValue for MsgAddrStd {
     fn token_value(self) -> TokenValue {
-        TokenValue::Cell(self)
+        TokenValue::Address(MsgAddress::AddrStd(self))
     }
 }
 
-impl BuildTokenValue for UInt256 {
+impl BuildTokenValue for &str {
     fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: BigUint::from_bytes_be(self.as_slice()),
-            size: 256,
-        })
+        TokenValue::Bytes(self.as_bytes().into())
+    }
+}
+
+impl BuildTokenValue for Vec<u8> {
+    fn token_value(self) -> TokenValue {
+        TokenValue::Bytes(self)
     }
 }
 
 impl BuildTokenValue for BuilderData {
     fn token_value(self) -> TokenValue {
         TokenValue::Cell(self.into())
-    }
-}
-
-impl BuildTokenValue for primitive_types::H256 {
-    fn token_value(self) -> TokenValue {
-        BigUint256(BigUint::from_bytes_be(self.as_bytes())).token_value()
-    }
-}
-
-#[derive(Debug)]
-pub struct BigUint256(pub BigUint);
-
-impl BuildTokenValue for BigUint256 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: self.0,
-            size: 256,
-        })
-    }
-}
-
-#[derive(Debug)]
-pub struct BigUint128(pub BigUint);
-
-impl BuildTokenValue for BigUint128 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: self.0,
-            size: 128,
-        })
     }
 }
 

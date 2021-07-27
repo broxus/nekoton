@@ -122,25 +122,28 @@ fn serialize_struct(
                 None => name.to_string(),
             };
 
-            match &f.attrs.pack_with {
-                Some(data) => {
-                    quote! {
-                        tokens.push(#data(#field_name, self.#name))
-                    }
+            if f.attrs.type_name.is_some() {
+                let handler = get_handler(
+                    f.attrs.type_name.as_ref().unwrap_or_else(|| unreachable!()),
+                    name,
+                );
+                quote! {
+                    tokens.push(ton_abi::Token::new(#field_name, #handler))
                 }
-                None => match &f.attrs.type_name {
-                    Some(type_name) => {
-                        let handler = get_handler(type_name, name);
-                        quote! {
-                            tokens.push(ton_abi::Token::new(#field_name, #handler))
-                        }
-                    }
-                    None => {
-                        quote! {
-                            tokens.push(self.#name.token_value().named(#field_name))
-                        }
-                    }
-                },
+            } else if f.attrs.with.is_some() {
+                let data = f.attrs.with.as_ref().unwrap_or_else(|| unreachable!());
+                quote! {
+                    tokens.push(#data::pack(#field_name, self.#name))
+                }
+            } else if f.attrs.pack_with.is_some() {
+                let data = f.attrs.pack_with.as_ref().unwrap_or_else(|| unreachable!());
+                quote! {
+                    tokens.push(#data(#field_name, self.#name))
+                }
+            } else {
+                quote! {
+                    tokens.push(self.#name.token_value().named(#field_name))
+                }
             }
         } else {
             quote! {} // do nothing
@@ -197,16 +200,6 @@ fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
                 ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 128 })
             }
         }
-        TypeName::Uint160 => {
-            quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from_bytes_be(self.#name.as_slice()), size: 160 })
-            }
-        }
-        TypeName::Uint256 => {
-            quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from_bytes_be(self.#name.as_slice()), size: 256 })
-            }
-        }
         TypeName::Address => {
             quote! {
                 ton_abi::TokenValue::Address(match self.#name {
@@ -228,11 +221,6 @@ fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
         TypeName::String => {
             quote! {
                 ton_abi::TokenValue::Bytes(self.#name.as_bytes().into())
-            }
-        }
-        TypeName::Biguint128 => {
-            quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from_bytes_be(self.#name.as_slice()), size: 128 })
             }
         }
         TypeName::None => unreachable!(),

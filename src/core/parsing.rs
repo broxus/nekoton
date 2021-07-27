@@ -6,12 +6,10 @@ use once_cell::sync::OnceCell;
 use ton_block::{MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
-use nekoton_parser::derive::UnpackAbi;
-
 use crate::contracts;
 use crate::core::models::*;
 use crate::core::ton_wallet::WalletType;
-use crate::helpers::abi::{self, FunctionExt, UnpackToken, UnpackerError};
+use crate::helpers::abi::{self, FunctionExt, UnpackAbi, UnpackToken, UnpackerError};
 use crate::utils::*;
 
 pub struct InputMessage(pub Vec<ton_abi::Token>);
@@ -419,7 +417,7 @@ impl TryFrom<(UInt256, InputMessage)> for MultisigConfirmTransaction {
 struct MultisigSubmitTransactionInput {
     #[abi(address)]
     dest: MsgAddressInt,
-    #[abi(biguint128)]
+    #[abi(with = "nekoton_parser::abi::uint128_number")]
     value: BigUint,
     #[abi(bool)]
     bounce: bool,
@@ -615,9 +613,9 @@ impl RootTokenContractFunctions {
 #[derive(UnpackAbi)]
 #[abi(plain)]
 struct TonTokenWalletBurnByOwner {
-    #[abi(biguint128)]
+    #[abi(with = "nekoton_parser::abi::uint128_number")]
     tokens: BigUint,
-    #[abi(biguint128, name = "grams")]
+    #[abi(name = "grams", with = "nekoton_parser::abi::uint128_number")]
     _grams: BigUint,
     #[abi(address, name = "send_gas_to")]
     _send_gas_to: MsgAddressInt,
@@ -659,7 +657,7 @@ impl TryFrom<InputMessage> for TokenSwapBack {
 #[derive(UnpackAbi)]
 #[abi(plain)]
 struct Accept {
-    #[abi(biguint128)]
+    #[abi(with = "nekoton_parser::abi::uint128_number")]
     tokens: BigUint,
 }
 
@@ -683,15 +681,18 @@ enum TransferType {
 #[derive(UnpackAbi)]
 #[abi(plain)]
 struct TonTokenWalletTransferToRecipient {
-    #[abi(uint256, name = "recipient_public_key")]
+    #[abi(
+        name = "recipient_public_key",
+        with = "nekoton_parser::abi::uint256_bytes"
+    )]
     _recipient_public_key: UInt256,
     #[abi(address)]
     recipient_address: MsgAddressInt,
-    #[abi(biguint128)]
+    #[abi(with = "nekoton_parser::abi::uint128_number")]
     tokens: BigUint,
-    #[abi(biguint128, name = "deploy_grams")]
+    #[abi(name = "deploy_grams", with = "nekoton_parser::abi::uint128_number")]
     _deploy_grams: BigUint,
-    #[abi(biguint128, name = "transfer_grams")]
+    #[abi(name = "transfer_grams", with = "nekoton_parser::abi::uint128_number")]
     _transfer_grams: BigUint,
     #[abi(address, name = "send_gas_to")]
     _send_gas_to: MsgAddressInt,
@@ -706,9 +707,9 @@ struct TonTokenWalletTransferToRecipient {
 struct TonTokenWalletTransfer {
     #[abi(address)]
     to: MsgAddressInt,
-    #[abi(biguint128)]
+    #[abi(with = "nekoton_parser::abi::uint128_number")]
     tokens: BigUint,
-    #[abi(biguint128, name = "grams")]
+    #[abi(name = "grams", with = "nekoton_parser::abi::uint128_number")]
     _grams: BigUint,
     #[abi(address, name = "send_gas_to")]
     _send_gas_to: MsgAddressInt,
@@ -748,9 +749,12 @@ impl TryFrom<(InputMessage, TransferType)> for TokenOutgoingTransfer {
 #[derive(UnpackAbi)]
 #[abi(plain)]
 struct TonTokenWalletInternalTransfer {
-    #[abi(biguint128)]
+    #[abi(with = "nekoton_parser::abi::uint128_number")]
     tokens: BigUint,
-    #[abi(uint256, name = "sender_public_key")]
+    #[abi(
+        name = "sender_public_key",
+        with = "nekoton_parser::abi::uint256_bytes"
+    )]
     _sender_public_key: UInt256,
     #[abi(address, name = "sender_address")]
     sender_address: MsgAddressInt,

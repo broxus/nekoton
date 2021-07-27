@@ -136,7 +136,7 @@ fn serialize_struct(
                 None => name.to_string(),
             };
 
-            let try_unpack = try_unpack(&f.attrs.type_name, &f.attrs.unpack_with);
+            let try_unpack = try_unpack(&f.attrs.type_name, &f.attrs.with, &f.attrs.unpack_with);
 
             quote! {
                 #name: {
@@ -189,36 +189,42 @@ fn serialize_struct(
 
 fn try_unpack(
     type_name: &Option<TypeName>,
+    with: &Option<syn::Expr>,
     unpack_with: &Option<syn::Expr>,
 ) -> proc_macro2::TokenStream {
-    match unpack_with {
-        Some(data) => quote! {
+    if type_name.is_some() {
+        let handler = get_handler(type_name.as_ref().unwrap_or_else(|| unreachable!()));
+        quote! {
+            match token {
+                Some(token) => {
+                    match token.value {
+                        #handler
+                        _ => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                    }
+                },
+                None => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+            }
+        }
+    } else if with.is_some() {
+        let data = with.as_ref().unwrap_or_else(|| unreachable!());
+        quote! {
+            match token {
+                Some(token) => #data::unpack(&token.value)?,
+                None => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+            }
+        }
+    } else if unpack_with.is_some() {
+        let data = unpack_with.as_ref().unwrap_or_else(|| unreachable!());
+        quote! {
             match token {
                 Some(token) => #data(&token.value)?,
                 None => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
             }
-        },
-        None => match type_name {
-            Some(type_name) => {
-                let handler = get_handler(type_name);
-                quote! {
-                    match token {
-                        Some(token) => {
-                            match token.value {
-                                #handler
-                                _ => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
-                            }
-                        },
-                        None => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
-                    }
-                }
-            }
-            None => {
-                quote! {
-                    token.unpack()?
-                }
-            }
-        },
+        }
+    } else {
+        quote! {
+            token.unpack()?
+        }
     }
 }
 
@@ -272,27 +278,6 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
                 },
             }
         }
-        TypeName::Uint160 => {
-            quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 160 }) => {
-                    value
-                },
-            }
-        }
-        TypeName::Uint256 => {
-            quote! {
-                ton_abi::TokenValue::Uint(data) => {
-                    let bytes = data.number.to_bytes_be();
-
-                    let mut result = [0; 32];
-                    let len = std::cmp::min(bytes.len(), 32);
-                    let offset = 32 - len;
-                    (0..len).for_each(|i| result[i + offset] = bytes[i]);
-
-                    result.into()
-                },
-            }
-        }
         TypeName::Address => {
             quote! {
                 ton_abi::TokenValue::Address(ton_block::MsgAddress::AddrStd(addr)) => {
@@ -316,13 +301,6 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         TypeName::String => {
             quote! {
                 ton_abi::TokenValue::Bytes(bytes) => String::from_utf8_lossy(&bytes).to_string(),
-            }
-        }
-        TypeName::Biguint128 => {
-            quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 128 }) => {
-                    value
-                },
             }
         }
         TypeName::None => unreachable!(),

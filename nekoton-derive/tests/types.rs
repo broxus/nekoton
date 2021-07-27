@@ -2,8 +2,7 @@ use num_bigint::BigUint;
 use ton_abi::{Int, Token, TokenValue, Uint};
 use ton_types::UInt256;
 
-use nekoton_parser::abi::UnpackToken;
-use nekoton_parser::derive::UnpackAbi;
+use nekoton_parser::abi::{UnpackAbi, UnpackToken};
 
 #[derive(UnpackAbi)]
 #[abi(plain)]
@@ -20,12 +19,12 @@ struct Data {
     data_u64: u64,
     #[abi(uint128)]
     data_u128: u128,
-    #[abi(uint160)]
+    #[abi(with = "nekoton_parser::abi::uint160_bytes")]
     data_u160: BigUint,
-    #[abi(uint256)]
+    #[abi(with = "nekoton_parser::abi::uint256_bytes")]
     data_u256: UInt256,
-    #[abi(biguint128)]
-    data_biguint128: BigUint,
+    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    data_uint128_number: BigUint,
     #[abi(bool)]
     data_bool: bool,
 }
@@ -39,7 +38,8 @@ fn test() -> Data {
     let data_u128 = Token::new("data_u128", TokenValue::Uint(Uint::new(128, 128)));
     let data_u160 = Token::new("data_u160", TokenValue::Uint(Uint::new(160, 160)));
     let data_u256 = Token::new("data_u256", TokenValue::Uint(Uint::new(256, 256)));
-    let data_biguint128 = Token::new("data_biguint128", TokenValue::Uint(Uint::new(128, 128)));
+    let data_uint128_number =
+        Token::new("data_uint128_number", TokenValue::Uint(Uint::new(128, 128)));
     let data_bool = Token::new("data_bool", TokenValue::Bool(true));
 
     let tokens = vec![
@@ -51,7 +51,7 @@ fn test() -> Data {
         data_u128,
         data_u160,
         data_u256,
-        data_biguint128,
+        data_uint128_number,
         data_bool,
     ];
     let parsed: Data = tokens.unpack().unwrap();
@@ -75,7 +75,7 @@ fn main() {
     assert_eq!(data.data_bool, true);
 
     {
-        let bytes = data.data_biguint128.to_bytes_be();
+        let bytes = data.data_uint128_number.to_bytes_be();
         assert!(bytes.len() <= 16);
 
         let mut padded_data = [0u8; 16];

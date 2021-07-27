@@ -18,6 +18,7 @@ define_symbols! {
     // field attributes
     NAME => "name",
     TYPE_NAME => "type",
+    WITH => "with",
     PACK_WITH => "pack_with",
     UNPACK_WITH => "unpack_with",
 }

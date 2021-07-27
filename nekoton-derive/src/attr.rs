@@ -32,6 +32,18 @@ impl Container {
             }
         }
 
+        if let syn::Data::Enum(_) = input.data {
+            if struct_plain.get() {
+                cx.error_spanned_by(input, "Invalid attribute 'plain' for enum");
+            }
+        }
+
+        if let syn::Data::Struct(_) = input.data {
+            if enum_bool.get() {
+                cx.error_spanned_by(input, "Invalid attribute 'boolean' for struct");
+            }
+        }
+
         Some(Self {
             struct_plain: struct_plain.get(),
             enum_bool: enum_bool.get(),
@@ -42,6 +54,7 @@ impl Container {
 pub struct Field {
     pub name: Option<String>,
     pub type_name: Option<TypeName>,
+    pub with: Option<syn::Expr>,
     pub pack_with: Option<syn::Expr>,
     pub unpack_with: Option<syn::Expr>,
 }
@@ -50,6 +63,7 @@ impl Field {
     pub fn from_ast(cx: &ParsingContext, _index: usize, input: &syn::Field) -> Option<Self> {
         let mut name = Attr::none(cx, NAME);
         let mut type_name = Attr::none(cx, TYPE_NAME);
+        let mut with = Attr::none(cx, WITH);
         let mut pack_with = Attr::none(cx, PACK_WITH);
         let mut unpack_with = Attr::none(cx, UNPACK_WITH);
 
@@ -75,6 +89,11 @@ impl Field {
                         }
                     }
                 }
+                (AttrFrom::Abi, Meta(NameValue(m))) if m.path == WITH => {
+                    if let Ok(expr) = parse_lit_into_expr(cx, WITH, &m.lit) {
+                        with.set(&m.path, expr);
+                    }
+                }
                 (AttrFrom::Abi, Meta(NameValue(m))) if m.path == PACK_WITH => {
                     if let Ok(expr) = parse_lit_into_expr(cx, PACK_WITH, &m.lit) {
                         pack_with.set(&m.path, expr);
@@ -92,11 +111,36 @@ impl Field {
             }
         }
 
+        let type_name = type_name.get();
+        let with = with.get();
+        let pack_with = pack_with.get();
+        let unpack_with = unpack_with.get();
+
+        if !((type_name.is_none()
+            && with.is_none()
+            && pack_with.is_none()
+            && unpack_with.is_none())
+            || (type_name.is_some()
+                && with.is_none()
+                && pack_with.is_none()
+                && unpack_with.is_none())
+            || (type_name.is_none()
+                && with.is_some()
+                && pack_with.is_none()
+                && unpack_with.is_none())
+            || (type_name.is_none()
+                && with.is_none()
+                && (pack_with.is_some() || unpack_with.is_some())))
+        {
+            cx.error_spanned_by(input, "Only one of attributes ('type', 'with', 'pack_with/unpack_with') can be selected at time");
+        }
+
         Some(Self {
             name: name.get(),
-            type_name: type_name.get(),
-            pack_with: pack_with.get(),
-            unpack_with: unpack_with.get(),
+            type_name,
+            with,
+            pack_with,
+            unpack_with,
         })
     }
 }
@@ -298,13 +342,10 @@ pub enum TypeName {
     Uint32,
     Uint64,
     Uint128,
-    Uint160,
-    Uint256,
     Bool,
     Cell,
     Address,
     String,
-    Biguint128,
     None,
 }
 
@@ -322,10 +363,6 @@ impl TypeName {
             TypeName::Uint64
         } else if input == "uint128" {
             TypeName::Uint128
-        } else if input == "uint160" {
-            TypeName::Uint160
-        } else if input == "uint256" {
-            TypeName::Uint256
         } else if input == "bool" {
             TypeName::Bool
         } else if input == "cell" {
@@ -334,8 +371,6 @@ impl TypeName {
             TypeName::Address
         } else if input == "string" {
             TypeName::String
-        } else if input == "biguint128" {
-            TypeName::Biguint128
         } else {
             TypeName::None
         }

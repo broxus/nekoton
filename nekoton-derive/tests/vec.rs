@@ -1,5 +1,4 @@
-use nekoton_parser::abi::{BuildTokenValue, TokenValueExt, UnpackToken};
-use nekoton_parser::derive::{PackAbi, UnpackAbi};
+use nekoton_parser::abi::{BuildTokenValue, PackAbi, TokenValueExt, UnpackAbi, UnpackToken};
 
 #[derive(PackAbi, UnpackAbi)]
 struct Data {

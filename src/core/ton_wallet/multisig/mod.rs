@@ -6,12 +6,12 @@ use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_parser::derive::UnpackAbi;
-
 use super::TonWalletDetails;
 use crate::contracts;
 use crate::core::models::{GenTimings, LastTransactionId, MultisigPendingTransaction};
-use crate::helpers::abi::{ContractResult, FunctionExt, UnpackFirst, UnpackToken, UnpackerError};
+use crate::helpers::abi::{
+    ContractResult, FunctionExt, UnpackAbi, UnpackFirst, UnpackToken, UnpackerError,
+};
 use crate::utils::*;
 
 #[cfg(feature = "wallet")]
@@ -247,7 +247,7 @@ enum MultisigError {
 struct TonWalletCustodian {
     #[abi(uint8)]
     index: u8,
-    #[abi(uint256)]
+    #[abi(with = "nekoton_parser::abi::uint256_bytes")]
     pubkey: UInt256,
 }
 
@@ -261,13 +261,13 @@ struct PendingTransaction {
     signs_required: u8,
     #[abi(uint8, name = "signsReceived")]
     signs_received: u8,
-    #[abi(uint256)]
+    #[abi(with = "nekoton_parser::abi::uint256_bytes")]
     creator: UInt256,
     #[abi(uint8)]
     index: u8,
     #[abi(address)]
     dest: MsgAddressInt,
-    #[abi(biguint128)]
+    #[abi(with = "nekoton_parser::abi::uint128_number")]
     value: BigUint,
     #[abi(uint16, name = "sendFlags")]
     send_flags: u16,

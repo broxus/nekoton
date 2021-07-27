@@ -9,6 +9,9 @@ use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
 use ton_types::{SliceData, UInt256};
 
+#[cfg(feature = "derive")]
+pub use nekoton_derive::*;
+
 use super::models::{GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
@@ -16,12 +19,19 @@ pub use self::function_builder::*;
 pub use self::message_builder::*;
 pub use self::token_packer::*;
 pub use self::token_unpacker::*;
+pub use self::uint128_bytes::*;
+pub use self::uint256_bytes::*;
 
 mod function_builder;
 mod message_builder;
 mod token_packer;
 mod token_unpacker;
 mod tvm;
+
+pub mod uint128_bytes;
+pub mod uint128_number;
+pub mod uint160_bytes;
+pub mod uint256_bytes;
 
 const TON_ABI_VERSION: u8 = 2;
 
@@ -430,17 +440,14 @@ impl Executor {
 }
 
 pub trait StandaloneToken {}
-impl StandaloneToken for MsgAddressInt {}
-impl StandaloneToken for MsgAddrStd {}
-impl StandaloneToken for UInt256 {}
-impl StandaloneToken for UInt128 {}
-impl StandaloneToken for primitive_types::H160 {}
-impl StandaloneToken for primitive_types::H256 {}
 impl StandaloneToken for u16 {}
 impl StandaloneToken for u32 {}
 impl StandaloneToken for u64 {}
 impl StandaloneToken for u128 {}
 impl StandaloneToken for bool {}
+impl StandaloneToken for MsgAddressInt {}
+impl StandaloneToken for MsgAddrStd {}
+impl StandaloneToken for UInt256 {}
 impl StandaloneToken for Vec<u8> {}
 impl StandaloneToken for TokenValue {}
 

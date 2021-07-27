@@ -1,7 +1,6 @@
 use ton_abi::Uint;
 
-use nekoton_parser::abi::{BuildTokenValue, StandaloneToken, UnpackToken};
-use nekoton_parser::derive::{PackAbi, UnpackAbi};
+use nekoton_parser::abi::{BuildTokenValue, PackAbi, StandaloneToken, UnpackAbi, UnpackToken};
 
 #[derive(PackAbi, UnpackAbi, PartialEq, Debug)]
 enum EventType {
