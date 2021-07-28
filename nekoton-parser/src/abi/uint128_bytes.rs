@@ -3,7 +3,7 @@ use ton_abi::{Token, TokenValue};
 
 use nekoton_utils::UInt128;
 
-use super::{BuildTokenValue, ContractResult, UnpackerError};
+use super::{BuildTokenValue, UnpackerError, UnpackerResult};
 
 pub struct BigUint128(pub BigUint);
 
@@ -23,7 +23,7 @@ pub fn pack(name: &str, value: UInt128) -> Token {
     )
 }
 
-pub fn unpack(value: &TokenValue) -> ContractResult<UInt128> {
+pub fn unpack(value: &TokenValue) -> UnpackerResult<UInt128> {
     match value {
         TokenValue::Uint(data) => Ok(data.number.to_bytes_be().into()),
         _ => Err(UnpackerError::InvalidAbi),

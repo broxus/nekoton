@@ -26,7 +26,7 @@ pub fn impl_derive_pack_abi(
             };
             let body = serialize_enum(&container, variants, enum_type);
             quote! {
-                impl nekoton_parser::abi::BuildTokenValue for #ident {
+                impl BuildTokenValue for #ident {
                     fn token_value(self) -> ton_abi::TokenValue {
                         #body
                     }
@@ -37,7 +37,7 @@ pub fn impl_derive_pack_abi(
             if container.attrs.struct_plain {
                 let body = serialize_struct(&container, fields, StructType::Plain);
                 quote! {
-                    impl nekoton_parser::abi::PackTokens for #ident {
+                    impl PackTokens for #ident {
                         fn pack(self) -> Vec<ton_abi::Token> {
                             #body
                         }
@@ -46,7 +46,7 @@ pub fn impl_derive_pack_abi(
             } else {
                 let body = serialize_struct(&container, fields, StructType::Tuple);
                 quote! {
-                    impl nekoton_parser::abi::BuildTokenValue for #ident {
+                    impl BuildTokenValue for #ident {
                         fn token_value(self) -> ton_abi::TokenValue {
                             #body
                         }

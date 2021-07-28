@@ -2,7 +2,7 @@ use num_bigint::BigUint;
 use ton_abi::{Token, TokenValue, Uint};
 use ton_types::UInt256;
 
-use super::{BuildTokenValue, ContractResult, UnpackerError};
+use super::{BuildTokenValue, UnpackerError, UnpackerResult};
 
 pub struct BigUint256(pub BigUint);
 
@@ -31,7 +31,7 @@ pub fn pack(name: &str, value: UInt256) -> Token {
     )
 }
 
-pub fn unpack(value: &TokenValue) -> ContractResult<UInt256> {
+pub fn unpack(value: &TokenValue) -> UnpackerResult<UInt256> {
     match value {
         TokenValue::Uint(data) => {
             let mut result = [0u8; 32];

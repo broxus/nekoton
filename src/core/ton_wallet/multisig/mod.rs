@@ -9,8 +9,8 @@ use ton_types::UInt256;
 use super::TonWalletDetails;
 use crate::contracts;
 use crate::core::models::{GenTimings, LastTransactionId, MultisigPendingTransaction};
-use crate::helpers::abi::{
-    ContractResult, FunctionExt, UnpackAbi, UnpackFirst, UnpackToken, UnpackerError,
+use crate::parser::abi::{
+    FunctionExt, UnpackAbi, UnpackFirst, UnpackToken, UnpackerError, UnpackerResult,
 };
 use crate::utils::*;
 
@@ -189,7 +189,7 @@ pub fn find_pending_transaction(
             let transaction: PendingTransaction = item.unpack()?;
             Ok(transaction)
         })
-        .collect::<ContractResult<Vec<PendingTransaction>>>()?;
+        .collect::<UnpackerResult<Vec<PendingTransaction>>>()?;
 
     for transaction in transactions {
         if pending_transaction_id == transaction.id {
@@ -232,7 +232,7 @@ fn parse_multisig_contract_pending_transactions(
             let transaction: PendingTransaction = item.unpack()?;
             Ok(transaction.with_custodians(custodians))
         })
-        .collect::<ContractResult<Vec<MultisigPendingTransaction>>>()?;
+        .collect::<UnpackerResult<Vec<MultisigPendingTransaction>>>()?;
 
     Ok(transactions)
 }

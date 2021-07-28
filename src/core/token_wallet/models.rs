@@ -2,7 +2,7 @@ use num_bigint::BigUint;
 use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
-use crate::helpers::abi::UnpackAbi;
+use crate::parser::abi::{UnpackAbi, UnpackToken, UnpackerError, UnpackerResult};
 
 #[derive(UnpackAbi)]
 pub struct BriefRootTokenContractDetails {

@@ -58,6 +58,6 @@ pub mod core;
 pub mod crypto;
 #[cfg(feature = "wallet")]
 pub mod external;
-pub mod helpers;
+pub mod parser;
 pub mod transport;
 pub mod utils;

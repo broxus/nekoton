@@ -1,7 +1,7 @@
 use num_bigint::BigUint;
 use ton_abi::{Token, TokenValue, Uint};
 
-use super::{ContractResult, UnpackerError};
+use super::{UnpackerError, UnpackerResult};
 
 pub fn pack(name: &str, value: BigUint) -> Token {
     Token::new(
@@ -13,7 +13,7 @@ pub fn pack(name: &str, value: BigUint) -> Token {
     )
 }
 
-pub fn unpack(value: &TokenValue) -> ContractResult<BigUint> {
+pub fn unpack(value: &TokenValue) -> UnpackerResult<BigUint> {
     match value {
         TokenValue::Uint(ton_abi::Uint {
             number: data,

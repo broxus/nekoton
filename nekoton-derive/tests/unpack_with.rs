@@ -2,7 +2,7 @@ use num_traits::ToPrimitive;
 use ton_abi::TokenValue;
 use ton_abi::{Token, Uint};
 
-use nekoton_parser::abi::{ContractResult, UnpackAbi, UnpackToken, UnpackerError};
+use nekoton_parser::abi::{UnpackAbi, UnpackToken, UnpackerError, UnpackerResult};
 
 #[derive(UnpackAbi)]
 struct Data {
@@ -10,7 +10,7 @@ struct Data {
     value: u32,
 }
 
-fn external_unpacker(value: &TokenValue) -> ContractResult<u32> {
+fn external_unpacker(value: &TokenValue) -> UnpackerResult<u32> {
     match value {
         ton_abi::TokenValue::Uint(ton_abi::Uint {
             number: value,

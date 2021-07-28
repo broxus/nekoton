@@ -2,7 +2,7 @@ use num_bigint::BigUint;
 use ton_abi::{Int, Token, TokenValue, Uint};
 use ton_types::UInt256;
 
-use nekoton_parser::abi::{UnpackAbi, UnpackToken};
+use nekoton_parser::abi::{UnpackAbi, UnpackToken, UnpackerError, UnpackerResult};
 
 #[derive(UnpackAbi)]
 #[abi(plain)]

@@ -25,8 +25,8 @@ pub fn impl_derive_unpack_abi(
             };
             let body = serialize_enum(&container, variants, enum_type);
             quote! {
-                impl nekoton_parser::abi::UnpackToken<#ident> for ton_abi::TokenValue {
-                    fn unpack(self) -> nekoton_parser::abi::ContractResult<#ident> {
+                impl UnpackToken<#ident> for ton_abi::TokenValue {
+                    fn unpack(self) -> UnpackerResult<#ident> {
                         #body
                     }
                 }
@@ -36,8 +36,8 @@ pub fn impl_derive_unpack_abi(
             if container.attrs.struct_plain {
                 let body = serialize_struct(&container, fields, StructType::Plain);
                 quote! {
-                    impl nekoton_parser::abi::UnpackToken<#ident> for Vec<ton_abi::Token> {
-                        fn unpack(self) -> nekoton_parser::abi::ContractResult<#ident> {
+                    impl UnpackToken<#ident> for Vec<ton_abi::Token> {
+                        fn unpack(self) -> UnpackerResult<#ident> {
                             #body
                         }
                     }
@@ -45,8 +45,8 @@ pub fn impl_derive_unpack_abi(
             } else {
                 let body = serialize_struct(&container, fields, StructType::Tuple);
                 quote! {
-                    impl nekoton_parser::abi::UnpackToken<#ident> for ton_abi::TokenValue {
-                        fn unpack(self) -> nekoton_parser::abi::ContractResult<#ident> {
+                    impl UnpackToken<#ident> for ton_abi::TokenValue {
+                        fn unpack(self) -> UnpackerResult<#ident> {
                             #body
                         }
                     }
@@ -103,9 +103,9 @@ fn serialize_enum(
                 match self {
                     ton_abi::TokenValue::Uint(int) => match num_traits::ToPrimitive::to_u8(&int.number) {
                         #(#build_variants,)*
-                        _ => Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                        _ => Err(UnpackerError::InvalidAbi),
                     },
-                    _ => Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                    _ => Err(UnpackerError::InvalidAbi),
                 }
             }
         }
@@ -113,7 +113,7 @@ fn serialize_enum(
             quote! {
                 match self {
                     #(#build_variants,)*
-                    _ => Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                    _ => Err(UnpackerError::InvalidAbi),
                 }
             }
         }
@@ -143,12 +143,12 @@ fn serialize_struct(
                     let token = tokens.next();
                     let name = match &token {
                         Some(token) => token.name.clone(),
-                        None => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                        None => return Err(UnpackerError::InvalidAbi),
                     };
                     if name == #field_name {
                         #try_unpack
                     } else {
-                        return Err(nekoton_parser::abi::UnpackerError::InvalidName{
+                        return Err(UnpackerError::InvalidName{
                             expected: #field_name.to_string(),
                             found: name,
                         });
@@ -176,7 +176,7 @@ fn serialize_struct(
             quote! {
                 let mut tokens = match self {
                     ton_abi::TokenValue::Tuple(tokens) => tokens.into_iter(),
-                    _ => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                    _ => return Err(UnpackerError::InvalidAbi),
                 };
 
                 std::result::Result::Ok(#name {
@@ -199,10 +199,10 @@ fn try_unpack(
                 Some(token) => {
                     match token.value {
                         #handler
-                        _ => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                        _ => return Err(UnpackerError::InvalidAbi),
                     }
                 },
-                None => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                None => return Err(UnpackerError::InvalidAbi),
             }
         }
     } else if with.is_some() {
@@ -210,7 +210,7 @@ fn try_unpack(
         quote! {
             match token {
                 Some(token) => #data::unpack(&token.value)?,
-                None => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                None => return Err(UnpackerError::InvalidAbi),
             }
         }
     } else if unpack_with.is_some() {
@@ -218,7 +218,7 @@ fn try_unpack(
         quote! {
             match token {
                 Some(token) => #data(&token.value)?,
-                None => return Err(nekoton_parser::abi::UnpackerError::InvalidAbi),
+                None => return Err(UnpackerError::InvalidAbi),
             }
         }
     } else {
@@ -234,7 +234,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
             quote! {
                 ton_abi::TokenValue::Int(ton_abi::Int { number: value, size: 8 }) => {
                     num_traits::ToPrimitive::to_i8(&value)
-                    .ok_or(nekoton_parser::abi::UnpackerError::InvalidAbi)?
+                    .ok_or(UnpackerError::InvalidAbi)?
                 },
             }
         }
@@ -242,7 +242,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
             quote! {
                 ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 8 }) => {
                     num_traits::ToPrimitive::to_u8(&value)
-                    .ok_or(nekoton_parser::abi::UnpackerError::InvalidAbi)?
+                    .ok_or(UnpackerError::InvalidAbi)?
                 },
             }
         }
@@ -250,7 +250,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
             quote! {
                 ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 16 }) => {
                     num_traits::ToPrimitive::to_u16(&value)
-                    .ok_or(nekoton_parser::abi::UnpackerError::InvalidAbi)?
+                    .ok_or(UnpackerError::InvalidAbi)?
                 },
             }
         }
@@ -258,7 +258,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
             quote! {
                 ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 32 }) => {
                     num_traits::ToPrimitive::to_u32(&value)
-                    .ok_or(nekoton_parser::abi::UnpackerError::InvalidAbi)?
+                    .ok_or(UnpackerError::InvalidAbi)?
                 },
             }
         }
@@ -266,7 +266,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
             quote! {
                 ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 64 }) => {
                     num_traits::ToPrimitive::to_u64(&value)
-                    .ok_or(nekoton_parser::abi::UnpackerError::InvalidAbi)?
+                    .ok_or(UnpackerError::InvalidAbi)?
                 },
             }
         }
@@ -274,7 +274,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
             quote! {
                 ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 128 }) => {
                     num_traits::ToPrimitive::to_u128(&value)
-                    .ok_or(nekoton_parser::abi::UnpackerError::InvalidAbi)?
+                    .ok_or(UnpackerError::InvalidAbi)?
                 },
             }
         }

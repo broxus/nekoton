@@ -13,7 +13,7 @@ use crate::contracts;
 use crate::core::models::Expiration;
 use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
-use crate::helpers::abi::{BigUint128, MessageBuilder};
+use crate::parser::abi::{BigUint128, MessageBuilder};
 use crate::utils::*;
 
 pub fn prepare_deploy(

@@ -8,9 +8,9 @@ use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializab
 use crate::contracts;
 use crate::core::models::*;
 use crate::core::parsing::*;
-use crate::helpers::abi::{
-    self, BigUint128, BigUint256, BuildTokenValue, ContractOutputUnpacker, ContractResult,
-    FunctionExt, IntoUnpacker, TokenValueExt, UnpackFirst, UnpackToken, UnpackerError,
+use crate::parser::abi::{
+    self, BigUint128, BigUint256, BuildTokenValue, ContractOutputUnpacker, FunctionExt,
+    IntoUnpacker, TokenValueExt, UnpackFirst, UnpackToken, UnpackerError, UnpackerResult,
 };
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
@@ -568,7 +568,7 @@ impl<'a> RootTokenContractState<'a> {
 fn unpack_brief_root_token_contract_details(
     version: TokenWalletVersion,
     tokens: Vec<ton_abi::Token>,
-) -> ContractResult<RootTokenContractDetails> {
+) -> UnpackerResult<RootTokenContractDetails> {
     let data = if matches!(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
@@ -688,7 +688,7 @@ impl<'a> TokenWalletContractState<'a> {
 fn unpack_token_wallet_details(
     version: TokenWalletVersion,
     tokens: Vec<ton_abi::Token>,
-) -> ContractResult<TokenWalletDetails> {
+) -> UnpackerResult<TokenWalletDetails> {
     let data = if matches!(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
@@ -868,7 +868,7 @@ impl TryFrom<Vec<ton_abi::Token>> for EthEventDetails {
     }
 }
 
-fn unpack_vote_count<I>(tuple: &mut ContractOutputUnpacker<I>) -> ContractResult<u16>
+fn unpack_vote_count<I>(tuple: &mut ContractOutputUnpacker<I>) -> UnpackerResult<u16>
 where
     I: Iterator<Item = ton_abi::Token>,
 {

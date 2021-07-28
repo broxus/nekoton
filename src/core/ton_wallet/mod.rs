@@ -16,7 +16,7 @@ use super::models::{
 };
 use super::{ContractSubscription, PollingMethod};
 use crate::core::parsing::*;
-use crate::helpers;
+use crate::parser;
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 use crate::utils::*;
@@ -293,7 +293,7 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
 
     let code_hash = code.repr_hash();
     if let Some(multisig_type) = multisig::guess_multisig_type(&code_hash) {
-        let public_key = helpers::abi::extract_public_key(&contract.account)?;
+        let public_key = parser::abi::extract_public_key(&contract.account)?;
         Ok((public_key, WalletType::Multisig(multisig_type)))
     } else if wallet_v3::is_wallet_v3(&code_hash) {
         let public_key =
