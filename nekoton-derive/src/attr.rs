@@ -19,7 +19,7 @@ impl Container {
         for (from, meta_item) in input
             .attrs
             .iter()
-            .flat_map(|attr| get_meta_items(&cx, attr))
+            .flat_map(|attr| get_meta_items(cx, attr))
             .flat_map(|item| item.into_iter())
         {
             match (from, &meta_item) {
@@ -70,7 +70,7 @@ impl Field {
         for (from, meta_item) in input
             .attrs
             .iter()
-            .flat_map(|attr| get_meta_items(&cx, attr))
+            .flat_map(|attr| get_meta_items(cx, attr))
             .flat_map(|item| item.into_iter())
         {
             match (from, &meta_item) {
