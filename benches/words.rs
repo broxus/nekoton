@@ -15,7 +15,7 @@ fn criterion_benchmark(c: &mut Criterion) {
 }
 
 fn create_function(name: &str) {
-    nekoton::contracts::abi::ton_token_wallet_v3()
+    nekoton_contracts::abi::ton_token_wallet_v3()
         .function(black_box(name))
         .unwrap();
 }

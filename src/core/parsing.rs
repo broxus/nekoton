@@ -6,13 +6,11 @@ use once_cell::sync::OnceCell;
 use ton_block::{MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
-use crate::contracts;
+use nekoton_abi::*;
+use nekoton_utils::*;
+
 use crate::core::models::*;
 use crate::core::ton_wallet::WalletType;
-use crate::parser::abi::{
-    self, FunctionExt, UnpackAbi, UnpackToken, UnpackerError, UnpackerResult,
-};
-use crate::utils::*;
 
 pub struct InputMessage(pub Vec<ton_abi::Token>);
 
@@ -22,9 +20,9 @@ pub struct ContractCall {
 }
 
 pub fn parse_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
-    let function_id = read_u32(&payload).ok()?;
+    let function_id = read_function_id(&payload).ok()?;
     if function_id == 0 {
-        return abi::parse_comment_payload(payload).map(KnownPayload::Comment);
+        return parse_comment_payload(payload).map(KnownPayload::Comment);
     }
 
     // TODO: somehow determine token wallet version
@@ -132,10 +130,10 @@ pub fn parse_transaction_additional_info(
     }
 
     let body = in_msg.body()?;
-    let function_id = read_u32(&body).ok()?;
+    let function_id = read_function_id(&body).ok()?;
 
     if function_id == 0 {
-        abi::parse_comment_payload(body).map(TransactionAdditionalInfo::Comment)
+        parse_comment_payload(body).map(TransactionAdditionalInfo::Comment)
     } else if function_id == depool_notifications.on_round_complete.input_id {
         let inputs = depool_notifications
             .on_round_complete
@@ -205,7 +203,9 @@ impl DePoolParticipantFunctions {
 
     fn instance() -> &'static Self {
         static IDS: OnceCell<DePoolParticipantFunctions> = OnceCell::new();
-        IDS.get_or_init(|| DePoolParticipantFunctions::new(contracts::abi::depool_v3_participant()))
+        IDS.get_or_init(|| {
+            DePoolParticipantFunctions::new(nekoton_contracts::abi::depool_v3_participant())
+        })
     }
 }
 
@@ -230,7 +230,9 @@ impl WalletNotificationFunctions {
 
     fn instance() -> &'static Self {
         static IDS: OnceCell<WalletNotificationFunctions> = OnceCell::new();
-        IDS.get_or_init(|| WalletNotificationFunctions::new(contracts::abi::wallet_notifications()))
+        IDS.get_or_init(|| {
+            WalletNotificationFunctions::new(nekoton_contracts::abi::wallet_notifications())
+        })
     }
 }
 
@@ -340,7 +342,7 @@ fn parse_multisig_transaction_impl(
         body.move_by(PUBKEY_OFFSET + PUBKEY_LENGTH + TIME_LENGTH + EXPIRE_LENGTH)
             .ok()?;
 
-        read_u32(&body).ok()?
+        read_function_id(&body).ok()?
     };
 
     let functions = MultisigFunctions::instance();
@@ -398,7 +400,7 @@ impl MultisigFunctions {
 
     fn instance() -> &'static Self {
         static IDS: OnceCell<MultisigFunctions> = OnceCell::new();
-        IDS.get_or_init(|| MultisigFunctions::new(contracts::abi::safe_multisig_wallet()))
+        IDS.get_or_init(|| MultisigFunctions::new(nekoton_contracts::abi::safe_multisig_wallet()))
     }
 }
 
@@ -419,7 +421,7 @@ impl TryFrom<(UInt256, InputMessage)> for MultisigConfirmTransaction {
 struct MultisigSubmitTransactionInput {
     #[abi(address)]
     dest: MsgAddressInt,
-    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    #[abi(with = "uint128_number")]
     value: BigUint,
     #[abi(bool)]
     bounce: bool,
@@ -485,12 +487,12 @@ pub fn parse_token_transaction(
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
 
     let mut body = in_msg.body()?;
-    let function_id = read_u32(&body).ok()?;
+    let function_id = read_function_id(&body).ok()?;
 
     let header = in_msg.int_header()?;
     if header.bounced {
         body.move_by(32).ok()?;
-        let function_id = read_u32(&body).ok()?;
+        let function_id = read_function_id(&body).ok()?;
 
         if function_id == functions.internal_transfer.input_id {
             return Some(TokenWalletTransaction::TransferBounced(
@@ -568,15 +570,15 @@ impl TokenWalletFunctions {
             TokenWalletVersion::Tip3v1 => return None,
             TokenWalletVersion::Tip3v2 => {
                 static IDS: OnceCell<TokenWalletFunctions> = OnceCell::new();
-                IDS.get_or_init(|| Self::new(contracts::abi::ton_token_wallet_v2()))
+                IDS.get_or_init(|| Self::new(nekoton_contracts::abi::ton_token_wallet_v2()))
             }
             TokenWalletVersion::Tip3v3 => {
                 static IDS: OnceCell<TokenWalletFunctions> = OnceCell::new();
-                IDS.get_or_init(|| Self::new(contracts::abi::ton_token_wallet_v3()))
+                IDS.get_or_init(|| Self::new(nekoton_contracts::abi::ton_token_wallet_v3()))
             }
             TokenWalletVersion::Tip3v4 => {
                 static IDS: OnceCell<TokenWalletFunctions> = OnceCell::new();
-                IDS.get_or_init(|| Self::new(contracts::abi::ton_token_wallet_v4()))
+                IDS.get_or_init(|| Self::new(nekoton_contracts::abi::ton_token_wallet_v4()))
             }
         })
     }
@@ -598,15 +600,15 @@ impl RootTokenContractFunctions {
             TokenWalletVersion::Tip3v1 => return None,
             TokenWalletVersion::Tip3v2 => {
                 static IDS: OnceCell<RootTokenContractFunctions> = OnceCell::new();
-                IDS.get_or_init(|| Self::new(contracts::abi::root_token_contract_v2()))
+                IDS.get_or_init(|| Self::new(nekoton_contracts::abi::root_token_contract_v2()))
             }
             TokenWalletVersion::Tip3v3 => {
                 static IDS: OnceCell<RootTokenContractFunctions> = OnceCell::new();
-                IDS.get_or_init(|| Self::new(contracts::abi::root_token_contract_v3()))
+                IDS.get_or_init(|| Self::new(nekoton_contracts::abi::root_token_contract_v3()))
             }
             TokenWalletVersion::Tip3v4 => {
                 static IDS: OnceCell<RootTokenContractFunctions> = OnceCell::new();
-                IDS.get_or_init(|| Self::new(contracts::abi::root_token_contract_v4()))
+                IDS.get_or_init(|| Self::new(nekoton_contracts::abi::root_token_contract_v4()))
             }
         })
     }
@@ -615,9 +617,9 @@ impl RootTokenContractFunctions {
 #[derive(UnpackAbi)]
 #[abi(plain)]
 struct TonTokenWalletBurnByOwner {
-    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    #[abi(with = "uint128_number")]
     tokens: BigUint,
-    #[abi(name = "grams", with = "nekoton_parser::abi::uint128_number")]
+    #[abi(name = "grams", with = "uint128_number")]
     _grams: BigUint,
     #[abi(address, name = "send_gas_to")]
     _send_gas_to: MsgAddressInt,
@@ -659,7 +661,7 @@ impl TryFrom<InputMessage> for TokenSwapBack {
 #[derive(UnpackAbi)]
 #[abi(plain)]
 struct Accept {
-    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    #[abi(with = "uint128_number")]
     tokens: BigUint,
 }
 
@@ -683,18 +685,15 @@ enum TransferType {
 #[derive(UnpackAbi)]
 #[abi(plain)]
 struct TonTokenWalletTransferToRecipient {
-    #[abi(
-        name = "recipient_public_key",
-        with = "nekoton_parser::abi::uint256_bytes"
-    )]
+    #[abi(name = "recipient_public_key", with = "uint256_bytes")]
     _recipient_public_key: UInt256,
     #[abi(address)]
     recipient_address: MsgAddressInt,
-    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    #[abi(with = "uint128_number")]
     tokens: BigUint,
-    #[abi(name = "deploy_grams", with = "nekoton_parser::abi::uint128_number")]
+    #[abi(name = "deploy_grams", with = "uint128_number")]
     _deploy_grams: BigUint,
-    #[abi(name = "transfer_grams", with = "nekoton_parser::abi::uint128_number")]
+    #[abi(name = "transfer_grams", with = "uint128_number")]
     _transfer_grams: BigUint,
     #[abi(address, name = "send_gas_to")]
     _send_gas_to: MsgAddressInt,
@@ -709,9 +708,9 @@ struct TonTokenWalletTransferToRecipient {
 struct TonTokenWalletTransfer {
     #[abi(address)]
     to: MsgAddressInt,
-    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    #[abi(with = "uint128_number")]
     tokens: BigUint,
-    #[abi(name = "grams", with = "nekoton_parser::abi::uint128_number")]
+    #[abi(name = "grams", with = "uint128_number")]
     _grams: BigUint,
     #[abi(address, name = "send_gas_to")]
     _send_gas_to: MsgAddressInt,
@@ -751,12 +750,9 @@ impl TryFrom<(InputMessage, TransferType)> for TokenOutgoingTransfer {
 #[derive(UnpackAbi)]
 #[abi(plain)]
 struct TonTokenWalletInternalTransfer {
-    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    #[abi(with = "uint128_number")]
     tokens: BigUint,
-    #[abi(
-        name = "sender_public_key",
-        with = "nekoton_parser::abi::uint256_bytes"
-    )]
+    #[abi(name = "sender_public_key", with = "uint256_bytes")]
     _sender_public_key: UInt256,
     #[abi(address, name = "sender_address")]
     sender_address: MsgAddressInt,

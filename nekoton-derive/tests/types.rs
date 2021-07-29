@@ -2,7 +2,7 @@ use num_bigint::BigUint;
 use ton_abi::{Int, Token, TokenValue, Uint};
 use ton_types::UInt256;
 
-use nekoton_parser::abi::{UnpackAbi, UnpackToken, UnpackerError, UnpackerResult};
+use nekoton_abi::*;
 
 #[derive(UnpackAbi)]
 #[abi(plain)]
@@ -19,11 +19,11 @@ struct Data {
     data_u64: u64,
     #[abi(uint128)]
     data_u128: u128,
-    #[abi(with = "nekoton_parser::abi::uint160_bytes")]
-    data_u160: BigUint,
-    #[abi(with = "nekoton_parser::abi::uint256_bytes")]
+    #[abi(with = "uint160_bytes")]
+    data_u160: [u8; 20],
+    #[abi(with = "uint256_bytes")]
     data_u256: UInt256,
-    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    #[abi(with = "uint128_number")]
     data_uint128_number: BigUint,
     #[abi(bool)]
     data_bool: bool,
@@ -86,15 +86,8 @@ fn main() {
     }
 
     {
-        let bytes = data.data_u160.to_bytes_be();
-        assert!(bytes.len() <= 20);
-
-        let mut padded_data = [0u8; 20];
-        let offset = padded_data.len() - bytes.len();
-        padded_data[offset..20].copy_from_slice(&bytes);
-
         assert_eq!(
-            hex::encode(padded_data),
+            hex::encode(data.data_u160),
             "00000000000000000000000000000000000000a0"
         );
     }

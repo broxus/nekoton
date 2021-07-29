@@ -9,12 +9,13 @@ use serde::Deserialize;
 use tokio::sync::{RwLock, Semaphore};
 use ton_block::MsgAddressInt;
 
+use nekoton_utils::{NoFailure, TrustMe};
+
 use super::models::TokenWalletVersion;
 use crate::core::token_wallet::{RootTokenContractState, TokenWalletContractState};
 use crate::external::Storage;
 use crate::transport::models::{ExistingContract, RawContractState};
 use crate::transport::Transport;
-use crate::utils::{NoFailure, TrustMe};
 
 const STORAGE_OWNERS_CACHE: &str = "__core__owners_cache";
 

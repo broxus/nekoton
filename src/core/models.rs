@@ -6,11 +6,13 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt};
 use ton_types::UInt256;
 
-use super::utils;
-use crate::parser::abi::{UnpackAbi, UnpackToken, UnpackerError, UnpackerResult};
-use crate::utils::*;
+use nekoton_abi::{
+    GenTimings, LastTransactionId, TransactionId, UnpackAbi, UnpackToken, UnpackerError,
+    UnpackerResult,
+};
+use nekoton_utils::*;
 
-pub use crate::parser::models::*;
+use super::utils;
 
 #[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -98,7 +100,7 @@ pub struct TokenWalletDeployedNotification {
     pub root_token_contract: MsgAddressInt,
 }
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(
         Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
     )]
@@ -110,7 +112,7 @@ crate::define_string_enum!(
     }
 );
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(
         Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
     )]
@@ -160,7 +162,7 @@ pub struct MultisigSendTransaction {
     #[abi(address)]
     #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
-    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    #[abi(with = "nekoton_abi::uint128_number")]
     pub value: BigUint,
     #[abi(bool)]
     pub bounce: bool,
@@ -314,7 +316,7 @@ pub struct TonEventData {
     pub to: String,
 }
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum PollingMethod {
         /// Manual polling once a minute or by a click.
@@ -326,7 +328,7 @@ crate::define_string_enum!(
     }
 );
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum ReliableBehavior {
         /// Used for transports which doesn't support getting blocks directly (ADNL)
@@ -354,7 +356,7 @@ impl Expiration {
     pub fn timestamp(&self) -> u32 {
         match self {
             Self::Never => u32::MAX,
-            Self::Timeout(timeout) => now() + timeout,
+            Self::Timeout(timeout) => chrono::Utc::now().timestamp() as u32 + timeout,
             &Self::Timestamp(timestamp) => timestamp,
         }
     }
@@ -416,7 +418,7 @@ pub struct Symbol {
     pub root_token_contract: MsgAddressInt,
 }
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum TokenWalletVersion {
         /// First stable iteration of token wallets.

@@ -7,9 +7,7 @@ use ton_abi::{Token, Uint};
 use ton_block::{MsgAddress, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_parser::abi::{
-    BuildTokenValue, PackAbi, TokenValueExt, UnpackAbi, UnpackToken, UnpackerError, UnpackerResult,
-};
+use nekoton_abi::*;
 
 #[derive(PackAbi, UnpackAbi, Clone)]
 struct PendingTransaction {
@@ -21,7 +19,7 @@ struct PendingTransaction {
     signs_required: u8,
     #[abi(uint8, name = "signsReceived")]
     signs_received: u8,
-    #[abi(name = "creator", with = "nekoton_parser::abi::uint256_bytes")]
+    #[abi(name = "creator", with = "uint256_bytes")]
     creator: UInt256,
     #[abi(uint8)]
     index: u8,

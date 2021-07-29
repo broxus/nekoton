@@ -5,7 +5,7 @@ use base64::URL_SAFE;
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::AccountId;
 
-use super::crc::crc_16;
+use crate::crc::crc_16;
 
 ///Packs std address to base64 format
 /// # Arguments
@@ -35,7 +35,6 @@ pub fn pack_std_smc_addr(
     } else {
         base64::encode(&buffer)
     };
-    assert_eq!(b64_enc.len(), 48);
     Ok(b64_enc)
 }
 
@@ -86,7 +85,7 @@ pub fn repack_address(address: &str) -> Result<MsgAddressInt> {
     if let Ok(a) = unpack_std_smc_addr(address, true) {
         return Ok(a);
     }
-    anyhow::bail!("Invalid address")
+    Err(AddressConversionError::InvalidAddress.into())
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -99,14 +98,14 @@ enum AddressConversionError {
     InvalidPackedLength,
     #[error("Invalid checksum")]
     InvalidChecksum,
+    #[error("Invalid address")]
+    InvalidAddress,
 }
 
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
 
-    #[cfg(test)]
-    use pretty_assertions::assert_eq;
     use ton_block::MsgAddressInt;
 
     use crate::address::{pack_std_smc_addr, unpack_std_smc_addr};

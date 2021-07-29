@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::pin::Pin;
@@ -8,14 +9,13 @@ use ed25519_dalek::PublicKey;
 use futures::{Future, FutureExt, Stream};
 use ton_block::{MsgAddressInt, Serializable};
 
+use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
+use nekoton_utils::*;
+
 use crate::core::models::*;
-#[cfg(feature = "wallet")]
 use crate::crypto::{SignedMessage, UnsignedMessage};
 use crate::transport::models::RawTransaction;
 use crate::transport::Transport;
-use crate::utils::*;
-#[cfg(feature = "wallet")]
-use std::borrow::Cow;
 
 pub fn convert_transactions(
     transactions: Vec<RawTransaction>,
@@ -361,7 +361,6 @@ impl PendingTransactionsExt for Vec<PendingTransaction> {
     }
 }
 
-#[cfg(feature = "wallet")]
 pub fn make_labs_unsigned_message(
     message: ton_block::Message,
     expiration: Expiration,
@@ -387,7 +386,6 @@ pub fn make_labs_unsigned_message(
     }))
 }
 
-#[cfg(feature = "wallet")]
 #[derive(Clone)]
 struct LabsUnsignedMessage {
     function: Cow<'static, ton_abi::Function>,
@@ -399,7 +397,6 @@ struct LabsUnsignedMessage {
     message: ton_block::Message,
 }
 
-#[cfg(feature = "wallet")]
 impl UnsignedMessage for LabsUnsignedMessage {
     fn refresh_timeout(&mut self) {
         let time = chrono::Utc::now().timestamp_millis() as u64;

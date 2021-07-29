@@ -4,22 +4,143 @@ use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
-use ton_types::UInt256;
+use ton_types::{SliceData, UInt256};
 
-use super::TonWalletDetails;
-use crate::contracts;
-use crate::core::models::{GenTimings, LastTransactionId, MultisigPendingTransaction};
-use crate::parser::abi::{
-    FunctionExt, UnpackAbi, UnpackFirst, UnpackToken, UnpackerError, UnpackerResult,
-};
-use crate::utils::*;
+use nekoton_abi::*;
+use nekoton_utils::*;
 
-#[cfg(feature = "wallet")]
-pub use wallet_integration::*;
-#[cfg(feature = "wallet")]
-mod wallet_integration;
+use super::{TonWalletDetails, TransferAction, DEFAULT_WORKCHAIN};
+use crate::core::models::{Expiration, MultisigPendingTransaction};
+use crate::core::utils::*;
+use crate::crypto::UnsignedMessage;
 
-crate::define_string_enum!(
+pub fn prepare_deploy(
+    public_key: &PublicKey,
+    multisig_type: MultisigType,
+    expiration: Expiration,
+    owners: &[PublicKey],
+    req_confirms: u8,
+) -> Result<Box<dyn UnsignedMessage>> {
+    let state_init = prepare_state_init(public_key, multisig_type);
+    let hash = state_init.hash().trust_me();
+
+    let dst = MsgAddressInt::AddrStd(ton_block::MsgAddrStd {
+        anycast: None,
+        workchain_id: DEFAULT_WORKCHAIN,
+        address: hash.into(),
+    });
+
+    let mut message =
+        ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+            dst,
+            ..Default::default()
+        });
+
+    message.set_state_init(state_init);
+
+    let owners = owners
+        .iter()
+        .map(|public_key| UInt256::from(public_key.as_bytes()))
+        .collect::<Vec<UInt256>>();
+
+    let (function, input) = MessageBuilder::new(
+        nekoton_contracts::abi::safe_multisig_wallet(),
+        "constructor",
+    )
+    .trust_me()
+    .arg(owners)
+    .arg(req_confirms) // reqConfirms
+    .build();
+
+    make_labs_unsigned_message(
+        message,
+        expiration,
+        public_key,
+        Cow::Borrowed(function),
+        input,
+    )
+}
+
+pub fn prepare_confirm_transaction(
+    public_key: &PublicKey,
+    address: MsgAddressInt,
+    transaction_id: u64,
+    expiration: Expiration,
+) -> Result<Box<dyn UnsignedMessage>> {
+    let message = ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+        dst: address,
+        ..Default::default()
+    });
+
+    let (function, input) = MessageBuilder::new(
+        nekoton_contracts::abi::safe_multisig_wallet(),
+        "confirmTransaction",
+    )
+    .trust_me()
+    .arg(transaction_id)
+    .build();
+
+    make_labs_unsigned_message(
+        message,
+        expiration,
+        public_key,
+        Cow::Borrowed(function),
+        input,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn prepare_transfer(
+    public_key: &PublicKey,
+    has_multiple_owners: bool,
+    address: MsgAddressInt,
+    destination: MsgAddressInt,
+    amount: u64,
+    bounce: bool,
+    body: Option<SliceData>,
+    expiration: Expiration,
+) -> Result<TransferAction> {
+    let message = ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+        dst: address,
+        ..Default::default()
+    });
+
+    let (function, input) = if has_multiple_owners {
+        MessageBuilder::new(
+            nekoton_contracts::abi::safe_multisig_wallet(),
+            "submitTransaction",
+        )
+        .trust_me()
+        .arg(destination)
+        .arg(BigUint128(amount.into()))
+        .arg(bounce)
+        .arg(false) // allBalance
+        .arg(body.unwrap_or_default().into_cell())
+        .build()
+    } else {
+        MessageBuilder::new(
+            nekoton_contracts::abi::safe_multisig_wallet(),
+            "sendTransaction",
+        )
+        .trust_me()
+        .arg(destination)
+        .arg(BigUint128(amount.into()))
+        .arg(bounce)
+        .arg(3u8) // flags
+        .arg(body.unwrap_or_default().into_cell())
+        .build()
+    };
+
+    Ok(TransferAction::Sign(make_labs_unsigned_message(
+        message,
+        expiration,
+        public_key,
+        Cow::Borrowed(function),
+        input,
+    )?))
+}
+
+define_string_enum!(
     #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum MultisigType {
         SafeMultisigWallet,
@@ -87,10 +208,10 @@ pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
 
 fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> ton_block::StateInit {
     let mut code = match multisig_type {
-        MultisigType::SafeMultisigWallet => contracts::code::safe_multisig_wallet(),
-        MultisigType::SafeMultisigWallet24h => contracts::code::safe_multisig_wallet_24h(),
-        MultisigType::SetcodeMultisigWallet => contracts::code::setcode_multisig_wallet(),
-        MultisigType::SurfWallet => contracts::code::surf_wallet(),
+        MultisigType::SafeMultisigWallet => nekoton_contracts::code::safe_multisig_wallet(),
+        MultisigType::SafeMultisigWallet24h => nekoton_contracts::code::safe_multisig_wallet_24h(),
+        MultisigType::SetcodeMultisigWallet => nekoton_contracts::code::setcode_multisig_wallet(),
+        MultisigType::SurfWallet => nekoton_contracts::code::surf_wallet(),
     }
     .into();
 
@@ -115,10 +236,10 @@ fn run_local(
 ) -> Result<Vec<ton_abi::Token>> {
     let function: &ton_abi::Function = match multisig_type {
         MultisigType::SafeMultisigWallet | MultisigType::SafeMultisigWallet24h => {
-            contracts::abi::safe_multisig_wallet()
+            nekoton_contracts::abi::safe_multisig_wallet()
         }
         MultisigType::SetcodeMultisigWallet | MultisigType::SurfWallet => {
-            contracts::abi::setcode_multisig_wallet()
+            nekoton_contracts::abi::setcode_multisig_wallet()
         }
     }
     .function(contract_method)
@@ -148,7 +269,7 @@ pub fn get_custodians(
 }
 
 fn parse_multisig_contract_custodians(tokens: Vec<ton_abi::Token>) -> Result<Vec<UInt256>> {
-    let array = match tokens.unpack_first() {
+    let array = match tokens.into_unpacker().unpack_next() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };
@@ -178,7 +299,7 @@ pub fn find_pending_transaction(
         last_transaction_id,
     )?;
 
-    let array = match tokens.unpack_first() {
+    let array = match tokens.into_unpacker().unpack_next() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };
@@ -221,7 +342,7 @@ fn parse_multisig_contract_pending_transactions(
     tokens: Vec<ton_abi::Token>,
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingTransaction>> {
-    let array = match tokens.unpack_first() {
+    let array = match tokens.into_unpacker().unpack_next() {
         Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };
@@ -247,7 +368,7 @@ enum MultisigError {
 struct TonWalletCustodian {
     #[abi(uint8)]
     index: u8,
-    #[abi(with = "nekoton_parser::abi::uint256_bytes")]
+    #[abi(with = "uint256_bytes")]
     pubkey: UInt256,
 }
 
@@ -261,13 +382,13 @@ struct PendingTransaction {
     signs_required: u8,
     #[abi(uint8, name = "signsReceived")]
     signs_received: u8,
-    #[abi(with = "nekoton_parser::abi::uint256_bytes")]
+    #[abi(with = "uint256_bytes")]
     creator: UInt256,
     #[abi(uint8)]
     index: u8,
     #[abi(address)]
     dest: MsgAddressInt,
-    #[abi(with = "nekoton_parser::abi::uint128_number")]
+    #[abi(with = "uint128_number")]
     value: BigUint,
     #[abi(uint16, name = "sendFlags")]
     send_flags: u16,

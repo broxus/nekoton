@@ -1,7 +1,6 @@
 use ton_abi::{Function, Param, ParamType};
 
-use super::BuildTokenValue;
-use super::TokenValueExt;
+use super::{BuildTokenValue, TokenValueExt};
 
 const ANSWER_ID: &str = "_answer_id";
 
@@ -126,8 +125,9 @@ pub fn answer_id() -> ton_abi::Token {
 
 #[cfg(test)]
 mod tests {
-    use crate::abi::FunctionBuilder;
     use ton_abi::ParamType;
+
+    use super::*;
 
     // "name": "transfer",
     // "inputs": [

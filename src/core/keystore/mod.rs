@@ -10,9 +10,10 @@ use futures::future;
 use serde::{Serialize, Serializer};
 use tokio::sync::RwLock;
 
+use nekoton_utils::*;
+
 use crate::crypto::{PasswordCache, Signature, Signer, SignerContext, SignerEntry, SignerStorage};
 use crate::external::Storage;
-use crate::utils::*;
 
 const STORAGE_KEYSTORE: &str = "__core__keystore";
 
@@ -237,9 +238,9 @@ impl SignerEntry {
 pub struct KeyStoreEntry {
     pub signer_name: String,
     pub name: String,
-    #[serde(with = "crate::utils::serde_public_key")]
+    #[serde(with = "nekoton_utils::serde_public_key")]
     pub public_key: PublicKey,
-    #[serde(with = "crate::utils::serde_public_key")]
+    #[serde(with = "nekoton_utils::serde_public_key")]
     pub master_key: PublicKey,
     pub account_id: u16,
 }

@@ -10,30 +10,33 @@ use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExe
 use ton_types::{SliceData, UInt256};
 
 #[cfg(feature = "derive")]
-pub use nekoton_derive::*;
-
-use super::models::{GenTimings, LastTransactionId};
+pub use nekoton_derive::{PackAbi, UnpackAbi};
 use nekoton_utils::*;
 
+pub use self::abi_helpers::*;
 pub use self::function_builder::*;
 pub use self::message_builder::*;
+pub use self::models::*;
 pub use self::token_packer::*;
 pub use self::token_unpacker::*;
-pub use self::uint128_bytes::*;
-pub use self::uint256_bytes::*;
 
+mod abi_helpers;
 mod function_builder;
 mod message_builder;
+mod models;
 mod token_packer;
 mod token_unpacker;
 mod tvm;
 
-pub mod uint128_bytes;
-pub mod uint128_number;
-pub mod uint160_bytes;
-pub mod uint256_bytes;
-
 const TON_ABI_VERSION: u8 = 2;
+
+pub fn read_function_id(data: &ton_types::SliceData) -> ton_types::Result<u32> {
+    let mut value: u32 = 0;
+    for i in 0..4 {
+        value |= (data.get_byte(8 * i)? as u32) << (8 * (3 - i));
+    }
+    Ok(value)
+}
 
 pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
     ton_abi::TokenValue::pack_values_into_chain(
@@ -304,7 +307,7 @@ pub fn process_raw_outputs(
     let mut output = None;
 
     for body in ext_out_msg_bodies {
-        let function_id = read_u32(body).map_err(|_| AbiError::InvalidOutputMessage)?;
+        let function_id = read_function_id(body).map_err(|_| AbiError::InvalidOutputMessage)?;
         if abi_function.output_id != function_id {
             continue;
         }

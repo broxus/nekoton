@@ -7,28 +7,27 @@ use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
-use ton_types::UInt256;
+use ton_types::{SliceData, UInt256};
+
+use nekoton_abi::*;
+use nekoton_utils::*;
 
 pub use self::multisig::MultisigType;
 use super::models::{
-    ContractState, MultisigPendingTransaction, PendingTransaction, Transaction,
-    TransactionAdditionalInfo, TransactionId, TransactionWithData, TransactionsBatchInfo,
+    ContractState, Expiration, MultisigPendingTransaction, PendingTransaction, Transaction,
+    TransactionAdditionalInfo, TransactionWithData, TransactionsBatchInfo,
 };
 use super::{ContractSubscription, PollingMethod};
 use crate::core::parsing::*;
-use crate::parser;
+use crate::core::InternalMessage;
+use crate::crypto::UnsignedMessage;
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
-use crate::utils::*;
 
 mod multisig;
 mod wallet_v3;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
-#[cfg(feature = "wallet")]
-mod wallet_integration;
-#[cfg(feature = "wallet")]
-pub use wallet_integration::*;
 
 pub struct TonWallet {
     public_key: PublicKey,
@@ -158,6 +157,132 @@ impl TonWallet {
 
     pub fn get_custodians(&self) -> &Option<Vec<UInt256>> {
         &self.wallet_data.custodians
+    }
+
+    pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
+        match self.wallet_type {
+            WalletType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expiration),
+            WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
+                &self.public_key,
+                multisig_type,
+                expiration,
+                &[self.public_key],
+                1,
+            ),
+        }
+    }
+
+    pub fn prepare_deploy_with_multiple_owners(
+        &self,
+        expiration: Expiration,
+        custodians: &[PublicKey],
+        req_confirms: u8,
+    ) -> Result<Box<dyn UnsignedMessage>> {
+        match self.wallet_type {
+            WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
+                &self.public_key,
+                multisig_type,
+                expiration,
+                custodians,
+                req_confirms,
+            ),
+            WalletType::WalletV3 => Err(TonWalletError::InvalidContractType.into()),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn prepare_transfer(
+        &mut self,
+        current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
+        destination: MsgAddressInt,
+        amount: u64,
+        bounce: bool,
+        body: Option<SliceData>,
+        expiration: Expiration,
+    ) -> Result<TransferAction> {
+        match self.wallet_type {
+            WalletType::Multisig(_) => {
+                match &current_state.storage.state {
+                    ton_block::AccountState::AccountFrozen(_) => {
+                        return Err(TonWalletError::AccountIsFrozen.into())
+                    }
+                    ton_block::AccountState::AccountUninit => {
+                        return Ok(TransferAction::DeployFirst)
+                    }
+                    ton_block::AccountState::AccountActive(_) => {}
+                };
+
+                self.wallet_data.update(
+                    &self.public_key,
+                    self.wallet_type,
+                    current_state,
+                    *self.contract_subscription.contract_state(),
+                )?;
+
+                let has_multiple_owners = match &self.wallet_data.custodians {
+                    Some(custodians) => custodians.len() > 1,
+                    None => return Err(TonWalletError::CustodiansNotFound.into()),
+                };
+
+                multisig::prepare_transfer(
+                    public_key,
+                    has_multiple_owners,
+                    self.address().clone(),
+                    destination,
+                    amount,
+                    bounce,
+                    body,
+                    expiration,
+                )
+            }
+            WalletType::WalletV3 => wallet_v3::prepare_transfer(
+                public_key,
+                current_state,
+                destination,
+                amount,
+                bounce,
+                body,
+                expiration,
+            ),
+        }
+    }
+
+    pub fn prepare_confirm_transaction(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
+        transaction_id: u64,
+        expiration: Expiration,
+    ) -> Result<Box<dyn UnsignedMessage>> {
+        match self.wallet_type {
+            WalletType::Multisig(multisig_type) => {
+                let gen_timings = self.contract_state().gen_timings;
+                let last_transaction_id = &self
+                    .contract_state()
+                    .last_transaction_id
+                    .ok_or(TonWalletError::LastTransactionNotFound)?;
+
+                let has_pending_transaction = multisig::find_pending_transaction(
+                    multisig_type,
+                    Cow::Borrowed(current_state),
+                    gen_timings,
+                    last_transaction_id,
+                    transaction_id,
+                )?;
+                if !has_pending_transaction {
+                    return Err(TonWalletError::PendingTransactionNotFound.into());
+                }
+
+                multisig::prepare_confirm_transaction(
+                    public_key,
+                    self.address().clone(),
+                    transaction_id,
+                    expiration,
+                )
+            }
+            WalletType::WalletV3 => Err(TonWalletError::PendingTransactionNotFound.into()),
+        }
     }
 
     pub async fn send(
@@ -293,7 +418,7 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
 
     let code_hash = code.repr_hash();
     if let Some(multisig_type) = multisig::guess_multisig_type(&code_hash) {
-        let public_key = parser::abi::extract_public_key(&contract.account)?;
+        let public_key = extract_public_key(&contract.account)?;
         Ok((public_key, WalletType::Multisig(multisig_type)))
     } else if wallet_v3::is_wallet_v3(&code_hash) {
         let public_key =
@@ -368,6 +493,46 @@ pub struct ExistingWalletInfo {
     pub public_key: PublicKey,
     pub wallet_type: WalletType,
     pub contract_state: ContractState,
+}
+
+pub trait InternalMessageSender {
+    fn prepare_transfer(
+        &mut self,
+        current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
+        message: InternalMessage,
+        expiration: Expiration,
+    ) -> Result<TransferAction>;
+}
+
+impl InternalMessageSender for TonWallet {
+    fn prepare_transfer(
+        &mut self,
+        current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
+        message: InternalMessage,
+        expiration: Expiration,
+    ) -> Result<TransferAction> {
+        if matches!(message.source, Some(source) if &source != self.address()) {
+            return Err(InternalMessageSenderError::InvalidSender.into());
+        }
+
+        self.prepare_transfer(
+            current_state,
+            public_key,
+            message.destination,
+            message.amount,
+            message.bounce,
+            Some(message.body),
+            expiration,
+        )
+    }
+}
+
+#[derive(thiserror::Error, Debug)]
+enum InternalMessageSenderError {
+    #[error("Invalid sender")]
+    InvalidSender,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -463,6 +628,12 @@ pub struct TonWalletDetails {
     pub supports_payload: bool,
     pub supports_multiple_owners: bool,
     pub expiration_time: u32,
+}
+
+#[derive(Clone)]
+pub enum TransferAction {
+    DeployFirst,
+    Sign(Box<dyn UnsignedMessage>),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]

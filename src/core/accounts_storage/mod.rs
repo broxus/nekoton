@@ -7,9 +7,10 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{RwLock, RwLockReadGuard};
 use ton_block::MsgAddressInt;
 
+use nekoton_utils::*;
+
 use crate::core::ton_wallet;
 use crate::external::Storage;
-use crate::utils::*;
 
 const STORAGE_ACCOUNTS: &str = "__core__accounts";
 

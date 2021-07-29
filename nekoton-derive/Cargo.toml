@@ -1,7 +1,11 @@
 [package]
 name = "nekoton-derive"
-version = "0.1.0"
-authors = ["Alexey Pashinov <pashinov93@gmail.com>"]
+version = "0.3.0"
+authors = [
+    "Alexey Pashinov <pashinov93@gmail.com>",
+    "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
+    "Ivan Kalinin <i.kalinin@dexpa.io>"
+]
 edition = "2018"
 
 [lib]
@@ -21,7 +25,7 @@ ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi", rev = "a2b2a9dc2e8c
 ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
 ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
 
-nekoton-parser = { path = "../nekoton-parser", features = ["derive"] }
+nekoton-abi = { path = "../nekoton-abi", features = ["derive"] }
 
 [dependencies]
 proc-macro2 = "1.0.27"
