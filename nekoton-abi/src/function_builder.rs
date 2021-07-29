@@ -1,7 +1,6 @@
 use ton_abi::{Function, Param, ParamType};
-use ton_token_packer::BuildTokenValue;
 
-use super::TokenValueExt;
+use super::{BuildTokenValue, TokenValueExt};
 
 const ANSWER_ID: &str = "_answer_id";
 
@@ -126,8 +125,9 @@ pub fn answer_id() -> ton_abi::Token {
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::abi::FunctionBuilder;
     use ton_abi::ParamType;
+
+    use super::*;
 
     // "name": "transfer",
     // "inputs": [
@@ -142,7 +142,7 @@ mod tests {
     //     ]
     #[test]
     fn build() {
-        let original = crate::contracts::abi::ton_token_wallet_v3()
+        let original = nekoton_contracts::abi::ton_token_wallet_v3()
             .function("transfer")
             .unwrap();
         let imposter = FunctionBuilder::new("transfer")

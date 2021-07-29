@@ -1,21 +1,24 @@
 [package]
 name = "nekoton"
-version = "0.2.1"
+version = "0.3.0"
 authors = [
+    "Alexey Pashinov <pashinov93@gmail.com>",
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
     "Ivan Kalinin <i.kalinin@dexpa.io>"
 ]
 edition = "2018"
 
+[workspace]
+members = ["nekoton-contracts", "nekoton-derive", "nekoton-abi", "nekoton-utils"]
+
 [dependencies]
 aes = { version = "0.7.2", features = ["ctr"], default-features = false, optional = true }
-cipher = { version = "0.3.0", default-features = false, optional = true }
-
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.13"
-chacha20poly1305 = "0.8.0"
+chacha20poly1305 = { version = "0.8.0" }
 chrono = "0.4.19"
+cipher = { version = "0.3.0", default-features = false, optional = true }
 curve25519-dalek = "3.0"
 downcast-rs = "1.2"
 dyn-clone = "1.0"
@@ -42,25 +45,24 @@ thiserror = "1.0"
 tiny-bip39 = "0.8.0"
 tiny-hderive = "0.3.0"
 tokio = { version = "1.4", default-features = false, features = ["sync"] }
-x25519-dalek = "1.1"
+x25519-dalek = { version = "1.1", optional = true }
 zeroize = "1.2.0"
 
-ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi", rev='a2b2a9dc2e8c30a070e9af79cf0c24a55bdd5a87' }
+ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi", rev = 'a2b2a9dc2e8c30a070e9af79cf0c24a55bdd5a87' }
 ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "original", package = "ton_api", optional = true }
 ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
-ton_token_abi = { git = "https://github.com/broxus/ton-token-abi.git" }
-ton_token_packer = { git = "https://github.com/broxus/ton-token-abi.git" }
-ton_token_unpacker = { git = "https://github.com/broxus/ton-token-abi.git" }
 ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
 tiny-jsonrpc = { version = "0.5.0", default-features = false, optional = true }
 
+nekoton-contracts = { path = "nekoton-contracts" }
+nekoton-abi = { path = "nekoton-abi", features = ["derive"] }
+nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
+
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
 criterion = { version = "0.3", features = ["async_tokio", "html_reports"] }
-hex = "0.4.3"
-pretty_assertions = "0.7.1"
 tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 reqwest = { version = "0.11.3", features = ["gzip", "json"] }
 
@@ -69,7 +71,7 @@ default = ["gql_transport"]
 integration_test = []
 web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen", "instant/wasm-bindgen"]
 gql_transport = ["graphql_client"]
-adnl_transport = ["ton_api", "aes", "cipher"]
+adnl_transport = ["ton_api", "aes", "cipher", "x25519-dalek"]
 jrpc_transport = ["tiny-jsonrpc"]
 
 [[bench]]

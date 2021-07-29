@@ -12,13 +12,13 @@ use ring::rand::SecureRandom;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
+use nekoton_utils::*;
+
 use super::mnemonic::*;
-use super::symmetric::*;
 use super::{
     default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey,
     Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
-use crate::utils::*;
 
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
 pub struct EncryptedKeySigner {
@@ -255,7 +255,7 @@ pub struct EncryptedKeyCreateInput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EncryptedKeyPassword {
-    #[serde(with = "crate::utils::serde_public_key")]
+    #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
     pub password: Password,
 }
@@ -276,12 +276,12 @@ pub struct EncryptedKeyGetPublicKeys {
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum EncryptedKeyUpdateParams {
     Rename {
-        #[serde(with = "crate::utils::serde_public_key")]
+        #[serde(with = "serde_public_key")]
         public_key: PublicKey,
         name: String,
     },
     ChangePassword {
-        #[serde(with = "crate::utils::serde_public_key")]
+        #[serde(with = "serde_public_key")]
         public_key: PublicKey,
         old_password: Password,
         new_password: Password,

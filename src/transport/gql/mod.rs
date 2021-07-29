@@ -7,9 +7,11 @@ use async_trait::async_trait;
 use graphql_client::*;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
-use crate::core::models::{GenTimings, LastTransactionId, ReliableBehavior, TransactionId};
+use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
+use nekoton_utils::*;
+
+use crate::core::models::ReliableBehavior;
 use crate::external::GqlConnection;
-use crate::utils::*;
 
 use super::models::*;
 use super::utils::ConfigCache;

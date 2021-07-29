@@ -4,9 +4,9 @@ use std::sync::Arc;
 use anyhow::Result;
 use ton_block::MsgAddressInt;
 
-use super::models::{
-    ContractState, PendingTransaction, Transaction, TransactionId, TransactionsBatchInfo,
-};
+use nekoton_abi::TransactionId;
+
+use super::models::{ContractState, PendingTransaction, Transaction, TransactionsBatchInfo};
 use super::{ContractSubscription, PollingMethod};
 use crate::core::utils;
 use crate::transport::models::{RawContractState, RawTransaction};

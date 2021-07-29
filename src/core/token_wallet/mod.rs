@@ -4,16 +4,14 @@ use std::sync::Arc;
 use anyhow::Result;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
-use ton_token_packer::BuildTokenValue;
-use ton_token_unpacker::{ContractResult, IntoUnpacker, UnpackToken, UnpackerError};
 
-use crate::contracts;
+use nekoton_abi::*;
+use nekoton_utils::*;
+
 use crate::core::models::*;
 use crate::core::parsing::*;
-use crate::helpers::abi::{self, BigUint128, BigUint256, FunctionExt, TokenValueExt};
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
-use crate::utils::{NoFailure, TrustMe};
 
 use super::{ContractSubscription, InternalMessage};
 
@@ -115,8 +113,8 @@ impl TokenWallet {
     pub fn prepare_deploy(&self) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
 
-        let (function, input) = abi::MessageBuilder::new(
-            contracts::abi::root_token_contract_v3(),
+        let (function, input) = MessageBuilder::new(
+            nekoton_contracts::abi::root_token_contract_v3(),
             "deployEmptyWallet",
         )
         .trust_me()
@@ -153,13 +151,13 @@ impl TokenWallet {
 
         let (function, input) = match destination {
             TransferRecipient::TokenWallet(token_wallet) => {
-                abi::MessageBuilder::new(contract, "transfer")
+                MessageBuilder::new(contract, "transfer")
                     .trust_me()
                     .arg(token_wallet) // to
                     .arg(BigUint128(tokens)) // tokens
             }
             TransferRecipient::OwnerWallet(owner_wallet) => {
-                abi::MessageBuilder::new(contract, "transferToRecipient")
+                MessageBuilder::new(contract, "transferToRecipient")
                     .trust_me()
                     .arg(BigUint256(Default::default())) // recipient_public_key
                     .arg(owner_wallet) // recipient_address
@@ -209,7 +207,7 @@ impl TokenWallet {
 
         let contract = select_token_contract(self.version)?;
 
-        let (function, input) = abi::MessageBuilder::new(contract, "burnByOwner")
+        let (function, input) = MessageBuilder::new(contract, "burnByOwner")
             .trust_me()
             .arg(BigUint128(tokens)) // tokens
             .arg(BigUint128(Default::default())) // grams
@@ -401,7 +399,7 @@ pub async fn get_ton_event_details<'a>(
 pub fn make_collect_tokens_call(eth_event_address: MsgAddressInt) -> InternalMessage {
     const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
 
-    let function = abi::FunctionBuilder::new("executeProxyCallback").build();
+    let function = FunctionBuilder::new("executeProxyCallback").build();
     let body = function
         .encode_input(&Default::default(), &[], true, None)
         .trust_me()
@@ -419,9 +417,9 @@ pub fn make_collect_tokens_call(eth_event_address: MsgAddressInt) -> InternalMes
 fn select_token_contract(version: TokenWalletVersion) -> Result<&'static ton_abi::Contract> {
     Ok(match version {
         TokenWalletVersion::Tip3v1 => return Err(TokenWalletError::UnsupportedVersion.into()),
-        TokenWalletVersion::Tip3v2 => contracts::abi::ton_token_wallet_v2(),
-        TokenWalletVersion::Tip3v3 => contracts::abi::ton_token_wallet_v3(),
-        TokenWalletVersion::Tip3v4 => contracts::abi::ton_token_wallet_v4(),
+        TokenWalletVersion::Tip3v2 => nekoton_contracts::abi::ton_token_wallet_v2(),
+        TokenWalletVersion::Tip3v3 => nekoton_contracts::abi::ton_token_wallet_v3(),
+        TokenWalletVersion::Tip3v4 => nekoton_contracts::abi::ton_token_wallet_v4(),
     })
 }
 
@@ -489,7 +487,7 @@ impl<'a> RootTokenContractState<'a> {
             }
             None => BigUint::default(),
         };
-        let mut function = abi::FunctionBuilder::new("getWalletAddress")
+        let mut function = FunctionBuilder::new("getWalletAddress")
             .default_headers()
             .in_arg("wallet_public_key_", ton_abi::ParamType::Uint(256))
             .in_arg("owner_address_", ton_abi::ParamType::Address)
@@ -498,15 +496,14 @@ impl<'a> RootTokenContractState<'a> {
         let mut inputs = adjust_responsible(&mut function, version);
         inputs.push(ton_abi::Token::new(
             "wallet_public_key_",
-            abi::BigUint256(wallet_public_key).token_value(),
+            BigUint256(wallet_public_key).token_value(),
         ));
         inputs.push(ton_abi::Token::new("owner_address_", owner.token_value()));
 
         let address = self
             .0
             .run_local(&function.build(), &inputs)?
-            .into_unpacker()
-            .unpack_next()?;
+            .unpack_first()?;
 
         Ok(address)
     }
@@ -531,7 +528,7 @@ impl<'a> RootTokenContractState<'a> {
 
     /// Retrieve details using specified version
     pub fn get_details(&self, version: TokenWalletVersion) -> Result<RootTokenContractDetails> {
-        let mut details_abi = abi::TupleBuilder::new()
+        let mut details_abi = TupleBuilder::new()
             .arg("name", ton_abi::ParamType::Bytes)
             .arg("symbol", ton_abi::ParamType::Bytes)
             .arg("decimals", ton_abi::ParamType::Uint(8));
@@ -554,7 +551,7 @@ impl<'a> RootTokenContractState<'a> {
                 .arg("paused", ton_abi::ParamType::Bool);
         }
 
-        let mut function = abi::FunctionBuilder::new("getDetails")
+        let mut function = FunctionBuilder::new("getDetails")
             .default_headers()
             .out_arg("value0", details_abi.build());
 
@@ -568,12 +565,12 @@ impl<'a> RootTokenContractState<'a> {
 fn unpack_brief_root_token_contract_details(
     version: TokenWalletVersion,
     tokens: Vec<ton_abi::Token>,
-) -> ContractResult<RootTokenContractDetails> {
+) -> UnpackerResult<RootTokenContractDetails> {
     let data = if matches!(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
     ) {
-        let data: BriefRootTokenContractDetails = tokens.into_unpacker().unpack_next()?;
+        let data: BriefRootTokenContractDetails = tokens.unpack_first()?;
         RootTokenContractDetails {
             version,
             name: data.name,
@@ -584,7 +581,7 @@ fn unpack_brief_root_token_contract_details(
             root_public_key: data.root_public_key,
         }
     } else {
-        let data: BriefRootTokenContractDetailsV4 = tokens.into_unpacker().unpack_next()?;
+        let data: BriefRootTokenContractDetailsV4 = tokens.unpack_first()?;
         RootTokenContractDetails {
             version,
             name: data.name,
@@ -617,7 +614,7 @@ impl<'a> TokenWalletContractState<'a> {
     }
 
     pub fn get_balance(&self, version: TokenWalletVersion) -> Result<BigUint> {
-        let mut function = abi::FunctionBuilder::new("balance")
+        let mut function = FunctionBuilder::new("balance")
             .default_headers()
             .out_arg("value0", ton_abi::ParamType::Uint(128));
 
@@ -630,8 +627,7 @@ impl<'a> TokenWalletContractState<'a> {
     }
 
     pub fn get_details(&self, version: TokenWalletVersion) -> Result<TokenWalletDetails> {
-        let mut details_abi =
-            abi::TupleBuilder::new().arg("root_address", ton_abi::ParamType::Address);
+        let mut details_abi = TupleBuilder::new().arg("root_address", ton_abi::ParamType::Address);
 
         if matches!(
             version,
@@ -655,7 +651,7 @@ impl<'a> TokenWalletContractState<'a> {
             }
         }
 
-        let mut function = abi::FunctionBuilder::new("getDetails")
+        let mut function = FunctionBuilder::new("getDetails")
             .default_headers()
             .out_arg("value0", details_abi.build());
 
@@ -688,12 +684,12 @@ impl<'a> TokenWalletContractState<'a> {
 fn unpack_token_wallet_details(
     version: TokenWalletVersion,
     tokens: Vec<ton_abi::Token>,
-) -> ContractResult<TokenWalletDetails> {
+) -> UnpackerResult<TokenWalletDetails> {
     let data = if matches!(
         version,
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
     ) {
-        let data: TonTokenWalletDetails = tokens.into_unpacker().unpack_next()?;
+        let data: TonTokenWalletDetails = tokens.unpack_first()?;
         TokenWalletDetails {
             root_address: data.root_address,
             owner_address: data.owner_address,
@@ -702,7 +698,7 @@ fn unpack_token_wallet_details(
             balance: data.balance,
         }
     } else {
-        let data: TonTokenWalletDetailsV4 = tokens.into_unpacker().unpack_next()?;
+        let data: TonTokenWalletDetailsV4 = tokens.unpack_first()?;
         TokenWalletDetails {
             root_address: data.root_address,
             owner_address: data.owner_address,
@@ -719,7 +715,7 @@ struct RootMetaContractState<'a>(&'a ExistingContract);
 
 impl<'a> RootMetaContractState<'a> {
     fn get_details(&self) -> Result<RootMetaDetails> {
-        let function = abi::FunctionBuilder::new("getMetaByKey")
+        let function = FunctionBuilder::new("getMetaByKey")
             .header("time", ton_abi::ParamType::Time)
             .in_arg("key", ton_abi::ParamType::Uint(16))
             .out_arg("value", ton_abi::ParamType::Cell)
@@ -728,8 +724,7 @@ impl<'a> RootMetaContractState<'a> {
         let value: ton_types::Cell = self
             .0
             .run_local(&function, &[0u16.token_value().named("key")])?
-            .into_unpacker()
-            .unpack_next()?;
+            .unpack_first()?;
 
         let proxy_address = MsgAddressInt::construct_from_cell(value).convert()?;
 
@@ -745,7 +740,7 @@ pub struct TonEventContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> TonEventContractState<'a> {
     pub fn get_details(&self) -> Result<TonEventDetails> {
-        let function = contracts::abi::ton_event()
+        let function = nekoton_contracts::abi::ton_event()
             .function("getDetails")
             .trust_me();
 
@@ -754,7 +749,7 @@ impl<'a> TonEventContractState<'a> {
     }
 
     pub fn get_event_data(&self) -> Result<TonEventData> {
-        let function = contracts::abi::ton_event()
+        let function = nekoton_contracts::abi::ton_event()
             .function("getDecodedData")
             .trust_me();
 
@@ -769,18 +764,7 @@ impl TryFrom<Vec<ton_abi::Token>> for TonEventData {
     fn try_from(tokens: Vec<ton_abi::Token>) -> Result<Self, Self::Error> {
         let data: TonEventDecodedData = tokens.unpack()?;
 
-        let to = {
-            let address: BigUint = data.ethereum_address;
-            let bytes = address.to_bytes_be();
-            if bytes.len() > 20 {
-                return Err(UnpackerError::InvalidAbi);
-            }
-
-            let mut padded_data = [0u8; 20];
-            let offset = padded_data.len() - bytes.len();
-            padded_data[offset..20].copy_from_slice(&bytes);
-            format!("0x{}", hex::encode(padded_data))
-        };
+        let to = format!("0x{}", hex::encode(data.ethereum_address));
 
         Ok(Self {
             root_token_contract: data.root_token,
@@ -816,7 +800,7 @@ pub struct EthEventContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> EthEventContractState<'a> {
     pub fn get_details(&self) -> Result<EthEventDetails> {
-        let function = contracts::abi::ethereum_event()
+        let function = nekoton_contracts::abi::ethereum_event()
             .function("getDetails")
             .trust_me();
 
@@ -825,7 +809,7 @@ impl<'a> EthEventContractState<'a> {
     }
 
     pub fn get_event_data(&self) -> Result<EthEventData> {
-        let function = contracts::abi::ethereum_event()
+        let function = nekoton_contracts::abi::ethereum_event()
             .function("getDecodedData")
             .trust_me();
 
@@ -869,9 +853,7 @@ impl TryFrom<Vec<ton_abi::Token>> for EthEventDetails {
     }
 }
 
-fn unpack_vote_count<I>(
-    tuple: &mut ton_token_unpacker::ContractOutputUnpacker<I>,
-) -> ContractResult<u16>
+fn unpack_vote_count<I>(tuple: &mut ContractOutputUnpacker<I>) -> UnpackerResult<u16>
 where
     I: Iterator<Item = ton_abi::Token>,
 {
@@ -882,7 +864,7 @@ where
 }
 
 fn adjust_responsible(
-    function: &mut abi::FunctionBuilder,
+    function: &mut FunctionBuilder,
     version: TokenWalletVersion,
 ) -> Vec<ton_abi::Token> {
     let mut inputs = Vec::new();
@@ -890,22 +872,21 @@ fn adjust_responsible(
         TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 => {}
         _ => {
             function.make_responsible();
-            inputs.push(abi::answer_id());
+            inputs.push(answer_id());
         }
     }
     inputs
 }
 
 fn get_version_direct(contract: &ExistingContract) -> Result<GotVersion> {
-    let function = abi::FunctionBuilder::new_responsible("getVersion")
+    let function = FunctionBuilder::new_responsible("getVersion")
         .default_headers()
         .out_arg("value0", ton_abi::ParamType::Uint(32))
         .build();
 
     let version: u32 = contract
-        .run_local(&function, &[abi::answer_id()])?
-        .into_unpacker()
-        .unpack_next()?;
+        .run_local(&function, &[answer_id()])?
+        .unpack_first()?;
 
     Ok(version
         .try_into()
@@ -919,7 +900,7 @@ enum GotVersion {
 }
 
 fn compute_root_meta_address(root_token_contract: &MsgAddressInt) -> MsgAddressInt {
-    let mut code = contracts::code::root_meta().into();
+    let mut code = nekoton_contracts::code::root_meta().into();
     let mut state_init = ton_block::StateInit::construct_from(&mut code).trust_me();
 
     state_init.data = {
@@ -999,7 +980,7 @@ enum TokenWalletError {
 mod tests {
     use std::str::FromStr;
 
-    use crate::core::models::LastTransactionId;
+    use nekoton_abi::LastTransactionId;
 
     use super::*;
 

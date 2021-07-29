@@ -1,7 +1,8 @@
 use num_bigint::BigUint;
 use ton_block::MsgAddressInt;
-use ton_token_abi::UnpackAbi;
 use ton_types::UInt256;
+
+use nekoton_abi::*;
 
 #[derive(UnpackAbi)]
 pub struct BriefRootTokenContractDetails {
@@ -13,11 +14,11 @@ pub struct BriefRootTokenContractDetails {
     pub decimals: u8,
     #[abi(cell, name = "wallet_code")]
     _wallet_code: ton_types::Cell,
-    #[abi(uint256, name = "root_public_key")]
+    #[abi(with = "uint256_bytes")]
     pub root_public_key: UInt256,
     #[abi(address)]
     pub root_owner_address: MsgAddressInt,
-    #[abi(biguint128)]
+    #[abi(with = "uint128_number")]
     pub total_supply: BigUint,
 }
 
@@ -29,11 +30,11 @@ pub struct BriefRootTokenContractDetailsV4 {
     pub symbol: String,
     #[abi(uint8)]
     pub decimals: u8,
-    #[abi(uint256)]
+    #[abi(with = "uint256_bytes")]
     pub root_public_key: UInt256,
     #[abi(address)]
     pub root_owner_address: MsgAddressInt,
-    #[abi(biguint128)]
+    #[abi(with = "uint128_number")]
     pub total_supply: BigUint,
 }
 
@@ -43,11 +44,11 @@ pub struct TonTokenWalletDetails {
     pub root_address: MsgAddressInt,
     #[abi(cell)]
     pub code: ton_types::Cell,
-    #[abi(uint256)]
+    #[abi(with = "uint256_bytes")]
     pub wallet_public_key: UInt256,
     #[abi(address)]
     pub owner_address: MsgAddressInt,
-    #[abi(biguint128, name = "balance")]
+    #[abi(name = "balance", with = "uint128_number")]
     pub balance: BigUint,
     /*#[abi(address)]
     _receive_callback: MsgAddressInt,
@@ -61,11 +62,11 @@ pub struct TonTokenWalletDetails {
 pub struct TonTokenWalletDetailsV4 {
     #[abi(address)]
     pub root_address: MsgAddressInt,
-    #[abi(uint256)]
+    #[abi(with = "uint256_bytes")]
     pub wallet_public_key: UInt256,
     #[abi(address)]
     pub owner_address: MsgAddressInt,
-    #[abi(biguint128, name = "balance")]
+    #[abi(name = "balance", with = "uint128_number")]
     pub balance: BigUint,
     /*#[abi(address)]
     _receive_callback: MsgAddressInt,
@@ -82,12 +83,12 @@ pub struct TonEventDecodedData {
     pub root_token: MsgAddressInt,
     #[abi(int8, name = "wid")]
     _wid: i8,
-    #[abi(uint256, name = "addr")]
+    #[abi(name = "addr", with = "uint256_bytes")]
     _addr: UInt256,
-    #[abi(biguint128)]
+    #[abi(with = "uint128_number")]
     pub tokens: BigUint,
-    #[abi(uint160)]
-    pub ethereum_address: BigUint,
+    #[abi(with = "uint160_bytes")]
+    pub ethereum_address: [u8; 20],
     #[abi(address, name = "owner_address")]
     _owner_address: MsgAddressInt,
 }
@@ -97,13 +98,13 @@ pub struct TonEventDecodedData {
 pub struct EthEventDecodedData {
     #[abi(address, name = "rootToken")]
     pub root_token: MsgAddressInt,
-    #[abi(biguint128)]
+    #[abi(with = "uint128_number")]
     pub tokens: BigUint,
     #[abi(int8, name = "wid")]
     _wid: i8,
-    #[abi(uint256, name = "owner_addr")]
+    #[abi(name = "owner_addr", with = "uint256_bytes")]
     _owner_addr: UInt256,
-    #[abi(uint256, name = "owner_pubkey")]
+    #[abi(name = "owner_pubkey", with = "uint256_bytes")]
     _owner_pubkey: UInt256,
     #[abi(address, name = "owner_address")]
     _owner_address: MsgAddressInt,
@@ -111,7 +112,7 @@ pub struct EthEventDecodedData {
 
 #[derive(UnpackAbi)]
 pub struct TonEventInitData {
-    #[abi(uint256, name = "eventTransaction")]
+    #[abi(name = "eventTransaction", with = "uint256_bytes")]
     _event_transaction: UInt256,
     #[abi(uint64, name = "eventTransactionLt")]
     _event_transaction_lt: u64,
@@ -133,7 +134,7 @@ pub struct TonEventInitData {
 
 #[derive(UnpackAbi)]
 pub struct EthEventInitData {
-    #[abi(uint256, name = "eventTransaction")]
+    #[abi(name = "eventTransaction", with = "uint256_bytes")]
     _event_transaction: UInt256,
     #[abi(uint32, name = "eventIndex")]
     _event_index: u32,
@@ -141,7 +142,7 @@ pub struct EthEventInitData {
     _event_data: ton_types::Cell,
     #[abi(uint32, name = "eventBlockNumber")]
     _event_block_number: u32,
-    #[abi(uint256, name = "eventBlock")]
+    #[abi(name = "eventBlock", with = "uint256_bytes")]
     _event_block: UInt256,
     #[abi(address, name = "ethereumEventConfiguration")]
     _ethereum_event_configuration: MsgAddressInt,
@@ -158,6 +159,6 @@ pub struct EthEventInitData {
 #[derive(UnpackAbi)]
 #[abi(plain)]
 pub struct TonTokenWalletBalance {
-    #[abi(biguint128, name = "value0")]
+    #[abi(name = "value0", with = "uint128_number")]
     pub balance: BigUint,
 }

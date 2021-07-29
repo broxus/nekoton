@@ -2,8 +2,9 @@ use tokio::sync::Mutex;
 
 use anyhow::Result;
 
+use nekoton_utils::NoFailure;
+
 use super::Transport;
-use crate::utils::NoFailure;
 
 #[derive(Default)]
 pub struct ConfigCache {

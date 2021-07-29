@@ -5,7 +5,8 @@ use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use ring::{digest, pbkdf2};
 use secstr::SecVec;
-use thiserror::Error;
+
+pub const NONCE_LENGTH: usize = 12;
 
 const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
@@ -59,7 +60,7 @@ pub fn symmetric_key_from_password(password: &str, salt: &[u8]) -> Key {
     Key::clone_from_slice((&pbkdf2_hash).borrow())
 }
 
-#[derive(Error, Debug, Copy, Clone)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum SymmetricCryptoError {
     #[error("Failed to decrypt data")]
     FailedToDecryptData,

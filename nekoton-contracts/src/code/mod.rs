@@ -1,7 +1,5 @@
 use ton_types::Cell;
 
-use crate::utils::TrustMe;
-
 macro_rules! declare_tvc {
     ($($contract:ident => $source:literal ($const_bytes:ident)),*$(,)?) => {$(
         const $const_bytes: &[u8] = include_bytes!($source);
@@ -22,5 +20,5 @@ declare_tvc! {
 }
 
 fn load(data: &[u8]) -> Cell {
-    ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(data)).trust_me()
+    ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(data)).expect("Trust me")
 }

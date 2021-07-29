@@ -4,7 +4,7 @@ use anyhow::Error;
 use bip39::{Language, Seed};
 use tiny_hderive::bip32::ExtendedPrivKey;
 
-use crate::utils::*;
+use nekoton_utils::TrustMe;
 
 pub fn derive_master_key(phrase: &str) -> anyhow::Result<[u8; 64]> {
     let cnt = phrase.split_whitespace().count();

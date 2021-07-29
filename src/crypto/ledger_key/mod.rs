@@ -8,9 +8,10 @@ use async_trait::async_trait;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 
+use nekoton_utils::*;
+
 use super::{default_key_name, Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage};
 use crate::external::LedgerConnection;
-use crate::utils::*;
 
 #[derive(Clone)]
 pub struct LedgerKeySigner {
@@ -225,7 +226,7 @@ pub struct LedgerKeyGetPublicKeys {
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum LedgerUpdateKeyInput {
     Rename {
-        #[serde(with = "crate::utils::serde_public_key")]
+        #[serde(with = "serde_public_key")]
         public_key: PublicKey,
         name: String,
     },
@@ -233,7 +234,7 @@ pub enum LedgerUpdateKeyInput {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LedgerKeyPublic {
-    #[serde(with = "crate::utils::serde_public_key")]
+    #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
 }
 

@@ -3,7 +3,9 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
-use crate::core::models::{ReliableBehavior, TransactionId};
+use nekoton_abi::TransactionId;
+
+use crate::core::models::ReliableBehavior;
 
 use self::models::*;
 

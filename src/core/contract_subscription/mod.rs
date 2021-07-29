@@ -4,12 +4,11 @@ use anyhow::Result;
 use futures::StreamExt;
 use ton_block::MsgAddressInt;
 
-use super::models::{
-    ContractState, GenTimings, PendingTransaction, TransactionId, TransactionsBatchInfo,
-};
+use nekoton_abi::{Executor, GenTimings, TransactionId};
+
+use super::models::{ContractState, PendingTransaction, TransactionsBatchInfo};
 use super::{utils, PollingMethod};
 use crate::core::utils::PendingTransactionsExt;
-use crate::helpers::abi::Executor;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 
