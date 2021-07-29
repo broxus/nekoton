@@ -55,3 +55,7 @@ pub mod core;
 pub mod crypto;
 pub mod external;
 pub mod transport;
+
+pub use nekoton_abi as abi;
+pub use nekoton_contracts as contracts;
+pub use nekoton_utils as utils;
