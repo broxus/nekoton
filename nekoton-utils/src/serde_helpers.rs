@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::str::FromStr;
 
 use num_bigint::BigUint;
@@ -5,6 +6,50 @@ use serde::de::{Deserialize, Error, SeqAccess, Visitor};
 use serde::ser::{Serialize, SerializeSeq};
 use ton_block::MsgAddressInt;
 use ton_types::{Cell, SliceData, UInt256};
+
+pub mod serde_base64_array {
+    use super::*;
+
+    pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: AsRef<[u8]> + Sized,
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&base64::encode(&data.as_ref()))
+    }
+
+    pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<[u8; N], D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = String::deserialize(deserializer)?;
+        let data = base64::decode(data).map_err(D::Error::custom)?;
+        data.try_into()
+            .map_err(|_| D::Error::custom(format!("Invalid array length, expected: {}", N)))
+    }
+}
+
+pub mod serde_hex_array {
+    use super::*;
+
+    pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: AsRef<[u8]> + Sized,
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&hex::encode(&data.as_ref()))
+    }
+
+    pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<[u8; N], D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = String::deserialize(deserializer)?;
+        let data = hex::decode(data).map_err(D::Error::custom)?;
+        data.try_into()
+            .map_err(|_| D::Error::custom(format!("Invalid array length, expected: {}", N)))
+    }
+}
 
 pub mod serde_u64 {
     use super::*;
