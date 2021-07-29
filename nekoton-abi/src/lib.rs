@@ -10,7 +10,11 @@ use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExe
 use ton_types::{SliceData, UInt256};
 
 #[cfg(feature = "derive")]
-pub use nekoton_derive::{PackAbi, UnpackAbi};
+pub use {
+    nekoton_derive::{PackAbi, UnpackAbi},
+    num_bigint, num_traits,
+};
+
 use nekoton_utils::*;
 
 pub use self::abi_helpers::*;
