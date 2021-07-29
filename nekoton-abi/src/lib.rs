@@ -5,25 +5,38 @@ use std::sync::Arc;
 use anyhow::Result;
 use chrono::Utc;
 use ton_abi::{Function, Param, Token, TokenValue};
-use ton_block::{Account, AccountStuff, Deserializable, Serializable};
+use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt, Serializable};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_token_packer::BuildTokenValue;
-use ton_token_unpacker::UnpackerError;
-use ton_types::SliceData;
+use ton_types::{SliceData, UInt256};
 
-use crate::core::models::{GenTimings, LastTransactionId};
-use crate::utils::*;
+#[cfg(feature = "derive")]
+pub use nekoton_derive::{PackAbi, UnpackAbi};
+use nekoton_utils::*;
 
+pub use self::abi_helpers::*;
 pub use self::function_builder::*;
 pub use self::message_builder::*;
-pub use self::token_ext::*;
+pub use self::models::*;
+pub use self::token_packer::*;
+pub use self::token_unpacker::*;
 
+mod abi_helpers;
 mod function_builder;
 mod message_builder;
-mod token_ext;
+mod models;
+mod token_packer;
+mod token_unpacker;
 mod tvm;
 
 const TON_ABI_VERSION: u8 = 2;
+
+pub fn read_function_id(data: &ton_types::SliceData) -> ton_types::Result<u32> {
+    let mut value: u32 = 0;
+    for i in 0..4 {
+        value |= (data.get_byte(8 * i)? as u32) << (8 * (3 - i));
+    }
+    Ok(value)
+}
 
 pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
     ton_abi::TokenValue::pack_values_into_chain(
@@ -294,7 +307,7 @@ pub fn process_raw_outputs(
     let mut output = None;
 
     for body in ext_out_msg_bodies {
-        let function_id = read_u32(body).map_err(|_| AbiError::InvalidOutputMessage)?;
+        let function_id = read_function_id(body).map_err(|_| AbiError::InvalidOutputMessage)?;
         if abi_function.output_id != function_id {
             continue;
         }
@@ -428,6 +441,18 @@ impl Executor {
             .convert()
     }
 }
+
+pub trait StandaloneToken {}
+impl StandaloneToken for u16 {}
+impl StandaloneToken for u32 {}
+impl StandaloneToken for u64 {}
+impl StandaloneToken for u128 {}
+impl StandaloneToken for bool {}
+impl StandaloneToken for MsgAddressInt {}
+impl StandaloneToken for MsgAddrStd {}
+impl StandaloneToken for UInt256 {}
+impl StandaloneToken for Vec<u8> {}
+impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod tests {

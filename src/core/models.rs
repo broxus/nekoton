@@ -1,16 +1,18 @@
-use std::cmp::Ordering;
 use std::convert::TryFrom;
 
 use anyhow::Result;
-use chrono::Utc;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt};
-use ton_token_abi::UnpackAbi;
 use ton_types::UInt256;
 
+use nekoton_abi::{
+    GenTimings, LastTransactionId, TransactionId, UnpackAbi, UnpackToken, UnpackerError,
+    UnpackerResult,
+};
+use nekoton_utils::*;
+
 use super::utils;
-use crate::utils::*;
 
 #[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -98,7 +100,7 @@ pub struct TokenWalletDeployedNotification {
     pub root_token_contract: MsgAddressInt,
 }
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(
         Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
     )]
@@ -110,7 +112,7 @@ crate::define_string_enum!(
     }
 );
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(
         Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
     )]
@@ -160,7 +162,7 @@ pub struct MultisigSendTransaction {
     #[abi(address)]
     #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
-    #[abi(biguint128)]
+    #[abi(with = "nekoton_abi::uint128_number")]
     pub value: BigUint,
     #[abi(bool)]
     pub bounce: bool,
@@ -314,7 +316,7 @@ pub struct TonEventData {
     pub to: String,
 }
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum PollingMethod {
         /// Manual polling once a minute or by a click.
@@ -326,7 +328,7 @@ crate::define_string_enum!(
     }
 );
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum ReliableBehavior {
         /// Used for transports which doesn't support getting blocks directly (ADNL)
@@ -354,7 +356,7 @@ impl Expiration {
     pub fn timestamp(&self) -> u32 {
         match self {
             Self::Never => u32::MAX,
-            Self::Timeout(timeout) => now() + timeout,
+            Self::Timeout(timeout) => chrono::Utc::now().timestamp() as u32 + timeout,
             &Self::Timestamp(timestamp) => timestamp,
         }
     }
@@ -416,7 +418,7 @@ pub struct Symbol {
     pub root_token_contract: MsgAddressInt,
 }
 
-crate::define_string_enum!(
+define_string_enum!(
     #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum TokenWalletVersion {
         /// First stable iteration of token wallets.
@@ -511,40 +513,6 @@ impl PartialEq for ContractState {
 }
 
 impl Eq for ContractState {}
-
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase", tag = "type")]
-pub enum GenTimings {
-    /// There is no way to determine the point in time at which this specific state was obtained
-    Unknown,
-    /// There is a known point in time at which this specific state was obtained
-    Known {
-        #[serde(with = "serde_u64")]
-        gen_lt: u64,
-        gen_utime: u32,
-    },
-}
-
-impl Default for GenTimings {
-    fn default() -> Self {
-        Self::Unknown
-    }
-}
-
-/// Additional estimated lag for the pending message to be expired
-pub const GEN_TIMINGS_ALLOWABLE_INTERVAL: u32 = 30;
-
-impl GenTimings {
-    pub fn current_utime(&self) -> u32 {
-        match *self {
-            GenTimings::Unknown => {
-                // TODO: split optimistic and pessimistic predictions for unknown timings
-                Utc::now().timestamp() as u32 - GEN_TIMINGS_ALLOWABLE_INTERVAL
-            }
-            GenTimings::Known { gen_utime, .. } => gen_utime,
-        }
-    }
-}
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct PendingTransaction {
@@ -808,92 +776,6 @@ pub enum MessageBodyError {
     FailedToSerialize,
     #[error("Failed to deserialize data")]
     FailedToDeserialize,
-}
-
-#[derive(Debug, Copy, Clone, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase", tag = "type", content = "data")]
-pub enum LastTransactionId {
-    Exact(TransactionId),
-    Inexact {
-        #[serde(with = "serde_u64")]
-        latest_lt: u64,
-    },
-}
-
-impl LastTransactionId {
-    /// Whether the exact id is known
-    pub fn is_exact(&self) -> bool {
-        matches!(self, Self::Exact(_))
-    }
-
-    /// Converts last transaction id into real or fake id
-    pub fn to_transaction_id(self) -> TransactionId {
-        match self {
-            Self::Exact(id) => id,
-            Self::Inexact { latest_lt } => TransactionId {
-                lt: latest_lt,
-                hash: Default::default(),
-            },
-        }
-    }
-}
-
-impl PartialEq for LastTransactionId {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Self::Exact(left), Self::Exact(right)) => left == right,
-            (Self::Inexact { latest_lt: left }, Self::Inexact { latest_lt: right }) => {
-                left == right
-            }
-            _ => false,
-        }
-    }
-}
-
-impl PartialOrd for LastTransactionId {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for LastTransactionId {
-    fn cmp(&self, other: &Self) -> Ordering {
-        let left = match self {
-            Self::Exact(id) => &id.lt,
-            Self::Inexact { latest_lt } => latest_lt,
-        };
-        let right = match other {
-            Self::Exact(id) => &id.lt,
-            Self::Inexact { latest_lt } => latest_lt,
-        };
-        left.cmp(right)
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, Serialize, Deserialize)]
-pub struct TransactionId {
-    #[serde(with = "serde_u64")]
-    pub lt: u64,
-    #[serde(with = "serde_uint256")]
-    pub hash: UInt256,
-}
-
-impl PartialEq for TransactionId {
-    fn eq(&self, other: &Self) -> bool {
-        self.lt == other.lt
-    }
-}
-
-impl PartialOrd for TransactionId {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for TransactionId {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.lt.cmp(&other.lt)
-    }
 }
 
 #[derive(thiserror::Error, Debug)]

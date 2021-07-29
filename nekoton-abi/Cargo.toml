@@ -1,0 +1,38 @@
+[package]
+name = "nekoton-abi"
+version = "0.3.0"
+authors = [
+    "Alexey Pashinov <pashinov93@gmail.com>",
+    "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
+    "Ivan Kalinin <i.kalinin@dexpa.io>"
+]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.13"
+chrono = "0.4.19"
+ed25519-dalek = "1.0"
+hex = "0.4"
+log = "0.4"
+num-bigint = { version = "0.2", features = ["serde"] }
+num-traits = "0.2.14"
+serde = { version = "1.0", features = ["derive"] }
+sha2 = "0.9"
+thiserror = "1.0"
+
+ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi", rev = 'a2b2a9dc2e8c30a070e9af79cf0c24a55bdd5a87' }
+ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
+ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
+ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
+ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
+
+nekoton-derive = { path = "../nekoton-derive", optional = true }
+nekoton-utils = { path = "../nekoton-utils" }
+
+[dev-dependencies]
+nekoton-contracts = { path = "../nekoton-contracts" }
+
+[features]
+default = []
+derive = ["nekoton-derive"]

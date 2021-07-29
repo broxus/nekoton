@@ -9,19 +9,20 @@ use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 use ton_types::{SliceData, UInt256};
 
+use nekoton_abi::*;
+use nekoton_utils::*;
+
 pub use self::multisig::MultisigType;
 use super::models::{
     ContractState, Expiration, MultisigPendingTransaction, PendingTransaction, Transaction,
-    TransactionAdditionalInfo, TransactionId, TransactionWithData, TransactionsBatchInfo,
+    TransactionAdditionalInfo, TransactionWithData, TransactionsBatchInfo,
 };
 use super::{ContractSubscription, PollingMethod};
 use crate::core::parsing::*;
 use crate::core::InternalMessage;
 use crate::crypto::UnsignedMessage;
-use crate::helpers;
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
-use crate::utils::*;
 
 mod multisig;
 mod wallet_v3;
@@ -417,7 +418,7 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
 
     let code_hash = code.repr_hash();
     if let Some(multisig_type) = multisig::guess_multisig_type(&code_hash) {
-        let public_key = helpers::abi::extract_public_key(&contract.account)?;
+        let public_key = extract_public_key(&contract.account)?;
         Ok((public_key, WalletType::Multisig(multisig_type)))
     } else if wallet_v3::is_wallet_v3(&code_hash) {
         let public_key =
@@ -619,12 +620,6 @@ where
     move |pending_transaction| handler.as_ref().on_message_expired(pending_transaction)
 }
 
-#[derive(Clone)]
-pub enum TransferAction {
-    DeployFirst,
-    Sign(Box<dyn UnsignedMessage>),
-}
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TonWalletDetails {
     pub requires_separate_deploy: bool,
@@ -633,6 +628,12 @@ pub struct TonWalletDetails {
     pub supports_payload: bool,
     pub supports_multiple_owners: bool,
     pub expiration_time: u32,
+}
+
+#[derive(Clone)]
+pub enum TransferAction {
+    DeployFirst,
+    Sign(Box<dyn UnsignedMessage>),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 use anyhow::Result;
-use num_bigint::BigUint;
-use ton_abi::{Contract, Function, Token, TokenValue};
-use ton_token_packer::{BuildTokenValue, BuildTokenValues};
+use ton_abi::{Contract, Function, Token};
+
+use super::{BuildTokenValue, BuildTokenValues};
 
 #[derive(Debug)]
 pub struct MessageBuilder<'a> {
@@ -13,7 +13,7 @@ impl<'a> MessageBuilder<'a> {
     pub fn new(contract: &'a Contract, function_name: &str) -> Result<Self> {
         let function = contract
             .function(function_name)
-            .map_err(|_| BuilderError::InvalidAbi)?;
+            .map_err(|_| MessageBuilderError::InvalidAbi)?;
         let input = Vec::with_capacity(function.inputs.len());
 
         Ok(Self {
@@ -55,32 +55,8 @@ impl<'a> MessageBuilder<'a> {
     }
 }
 
-#[derive(Debug)]
-pub struct BigUint256(pub BigUint);
-
-impl BuildTokenValue for BigUint256 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: self.0,
-            size: 256,
-        })
-    }
-}
-
-#[derive(Debug)]
-pub struct BigUint128(pub BigUint);
-
-impl BuildTokenValue for BigUint128 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: self.0,
-            size: 128,
-        })
-    }
-}
-
 #[derive(thiserror::Error, Debug)]
-enum BuilderError {
+enum MessageBuilderError {
     #[error("Invalid ABI")]
     InvalidAbi,
 }

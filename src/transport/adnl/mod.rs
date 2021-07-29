@@ -11,12 +11,14 @@ use tokio::sync::Mutex;
 use ton_api::{ton, BoxedSerialize, Deserializer, IntoBoxed};
 use ton_block::{Deserializable, Message, MsgAddressInt, Serializable};
 
+use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
+use nekoton_utils::TrustMe;
+
 use super::models::*;
 use super::utils::ConfigCache;
 use super::{Transport, TransportInfo};
-use crate::core::models::{GenTimings, LastTransactionId, ReliableBehavior, TransactionId};
+use crate::core::models::ReliableBehavior;
 use crate::external::AdnlConnection;
-use crate::utils::TrustMe;
 
 const LAST_BLOCK_THRESHOLD: u64 = 1;
 

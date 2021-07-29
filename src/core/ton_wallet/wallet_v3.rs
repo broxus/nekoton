@@ -5,11 +5,11 @@ use ed25519_dalek::PublicKey;
 use ton_block::{MsgAddrStd, MsgAddressInt, Serializable};
 use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 
+use nekoton_utils::*;
+
 use super::{TonWalletDetails, TransferAction, DEFAULT_WORKCHAIN};
-use crate::contracts;
 use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
-use crate::utils::*;
 
 pub fn prepare_deploy(
     public_key: &PublicKey,
@@ -235,7 +235,7 @@ impl InitData {
 
     pub fn make_state_init(&self) -> Result<ton_block::StateInit> {
         Ok(ton_block::StateInit {
-            code: Some(contracts::code::wallet_v3()),
+            code: Some(nekoton_contracts::code::wallet_v3()),
             data: Some(self.serialize()?),
             ..Default::default()
         })

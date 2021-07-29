@@ -5,12 +5,14 @@ use models::*;
 use serde::Serialize;
 use ton_block::{Block, Deserializable, MsgAddressInt};
 
+use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
+use nekoton_utils::TrustMe;
+
 use super::models::{ExistingContract, RawContractState, RawTransaction};
 use super::utils::*;
 use super::{Transport, TransportInfo};
-use crate::core::models::{GenTimings, LastTransactionId, ReliableBehavior, TransactionId};
+use crate::core::models::ReliableBehavior;
 use crate::external::JrpcConnection;
-use crate::utils::*;
 
 mod models;
 
@@ -155,8 +157,9 @@ mod tests {
     use ton_block::MsgAddressInt;
     use ton_types::UInt256;
 
+    use nekoton_abi::TransactionId;
+
     use super::Transport;
-    use crate::core::models::TransactionId;
     use crate::external::JrpcConnection;
 
     #[async_trait::async_trait]
