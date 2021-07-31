@@ -115,7 +115,8 @@ impl Transport for AdnlTransport {
                 account: ton::lite_server::accountid::AccountId {
                     workchain: address.workchain_id(),
                     id: ton::int256(
-                        ton_types::UInt256::from(address.address().get_bytestring(0)).into(),
+                        ton_types::UInt256::from_be_bytes(&address.address().get_bytestring(0))
+                            .into(),
                     ),
                 },
             })
@@ -141,8 +142,8 @@ impl Transport for AdnlTransport {
                 let shard_info = ss
                     .read_accounts()
                     .and_then(|accounts| {
-                        accounts.get(&ton_types::UInt256::from(
-                            address.get_address().get_bytestring(0),
+                        accounts.get(&ton_types::UInt256::from_be_bytes(
+                            &address.get_address().get_bytestring(0),
                         ))
                     })
                     .map_err(|_| QueryAccountStateError::InvalidAccountStateProof)?;
@@ -180,7 +181,8 @@ impl Transport for AdnlTransport {
                 account: ton::lite_server::accountid::AccountId {
                     workchain: address.workchain_id(),
                     id: ton::int256(
-                        ton_types::UInt256::from(address.address().get_bytestring(0)).into(),
+                        ton_types::UInt256::from_be_bytes(&address.address().get_bytestring(0))
+                            .into(),
                     ),
                 },
                 lt: from.lt as i64,

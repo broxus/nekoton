@@ -21,10 +21,10 @@ serde = { version = "1.0", features = ["derive"] }
 sha2 = "0.9"
 thiserror = "1.0"
 
-ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi", rev = 'a2b2a9dc2e8c30a070e9af79cf0c24a55bdd5a87' }
-ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
+ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
+ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
-ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
+ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
 
 nekoton-derive = { path = "../nekoton-derive", optional = true }

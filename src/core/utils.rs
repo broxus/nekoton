@@ -91,7 +91,9 @@ pub fn parse_block(
         .read_struct()
         .and_then(|extra| extra.read_account_blocks())
         .and_then(|account_blocks| {
-            account_blocks.get_with_aug(&address.address().get_bytestring(0).into())
+            account_blocks.get_with_aug(&ton_types::UInt256::from_be_bytes(
+                &address.address().get_bytestring(0),
+            ))
         }) {
         Ok(Some((extra, _))) => extra,
         _ => return Ok(ParsedBlock::empty(info.gen_utime().0)),

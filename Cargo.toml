@@ -48,11 +48,11 @@ tokio = { version = "1.4", default-features = false, features = ["sync"] }
 x25519-dalek = { version = "1.1", optional = true }
 zeroize = "1.2.0"
 
-ton_abi = { git = "https://github.com/tonlabs/ton-labs-abi", rev = 'a2b2a9dc2e8c30a070e9af79cf0c24a55bdd5a87' }
-ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", branch = "original", package = "ton_api", optional = true }
-ton_block = { git = "https://github.com/tonlabs/ton-labs-block.git" }
+ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
+ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", package = "ton_api", optional = true }
+ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
-ton_types = { git = "https://github.com/tonlabs/ton-labs-types.git" }
+ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
 tiny-jsonrpc = { version = "0.5.0", default-features = false, optional = true }
 
@@ -64,7 +64,6 @@ nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
 criterion = { version = "0.3", features = ["async_tokio", "html_reports"] }
 tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
-reqwest = { version = "0.11.3", features = ["gzip", "json"] }
 
 [features]
 default = ["gql_transport"]

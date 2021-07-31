@@ -308,7 +308,7 @@ impl TryFrom<&Cell> for InitData {
         Ok(Self {
             seqno: cs.get_next_u32().convert()?,
             wallet_id: cs.get_next_u32().convert()?,
-            public_key: UInt256::from(cs.get_next_bytes(32).convert()?),
+            public_key: UInt256::from_be_bytes(&cs.get_next_bytes(32).convert()?),
         })
     }
 }

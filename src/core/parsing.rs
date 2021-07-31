@@ -779,6 +779,8 @@ impl TryFrom<InputMessage> for TokenIncomingTransfer {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use ton_block::{Deserializable, Transaction, TransactionDescrOrdinary};
 
     use super::*;
