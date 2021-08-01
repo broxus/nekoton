@@ -18,6 +18,7 @@ pub use {
 use nekoton_utils::*;
 
 pub use self::abi_helpers::*;
+pub use self::event_builder::*;
 pub use self::function_builder::*;
 pub use self::message_builder::*;
 pub use self::models::*;
@@ -25,6 +26,7 @@ pub use self::token_packer::*;
 pub use self::token_unpacker::*;
 
 mod abi_helpers;
+mod event_builder;
 mod function_builder;
 mod message_builder;
 mod models;
