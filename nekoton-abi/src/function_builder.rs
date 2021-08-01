@@ -125,21 +125,9 @@ pub fn answer_id() -> ton_abi::Token {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use ton_abi::ParamType;
 
-    use super::*;
-
-    // "name": "transfer",
-    // "inputs": [
-    // {"name":"to","type":"address"},
-    // {"name":"tokens","type":"uint128"},
-    // {"name":"grams","type":"uint128"},
-    // {"name":"send_gas_to","type":"address"},
-    // {"name":"notify_receiver","type":"bool"},
-    //     {"name":"payload","type":"cell"}
-    //     ],
-    //     "outputs": [
-    //     ]
     #[test]
     fn build() {
         let original = nekoton_contracts::abi::ton_token_wallet_v3()
