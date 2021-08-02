@@ -1,6 +1,6 @@
 use ton_abi::Uint;
 
-use nekoton_abi::*;
+use nekoton_abi::{PackAbi, StandaloneToken, UnpackAbi};
 
 #[derive(PackAbi, UnpackAbi, PartialEq, Debug)]
 enum EventType {
@@ -20,6 +20,8 @@ enum Voting {
 impl StandaloneToken for Voting {}
 
 fn test_event_type() -> EventType {
+    use nekoton_abi::BuildTokenValue;
+
     let event = EventType::TON;
     let token = event.token_value();
     let parsed: EventType = token.unpack().unwrap();
@@ -27,6 +29,8 @@ fn test_event_type() -> EventType {
 }
 
 fn test_voiting() -> Voting {
+    use nekoton_abi::BuildTokenValue;
+
     let vote = Voting::Confirm;
     let token = vote.token_value();
     let parsed: Voting = token.unpack().unwrap();

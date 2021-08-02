@@ -6,10 +6,7 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Deserializable, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_abi::{
-    GenTimings, LastTransactionId, TransactionId, UnpackAbi, UnpackToken, UnpackerError,
-    UnpackerResult,
-};
+use nekoton_abi::*;
 use nekoton_utils::*;
 
 use super::utils;
@@ -58,8 +55,7 @@ pub enum WalletInteractionMethod {
     Multisig(Box<MultisigTransaction>),
 }
 
-#[derive(UnpackAbi, Clone, Debug, Serialize, Deserialize, Copy)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize, Copy)]
 pub struct DePoolOnRoundCompleteNotification {
     #[abi(uint64, name = "roundId")]
     #[serde(with = "serde_u64")]
@@ -82,8 +78,7 @@ pub struct DePoolOnRoundCompleteNotification {
     pub reason: u8,
 }
 
-#[derive(UnpackAbi, Clone, Debug, Serialize, Deserialize, Copy)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize, Copy)]
 pub struct DePoolReceiveAnswerNotification {
     #[abi(uint32, name = "errcode")]
     pub error_code: u32,
@@ -92,8 +87,7 @@ pub struct DePoolReceiveAnswerNotification {
     pub comment: u64,
 }
 
-#[derive(UnpackAbi, Clone, Debug, Serialize, Deserialize)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize)]
 pub struct TokenWalletDeployedNotification {
     #[abi(address, name = "root")]
     #[serde(with = "serde_address")]
@@ -131,8 +125,7 @@ pub enum MultisigTransaction {
     Confirm(MultisigConfirmTransaction),
 }
 
-#[derive(UnpackAbi, Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain, Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
 pub struct MultisigConfirmTransaction {
     #[serde(with = "serde_uint256")]
     pub custodian: UInt256,
@@ -156,8 +149,7 @@ pub struct MultisigSubmitTransaction {
     pub trans_id: u64,
 }
 
-#[derive(UnpackAbi, Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MultisigSendTransaction {
     #[abi(address)]
     #[serde(with = "serde_address")]

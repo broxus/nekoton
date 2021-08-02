@@ -50,13 +50,13 @@ impl IntoUnpacker for Vec<Token> {
 pub trait UnpackFirst {
     fn unpack_first<T>(self) -> UnpackerResult<T>
     where
-        TokenValue: UnpackToken<T>;
+        TokenValue: UnpackAbi<T>;
 }
 
 impl UnpackFirst for Vec<Token> {
     fn unpack_first<T>(self) -> UnpackerResult<T>
     where
-        TokenValue: UnpackToken<T>,
+        TokenValue: UnpackAbi<T>,
     {
         self.into_unpacker().unpack_next()
     }
@@ -68,65 +68,72 @@ pub struct ContractOutputUnpacker<I>(I);
 impl<I: Iterator<Item = Token>> ContractOutputUnpacker<I> {
     pub fn unpack_next<T>(&mut self) -> UnpackerResult<T>
     where
-        TokenValue: UnpackToken<T>,
+        TokenValue: UnpackAbi<T>,
     {
         self.0.next().unpack()
     }
 }
 
-pub trait UnpackToken<T> {
+pub trait UnpackAbiPlain<T>: FunctionOutputMarker {
     fn unpack(self) -> UnpackerResult<T>;
 }
 
-impl UnpackToken<i8> for TokenValue {
+pub trait FunctionOutputMarker {}
+impl FunctionOutputMarker for Vec<ton_abi::Token> {}
+
+pub trait UnpackAbi<T> {
+    fn unpack(self) -> UnpackerResult<T>;
+}
+
+impl UnpackAbi<i8> for TokenValue {
     fn unpack(self) -> UnpackerResult<i8> {
-        UnpackToken::<BigInt>::unpack(self)?
+        UnpackAbi::<BigInt>::unpack(self)?
             .to_i8()
             .ok_or(UnpackerError::InvalidAbi)
     }
 }
 
-impl UnpackToken<u8> for TokenValue {
+impl UnpackAbi<u8> for TokenValue {
     fn unpack(self) -> UnpackerResult<u8> {
-        UnpackToken::<BigUint>::unpack(self)?
+        UnpackAbi::<BigUint>::unpack(self)?
             .to_u8()
             .ok_or(UnpackerError::InvalidAbi)
     }
 }
 
-impl UnpackToken<u16> for TokenValue {
+impl UnpackAbi<u16> for TokenValue {
     fn unpack(self) -> UnpackerResult<u16> {
-        UnpackToken::<BigUint>::unpack(self)?
+        UnpackAbi::<BigUint>::unpack(self)?
             .to_u16()
             .ok_or(UnpackerError::InvalidAbi)
     }
 }
 
-impl UnpackToken<u32> for TokenValue {
+impl UnpackAbi<u32> for TokenValue {
     fn unpack(self) -> UnpackerResult<u32> {
-        UnpackToken::<BigUint>::unpack(self)?
+        UnpackAbi::<BigUint>::unpack(self)?
             .to_u32()
             .ok_or(UnpackerError::InvalidAbi)
     }
 }
 
-impl UnpackToken<u64> for TokenValue {
+impl UnpackAbi<u64> for TokenValue {
     fn unpack(self) -> UnpackerResult<u64> {
-        UnpackToken::<BigUint>::unpack(self)?
+        UnpackAbi::<BigUint>::unpack(self)?
             .to_u64()
             .ok_or(UnpackerError::InvalidAbi)
     }
 }
 
-impl UnpackToken<u128> for TokenValue {
+impl UnpackAbi<u128> for TokenValue {
     fn unpack(self) -> UnpackerResult<u128> {
-        UnpackToken::<BigUint>::unpack(self)?
+        UnpackAbi::<BigUint>::unpack(self)?
             .to_u128()
             .ok_or(UnpackerError::InvalidAbi)
     }
 }
 
-impl UnpackToken<bool> for TokenValue {
+impl UnpackAbi<bool> for TokenValue {
     fn unpack(self) -> UnpackerResult<bool> {
         match self {
             TokenValue::Bool(confirmed) => Ok(confirmed),
@@ -135,7 +142,7 @@ impl UnpackToken<bool> for TokenValue {
     }
 }
 
-impl UnpackToken<Cell> for TokenValue {
+impl UnpackAbi<Cell> for TokenValue {
     fn unpack(self) -> UnpackerResult<Cell> {
         match self {
             TokenValue::Cell(cell) => Ok(cell),
@@ -144,7 +151,7 @@ impl UnpackToken<Cell> for TokenValue {
     }
 }
 
-impl UnpackToken<MsgAddressInt> for TokenValue {
+impl UnpackAbi<MsgAddressInt> for TokenValue {
     fn unpack(self) -> UnpackerResult<MsgAddressInt> {
         match self {
             TokenValue::Address(ton_block::MsgAddress::AddrStd(addr)) => {
@@ -158,7 +165,7 @@ impl UnpackToken<MsgAddressInt> for TokenValue {
     }
 }
 
-impl UnpackToken<MsgAddrStd> for TokenValue {
+impl UnpackAbi<MsgAddrStd> for TokenValue {
     fn unpack(self) -> UnpackerResult<MsgAddrStd> {
         match self {
             TokenValue::Address(ton_block::MsgAddress::AddrStd(addr)) => Ok(addr),
@@ -167,7 +174,7 @@ impl UnpackToken<MsgAddrStd> for TokenValue {
     }
 }
 
-impl UnpackToken<String> for TokenValue {
+impl UnpackAbi<String> for TokenValue {
     fn unpack(self) -> UnpackerResult<String> {
         match self {
             TokenValue::Bytes(bytes) => Ok(String::from_utf8_lossy(&bytes).to_string()),
@@ -176,7 +183,7 @@ impl UnpackToken<String> for TokenValue {
     }
 }
 
-impl UnpackToken<BigInt> for TokenValue {
+impl UnpackAbi<BigInt> for TokenValue {
     fn unpack(self) -> UnpackerResult<BigInt> {
         match self {
             TokenValue::Int(data) => Ok(data.number),
@@ -185,7 +192,7 @@ impl UnpackToken<BigInt> for TokenValue {
     }
 }
 
-impl UnpackToken<BigUint> for TokenValue {
+impl UnpackAbi<BigUint> for TokenValue {
     fn unpack(self) -> UnpackerResult<BigUint> {
         match self {
             TokenValue::Uint(data) => Ok(data.number),
@@ -194,7 +201,7 @@ impl UnpackToken<BigUint> for TokenValue {
     }
 }
 
-impl UnpackToken<Vec<u8>> for TokenValue {
+impl UnpackAbi<Vec<u8>> for TokenValue {
     fn unpack(self) -> UnpackerResult<Vec<u8>> {
         match self {
             TokenValue::Bytes(bytes) => Ok(bytes),
@@ -203,16 +210,16 @@ impl UnpackToken<Vec<u8>> for TokenValue {
     }
 }
 
-impl UnpackToken<TokenValue> for TokenValue {
+impl UnpackAbi<TokenValue> for TokenValue {
     #[inline]
     fn unpack(self) -> UnpackerResult<TokenValue> {
         Ok(self)
     }
 }
 
-impl<T> UnpackToken<T> for Option<Token>
+impl<T> UnpackAbi<T> for Option<Token>
 where
-    TokenValue: UnpackToken<T>,
+    TokenValue: UnpackAbi<T>,
 {
     fn unpack(self) -> UnpackerResult<T> {
         match self {
@@ -222,9 +229,9 @@ where
     }
 }
 
-impl<T> UnpackToken<T> for Option<TokenValue>
+impl<T> UnpackAbi<T> for Option<TokenValue>
 where
-    TokenValue: UnpackToken<T>,
+    TokenValue: UnpackAbi<T>,
 {
     fn unpack(self) -> UnpackerResult<T> {
         match self {
@@ -234,10 +241,10 @@ where
     }
 }
 
-impl<T> UnpackToken<Vec<T>> for TokenValue
+impl<T> UnpackAbi<Vec<T>> for TokenValue
 where
     T: StandaloneToken,
-    TokenValue: UnpackToken<T>,
+    TokenValue: UnpackAbi<T>,
 {
     fn unpack(self) -> UnpackerResult<Vec<T>> {
         match self {
@@ -245,14 +252,14 @@ where
             _ => return Err(UnpackerError::InvalidAbi),
         }
         .into_iter()
-        .map(UnpackToken::unpack)
+        .map(UnpackAbi::unpack)
         .collect()
     }
 }
 
-impl<T> UnpackToken<T> for Token
+impl<T> UnpackAbi<T> for Token
 where
-    TokenValue: UnpackToken<T>,
+    TokenValue: UnpackAbi<T>,
 {
     fn unpack(self) -> UnpackerResult<T> {
         self.value.unpack()

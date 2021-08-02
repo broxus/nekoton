@@ -279,8 +279,7 @@ impl TryFrom<InputMessage> for TokenWalletDeployedNotification {
     }
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct EthEventStatusChanged {
     #[abi(name = "status")]
     new_status: EthEventStatus,
@@ -298,8 +297,7 @@ impl TryFrom<InputMessage> for EthEventStatusChanged {
     }
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct TonEventStatusChanged {
     #[abi(name = "status")]
     new_status: TonEventStatus,
@@ -416,8 +414,7 @@ impl TryFrom<(UInt256, InputMessage)> for MultisigConfirmTransaction {
     }
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct MultisigSubmitTransactionInput {
     #[abi(address)]
     dest: MsgAddressInt,
@@ -431,8 +428,7 @@ struct MultisigSubmitTransactionInput {
     payload: ton_types::Cell,
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct MultisigSubmitTransactionOutput {
     #[abi(uint64, name = "transId")]
     trans_id: u64,
@@ -614,8 +610,7 @@ impl RootTokenContractFunctions {
     }
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct TonTokenWalletBurnByOwner {
     #[abi(with = "uint128_number")]
     tokens: BigUint,
@@ -658,8 +653,7 @@ impl TryFrom<InputMessage> for TokenSwapBack {
     }
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct Accept {
     #[abi(with = "uint128_number")]
     tokens: BigUint,
@@ -682,8 +676,7 @@ enum TransferType {
     ByTokenWalletAddress,
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct TonTokenWalletTransferToRecipient {
     #[abi(name = "recipient_public_key", with = "uint256_bytes")]
     _recipient_public_key: UInt256,
@@ -703,8 +696,7 @@ struct TonTokenWalletTransferToRecipient {
     _payload: ton_types::Cell,
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct TonTokenWalletTransfer {
     #[abi(address)]
     to: MsgAddressInt,
@@ -747,8 +739,7 @@ impl TryFrom<(InputMessage, TransferType)> for TokenOutgoingTransfer {
     }
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct TonTokenWalletInternalTransfer {
     #[abi(with = "uint128_number")]
     tokens: BigUint,

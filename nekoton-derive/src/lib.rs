@@ -1,3 +1,9 @@
+use quote::quote;
+use syn::parse_macro_input;
+
+use self::pack_abi::*;
+use self::unpack_abi::*;
+
 mod ast;
 mod attr;
 mod pack_abi;
@@ -6,15 +12,18 @@ mod symbol;
 mod unpack_abi;
 mod utils;
 
-use self::pack_abi::*;
-use self::unpack_abi::*;
-use quote::quote;
-use syn::parse_macro_input;
-
 #[proc_macro_derive(PackAbi, attributes(abi))]
 pub fn derive_pack_abi(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    impl_derive_pack_abi(input)
+    impl_derive_pack_abi(input, false)
+        .unwrap_or_else(to_compile_errors)
+        .into()
+}
+
+#[proc_macro_derive(PackAbiPlain, attributes(abi))]
+pub fn derive_pack_abi_plain(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as syn::DeriveInput);
+    impl_derive_pack_abi(input, true)
         .unwrap_or_else(to_compile_errors)
         .into()
 }
@@ -22,7 +31,15 @@ pub fn derive_pack_abi(input: proc_macro::TokenStream) -> proc_macro::TokenStrea
 #[proc_macro_derive(UnpackAbi, attributes(abi))]
 pub fn derive_unpack_abi(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
-    impl_derive_unpack_abi(input)
+    impl_derive_unpack_abi(input, false)
+        .unwrap_or_else(to_compile_errors)
+        .into()
+}
+
+#[proc_macro_derive(UnpackAbiPlain, attributes(abi))]
+pub fn derive_unpack_abi_plain(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as syn::DeriveInput);
+    impl_derive_unpack_abi(input, true)
         .unwrap_or_else(to_compile_errors)
         .into()
 }

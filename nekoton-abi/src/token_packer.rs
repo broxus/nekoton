@@ -5,16 +5,16 @@ use ton_types::{BuilderData, Cell};
 
 use super::StandaloneToken;
 
-pub trait PackTokens {
+pub trait PackAbiPlain {
     fn pack(self) -> Vec<Token>;
+}
+
+pub trait PackAbi: BuildTokenValue {
+    fn pack(self) -> TokenValue;
 }
 
 pub trait BuildTokenValue {
     fn token_value(self) -> TokenValue;
-}
-
-pub trait BuildTokenValues {
-    fn token_values(self) -> Vec<TokenValue>;
 }
 
 impl BuildTokenValue for i8 {
@@ -137,14 +137,5 @@ where
 {
     fn token_value(self) -> TokenValue {
         self.clone().token_value()
-    }
-}
-
-impl<T> BuildTokenValues for &T
-where
-    T: Clone + BuildTokenValues,
-{
-    fn token_values(self) -> Vec<TokenValue> {
-        self.clone().token_values()
     }
 }

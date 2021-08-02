@@ -7,12 +7,18 @@ use crate::utils::*;
 
 pub fn impl_derive_unpack_abi(
     input: syn::DeriveInput,
+    plain: bool,
 ) -> Result<proc_macro2::TokenStream, Vec<syn::Error>> {
     let cx = ParsingContext::new();
     let container = match Container::from_ast(&cx, &input) {
         Some(container) => container,
         None => return Err(cx.check().unwrap_err()),
     };
+
+    if plain && matches!(&container.data, Data::Enum(_)) {
+        cx.error_spanned_by(&input.ident, "Plain unpacker is not supported for enums");
+    }
+
     cx.check()?;
 
     let ident = &container.ident;
@@ -25,19 +31,19 @@ pub fn impl_derive_unpack_abi(
             };
             let body = serialize_enum(&container, variants, enum_type);
             quote! {
-                impl UnpackToken<#ident> for ton_abi::TokenValue {
-                    fn unpack(self) -> UnpackerResult<#ident> {
+                impl ::nekoton_abi::UnpackAbi<#ident> for ::ton_abi::TokenValue {
+                    fn unpack(self) -> ::nekoton_abi::UnpackerResult<#ident> {
                         #body
                     }
                 }
             }
         }
         Data::Struct(_, fields) => {
-            if container.attrs.struct_plain {
+            if plain {
                 let body = serialize_struct(&container, fields, StructType::Plain);
                 quote! {
-                    impl UnpackToken<#ident> for Vec<ton_abi::Token> {
-                        fn unpack(self) -> UnpackerResult<#ident> {
+                    impl ::nekoton_abi::UnpackAbiPlain<#ident> for Vec<::ton_abi::Token> {
+                        fn unpack(self) -> ::nekoton_abi::UnpackerResult<#ident> {
                             #body
                         }
                     }
@@ -45,8 +51,8 @@ pub fn impl_derive_unpack_abi(
             } else {
                 let body = serialize_struct(&container, fields, StructType::Tuple);
                 quote! {
-                    impl UnpackToken<#ident> for ton_abi::TokenValue {
-                        fn unpack(self) -> UnpackerResult<#ident> {
+                    impl ::nekoton_abi::UnpackAbi<#ident> for ::ton_abi::TokenValue {
+                        fn unpack(self) -> ::nekoton_abi::UnpackerResult<#ident> {
                             #body
                         }
                     }
@@ -86,11 +92,11 @@ fn serialize_enum(
                 EnumType::Bool => {
                     if number == 0 {
                         quote! {
-                            ton_abi::TokenValue::Bool(false) => Ok(#name::#ident)
+                            ::ton_abi::TokenValue::Bool(false) => Ok(#name::#ident)
                         }
                     } else {
                         quote! {
-                            ton_abi::TokenValue::Bool(true) => Ok(#name::#ident)
+                            ::ton_abi::TokenValue::Bool(true) => Ok(#name::#ident)
                         }
                     }
                 }
@@ -101,11 +107,11 @@ fn serialize_enum(
         EnumType::Int => {
             quote! {
                 match self {
-                    ton_abi::TokenValue::Uint(int) => match num_traits::ToPrimitive::to_u8(&int.number) {
+                    ::ton_abi::TokenValue::Uint(int) => match num_traits::ToPrimitive::to_u8(&int.number) {
                         #(#build_variants,)*
-                        _ => Err(UnpackerError::InvalidAbi),
+                        _ => Err(::nekoton_abi::UnpackerError::InvalidAbi),
                     },
-                    _ => Err(UnpackerError::InvalidAbi),
+                    _ => Err(::nekoton_abi::UnpackerError::InvalidAbi),
                 }
             }
         }
@@ -113,7 +119,7 @@ fn serialize_enum(
             quote! {
                 match self {
                     #(#build_variants,)*
-                    _ => Err(UnpackerError::InvalidAbi),
+                    _ => Err(::nekoton_abi::UnpackerError::InvalidAbi),
                 }
             }
         }
@@ -143,12 +149,12 @@ fn serialize_struct(
                     let token = tokens.next();
                     let name = match &token {
                         Some(token) => token.name.clone(),
-                        None => return Err(UnpackerError::InvalidAbi),
+                        None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
                     };
                     if name == #field_name {
                         #try_unpack
                     } else {
-                        return Err(UnpackerError::InvalidName{
+                        return Err(::nekoton_abi::UnpackerError::InvalidName{
                             expected: #field_name.to_string(),
                             found: name,
                         });
@@ -175,8 +181,8 @@ fn serialize_struct(
         StructType::Tuple => {
             quote! {
                 let mut tokens = match self {
-                    ton_abi::TokenValue::Tuple(tokens) => tokens.into_iter(),
-                    _ => return Err(UnpackerError::InvalidAbi),
+                    ::ton_abi::TokenValue::Tuple(tokens) => tokens.into_iter(),
+                    _ => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
                 };
 
                 std::result::Result::Ok(#name {
@@ -199,10 +205,10 @@ fn try_unpack(
                 Some(token) => {
                     match token.value {
                         #handler
-                        _ => return Err(UnpackerError::InvalidAbi),
+                        _ => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
                     }
                 },
-                None => return Err(UnpackerError::InvalidAbi),
+                None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
             }
         }
     } else if with.is_some() {
@@ -210,7 +216,7 @@ fn try_unpack(
         quote! {
             match token {
                 Some(token) => #data::unpack(&token.value)?,
-                None => return Err(UnpackerError::InvalidAbi),
+                None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
             }
         }
     } else if unpack_with.is_some() {
@@ -218,12 +224,12 @@ fn try_unpack(
         quote! {
             match token {
                 Some(token) => #data(&token.value)?,
-                None => return Err(UnpackerError::InvalidAbi),
+                None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
             }
         }
     } else {
         quote! {
-            token.unpack()?
+            ::nekoton_abi::UnpackAbi::unpack(token)?
         }
     }
 }
@@ -232,75 +238,75 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
     match type_name {
         TypeName::Int8 => {
             quote! {
-                ton_abi::TokenValue::Int(ton_abi::Int { number: value, size: 8 }) => {
-                    num_traits::ToPrimitive::to_i8(&value)
-                    .ok_or(UnpackerError::InvalidAbi)?
+                ::ton_abi::TokenValue::Int(::ton_abi::Int { number: value, size: 8 }) => {
+                    ::num_traits::ToPrimitive::to_i8(&value)
+                    .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
         }
         TypeName::Uint8 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 8 }) => {
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 8 }) => {
                     num_traits::ToPrimitive::to_u8(&value)
-                    .ok_or(UnpackerError::InvalidAbi)?
+                    .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
         }
         TypeName::Uint16 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 16 }) => {
-                    num_traits::ToPrimitive::to_u16(&value)
-                    .ok_or(UnpackerError::InvalidAbi)?
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 16 }) => {
+                    ::num_traits::ToPrimitive::to_u16(&value)
+                    .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
         }
         TypeName::Uint32 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 32 }) => {
-                    num_traits::ToPrimitive::to_u32(&value)
-                    .ok_or(UnpackerError::InvalidAbi)?
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 32 }) => {
+                    ::num_traits::ToPrimitive::to_u32(&value)
+                    .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
         }
         TypeName::Uint64 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 64 }) => {
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 64 }) => {
                     num_traits::ToPrimitive::to_u64(&value)
-                    .ok_or(UnpackerError::InvalidAbi)?
+                    .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
         }
         TypeName::Uint128 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: value, size: 128 }) => {
-                    num_traits::ToPrimitive::to_u128(&value)
-                    .ok_or(UnpackerError::InvalidAbi)?
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 128 }) => {
+                    ::num_traits::ToPrimitive::to_u128(&value)
+                    .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
         }
         TypeName::Address => {
             quote! {
-                ton_abi::TokenValue::Address(ton_block::MsgAddress::AddrStd(addr)) => {
-                    ton_block::MsgAddressInt::AddrStd(addr)
+                ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrStd(addr)) => {
+                    ::ton_block::MsgAddressInt::AddrStd(addr)
                 },
-                ton_abi::TokenValue::Address(ton_block::MsgAddress::AddrVar(addr)) => {
-                    ton_block::MsgAddressInt::AddrVar(addr)
+                ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrVar(addr)) => {
+                    ::ton_block::MsgAddressInt::AddrVar(addr)
                 },
             }
         }
         TypeName::Cell => {
             quote! {
-                ton_abi::TokenValue::Cell(cell) => cell,
+                ::ton_abi::TokenValue::Cell(cell) => cell,
             }
         }
         TypeName::Bool => {
             quote! {
-                ton_abi::TokenValue::Bool(value) => value,
+                ::ton_abi::TokenValue::Bool(value) => value,
             }
         }
         TypeName::String => {
             quote! {
-                ton_abi::TokenValue::Bytes(bytes) => String::from_utf8_lossy(&bytes).to_string(),
+                ::ton_abi::TokenValue::Bytes(bytes) => String::from_utf8_lossy(&bytes).to_string(),
             }
         }
         TypeName::None => unreachable!(),

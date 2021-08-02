@@ -7,13 +7,11 @@ use crate::parsing_context::*;
 use crate::symbol::*;
 
 pub struct Container {
-    pub struct_plain: bool,
     pub enum_bool: bool,
 }
 
 impl Container {
     pub fn from_ast(cx: &ParsingContext, input: &syn::DeriveInput) -> Option<Self> {
-        let mut struct_plain = BoolAttr::none(cx, PLAIN);
         let mut enum_bool = BoolAttr::none(cx, ENUM_BOOL);
 
         for (from, meta_item) in input
@@ -23,18 +21,11 @@ impl Container {
             .flat_map(|item| item.into_iter())
         {
             match (from, &meta_item) {
-                (AttrFrom::Abi, Meta(Path(word))) if word == PLAIN => struct_plain.set_true(word),
                 (AttrFrom::Abi, Meta(Path(word))) if word == ENUM_BOOL => enum_bool.set_true(word),
                 (AttrFrom::Abi, token) => {
                     cx.error_spanned_by(token, "unexpected token");
                     return None;
                 }
-            }
-        }
-
-        if let syn::Data::Enum(_) = input.data {
-            if struct_plain.get() {
-                cx.error_spanned_by(input, "Invalid attribute 'plain' for enum");
             }
         }
 
@@ -45,7 +36,6 @@ impl Container {
         }
 
         Some(Self {
-            struct_plain: struct_plain.get(),
             enum_bool: enum_bool.get(),
         })
     }

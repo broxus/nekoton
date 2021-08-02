@@ -7,10 +7,9 @@ use ton_abi::{Token, Uint};
 use ton_block::{MsgAddress, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_abi::*;
+use nekoton_abi::{uint256_bytes, UnpackAbiPlain};
 
-#[derive(UnpackAbi, Debug)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain, Debug)]
 pub struct InternalTransfer {
     #[abi]
     pub tokens: u128,
