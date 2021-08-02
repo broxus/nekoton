@@ -76,8 +76,7 @@ pub struct TonTokenWalletDetailsV4 {
     _allow_non_notifiable: bool,*/
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 pub struct TonEventDecodedData {
     #[abi(address, name = "rootToken")]
     pub root_token: MsgAddressInt,
@@ -93,8 +92,7 @@ pub struct TonEventDecodedData {
     _owner_address: MsgAddressInt,
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 pub struct EthEventDecodedData {
     #[abi(address, name = "rootToken")]
     pub root_token: MsgAddressInt,
@@ -156,8 +154,7 @@ pub struct EthEventInitData {
     _configuration_meta: ton_types::Cell,
 }
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 pub struct TonTokenWalletBalance {
     #[abi(name = "value0", with = "uint128_number")]
     pub balance: BigUint,

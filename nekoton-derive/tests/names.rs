@@ -1,7 +1,7 @@
 use std::fmt::Display;
-use ton_abi::{Token, TokenValue, Uint};
 
-use nekoton_abi::*;
+use nekoton_abi::UnpackAbi;
+use ton_abi::{Token, TokenValue, Uint};
 
 #[derive(UnpackAbi)]
 struct ValidSt {
@@ -25,12 +25,12 @@ fn main() {
 
     let tuple = Token::new("tuple", TokenValue::Tuple(tokens));
 
-    let invalid: Result<InvalidSt, UnpackerError> = tuple.clone().unpack();
+    let invalid: Result<InvalidSt, _> = tuple.clone().unpack();
     assert(
         "Invalid name (expected \"invalidField\", found \"validField\")",
         invalid.err().unwrap(),
     );
 
-    let valid: Result<ValidSt, UnpackerError> = tuple.unpack();
+    let valid: Result<ValidSt, _> = tuple.unpack();
     assert!(valid.is_ok());
 }

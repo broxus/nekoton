@@ -1,7 +1,7 @@
 use anyhow::Result;
 use ton_abi::{Contract, Function, Token};
 
-use super::{BuildTokenValue, BuildTokenValues};
+use super::{BuildTokenValue, PackAbiPlain};
 
 #[derive(Debug)]
 pub struct MessageBuilder<'a> {
@@ -33,20 +33,9 @@ impl<'a> MessageBuilder<'a> {
 
     pub fn args<A>(mut self, values: A) -> Self
     where
-        A: BuildTokenValues,
+        A: PackAbiPlain,
     {
-        let token_values = values.token_values();
-        let args_from = self.inputs.len();
-        let args_to = args_from + token_values.len();
-
-        let inputs = &self.function.inputs;
-        self.inputs.extend(
-            (args_from..args_to)
-                .into_iter()
-                .map(|i| inputs[i].name.as_ref())
-                .zip(token_values.into_iter())
-                .map(|(name, value)| Token::new(name, value)),
-        );
+        self.inputs.extend(values.pack());
         self
     }
 

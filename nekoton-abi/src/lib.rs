@@ -11,7 +11,7 @@ use ton_types::{SliceData, UInt256};
 
 #[cfg(feature = "derive")]
 pub use {
-    nekoton_derive::{PackAbi, UnpackAbi},
+    nekoton_derive::{PackAbi, PackAbiPlain, UnpackAbi, UnpackAbiPlain},
     num_bigint, num_traits,
 };
 

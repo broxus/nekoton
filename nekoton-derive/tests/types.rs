@@ -4,8 +4,7 @@ use ton_types::UInt256;
 
 use nekoton_abi::*;
 
-#[derive(UnpackAbi)]
-#[abi(plain)]
+#[derive(UnpackAbiPlain)]
 struct Data {
     #[abi(int8)]
     data_i8: i8,

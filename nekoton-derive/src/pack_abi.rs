@@ -8,12 +8,18 @@ use crate::utils::*;
 
 pub fn impl_derive_pack_abi(
     input: syn::DeriveInput,
+    plain: bool,
 ) -> Result<proc_macro2::TokenStream, Vec<syn::Error>> {
     let cx = ParsingContext::new();
     let container = match Container::from_ast(&cx, &input) {
         Some(container) => container,
         None => return Err(cx.check().unwrap_err()),
     };
+
+    if plain && matches!(&container.data, Data::Enum(_)) {
+        cx.error_spanned_by(&input.ident, "Plain packer is not supported for enums");
+    }
+
     cx.check()?;
 
     let ident = &container.ident;
@@ -26,19 +32,25 @@ pub fn impl_derive_pack_abi(
             };
             let body = serialize_enum(&container, variants, enum_type);
             quote! {
-                impl BuildTokenValue for #ident {
-                    fn token_value(self) -> ton_abi::TokenValue {
+                impl ::nekoton_abi::BuildTokenValue for #ident {
+                    fn token_value(self) -> ::ton_abi::TokenValue {
                         #body
+                    }
+                }
+
+                impl ::nekoton_abi::PackAbi for #ident {
+                    fn pack(self) -> ::ton_abi::TokenValue {
+                        ::nekoton_abi::BuildTokenValue::token_value(self)
                     }
                 }
             }
         }
         Data::Struct(_, fields) => {
-            if container.attrs.struct_plain {
+            if plain {
                 let body = serialize_struct(&container, fields, StructType::Plain);
                 quote! {
-                    impl PackTokens for #ident {
-                        fn pack(self) -> Vec<ton_abi::Token> {
+                    impl ::nekoton_abi::PackAbiPlain for #ident {
+                        fn pack(self) -> Vec<::ton_abi::Token> {
                             #body
                         }
                     }
@@ -46,9 +58,15 @@ pub fn impl_derive_pack_abi(
             } else {
                 let body = serialize_struct(&container, fields, StructType::Tuple);
                 quote! {
-                    impl BuildTokenValue for #ident {
-                        fn token_value(self) -> ton_abi::TokenValue {
+                    impl ::nekoton_abi::BuildTokenValue for #ident {
+                        fn token_value(self) -> ::ton_abi::TokenValue {
                             #body
+                        }
+                    }
+
+                    impl ::nekoton_abi::PackAbi for #ident {
+                        fn pack(self) -> ::ton_abi::TokenValue {
+                            ::nekoton_abi::BuildTokenValue::token_value(self)
                         }
                     }
                 }
@@ -81,17 +99,17 @@ fn serialize_enum(
             match enum_type {
                 EnumType::Int => {
                     quote! {
-                        #name::#ident => #number.token_value()
+                        #name::#ident => ::nekoton_abi::BuildTokenValue::token_value(#number)
                     }
                 }
                 EnumType::Bool => {
                     if number == 0 {
                         quote! {
-                            #name::#ident => false.token_value()
+                            #name::#ident => ::nekoton_abi::BuildTokenValue::token_value(false)
                         }
                     } else {
                         quote! {
-                            #name::#ident => true.token_value()
+                            #name::#ident => ::nekoton_abi::BuildTokenValue::token_value(true)
                         }
                     }
                 }
@@ -111,7 +129,7 @@ fn serialize_struct(
     struct_type: StructType,
 ) -> proc_macro2::TokenStream {
     let definition = quote! {
-        let mut tokens: Vec<ton_abi::Token> = Vec::new();
+        let mut tokens: Vec<::ton_abi::Token> = Vec::new();
     };
 
     let build_fields = fields.iter().map(|f| {
@@ -128,7 +146,7 @@ fn serialize_struct(
                     name,
                 );
                 quote! {
-                    tokens.push(ton_abi::Token::new(#field_name, #handler))
+                    tokens.push(::ton_abi::Token::new(#field_name, #handler))
                 }
             } else if f.attrs.with.is_some() {
                 let data = f.attrs.with.as_ref().unwrap_or_else(|| unreachable!());
@@ -142,7 +160,10 @@ fn serialize_struct(
                 }
             } else {
                 quote! {
-                    tokens.push(self.#name.token_value().named(#field_name))
+                    tokens.push(::nekoton_abi::TokenValueExt::named(
+                        ::nekoton_abi::BuildTokenValue::token_value(self.#name),
+                        #field_name
+                    ))
                 }
             }
         } else {
@@ -162,7 +183,7 @@ fn serialize_struct(
             quote! {
                 #definition
                 #(#build_fields;)*
-                return ton_abi::TokenValue::Tuple(tokens);
+                return ::ton_abi::TokenValue::Tuple(tokens);
             }
         }
     }
@@ -172,55 +193,55 @@ fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
     match type_name {
         TypeName::Int8 => {
             quote! {
-                ton_abi::TokenValue::Int(ton_abi::Int { number: num_bigint::BigInt::from(self.#name), size: 8 })
+                ::ton_abi::TokenValue::Int(::ton_abi::Int { number: ::num_bigint::BigInt::from(self.#name), size: 8 })
             }
         }
         TypeName::Uint8 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 8 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 8 })
             }
         }
         TypeName::Uint16 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 16 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 16 })
             }
         }
         TypeName::Uint32 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 32 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 32 })
             }
         }
         TypeName::Uint64 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 64 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 64 })
             }
         }
         TypeName::Uint128 => {
             quote! {
-                ton_abi::TokenValue::Uint(ton_abi::Uint { number: num_bigint::BigUint::from(self.#name), size: 128 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 128 })
             }
         }
         TypeName::Address => {
             quote! {
-                ton_abi::TokenValue::Address(match self.#name {
-                    ton_block::MsgAddressInt::AddrStd(addr) => ton_block::MsgAddress::AddrStd(addr),
-                    ton_block::MsgAddressInt::AddrVar(addr) => ton_block::MsgAddress::AddrVar(addr),
+                ::ton_abi::TokenValue::Address(match self.#name {
+                    ::ton_block::MsgAddressInt::AddrStd(addr) => ::ton_block::MsgAddress::AddrStd(addr),
+                    ::ton_block::MsgAddressInt::AddrVar(addr) => ::ton_block::MsgAddress::AddrVar(addr),
                 })
             }
         }
         TypeName::Cell => {
             quote! {
-                ton_abi::TokenValue::Cell(self.#name)
+                ::ton_abi::TokenValue::Cell(self.#name)
             }
         }
         TypeName::Bool => {
             quote! {
-                ton_abi::TokenValue::Bool(self.#name)
+                ::ton_abi::TokenValue::Bool(self.#name)
             }
         }
         TypeName::String => {
             quote! {
-                ton_abi::TokenValue::Bytes(self.#name.as_bytes().into())
+                ::ton_abi::TokenValue::Bytes(self.#name.as_bytes().into())
             }
         }
         TypeName::None => unreachable!(),

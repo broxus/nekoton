@@ -7,7 +7,7 @@ use ton_abi::{Token, Uint};
 use ton_block::{MsgAddress, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_abi::*;
+use nekoton_abi::{uint256_bytes, PackAbi, UnpackAbi};
 
 #[derive(PackAbi, UnpackAbi, Clone)]
 struct PendingTransaction {
@@ -106,7 +106,7 @@ fn test_unpacker() -> PendingTransaction {
 }
 
 fn test_packer(data: PendingTransaction) -> PendingTransaction {
-    let token = data.token_value();
+    let token = data.pack();
     let parsed: PendingTransaction = token.unpack().unwrap();
 
     parsed

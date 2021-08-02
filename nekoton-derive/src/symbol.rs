@@ -12,7 +12,6 @@ define_symbols! {
     ABI => "abi",
 
     // container attributes
-    PLAIN => "plain",
     ENUM_BOOL => "boolean",
 
     // field attributes
