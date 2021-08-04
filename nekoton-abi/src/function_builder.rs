@@ -45,15 +45,15 @@ impl FunctionBuilder {
         self.pubkey_header().time_header().expire_header()
     }
 
-    pub fn pubkey_header(mut self) -> Self {
+    pub fn pubkey_header(self) -> Self {
         self.header("pubkey", ParamType::PublicKey)
     }
 
-    pub fn time_header(mut self) -> Self {
+    pub fn time_header(self) -> Self {
         self.header("time", ParamType::Time)
     }
 
-    pub fn expire_header(mut self) -> Self {
+    pub fn expire_header(self) -> Self {
         self.header("expire", ParamType::Expire)
     }
 
