@@ -42,9 +42,19 @@ impl FunctionBuilder {
     }
 
     pub fn default_headers(self) -> Self {
+        self.pubkey_header().time_header().expire_header()
+    }
+
+    pub fn pubkey_header(mut self) -> Self {
         self.header("pubkey", ParamType::PublicKey)
-            .header("time", ParamType::Time)
-            .header("expire", ParamType::Expire)
+    }
+
+    pub fn time_header(mut self) -> Self {
+        self.header("time", ParamType::Time)
+    }
+
+    pub fn expire_header(mut self) -> Self {
+        self.header("expire", ParamType::Expire)
     }
 
     pub fn make_responsible(&mut self) {
