@@ -66,7 +66,7 @@ impl BuildTokenValue for u128 {
     fn token_value(self) -> TokenValue {
         TokenValue::Uint(ton_abi::Uint {
             number: BigUint::from(self),
-            size: 64,
+            size: 128,
         })
     }
 }
