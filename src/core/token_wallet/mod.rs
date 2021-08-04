@@ -716,7 +716,7 @@ struct RootMetaContractState<'a>(&'a ExistingContract);
 impl<'a> RootMetaContractState<'a> {
     fn get_details(&self) -> Result<RootMetaDetails> {
         let function = FunctionBuilder::new("getMetaByKey")
-            .header("time", ton_abi::ParamType::Time)
+            .time_header()
             .in_arg("key", ton_abi::ParamType::Uint(16))
             .out_arg("value", ton_abi::ParamType::Cell)
             .build();
