@@ -4,8 +4,7 @@ use super::{BuildTokenValue, TokenValueExt};
 
 const ANSWER_ID: &str = "_answer_id";
 
-#[allow(dead_code)]
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct FunctionBuilder {
     /// Contract function specification.
     /// ABI version
@@ -109,7 +108,7 @@ impl FunctionBuilder {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct TupleBuilder {
     types: Vec<Param>,
 }
