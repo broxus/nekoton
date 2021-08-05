@@ -198,8 +198,8 @@ fn try_unpack(
     with: &Option<syn::Expr>,
     unpack_with: &Option<syn::Expr>,
 ) -> proc_macro2::TokenStream {
-    if type_name.is_some() {
-        let handler = get_handler(type_name.as_ref().unwrap_or_else(|| unreachable!()));
+    if let Some(type_name) = type_name.as_ref() {
+        let handler = get_handler(type_name);
         quote! {
             match token {
                 Some(token) => {
@@ -211,19 +211,17 @@ fn try_unpack(
                 None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
             }
         }
-    } else if with.is_some() {
-        let data = with.as_ref().unwrap_or_else(|| unreachable!());
+    } else if let Some(with) = with.as_ref() {
         quote! {
             match token {
-                Some(token) => #data::unpack(&token.value)?,
+                Some(token) => #with::unpack(&token.value)?,
                 None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
             }
         }
-    } else if unpack_with.is_some() {
-        let data = unpack_with.as_ref().unwrap_or_else(|| unreachable!());
+    } else if let Some(unpack_with) = unpack_with.as_ref() {
         quote! {
             match token {
-                Some(token) => #data(&token.value)?,
+                Some(token) => #unpack_with(&token.value)?,
                 None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
             }
         }

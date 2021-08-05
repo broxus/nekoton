@@ -97,22 +97,17 @@ fn serialize_enum(
             let number = token.parse::<u8>().unwrap();
 
             match enum_type {
-                EnumType::Int => {
-                    quote! {
-                        #name::#ident => ::nekoton_abi::BuildTokenValue::token_value(#number)
-                    }
-                }
-                EnumType::Bool => {
-                    if number == 0 {
-                        quote! {
-                            #name::#ident => ::nekoton_abi::BuildTokenValue::token_value(false)
-                        }
-                    } else {
-                        quote! {
-                            #name::#ident => ::nekoton_abi::BuildTokenValue::token_value(true)
-                        }
-                    }
-                }
+                EnumType::Int => quote! {
+                    #name::#ident => ::nekoton_abi::BuildTokenValue::token_value(#number)
+                },
+                EnumType::Bool => match number {
+                    0 => quote! {
+                        #name::#ident => ::nekoton_abi::BuildTokenValue::token_value(false)
+                    },
+                    _ => quote! {
+                        #name::#ident => ::nekoton_abi::BuildTokenValue::token_value(true)
+                    },
+                },
             }
         });
 
@@ -140,23 +135,18 @@ fn serialize_struct(
                 None => name.to_string(),
             };
 
-            if f.attrs.type_name.is_some() {
-                let handler = get_handler(
-                    f.attrs.type_name.as_ref().unwrap_or_else(|| unreachable!()),
-                    name,
-                );
+            if let Some(type_name) = f.attrs.type_name.as_ref() {
+                let handler = get_handler(type_name, name);
                 quote! {
                     tokens.push(::ton_abi::Token::new(#field_name, #handler))
                 }
-            } else if f.attrs.with.is_some() {
-                let data = f.attrs.with.as_ref().unwrap_or_else(|| unreachable!());
+            } else if let Some(with) = f.attrs.with.as_ref() {
                 quote! {
-                    tokens.push(#data::pack(#field_name, self.#name))
+                    tokens.push(::ton_abi::Token::new(#field_name, #with::pack(self.#name)))
                 }
-            } else if f.attrs.pack_with.is_some() {
-                let data = f.attrs.pack_with.as_ref().unwrap_or_else(|| unreachable!());
+            } else if let Some(pack_with) = f.attrs.pack_with.as_ref() {
                 quote! {
-                    tokens.push(#data(#field_name, self.#name))
+                    tokens.push(::ton_abi::Token::new(#field_name, #pack_with(self.#name)))
                 }
             } else {
                 quote! {
