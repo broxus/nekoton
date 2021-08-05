@@ -193,32 +193,32 @@ fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
     match type_name {
         TypeName::Int8 => {
             quote! {
-                ::ton_abi::TokenValue::Int(::ton_abi::Int { number: ::num_bigint::BigInt::from(self.#name), size: 8 })
+                ::ton_abi::TokenValue::Int(::ton_abi::Int { number: ::nekoton_abi::num_bigint::BigInt::from(self.#name), size: 8 })
             }
         }
         TypeName::Uint8 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 8 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 8 })
             }
         }
         TypeName::Uint16 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 16 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 16 })
             }
         }
         TypeName::Uint32 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 32 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 32 })
             }
         }
         TypeName::Uint64 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 64 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 64 })
             }
         }
         TypeName::Uint128 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::num_bigint::BigUint::from(self.#name), size: 128 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 128 })
             }
         }
         TypeName::Address => {

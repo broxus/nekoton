@@ -107,7 +107,7 @@ fn serialize_enum(
         EnumType::Int => {
             quote! {
                 match self {
-                    ::ton_abi::TokenValue::Uint(int) => match num_traits::ToPrimitive::to_u8(&int.number) {
+                    ::ton_abi::TokenValue::Uint(int) => match ::nekoton_abi::num_traits::ToPrimitive::to_u8(&int.number) {
                         #(#build_variants,)*
                         _ => Err(::nekoton_abi::UnpackerError::InvalidAbi),
                     },
@@ -239,7 +239,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         TypeName::Int8 => {
             quote! {
                 ::ton_abi::TokenValue::Int(::ton_abi::Int { number: value, size: 8 }) => {
-                    ::num_traits::ToPrimitive::to_i8(&value)
+                    ::nekoton_abi::num_traits::ToPrimitive::to_i8(&value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
@@ -247,7 +247,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         TypeName::Uint8 => {
             quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 8 }) => {
-                    num_traits::ToPrimitive::to_u8(&value)
+                    ::nekoton_abi::num_traits::ToPrimitive::to_u8(&value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
@@ -255,7 +255,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         TypeName::Uint16 => {
             quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 16 }) => {
-                    ::num_traits::ToPrimitive::to_u16(&value)
+                    ::nekoton_abi::num_traits::ToPrimitive::to_u16(&value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
@@ -263,7 +263,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         TypeName::Uint32 => {
             quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 32 }) => {
-                    ::num_traits::ToPrimitive::to_u32(&value)
+                    ::nekoton_abi::num_traits::ToPrimitive::to_u32(&value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
@@ -271,7 +271,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         TypeName::Uint64 => {
             quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 64 }) => {
-                    num_traits::ToPrimitive::to_u64(&value)
+                    ::nekoton_abi::num_traits::ToPrimitive::to_u64(&value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
@@ -279,7 +279,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         TypeName::Uint128 => {
             quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: 128 }) => {
-                    ::num_traits::ToPrimitive::to_u128(&value)
+                    ::nekoton_abi::num_traits::ToPrimitive::to_u128(&value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)?
                 },
             }
