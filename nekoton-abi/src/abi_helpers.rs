@@ -149,3 +149,28 @@ pub mod uint128_number {
         }
     }
 }
+
+pub mod address_only_hash {
+    use super::*;
+
+    pub fn pack(name: &str, value: UInt256) -> Token {
+        Token::new(
+            name,
+            TokenValue::Address(ton_block::MsgAddress::AddrStd(ton_block::MsgAddrStd {
+                anycast: None,
+                workchain_id: 0,
+                address: value.into(),
+            })),
+        )
+    }
+
+    pub fn unpack(value: &TokenValue) -> UnpackerResult<UInt256> {
+        match value {
+            TokenValue::Address(ton_block::MsgAddress::AddrStd(ton_block::MsgAddrStd {
+                address,
+                ..
+            })) => Ok(UInt256::from_be_bytes(&address.get_bytestring(0))),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
