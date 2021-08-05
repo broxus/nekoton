@@ -1,6 +1,7 @@
 use ton_abi::{Function, Param, ParamType};
 
 use super::{BuildTokenValue, TokenValueExt};
+use std::iter::FromIterator;
 
 const ANSWER_ID: &str = "_answer_id";
 
@@ -133,14 +134,23 @@ impl TupleBuilder {
     }
 }
 
+impl FromIterator<Param> for TupleBuilder {
+    fn from_iter<T: IntoIterator<Item = Param>>(iter: T) -> Self {
+        Self {
+            types: iter.into_iter().collect(),
+        }
+    }
+}
+
 pub fn answer_id() -> ton_abi::Token {
     0u32.token_value().named(ANSWER_ID)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ton_abi::ParamType;
+
+    use super::*;
 
     #[test]
     fn build() {
