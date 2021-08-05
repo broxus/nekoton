@@ -336,6 +336,7 @@ pub enum TypeName {
     Cell,
     Address,
     String,
+    Bytes,
     None,
 }
 
@@ -361,6 +362,8 @@ impl TypeName {
             TypeName::Address
         } else if input == "string" {
             TypeName::String
+        } else if input == "bytes" {
+            TypeName::Bytes
         } else {
             TypeName::None
         }

@@ -234,6 +234,11 @@ fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
                 ::ton_abi::TokenValue::Bytes(self.#name.as_bytes().into())
             }
         }
+        TypeName::Bytes => {
+            quote! {
+                ::ton_abi::TokenValue::Bytes(self.#name)
+            }
+        }
         TypeName::None => unreachable!(),
     }
 }

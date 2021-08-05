@@ -26,6 +26,8 @@ struct Data {
     data_uint128_number: BigUint,
     #[abi(bool)]
     data_bool: bool,
+    #[abi(bytes)]
+    data_bytes: Vec<u8>,
 }
 
 fn test() -> Data {
@@ -40,6 +42,7 @@ fn test() -> Data {
     let data_uint128_number =
         Token::new("data_uint128_number", TokenValue::Uint(Uint::new(128, 128)));
     let data_bool = Token::new("data_bool", TokenValue::Bool(true));
+    let data_bytes = Token::new("data_bytes", TokenValue::Bytes(Vec::from("Test")));
 
     let tokens = vec![
         data_i8,
@@ -52,6 +55,7 @@ fn test() -> Data {
         data_u256,
         data_uint128_number,
         data_bool,
+        data_bytes,
     ];
     let parsed: Data = tokens.unpack().unwrap();
 
@@ -84,10 +88,10 @@ fn main() {
         assert_eq!(hex::encode(padded_data), "00000000000000000000000000000080");
     }
 
-    {
-        assert_eq!(
-            hex::encode(data.data_u160),
-            "00000000000000000000000000000000000000a0"
-        );
-    }
+    assert_eq!(
+        hex::encode(data.data_u160),
+        "00000000000000000000000000000000000000a0"
+    );
+
+    assert_eq!(data.data_bytes, Vec::from("Test"));
 }
