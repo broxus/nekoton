@@ -91,6 +91,11 @@ impl FunctionBuilder {
         self
     }
 
+    pub fn headers(mut self, headers: Vec<Param>) -> Self {
+        self.header = headers;
+        self
+    }
+
     pub fn build(self) -> Function {
         let mut fun = Function {
             abi_version: self.abi_version,
