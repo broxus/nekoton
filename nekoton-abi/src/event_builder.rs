@@ -1,6 +1,6 @@
 use ton_abi::{Event, Param, ParamType};
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct EventBuilder {
     /// Contract function specification.
     /// ABI version
