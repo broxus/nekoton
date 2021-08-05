@@ -1,5 +1,4 @@
 use num_bigint::BigUint;
-use ton_abi::Token;
 use ton_abi::TokenValue;
 
 use nekoton_abi::{PackAbiPlain, UnpackAbiPlain};
@@ -10,14 +9,11 @@ struct Data {
     value: u32,
 }
 
-fn external_packer(name: &str, value: u32) -> Token {
-    Token::new(
-        name,
-        TokenValue::Uint(ton_abi::Uint {
-            number: BigUint::from(value),
-            size: 32,
-        }),
-    )
+fn external_packer(value: u32) -> TokenValue {
+    TokenValue::Uint(ton_abi::Uint {
+        number: BigUint::from(value),
+        size: 32,
+    })
 }
 
 fn main() {

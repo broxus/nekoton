@@ -1,5 +1,5 @@
 use num_bigint::BigUint;
-use ton_abi::{Token, TokenValue, Uint};
+use ton_abi::{TokenValue, Uint};
 use ton_types::UInt256;
 
 use nekoton_utils::UInt128;
@@ -40,11 +40,8 @@ impl BuildTokenValue for UInt256 {
 pub mod uint256_bytes {
     use super::*;
 
-    pub fn pack(name: &str, value: UInt256) -> Token {
-        Token::new(
-            name,
-            BigUint256(BigUint::from_bytes_be(value.as_slice())).token_value(),
-        )
+    pub fn pack(value: UInt256) -> TokenValue {
+        BigUint256(BigUint::from_bytes_be(value.as_slice())).token_value()
     }
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<UInt256> {
@@ -67,8 +64,8 @@ pub mod uint256_bytes {
 pub mod uint256_number {
     use super::*;
 
-    pub fn pack(name: &str, value: BigUint) -> Token {
-        Token::new(name, BigUint256(value).token_value())
+    pub fn pack(value: BigUint) -> TokenValue {
+        BigUint256(value).token_value()
     }
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<BigUint> {
@@ -79,17 +76,29 @@ pub mod uint256_number {
     }
 }
 
+pub mod array_uint256_bytes {
+    use super::*;
+
+    pub fn pack(value: Vec<UInt256>) -> TokenValue {
+        TokenValue::Array(value.into_iter().map(uint256_bytes::pack).collect())
+    }
+
+    pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<UInt256>> {
+        match value {
+            TokenValue::Array(array) => array.into_iter().map(uint256_bytes::unpack).collect(),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
 pub mod uint160_bytes {
     use super::*;
 
-    pub fn pack(name: &str, value: [u8; 20]) -> Token {
-        Token::new(
-            name,
-            TokenValue::Uint(Uint {
-                number: BigUint::from_bytes_be(&value),
-                size: 160,
-            }),
-        )
+    pub fn pack(value: [u8; 20]) -> TokenValue {
+        TokenValue::Uint(Uint {
+            number: BigUint::from_bytes_be(&value),
+            size: 160,
+        })
     }
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<[u8; 20]> {
@@ -114,11 +123,8 @@ pub mod uint160_bytes {
 pub mod uint128_bytes {
     use super::*;
 
-    pub fn pack(name: &str, value: UInt128) -> Token {
-        Token::new(
-            name,
-            BigUint128(BigUint::from_bytes_be(value.as_slice())).token_value(),
-        )
+    pub fn pack(value: UInt128) -> TokenValue {
+        BigUint128(BigUint::from_bytes_be(value.as_slice())).token_value()
     }
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<UInt128> {
@@ -132,14 +138,11 @@ pub mod uint128_bytes {
 pub mod uint128_number {
     use super::*;
 
-    pub fn pack(name: &str, value: BigUint) -> Token {
-        Token::new(
-            name,
-            TokenValue::Uint(Uint {
-                number: value,
-                size: 128,
-            }),
-        )
+    pub fn pack(value: BigUint) -> TokenValue {
+        TokenValue::Uint(Uint {
+            number: value,
+            size: 128,
+        })
     }
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<BigUint> {
@@ -153,15 +156,12 @@ pub mod uint128_number {
 pub mod address_only_hash {
     use super::*;
 
-    pub fn pack(name: &str, value: UInt256) -> Token {
-        Token::new(
-            name,
-            TokenValue::Address(ton_block::MsgAddress::AddrStd(ton_block::MsgAddrStd {
-                anycast: None,
-                workchain_id: 0,
-                address: value.into(),
-            })),
-        )
+    pub fn pack(value: UInt256) -> TokenValue {
+        TokenValue::Address(ton_block::MsgAddress::AddrStd(ton_block::MsgAddrStd {
+            anycast: None,
+            workchain_id: 0,
+            address: value.into(),
+        }))
     }
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<UInt256> {
