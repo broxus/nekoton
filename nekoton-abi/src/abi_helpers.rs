@@ -76,6 +76,21 @@ pub mod uint256_number {
     }
 }
 
+pub mod array_uint256_bytes {
+    use super::*;
+
+    pub fn pack(value: Vec<UInt256>) -> TokenValue {
+        TokenValue::Array(value.into_iter().map(uint256_bytes::pack).collect())
+    }
+
+    pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<UInt256>> {
+        match value {
+            TokenValue::Array(array) => array.into_iter().map(uint256_bytes::unpack).collect(),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
 pub mod uint160_bytes {
     use super::*;
 
