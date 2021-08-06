@@ -85,7 +85,7 @@ pub mod array_uint256_bytes {
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<UInt256>> {
         match value {
-            TokenValue::Array(array) => array.into_iter().map(uint256_bytes::unpack).collect(),
+            TokenValue::Array(array) => array.iter().map(uint256_bytes::unpack).collect(),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }

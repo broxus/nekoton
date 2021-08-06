@@ -1,4 +1,3 @@
-use proc_macro2::Ident;
 use quote::quote;
 
 use crate::ast::*;
@@ -136,9 +135,20 @@ fn serialize_struct(
             };
 
             if let Some(type_name) = f.attrs.type_name.as_ref() {
-                let handler = get_handler(type_name, name);
-                quote! {
-                    tokens.push(::ton_abi::Token::new(#field_name, #handler))
+                let handler = get_handler(type_name);
+                match f.attrs.is_array {
+                    true => {
+                        quote! {
+                            tokens.push(::ton_abi::Token::new(#field_name,
+                                ::ton_abi::TokenValue::Array(self.#name.into_iter().map(|value| #handler).collect())))
+                        }
+                    }
+                    false => {
+                        quote! {
+                            let value = self.#name;
+                            tokens.push(::ton_abi::Token::new(#field_name, #handler))
+                        }
+                    }
                 }
             } else if let Some(with) = f.attrs.with.as_ref() {
                 quote! {
@@ -149,11 +159,23 @@ fn serialize_struct(
                     tokens.push(::ton_abi::Token::new(#field_name, #pack_with(self.#name)))
                 }
             } else {
-                quote! {
-                    tokens.push(::nekoton_abi::TokenValueExt::named(
-                        ::nekoton_abi::BuildTokenValue::token_value(self.#name),
-                        #field_name
-                    ))
+                match f.attrs.is_array {
+                    true => {
+                        quote! {
+                            tokens.push(::nekoton_abi::TokenValueExt::named(
+                                ::ton_abi::TokenValue::Array(self.#name.into_iter().map(::nekoton_abi::BuildTokenValue::token_value).collect()),
+                                #field_name
+                            ))
+                        }
+                    }
+                    false => {
+                        quote! {
+                            tokens.push(::nekoton_abi::TokenValueExt::named(
+                                ::nekoton_abi::BuildTokenValue::token_value(self.#name),
+                                #field_name
+                            ))
+                        }
+                    }
                 }
             }
         } else {
@@ -179,41 +201,41 @@ fn serialize_struct(
     }
 }
 
-fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
+fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
     match type_name {
         TypeName::Int8 => {
             quote! {
-                ::ton_abi::TokenValue::Int(::ton_abi::Int { number: ::nekoton_abi::num_bigint::BigInt::from(self.#name), size: 8 })
+                ::ton_abi::TokenValue::Int(::ton_abi::Int { number: ::nekoton_abi::num_bigint::BigInt::from(value), size: 8 })
             }
         }
         TypeName::Uint8 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 8 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 8 })
             }
         }
         TypeName::Uint16 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 16 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 16 })
             }
         }
         TypeName::Uint32 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 32 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 32 })
             }
         }
         TypeName::Uint64 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 64 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 64 })
             }
         }
         TypeName::Uint128 => {
             quote! {
-                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(self.#name), size: 128 })
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 128 })
             }
         }
         TypeName::Address => {
             quote! {
-                ::ton_abi::TokenValue::Address(match self.#name {
+                ::ton_abi::TokenValue::Address(match value {
                     ::ton_block::MsgAddressInt::AddrStd(addr) => ::ton_block::MsgAddress::AddrStd(addr),
                     ::ton_block::MsgAddressInt::AddrVar(addr) => ::ton_block::MsgAddress::AddrVar(addr),
                 })
@@ -221,22 +243,22 @@ fn get_handler(type_name: &TypeName, name: &Ident) -> proc_macro2::TokenStream {
         }
         TypeName::Cell => {
             quote! {
-                ::ton_abi::TokenValue::Cell(self.#name)
+                ::ton_abi::TokenValue::Cell(value)
             }
         }
         TypeName::Bool => {
             quote! {
-                ::ton_abi::TokenValue::Bool(self.#name)
+                ::ton_abi::TokenValue::Bool(value)
             }
         }
         TypeName::String => {
             quote! {
-                ::ton_abi::TokenValue::Bytes(self.#name.as_bytes().into())
+                ::ton_abi::TokenValue::Bytes(value.as_bytes().into())
             }
         }
         TypeName::Bytes => {
             quote! {
-                ::ton_abi::TokenValue::Bytes(self.#name)
+                ::ton_abi::TokenValue::Bytes(value)
             }
         }
         TypeName::None => unreachable!(),

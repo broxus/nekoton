@@ -2,7 +2,7 @@ use nekoton_abi::*;
 
 #[derive(PackAbi, UnpackAbi)]
 struct Data {
-    #[abi(name = "vector")]
+    #[abi(uint32, array, name = "vector")]
     vec: Vec<u32>,
     #[abi]
     complex: Complex,

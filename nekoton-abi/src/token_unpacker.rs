@@ -4,8 +4,6 @@ use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::Cell;
 
-use super::StandaloneToken;
-
 pub trait TokenValueExt {
     fn unnamed(self) -> Token;
 
@@ -238,22 +236,6 @@ where
             Some(value) => value.unpack(),
             None => Err(UnpackerError::InvalidAbi),
         }
-    }
-}
-
-impl<T> UnpackAbi<Vec<T>> for TokenValue
-where
-    T: StandaloneToken,
-    TokenValue: UnpackAbi<T>,
-{
-    fn unpack(self) -> UnpackerResult<Vec<T>> {
-        match self {
-            TokenValue::Array(tokens) | TokenValue::FixedArray(tokens) => tokens,
-            _ => return Err(UnpackerError::InvalidAbi),
-        }
-        .into_iter()
-        .map(UnpackAbi::unpack)
-        .collect()
     }
 }
 

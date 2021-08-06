@@ -142,7 +142,12 @@ fn serialize_struct(
                 None => name.to_string(),
             };
 
-            let try_unpack = try_unpack(&f.attrs.type_name, &f.attrs.with, &f.attrs.unpack_with);
+            let try_unpack = try_unpack(
+                &f.attrs.type_name,
+                &f.attrs.with,
+                &f.attrs.unpack_with,
+                f.attrs.is_array,
+            );
 
             quote! {
                 #name: {
@@ -197,18 +202,43 @@ fn try_unpack(
     type_name: &Option<TypeName>,
     with: &Option<syn::Expr>,
     unpack_with: &Option<syn::Expr>,
+    is_array: bool,
 ) -> proc_macro2::TokenStream {
     if let Some(type_name) = type_name.as_ref() {
         let handler = get_handler(type_name);
-        quote! {
-            match token {
-                Some(token) => {
-                    match token.value {
-                        #handler
-                        _ => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
+        match is_array {
+            true => {
+                quote! {
+                    let array = match token {
+                        Some(token) => match token.value {
+                            ::ton_abi::TokenValue::Array(tokens) | ::ton_abi::TokenValue::FixedArray(tokens) => {
+                                let mut vec = Vec::new();
+                                for token in tokens {
+                                    let item = match token {
+                                        #handler
+                                        _ => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
+                                    };
+                                    vec.push(item);
+                                }
+                                Ok(vec)
+                            },
+                            _ => Err(::nekoton_abi::UnpackerError::InvalidAbi),
+                        }
+                        None => Err(::nekoton_abi::UnpackerError::InvalidAbi),
+                    };
+                    array?
+                }
+            }
+            false => {
+                quote! {
+                    match token {
+                        Some(token) => match token.value {
+                            #handler
+                            _ => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
+                        },
+                        None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
                     }
-                },
-                None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
+                }
             }
         }
     } else if let Some(with) = with.as_ref() {
@@ -226,8 +256,27 @@ fn try_unpack(
             }
         }
     } else {
-        quote! {
-            ::nekoton_abi::UnpackAbi::unpack(token)?
+        match is_array {
+            true => {
+                quote! {
+                    let array = match token {
+                        Some(token) => match token.value {
+                            ::ton_abi::TokenValue::Array(tokens) | ::ton_abi::TokenValue::FixedArray(tokens) => tokens,
+                            _ => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
+                        }
+                        .into_iter()
+                        .map(::nekoton_abi::UnpackAbi::unpack)
+                        .collect(),
+                        None => Err(::nekoton_abi::UnpackerError::InvalidAbi),
+                    };
+                    array?
+                }
+            }
+            false => {
+                quote! {
+                    ::nekoton_abi::UnpackAbi::unpack(token)?
+                }
+            }
         }
     }
 }

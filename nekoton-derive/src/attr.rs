@@ -47,6 +47,7 @@ pub struct Field {
     pub with: Option<syn::Expr>,
     pub pack_with: Option<syn::Expr>,
     pub unpack_with: Option<syn::Expr>,
+    pub is_array: bool,
 }
 
 impl Field {
@@ -56,6 +57,7 @@ impl Field {
         let mut with = Attr::none(cx, WITH);
         let mut pack_with = Attr::none(cx, PACK_WITH);
         let mut unpack_with = Attr::none(cx, UNPACK_WITH);
+        let mut is_array = BoolAttr::none(cx, ARRAY);
 
         for (from, meta_item) in input
             .attrs
@@ -69,6 +71,7 @@ impl Field {
                         name.set(&m.path, s.value());
                     }
                 }
+                (AttrFrom::Abi, Meta(Path(word))) if word == ARRAY => is_array.set_true(word),
                 (AttrFrom::Abi, Meta(Path(word))) => {
                     if let Some(word) = word.get_ident() {
                         let pt = TypeName::from(&word.to_string());
@@ -131,6 +134,7 @@ impl Field {
             with,
             pack_with,
             unpack_with,
+            is_array: is_array.get(),
         })
     }
 }

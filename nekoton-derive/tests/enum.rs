@@ -1,14 +1,12 @@
-use ton_abi::Uint;
+use ton_abi::{Token, TokenValue, Uint};
 
-use nekoton_abi::{PackAbi, StandaloneToken, UnpackAbi};
+use nekoton_abi::{PackAbi, UnpackAbi};
 
 #[derive(PackAbi, UnpackAbi, PartialEq, Debug)]
 enum EventType {
     ETH = 0,
     TON = 1,
 }
-
-impl StandaloneToken for EventType {}
 
 #[derive(PackAbi, UnpackAbi, PartialEq, Debug)]
 #[abi(boolean)]
@@ -17,7 +15,11 @@ enum Voting {
     Confirm = 1,
 }
 
-impl StandaloneToken for Voting {}
+#[derive(PackAbi, UnpackAbi)]
+struct Test {
+    #[abi(array, name = "eventTypes")]
+    event_types: Vec<EventType>,
+}
 
 fn test_event_type() -> EventType {
     use nekoton_abi::BuildTokenValue;
@@ -37,16 +39,14 @@ fn test_voiting() -> Voting {
     parsed
 }
 
-fn test_vec() -> Vec<EventType> {
-    let eth_token = ton_abi::TokenValue::Uint(Uint::new(0, 8));
-    let ton_token = ton_abi::TokenValue::Uint(Uint::new(1, 8));
+fn test() -> Test {
+    let eth = TokenValue::Uint(Uint::new(0, 8));
+    let ton = TokenValue::Uint(Uint::new(1, 8));
+    let event_types = Token::new("eventTypes", TokenValue::Array(vec![eth, ton]));
 
-    let tokens = ton_abi::Token::new(
-        "types",
-        ton_abi::TokenValue::Array(vec![eth_token, ton_token]),
-    );
+    let tuple = Token::new("tuple", TokenValue::Tuple(vec![event_types]));
 
-    let parsed: Vec<EventType> = tokens.unpack().unwrap();
+    let parsed: Test = tuple.unpack().unwrap();
     parsed
 }
 
@@ -57,7 +57,7 @@ fn main() {
     let vote = test_voiting();
     assert_eq!(vote, Voting::Confirm);
 
-    let vec = test_vec();
-    assert_eq!(vec[0], EventType::ETH);
-    assert_eq!(vec[1], EventType::TON);
+    let data = test();
+    assert_eq!(data.event_types[0], EventType::ETH);
+    assert_eq!(data.event_types[1], EventType::TON);
 }

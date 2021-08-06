@@ -20,6 +20,7 @@ define_symbols! {
     WITH => "with",
     PACK_WITH => "pack_with",
     UNPACK_WITH => "unpack_with",
+    ARRAY => "array",
 }
 
 #[derive(Copy, Clone)]
