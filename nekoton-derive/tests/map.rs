@@ -33,26 +33,8 @@ struct ParticipantInfo {
     reward: u64,
     #[abi(unpack_with = "stakes_unpacker")]
     stakes: BTreeMap<u64, u64>,
-    #[abi(unpack_with = "vestings_unpacker")]
+    #[abi(with = "map_u64_tuple")]
     vestings: BTreeMap<u64, VestingsComponents>,
-}
-
-fn vestings_unpacker(value: &TokenValue) -> UnpackerResult<BTreeMap<u64, VestingsComponents>> {
-    match value {
-        TokenValue::Map(map_key_type, values) => match map_key_type {
-            ParamType::Map(_, _) => {
-                let mut map = BTreeMap::<u64, VestingsComponents>::new();
-                for (key, value) in values {
-                    let key = key.parse::<u64>().map_err(|_| UnpackerError::InvalidAbi)?;
-                    let value: VestingsComponents = value.to_owned().unpack()?;
-                    map.insert(key, value);
-                }
-                Ok(map)
-            }
-            _ => Err(UnpackerError::InvalidAbi),
-        },
-        _ => Err(UnpackerError::InvalidAbi),
-    }
 }
 
 fn stakes_unpacker(value: &TokenValue) -> UnpackerResult<BTreeMap<u64, u64>> {

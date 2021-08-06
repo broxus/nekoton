@@ -1,10 +1,12 @@
+use std::collections::BTreeMap;
+
 use num_bigint::BigUint;
-use ton_abi::{TokenValue, Uint};
+use ton_abi::{ParamType, TokenValue, Uint};
 use ton_types::UInt256;
 
 use nekoton_utils::UInt128;
 
-use super::{BuildTokenValue, UnpackerError, UnpackerResult};
+use super::{BuildTokenValue, UnpackAbi, UnpackerError, UnpackerResult};
 
 pub struct BigUint128(pub BigUint);
 
@@ -170,6 +172,31 @@ pub mod address_only_hash {
                 address,
                 ..
             })) => Ok(UInt256::from_be_bytes(&address.get_bytestring(0))),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
+pub mod map_u64_tuple {
+    use super::*;
+
+    pub fn unpack<T>(value: &TokenValue) -> UnpackerResult<BTreeMap<u64, T>>
+    where
+        TokenValue: UnpackAbi<T>,
+    {
+        match value {
+            TokenValue::Map(map_key_type, values) => match map_key_type {
+                ParamType::Map(_, _) => {
+                    let mut map = BTreeMap::<u64, T>::new();
+                    for (key, value) in values {
+                        let key = key.parse::<u64>().map_err(|_| UnpackerError::InvalidAbi)?;
+                        let value: T = value.to_owned().unpack()?;
+                        map.insert(key, value);
+                    }
+                    Ok(map)
+                }
+                _ => Err(UnpackerError::InvalidAbi),
+            },
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
