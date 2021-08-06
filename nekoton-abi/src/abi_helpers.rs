@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::str::FromStr;
 
 use num_bigint::BigUint;
 use ton_abi::{ParamType, TokenValue, Uint};
@@ -177,20 +178,21 @@ pub mod address_only_hash {
     }
 }
 
-pub mod map_u64_tuple {
+pub mod map_integer_tuple {
     use super::*;
 
-    pub fn unpack<T>(value: &TokenValue) -> UnpackerResult<BTreeMap<u64, T>>
+    pub fn unpack<K, V>(value: &TokenValue) -> UnpackerResult<BTreeMap<K, V>>
     where
-        TokenValue: UnpackAbi<T>,
+        K: Ord + FromStr,
+        TokenValue: UnpackAbi<V>,
     {
         match value {
             TokenValue::Map(map_key_type, values) => match map_key_type {
                 ParamType::Map(_, _) => {
-                    let mut map = BTreeMap::<u64, T>::new();
+                    let mut map = BTreeMap::<K, V>::new();
                     for (key, value) in values {
-                        let key = key.parse::<u64>().map_err(|_| UnpackerError::InvalidAbi)?;
-                        let value: T = value.to_owned().unpack()?;
+                        let key = key.parse::<K>().map_err(|_| UnpackerError::InvalidAbi)?;
+                        let value: V = value.to_owned().unpack()?;
                         map.insert(key, value);
                     }
                     Ok(map)

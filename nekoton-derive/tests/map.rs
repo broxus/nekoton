@@ -33,7 +33,7 @@ struct ParticipantInfo {
     reward: u64,
     #[abi(unpack_with = "stakes_unpacker")]
     stakes: BTreeMap<u64, u64>,
-    #[abi(with = "map_u64_tuple")]
+    #[abi(with = "map_integer_tuple")]
     vestings: BTreeMap<u64, VestingsComponents>,
 }
 
