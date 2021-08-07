@@ -187,18 +187,15 @@ pub mod map_integer_tuple {
         TokenValue: UnpackAbi<V>,
     {
         match value {
-            TokenValue::Map(map_key_type, values) => match map_key_type {
-                ParamType::Map(_, _) => {
-                    let mut map = BTreeMap::<K, V>::new();
-                    for (key, value) in values {
-                        let key = key.parse::<K>().map_err(|_| UnpackerError::InvalidAbi)?;
-                        let value: V = value.to_owned().unpack()?;
-                        map.insert(key, value);
-                    }
-                    Ok(map)
+            TokenValue::Map(ParamType::Map(_, _), values) => {
+                let mut map = BTreeMap::<K, V>::new();
+                for (key, value) in values {
+                    let key = key.parse::<K>().map_err(|_| UnpackerError::InvalidAbi)?;
+                    let value: V = value.to_owned().unpack()?;
+                    map.insert(key, value);
                 }
-                _ => Err(UnpackerError::InvalidAbi),
-            },
+                Ok(map)
+            }
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
