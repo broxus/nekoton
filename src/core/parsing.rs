@@ -489,6 +489,7 @@ pub fn parse_token_transaction(
     if header.bounced {
         body.move_by(32).ok()?;
         let function_id = read_function_id(&body).ok()?;
+        body.move_by(32).ok()?;
 
         if function_id == functions.internal_transfer.input_id {
             return Some(TokenWalletTransaction::TransferBounced(
