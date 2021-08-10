@@ -60,11 +60,6 @@ nekoton-contracts = { path = "nekoton-contracts" }
 nekoton-abi = { path = "nekoton-abi", features = ["derive"] }
 nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
 
-# Optional web dependencies
-js-sys = { version = "0.3", optional = true }
-wasm-bindgen = { version = "0.2", optional = true }
-web-sys = { version = "0.3", optional = true }
-
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
 criterion = { version = "0.3", features = ["async_tokio", "html_reports"] }
@@ -73,7 +68,7 @@ tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 [features]
 default = ["gql_transport"]
 integration_test = []
-web = ["wasm-bindgen", "js-sys", "web-sys", "chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen", "instant/wasm-bindgen"]
+web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen", "instant/wasm-bindgen"]
 gql_transport = ["graphql_client"]
 adnl_transport = ["ton_api", "aes", "cipher", "x25519-dalek"]
 jrpc_transport = ["tiny-jsonrpc"]

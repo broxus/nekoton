@@ -199,26 +199,6 @@ impl Default for PasswordCacheBehavior {
     }
 }
 
-#[cfg(not(feature = "web"))]
-pub fn now() -> f64 {
-    use std::time::SystemTime;
-
-    (SystemTime::now().duration_since(SystemTime::UNIX_EPOCH))
-        .expect("System clock was before 1970.")
-        .as_secs_f64()
-        * 1000.0
-}
-
-#[cfg(feature = "web")]
-fn now() -> f64 {
-    use wasm_bindgen::prelude::*;
-    use wasm_bindgen::JsCast;
-    js_sys::Reflect::get(&js_sys::global(), &JsValue::from_str("performance"))
-        .expect("failed to get performance from global object")
-        .unchecked_into::<web_sys::Performance>()
-        .now()
-}
-
 #[derive(thiserror::Error, Debug)]
 enum PasswordCacheError {
     #[error("Failed to generate cipher")]
