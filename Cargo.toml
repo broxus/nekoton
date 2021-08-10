@@ -28,7 +28,7 @@ futures = "0.3"
 getrandom = "0.1"
 graphql_client = { version = "0.9", optional = true }
 hex = "0.4"
-instant = { version = "0.1", features = ["now"], git = "https://github.com/Rexagon/instant.git" }
+instant = { version = "0.1", features = ["now"] }
 log = "0.4"
 num-bigint = { version = "0.2", features = ["serde"] }
 num-traits = "0.2.14"
@@ -59,6 +59,9 @@ tiny-jsonrpc = { version = "0.5.0", default-features = false, optional = true }
 nekoton-contracts = { path = "nekoton-contracts" }
 nekoton-abi = { path = "nekoton-abi", features = ["derive"] }
 nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
+
+[patch.crates-io]
+instant = { version = "0.1", git = "https://github.com/Rexagon/instant.git" }
 
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
