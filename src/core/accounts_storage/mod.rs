@@ -78,9 +78,9 @@ impl AccountsStorage {
         name: &str,
         public_key: ed25519_dalek::PublicKey,
         contract: ton_wallet::WalletType,
+        workchain: i8,
     ) -> Result<AssetsList> {
-        let address =
-            ton_wallet::compute_address(&public_key, contract, ton_wallet::DEFAULT_WORKCHAIN);
+        let address = ton_wallet::compute_address(&public_key, contract, workchain);
         let key = address.to_string();
 
         let accounts = &mut *self.accounts.write().await;
