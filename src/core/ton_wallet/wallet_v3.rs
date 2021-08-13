@@ -159,9 +159,7 @@ impl UnsignedMessage for UnsignedWalletV3Message {
 
     fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
         let mut payload = self.payload.clone();
-        payload
-            .prepend_raw(signature, signature.len() * 8)
-            .convert()?;
+        payload.prepend_raw(signature, signature.len() * 8)?;
 
         let mut message = self.message.clone();
         message.set_body(payload.into());
@@ -224,7 +222,7 @@ impl InitData {
     }
 
     pub fn compute_addr(&self, workchain_id: i8) -> Result<MsgAddressInt> {
-        let init_state = self.make_state_init()?.serialize().convert()?;
+        let init_state = self.make_state_init()?.serialize()?;
         let hash = init_state.repr_hash();
         Ok(MsgAddressInt::AddrStd(MsgAddrStd {
             anycast: None,
@@ -243,13 +241,10 @@ impl InitData {
 
     pub fn serialize(&self) -> Result<Cell> {
         let mut data = BuilderData::new();
-        data.append_u32(self.seqno)
-            .convert()?
-            .append_u32(self.wallet_id)
-            .convert()?
-            .append_raw(self.public_key.as_slice(), 256)
-            .convert()?;
-        data.into_cell().convert()
+        data.append_u32(self.seqno)?
+            .append_u32(self.wallet_id)?
+            .append_raw(self.public_key.as_slice(), 256)?;
+        data.into_cell()
     }
 
     pub fn make_transfer_payload(
@@ -261,12 +256,9 @@ impl InitData {
 
         // insert prefix
         payload
-            .append_u32(self.wallet_id)
-            .convert()?
-            .append_u32(expire_at)
-            .convert()?
-            .append_u32(self.seqno)
-            .convert()?;
+            .append_u32(self.wallet_id)?
+            .append_u32(expire_at)?
+            .append_u32(self.seqno)?;
 
         // create internal message
         if let Some(gift) = gift {
@@ -289,12 +281,11 @@ impl InitData {
 
             // append it to the body
             payload
-                .append_u8(gift.flags)
-                .convert()?
-                .append_reference_cell(internal_message.serialize().convert()?);
+                .append_u8(gift.flags)?
+                .append_reference_cell(internal_message.serialize()?);
         }
 
-        let hash = payload.clone().into_cell().convert()?.repr_hash();
+        let hash = payload.clone().into_cell()?.repr_hash();
 
         Ok((hash, payload))
     }
@@ -306,9 +297,9 @@ impl TryFrom<&Cell> for InitData {
     fn try_from(data: &Cell) -> Result<Self, Self::Error> {
         let mut cs = SliceData::from(data);
         Ok(Self {
-            seqno: cs.get_next_u32().convert()?,
-            wallet_id: cs.get_next_u32().convert()?,
-            public_key: UInt256::from_be_bytes(&cs.get_next_bytes(32).convert()?),
+            seqno: cs.get_next_u32()?,
+            wallet_id: cs.get_next_u32()?,
+            public_key: UInt256::from_be_bytes(&cs.get_next_bytes(32)?),
         })
     }
 }

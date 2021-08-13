@@ -1,5 +1,3 @@
-use anyhow::Error;
-
 pub trait TrustMe<T>: Sized {
     #[track_caller]
     fn trust_me(self) -> T;

@@ -242,8 +242,7 @@ fn run_local(
             nekoton_contracts::abi::setcode_multisig_wallet()
         }
     }
-    .function(contract_method)
-    .map_err(|err| err.compat())?;
+    .function(contract_method)?;
 
     let input = Vec::with_capacity(function.inputs.len());
     function
