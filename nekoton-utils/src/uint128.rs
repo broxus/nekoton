@@ -54,7 +54,7 @@ impl UInt128 {
 }
 
 impl FromStr for UInt128 {
-    type Err = failure::Error;
+    type Err = anyhow::Error;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
         if value.len() != 32 {

@@ -2,8 +2,6 @@ use tokio::sync::Mutex;
 
 use anyhow::Result;
 
-use nekoton_utils::NoFailure;
-
 use super::Transport;
 
 #[derive(Default)]
@@ -58,7 +56,7 @@ impl ConfigCache {
 async fn fetch_config(transport: &dyn Transport) -> Result<(ton_executor::BlockchainConfig, u32)> {
     let block = transport.get_latest_key_block().await?;
 
-    let info = block.info.read_struct().convert()?;
+    let info = block.info.read_struct()?;
 
     let extra = block
         .read_extra()
@@ -90,8 +88,8 @@ fn compute_next_phase(
         return Ok(ConfigCachePhase::WaitingKeyBlock);
     }
 
-    let elector_params = config.raw_config().elector_params().convert()?;
-    let current_vset = config.raw_config().validator_set().convert()?;
+    let elector_params = config.raw_config().elector_params()?;
+    let current_vset = config.raw_config().validator_set()?;
 
     let elections_end = current_vset.utime_until() - elector_params.elections_end_before;
     if now < elections_end {

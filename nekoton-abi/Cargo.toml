@@ -15,7 +15,7 @@ chrono = "0.4.19"
 ed25519-dalek = "1.0"
 hex = "0.4"
 log = "0.4"
-num-bigint = { version = "0.2", features = ["serde"] }
+num-bigint = { version = "0.3", features = ["serde"] }
 num-traits = "0.2.14"
 serde = { version = "1.0", features = ["derive"] }
 sha2 = "0.9"

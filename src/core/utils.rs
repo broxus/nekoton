@@ -346,7 +346,7 @@ impl PendingTransactionsExt for Vec<PendingTransaction> {
             .unwrap_or_default();
 
         let pending_transaction = PendingTransaction {
-            message_hash: message.serialize().convert()?.repr_hash(),
+            message_hash: message.serialize()?.repr_hash(),
             src,
             body_hash,
             expire_at,
@@ -373,9 +373,7 @@ pub fn make_labs_unsigned_message(
     let time = chrono::Utc::now().timestamp_millis() as u64;
     let (expire_at, header) = default_headers(time, expiration, public_key);
 
-    let (payload, hash) = function
-        .create_unsigned_call(&header, &input, false, true)
-        .convert()?;
+    let (payload, hash) = function.create_unsigned_call(&header, &input, false, true)?;
 
     Ok(Box::new(LabsUnsignedMessage {
         function,
@@ -428,7 +426,7 @@ impl UnsignedMessage for LabsUnsignedMessage {
 
     fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
         let payload = self.payload.clone();
-        let payload = ton_abi::Function::fill_sign(2, Some(signature), None, payload).convert()?;
+        let payload = ton_abi::Function::fill_sign(2, Some(signature), None, payload)?;
 
         let mut message = self.message.clone();
         message.set_body(payload.into());

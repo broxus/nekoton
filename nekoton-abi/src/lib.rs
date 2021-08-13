@@ -53,7 +53,6 @@ pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
         Vec::new(),
         2,
     )
-    .convert()
     .map(SliceData::from)
 }
 
@@ -88,7 +87,6 @@ pub fn pack_into_cell(tokens: &[ton_abi::Token]) -> Result<ton_types::Cell> {
     let cells = Vec::new();
     ton_abi::TokenValue::pack_values_into_chain(tokens, cells, TON_ABI_VERSION)
         .and_then(|x| x.into_cell())
-        .convert()
 }
 
 pub fn unpack_from_cell(
@@ -101,7 +99,7 @@ pub fn unpack_from_cell(
     for param in params {
         let last = Some(param) == params.last();
         let (token_value, new_cursor) =
-            TokenValue::read_from(&param.kind, cursor, last, TON_ABI_VERSION).convert()?;
+            TokenValue::read_from(&param.kind, cursor, last, TON_ABI_VERSION)?;
 
         cursor = new_cursor;
         tokens.push(Token {
@@ -151,14 +149,11 @@ pub fn code_to_tvc(code: ton_types::Cell) -> Result<ton_block::StateInit> {
     let value = ton_types::BuilderData::with_raw(pubkey_vec, pubkey_len).unwrap_or_default();
 
     let mut init_data = ton_types::HashmapE::with_bit_len(ton_abi::Contract::DATA_MAP_KEYLEN);
-    init_data
-        .set(0u64.write_to_new_cell().unwrap().into(), &value.into())
-        .convert()?;
+    init_data.set(0u64.write_to_new_cell().unwrap().into(), &value.into())?;
 
     let data = init_data
         .write_to_new_cell()
-        .and_then(|data| data.into_cell())
-        .convert()?;
+        .and_then(|data| data.into_cell())?;
 
     Ok(ton_block::StateInit {
         code: Some(code),
@@ -244,8 +239,7 @@ impl<'a> FunctionAbi<'a> {
 
         msg.set_body(
             self.fun
-                .encode_input(&HashMap::default(), input, false, None)
-                .convert()?
+                .encode_input(&HashMap::default(), input, false, None)?
                 .into(),
         );
 
@@ -288,11 +282,8 @@ pub fn process_out_messages(
 
         let body = msg.body().ok_or(AbiError::InvalidOutputMessage)?;
 
-        if abi_function
-            .is_my_output_message(body.clone(), false)
-            .convert()?
-        {
-            let tokens = abi_function.decode_output(body, false).convert()?;
+        if abi_function.is_my_output_message(body.clone(), false)? {
+            let tokens = abi_function.decode_output(body, false)?;
 
             output = Some(tokens);
             break;
@@ -318,7 +309,7 @@ pub fn process_raw_outputs(
             continue;
         }
 
-        output = Some(abi_function.decode_output(body.clone(), false).convert()?);
+        output = Some(abi_function.decode_output(body.clone(), false)?);
         break;
     }
 
@@ -333,18 +324,15 @@ fn parse_transaction_messages(
     transaction: &ton_block::Transaction,
 ) -> Result<Vec<ton_block::Message>> {
     let mut messages = Vec::new();
-    transaction
-        .out_msgs
-        .iterate_slices(|slice| {
-            if let Ok(message) = slice
-                .reference(0)
-                .and_then(ton_block::Message::construct_from_cell)
-            {
-                messages.push(message);
-            }
-            Ok(true)
-        })
-        .convert()?;
+    transaction.out_msgs.iterate_slices(|slice| {
+        if let Ok(message) = slice
+            .reference(0)
+            .and_then(ton_block::Message::construct_from_cell)
+        {
+            messages.push(message);
+        }
+        Ok(true)
+    })?;
     Ok(messages)
 }
 
@@ -434,17 +422,15 @@ impl Executor {
     pub fn run(&mut self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
         let mut executor = OrdinaryTransactionExecutor::new(self.config.clone());
         executor.set_signature_check_disabled(self.disable_signature_check);
-        executor
-            .execute_for_account(
-                Some(message),
-                &mut self.account,
-                Default::default(),
-                self.block_utime,
-                self.block_lt,
-                self.last_transaction_lt.clone(),
-                false,
-            )
-            .convert()
+        executor.execute_for_account(
+            Some(message),
+            &mut self.account,
+            Default::default(),
+            self.block_utime,
+            self.block_lt,
+            self.last_transaction_lt.clone(),
+            false,
+        )
     }
 }
 

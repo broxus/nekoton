@@ -125,8 +125,7 @@ impl TokenWallet {
         .build();
 
         let body = function
-            .encode_input(&Default::default(), &input, true, None)
-            .convert()?
+            .encode_input(&Default::default(), &input, true, None)?
             .into();
 
         Ok(InternalMessage {
@@ -172,8 +171,7 @@ impl TokenWallet {
         .build();
 
         let body = function
-            .encode_input(&Default::default(), &input, true, None)
-            .convert()?
+            .encode_input(&Default::default(), &input, true, None)?
             .into();
 
         Ok(InternalMessage {
@@ -217,8 +215,7 @@ impl TokenWallet {
             .build();
 
         let body = function
-            .encode_input(&Default::default(), &input, true, None)
-            .convert()?
+            .encode_input(&Default::default(), &input, true, None)?
             .into();
 
         Ok(InternalMessage {
@@ -726,7 +723,7 @@ impl<'a> RootMetaContractState<'a> {
             .run_local(&function, &[0u16.token_value().named("key")])?
             .unpack_first()?;
 
-        let proxy_address = MsgAddressInt::construct_from_cell(value).convert()?;
+        let proxy_address = MsgAddressInt::construct_from_cell(value)?;
 
         Ok(RootMetaDetails { proxy_address })
     }

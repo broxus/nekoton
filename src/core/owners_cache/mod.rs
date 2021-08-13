@@ -9,7 +9,7 @@ use serde::Deserialize;
 use tokio::sync::{RwLock, Semaphore};
 use ton_block::MsgAddressInt;
 
-use nekoton_utils::{NoFailure, TrustMe};
+use nekoton_utils::TrustMe;
 
 use super::models::TokenWalletVersion;
 use crate::core::token_wallet::{RootTokenContractState, TokenWalletContractState};
@@ -50,8 +50,8 @@ impl OwnersCache {
         }
         .into_iter()
         .map(|OwnersMapItem(token_wallet, owner_wallet)| {
-            let token_wallet = MsgAddressInt::from_str(&token_wallet).convert()?;
-            let owner_wallet = MsgAddressInt::from_str(&owner_wallet).convert()?;
+            let token_wallet = MsgAddressInt::from_str(&token_wallet)?;
+            let owner_wallet = MsgAddressInt::from_str(&owner_wallet)?;
             Result::<_, anyhow::Error>::Ok((token_wallet, owner_wallet))
         })
         .collect::<Result<HashMap<_, _>, _>>()?;
