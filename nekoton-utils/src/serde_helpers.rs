@@ -198,11 +198,14 @@ pub mod serde_vec_address {
         D: serde::Deserializer<'de>,
     {
         struct VecVisitor;
+
         impl<'de> Visitor<'de> for VecVisitor {
             type Value = Vec<MsgAddressInt>;
+
             fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 formatter.write_str("vector of addresses")
             }
+
             fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
             where
                 V: SeqAccess<'de>,
