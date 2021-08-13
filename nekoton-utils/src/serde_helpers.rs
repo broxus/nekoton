@@ -179,6 +179,48 @@ pub mod serde_optional_address {
     }
 }
 
+pub mod serde_vec_address {
+    use super::*;
+
+    pub fn serialize<S>(data: &[MsgAddressInt], serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(data.len()))?;
+        for address in data {
+            seq.serialize_element(&address.to_string())?;
+        }
+        seq.end()
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<MsgAddressInt>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct VecVisitor;
+        impl<'de> Visitor<'de> for VecVisitor {
+            type Value = Vec<MsgAddressInt>;
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("vector of addresses")
+            }
+            fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                let mut vec = Vec::new();
+                while let Some(elem) = visitor.next_element::<String>()? {
+                    let item = MsgAddressInt::from_str(&elem)
+                        .map_err(|_| V::Error::custom("Invalid address"))?;
+                    vec.push(item);
+                }
+                Ok(vec)
+            }
+        }
+
+        deserializer.deserialize_seq(VecVisitor)
+    }
+}
+
 pub mod serde_bytes {
     use super::*;
 
