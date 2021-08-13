@@ -7,16 +7,17 @@ use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 
 use nekoton_utils::*;
 
-use super::{TonWalletDetails, TransferAction, DEFAULT_WORKCHAIN};
+use super::{TonWalletDetails, TransferAction};
 use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
 
 pub fn prepare_deploy(
     public_key: &PublicKey,
+    workchain: i8,
     expiration: Expiration,
 ) -> Result<Box<dyn UnsignedMessage>> {
     let init_data = InitData::from_key(public_key).with_wallet_id(WALLET_ID);
-    let dst = compute_contract_address(public_key, DEFAULT_WORKCHAIN);
+    let dst = compute_contract_address(public_key, workchain);
     let mut message =
         ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
             dst,
