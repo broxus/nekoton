@@ -39,25 +39,23 @@ struct ParticipantInfo {
 
 fn stakes_unpacker(value: &TokenValue) -> UnpackerResult<BTreeMap<u64, u64>> {
     match value {
-        TokenValue::Map(map_key_type, values) => match map_key_type {
-            ParamType::Map(_, _) => {
-                let mut map = BTreeMap::<u64, u64>::new();
-                for (key, value) in values {
-                    let key = key.parse::<u64>().map_err(|_| UnpackerError::InvalidAbi)?;
-                    let value = match value {
-                        TokenValue::Uint(Uint {
-                            number: value,
-                            size: 64,
-                        }) => num_traits::ToPrimitive::to_u64(value)
-                            .ok_or(UnpackerError::InvalidAbi)?,
-                        _ => return Err(UnpackerError::InvalidAbi),
-                    };
-                    map.insert(key, value);
-                }
-                Ok(map)
+        TokenValue::Map(ParamType::Uint(64), values) => {
+            let mut map = BTreeMap::<u64, u64>::new();
+            for (key, value) in values {
+                let key = key.parse::<u64>().map_err(|_| UnpackerError::InvalidAbi)?;
+                let value = match value {
+                    TokenValue::Uint(Uint {
+                        number: value,
+                        size: 64,
+                    }) => {
+                        num_traits::ToPrimitive::to_u64(value).ok_or(UnpackerError::InvalidAbi)?
+                    }
+                    _ => return Err(UnpackerError::InvalidAbi),
+                };
+                map.insert(key, value);
             }
-            _ => Err(UnpackerError::InvalidAbi),
-        },
+            Ok(map)
+        }
         _ => Err(UnpackerError::InvalidAbi),
     }
 }
@@ -71,13 +69,7 @@ fn test() -> ParticipantInfo {
     let mut stakes_bmap = BTreeMap::<String, TokenValue>::new();
     stakes_bmap.insert("12".to_string(), TokenValue::Uint(Uint::new(50, 64)));
 
-    let stakes = Token::new(
-        "stakes",
-        TokenValue::Map(
-            ParamType::Map(Box::new(ParamType::Uint(64)), Box::new(ParamType::Uint(64))),
-            stakes_bmap,
-        ),
-    );
+    let stakes = Token::new("stakes", TokenValue::Map(ParamType::Uint(64), stakes_bmap));
 
     let vestings_remaining_amount =
         Token::new("remainingAmount", TokenValue::Uint(Uint::new(23, 32)));
@@ -113,10 +105,7 @@ fn test() -> ParticipantInfo {
 
     let vestings = Token::new(
         "vestings",
-        TokenValue::Map(
-            ParamType::Map(Box::new(ParamType::Uint(64)), Box::new(ParamType::Unknown)),
-            vestings_bmap,
-        ),
+        TokenValue::Map(ParamType::Uint(64), vestings_bmap),
     );
 
     let tokens = vec![total, withdraw_value, reinvest, reward, stakes, vestings];
