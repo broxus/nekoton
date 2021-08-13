@@ -9,7 +9,7 @@ use ton_types::{SliceData, UInt256};
 use nekoton_abi::*;
 use nekoton_utils::*;
 
-use super::{TonWalletDetails, TransferAction, DEFAULT_WORKCHAIN};
+use super::{TonWalletDetails, TransferAction};
 use crate::core::models::{Expiration, MultisigPendingTransaction};
 use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
@@ -17,6 +17,7 @@ use crate::crypto::UnsignedMessage;
 pub fn prepare_deploy(
     public_key: &PublicKey,
     multisig_type: MultisigType,
+    workchain: i8,
     expiration: Expiration,
     owners: &[PublicKey],
     req_confirms: u8,
@@ -26,7 +27,7 @@ pub fn prepare_deploy(
 
     let dst = MsgAddressInt::AddrStd(ton_block::MsgAddrStd {
         anycast: None,
-        workchain_id: DEFAULT_WORKCHAIN,
+        workchain_id: workchain,
         address: hash.into(),
     });
 

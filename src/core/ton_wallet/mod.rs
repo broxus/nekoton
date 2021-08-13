@@ -40,11 +40,12 @@ pub struct TonWallet {
 impl TonWallet {
     pub async fn subscribe(
         transport: Arc<dyn Transport>,
+        workchain: i8,
         public_key: PublicKey,
         wallet_type: WalletType,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
     ) -> Result<Self> {
-        let address = compute_address(&public_key, wallet_type, DEFAULT_WORKCHAIN);
+        let address = compute_address(&public_key, wallet_type, workchain);
 
         let mut wallet_data = WalletData::default();
 
@@ -123,6 +124,10 @@ impl TonWallet {
         })
     }
 
+    pub fn workchain(&self) -> i8 {
+        self.contract_subscription.address().workchain_id() as i8
+    }
+
     pub fn address(&self) -> &MsgAddressInt {
         self.contract_subscription.address()
     }
@@ -161,10 +166,13 @@ impl TonWallet {
 
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
-            WalletType::WalletV3 => wallet_v3::prepare_deploy(&self.public_key, expiration),
+            WalletType::WalletV3 => {
+                wallet_v3::prepare_deploy(&self.public_key, self.workchain(), expiration)
+            }
             WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
                 &self.public_key,
                 multisig_type,
+                self.workchain(),
                 expiration,
                 &[self.public_key],
                 1,
@@ -182,6 +190,7 @@ impl TonWallet {
             WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
                 &self.public_key,
                 multisig_type,
+                self.workchain(),
                 expiration,
                 custodians,
                 req_confirms,
