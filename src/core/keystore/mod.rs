@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use ed25519_dalek::PublicKey;
 use futures::future;
 use serde::{Serialize, Serializer};
@@ -162,6 +162,11 @@ impl KeyStore {
     }
 
     async fn save(&self, signers: &SignersMap) -> Result<()> {
+        let data = self.export(signers).await?;
+        self.storage.set(STORAGE_KEYSTORE, &data).await
+    }
+
+    pub async fn export(&self, signers: &SignersMap) -> Result<String> {
         use serde::ser::SerializeSeq;
 
         struct StoredData<'a>(&'a SignersMap);
@@ -181,9 +186,29 @@ impl KeyStore {
                 seq.end()
             }
         }
+        Ok(serde_json::to_string(&StoredData(signers))?)
+    }
 
-        let data = serde_json::to_string(&StoredData(signers))?;
-        self.storage.set(STORAGE_KEYSTORE, &data).await
+    pub async fn export_qr(&self) -> Result<String> {
+        use flate2::write::GzEncoder;
+        use flate2::Compression;
+
+        let data = self
+            .storage
+            .get(STORAGE_KEYSTORE)
+            .await?
+            .context("State not saved yet")?;
+
+        let mut data = std::io::Cursor::new(data);
+        let mut output = vec![];
+        let mut writer = GzEncoder::new(&mut output, Compression::best());
+        std::io::copy(&mut data, &mut writer)?;
+        drop(writer);
+
+        let qr =
+            qrcode::QrCode::with_error_correction_level(output.as_slice(), qrcode::EcLevel::L)?;
+        let svg = qr.render::<qrcode::render::svg::Color<'_>>().build();
+        Ok(svg)
     }
 }
 
@@ -285,9 +310,7 @@ impl KeyStoreBuilder {
         Ok(self)
     }
 
-    pub async fn load(mut self) -> Result<KeyStore> {
-        let data = self.load_stored_data().await?;
-
+    async fn load_inner(mut self, data: Vec<(String, String)>) -> Result<KeyStore> {
         let mut entries = HashMap::new();
 
         for (name, data) in data {
@@ -311,6 +334,11 @@ impl KeyStoreBuilder {
             storage: self.storage,
             password_cache: PasswordCache::new()?,
         })
+    }
+
+    pub async fn load(self) -> Result<KeyStore> {
+        let data = self.load_stored_data().await?;
+        self.load_inner(data).await
     }
 
     pub async fn load_unchecked(mut self) -> KeyStore {
@@ -339,6 +367,19 @@ impl KeyStoreBuilder {
             storage: self.storage,
             password_cache: PasswordCache::new().trust_me(),
         }
+    }
+
+    /// # Arguments
+    ///   - `bytes`:  Data decoded from qr code
+    pub async fn load_qr_data(self, bytes: &[u8]) -> Result<KeyStore> {
+        use flate2::read::GzDecoder;
+
+        let reader = std::io::Cursor::new(bytes);
+        let mut reader = GzDecoder::new(reader);
+        let mut output = vec![];
+        std::io::copy(&mut reader, &mut output)?;
+        let data = serde_json::from_slice(&output)?;
+        self.load_inner(data).await
     }
 
     async fn load_stored_data(&self) -> Result<Vec<(String, String)>> {

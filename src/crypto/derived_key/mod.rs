@@ -737,7 +737,9 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
+    use crate::core::keystore::KeyStore;
     use crate::crypto::PasswordCacheBehavior;
+    use std::sync::Arc;
 
     const TEST_PHRASE: &str =
         "pioneer fever hazard scan install wise reform corn bubble leisure amazing note";
@@ -951,9 +953,7 @@ mod tests {
         assert_eq!(loaded, key);
     }
 
-    #[tokio::test]
-    async fn load_old() {
-        let json = r#"{
+    const OLD_JSON: &str = r#"{
     "master_keys": {
         "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89": {
             "public_key": "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89",
@@ -977,7 +977,35 @@ mod tests {
         }
     }
 }"#;
+
+    #[tokio::test]
+    async fn load_old() {
         let mut loaded = DerivedKeySigner::new();
-        loaded.load_state(json).unwrap();
+        loaded.load_state(OLD_JSON).unwrap();
+    }
+
+    #[tokio::test]
+    async fn export_qr() {
+        let mut loaded = DerivedKeySigner::new();
+        loaded.load_state(OLD_JSON).unwrap();
+        let storage = crate::external::test_impl::StorageMap::new();
+        let keystore = KeyStore::builder(Arc::new(storage))
+            .with_signer::<DerivedKeySigner>("test", loaded)
+            .unwrap()
+            .load()
+            .await
+            .unwrap();
+        let input = DerivedKeyCreateInput::Import {
+            key_name: Some("史萊克的模因.".into()),
+            password: Password::Explicit {
+                password: SecUtf8::from("supasecret"),
+                cache_behavior: Default::default(),
+            },
+            phrase: SecUtf8::from(TEST_PHRASE),
+        };
+
+        keystore.add_key::<DerivedKeySigner>(input).await.unwrap();
+        let qr = keystore.export_qr().await.unwrap();
+        println!("{}", qr);
     }
 }

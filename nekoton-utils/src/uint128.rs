@@ -57,12 +57,13 @@ impl FromStr for UInt128 {
     type Err = anyhow::Error;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
-        if value.len() != 32 {
-            ton_types::fail!("invalid account ID string length (32 expected)")
-        } else {
-            let bytes = hex::decode(value)?;
-            Ok(UInt128::from(bytes))
-        }
+        anyhow::ensure!(
+            value.len() == 32,
+            "invalid account ID string length (32 expected), got {}",
+            value.len()
+        );
+        let bytes = hex::decode(value)?;
+        Ok(UInt128::from(bytes))
     }
 }
 

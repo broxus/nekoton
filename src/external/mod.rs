@@ -52,3 +52,43 @@ pub trait LedgerConnection: Send + Sync {
         message: &[u8],
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
 }
+
+#[cfg(test)]
+pub mod test_impl {
+    use super::*;
+    use parking_lot::Mutex;
+    use std::collections::HashMap;
+
+    pub struct StorageMap(Mutex<HashMap<String, String>>);
+
+    impl StorageMap {
+        pub fn new() -> Self {
+            StorageMap(Default::default())
+        }
+    }
+
+    #[async_trait]
+    impl Storage for StorageMap {
+        async fn get(&self, key: &str) -> Result<Option<String>> {
+            Ok(self.0.lock().get(key).map(|x| x.clone()))
+        }
+
+        async fn set(&self, key: &str, value: &str) -> Result<()> {
+            let _ = self.0.lock().insert(key.to_string(), value.to_string());
+            Ok(())
+        }
+
+        fn set_unchecked(&self, key: &str, value: &str) {
+            let _ = self.0.lock().insert(key.to_string(), value.to_string());
+        }
+
+        async fn remove(&self, key: &str) -> Result<()> {
+            let _ = self.0.lock().remove(key);
+            Ok(())
+        }
+
+        fn remove_unchecked(&self, key: &str) {
+            let _ = self.0.lock().remove(key);
+        }
+    }
+}
