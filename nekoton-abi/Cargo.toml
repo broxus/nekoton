@@ -19,6 +19,7 @@ num-bigint = { version = "0.3", features = ["serde"] }
 num-traits = "0.2.14"
 serde = { version = "1.0", features = ["derive"] }
 sha2 = "0.9"
+smallvec = { version = "1.6.1", features = ["const_generics", "union", "write"] }
 thiserror = "1.0"
 
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }

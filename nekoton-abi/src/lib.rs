@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use chrono::Utc;
+use smallvec::smallvec;
 use ton_abi::{Function, Param, Token, TokenValue};
 use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt, Serializable};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
@@ -144,7 +145,7 @@ pub enum ExtractionError {
 }
 
 pub fn code_to_tvc(code: ton_types::Cell) -> Result<ton_block::StateInit> {
-    let pubkey_vec = vec![0; 32];
+    let pubkey_vec = smallvec![0; 32];
     let pubkey_len = pubkey_vec.len() * 8;
     let value = ton_types::BuilderData::with_raw(pubkey_vec, pubkey_len).unwrap_or_default();
 
