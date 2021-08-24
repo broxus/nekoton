@@ -134,6 +134,73 @@ pub fn extract_public_key(
     Ok(ed25519_dalek::PublicKey::from_bytes(&data).trust_me())
 }
 
+pub fn unpack_headers<T>(body: &ton_types::SliceData) -> Result<(T::Output, ton_types::SliceData)>
+where
+    T: UnpackHeader,
+{
+    let mut body = body.clone();
+    let output = T::unpack_header(&mut body)?;
+    Ok((output, body))
+}
+
+macro_rules! impl_unpack_header {
+    ($($header:ident),+) => {
+        impl UnpackHeader for ($($header),*) {
+            type Output = ($(<$header as UnpackHeader>::Output),+);
+
+            fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output> {
+                Ok(($($header::unpack_header(body)?),+))
+            }
+        }
+    }
+}
+
+impl_unpack_header!(PubkeyHeader, TimeHeader, ExpireHeader);
+impl_unpack_header!(TimeHeader, ExpireHeader);
+
+pub trait UnpackHeader {
+    type Output;
+    fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output>;
+}
+
+pub struct PubkeyHeader;
+
+impl UnpackHeader for PubkeyHeader {
+    type Output = Option<UInt256>;
+
+    fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output> {
+        if body.get_next_bit()? {
+            body.move_by(ed25519_dalek::SIGNATURE_LENGTH * 8)?;
+        }
+        if body.get_next_bit()? {
+            let data = body.get_next_bits(256)?;
+            Ok(Some(UInt256::from_be_bytes(&data)))
+        } else {
+            Ok(None)
+        }
+    }
+}
+
+pub struct TimeHeader;
+
+impl UnpackHeader for TimeHeader {
+    type Output = u64;
+
+    fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output> {
+        body.get_next_u64()
+    }
+}
+
+pub struct ExpireHeader;
+
+impl UnpackHeader for ExpireHeader {
+    type Output = u32;
+
+    fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output> {
+        body.get_next_u32()
+    }
+}
+
 #[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum ExtractionError {
     #[error("Account is not active")]
@@ -321,7 +388,7 @@ pub fn process_raw_outputs(
     }
 }
 
-fn parse_transaction_messages(
+pub fn parse_transaction_messages(
     transaction: &ton_block::Transaction,
 ) -> Result<Vec<ton_block::Message>> {
     let mut messages = Vec::new();
@@ -449,6 +516,8 @@ impl StandaloneToken for TokenValue {}
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use ton_abi::{Param, ParamType, Uint};
     use ton_block::{Deserializable, Message, Transaction};
     use ton_types::serialize_toc;
@@ -585,5 +654,27 @@ mod tests {
             &[Token::new("first", TokenValue::Uint(Uint::new(12345, 256))),],
             got.as_slice()
         );
+    }
+
+    #[test]
+    fn unpack_header() {
+        let body = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(base64::decode("te6ccgEBAwEArAAB4by5SH0Glx7Jnb0imtClvhC4I0DPaT+/su49hM5DQH+xHrEtD9U2dQOJpD2J598bWtYTC4m1Ylxh6MSg9//WKgdEWH2fKWA3SuZNZZ7BBCeDpiGAfwIlOFF981WU06BclcAAAF7d/kbVGEk26dM7mRsgAQFlgBOzHFkFNmE1fX9Dpui0xVFiNtBGdDa6IIntwTxwGs9y4AAAAAAAAAAAAAAAB3NZQAA4AgAA").unwrap())).unwrap().into();
+
+        let ((pubkey, time, expire), remaining_body) =
+            unpack_headers::<(PubkeyHeader, TimeHeader, ExpireHeader)>(&body).unwrap();
+
+        assert_eq!(
+            pubkey,
+            Some(
+                UInt256::from_str(
+                    "1161f67ca580dd2b9935967b04109e0e988601fc0894e145f7cd56534e817257"
+                )
+                .unwrap()
+            )
+        );
+        assert_eq!(time, 1629805419348);
+        assert_eq!(expire, 1629805479);
+
+        assert_eq!(read_function_id(&remaining_body).unwrap(), 1290691692); // sendTransaction input id
     }
 }
