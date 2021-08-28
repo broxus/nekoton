@@ -1,15 +1,17 @@
+use std::iter::FromIterator;
+
+use ton_abi::contract::{AbiVersion, ABI_VBERSION_2_0};
 use ton_abi::{Function, Param, ParamType};
 
 use super::{BuildTokenValue, TokenValueExt};
-use std::iter::FromIterator;
 
 const ANSWER_ID: &str = "_answer_id";
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct FunctionBuilder {
     /// Contract function specification.
     /// ABI version
-    abi_version: u8,
+    abi_version: AbiVersion,
     /// Function name.
     name: String,
     /// Function header parameters.
@@ -29,9 +31,14 @@ pub struct FunctionBuilder {
 impl FunctionBuilder {
     pub fn new(function_name: &str) -> Self {
         Self {
+            abi_version: ABI_VBERSION_2_0,
             name: function_name.to_string(),
-            abi_version: 2,
-            ..Default::default()
+            header: Vec::new(),
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+            input_id: 0,
+            output_id: 0,
+            responsible: false,
         }
     }
 
@@ -65,6 +72,11 @@ impl FunctionBuilder {
                 .insert(0, Param::new(ANSWER_ID, ParamType::Uint(32)));
         }
         self.responsible = true;
+    }
+
+    pub fn abi_version(mut self, abi_version: AbiVersion) -> Self {
+        self.abi_version = abi_version;
+        self
     }
 
     pub fn in_arg(mut self, name: &str, arg_type: ParamType) -> Self {

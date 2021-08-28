@@ -24,8 +24,9 @@ use crate::crypto::UnsignedMessage;
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 
-mod multisig;
-mod wallet_v3;
+pub mod highload_wallet_v2;
+pub mod multisig;
+pub mod wallet_v3;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 

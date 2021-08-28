@@ -7,7 +7,7 @@ use ton_block::{MsgAddress, MsgAddressInt};
 
 use nekoton_abi::*;
 
-#[derive(UnpackAbi, Debug, PartialEq)]
+#[derive(UnpackAbi, KnownParamType, Debug, PartialEq)]
 struct VestingsComponents {
     #[abi(uint32, name = "remainingAmount")]
     remaining_amount: u32,
@@ -39,7 +39,7 @@ struct ParticipantInfo {
 
 fn stakes_unpacker(value: &TokenValue) -> UnpackerResult<BTreeMap<u64, u64>> {
     match value {
-        TokenValue::Map(ParamType::Uint(64), values) => {
+        TokenValue::Map(ParamType::Uint(64), _, values) => {
             let mut map = BTreeMap::<u64, u64>::new();
             for (key, value) in values {
                 let key = key.parse::<u64>().map_err(|_| UnpackerError::InvalidAbi)?;
@@ -69,7 +69,14 @@ fn test() -> ParticipantInfo {
     let mut stakes_bmap = BTreeMap::<String, TokenValue>::new();
     stakes_bmap.insert("12".to_string(), TokenValue::Uint(Uint::new(50, 64)));
 
-    let stakes = Token::new("stakes", TokenValue::Map(ParamType::Uint(64), stakes_bmap));
+    let stakes = Token::new(
+        "stakes",
+        TokenValue::Map(
+            ParamType::Uint(64),
+            VestingsComponents::param_type(),
+            stakes_bmap,
+        ),
+    );
 
     let vestings_remaining_amount =
         Token::new("remainingAmount", TokenValue::Uint(Uint::new(23, 32)));
@@ -105,7 +112,11 @@ fn test() -> ParticipantInfo {
 
     let vestings = Token::new(
         "vestings",
-        TokenValue::Map(ParamType::Uint(64), vestings_bmap),
+        TokenValue::Map(
+            ParamType::Uint(64),
+            VestingsComponents::param_type(),
+            vestings_bmap,
+        ),
     );
 
     let tokens = vec![total, withdraw_value, reinvest, reward, stakes, vestings];
@@ -123,9 +134,9 @@ fn main() {
     assert_eq!(data.withdraw_value, 30);
     assert_eq!(data.reinvest, true);
     assert_eq!(data.reward, 12);
-    assert_eq!(*data.stakes.get(&(12 as u64)).unwrap(), 50);
+    assert_eq!(*data.stakes.get(&(12_u64)).unwrap(), 50);
     assert_eq!(
-        *data.vestings.get(&(1 as u64)).unwrap(),
+        *data.vestings.get(&(1_u64)).unwrap(),
         VestingsComponents {
             remaining_amount: 23,
             last_withdrawal_time: 33,

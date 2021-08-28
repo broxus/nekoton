@@ -7,7 +7,7 @@ use ton_types::UInt256;
 
 use nekoton_utils::UInt128;
 
-use super::{BuildTokenValue, UnpackAbi, UnpackerError, UnpackerResult};
+use super::{BuildTokenValue, KnownParamType, UnpackAbi, UnpackerError, UnpackerResult};
 
 pub struct BigUint128(pub BigUint);
 
@@ -17,6 +17,12 @@ impl BuildTokenValue for BigUint128 {
             number: self.0,
             size: 128,
         })
+    }
+}
+
+impl KnownParamType for BigUint128 {
+    fn param_type() -> ParamType {
+        ParamType::Uint(128)
     }
 }
 
@@ -31,12 +37,24 @@ impl BuildTokenValue for BigUint256 {
     }
 }
 
+impl KnownParamType for BigUint256 {
+    fn param_type() -> ParamType {
+        ParamType::Uint(256)
+    }
+}
+
 impl BuildTokenValue for UInt256 {
     fn token_value(self) -> TokenValue {
         TokenValue::Uint(Uint {
             number: BigUint::from_bytes_be(self.as_slice()),
             size: 256,
         })
+    }
+}
+
+impl KnownParamType for UInt256 {
+    fn param_type() -> ParamType {
+        ParamType::Uint(256)
     }
 }
 
@@ -62,6 +80,10 @@ pub mod uint256_bytes {
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Uint(256)
+    }
 }
 
 pub mod uint256_number {
@@ -77,20 +99,33 @@ pub mod uint256_number {
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Uint(256)
+    }
 }
 
 pub mod array_uint256_bytes {
     use super::*;
 
     pub fn pack(value: Vec<UInt256>) -> TokenValue {
-        TokenValue::Array(value.into_iter().map(uint256_bytes::pack).collect())
+        TokenValue::Array(
+            ton_abi::ParamType::Uint(256),
+            value.into_iter().map(uint256_bytes::pack).collect(),
+        )
     }
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<UInt256>> {
         match value {
-            TokenValue::Array(array) => array.iter().map(uint256_bytes::unpack).collect(),
+            TokenValue::Array(ton_abi::ParamType::Uint(256), array) => {
+                array.iter().map(uint256_bytes::unpack).collect()
+            }
             _ => Err(UnpackerError::InvalidAbi),
         }
+    }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Array(Box::new(ParamType::Uint(256)))
     }
 }
 
@@ -121,6 +156,10 @@ pub mod uint160_bytes {
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Uint(160)
+    }
 }
 
 pub mod uint128_bytes {
@@ -135,6 +174,10 @@ pub mod uint128_bytes {
             TokenValue::Uint(Uint { number, size: 128 }) => Ok(number.to_bytes_be().into()),
             _ => Err(UnpackerError::InvalidAbi),
         }
+    }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Uint(128)
     }
 }
 
@@ -153,6 +196,10 @@ pub mod uint128_number {
             TokenValue::Uint(ton_abi::Uint { number, size: 128 }) => Ok(number.clone()),
             _ => Err(UnpackerError::InvalidAbi),
         }
+    }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Uint(128)
     }
 }
 
@@ -176,6 +223,10 @@ pub mod address_only_hash {
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Address
+    }
 }
 
 pub mod map_integer_tuple {
@@ -187,7 +238,7 @@ pub mod map_integer_tuple {
         TokenValue: UnpackAbi<V>,
     {
         match value {
-            TokenValue::Map(ParamType::Uint(64), values) => {
+            TokenValue::Map(ParamType::Uint(64), _, values) => {
                 let mut map = BTreeMap::<K, V>::new();
                 for (key, value) in values {
                     let key = key.parse::<K>().map_err(|_| UnpackerError::InvalidAbi)?;

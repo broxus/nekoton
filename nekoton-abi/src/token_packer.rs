@@ -3,7 +3,7 @@ use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
 use ton_types::{BuilderData, Cell};
 
-use super::StandaloneToken;
+use super::{KnownParamType, StandaloneToken};
 
 pub trait PackAbiPlain {
     fn pack(self) -> Vec<Token>;
@@ -118,10 +118,13 @@ impl BuildTokenValue for BuilderData {
 
 impl<T> BuildTokenValue for Vec<T>
 where
-    T: StandaloneToken + BuildTokenValue,
+    T: StandaloneToken + KnownParamType + BuildTokenValue,
 {
     fn token_value(self) -> TokenValue {
-        TokenValue::Array(self.into_iter().map(BuildTokenValue::token_value).collect())
+        TokenValue::Array(
+            T::param_type(),
+            self.into_iter().map(BuildTokenValue::token_value).collect(),
+        )
     }
 }
 
