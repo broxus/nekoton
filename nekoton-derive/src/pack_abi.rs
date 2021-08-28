@@ -122,8 +122,10 @@ fn serialize_struct(
     fields: &[Field],
     struct_type: StructType,
 ) -> proc_macro2::TokenStream {
+    let field_count = fields.len();
+
     let definition = quote! {
-        let mut tokens: Vec<::ton_abi::Token> = Vec::new();
+        let mut tokens: Vec<::ton_abi::Token> = Vec::with_capacity(#field_count);
     };
 
     let build_fields = fields.iter().map(|f| {
@@ -134,13 +136,21 @@ fn serialize_struct(
                 None => name.to_string(),
             };
 
+            let ty = &f.original.ty;
+
             if let Some(type_name) = f.attrs.type_name.as_ref() {
-                let handler = get_handler(type_name);
+                let param_type = type_name.get_param_type();
+                let handler = type_name.get_handler();
                 match f.attrs.is_array {
                     true => {
                         quote! {
-                            tokens.push(::ton_abi::Token::new(#field_name,
-                                ::ton_abi::TokenValue::Array(self.#name.into_iter().map(|value| #handler).collect())))
+                            tokens.push(::ton_abi::Token::new(
+                                #field_name,
+                                ::ton_abi::TokenValue::Array(
+                                    #param_type,
+                                    self.#name.into_iter().map(|value| #handler).collect()
+                                )
+                            ))
                         }
                     }
                     false => {
@@ -163,7 +173,10 @@ fn serialize_struct(
                     true => {
                         quote! {
                             tokens.push(::nekoton_abi::TokenValueExt::named(
-                                ::ton_abi::TokenValue::Array(self.#name.into_iter().map(::nekoton_abi::BuildTokenValue::token_value).collect()),
+                                ::ton_abi::TokenValue::Array(
+                                    <#ty as ::nekoton_abi::KnownParamTypeArray<_>>::item_param_type(),
+                                    self.#name.into_iter().map(::nekoton_abi::BuildTokenValue::token_value).collect()
+                                ),
                                 #field_name
                             ))
                         }
@@ -201,66 +214,47 @@ fn serialize_struct(
     }
 }
 
-fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
-    match type_name {
-        TypeName::Int8 => {
-            quote! {
+impl TypeName {
+    fn get_handler(&self) -> proc_macro2::TokenStream {
+        match self {
+            TypeName::Int8 => quote! {
                 ::ton_abi::TokenValue::Int(::ton_abi::Int { number: ::nekoton_abi::num_bigint::BigInt::from(value), size: 8 })
-            }
-        }
-        TypeName::Uint8 => {
-            quote! {
+            },
+            TypeName::Uint8 => quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 8 })
-            }
-        }
-        TypeName::Uint16 => {
-            quote! {
+            },
+            TypeName::Uint16 => quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 16 })
-            }
-        }
-        TypeName::Uint32 => {
-            quote! {
+            },
+            TypeName::Uint32 => quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 32 })
-            }
-        }
-        TypeName::Uint64 => {
-            quote! {
+            },
+            TypeName::Uint64 => quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 64 })
-            }
-        }
-        TypeName::Uint128 => {
-            quote! {
+            },
+            TypeName::Uint128 => quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 128 })
-            }
-        }
-        TypeName::Address => {
-            quote! {
+            },
+            TypeName::Address => quote! {
                 ::ton_abi::TokenValue::Address(match value {
                     ::ton_block::MsgAddressInt::AddrStd(addr) => ::ton_block::MsgAddress::AddrStd(addr),
                     ::ton_block::MsgAddressInt::AddrVar(addr) => ::ton_block::MsgAddress::AddrVar(addr),
                 })
-            }
-        }
-        TypeName::Cell => {
-            quote! {
+            },
+            TypeName::Cell => quote! {
                 ::ton_abi::TokenValue::Cell(value)
-            }
-        }
-        TypeName::Bool => {
-            quote! {
+            },
+            TypeName::Bool => quote! {
                 ::ton_abi::TokenValue::Bool(value)
-            }
-        }
-        TypeName::String => {
-            quote! {
+            },
+            // TODO: change for ABI 2.1
+            TypeName::String => quote! {
                 ::ton_abi::TokenValue::Bytes(value.as_bytes().into())
-            }
-        }
-        TypeName::Bytes => {
-            quote! {
+            },
+            TypeName::Bytes => quote! {
                 ::ton_abi::TokenValue::Bytes(value)
-            }
+            },
+            TypeName::None => unreachable!(),
         }
-        TypeName::None => unreachable!(),
     }
 }

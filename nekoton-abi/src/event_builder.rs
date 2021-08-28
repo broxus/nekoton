@@ -1,10 +1,11 @@
+use ton_abi::contract::{AbiVersion, ABI_VBERSION_2_0};
 use ton_abi::{Event, Param, ParamType};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct EventBuilder {
     /// Contract function specification.
     /// ABI version
-    abi_version: u8,
+    abi_version: AbiVersion,
     /// Event name.
     name: String,
     /// Function input.
@@ -17,9 +18,15 @@ impl EventBuilder {
     pub fn new(event_name: &str) -> Self {
         Self {
             name: event_name.to_string(),
-            abi_version: 2,
-            ..Default::default()
+            abi_version: ABI_VBERSION_2_0,
+            inputs: Vec::new(),
+            event_id: 0,
         }
+    }
+
+    pub fn abi_version(mut self, abi_version: AbiVersion) -> Self {
+        self.abi_version = abi_version;
+        self
     }
 
     pub fn in_arg(mut self, name: &str, arg_type: ParamType) -> Self {

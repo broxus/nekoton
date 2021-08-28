@@ -1,4 +1,5 @@
 use proc_macro2::{Group, Span, TokenStream, TokenTree};
+use quote::quote;
 use quote::ToTokens;
 use syn::Meta::*;
 use syn::NestedMeta::*;
@@ -47,6 +48,7 @@ pub struct Field {
     pub with: Option<syn::Expr>,
     pub pack_with: Option<syn::Expr>,
     pub unpack_with: Option<syn::Expr>,
+    pub param_type_with: Option<syn::Expr>,
     pub is_array: bool,
 }
 
@@ -57,6 +59,7 @@ impl Field {
         let mut with = Attr::none(cx, WITH);
         let mut pack_with = Attr::none(cx, PACK_WITH);
         let mut unpack_with = Attr::none(cx, UNPACK_WITH);
+        let mut param_type_with = Attr::none(cx, PARAM_TYPE_WITH);
         let mut is_array = BoolAttr::none(cx, ARRAY);
 
         for (from, meta_item) in input
@@ -97,6 +100,11 @@ impl Field {
                         unpack_with.set(&m.path, expr);
                     }
                 }
+                (AttrFrom::Abi, Meta(NameValue(m))) if m.path == PARAM_TYPE_WITH => {
+                    if let Ok(expr) = parse_lit_into_expr(cx, PARAM_TYPE_WITH, &m.lit) {
+                        param_type_with.set(&m.path, expr);
+                    }
+                }
                 (AttrFrom::Abi, token) => {
                     cx.error_spanned_by(token, "unexpected token");
                     return None;
@@ -108,25 +116,22 @@ impl Field {
         let with = with.get();
         let pack_with = pack_with.get();
         let unpack_with = unpack_with.get();
+        let param_type_with = param_type_with.get();
 
-        if !((type_name.is_none()
-            && with.is_none()
-            && pack_with.is_none()
-            && unpack_with.is_none())
-            || (type_name.is_some()
-                && with.is_none()
-                && pack_with.is_none()
-                && unpack_with.is_none())
-            || (type_name.is_none()
-                && with.is_some()
-                && pack_with.is_none()
-                && unpack_with.is_none())
-            || (type_name.is_none()
-                && with.is_none()
-                && (pack_with.is_some() || unpack_with.is_some())))
-        {
-            cx.error_spanned_by(input, "Only one of attributes ('type', 'with', 'pack_with/unpack_with') can be selected at time");
-        }
+        match (
+            &type_name,
+            &with,
+            &pack_with,
+            &unpack_with,
+            &param_type_with,
+        ) {
+            (Some(_), None, None, None, None)
+            | (None, Some(_), None, None, None)
+            | (None, None, ..) => {}
+            _ => {
+                cx.error_spanned_by(input, "Only one of attributes ('type', 'with', 'pack_with/unpack_with/param_type_with') can be selected at time");
+            }
+        };
 
         Some(Self {
             name: name.get(),
@@ -134,6 +139,7 @@ impl Field {
             with,
             pack_with,
             unpack_with,
+            param_type_with,
             is_array: is_array.get(),
         })
     }
@@ -370,6 +376,46 @@ impl TypeName {
             TypeName::Bytes
         } else {
             TypeName::None
+        }
+    }
+
+    pub fn get_param_type(&self) -> proc_macro2::TokenStream {
+        match self {
+            TypeName::Int8 => quote! {
+                ::ton_abi::ParamType::Int(8)
+            },
+            TypeName::Uint8 => quote! {
+                ::ton_abi::ParamType::Uint(8)
+            },
+            TypeName::Uint16 => quote! {
+                ::ton_abi::ParamType::Uint(16)
+            },
+            TypeName::Uint32 => quote! {
+                ::ton_abi::ParamType::Uint(32)
+            },
+            TypeName::Uint64 => quote! {
+                ::ton_abi::ParamType::Uint(64)
+            },
+            TypeName::Uint128 => quote! {
+                ::ton_abi::ParamType::Uint(128)
+            },
+            TypeName::Address => quote! {
+                ::ton_abi::ParamType::Address
+            },
+            TypeName::Cell => quote! {
+                ::ton_abi::ParamType::Cell
+            },
+            TypeName::Bool => quote! {
+                ::ton_abi::ParamType::Bool
+            },
+            // TODO: change for ABI 2.1
+            TypeName::String => quote! {
+                ::ton_abi::ParamType::Bytes
+            },
+            TypeName::Bytes => quote! {
+                ::ton_abi::ParamType::Bytes
+            },
+            TypeName::None => unreachable!(),
         }
     }
 }

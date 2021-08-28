@@ -270,7 +270,7 @@ pub fn get_custodians(
 
 fn parse_multisig_contract_custodians(tokens: Vec<ton_abi::Token>) -> Result<Vec<UInt256>> {
     let array = match tokens.into_unpacker().unpack_next() {
-        Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
+        Ok(ton_abi::TokenValue::Array(_, tokens)) => tokens,
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };
 
@@ -300,7 +300,7 @@ pub fn find_pending_transaction(
     )?;
 
     let array = match tokens.into_unpacker().unpack_next() {
-        Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
+        Ok(ton_abi::TokenValue::Array(_, tokens)) => tokens,
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };
 
@@ -343,7 +343,7 @@ fn parse_multisig_contract_pending_transactions(
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingTransaction>> {
     let array = match tokens.into_unpacker().unpack_next() {
-        Ok(ton_abi::TokenValue::Array(tokens)) => tokens,
+        Ok(ton_abi::TokenValue::Array(_, tokens)) => tokens,
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };
 

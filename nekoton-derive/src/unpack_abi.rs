@@ -211,8 +211,8 @@ fn try_unpack(
                 quote! {
                     let array = match token {
                         Some(token) => match token.value {
-                            ::ton_abi::TokenValue::Array(tokens) | ::ton_abi::TokenValue::FixedArray(tokens) => {
-                                let mut vec = Vec::new();
+                            ::ton_abi::TokenValue::Array(_, tokens) | ::ton_abi::TokenValue::FixedArray(_, tokens) => {
+                                let mut vec = Vec::with_capacity(tokens.len());
                                 for token in tokens {
                                     let item = match token {
                                         #handler
@@ -261,7 +261,7 @@ fn try_unpack(
                 quote! {
                     let array = match token {
                         Some(token) => match token.value {
-                            ::ton_abi::TokenValue::Array(tokens) | ::ton_abi::TokenValue::FixedArray(tokens) => tokens,
+                            ::ton_abi::TokenValue::Array(_, tokens) | ::ton_abi::TokenValue::FixedArray(_, tokens) => tokens,
                             _ => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
                         }
                         .into_iter()

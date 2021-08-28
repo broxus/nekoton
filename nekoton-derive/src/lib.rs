@@ -1,16 +1,34 @@
 use quote::quote;
 use syn::parse_macro_input;
 
+use self::known_param_type::*;
 use self::pack_abi::*;
 use self::unpack_abi::*;
 
 mod ast;
 mod attr;
+mod known_param_type;
 mod pack_abi;
 mod parsing_context;
 mod symbol;
 mod unpack_abi;
 mod utils;
+
+#[proc_macro_derive(KnownParamType, attributes(abi))]
+pub fn derive_known_param_type(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as syn::DeriveInput);
+    impl_derive_known_param_type(input, false)
+        .unwrap_or_else(to_compile_errors)
+        .into()
+}
+
+#[proc_macro_derive(KnownParamTypePlain, attributes(abi))]
+pub fn derive_known_param_type_plain(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as syn::DeriveInput);
+    impl_derive_known_param_type(input, true)
+        .unwrap_or_else(to_compile_errors)
+        .into()
+}
 
 #[proc_macro_derive(PackAbi, attributes(abi))]
 pub fn derive_pack_abi(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

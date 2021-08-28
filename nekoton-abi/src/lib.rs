@@ -12,7 +12,9 @@ use ton_types::{SliceData, UInt256};
 
 #[cfg(feature = "derive")]
 pub use {
-    nekoton_derive::{PackAbi, PackAbiPlain, UnpackAbi, UnpackAbiPlain},
+    nekoton_derive::{
+        KnownParamType, KnownParamTypePlain, PackAbi, PackAbiPlain, UnpackAbi, UnpackAbiPlain,
+    },
     num_bigint, num_traits,
 };
 
@@ -21,6 +23,7 @@ use nekoton_utils::*;
 pub use self::abi_helpers::*;
 pub use self::event_builder::*;
 pub use self::function_builder::*;
+pub use self::known_param_type::*;
 pub use self::message_builder::*;
 pub use self::models::*;
 pub use self::token_packer::*;
@@ -29,6 +32,7 @@ pub use self::token_unpacker::*;
 mod abi_helpers;
 mod event_builder;
 mod function_builder;
+mod known_param_type;
 mod message_builder;
 mod models;
 mod token_packer;

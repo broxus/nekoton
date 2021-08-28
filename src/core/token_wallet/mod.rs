@@ -855,7 +855,7 @@ where
     I: Iterator<Item = ton_abi::Token>,
 {
     match tuple.unpack_next::<ton_abi::TokenValue>()? {
-        ton_abi::TokenValue::Array(votes) => Ok(votes.len() as u16),
+        ton_abi::TokenValue::Array(_, votes) => Ok(votes.len() as u16),
         _ => Err(UnpackerError::InvalidAbi),
     }
 }
