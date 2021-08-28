@@ -29,11 +29,21 @@ impl EventBuilder {
         self
     }
 
-    pub fn in_arg(mut self, name: &str, arg_type: ParamType) -> Self {
-        self.inputs.push(Param::new(name, arg_type));
+    /// Adds input param
+    #[deprecated(note = "use `input` instead")]
+    pub fn in_arg(self, name: &str, ty: ParamType) -> Self {
+        self.input(name, ty)
+    }
+
+    /// Adds input param
+    pub fn input(mut self, name: &str, ty: ParamType) -> Self {
+        self.inputs.push(Param::new(name, ty));
         self
     }
 
+    /// Sets the input params to the specified
+    ///
+    /// NOTE: Replaces previously added inputs
     pub fn inputs(mut self, inputs: Vec<Param>) -> Self {
         self.inputs = inputs;
         self
@@ -61,7 +71,7 @@ mod tests {
     fn build() {
         let original = &nekoton_contracts::abi::safe_multisig_wallet().events()["TransferAccepted"];
         let imposter = EventBuilder::new("TransferAccepted")
-            .in_arg("payload", ParamType::Bytes)
+            .input("payload", ParamType::Bytes)
             .build();
         assert_eq!(original, &imposter)
     }

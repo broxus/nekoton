@@ -486,9 +486,9 @@ impl<'a> RootTokenContractState<'a> {
         };
         let mut function = FunctionBuilder::new("getWalletAddress")
             .default_headers()
-            .in_arg("wallet_public_key_", ton_abi::ParamType::Uint(256))
-            .in_arg("owner_address_", ton_abi::ParamType::Address)
-            .out_arg("address", ton_abi::ParamType::Address);
+            .input("wallet_public_key_", ton_abi::ParamType::Uint(256))
+            .input("owner_address_", ton_abi::ParamType::Address)
+            .output("address", ton_abi::ParamType::Address);
 
         let mut inputs = adjust_responsible(&mut function, version);
         inputs.push(ton_abi::Token::new(
@@ -526,31 +526,31 @@ impl<'a> RootTokenContractState<'a> {
     /// Retrieve details using specified version
     pub fn get_details(&self, version: TokenWalletVersion) -> Result<RootTokenContractDetails> {
         let mut details_abi = TupleBuilder::new()
-            .arg("name", ton_abi::ParamType::Bytes)
-            .arg("symbol", ton_abi::ParamType::Bytes)
-            .arg("decimals", ton_abi::ParamType::Uint(8));
+            .item("name", ton_abi::ParamType::Bytes)
+            .item("symbol", ton_abi::ParamType::Bytes)
+            .item("decimals", ton_abi::ParamType::Uint(8));
 
         if matches!(
             version,
             TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
         ) {
-            details_abi = details_abi.arg("wallet_code", ton_abi::ParamType::Cell);
+            details_abi = details_abi.item("wallet_code", ton_abi::ParamType::Cell);
         };
 
         details_abi = details_abi
-            .arg("root_public_key", ton_abi::ParamType::Uint(256))
-            .arg("root_owner_address", ton_abi::ParamType::Address)
-            .arg("total_supply", ton_abi::ParamType::Uint(128));
+            .item("root_public_key", ton_abi::ParamType::Uint(256))
+            .item("root_owner_address", ton_abi::ParamType::Address)
+            .item("total_supply", ton_abi::ParamType::Uint(128));
 
         if version == TokenWalletVersion::Tip3v1 {
             details_abi = details_abi
-                .arg("start_gas_balance", ton_abi::ParamType::Uint(128))
-                .arg("paused", ton_abi::ParamType::Bool);
+                .item("start_gas_balance", ton_abi::ParamType::Uint(128))
+                .item("paused", ton_abi::ParamType::Bool);
         }
 
         let mut function = FunctionBuilder::new("getDetails")
             .default_headers()
-            .out_arg("value0", details_abi.build());
+            .output("value0", details_abi.build());
 
         let inputs = adjust_responsible(&mut function, version);
         let outputs = self.0.run_local(&function.build(), &inputs)?;
@@ -613,7 +613,7 @@ impl<'a> TokenWalletContractState<'a> {
     pub fn get_balance(&self, version: TokenWalletVersion) -> Result<BigUint> {
         let mut function = FunctionBuilder::new("balance")
             .default_headers()
-            .out_arg("value0", ton_abi::ParamType::Uint(128));
+            .output("value0", ton_abi::ParamType::Uint(128));
 
         let inputs = adjust_responsible(&mut function, version);
 
@@ -624,33 +624,33 @@ impl<'a> TokenWalletContractState<'a> {
     }
 
     pub fn get_details(&self, version: TokenWalletVersion) -> Result<TokenWalletDetails> {
-        let mut details_abi = TupleBuilder::new().arg("root_address", ton_abi::ParamType::Address);
+        let mut details_abi = TupleBuilder::new().item("root_address", ton_abi::ParamType::Address);
 
         if matches!(
             version,
             TokenWalletVersion::Tip3v1 | TokenWalletVersion::Tip3v2 | TokenWalletVersion::Tip3v3
         ) {
-            details_abi = details_abi.arg("code", ton_abi::ParamType::Cell);
+            details_abi = details_abi.item("code", ton_abi::ParamType::Cell);
         }
 
         details_abi = details_abi
-            .arg("wallet_public_key", ton_abi::ParamType::Uint(256))
-            .arg("owner_address", ton_abi::ParamType::Address)
-            .arg("balance", ton_abi::ParamType::Uint(128));
+            .item("wallet_public_key", ton_abi::ParamType::Uint(256))
+            .item("owner_address", ton_abi::ParamType::Address)
+            .item("balance", ton_abi::ParamType::Uint(128));
 
         match version {
             TokenWalletVersion::Tip3v1 => {}
             _ => {
                 details_abi = details_abi
-                    .arg("receive_callback", ton_abi::ParamType::Address)
-                    .arg("bounced_callback", ton_abi::ParamType::Address)
-                    .arg("allow_non_notifiable", ton_abi::ParamType::Bool);
+                    .item("receive_callback", ton_abi::ParamType::Address)
+                    .item("bounced_callback", ton_abi::ParamType::Address)
+                    .item("allow_non_notifiable", ton_abi::ParamType::Bool);
             }
         }
 
         let mut function = FunctionBuilder::new("getDetails")
             .default_headers()
-            .out_arg("value0", details_abi.build());
+            .output("value0", details_abi.build());
 
         let inputs = adjust_responsible(&mut function, version);
         let outputs = self.0.run_local(&function.build(), &inputs)?;
@@ -714,8 +714,8 @@ impl<'a> RootMetaContractState<'a> {
     fn get_details(&self) -> Result<RootMetaDetails> {
         let function = FunctionBuilder::new("getMetaByKey")
             .time_header()
-            .in_arg("key", ton_abi::ParamType::Uint(16))
-            .out_arg("value", ton_abi::ParamType::Cell)
+            .input("key", ton_abi::ParamType::Uint(16))
+            .output("value", ton_abi::ParamType::Cell)
             .build();
 
         let value: ton_types::Cell = self
@@ -878,7 +878,7 @@ fn adjust_responsible(
 fn get_version_direct(contract: &ExistingContract) -> Result<GotVersion> {
     let function = FunctionBuilder::new_responsible("getVersion")
         .default_headers()
-        .out_arg("value0", ton_abi::ParamType::Uint(32))
+        .output("value0", ton_abi::ParamType::Uint(32))
         .build();
 
     let version: u32 = contract
