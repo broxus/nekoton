@@ -1,11 +1,11 @@
-use ton_abi::ParamType;
+use ton_abi::{Param, ParamType};
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::{BuilderData, Cell};
 
 use super::StandaloneToken;
 
 pub trait KnownParamTypePlain {
-    fn param_type() -> Vec<ParamType>;
+    fn param_type() -> Vec<Param>;
 }
 
 pub trait KnownParamType {

@@ -42,7 +42,7 @@ pub fn impl_derive_known_param_type(
                 let body = serialize_struct(&container, fields, StructType::Plain);
                 quote! {
                     impl ::nekoton_abi::KnownParamTypePlain for #ident {
-                        fn param_type(self) -> Vec<::ton_abi::ParamType> {
+                        fn param_type() -> Vec<::ton_abi::Param> {
                             #body
                         }
                     }
@@ -112,7 +112,7 @@ fn serialize_struct(
                 match f.attrs.is_array {
                     true => {
                         quote! {
-                            params.push(::nekoton_abi::Param::new(
+                            params.push(::ton_abi::Param::new(
                                 #field_name,
                                 ::ton_abi::ParamType::Array(<#ty as ::nekoton_abi::KnownParamTypeArray<_>>::item_param_type()),
                             ))
@@ -120,7 +120,7 @@ fn serialize_struct(
                     }
                     false => {
                         quote! {
-                            params.push(::nekoton_abi::Param::new(
+                            params.push(::ton_abi::Param::new(
                                 #field_name,
                                 <#ty as ::nekoton_abi::KnownParamType>::param_type(),
                             ))
