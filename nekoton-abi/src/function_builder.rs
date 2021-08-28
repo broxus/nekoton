@@ -79,21 +79,41 @@ impl FunctionBuilder {
         self
     }
 
-    pub fn in_arg(mut self, name: &str, arg_type: ParamType) -> Self {
-        self.inputs.push(Param::new(name, arg_type));
+    /// Adds input param
+    #[deprecated(note = "use `input` instead")]
+    pub fn in_arg(self, name: &str, ty: ParamType) -> Self {
+        self.input(name, ty)
+    }
+
+    /// Adds input param
+    pub fn input(mut self, name: &str, ty: ParamType) -> Self {
+        self.inputs.push(Param::new(name, ty));
         self
     }
 
+    /// Sets the input params to the specified
+    ///
+    /// NOTE: Replaces previously added inputs
     pub fn inputs(mut self, inputs: Vec<Param>) -> Self {
         self.inputs = inputs;
         self
     }
 
-    pub fn out_arg(mut self, name: &str, arg_type: ton_abi::ParamType) -> Self {
-        self.outputs.push(Param::new(name, arg_type));
+    /// Adds output param
+    #[deprecated(note = "use `output` instead")]
+    pub fn out_arg(self, name: &str, ty: ton_abi::ParamType) -> Self {
+        self.output(name, ty)
+    }
+
+    /// Adds output param
+    pub fn output(mut self, name: &str, ty: ton_abi::ParamType) -> Self {
+        self.outputs.push(Param::new(name, ty));
         self
     }
 
+    /// Sets the output params to the specified
+    ///
+    /// NOTE: Replaces previously added outputs
     pub fn outputs(mut self, outputs: Vec<Param>) -> Self {
         self.outputs = outputs;
         self
@@ -136,8 +156,13 @@ impl TupleBuilder {
         Self::default()
     }
 
-    pub fn arg(mut self, name: &str, arg_type: ParamType) -> Self {
-        self.types.push(Param::new(name, arg_type));
+    #[deprecated(note = "use `item` instead")]
+    pub fn arg(self, name: &str, ty: ParamType) -> Self {
+        self.item(name, ty)
+    }
+
+    pub fn item(mut self, name: &str, ty: ParamType) -> Self {
+        self.types.push(Param::new(name, ty));
         self
     }
 
@@ -171,12 +196,12 @@ mod tests {
             .unwrap();
         let imposter = FunctionBuilder::new("transfer")
             .default_headers()
-            .in_arg("to", ParamType::Address)
-            .in_arg("tokens", ParamType::Uint(128))
-            .in_arg("grams", ParamType::Uint(128))
-            .in_arg("send_gas_to", ParamType::Address)
-            .in_arg("notify_receiver", ParamType::Bool)
-            .in_arg("payload", ParamType::Cell)
+            .input("to", ParamType::Address)
+            .input("tokens", ParamType::Uint(128))
+            .input("grams", ParamType::Uint(128))
+            .input("send_gas_to", ParamType::Address)
+            .input("notify_receiver", ParamType::Bool)
+            .input("payload", ParamType::Cell)
             .build();
 
         assert_eq!(original, &imposter)
