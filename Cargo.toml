@@ -16,7 +16,7 @@ aes = { version = "0.7.2", features = ["ctr"], default-features = false, optiona
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.13"
-chacha20poly1305 = { version = "0.8.0" }
+chacha20poly1305 = "0.9"
 chrono = "0.4.19"
 cipher = { version = "0.3.0", default-features = false, optional = true }
 curve25519-dalek = "3.0"
@@ -61,7 +61,6 @@ nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
 
 [dev-dependencies]
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
-criterion = { version = "0.3", features = ["async_tokio", "html_reports"] }
 tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 
 [features]
@@ -71,7 +70,3 @@ web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen", 
 gql_transport = ["graphql_client"]
 adnl_transport = ["ton_api", "aes", "cipher", "x25519-dalek"]
 jrpc_transport = ["tiny-jsonrpc"]
-
-[[bench]]
-name = "words"
-harness = false

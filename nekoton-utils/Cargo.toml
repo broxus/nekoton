@@ -11,7 +11,7 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0"
 base64 = "0.13"
-chacha20poly1305 = { version = "0.8.0", optional = true }
+chacha20poly1305 = { version = "0.9", optional = true }
 ed25519-dalek = "1.0"
 hex = "0.4"
 log = "0.4"
