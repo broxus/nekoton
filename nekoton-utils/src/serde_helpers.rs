@@ -372,6 +372,27 @@ pub mod serde_biguint {
     }
 }
 
+pub mod serde_secret_key {
+    use super::*;
+
+    pub fn serialize<S>(data: &ed25519_dalek::SecretKey, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&hex::encode(data.as_bytes()))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<ed25519_dalek::SecretKey, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = String::deserialize(deserializer)?;
+        let bytes = hex::decode(&data).map_err(|_| D::Error::custom("Invalid SecretKey"))?;
+        ed25519_dalek::SecretKey::from_bytes(&bytes)
+            .map_err(|_| D::Error::custom("Invalid SecretKey"))
+    }
+}
+
 pub mod serde_public_key {
     use super::*;
 
