@@ -4,7 +4,8 @@ use std::num::NonZeroU32;
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use ring::{digest, pbkdf2};
-use secstr::SecVec;
+use secstr::{SecUtf8, SecVec};
+use zeroize::Zeroize;
 
 pub const NONCE_LENGTH: usize = 12;
 
@@ -17,6 +18,20 @@ const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1) };
 /// Initial value is optimal for the current machine, so you maybe want to change it.
 #[cfg(not(debug_assertions))]
 const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(100_000) };
+
+/// Decrypts utf8 data using specified decrypter and nonce
+pub fn decrypt_secure_str(
+    dec: &ChaCha20Poly1305,
+    nonce: &Nonce,
+    data: &[u8],
+) -> Result<SecUtf8, SymmetricCryptoError> {
+    String::from_utf8(decrypt(dec, nonce, data)?)
+        .map(SecUtf8::from)
+        .map_err(|e| {
+            e.into_bytes().zeroize();
+            SymmetricCryptoError::FailedToDecryptData
+        })
+}
 
 /// Decrypts data using specified decrypter and nonce
 pub fn decrypt_secure(
