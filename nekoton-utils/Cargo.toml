@@ -12,7 +12,7 @@ edition = "2018"
 anyhow = "1.0"
 base64 = "0.13"
 chacha20poly1305 = { version = "0.9", optional = true }
-ed25519-dalek = "1.0"
+ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
 hex = "0.4"
 log = "0.4"
 num-bigint = { version = "0.3", features = ["serde"] }
