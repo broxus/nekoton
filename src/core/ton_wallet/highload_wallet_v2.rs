@@ -280,7 +280,13 @@ impl InitData {
             query
                 .append_bit_one()?
                 .append_reference_cell(messages.clone());
-            query.into_cell()?.repr_hash()
+            let hash = query.into_cell()?.repr_hash();
+            let bytes = hash.as_slice();
+
+            (bytes[28] as u32) << 24
+                | (bytes[29] as u32) << 16
+                | (bytes[30] as u32) << 8
+                | (bytes[31] as u32)
         };
 
         // Build payload
@@ -288,7 +294,7 @@ impl InitData {
         payload
             .append_u32(self.wallet_id)?
             .append_u32(expire_at)?
-            .append_raw(&messages_hash.as_slice()[28..32], 32)?
+            .append_u32(messages_hash)?
             .append_bit_one()?
             .append_reference_cell(messages);
 
