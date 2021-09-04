@@ -27,7 +27,6 @@ futures = "0.3"
 getrandom = "0.2.3"
 graphql_client = { version = "0.10", optional = true }
 hex = "0.4"
-instant = "0.1"
 log = "0.4"
 num-bigint = { version = "0.3", features = ["serde"] }
 num-traits = "0.2.14"
@@ -66,7 +65,7 @@ tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 [features]
 default = ["gql_transport"]
 integration_test = []
-web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen", "instant/wasm-bindgen"]
+web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
 gql_transport = ["graphql_client"]
 adnl_transport = ["ton_api", "aes", "cipher", "x25519-dalek-ng"]
 jrpc_transport = ["tiny-jsonrpc"]

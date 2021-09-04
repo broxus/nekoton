@@ -4,21 +4,18 @@ use std::time::Duration;
 use anyhow::Result;
 use chacha20poly1305::aead::{Aead, NewAead};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
-use instant::Instant;
 use parking_lot::RwLock;
 use ring::rand::SecureRandom;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
 pub struct PasswordCache {
-    time: Instant,
     state: RwLock<PasswordCacheState>,
 }
 
 impl PasswordCache {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            time: Instant::now(),
             state: RwLock::new(PasswordCacheState {
                 cipher: make_cipher()?,
                 passwords: Default::default(),
@@ -66,7 +63,7 @@ impl PasswordCache {
     }
 
     pub fn contains(&self, id: &[u8; 32], required_duration: Duration) -> bool {
-        let must_be_alive_at = Instant::now() + required_duration;
+        let must_be_alive_at = now_ms() + required_duration.as_secs_f64() * 1000.0;
         match self.state.read().passwords.get(id) {
             Some(item) => item.expire_at >= must_be_alive_at,
             None => false,
@@ -103,12 +100,14 @@ impl PasswordCache {
             .encrypt(&nonce, password)
             .map_err(|_| PasswordCacheError::FailedToEncryptPassword)?;
 
+        let expire_at = now_ms() + duration.as_secs_f64() * 1000.0;
+
         state.passwords.insert(
             id,
             CachedPassword {
                 encrypted_password,
                 nonce,
-                expire_at: self.time + duration,
+                expire_at,
             },
         );
 
@@ -127,7 +126,7 @@ impl PasswordCache {
     }
 
     pub fn refresh(&self) {
-        let now = Instant::now();
+        let now = now_ms();
         self.state
             .write()
             .passwords
@@ -166,7 +165,7 @@ struct PasswordCacheState {
 struct CachedPassword {
     encrypted_password: Vec<u8>,
     nonce: Nonce,
-    expire_at: Instant,
+    expire_at: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -197,6 +196,22 @@ impl Default for PasswordCacheBehavior {
     fn default() -> Self {
         Self::Remove
     }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn now_ms() -> f64 {
+    js_sys::Date::now()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn now_ms() -> f64 {
+    use nekoton_utils::TrustMe;
+    use std::time::SystemTime;
+
+    (SystemTime::now().duration_since(SystemTime::UNIX_EPOCH))
+        .trust_me()
+        .as_secs_f64()
+        * 1000.0
 }
 
 #[derive(thiserror::Error, Debug)]
