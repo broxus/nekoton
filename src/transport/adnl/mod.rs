@@ -636,7 +636,7 @@ fn calculate_id(type_id: i32, pub_key: &[u8; 32]) -> KeyId {
 }
 
 fn calculate_shared_secret(private_key: &[u8; 64], public_key: &[u8; 32]) -> [u8; 32] {
-    let point = curve25519_dalek::edwards::CompressedEdwardsY(*public_key)
+    let point = curve25519_dalek_ng::edwards::CompressedEdwardsY(*public_key)
         .decompress()
         .expect("Invalid public key")
         .to_montgomery()
@@ -644,7 +644,7 @@ fn calculate_shared_secret(private_key: &[u8; 64], public_key: &[u8; 32]) -> [u8
 
     let mut buffer = [0; 32];
     buffer.copy_from_slice(&private_key[..32]);
-    x25519_dalek::x25519(buffer, point)
+    x25519_dalek_ng::x25519(buffer, point)
 }
 
 fn build_packet_cipher(shared_secret: &[u8; 32], checksum: &[u8; 32]) -> aes::Aes256Ctr {

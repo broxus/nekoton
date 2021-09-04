@@ -44,7 +44,7 @@ thiserror = "1.0"
 tiny-bip39 = { git = "https://github.com/broxus/tiny-bip39.git" }
 tiny-hderive = { git = "https://github.com/broxus/tiny-hderive.git" }
 tokio = { version = "1.4", default-features = false, features = ["sync"] }
-x25519-dalek = { version = "1.1", optional = true }
+x25519-dalek-ng = { version = "1.1", optional = true }
 zeroize = "1.2.0"
 
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
@@ -68,5 +68,5 @@ default = ["gql_transport"]
 integration_test = []
 web = ["chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen", "instant/wasm-bindgen"]
 gql_transport = ["graphql_client"]
-adnl_transport = ["ton_api", "aes", "cipher", "x25519-dalek"]
+adnl_transport = ["ton_api", "aes", "cipher", "x25519-dalek-ng"]
 jrpc_transport = ["tiny-jsonrpc"]
