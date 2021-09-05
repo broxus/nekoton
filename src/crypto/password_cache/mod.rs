@@ -63,7 +63,7 @@ impl PasswordCache {
     }
 
     pub fn contains(&self, id: &[u8; 32], required_duration: Duration) -> bool {
-        let must_be_alive_at = now_ms() + required_duration.as_secs_f64() * 1000.0;
+        let must_be_alive_at = required_duration.as_secs_f64().mul_add(1000.0, now_ms());
         match self.state.read().passwords.get(id) {
             Some(item) => item.expire_at >= must_be_alive_at,
             None => false,
@@ -100,7 +100,7 @@ impl PasswordCache {
             .encrypt(&nonce, password)
             .map_err(|_| PasswordCacheError::FailedToEncryptPassword)?;
 
-        let expire_at = now_ms() + duration.as_secs_f64() * 1000.0;
+        let expire_at = duration.as_secs_f64().mul_add(1000.0, now_ms());
 
         state.passwords.insert(
             id,
