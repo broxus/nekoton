@@ -24,11 +24,7 @@ pub fn prepare_deploy(
             ..Default::default()
         });
 
-    message.set_state_init(
-        InitData::from_key(public_key)
-            .with_wallet_id(WALLET_ID)
-            .make_state_init()?,
-    );
+    message.set_state_init(init_data.make_state_init()?);
 
     let expire_at = ExpireAt::new(expiration);
     let (hash, payload) = init_data.make_transfer_payload(None, expire_at.timestamp)?;
