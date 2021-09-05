@@ -24,18 +24,14 @@ pub fn prepare_deploy(
             ..Default::default()
         });
 
-    message.set_state_init(
-        InitData::from_key(public_key)
-            .with_wallet_id(WALLET_ID)
-            .make_state_init()?,
-    );
+    message.set_state_init(init_data.make_state_init()?);
 
     let expire_at = ExpireAt::new(expiration);
-    let (hash, payload) = init_data.make_transfer_payload(&[], expire_at.timestamp)?;
+    let (hash, payload) = init_data.make_deploy_payload(expire_at.timestamp)?;
 
     Ok(Box::new(UnsignedHighloadWalletV2Message {
         init_data,
-        gifts: Vec::new(),
+        gifts: None,
         payload,
         message,
         expire_at,
@@ -107,7 +103,7 @@ pub fn prepare_transfer(
     Ok(TransferAction::Sign(Box::new(
         UnsignedHighloadWalletV2Message {
             init_data,
-            gifts,
+            gifts: Some(gifts),
             payload,
             hash,
             expire_at,
@@ -119,7 +115,7 @@ pub fn prepare_transfer(
 #[derive(Clone)]
 struct UnsignedHighloadWalletV2Message {
     init_data: InitData,
-    gifts: Vec<Gift>,
+    gifts: Option<Vec<Gift>>,
     payload: BuilderData,
     hash: UInt256,
     expire_at: ExpireAt,
@@ -132,10 +128,14 @@ impl UnsignedMessage for UnsignedHighloadWalletV2Message {
             return;
         }
 
-        let (hash, payload) = self
-            .init_data
-            .make_transfer_payload(&self.gifts, self.expire_at())
-            .trust_me();
+        let expire_at = self.expire_at();
+
+        let (hash, payload) = match &self.gifts {
+            Some(gifts) => self.init_data.make_transfer_payload(gifts, expire_at),
+            None => self.init_data.make_deploy_payload(expire_at),
+        }
+        .trust_me();
+
         self.hash = hash;
         self.payload = payload;
     }
@@ -239,6 +239,19 @@ impl InitData {
         data.into_cell()
     }
 
+    pub fn make_deploy_payload(&self, expire_at: u32) -> Result<(UInt256, BuilderData)> {
+        let mut payload = BuilderData::new();
+        payload
+            .append_u32(self.wallet_id)?
+            .append_u32(expire_at)?
+            .append_u32(u32::MAX)?
+            .append_bit_zero()?;
+
+        let hash = payload.clone().into_cell()?.repr_hash();
+
+        Ok((hash, payload))
+    }
+
     pub fn make_transfer_payload(
         &self,
         gifts: &[Gift],
@@ -272,31 +285,17 @@ impl InitData {
 
             messages.set(key, &item.into())?;
         }
+
         let messages = messages.serialize()?;
-
-        // Compute query id
-        let messages_hash = {
-            let mut query = BuilderData::new();
-            query
-                .append_bit_one()?
-                .append_reference_cell(messages.clone());
-            let hash = query.into_cell()?.repr_hash();
-            let bytes = hash.as_slice();
-
-            (bytes[28] as u32) << 24
-                | (bytes[29] as u32) << 16
-                | (bytes[30] as u32) << 8
-                | (bytes[31] as u32)
-        };
+        let messages_hash = messages.repr_hash();
 
         // Build payload
         let mut payload = BuilderData::new();
         payload
             .append_u32(self.wallet_id)?
             .append_u32(expire_at)?
-            .append_u32(messages_hash)?
-            .append_bit_one()?
-            .append_reference_cell(messages);
+            .append_raw(&messages_hash.as_slice()[28..32], 32)?
+            .append_builder(&messages.into())?;
 
         let hash = payload.clone().into_cell()?.repr_hash();
 
