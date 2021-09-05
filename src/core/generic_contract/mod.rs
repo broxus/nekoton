@@ -2,12 +2,12 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use anyhow::Result;
-use ton_block::MsgAddressInt;
+use ton_block::{GetRepresentationHash, MsgAddressInt};
 
 use nekoton_abi::TransactionId;
 
 use super::models::{ContractState, PendingTransaction, Transaction, TransactionsBatchInfo};
-use super::{ContractSubscription, PollingMethod};
+use super::{ContractSubscription, PollingMethod, TransactionExecutionOptions};
 use crate::core::utils;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
@@ -97,6 +97,20 @@ impl GenericContract {
 
     pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
         self.contract_subscription.estimate_fees(message).await
+    }
+
+    pub async fn execute_transaction_locally(
+        &mut self,
+        message: &ton_block::Message,
+        options: TransactionExecutionOptions,
+    ) -> Result<Transaction> {
+        let transaction = self
+            .contract_subscription
+            .execute_transaction_locally(message, options)
+            .await?;
+        let hash = transaction.hash()?;
+
+        Transaction::try_from((hash, transaction)).map_err(From::from)
     }
 }
 

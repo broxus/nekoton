@@ -12,7 +12,6 @@ edition = "2018"
 anyhow = "1.0"
 base64 = "0.13"
 chrono = "0.4.19"
-ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
 hex = "0.4"
 log = "0.4"
 num-bigint = { version = "0.3", features = ["serde"] }
@@ -21,6 +20,8 @@ serde = { version = "1.0", features = ["derive"] }
 sha2 = "0.9"
 smallvec = { version = "1.6.1", features = ["const_generics", "union", "write"] }
 thiserror = "1.0"
+
+ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
 
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }

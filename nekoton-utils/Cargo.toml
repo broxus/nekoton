@@ -1,6 +1,6 @@
 [package]
 name = "nekoton-utils"
-version = "0.5.0"
+version = "0.6.0"
 authors = [
     "Alexey Pashinov <pashinov93@gmail.com>",
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
@@ -12,7 +12,6 @@ edition = "2018"
 anyhow = "1.0"
 base64 = "0.13"
 chacha20poly1305 = { version = "0.9", optional = true }
-ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
 hex = "0.4"
 log = "0.4"
 num-bigint = { version = "0.3", features = ["serde"] }
@@ -23,6 +22,8 @@ serde = { version = "1.0", features = ["derive"] }
 sha2 = "0.9"
 thiserror = "1.0"
 zeroize = { version = "1.4", optional = true }
+
+ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
 
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }

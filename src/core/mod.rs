@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-pub use self::contract_subscription::ContractSubscription;
+pub use self::contract_subscription::{ContractSubscription, TransactionExecutionOptions};
 use self::models::PollingMethod;
 use crate::transport::Transport;
 

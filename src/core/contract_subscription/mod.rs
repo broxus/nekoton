@@ -172,6 +172,23 @@ impl ContractSubscription {
     }
 
     pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
+        let transaction = self
+            .execute_transaction_locally(
+                message,
+                TransactionExecutionOptions {
+                    disable_signature_check: true,
+                },
+            )
+            .await?;
+
+        Ok(transaction.total_fees.grams.0 as u64)
+    }
+
+    pub async fn execute_transaction_locally(
+        &mut self,
+        message: &ton_block::Message,
+        options: TransactionExecutionOptions,
+    ) -> Result<ton_block::Transaction> {
         let blockchain_config = self.transport.get_blockchain_config().await?;
         let state = match self.transport.get_contract_state(&self.address).await? {
             RawContractState::Exists(state) => state,
@@ -180,16 +197,17 @@ impl ContractSubscription {
             }
         };
 
-        let transaction = Executor::new(
+        let mut executor = Executor::new(
             blockchain_config,
             state.account,
             state.timings,
             &state.last_transaction_id,
-        )
-        .disable_signature_check()
-        .run(message)?;
+        );
+        if options.disable_signature_check {
+            executor.disable_signature_check();
+        }
 
-        Ok(transaction.total_fees.grams.0 as u64)
+        executor.run(message)
     }
 
     pub async fn refresh_contract_state<FC>(&mut self, mut on_contract_state: FC) -> Result<bool>
@@ -368,6 +386,11 @@ impl ContractSubscription {
             !expired
         })
     }
+}
+
+#[derive(Debug, Default, Copy, Clone, serde::Serialize, serde::Deserialize)]
+pub struct TransactionExecutionOptions {
+    pub disable_signature_check: bool,
 }
 
 #[derive(thiserror::Error, Debug)]
