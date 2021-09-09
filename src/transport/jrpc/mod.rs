@@ -91,6 +91,17 @@ impl Transport for JrpcTransport {
             ton_types::deserialize_cells_tree(&mut std::io::Cursor::new(&response.transactions))
                 .map_err(|_| anyhow::anyhow!("Invalid transaction list"))?;
 
+        if transactions.len() == 1 {
+            let is_empty_cell = matches!(
+                transactions.first(),
+                Some(cell) if cell.repr_hash().as_slice() == &EMPTY_CELL_HASH
+            );
+
+            if is_empty_cell {
+                return Ok(Vec::new());
+            }
+        }
+
         let mut result = Vec::with_capacity(transactions.len());
         for item in transactions {
             result.push(RawTransaction {
@@ -115,6 +126,11 @@ impl Transport for JrpcTransport {
         self.config_cache.get_blockchain_config(self).await
     }
 }
+
+const EMPTY_CELL_HASH: [u8; 32] = [
+    0x96, 0xa2, 0x96, 0xd2, 0x24, 0xf2, 0x85, 0xc6, 0x7b, 0xee, 0x93, 0xc3, 0x0f, 0x8a, 0x30, 0x91,
+    0x57, 0xf0, 0xda, 0xa3, 0x5d, 0xc5, 0xb8, 0x7e, 0x41, 0x0b, 0x78, 0x63, 0x0a, 0x09, 0xcf, 0xc7,
+];
 
 fn make_request<T>(method: &str, params: T) -> String
 where
@@ -144,5 +160,24 @@ where
         ser.serialize_field("method", self.method)?;
         ser.serialize_field("params", &self.params)?;
         ser.end()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_jrpc_empty_transactions_list() {
+        let response = base64::decode("te6ccgEBAQEAAgAAAA==").unwrap();
+
+        let transactions =
+            ton_types::deserialize_cells_tree(&mut std::io::Cursor::new(response)).unwrap();
+
+        assert_eq!(transactions.len(), 1);
+        assert_eq!(
+            transactions.first().unwrap().repr_hash().as_slice(),
+            &EMPTY_CELL_HASH
+        );
     }
 }
