@@ -12,6 +12,10 @@ pub struct PlainStruct {
     pub sender_public_key: UInt256,
     #[abi(address)]
     pub sender_address: MsgAddressInt,
+    #[abi(array)]
+    pub array: Vec<u32>,
+    #[abi(array, uint32)]
+    pub array_explicit: Vec<u32>,
 }
 
 #[derive(KnownParamType)]
@@ -22,6 +26,10 @@ pub struct Struct {
     pub sender_public_key: UInt256,
     #[abi(address)]
     pub sender_address: MsgAddressInt,
+    #[abi(array)]
+    pub array: Vec<u32>,
+    #[abi(array, uint32)]
+    pub array_explicit: Vec<u32>,
 }
 
 fn main() {
@@ -29,6 +37,11 @@ fn main() {
         Param::new("tokens", ParamType::Uint(128)),
         Param::new("sender_public_key", ParamType::Uint(256)),
         Param::new("sender_address", ParamType::Address),
+        Param::new("array", ParamType::Array(Box::new(ParamType::Uint(32)))),
+        Param::new(
+            "array_explicit",
+            ParamType::Array(Box::new(ParamType::Uint(32))),
+        ),
     ];
 
     assert_eq!(params, PlainStruct::param_type());

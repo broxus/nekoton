@@ -114,7 +114,7 @@ fn serialize_struct(
                         quote! {
                             params.push(::ton_abi::Param::new(
                                 #field_name,
-                                ::ton_abi::ParamType::Array(<#ty as ::nekoton_abi::KnownParamTypeArray<_>>::item_param_type()),
+                                ::ton_abi::ParamType::Array(Box::new(<#ty as ::nekoton_abi::KnownParamTypeArray<_>>::item_param_type())),
                             ))
                         }
                     }
