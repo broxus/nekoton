@@ -229,6 +229,48 @@ pub mod address_only_hash {
     }
 }
 
+pub mod array_address_only_hash {
+    use super::*;
+
+    pub fn pack(value: Vec<UInt256>) -> TokenValue {
+        ton_abi::TokenValue::Array(
+            param_type(),
+            value
+                .into_iter()
+                .map(|value| {
+                    TokenValue::Address(ton_block::MsgAddress::AddrStd(ton_block::MsgAddrStd {
+                        anycast: None,
+                        workchain_id: 0,
+                        address: value.into(),
+                    }))
+                })
+                .collect(),
+        )
+    }
+
+    pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<UInt256>> {
+        match value {
+            TokenValue::Array(_, values) => {
+                let mut result = Vec::with_capacity(values.len());
+                for value in values {
+                    match value {
+                        TokenValue::Address(ton_block::MsgAddress::AddrStd(
+                            ton_block::MsgAddrStd { address, .. },
+                        )) => result.push(UInt256::from_be_bytes(&address.get_bytestring(0))),
+                        _ => return Err(UnpackerError::InvalidAbi),
+                    }
+                }
+                Ok(result)
+            }
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+
+    pub fn param_type() -> ParamType {
+        ton_abi::ParamType::Array(Box::new(ParamType::Address))
+    }
+}
+
 pub mod map_integer_tuple {
     use super::*;
 
