@@ -28,6 +28,7 @@ pub use self::message_builder::*;
 pub use self::models::*;
 pub use self::token_packer::*;
 pub use self::token_unpacker::*;
+pub use self::tokens_json::*;
 
 mod abi_helpers;
 mod event_builder;
@@ -37,6 +38,7 @@ mod message_builder;
 mod models;
 mod token_packer;
 mod token_unpacker;
+mod tokens_json;
 mod tvm;
 
 const TON_ABI_VERSION: u8 = 2;
