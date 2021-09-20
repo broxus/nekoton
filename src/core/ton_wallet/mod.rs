@@ -464,12 +464,13 @@ pub fn get_wallet_custodians(
     Ok(custodians)
 }
 
-const WALLET_TYPES_BY_POPULARITY: [WalletType; 5] = [
+const WALLET_TYPES_BY_POPULARITY: [WalletType; 6] = [
     WalletType::Multisig(MultisigType::SurfWallet),
     WalletType::WalletV3,
     WalletType::Multisig(MultisigType::SafeMultisigWallet),
     WalletType::Multisig(MultisigType::SetcodeMultisigWallet),
     WalletType::Multisig(MultisigType::SafeMultisigWallet24h),
+    WalletType::Multisig(MultisigType::BridgeMultisigWallet),
 ];
 
 pub async fn find_existing_wallets(

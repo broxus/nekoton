@@ -14,6 +14,7 @@ declare_abi! {
     depool_v3_participant => "./DePoolV3Participant.abi.json",
     safe_multisig_wallet => "./SafeMultisigWallet.abi.json",
     setcode_multisig_wallet => "./SetcodeMultisigWallet.abi.json",
+    bridge_multisig_wallet => "./BridgeMultisigWallet.abi.json",
     wallet_notifications => "./WalletNotifications.abi.json",
     ethereum_event => "./EthereumEvent.abi.json",
     ton_event => "./TonEvent.abi.json",

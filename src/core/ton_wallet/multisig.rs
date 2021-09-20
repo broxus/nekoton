@@ -147,6 +147,7 @@ define_string_enum!(
         SafeMultisigWallet,
         SafeMultisigWallet24h,
         SetcodeMultisigWallet,
+        BridgeMultisigWallet,
         SurfWallet,
     }
 );
@@ -163,6 +164,10 @@ const SETCODE_MULTISIG_WALLET_HASH: [u8; 32] = [
     0xe2, 0xb6, 0x0b, 0x6b, 0x60, 0x2c, 0x10, 0xce, 0xd7, 0xea, 0x8e, 0xde, 0x4b, 0xdf, 0x96, 0x34,
     0x2c, 0x97, 0x57, 0x0a, 0x37, 0x98, 0x06, 0x6f, 0x3f, 0xb5, 0x0a, 0x4b, 0x2b, 0x27, 0xa2, 0x08,
 ];
+const BRIDGE_MULTISIG_WALLET_HASH: [u8; 32] = [
+    0xf3, 0xa0, 0x7a, 0xe8, 0x4f, 0xc3, 0x43, 0x25, 0x9d, 0x7f, 0xa4, 0x84, 0x7b, 0x86, 0x33, 0x5b,
+    0x3f, 0xdc, 0xfc, 0x8b, 0x31, 0xf1, 0xba, 0x4b, 0x7a, 0x94, 0x99, 0xd5, 0x53, 0x0f, 0x0b, 0x18,
+];
 const SURF_WALLET_HASH: [u8; 32] = [
     0x20, 0x7d, 0xc5, 0x60, 0xc5, 0x95, 0x6d, 0xe1, 0xa2, 0xc1, 0x47, 0x93, 0x56, 0xf8, 0xf3, 0xee,
     0x70, 0xa5, 0x97, 0x67, 0xdb, 0x2b, 0xf4, 0x78, 0x8b, 0x1d, 0x61, 0xad, 0x42, 0xcd, 0xad, 0x82,
@@ -173,6 +178,7 @@ pub fn guess_multisig_type(code_hash: &UInt256) -> Option<MultisigType> {
         SAFE_MULTISIG_WALLET_HASH => Some(MultisigType::SafeMultisigWallet),
         SAFE_MULTISIG_WALLET_24H_HASH => Some(MultisigType::SafeMultisigWallet24h),
         SETCODE_MULTISIG_WALLET_HASH => Some(MultisigType::SetcodeMultisigWallet),
+        BRIDGE_MULTISIG_WALLET_HASH => Some(MultisigType::BridgeMultisigWallet),
         SURF_WALLET_HASH => Some(MultisigType::SurfWallet),
         _ => None,
     }
@@ -202,7 +208,7 @@ pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
         expiration_time: match multisig_type {
             MultisigType::SafeMultisigWallet | MultisigType::SetcodeMultisigWallet => 3600,
             MultisigType::SurfWallet => 3601,
-            MultisigType::SafeMultisigWallet24h => 86400,
+            MultisigType::SafeMultisigWallet24h | MultisigType::BridgeMultisigWallet => 86400,
         },
     }
 }
@@ -212,6 +218,7 @@ fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> to
         MultisigType::SafeMultisigWallet => nekoton_contracts::code::safe_multisig_wallet(),
         MultisigType::SafeMultisigWallet24h => nekoton_contracts::code::safe_multisig_wallet_24h(),
         MultisigType::SetcodeMultisigWallet => nekoton_contracts::code::setcode_multisig_wallet(),
+        MultisigType::BridgeMultisigWallet => nekoton_contracts::code::bridge_multisig_wallet(),
         MultisigType::SurfWallet => nekoton_contracts::code::surf_wallet(),
     }
     .into();
@@ -236,9 +243,9 @@ fn run_local(
     last_transaction_id: &LastTransactionId,
 ) -> Result<Vec<ton_abi::Token>> {
     let function: &ton_abi::Function = match multisig_type {
-        MultisigType::SafeMultisigWallet | MultisigType::SafeMultisigWallet24h => {
-            nekoton_contracts::abi::safe_multisig_wallet()
-        }
+        MultisigType::SafeMultisigWallet
+        | MultisigType::SafeMultisigWallet24h
+        | MultisigType::BridgeMultisigWallet => nekoton_contracts::abi::safe_multisig_wallet(),
         MultisigType::SetcodeMultisigWallet | MultisigType::SurfWallet => {
             nekoton_contracts::abi::setcode_multisig_wallet()
         }
