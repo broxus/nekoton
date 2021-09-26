@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 
 use anyhow::Result;
 use num_bigint::BigUint;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use ton_block::{Deserializable, MsgAddressInt};
 use ton_types::UInt256;
 
@@ -32,10 +32,18 @@ pub enum TransactionAdditionalInfo {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WalletInteractionInfo {
-    #[serde(with = "serde_optional_address")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "serde_optional_address"
+    )]
     pub recipient: Option<MsgAddressInt>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub known_payload: Option<KnownPayload>,
+
     pub method: WalletInteractionMethod,
 }
 
@@ -56,38 +64,48 @@ pub enum WalletInteractionMethod {
 }
 
 #[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize, Copy)]
+#[serde(rename_all = "camelCase")]
 pub struct DePoolOnRoundCompleteNotification {
     #[abi(uint64, name = "roundId")]
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub round_id: u64,
+
     #[abi(uint64, name = "reward")]
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub reward: u64,
+
     #[abi(uint64, name = "ordinaryStake")]
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub ordinary_stake: u64,
+
     #[abi(uint64, name = "vestingStake")]
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub vesting_stake: u64,
+
     #[abi(uint64, name = "lockStake")]
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub lock_stake: u64,
+
     #[abi(bool, name = "reinvest")]
     pub reinvest: bool,
+
     #[abi(uint8, name = "reason")]
     pub reason: u8,
 }
 
 #[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize, Copy)]
+#[serde(rename_all = "camelCase")]
 pub struct DePoolReceiveAnswerNotification {
     #[abi(uint32, name = "errcode")]
     pub error_code: u32,
+
     #[abi(uint64, name = "comment")]
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub comment: u64,
 }
 
 #[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TokenWalletDeployedNotification {
     #[abi(address, name = "root")]
     #[serde(with = "serde_address")]
@@ -95,9 +113,7 @@ pub struct TokenWalletDeployedNotification {
 }
 
 define_string_enum!(
-    #[derive(
-        Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
-    )]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, UnpackAbi)]
     pub enum EthEventStatus {
         InProcess = 0,
         Confirmed = 1,
@@ -107,9 +123,7 @@ define_string_enum!(
 );
 
 define_string_enum!(
-    #[derive(
-        Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, UnpackAbi,
-    )]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, UnpackAbi)]
     pub enum TonEventStatus {
         InProcess = 0,
         Confirmed = 1,
@@ -126,26 +140,36 @@ pub enum MultisigTransaction {
 }
 
 #[derive(UnpackAbiPlain, Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
+#[serde(rename_all = "camelCase")]
 pub struct MultisigConfirmTransaction {
     #[serde(with = "serde_uint256")]
     pub custodian: UInt256,
+
     #[abi(uint64, name = "transactionId")]
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub transaction_id: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MultisigSubmitTransaction {
     #[serde(with = "serde_uint256")]
     pub custodian: UInt256,
+
     #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
+
+    #[serde(with = "serde_string")]
     pub value: BigUint,
+
     pub bounce: bool,
+
     pub all_balance: bool,
+
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
-    #[serde(with = "serde_u64")]
+
+    #[serde(with = "serde_string")]
     pub trans_id: u64,
 }
 
@@ -154,12 +178,17 @@ pub struct MultisigSendTransaction {
     #[abi(address)]
     #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
+
     #[abi(with = "nekoton_abi::uint128_number")]
+    #[serde(with = "serde_string")]
     pub value: BigUint,
+
     #[abi(bool)]
     pub bounce: bool,
+
     #[abi(uint8)]
     pub flags: u8,
+
     #[abi(cell)]
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
@@ -167,21 +196,31 @@ pub struct MultisigSendTransaction {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MultisigPendingTransaction {
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub id: u64,
+
     #[serde(with = "serde_vec_uint256")]
     pub confirmations: Vec<UInt256>,
+
     pub signs_required: u8,
     pub signs_received: u8,
+
     #[serde(with = "serde_uint256")]
     pub creator: UInt256,
+
     pub index: u8,
+
     #[serde(with = "serde_address")]
     pub dest: MsgAddressInt,
+
+    #[serde(with = "serde_string")]
     pub value: BigUint,
+
     pub send_flags: u16,
+
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
+
     pub bounce: bool,
 }
 
@@ -197,7 +236,9 @@ pub enum TokenWalletTransaction {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TokenIncomingTransfer {
+    #[serde(with = "serde_string")]
     pub tokens: BigUint,
     /// Not the address of the token wallet, but the address of its owner
     #[serde(with = "serde_address")]
@@ -207,6 +248,7 @@ pub struct TokenIncomingTransfer {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TokenOutgoingTransfer {
     pub to: TransferRecipient,
+    #[serde(with = "serde_string")]
     pub tokens: BigUint,
 }
 
@@ -226,7 +268,7 @@ impl Serialize for TransferRecipient {
         struct StoredItem<'a>(#[serde(with = "serde_address")] &'a MsgAddressInt);
 
         #[derive(Serialize)]
-        #[serde(rename_all = "snake_case", tag = "type", content = "data")]
+        #[serde(rename_all = "snake_case", tag = "type", content = "address")]
         enum StoredTransferRecipient<'a> {
             OwnerWallet(StoredItem<'a>),
             TokenWallet(StoredItem<'a>),
@@ -269,12 +311,14 @@ impl<'de> Deserialize<'de> for TransferRecipient {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TokenSwapBack {
+    #[serde(with = "serde_string")]
     pub tokens: BigUint,
     /// ETH address
     pub to: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Copy)]
+#[serde(rename_all = "camelCase")]
 pub struct EthEventDetails {
     pub status: EthEventStatus,
     pub required_confirmation_count: u16,
@@ -284,13 +328,16 @@ pub struct EthEventDetails {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EthEventData {
     #[serde(with = "serde_address")]
     pub root_token_contract: MsgAddressInt,
+    #[serde(with = "serde_string")]
     pub tokens: BigUint,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Copy)]
+#[serde(rename_all = "camelCase")]
 pub struct TonEventDetails {
     pub status: TonEventStatus,
     pub required_confirmation_count: u16,
@@ -300,28 +347,29 @@ pub struct TonEventDetails {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TonEventData {
     #[serde(with = "serde_address")]
     pub root_token_contract: MsgAddressInt,
+    #[serde(with = "serde_string")]
     pub tokens: BigUint,
     /// ETH address
     pub to: String,
 }
 
-define_string_enum!(
-    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-    pub enum PollingMethod {
-        /// Manual polling once a minute or by a click.
-        /// Used when there are no pending transactions
-        Manual,
-        /// Block-walking for GQL or fast refresh for ADNL.
-        /// Used when there are some pending transactions
-        Reliable,
-    }
-);
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PollingMethod {
+    /// Manual polling once a minute or by a click.
+    /// Used when there are no pending transactions
+    Manual,
+    /// Block-walking for GQL or fast refresh for ADNL.
+    /// Used when there are some pending transactions
+    Reliable,
+}
 
 define_string_enum!(
-    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
     pub enum ReliableBehavior {
         /// Used for transports which doesn't support getting blocks directly (ADNL)
         IntensivePolling,
@@ -331,7 +379,7 @@ define_string_enum!(
 );
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "lowercase", tag = "type", content = "data")]
 pub enum Expiration {
     /// Message will never be expired. Not recommended to use
     Never,
@@ -395,12 +443,13 @@ impl ExpireAt {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Symbol {
-    /// Full name
+    /// Short name, e.g. USDT, DAI, etc.
     pub name: String,
 
-    /// Short name, e.g. USDT, DAI, etc.
-    pub symbol: String,
+    /// Full name
+    pub full_name: String,
 
     /// Fixed decimals count
     pub decimals: u8,
@@ -411,7 +460,7 @@ pub struct Symbol {
 }
 
 define_string_enum!(
-    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
     pub enum TokenWalletVersion {
         /// First stable iteration of token wallets.
         /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/34e466bd42789413f02aeec0051b9d1212fe6de9)
@@ -447,18 +496,23 @@ impl TryFrom<u32> for TokenWalletVersion {
 struct UnknownTokenWalletVersion;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TokenWalletDetails {
     /// Linked root token contract address
     #[serde(with = "serde_address")]
     pub root_address: MsgAddressInt,
+
     /// Owner wallet address
     #[serde(with = "serde_address")]
     pub owner_address: MsgAddressInt,
+
     #[serde(skip)]
     pub code: Option<ton_types::Cell>,
+
     #[serde(skip)]
     pub wallet_public_key: UInt256,
-    #[serde(with = "serde_biguint")]
+
+    #[serde(with = "serde_string")]
     pub balance: BigUint,
 }
 
@@ -475,16 +529,17 @@ pub struct RootTokenContractDetails {
     /// Root owner contract address. Used as proxy address in Tip3v1
     #[serde(with = "serde_address")]
     pub owner_address: MsgAddressInt,
-    #[serde(with = "serde_biguint")]
+    #[serde(with = "serde_string")]
     pub total_supply: BigUint,
     #[serde(with = "serde_uint256")]
     pub root_public_key: UInt256,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]
+#[serde(rename_all = "camelCase")]
 pub struct ContractState {
     /// Full account balance in nano TON
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub balance: u64,
     /// At what point was this state obtained
     pub gen_timings: GenTimings,
@@ -507,6 +562,7 @@ impl PartialEq for ContractState {
 impl Eq for ContractState {}
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PendingTransaction {
     /// External message hash
     #[serde(with = "serde_uint256")]
@@ -515,7 +571,11 @@ pub struct PendingTransaction {
     #[serde(with = "serde_uint256")]
     pub body_hash: UInt256,
     /// Incoming message source
-    #[serde(with = "serde_optional_address")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "serde_optional_address"
+    )]
     pub src: Option<MsgAddressInt>,
     /// Expiration timestamp, unixtime
     pub expire_at: u32,
@@ -544,39 +604,52 @@ pub struct TransactionWithData<T> {
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TransactionsBatchInfo {
     /// The smallest lt in a group
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub min_lt: u64,
     /// Maximum lt in a group
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub max_lt: u64,
     /// Whether this batch was from the preload request
-    pub old: bool,
+    pub batch_type: TransactionsBatchType,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TransactionsBatchType {
+    Old,
+    New,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Transaction {
     /// Full transaction id
     pub id: TransactionId,
     /// Previous transaction id. `None` for last transaction
+    #[serde(rename = "prevTransactionId")]
     pub prev_trans_id: Option<TransactionId>,
     /// Transaction unix timestamp
     pub created_at: u32,
     /// Whether transaction execution was unsuccessful
     pub aborted: bool,
     /// Action phrase exit code. `None` if action phase was skipped
-    pub result_code: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exit_code: Option<i32>,
     /// Account status before transaction execution
     pub orig_status: AccountStatus,
     /// Account status after transaction execution
     pub end_status: AccountStatus,
     /// Sum of fees from all execution stages
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub total_fees: u64,
     /// Incoming message
+    #[serde(rename = "inMessage")]
     pub in_msg: Message,
     /// Outgoing messages
+    #[serde(rename = "outMessages")]
     pub out_msgs: Vec<Message>,
 }
 
@@ -628,7 +701,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             }),
             created_at: data.now,
             aborted: desc.aborted,
-            result_code,
+            exit_code: result_code,
             orig_status: data.orig_status.into(),
             end_status: data.end_status.into(),
             total_fees,
@@ -646,7 +719,7 @@ pub enum TransactionError {
     Unsupported,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountStatus {
     /// Account exists and has a positive balance
@@ -670,22 +743,16 @@ impl From<ton_block::AccountStatus> for AccountStatus {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default)]
 pub struct Message {
     /// Source message address, `None` for external messages
-    #[serde(with = "serde_optional_address")]
     pub src: Option<MsgAddressInt>,
 
     /// Destination message address, `None` for outbound messages
-    #[serde(with = "serde_optional_address")]
     pub dst: Option<MsgAddressInt>,
 
     /// Message value in nano TON
-    #[serde(with = "serde_u64")]
     pub value: u64,
-
-    /// Message body
-    pub body: Option<MessageBody>,
 
     /// Whether this message will be bounced on unsuccessful execution.
     pub bounce: bool,
@@ -693,11 +760,112 @@ pub struct Message {
     /// Whether this message was bounced during unsuccessful execution.
     /// Only relevant for internal messages
     pub bounced: bool,
+
+    /// Message body
+    pub body: Option<MessageBody>,
+}
+
+impl<'de> Deserialize<'de> for Message {
+    fn deserialize<D>(deserializer: D) -> std::prelude::v1::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct MessageHelper {
+            #[serde(default, with = "serde_optional_address")]
+            src: Option<MsgAddressInt>,
+            #[serde(default, with = "serde_optional_address")]
+            dst: Option<MsgAddressInt>,
+            #[serde(with = "serde_string")]
+            value: u64,
+            bounce: bool,
+            bounced: bool,
+            body: Option<String>,
+        }
+
+        let parsed = MessageHelper::deserialize(deserializer)?;
+        let body = match parsed.body {
+            Some(data) => {
+                let data = base64::decode(&data).map_err(D::Error::custom)?;
+                let data = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(data))
+                    .map_err(D::Error::custom)?;
+                let hash = data.repr_hash();
+                Some(MessageBody { hash, data })
+            }
+            None => None,
+        };
+
+        Ok(Self {
+            src: parsed.src,
+            dst: parsed.dst,
+            value: parsed.value,
+            bounce: parsed.bounce,
+            bounced: parsed.bounced,
+            body,
+        })
+    }
+}
+
+impl Serialize for Message {
+    fn serialize<S>(&self, serializer: S) -> std::prelude::v1::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::Error;
+
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct MessageHelper<'a> {
+            #[serde(
+                skip_serializing_if = "Option::is_none",
+                with = "serde_optional_address"
+            )]
+            src: &'a Option<MsgAddressInt>,
+            #[serde(
+                skip_serializing_if = "Option::is_none",
+                with = "serde_optional_address"
+            )]
+            dst: &'a Option<MsgAddressInt>,
+            value: String,
+            bounce: bool,
+            bounced: bool,
+            body: Option<String>,
+            body_hash: Option<String>,
+        }
+
+        let (body, body_hash) = match &self.body {
+            Some(body) => {
+                let data = ton_types::serialize_toc(&body.data).map_err(S::Error::custom)?;
+                (Some(base64::encode(data)), Some(body.hash.to_hex_string()))
+            }
+            None => (None, None),
+        };
+
+        MessageHelper {
+            src: &self.src,
+            dst: &self.dst,
+            value: self.value.to_string(),
+            bounce: self.bounce,
+            bounced: self.bounced,
+            body,
+            body_hash,
+        }
+        .serialize(serializer)
+    }
 }
 
 impl From<ton_block::Message> for Message {
     fn from(s: ton_block::Message) -> Self {
-        let body = s.body().and_then(|body| MessageBody::try_from(body).ok());
+        let body = s.body().map(|body| {
+            let data = body.into_cell();
+            MessageBody {
+                hash: data.repr_hash(),
+                data,
+            }
+        });
 
         match s.header() {
             ton_block::CommonMsgInfo::IntMsgInfo(header) => Message {
@@ -735,31 +903,8 @@ pub struct MessageBody {
     #[serde(with = "serde_uint256")]
     pub hash: UInt256,
     /// Base64 encoded message body
-    pub data: String,
-}
-
-impl MessageBody {
-    pub fn decode(&self) -> Result<ton_types::Cell> {
-        let bytes = base64::decode(&self.data)?;
-        let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
-            .map_err(|_| MessageBodyError::FailedToDeserialize)?;
-        Ok(cell)
-    }
-}
-
-impl TryFrom<ton_types::SliceData> for MessageBody {
-    type Error = MessageBodyError;
-
-    fn try_from(s: ton_types::SliceData) -> Result<Self, Self::Error> {
-        let cell = s.into_cell();
-        let hash = cell.repr_hash();
-        let bytes =
-            ton_types::serialize_toc(&cell).map_err(|_| MessageBodyError::FailedToSerialize)?;
-        Ok(Self {
-            hash,
-            data: base64::encode(bytes),
-        })
-    }
+    #[serde(with = "serde_cell")]
+    pub data: ton_types::Cell,
 }
 
 #[derive(thiserror::Error, Debug, Copy, Clone)]

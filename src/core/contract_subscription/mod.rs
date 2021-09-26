@@ -2,11 +2,14 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use futures::StreamExt;
+use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
 use nekoton_abi::{Executor, GenTimings, TransactionId};
 
-use super::models::{ContractState, PendingTransaction, TransactionsBatchInfo};
+use super::models::{
+    ContractState, PendingTransaction, TransactionsBatchInfo, TransactionsBatchType,
+};
 use super::{utils, PollingMethod};
 use crate::core::utils::PendingTransactionsExt;
 use crate::transport::models::{RawContractState, RawTransaction};
@@ -288,7 +291,7 @@ impl ContractSubscription {
             (Some(first), Some(last)) => Some(TransactionsBatchInfo {
                 min_lt: last.data.lt, // transactions in response are in descending order
                 max_lt: first.data.lt,
-                old: false,
+                batch_type: TransactionsBatchType::New,
             }),
             _ => None,
         };
@@ -304,7 +307,11 @@ impl ContractSubscription {
 
             // `utils::request_transactions` returns new transactions. So, to mark
             // first transactions we get as old, we should use initialization flag.
-            batch_info.old = !self.initialized;
+            batch_info.batch_type = if self.initialized {
+                TransactionsBatchType::New
+            } else {
+                TransactionsBatchType::Old
+            };
 
             on_transactions_found(new_transactions, batch_info);
         }
@@ -342,7 +349,7 @@ impl ContractSubscription {
             let batch_info = TransactionsBatchInfo {
                 min_lt: last.data.lt, // transactions in response are in descending order
                 max_lt: first.data.lt,
-                old: true,
+                batch_type: TransactionsBatchType::Old,
             };
 
             on_transactions_found(transactions, batch_info);
@@ -388,7 +395,8 @@ impl ContractSubscription {
     }
 }
 
-#[derive(Debug, Default, Copy, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TransactionExecutionOptions {
     pub disable_signature_check: bool,
 }

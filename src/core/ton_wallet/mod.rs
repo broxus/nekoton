@@ -634,7 +634,7 @@ where
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TonWalletDetails {
     pub requires_separate_deploy: bool,
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub min_amount: u64,
     pub supports_payload: bool,
     pub supports_multiple_owners: bool,

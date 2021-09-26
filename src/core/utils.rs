@@ -148,7 +148,7 @@ pub fn parse_block(
             Some(TransactionsBatchInfo {
                 min_lt: first.data.lt, // transactions in block info are in ascending order
                 max_lt: last.data.lt,
-                old: false,
+                batch_type: TransactionsBatchType::New,
             })
         } else {
             None

@@ -44,7 +44,7 @@ pub struct GetContractStateResponseData {
 #[derive(Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub struct GetContractStateResponseTimings {
-    #[serde(with = "serde_u64")]
+    #[serde(with = "serde_string")]
     pub gen_lt: u64,
     pub gen_utime: u32,
 }

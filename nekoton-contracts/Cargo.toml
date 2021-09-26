@@ -1,6 +1,6 @@
 [package]
 name = "nekoton-contracts"
-version = "0.6.0"
+version = "0.7.0"
 authors = [
     "Alexey Pashinov <pashinov93@gmail.com>",
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",

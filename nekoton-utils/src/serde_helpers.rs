@@ -1,7 +1,6 @@
 use std::convert::TryInto;
 use std::str::FromStr;
 
-use num_bigint::BigUint;
 use serde::de::{Deserialize, Error, SeqAccess, Visitor};
 use serde::ser::{Serialize, SerializeSeq};
 use ton_block::MsgAddressInt;
@@ -51,22 +50,24 @@ pub mod serde_hex_array {
     }
 }
 
-pub mod serde_u64 {
+pub mod serde_string {
     use super::*;
 
-    pub fn serialize<S>(data: &u64, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &dyn std::fmt::Display, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
         data.to_string().serialize(serializer)
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<u64, D::Error>
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<T, D::Error>
     where
         D: serde::Deserializer<'de>,
+        T: FromStr,
+        T::Err: std::fmt::Display,
     {
         String::deserialize(deserializer)
-            .and_then(|data| u64::from_str(&data).map_err(D::Error::custom))
+            .and_then(|data| T::from_str(&data).map_err(D::Error::custom))
     }
 }
 
@@ -350,25 +351,6 @@ pub mod serde_ton_block {
     {
         let data = String::deserialize(deserializer)?;
         T::construct_from_base64(&data).map_err(D::Error::custom)
-    }
-}
-
-pub mod serde_biguint {
-    use super::*;
-
-    pub fn serialize<S>(data: &BigUint, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&data.to_string())
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<BigUint, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let data = String::deserialize(deserializer)?;
-        BigUint::from_str(&data).map_err(|_| D::Error::custom("Invalid uint256"))
     }
 }
 
