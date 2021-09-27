@@ -119,13 +119,13 @@ impl Serialize for LastTransactionId {
             hash: Option<String>,
         }
 
-        let (lt, hash) = match self {
-            Self::Exact(id) => (&id.lt, Some(id.hash.to_hex_string())),
-            Self::Inexact { latest_lt } => (latest_lt, None),
+        let (is_exact, lt, hash) = match self {
+            Self::Exact(id) => (true, &id.lt, Some(id.hash.to_hex_string())),
+            Self::Inexact { latest_lt } => (false, latest_lt, None),
         };
 
         LastTransactionIdHelper {
-            is_exact: false,
+            is_exact,
             lt: lt.to_string(),
             hash,
         }
