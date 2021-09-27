@@ -6,7 +6,10 @@ use anyhow::Result;
 use chrono::Utc;
 use smallvec::smallvec;
 use ton_abi::{Function, Param, Token, TokenValue};
-use ton_block::{Account, AccountStuff, Deserializable, MsgAddrStd, MsgAddressInt, Serializable};
+use ton_block::{
+    Account, AccountStuff, Deserializable, GetRepresentationHash, MsgAddrStd, MsgAddressInt,
+    Serializable,
+};
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
 use ton_types::{SliceData, UInt256};
 
@@ -43,12 +46,89 @@ mod tvm;
 
 const TON_ABI_VERSION: u8 = 2;
 
-pub fn read_function_id(data: &ton_types::SliceData) -> ton_types::Result<u32> {
+pub fn read_function_id(data: &SliceData) -> Result<u32> {
     let mut value: u32 = 0;
     for i in 0..4 {
         value |= (data.get_byte(8 * i)? as u32) << (8 * (3 - i));
     }
     Ok(value)
+}
+
+pub fn read_input_function_id(
+    contract: &ton_abi::Contract,
+    mut body: SliceData,
+    internal: bool,
+) -> Result<u32> {
+    if internal {
+        read_function_id(&body)
+    } else {
+        // Skip optional signature
+        if body.get_next_bit()? {
+            body.move_by(ed25519_dalek::SIGNATURE_LENGTH * 8)?;
+        }
+
+        // Skip headers
+        for header in contract.header() {
+            match header.kind {
+                ton_abi::ParamType::PublicKey => {
+                    if body.get_next_bit()? {
+                        body.move_by(ed25519_dalek::PUBLIC_KEY_LENGTH * 8)?;
+                    }
+                }
+                ton_abi::ParamType::Time => body.move_by(64)?,
+                ton_abi::ParamType::Expire => body.move_by(32)?,
+                _ => return Err(AbiError::UnsupportedHeader.into()),
+            }
+        }
+
+        read_function_id(&body)
+    }
+}
+
+pub fn guess_method_by_input<'a>(
+    contract: &'a ton_abi::Contract,
+    message_body: &SliceData,
+    method: &MethodName,
+    internal: bool,
+) -> Result<Option<&'a ton_abi::Function>> {
+    let names = match method {
+        MethodName::Known(name) => return Ok(Some(contract.function(name)?)),
+        MethodName::GuessInRange(names) => Some(names),
+        MethodName::Guess => None,
+    };
+
+    let input_id = match read_input_function_id(contract, message_body.clone(), internal) {
+        Ok(id) => id,
+        Err(_) => return Ok(None),
+    };
+
+    let mut method = None;
+    match names {
+        Some(names) => {
+            for name in names {
+                let function = contract.function(name)?;
+                if function.input_id == input_id {
+                    method = Some(function);
+                    break;
+                }
+            }
+        }
+        None => {
+            for function in contract.functions().values() {
+                if function.input_id == input_id {
+                    method = Some(function);
+                    break;
+                }
+            }
+        }
+    }
+    Ok(method)
+}
+
+pub enum MethodName {
+    Known(String),
+    GuessInRange(Vec<String>),
+    Guess,
 }
 
 pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
@@ -123,13 +203,13 @@ pub fn unpack_from_cell(
 }
 
 pub fn extract_public_key(
-    account: &ton_block::AccountStuff,
+    account: &AccountStuff,
 ) -> Result<ed25519_dalek::PublicKey, ExtractionError> {
     let state_init = match &account.storage.state {
         ton_block::AccountState::AccountActive(state_init) => state_init,
         _ => return Err(ExtractionError::AccountIsNotActive),
     };
-    let mut data: ton_types::SliceData = match &state_init.data {
+    let mut data: SliceData = match &state_init.data {
         Some(data) => data.into(),
         None => return Err(ExtractionError::AccountDataNotFound),
     };
@@ -140,7 +220,178 @@ pub fn extract_public_key(
     Ok(ed25519_dalek::PublicKey::from_bytes(&data).trust_me())
 }
 
-pub fn unpack_headers<T>(body: &ton_types::SliceData) -> Result<(T::Output, ton_types::SliceData)>
+pub fn get_state_init_hash(
+    mut state_init: ton_block::StateInit,
+    contract: &ton_abi::Contract,
+    public_key: &Option<ed25519_dalek::PublicKey>,
+    init_data: Vec<ton_abi::Token>,
+) -> Result<UInt256> {
+    state_init.data = if let Some(data) = state_init.data.take() {
+        Some(insert_state_init_data(contract, data.into(), public_key, init_data)?.into_cell())
+    } else {
+        None
+    };
+    state_init.hash()
+}
+
+pub fn insert_state_init_data(
+    contract: &ton_abi::Contract,
+    data: SliceData,
+    public_key: &Option<ed25519_dalek::PublicKey>,
+    tokens: Vec<ton_abi::Token>,
+) -> Result<SliceData> {
+    #[derive(thiserror::Error, Debug)]
+    enum InitDataError {
+        #[error("Token not found: {}", .0)]
+        TokenNotFound(String),
+        #[error("Token param type mismatch")]
+        TokenParamTypeMismatch,
+    }
+
+    let mut map = ton_types::HashmapE::with_hashmap(
+        ton_abi::Contract::DATA_MAP_KEYLEN,
+        data.reference_opt(0),
+    );
+
+    if let Some(public_key) = public_key {
+        map.set_builder(
+            0u64.write_to_new_cell().trust_me().into(),
+            &ton_types::BuilderData::new()
+                .append_raw(public_key.as_bytes(), 256)
+                .trust_me(),
+        )?;
+    }
+
+    if !contract.data().is_empty() {
+        let tokens = tokens
+            .into_iter()
+            .map(|token| (token.name, token.value))
+            .collect::<HashMap<_, _>>();
+
+        for (param_name, param) in contract.data() {
+            let token = tokens
+                .get(param_name)
+                .ok_or_else(|| InitDataError::TokenNotFound(param_name.clone()))?;
+            if !token.type_check(&param.value.kind) {
+                return Err(InitDataError::TokenParamTypeMismatch.into());
+            }
+
+            let builder = token.pack_into_chain(2)?;
+            map.set_builder(param.key.write_to_new_cell().trust_me().into(), &builder)?;
+        }
+    }
+
+    map.write_to_new_cell().map(From::from)
+}
+
+pub fn decode_input<'a>(
+    contract: &'a ton_abi::Contract,
+    message_body: SliceData,
+    method: &MethodName,
+    internal: bool,
+) -> Result<Option<(&'a ton_abi::Function, Vec<Token>)>> {
+    let function = match guess_method_by_input(contract, &message_body, method, internal)? {
+        Some(function) => function,
+        None => return Ok(None),
+    };
+
+    let input = function.decode_input(message_body, internal)?;
+    Ok(Some((function, input)))
+}
+
+pub fn decode_output<'a>(
+    contract: &'a ton_abi::Contract,
+    message_body: SliceData,
+    method: &MethodName,
+) -> Result<Option<(&'a ton_abi::Function, Vec<Token>)>> {
+    let output_id = match read_function_id(&message_body) {
+        Ok(id) => id,
+        Err(_) => return Ok(None),
+    };
+
+    let function = match method {
+        MethodName::Known(name) => Some(contract.function(name)?),
+        MethodName::GuessInRange(names) => {
+            let mut function = None;
+            for name in names {
+                let entry = contract.function(name)?;
+                if entry.output_id == output_id {
+                    function = Some(entry);
+                    break;
+                }
+            }
+            function
+        }
+        MethodName::Guess => {
+            let mut function = None;
+            for entry in contract.functions().values() {
+                if entry.output_id == output_id {
+                    function = Some(entry);
+                    break;
+                }
+            }
+            function
+        }
+    };
+
+    let function = match function {
+        Some(function) => function,
+        None => return Ok(None),
+    };
+
+    let output = function.decode_output(message_body, true)?;
+    Ok(Some((function, output)))
+}
+
+pub fn decode_event<'a>(
+    contract: &'a ton_abi::Contract,
+    message_body: SliceData,
+    name: &MethodName,
+) -> Result<Option<(&'a ton_abi::Event, Vec<ton_abi::Token>)>> {
+    let events = contract.events();
+    let event_id = match read_function_id(&message_body) {
+        Ok(id) => id,
+        Err(_) => return Ok(None),
+    };
+
+    let event = match name {
+        MethodName::Known(name) => events.get(name),
+        MethodName::GuessInRange(names) => {
+            let mut event = None;
+            for name in names {
+                let entry = match events.get(name) {
+                    Some(event) => event,
+                    None => continue,
+                };
+                if entry.id == event_id {
+                    event = Some(entry);
+                    break;
+                }
+            }
+            event
+        }
+        MethodName::Guess => {
+            let mut event = None;
+            for entry in events.values() {
+                if entry.id == event_id {
+                    event = Some(entry);
+                    break;
+                }
+            }
+            event
+        }
+    };
+
+    let event = match event {
+        Some(event) => event,
+        None => return Ok(None),
+    };
+
+    let data = event.decode_input(message_body)?;
+    Ok(Some((event, data)))
+}
+
+pub fn unpack_headers<T>(body: &SliceData) -> Result<(T::Output, SliceData)>
 where
     T: UnpackHeader,
 {
@@ -154,7 +405,7 @@ macro_rules! impl_unpack_header {
         impl UnpackHeader for ($($header),*) {
             type Output = ($(<$header as UnpackHeader>::Output),+);
 
-            fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output> {
+            fn unpack_header(body: &mut SliceData) -> Result<Self::Output> {
                 Ok(($($header::unpack_header(body)?),+))
             }
         }
@@ -166,7 +417,7 @@ impl_unpack_header!(TimeHeader, ExpireHeader);
 
 pub trait UnpackHeader {
     type Output;
-    fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output>;
+    fn unpack_header(body: &mut SliceData) -> Result<Self::Output>;
 }
 
 pub struct PubkeyHeader;
@@ -174,7 +425,7 @@ pub struct PubkeyHeader;
 impl UnpackHeader for PubkeyHeader {
     type Output = Option<UInt256>;
 
-    fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output> {
+    fn unpack_header(body: &mut SliceData) -> Result<Self::Output> {
         if body.get_next_bit()? {
             body.move_by(ed25519_dalek::SIGNATURE_LENGTH * 8)?;
         }
@@ -192,7 +443,7 @@ pub struct TimeHeader;
 impl UnpackHeader for TimeHeader {
     type Output = u64;
 
-    fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output> {
+    fn unpack_header(body: &mut SliceData) -> Result<Self::Output> {
         body.get_next_u64()
     }
 }
@@ -202,7 +453,7 @@ pub struct ExpireHeader;
 impl UnpackHeader for ExpireHeader {
     type Output = u32;
 
-    fn unpack_header(body: &mut ton_types::SliceData) -> Result<Self::Output> {
+    fn unpack_header(body: &mut SliceData) -> Result<Self::Output> {
         body.get_next_u32()
     }
 }
@@ -241,7 +492,7 @@ pub trait FunctionExt {
 
     fn run_local(
         &self,
-        account_stuff: ton_block::AccountStuff,
+        account_stuff: AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
@@ -256,7 +507,7 @@ impl FunctionExt for &Function {
 
     fn run_local(
         &self,
-        account_stuff: ton_block::AccountStuff,
+        account_stuff: AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
@@ -274,7 +525,7 @@ impl FunctionExt for Function {
 
     fn run_local(
         &self,
-        account_stuff: ton_block::AccountStuff,
+        account_stuff: AccountStuff,
         timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
@@ -300,7 +551,7 @@ impl<'a> FunctionAbi<'a> {
 
     fn run_local(
         &self,
-        account_stuff: ton_block::AccountStuff,
+        account_stuff: AccountStuff,
         _timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
@@ -418,6 +669,8 @@ enum AbiError {
     NoMessagesProduced,
     #[error("Incomplete Deserialization")]
     IncompleteDeserialization(SliceData),
+    #[error("Unsupported header")]
+    UnsupportedHeader,
 }
 
 pub struct Executor {

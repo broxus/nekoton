@@ -111,7 +111,7 @@ pub fn parse_abi_token_value(
                 if let Some(value) = value.strip_prefix("0x") {
                     BigUint::from_str_radix(value, 16)
                 } else {
-                    BigUint::from_str(&value)
+                    BigUint::from_str(value)
                 }
                 .map_err(|_| TokensJsonError::InvalidNumber(value.to_string()))
             } else if let Some(value) = value.as_f64() {
@@ -143,7 +143,7 @@ pub fn parse_abi_token_value(
                 if let Some(value) = value.strip_prefix("0x") {
                     BigInt::from_str_radix(value, 16)
                 } else {
-                    BigInt::from_str(&value)
+                    BigInt::from_str(value)
                 }
                 .map_err(|_| TokensJsonError::InvalidNumber(value.to_string()))
             } else if let Some(value) = value.as_f64() {
@@ -272,7 +272,7 @@ pub fn parse_abi_token_value(
         ton_abi::ParamType::Address => {
             let value = if let Some(value) = value.as_str() {
                 let value = value.trim();
-                ton_block::MsgAddressInt::from_str(&value)
+                ton_block::MsgAddressInt::from_str(value)
                     .map_err(|_| TokensJsonError::InvalidAddress)
             } else {
                 Err(TokensJsonError::StringExpected)
@@ -324,7 +324,7 @@ pub fn parse_abi_token_value(
                 if let Some(value) = value.strip_prefix("0x") {
                     u128::from_str_radix(value, 16)
                 } else {
-                    u128::from_str(&value)
+                    u128::from_str(value)
                 }
                 .map_err(|_| TokensJsonError::InvalidNumber(value.to_string()))
             } else if let Some(value) = value.as_f64() {
@@ -345,7 +345,7 @@ pub fn parse_abi_token_value(
                 if let Some(value) = value.strip_prefix("0x") {
                     u64::from_str_radix(value, 16)
                 } else {
-                    u64::from_str(&value)
+                    u64::from_str(value)
                 }
                 .map_err(|_| TokensJsonError::InvalidNumber(value.to_string()))
             } else if let Some(value) = value.as_f64() {
@@ -372,7 +372,7 @@ pub fn parse_abi_token_value(
                 if let Some(value) = value.strip_prefix("0x") {
                     u32::from_str_radix(value, 16)
                 } else {
-                    u32::from_str(&value)
+                    u32::from_str(value)
                 }
                 .map_err(|_| TokensJsonError::InvalidNumber(value.to_string()))
             } else {
@@ -387,7 +387,7 @@ pub fn parse_abi_token_value(
                 if value.is_empty() {
                     Ok(None)
                 } else {
-                    hex::decode(value.strip_prefix("0x").unwrap_or(&value))
+                    hex::decode(value.strip_prefix("0x").unwrap_or(value))
                         .map_err(|_| TokensJsonError::InvalidPublicKey)
                         .and_then(|value| {
                             ed25519_dalek::PublicKey::from_bytes(&value)
