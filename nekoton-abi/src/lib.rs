@@ -59,9 +59,7 @@ pub fn read_input_function_id(
     mut body: SliceData,
     internal: bool,
 ) -> Result<u32> {
-    if internal {
-        read_function_id(&body)
-    } else {
+    if !internal {
         // Skip optional signature
         if body.get_next_bit()? {
             body.move_by(ed25519_dalek::SIGNATURE_LENGTH * 8)?;
@@ -80,9 +78,9 @@ pub fn read_input_function_id(
                 _ => return Err(AbiError::UnsupportedHeader.into()),
             }
         }
-
-        read_function_id(&body)
     }
+
+    read_function_id(&body)
 }
 
 pub fn guess_method_by_input<'a>(
@@ -256,7 +254,7 @@ pub fn insert_state_init_data(
     if let Some(public_key) = public_key {
         map.set_builder(
             0u64.write_to_new_cell().trust_me().into(),
-            &ton_types::BuilderData::new()
+            ton_types::BuilderData::new()
                 .append_raw(public_key.as_bytes(), 256)
                 .trust_me(),
         )?;
