@@ -35,7 +35,7 @@ impl AdnlTransport {
         Self {
             connection,
             last_block: LastBlock::new(&threshold),
-            config_cache: ConfigCache::new(),
+            config_cache: ConfigCache::new(false),
         }
     }
 
@@ -88,6 +88,7 @@ impl Transport for AdnlTransport {
         TransportInfo {
             max_transactions_per_fetch: 16,
             reliable_behavior: ReliableBehavior::IntensivePolling,
+            has_key_blocks: true,
         }
     }
 

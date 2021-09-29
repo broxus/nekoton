@@ -30,6 +30,8 @@ pub trait AdnlConnection: Send + Sync {
 #[cfg(feature = "gql_transport")]
 #[async_trait]
 pub trait GqlConnection: Send + Sync {
+    fn is_local(&self) -> bool;
+
     async fn post(&self, data: &str) -> Result<String>;
 }
 

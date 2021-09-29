@@ -47,4 +47,5 @@ pub trait Transport: Send + Sync {
 pub struct TransportInfo {
     pub max_transactions_per_fetch: u8,
     pub reliable_behavior: ReliableBehavior,
+    pub has_key_blocks: bool,
 }

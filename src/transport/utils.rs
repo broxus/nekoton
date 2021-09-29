@@ -4,14 +4,23 @@ use anyhow::Result;
 
 use super::Transport;
 
-#[derive(Default)]
 pub struct ConfigCache {
     state: Mutex<Option<ConfigCacheState>>,
 }
 
 impl ConfigCache {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(use_default_config: bool) -> Self {
+        Self {
+            state: Mutex::new(if use_default_config {
+                Some(ConfigCacheState {
+                    config: ton_executor::BlockchainConfig::default(),
+                    last_key_block_seqno: 0,
+                    phase: ConfigCachePhase::WainingNextValidatorsSet { deadline: u32::MAX },
+                })
+            } else {
+                None
+            }),
+        }
     }
 
     pub async fn get_blockchain_config(

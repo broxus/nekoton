@@ -25,7 +25,7 @@ impl JrpcTransport {
     pub fn new(connection: Arc<dyn JrpcConnection>) -> Self {
         Self {
             connection,
-            config_cache: ConfigCache::new(),
+            config_cache: ConfigCache::new(false),
         }
     }
 }
@@ -36,6 +36,7 @@ impl Transport for JrpcTransport {
         TransportInfo {
             max_transactions_per_fetch: 16,
             reliable_behavior: ReliableBehavior::IntensivePolling,
+            has_key_blocks: true,
         }
     }
 
