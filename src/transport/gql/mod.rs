@@ -24,9 +24,11 @@ pub struct GqlTransport {
 
 impl GqlTransport {
     pub fn new(connection: Arc<dyn GqlConnection>) -> Self {
+        let use_default_config = connection.is_local();
+
         Self {
             connection,
-            config_cache: ConfigCache::new(),
+            config_cache: ConfigCache::new(use_default_config),
         }
     }
 
@@ -59,6 +61,20 @@ impl GqlTransport {
         )]
         struct QueryLatestMasterchainBlock;
 
+        #[derive(GraphQLQuery)]
+        #[graphql(
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_node_se_conditions.graphql"
+        )]
+        struct QueryNodeSeConditions;
+
+        #[derive(GraphQLQuery)]
+        #[graphql(
+            schema_path = "src/transport/gql/schema.graphql",
+            query_path = "src/transport/gql/query_node_se_latest_block.graphql"
+        )]
+        struct QueryNodeSeLatestBlock;
+
         let workchain_id = addr.get_workchain_id();
 
         let blocks = self
@@ -67,52 +83,85 @@ impl GqlTransport {
             .blocks
             .ok_or_else(no_blocks_found)?;
 
-        let block = match blocks.into_iter().flatten().next() {
-            Some(block) => block,
-            // Node SE case (without masterchain and sharding)
-            None => return Err(NodeClientError::UnsupportedNetwork.into()),
-        };
+        match blocks.into_iter().flatten().next() {
+            Some(block) => {
+                // Handle simple case when searched account is in masterchain
+                if workchain_id == -1 {
+                    return match (block.id, block.end_lt, block.gen_utime) {
+                        (Some(id), Some(end_lt), Some(gen_utime)) => Ok(LatestBlock {
+                            id,
+                            end_lt: u64::from_str(&end_lt).unwrap_or_default(),
+                            gen_utime: gen_utime as u32,
+                        }),
+                        _ => Err(no_blocks_found().into()),
+                    };
+                }
 
-        // Handle simple case when searched account is in masterchain
-        if workchain_id == -1 {
-            return match (block.id, block.end_lt, block.gen_utime) {
-                (Some(id), Some(end_lt), Some(gen_utime)) => Ok(LatestBlock {
-                    id,
-                    end_lt: u64::from_str(&end_lt).unwrap_or_default(),
-                    gen_utime: gen_utime as u32,
-                }),
-                _ => Err(no_blocks_found().into()),
-            };
-        }
+                // Find account's shard block
+                let shards: Vec<_> = block
+                    .master
+                    .and_then(|master| master.shard_hashes)
+                    .ok_or_else(no_blocks_found)?;
 
-        // Find account's shard block
-        let shards: Vec<_> = block
-            .master
-            .and_then(|master| master.shard_hashes)
-            .ok_or_else(no_blocks_found)?;
-
-        // Find matching shard
-        for item in shards.into_iter().flatten() {
-            match (item.workchain_id, item.shard) {
-                (Some(workchain_id), Some(shard)) => {
-                    if check_shard_match(workchain_id, &shard, addr)? {
-                        return item
-                            .descr
-                            .and_then(|descr| {
-                                Some(LatestBlock {
-                                    id: descr.root_hash?,
-                                    end_lt: u64::from_str(&descr.end_lt?).unwrap_or_default(),
-                                    gen_utime: descr.gen_utime? as u32,
-                                })
-                            })
-                            .ok_or_else(|| no_blocks_found().into());
+                // Find matching shard
+                for item in shards.into_iter().flatten() {
+                    match (item.workchain_id, item.shard) {
+                        (Some(workchain_id), Some(shard)) => {
+                            if check_shard_match(workchain_id, &shard, addr)? {
+                                return item
+                                    .descr
+                                    .and_then(|descr| {
+                                        Some(LatestBlock {
+                                            id: descr.root_hash?,
+                                            end_lt: u64::from_str(&descr.end_lt?)
+                                                .unwrap_or_default(),
+                                            gen_utime: descr.gen_utime? as u32,
+                                        })
+                                    })
+                                    .ok_or_else(|| no_blocks_found().into());
+                            }
+                        }
+                        _ => return Err(no_blocks_found().into()),
                     }
                 }
-                _ => return Err(no_blocks_found().into()),
+
+                Err(no_blocks_found().into())
+            }
+            // Node SE case (without masterchain and sharding)
+            None => {
+                let block = self
+                    .fetch::<QueryNodeSeConditions>(query_node_se_conditions::Variables {
+                        workchain: workchain_id as i64,
+                    })
+                    .await?
+                    .blocks
+                    .and_then(|blocks| blocks.into_iter().flatten().next())
+                    .ok_or_else(no_blocks_found)?;
+
+                match (block.after_merge, &block.shard) {
+                    (Some(after_merge), Some(shard))
+                        if !after_merge && shard == "8000000000000000" => {}
+                    // If workchain is sharded then it is not Node SE and missing masterchain blocks is error
+                    _ => return Err(no_blocks_found().into()),
+                }
+
+                self.fetch::<QueryNodeSeLatestBlock>(query_node_se_latest_block::Variables {
+                    workchain: workchain_id as i64,
+                })
+                .await?
+                .blocks
+                .and_then(|blocks| {
+                    blocks.into_iter().flatten().next().and_then(|block| {
+                        Some(LatestBlock {
+                            id: block.id?,
+                            end_lt: u64::from_str(&block.end_lt?).unwrap_or_default(),
+                            gen_utime: block.gen_utime? as u32,
+                        })
+                    })
+                })
+                .ok_or_else(|| no_blocks_found().into())
             }
         }
-
-        Err(no_blocks_found().into())
     }
 
     pub async fn get_block(&self, id: &str) -> Result<ton_block::Block> {
@@ -203,6 +252,7 @@ impl Transport for GqlTransport {
         TransportInfo {
             max_transactions_per_fetch: 50,
             reliable_behavior: ReliableBehavior::BlockWalking,
+            has_key_blocks: !self.connection.is_local(),
         }
     }
 
