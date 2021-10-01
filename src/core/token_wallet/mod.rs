@@ -345,6 +345,19 @@ pub trait TokenWalletSubscriptionHandler: Send + Sync {
     );
 }
 
+pub async fn get_token_root_details(
+    transport: &dyn Transport,
+    root_token_contract: &MsgAddressInt,
+) -> Result<RootTokenContractDetails> {
+    let state = match transport.get_contract_state(root_token_contract).await? {
+        RawContractState::Exists(state) => state,
+        RawContractState::NotExists => {
+            return Err(TokenWalletError::InvalidRootTokenContract.into())
+        }
+    };
+    RootTokenContractState(&state).guess_details()
+}
+
 pub async fn get_token_root_details_from_token_wallet(
     transport: &dyn Transport,
     token_wallet_address: &MsgAddressInt,
