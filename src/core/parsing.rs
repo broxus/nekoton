@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use anyhow::Result;
 use num_bigint::BigUint;
 use once_cell::sync::OnceCell;
-use ton_block::{MsgAddressInt, Serializable};
+use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
 use nekoton_abi::*;
@@ -620,7 +620,7 @@ struct TonTokenWalletBurnByOwner {
     #[abi(address, name = "send_gas_to")]
     _send_gas_to: MsgAddressInt,
     #[abi(address, name = "callback_address")]
-    _callback_address: MsgAddressInt,
+    callback_address: MsgAddressInt,
     #[abi(cell)]
     callback_payload: ton_types::Cell,
 }
@@ -631,25 +631,10 @@ impl TryFrom<InputMessage> for TokenSwapBack {
     fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
         let input: TonTokenWalletBurnByOwner = value.0.unpack()?;
 
-        let to = match ton_abi::TokenValue::read_from(
-            &ton_abi::ParamType::Bytes,
-            input
-                .callback_payload
-                .write_to_new_cell()
-                .map_err(|_| UnpackerError::InvalidAbi)?
-                .into(),
-            true,
-            2,
-        ) {
-            Ok((ton_abi::TokenValue::Bytes(destination), _)) if destination.len() == 20 => {
-                format!("0x{}", hex::encode(&destination))
-            }
-            _ => return Err(UnpackerError::InvalidAbi),
-        };
-
         Ok(TokenSwapBack {
             tokens: input.tokens,
-            to,
+            callback_address: input.callback_address,
+            callback_payload: input.callback_payload,
         })
     }
 }

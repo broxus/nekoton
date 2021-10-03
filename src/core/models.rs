@@ -313,8 +313,11 @@ impl<'de> Deserialize<'de> for TransferRecipient {
 pub struct TokenSwapBack {
     #[serde(with = "serde_string")]
     pub tokens: BigUint,
-    /// ETH address
-    pub to: String,
+    #[serde(with = "serde_address")]
+    pub callback_address: MsgAddressInt,
+    /// ETH address or something else
+    #[serde(with = "serde_cell")]
+    pub callback_payload: ton_types::Cell,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Copy)]
