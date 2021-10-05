@@ -638,9 +638,12 @@ pub struct Transaction {
     pub created_at: u32,
     /// Whether transaction execution was unsuccessful
     pub aborted: bool,
-    /// Action phrase exit code. `None` if action phase was skipped
+    /// Compute phase result code. `None` if compute phase was skipped
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exit_code: Option<i32>,
+    /// Action phase result code. `None` if action phase was skipped
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub result_code: Option<i32>,
     /// Account status before transaction execution
     pub orig_status: AccountStatus,
     /// Account status after transaction execution
@@ -680,6 +683,11 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             None => return Err(TransactionError::Unsupported),
         };
 
+        let exit_code = match &desc.compute_ph {
+            ton_block::TrComputePhase::Vm(vm) => Some(vm.exit_code),
+            ton_block::TrComputePhase::Skipped(_) => None,
+        };
+
         let result_code = desc.action.map(|action| action.result_code);
 
         let mut out_msgs = Vec::new();
@@ -704,7 +712,8 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             }),
             created_at: data.now,
             aborted: desc.aborted,
-            exit_code: result_code,
+            exit_code,
+            result_code,
             orig_status: data.orig_status.into(),
             end_status: data.end_status.into(),
             total_fees,
