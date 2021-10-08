@@ -251,7 +251,7 @@ pub fn parse_abi_token_value(
             for value in value.into_iter() {
                 let mut value = match value {
                     serde_json::Value::Array(value) => value.into_iter(),
-                    _ => return Err(TokensJsonError::ArrayExpected),
+                    _ => return Err(TokensJsonError::MapItemExpected),
                 };
                 let (key, value) = match (value.next(), value.next()) {
                     (Some(key), Some(value)) => (key, value),
@@ -261,10 +261,7 @@ pub fn parse_abi_token_value(
                 let key = parse_abi_token_value(param_key.as_ref(), key)?;
                 let value = parse_abi_token_value(param_value.as_ref(), value)?;
 
-                result.insert(
-                    serde_json::to_string(&key).map_err(|_| TokensJsonError::InvalidMappingKey)?,
-                    value,
-                );
+                result.insert(key.to_string(), value);
             }
 
             ton_abi::TokenValue::Map(*param_key.clone(), *param_value.clone(), result)
