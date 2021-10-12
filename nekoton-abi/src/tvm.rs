@@ -89,11 +89,11 @@ pub fn call_msg(
         .push(StackItem::Slice(msg.body().unwrap_or_default())) // message body
         .push(function_selector); // function selector
 
-    let (engine, result_code, success) = call(utime, lt, account, stack)?;
+    let (engine, exit_code, success) = call(utime, lt, account, stack)?;
     if !success {
         return Ok(ActionPhaseOutput {
             messages: None,
-            result_code,
+            exit_code,
         });
     }
 
@@ -116,7 +116,7 @@ pub fn call_msg(
     msgs.reverse();
     Ok(ActionPhaseOutput {
         messages: Some(msgs),
-        result_code,
+        exit_code,
     })
 }
 
@@ -140,7 +140,7 @@ fn build_contract_info(
 
 pub struct ActionPhaseOutput {
     pub messages: Option<Vec<Message>>,
-    pub result_code: i32,
+    pub exit_code: i32,
 }
 
 #[derive(thiserror::Error, Debug)]

@@ -28,7 +28,6 @@ impl TxContext<'_> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn in_msg_external(&self) -> Option<&ton_block::Message> {
         if matches!(
             self.in_msg.header(),
@@ -40,7 +39,6 @@ impl TxContext<'_> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn find_function_output(
         &self,
         function: &ton_abi::Function,
@@ -77,7 +75,6 @@ impl TxContext<'_> {
         result
     }
 
-    #[allow(dead_code)]
     pub fn iterate_events<F>(&self, mut f: F)
     where
         F: FnMut(u32, ton_types::SliceData),

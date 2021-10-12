@@ -5,6 +5,7 @@ use ton_block::{Account, ShardAccount};
 
 pub trait ExistingContractExt {
     fn from_shard_account(shard_account: &ShardAccount) -> Result<Option<ExistingContract>>;
+
     fn from_shard_account_opt(
         shard_account: &Option<ShardAccount>,
     ) -> Result<Option<ExistingContract>>;
