@@ -9,7 +9,7 @@ authors = [
 edition = "2018"
 
 [workspace]
-members = ["nekoton-contracts", "nekoton-derive", "nekoton-abi", "nekoton-utils"]
+members = ["nekoton-contracts", "nekoton-derive", "nekoton-abi", "nekoton-utils", "nekoton-indexer-utils"]
 
 [dependencies]
 aes = { version = "0.7.2", features = ["ctr"], default-features = false, optional = true }
@@ -44,7 +44,7 @@ tokio = { version = "1.4", default-features = false, features = ["sync"] }
 x25519-dalek-ng = { version = "1.1", optional = true }
 zeroize = "1.2.0"
 
-ed25519-dalek = {git = "https://github.com/broxus/ed25519-dalek.git"}
+ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
 tiny-bip39 = { git = "https://github.com/broxus/tiny-bip39.git" }
 tiny-hderive = { git = "https://github.com/broxus/tiny-hderive.git" }
 

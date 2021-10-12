@@ -572,7 +572,7 @@ impl<'a> FunctionAbi<'a> {
 
         let tvm::ActionPhaseOutput {
             messages,
-            result_code,
+            exit_code: result_code,
         } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg)?;
 
         let tokens = messages
