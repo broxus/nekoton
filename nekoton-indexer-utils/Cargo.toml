@@ -1,0 +1,24 @@
+[package]
+name = "nekoton-indexer-utils"
+version = "0.1.0"
+authors = ["Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1"
+thiserror = "1.0.30"
+parking_lot = "0.11.2"
+
+nekoton = { path = "..", default-features = false }
+nekoton-abi = { path = "../nekoton-abi", default-features = false }
+
+ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
+ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
+ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
+ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
+ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
+
+[dev-dependencies]
+hex = "0.4.3"
