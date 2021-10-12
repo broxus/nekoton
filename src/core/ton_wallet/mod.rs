@@ -682,11 +682,60 @@ impl std::fmt::Display for WalletType {
     }
 }
 
+/// Zerostate hack
+pub fn map_special_account(
+    public_key: &PublicKey,
+    multisig_type: WalletType,
+    workchain_id: i8,
+) -> Option<MsgAddressInt> {
+    const GIVER_7_PUBKEY: [u8; 32] = [
+        0xce, 0x4a, 0x6b, 0x49, 0x93, 0xd6, 0x6b, 0xb0, 0xc8, 0x54, 0x16, 0xc2, 0xc4, 0x61, 0x53,
+        0x92, 0xda, 0x2d, 0x58, 0x03, 0x56, 0xbf, 0x96, 0xef, 0x2a, 0x87, 0x4e, 0x9c, 0x18, 0xed,
+        0x18, 0x57,
+    ];
+    const GIVER_8_PUBKEY: [u8; 32] = [
+        0x6b, 0x41, 0xf3, 0xe6, 0x2d, 0xab, 0x18, 0x85, 0xc8, 0x47, 0x2d, 0xf9, 0xb0, 0xf6, 0x52,
+        0x9a, 0x9c, 0xe5, 0x44, 0x8b, 0x2c, 0x41, 0x6e, 0x65, 0xe4, 0x43, 0x17, 0x8d, 0x23, 0xfe,
+        0xb5, 0x2d,
+    ];
+    const GIVER_9_PUBKEY: [u8; 32] = [
+        0xcd, 0x58, 0x37, 0xa9, 0x13, 0xba, 0x6e, 0x66, 0x63, 0x80, 0x97, 0x08, 0xf9, 0x95, 0x8f,
+        0x80, 0xd2, 0xd8, 0x0d, 0xe6, 0x67, 0x51, 0x76, 0x03, 0x35, 0x87, 0xb5, 0xa6, 0x00, 0x24,
+        0xd2, 0xc8,
+    ];
+
+    if multisig_type != WalletType::Multisig(MultisigType::SetcodeMultisigWallet)
+        || workchain_id != -1
+    {
+        return None;
+    }
+
+    match *public_key.as_bytes() {
+        GIVER_7_PUBKEY => MsgAddressInt::from_str(
+            "-1:7777777777777777777777777777777777777777777777777777777777777777",
+        )
+        .ok(),
+        GIVER_8_PUBKEY => MsgAddressInt::from_str(
+            "-1:8888888888888888888888888888888888888888888888888888888888888888",
+        )
+        .ok(),
+        GIVER_9_PUBKEY => MsgAddressInt::from_str(
+            "-1:9999999999999999999999999999999999999999999999999999999999999999",
+        )
+        .ok(),
+        _ => None,
+    }
+}
+
 pub fn compute_address(
     public_key: &PublicKey,
     wallet_type: WalletType,
     workchain_id: i8,
 ) -> MsgAddressInt {
+    if let Some(address) = map_special_account(public_key, wallet_type, workchain_id) {
+        return address;
+    }
+
     match wallet_type {
         WalletType::Multisig(multisig_type) => {
             multisig::compute_contract_address(public_key, multisig_type, workchain_id)
@@ -718,4 +767,38 @@ pub trait TonWalletSubscriptionHandler: Send + Sync {
         transactions: Vec<TransactionWithData<TransactionAdditionalInfo>>,
         batch_info: TransactionsBatchInfo,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_special_address_computation() {
+        let pairs = [
+            (
+                "ce4a6b4993d66bb0c85416c2c4615392da2d580356bf96ef2a874e9c18ed1857",
+                "-1:7777777777777777777777777777777777777777777777777777777777777777",
+            ),
+            (
+                "6b41f3e62dab1885c8472df9b0f6529a9ce5448b2c416e65e443178d23feb52d",
+                "-1:8888888888888888888888888888888888888888888888888888888888888888",
+            ),
+            (
+                "cd5837a913ba6e6663809708f9958f80d2d80de6675176033587b5a60024d2c8",
+                "-1:9999999999999999999999999999999999999999999999999999999999999999",
+            ),
+        ];
+
+        for (public_key, target_address) in pairs {
+            let public_key =
+                ed25519_dalek::PublicKey::from_bytes(&hex::decode(public_key).unwrap()).unwrap();
+            let address = compute_address(
+                &public_key,
+                WalletType::Multisig(MultisigType::SetcodeMultisigWallet),
+                -1,
+            );
+            assert_eq!(address.to_string(), target_address);
+        }
+    }
 }
