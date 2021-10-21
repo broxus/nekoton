@@ -3,6 +3,7 @@ pub use self::address::*;
 pub use self::encryption::*;
 pub use self::serde_helpers::*;
 pub use self::traits::*;
+pub use self::transaction::*;
 pub use self::uint128::*;
 
 mod address;
@@ -11,6 +12,7 @@ mod crc;
 mod encryption;
 mod serde_helpers;
 mod traits;
+mod transaction;
 mod uint128;
 
 #[macro_export]

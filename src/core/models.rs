@@ -9,8 +9,6 @@ use ton_types::UInt256;
 use nekoton_abi::*;
 use nekoton_utils::*;
 
-use super::utils;
-
 #[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
@@ -673,7 +671,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             return Err(TransactionError::Unsupported);
         };
 
-        let total_fees = utils::compute_total_transaction_fees(&data, &desc);
+        let total_fees = compute_total_transaction_fees(&data, &desc) as u64;
 
         let in_msg = match data.in_msg.take() {
             Some(message) => message
