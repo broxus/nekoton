@@ -27,24 +27,24 @@ impl Clock for SimpleClock {
 
 #[derive(Default)]
 pub struct ClockWithOffset {
-    offset_as_sec: u64,
-    offset_as_ms: u64,
+    offset_as_sec: i64,
+    offset_as_ms: i64,
 }
 
 impl ClockWithOffset {
-    pub const fn new(offset_ms: u64) -> Self {
+    pub const fn new(offset_ms: i64) -> Self {
         Self {
             offset_as_sec: offset_ms / 1000,
             offset_as_ms: offset_ms,
         }
     }
 
-    pub fn update_offset(&mut self, offset_ms: u64) {
+    pub fn update_offset(&mut self, offset_ms: i64) {
         self.offset_as_sec = offset_ms / 1000;
         self.offset_as_ms = offset_ms;
     }
 
-    pub const fn offset_ms(&self) -> u64 {
+    pub const fn offset_ms(&self) -> i64 {
         self.offset_as_ms
     }
 }
@@ -52,7 +52,7 @@ impl ClockWithOffset {
 impl Clock for ClockWithOffset {
     #[inline]
     fn now_sec_u64(&self) -> u64 {
-        self.offset_as_sec + now_sec_u64()
+        std::cmp::max(self.offset_as_sec.saturating_add(now_sec_u64() as i64), 0) as u64
     }
 
     #[inline]
@@ -62,14 +62,14 @@ impl Clock for ClockWithOffset {
 
     #[inline]
     fn now_ms_u64(&self) -> u64 {
-        self.offset_as_ms + now_ms_u64()
+        std::cmp::max(self.offset_as_ms.saturating_add(now_ms_u64() as i64), 0) as u64
     }
 }
 
 #[derive(Copy, Clone, Default)]
 pub struct ConstClock {
-    offset_as_sec: u64,
-    offset_as_ms: u64,
+    time_as_sec: u64,
+    time_as_ms: u64,
 }
 
 impl ConstClock {
@@ -81,16 +81,16 @@ impl ConstClock {
     #[inline]
     pub const fn from_millis(millis: u64) -> Self {
         Self {
-            offset_as_sec: millis / 1000,
-            offset_as_ms: millis,
+            time_as_sec: millis / 1000,
+            time_as_ms: millis,
         }
     }
 
     #[inline]
     pub const fn from_secs(secs: u64) -> Self {
         Self {
-            offset_as_sec: secs,
-            offset_as_ms: secs * 1000,
+            time_as_sec: secs,
+            time_as_ms: secs * 1000,
         }
     }
 }
@@ -98,17 +98,17 @@ impl ConstClock {
 impl Clock for ConstClock {
     #[inline]
     fn now_sec_u64(&self) -> u64 {
-        self.offset_as_sec
+        self.time_as_sec
     }
 
     #[inline]
     fn now_ms_f64(&self) -> f64 {
-        self.offset_as_ms as f64
+        self.time_as_ms as f64
     }
 
     #[inline]
     fn now_ms_u64(&self) -> u64 {
-        self.offset_as_ms
+        self.time_as_ms
     }
 }
 
