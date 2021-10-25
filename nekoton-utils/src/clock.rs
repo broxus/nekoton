@@ -25,9 +25,27 @@ impl Clock for SimpleClock {
     }
 }
 
+#[derive(Default)]
 pub struct ClockWithOffset {
     offset_as_sec: u64,
     offset_as_ms: u64,
+}
+
+impl ClockWithOffset {
+    pub fn new(offset_ms: u64) -> Self {
+        let mut clock = Self::default();
+        clock.update_offset(offset_ms);
+        clock
+    }
+
+    pub fn update_offset(&mut self, offset_ms: u64) {
+        self.offset_as_sec = offset_ms / 1000;
+        self.offset_as_ms = offset_ms;
+    }
+
+    pub fn offset_ms(&self) -> u64 {
+        self.offset_as_ms
+    }
 }
 
 impl Clock for ClockWithOffset {
