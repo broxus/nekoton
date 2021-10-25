@@ -1,6 +1,6 @@
 [package]
 name = "nekoton"
-version = "0.7.0"
+version = "0.8.0"
 authors = [
     "Alexey Pashinov <pashinov93@gmail.com>",
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
@@ -17,7 +17,6 @@ anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.13"
 chacha20poly1305 = "0.9"
-chrono = "0.4.19"
 cipher = { version = "0.3.0", default-features = false, optional = true }
 curve25519-dalek-ng = "4.0"
 downcast-rs = "1.2"
@@ -26,7 +25,6 @@ futures = "0.3"
 getrandom = "0.2.3"
 graphql_client = { version = "0.10", optional = true }
 hex = "0.4"
-js-sys = { version = "0.3", optional = true }
 log = "0.4"
 num-bigint = { version = "0.3", features = ["serde"] }
 num-traits = "0.2.14"
@@ -67,7 +65,7 @@ tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 [features]
 default = ["gql_transport"]
 integration_test = []
-web = ["js-sys", "chrono/wasmbind", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
+web = ["nekoton-utils/web", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
 gql_transport = ["graphql_client"]
 adnl_transport = ["ton_api", "aes", "cipher", "x25519-dalek-ng"]
 jrpc_transport = ["tiny-jsonrpc"]

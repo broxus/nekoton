@@ -1,4 +1,5 @@
 pub use self::address::*;
+pub use self::clock::*;
 #[cfg(feature = "encryption")]
 pub use self::encryption::*;
 pub use self::serde_helpers::*;
@@ -7,6 +8,7 @@ pub use self::transaction::*;
 pub use self::uint128::*;
 
 mod address;
+mod clock;
 mod crc;
 #[cfg(feature = "encryption")]
 mod encryption;

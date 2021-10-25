@@ -6,7 +6,7 @@ use serde::Serialize;
 use ton_block::{Block, Deserializable, MsgAddressInt};
 
 use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
-use nekoton_utils::TrustMe;
+use nekoton_utils::*;
 
 use super::models::{ExistingContract, RawContractState, RawTransaction};
 use super::utils::*;
@@ -123,8 +123,11 @@ impl Transport for JrpcTransport {
             .map(|block: GetBlockResponse| block.block)
     }
 
-    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
-        self.config_cache.get_blockchain_config(self).await
+    async fn get_blockchain_config(
+        &self,
+        clock: &dyn Clock,
+    ) -> Result<ton_executor::BlockchainConfig> {
+        self.config_cache.get_blockchain_config(self, clock).await
     }
 }
 

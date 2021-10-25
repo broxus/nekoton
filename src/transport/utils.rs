@@ -1,6 +1,7 @@
+use anyhow::Result;
 use tokio::sync::Mutex;
 
-use anyhow::Result;
+use nekoton_utils::*;
 
 use super::Transport;
 
@@ -26,10 +27,11 @@ impl ConfigCache {
     pub async fn get_blockchain_config(
         &self,
         transport: &dyn Transport,
+        clock: &dyn Clock,
     ) -> Result<ton_executor::BlockchainConfig> {
         let mut cache = self.state.lock().await;
 
-        let now = chrono::Utc::now().timestamp() as u32;
+        let now = clock.now_sec_u64() as u32;
 
         Ok(match &*cache {
             None => {

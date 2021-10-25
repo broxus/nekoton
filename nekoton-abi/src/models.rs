@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 use std::str::FromStr;
 
-use chrono::Utc;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use ton_types::UInt256;
 
@@ -74,7 +73,7 @@ impl GenTimings {
         match *self {
             GenTimings::Unknown => {
                 // TODO: split optimistic and pessimistic predictions for unknown timings
-                Utc::now().timestamp() as u32 - GEN_TIMINGS_ALLOWABLE_INTERVAL
+                now_sec_u64() as u32 - GEN_TIMINGS_ALLOWABLE_INTERVAL
             }
             GenTimings::Known { gen_utime, .. } => gen_utime,
         }

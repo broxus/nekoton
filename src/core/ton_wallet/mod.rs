@@ -165,12 +165,17 @@ impl TonWallet {
         &self.wallet_data.custodians
     }
 
-    pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
+    pub fn prepare_deploy(
+        &self,
+        clock: &dyn Clock,
+        expiration: Expiration,
+    ) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
             WalletType::WalletV3 => {
-                wallet_v3::prepare_deploy(&self.public_key, self.workchain(), expiration)
+                wallet_v3::prepare_deploy(clock, &self.public_key, self.workchain(), expiration)
             }
             WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
+                clock,
                 &self.public_key,
                 multisig_type,
                 self.workchain(),
@@ -183,12 +188,14 @@ impl TonWallet {
 
     pub fn prepare_deploy_with_multiple_owners(
         &self,
+        clock: &dyn Clock,
         expiration: Expiration,
         custodians: &[PublicKey],
         req_confirms: u8,
     ) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
             WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
+                clock,
                 &self.public_key,
                 multisig_type,
                 self.workchain(),
@@ -203,6 +210,7 @@ impl TonWallet {
     #[allow(clippy::too_many_arguments)]
     pub fn prepare_transfer(
         &mut self,
+        clock: &dyn Clock,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         destination: MsgAddressInt,
@@ -236,6 +244,7 @@ impl TonWallet {
                 };
 
                 multisig::prepare_transfer(
+                    clock,
                     public_key,
                     has_multiple_owners,
                     self.address().clone(),
@@ -247,6 +256,7 @@ impl TonWallet {
                 )
             }
             WalletType::WalletV3 => wallet_v3::prepare_transfer(
+                clock,
                 public_key,
                 current_state,
                 destination,
@@ -260,6 +270,7 @@ impl TonWallet {
 
     pub fn prepare_confirm_transaction(
         &self,
+        clock: &dyn Clock,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         transaction_id: u64,
@@ -285,6 +296,7 @@ impl TonWallet {
                 }
 
                 multisig::prepare_confirm_transaction(
+                    clock,
                     public_key,
                     self.address().clone(),
                     transaction_id,
@@ -345,8 +357,14 @@ impl TonWallet {
             .await
     }
 
-    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
-        self.contract_subscription.estimate_fees(message).await
+    pub async fn estimate_fees(
+        &mut self,
+        clock: &dyn Clock,
+        message: &ton_block::Message,
+    ) -> Result<u64> {
+        self.contract_subscription
+            .estimate_fees(clock, message)
+            .await
     }
 }
 
@@ -509,6 +527,7 @@ pub struct ExistingWalletInfo {
 pub trait InternalMessageSender {
     fn prepare_transfer(
         &mut self,
+        clock: &dyn Clock,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         message: InternalMessage,
@@ -519,6 +538,7 @@ pub trait InternalMessageSender {
 impl InternalMessageSender for TonWallet {
     fn prepare_transfer(
         &mut self,
+        clock: &dyn Clock,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         message: InternalMessage,
@@ -529,6 +549,7 @@ impl InternalMessageSender for TonWallet {
         }
 
         self.prepare_transfer(
+            clock,
             current_state,
             public_key,
             message.destination,

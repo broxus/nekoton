@@ -373,8 +373,11 @@ impl Transport for GqlTransport {
         Ok(block)
     }
 
-    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
-        self.config_cache.get_blockchain_config(self).await
+    async fn get_blockchain_config(
+        &self,
+        clock: &dyn Clock,
+    ) -> Result<ton_executor::BlockchainConfig> {
+        self.config_cache.get_blockchain_config(self, clock).await
     }
 }
 

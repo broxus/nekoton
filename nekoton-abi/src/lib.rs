@@ -3,7 +3,6 @@ use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 
 use anyhow::Result;
-use chrono::Utc;
 use smallvec::smallvec;
 use ton_abi::{Function, Param, Token, TokenValue};
 use ton_block::{
@@ -705,7 +704,7 @@ fn get_block_stats(
             last_transaction_lt,
         },
         _ => BlockStats {
-            gen_utime: Utc::now().timestamp() as u32,
+            gen_utime: now_sec_u64() as u32,
             gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
             last_transaction_lt,
         },

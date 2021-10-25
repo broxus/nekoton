@@ -25,7 +25,7 @@ pub type PubKey = [u8; ed25519_dalek::PUBLIC_KEY_LENGTH];
 
 pub trait UnsignedMessage: DynClone + Send {
     /// Adjust expiration timestamp from now
-    fn refresh_timeout(&mut self);
+    fn refresh_timeout(&mut self, clock: &dyn Clock);
 
     /// Current expiration timestamp
     fn expire_at(&self) -> u32;

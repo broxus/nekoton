@@ -394,10 +394,10 @@ pub enum Expiration {
 }
 
 impl Expiration {
-    pub fn timestamp(&self) -> u32 {
+    pub fn timestamp(&self, clock: &dyn Clock) -> u32 {
         match self {
             Self::Never => u32::MAX,
-            Self::Timeout(timeout) => chrono::Utc::now().timestamp() as u32 + timeout,
+            Self::Timeout(timeout) => clock.now_sec_u64() as u32 + timeout,
             &Self::Timestamp(timestamp) => timestamp,
         }
     }
@@ -410,10 +410,10 @@ pub struct ExpireAt {
 }
 
 impl ExpireAt {
-    pub fn new(expiration: Expiration) -> Self {
+    pub fn new(clock: &dyn Clock, expiration: Expiration) -> Self {
         Self {
             expiration,
-            timestamp: expiration.timestamp(),
+            timestamp: expiration.timestamp(clock),
         }
     }
 
@@ -426,18 +426,19 @@ impl ExpireAt {
         expire_at
     }
 
-    pub fn refresh(&mut self) -> bool {
+    pub fn refresh(&mut self, clock: &dyn Clock) -> bool {
         let old_timestamp = self.timestamp;
-        self.timestamp = self.expiration.timestamp();
+        self.timestamp = self.expiration.timestamp(clock);
         self.timestamp != old_timestamp
     }
 
     pub fn refresh_from_millis(&mut self, time: u64) -> bool {
         let old_timestamp = self.timestamp;
-        self.timestamp = if let Expiration::Timeout(timeout) = self.expiration {
-            (time / 1000) as u32 + timeout
-        } else {
-            self.expiration.timestamp()
+
+        self.timestamp = match self.expiration {
+            Expiration::Never => u32::MAX,
+            Expiration::Timeout(timeout) => (time / 1000) as u32 + timeout,
+            Expiration::Timestamp(timestamp) => timestamp,
         };
         self.timestamp != old_timestamp
     }

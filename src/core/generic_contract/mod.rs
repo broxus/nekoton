@@ -5,6 +5,7 @@ use anyhow::Result;
 use ton_block::{GetRepresentationHash, MsgAddressInt};
 
 use nekoton_abi::TransactionId;
+use nekoton_utils::Clock;
 
 use super::models::{ContractState, PendingTransaction, Transaction, TransactionsBatchInfo};
 use super::{ContractSubscription, PollingMethod, TransactionExecutionOptions};
@@ -95,18 +96,25 @@ impl GenericContract {
             .await
     }
 
-    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
-        self.contract_subscription.estimate_fees(message).await
+    pub async fn estimate_fees(
+        &mut self,
+        clock: &dyn Clock,
+        message: &ton_block::Message,
+    ) -> Result<u64> {
+        self.contract_subscription
+            .estimate_fees(clock, message)
+            .await
     }
 
     pub async fn execute_transaction_locally(
         &mut self,
+        clock: &dyn Clock,
         message: &ton_block::Message,
         options: TransactionExecutionOptions,
     ) -> Result<Transaction> {
         let transaction = self
             .contract_subscription
-            .execute_transaction_locally(message, options)
+            .execute_transaction_locally(clock, message, options)
             .await?;
         let hash = transaction.hash()?;
 

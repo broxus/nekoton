@@ -314,13 +314,14 @@ impl PendingTransactionsExt for Vec<PendingTransaction> {
 }
 
 pub fn make_labs_unsigned_message(
+    clock: &dyn Clock,
     message: ton_block::Message,
     expiration: Expiration,
     public_key: &PublicKey,
     function: Cow<'static, ton_abi::Function>,
     input: Vec<ton_abi::Token>,
 ) -> Result<Box<dyn UnsignedMessage>> {
-    let time = chrono::Utc::now().timestamp_millis() as u64;
+    let time = clock.now_ms_u64();
     let (expire_at, header) = default_headers(time, expiration, public_key);
 
     let (payload, hash) = function.create_unsigned_call(&header, &input, false, true)?;
@@ -348,8 +349,8 @@ struct LabsUnsignedMessage {
 }
 
 impl UnsignedMessage for LabsUnsignedMessage {
-    fn refresh_timeout(&mut self) {
-        let time = chrono::Utc::now().timestamp_millis() as u64;
+    fn refresh_timeout(&mut self, clock: &dyn Clock) {
+        let time = clock.now_ms_u64();
 
         if !self.expire_at.refresh_from_millis(time) {
             return;

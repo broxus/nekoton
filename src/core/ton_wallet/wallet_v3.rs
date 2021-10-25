@@ -12,6 +12,7 @@ use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
 
 pub fn prepare_deploy(
+    clock: &dyn Clock,
     public_key: &PublicKey,
     workchain: i8,
     expiration: Expiration,
@@ -26,7 +27,7 @@ pub fn prepare_deploy(
 
     message.set_state_init(init_data.make_state_init()?);
 
-    let expire_at = ExpireAt::new(expiration);
+    let expire_at = ExpireAt::new(clock, expiration);
     let (hash, payload) = init_data.make_transfer_payload(None, expire_at.timestamp)?;
 
     Ok(Box::new(UnsignedWalletV3Message {
@@ -46,8 +47,8 @@ struct UnsignedWalletV3Deploy {
 }
 
 impl UnsignedMessage for UnsignedWalletV3Deploy {
-    fn refresh_timeout(&mut self) {
-        self.expire_at.refresh();
+    fn refresh_timeout(&mut self, clock: &dyn Clock) {
+        self.expire_at.refresh(clock);
     }
 
     fn expire_at(&self) -> u32 {
@@ -67,7 +68,9 @@ impl UnsignedMessage for UnsignedWalletV3Deploy {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn prepare_transfer(
+    clock: &dyn Clock,
     public_key: &PublicKey,
     current_state: &ton_block::AccountStuff,
     destination: MsgAddressInt,
@@ -109,7 +112,7 @@ pub fn prepare_transfer(
         state_init: None,
     });
 
-    let expire_at = ExpireAt::new(expiration);
+    let expire_at = ExpireAt::new(clock, expiration);
     let (hash, payload) = init_data.make_transfer_payload(gift.clone(), expire_at.timestamp)?;
 
     Ok(TransferAction::Sign(Box::new(UnsignedWalletV3Message {
@@ -133,8 +136,8 @@ struct UnsignedWalletV3Message {
 }
 
 impl UnsignedMessage for UnsignedWalletV3Message {
-    fn refresh_timeout(&mut self) {
-        if !self.expire_at.refresh() {
+    fn refresh_timeout(&mut self, clock: &dyn Clock) {
+        if !self.expire_at.refresh(clock) {
             return;
         }
 

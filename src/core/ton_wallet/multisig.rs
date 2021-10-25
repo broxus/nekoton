@@ -15,6 +15,7 @@ use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
 
 pub fn prepare_deploy(
+    clock: &dyn Clock,
     public_key: &PublicKey,
     multisig_type: MultisigType,
     workchain: i8,
@@ -54,6 +55,7 @@ pub fn prepare_deploy(
     .build();
 
     make_labs_unsigned_message(
+        clock,
         message,
         expiration,
         public_key,
@@ -63,6 +65,7 @@ pub fn prepare_deploy(
 }
 
 pub fn prepare_confirm_transaction(
+    clock: &dyn Clock,
     public_key: &PublicKey,
     address: MsgAddressInt,
     transaction_id: u64,
@@ -82,6 +85,7 @@ pub fn prepare_confirm_transaction(
     .build();
 
     make_labs_unsigned_message(
+        clock,
         message,
         expiration,
         public_key,
@@ -92,6 +96,7 @@ pub fn prepare_confirm_transaction(
 
 #[allow(clippy::too_many_arguments)]
 pub fn prepare_transfer(
+    clock: &dyn Clock,
     public_key: &PublicKey,
     has_multiple_owners: bool,
     address: MsgAddressInt,
@@ -133,6 +138,7 @@ pub fn prepare_transfer(
     };
 
     Ok(TransferAction::Sign(make_labs_unsigned_message(
+        clock,
         message,
         expiration,
         public_key,

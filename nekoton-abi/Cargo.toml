@@ -1,6 +1,6 @@
 [package]
 name = "nekoton-abi"
-version = "0.7.0"
+version = "0.8.0"
 authors = [
     "Alexey Pashinov <pashinov93@gmail.com>",
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
@@ -11,7 +11,6 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0"
 base64 = "0.13"
-chrono = "0.4.19"
 hex = "0.4"
 log = "0.4"
 num-bigint = { version = "0.3", features = ["serde"] }

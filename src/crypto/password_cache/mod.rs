@@ -9,6 +9,8 @@ use ring::rand::SecureRandom;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
+use nekoton_utils::*;
+
 pub struct PasswordCache {
     state: RwLock<PasswordCacheState>,
 }
@@ -63,7 +65,9 @@ impl PasswordCache {
     }
 
     pub fn contains(&self, id: &[u8; 32], required_duration: Duration) -> bool {
-        let must_be_alive_at = required_duration.as_secs_f64().mul_add(1000.0, now_ms());
+        let must_be_alive_at = required_duration
+            .as_secs_f64()
+            .mul_add(1000.0, now_ms_f64());
         match self.state.read().passwords.get(id) {
             Some(item) => item.expire_at >= must_be_alive_at,
             None => false,
@@ -100,7 +104,7 @@ impl PasswordCache {
             .encrypt(&nonce, password)
             .map_err(|_| PasswordCacheError::FailedToEncryptPassword)?;
 
-        let expire_at = duration.as_secs_f64().mul_add(1000.0, now_ms());
+        let expire_at = duration.as_secs_f64().mul_add(1000.0, now_ms_f64());
 
         state.passwords.insert(
             id,
@@ -126,7 +130,7 @@ impl PasswordCache {
     }
 
     pub fn refresh(&self) {
-        let now = now_ms();
+        let now = now_ms_f64();
         self.state
             .write()
             .passwords
@@ -196,22 +200,6 @@ impl Default for PasswordCacheBehavior {
     fn default() -> Self {
         Self::Remove
     }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn now_ms() -> f64 {
-    js_sys::Date::now()
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn now_ms() -> f64 {
-    use nekoton_utils::TrustMe;
-    use std::time::SystemTime;
-
-    (SystemTime::now().duration_since(SystemTime::UNIX_EPOCH))
-        .trust_me()
-        .as_secs_f64()
-        * 1000.0
 }
 
 #[derive(thiserror::Error, Debug)]

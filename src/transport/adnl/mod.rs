@@ -12,7 +12,7 @@ use ton_api::{ton, BoxedSerialize, Deserializer, IntoBoxed};
 use ton_block::{Deserializable, Message, MsgAddressInt, Serializable};
 
 use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
-use nekoton_utils::TrustMe;
+use nekoton_utils::*;
 
 use super::models::*;
 use super::utils::ConfigCache;
@@ -231,8 +231,11 @@ impl Transport for AdnlTransport {
         }
     }
 
-    async fn get_blockchain_config(&self) -> Result<ton_executor::BlockchainConfig> {
-        self.config_cache.get_blockchain_config(self).await
+    async fn get_blockchain_config(
+        &self,
+        clock: &dyn Clock,
+    ) -> Result<ton_executor::BlockchainConfig> {
+        self.config_cache.get_blockchain_config(self, clock).await
     }
 }
 

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
 use nekoton_abi::{Executor, GenTimings, TransactionId};
+use nekoton_utils::Clock;
 
 use super::models::{
     ContractState, PendingTransaction, TransactionsBatchInfo, TransactionsBatchType,
@@ -174,9 +175,14 @@ impl ContractSubscription {
         Ok(new_account_state)
     }
 
-    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
+    pub async fn estimate_fees(
+        &mut self,
+        clock: &dyn Clock,
+        message: &ton_block::Message,
+    ) -> Result<u64> {
         let transaction = self
             .execute_transaction_locally(
+                clock,
                 message,
                 TransactionExecutionOptions {
                     disable_signature_check: true,
@@ -189,10 +195,11 @@ impl ContractSubscription {
 
     pub async fn execute_transaction_locally(
         &mut self,
+        clock: &dyn Clock,
         message: &ton_block::Message,
         options: TransactionExecutionOptions,
     ) -> Result<ton_block::Transaction> {
-        let blockchain_config = self.transport.get_blockchain_config().await?;
+        let blockchain_config = self.transport.get_blockchain_config(clock).await?;
         let state = match self.transport.get_contract_state(&self.address).await? {
             RawContractState::Exists(state) => state,
             RawContractState::NotExists => {
