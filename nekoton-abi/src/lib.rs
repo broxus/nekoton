@@ -489,28 +489,29 @@ pub trait FunctionExt {
 
     fn run_local(
         &self,
+        clock: &dyn Clock,
         account_stuff: AccountStuff,
-        timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput>;
 }
 
-impl FunctionExt for &Function {
+impl<T> FunctionExt for &T
+where
+    T: FunctionExt,
+{
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
-        let abi = FunctionAbi::new(self);
-        abi.parse(tx)
+        T::parse(self, tx)
     }
 
     fn run_local(
         &self,
+        clock: &dyn Clock,
         account_stuff: AccountStuff,
-        timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
-        let abi = FunctionAbi::new(self);
-        abi.run_local(account_stuff, timings, last_transaction_id, input)
+        T::run_local(self, clock, account_stuff, last_transaction_id, input)
     }
 }
 
@@ -522,13 +523,13 @@ impl FunctionExt for Function {
 
     fn run_local(
         &self,
+        clock: &dyn Clock,
         account_stuff: AccountStuff,
-        timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
         let abi = FunctionAbi::new(self);
-        abi.run_local(account_stuff, timings, last_transaction_id, input)
+        abi.run_local(clock, account_stuff, last_transaction_id, input)
     }
 }
 
@@ -548,8 +549,8 @@ impl<'a> FunctionAbi<'a> {
 
     fn run_local(
         &self,
+        clock: &dyn Clock,
         account_stuff: AccountStuff,
-        _timings: GenTimings,
         last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
@@ -567,7 +568,7 @@ impl<'a> FunctionAbi<'a> {
 
         let BlockStats {
             gen_utime, gen_lt, ..
-        } = get_block_stats(None, last_transaction_id);
+        } = get_block_stats(clock, None, last_transaction_id);
 
         let tvm::ActionPhaseOutput {
             messages,
@@ -686,6 +687,7 @@ struct BlockStats {
 }
 
 fn get_block_stats(
+    clock: &dyn Clock,
     timings: Option<GenTimings>,
     last_transaction_id: &LastTransactionId,
 ) -> BlockStats {
@@ -704,7 +706,7 @@ fn get_block_stats(
             last_transaction_lt,
         },
         _ => BlockStats {
-            gen_utime: now_sec_u64() as u32,
+            gen_utime: clock.now_sec_u64() as u32,
             gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
             last_transaction_lt,
         },
@@ -713,6 +715,7 @@ fn get_block_stats(
 
 impl Executor {
     pub fn new(
+        clock: &dyn Clock,
         config: BlockchainConfig,
         account_stuff: AccountStuff,
         _timings: GenTimings,
@@ -722,7 +725,7 @@ impl Executor {
             gen_utime,
             gen_lt,
             last_transaction_lt,
-        } = get_block_stats(None, last_transaction_id);
+        } = get_block_stats(clock, None, last_transaction_id);
 
         Self {
             config,
@@ -845,6 +848,7 @@ mod tests {
             unreachable!()
         };
         let mut executor = Executor::new(
+            &SimpleClock,
             BlockchainConfig::default(),
             account,
             GenTimings::Known {

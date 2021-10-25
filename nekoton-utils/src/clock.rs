@@ -32,10 +32,11 @@ pub struct ClockWithOffset {
 }
 
 impl ClockWithOffset {
-    pub fn new(offset_ms: u64) -> Self {
-        let mut clock = Self::default();
-        clock.update_offset(offset_ms);
-        clock
+    pub const fn new(offset_ms: u64) -> Self {
+        Self {
+            offset_as_sec: offset_ms / 1000,
+            offset_as_ms: offset_ms,
+        }
     }
 
     pub fn update_offset(&mut self, offset_ms: u64) {
@@ -43,22 +44,71 @@ impl ClockWithOffset {
         self.offset_as_ms = offset_ms;
     }
 
-    pub fn offset_ms(&self) -> u64 {
+    pub const fn offset_ms(&self) -> u64 {
         self.offset_as_ms
     }
 }
 
 impl Clock for ClockWithOffset {
+    #[inline]
     fn now_sec_u64(&self) -> u64 {
         self.offset_as_sec + now_sec_u64()
     }
 
+    #[inline]
     fn now_ms_f64(&self) -> f64 {
         self.offset_as_ms as f64 + now_ms_f64()
     }
 
+    #[inline]
     fn now_ms_u64(&self) -> u64 {
         self.offset_as_ms + now_ms_u64()
+    }
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct ConstClock {
+    offset_as_sec: u64,
+    offset_as_ms: u64,
+}
+
+impl ConstClock {
+    #[inline]
+    pub const fn in_future() -> Self {
+        Self::from_secs(0xffff0000)
+    }
+
+    #[inline]
+    pub const fn from_millis(millis: u64) -> Self {
+        Self {
+            offset_as_sec: millis / 1000,
+            offset_as_ms: millis,
+        }
+    }
+
+    #[inline]
+    pub const fn from_secs(secs: u64) -> Self {
+        Self {
+            offset_as_sec: secs,
+            offset_as_ms: secs * 1000,
+        }
+    }
+}
+
+impl Clock for ConstClock {
+    #[inline]
+    fn now_sec_u64(&self) -> u64 {
+        self.offset_as_sec
+    }
+
+    #[inline]
+    fn now_ms_f64(&self) -> f64 {
+        self.offset_as_ms as f64
+    }
+
+    #[inline]
+    fn now_ms_u64(&self) -> u64 {
+        self.offset_as_ms
     }
 }
 

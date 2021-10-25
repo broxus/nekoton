@@ -62,9 +62,10 @@ impl GenericContract {
         self.contract_subscription.send(message, expire_at).await
     }
 
-    pub async fn refresh(&mut self) -> Result<()> {
+    pub async fn refresh(&mut self, clock: &dyn Clock) -> Result<()> {
         self.contract_subscription
             .refresh(
+                clock,
                 make_contract_state_handler(&self.handler),
                 make_transactions_handler(&self.handler),
                 make_message_sent_handler(&self.handler),

@@ -240,11 +240,12 @@ impl TokenWallet {
         }
     }
 
-    pub async fn refresh(&mut self) -> Result<()> {
+    pub async fn refresh(&mut self, clock: &dyn Clock) -> Result<()> {
         let mut balance = self.balance.clone();
 
         self.contract_subscription
             .refresh(
+                clock,
                 make_contract_state_handler(self.version, &mut balance),
                 make_transactions_handler(&self.handler, self.version),
                 |_, _| {},
@@ -953,8 +954,8 @@ impl ExistingContractExt for ExistingContract {
         input: &[ton_abi::Token],
     ) -> Result<Vec<ton_abi::Token>> {
         let output = function.run_local(
+            &ConstClock::in_future(),
             self.account.clone(),
-            self.timings,
             &self.last_transaction_id,
             input,
         )?;

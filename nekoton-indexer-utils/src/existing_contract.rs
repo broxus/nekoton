@@ -1,6 +1,7 @@
 use anyhow::Result;
 use nekoton::transport::models::ExistingContract;
 use nekoton_abi::{ExecutionOutput, FunctionExt, GenTimings, LastTransactionId, TransactionId};
+use nekoton_utils::SimpleClock;
 use ton_block::{Account, ShardAccount};
 
 pub trait ExistingContractExt {
@@ -48,8 +49,8 @@ impl ExistingContractExt for ExistingContract {
             tokens,
             result_code,
         } = function.run_local(
+            &SimpleClock,
             self.account.clone(),
-            self.timings,
             &self.last_transaction_id,
             input,
         )?;

@@ -108,6 +108,7 @@ impl ContractSubscription {
 
     pub async fn refresh<FC, FT, FM, FE>(
         &mut self,
+        clock: &dyn Clock,
         on_contract_state: FC,
         on_transactions_found: FT,
         on_message_sent: FM,
@@ -134,7 +135,7 @@ impl ContractSubscription {
         }
 
         if !self.pending_transactions.is_empty() {
-            let current_utime = self.contract_state.gen_timings.current_utime();
+            let current_utime = self.contract_state.gen_timings.current_utime(clock);
             self.check_expired_transactions(current_utime, &mut on_message_expired);
         }
 
@@ -208,6 +209,7 @@ impl ContractSubscription {
         };
 
         let mut executor = Executor::new(
+            clock,
             blockchain_config,
             state.account,
             state.timings,

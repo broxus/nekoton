@@ -245,7 +245,6 @@ fn run_local(
     multisig_type: MultisigType,
     contract_method: &str,
     account_stuff: ton_block::AccountStuff,
-    gen_timings: GenTimings,
     last_transaction_id: &LastTransactionId,
 ) -> Result<Vec<ton_abi::Token>> {
     let function: &ton_abi::Function = match multisig_type {
@@ -260,7 +259,12 @@ fn run_local(
 
     let input = Vec::with_capacity(function.inputs.len());
     function
-        .run_local(account_stuff, gen_timings, last_transaction_id, &input)?
+        .run_local(
+            &ConstClock::in_future(),
+            account_stuff,
+            last_transaction_id,
+            &input,
+        )?
         .tokens
         .ok_or_else(|| MultisigError::NonZeroResultCode.into())
 }
@@ -268,14 +272,12 @@ fn run_local(
 pub fn get_custodians(
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
-    gen_timings: GenTimings,
     last_transaction_id: &LastTransactionId,
 ) -> Result<Vec<UInt256>> {
     run_local(
         multisig_type,
         "getCustodians",
         account_stuff.into_owned(),
-        gen_timings,
         last_transaction_id,
     )
     .and_then(parse_multisig_contract_custodians)
@@ -300,7 +302,6 @@ fn parse_multisig_contract_custodians(tokens: Vec<ton_abi::Token>) -> Result<Vec
 pub fn find_pending_transaction(
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
-    gen_timings: GenTimings,
     last_transaction_id: &LastTransactionId,
     pending_transaction_id: u64,
 ) -> Result<bool> {
@@ -308,7 +309,6 @@ pub fn find_pending_transaction(
         multisig_type,
         "getTransactions",
         account_stuff.into_owned(),
-        gen_timings,
         last_transaction_id,
     )?;
 
@@ -337,7 +337,6 @@ pub fn find_pending_transaction(
 pub fn get_pending_transaction(
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
-    gen_timings: GenTimings,
     last_transaction_id: &LastTransactionId,
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingTransaction>> {
@@ -345,7 +344,6 @@ pub fn get_pending_transaction(
         multisig_type,
         "getTransactions",
         account_stuff.into_owned(),
-        gen_timings,
         last_transaction_id,
     )
     .and_then(|tokens| parse_multisig_contract_pending_transactions(tokens, custodians))

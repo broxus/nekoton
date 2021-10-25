@@ -9,7 +9,7 @@ use serde::Deserialize;
 use tokio::sync::{RwLock, Semaphore};
 use ton_block::MsgAddressInt;
 
-use nekoton_utils::TrustMe;
+use nekoton_utils::*;
 
 use super::models::TokenWalletVersion;
 use crate::core::token_wallet::{RootTokenContractState, TokenWalletContractState};

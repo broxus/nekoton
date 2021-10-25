@@ -278,7 +278,6 @@ impl TonWallet {
     ) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
             WalletType::Multisig(multisig_type) => {
-                let gen_timings = self.contract_state().gen_timings;
                 let last_transaction_id = &self
                     .contract_state()
                     .last_transaction_id
@@ -287,7 +286,6 @@ impl TonWallet {
                 let has_pending_transaction = multisig::find_pending_transaction(
                     multisig_type,
                     Cow::Borrowed(current_state),
-                    gen_timings,
                     last_transaction_id,
                     transaction_id,
                 )?;
@@ -315,9 +313,10 @@ impl TonWallet {
         self.contract_subscription.send(message, expire_at).await
     }
 
-    pub async fn refresh(&mut self) -> Result<()> {
+    pub async fn refresh(&mut self, clock: &dyn Clock) -> Result<()> {
         self.contract_subscription
             .refresh(
+                clock,
                 make_contract_state_handler(
                     &self.handler,
                     &self.public_key,
@@ -392,7 +391,6 @@ impl WalletData {
             }
         };
 
-        let gen_timings = contract_state.gen_timings;
         let last_transaction_id = &contract_state
             .last_transaction_id
             .ok_or(TonWalletError::LastTransactionNotFound)?;
@@ -402,7 +400,6 @@ impl WalletData {
             self.custodians = Some(multisig::get_custodians(
                 multisig_type,
                 Cow::Borrowed(account_stuff),
-                gen_timings,
                 last_transaction_id,
             )?);
         }
@@ -423,7 +420,6 @@ impl WalletData {
         let pending_transactions = multisig::get_pending_transaction(
             multisig_type,
             Cow::Borrowed(account_stuff),
-            gen_timings,
             last_transaction_id,
             custodians,
         )?;
@@ -468,7 +464,6 @@ pub fn get_wallet_custodians(
     };
 
     let contract_state = contract.brief();
-    let gen_timings = contract_state.gen_timings;
     let last_transaction_id = &contract_state
         .last_transaction_id
         .ok_or(TonWalletError::LastTransactionNotFound)?;
@@ -476,7 +471,6 @@ pub fn get_wallet_custodians(
     let custodians = multisig::get_custodians(
         multisig_type,
         Cow::Borrowed(&contract.account),
-        gen_timings,
         last_transaction_id,
     )?;
     Ok(custodians)

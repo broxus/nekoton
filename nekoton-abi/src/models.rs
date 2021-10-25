@@ -69,11 +69,11 @@ impl Default for GenTimings {
 pub const GEN_TIMINGS_ALLOWABLE_INTERVAL: u32 = 30;
 
 impl GenTimings {
-    pub fn current_utime(&self) -> u32 {
+    pub fn current_utime(&self, clock: &dyn Clock) -> u32 {
         match *self {
             GenTimings::Unknown => {
                 // TODO: split optimistic and pessimistic predictions for unknown timings
-                now_sec_u64() as u32 - GEN_TIMINGS_ALLOWABLE_INTERVAL
+                clock.now_sec_u64() as u32 - GEN_TIMINGS_ALLOWABLE_INTERVAL
             }
             GenTimings::Known { gen_utime, .. } => gen_utime,
         }
