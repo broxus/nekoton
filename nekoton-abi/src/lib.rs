@@ -560,15 +560,15 @@ impl<'a> FunctionAbi<'a> {
                 ..Default::default()
             });
 
-        msg.set_body(
-            self.fun
-                .encode_input(&HashMap::default(), input, false, None)?
-                .into(),
-        );
-
         let BlockStats {
             gen_utime, gen_lt, ..
         } = get_block_stats(clock, None, last_transaction_id);
+
+        msg.set_body(
+            self.fun
+                .encode_run_local_input(gen_utime as u64 * 1000, input)?
+                .into(),
+        );
 
         let tvm::ActionPhaseOutput {
             messages,
