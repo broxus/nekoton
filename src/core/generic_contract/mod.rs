@@ -20,11 +20,13 @@ pub struct GenericContract {
 
 impl GenericContract {
     pub async fn subscribe(
+        clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
         handler: Arc<dyn GenericContractSubscriptionHandler>,
     ) -> Result<Self> {
         let contract_subscription = ContractSubscription::subscribe(
+            clock,
             transport,
             address,
             make_contract_state_handler(&handler),
@@ -62,10 +64,9 @@ impl GenericContract {
         self.contract_subscription.send(message, expire_at).await
     }
 
-    pub async fn refresh(&mut self, clock: &dyn Clock) -> Result<()> {
+    pub async fn refresh(&mut self) -> Result<()> {
         self.contract_subscription
             .refresh(
-                clock,
                 make_contract_state_handler(&self.handler),
                 make_transactions_handler(&self.handler),
                 make_message_sent_handler(&self.handler),
@@ -97,25 +98,18 @@ impl GenericContract {
             .await
     }
 
-    pub async fn estimate_fees(
-        &mut self,
-        clock: &dyn Clock,
-        message: &ton_block::Message,
-    ) -> Result<u64> {
-        self.contract_subscription
-            .estimate_fees(clock, message)
-            .await
+    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
+        self.contract_subscription.estimate_fees(message).await
     }
 
     pub async fn execute_transaction_locally(
         &mut self,
-        clock: &dyn Clock,
         message: &ton_block::Message,
         options: TransactionExecutionOptions,
     ) -> Result<Transaction> {
         let transaction = self
             .contract_subscription
-            .execute_transaction_locally(clock, message, options)
+            .execute_transaction_locally(message, options)
             .await?;
         let hash = transaction.hash()?;
 

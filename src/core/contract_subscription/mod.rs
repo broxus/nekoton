@@ -18,6 +18,7 @@ use crate::transport::Transport;
 
 /// Used as a base object for different listeners implementation
 pub struct ContractSubscription {
+    clock: Arc<dyn Clock>,
     transport: Arc<dyn Transport>,
     address: MsgAddressInt,
     contract_state: ContractState,
@@ -28,6 +29,7 @@ pub struct ContractSubscription {
 
 impl ContractSubscription {
     pub async fn subscribe<FC, FT>(
+        clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
         on_contract_state: FC,
@@ -38,6 +40,7 @@ impl ContractSubscription {
         FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
     {
         let mut result = Self {
+            clock,
             transport,
             address,
             contract_state: Default::default(),
@@ -108,7 +111,6 @@ impl ContractSubscription {
 
     pub async fn refresh<FC, FT, FM, FE>(
         &mut self,
-        clock: &dyn Clock,
         on_contract_state: FC,
         on_transactions_found: FT,
         on_message_sent: FM,
@@ -135,7 +137,10 @@ impl ContractSubscription {
         }
 
         if !self.pending_transactions.is_empty() {
-            let current_utime = self.contract_state.gen_timings.current_utime(clock);
+            let current_utime = self
+                .contract_state
+                .gen_timings
+                .current_utime(self.clock.as_ref());
             self.check_expired_transactions(current_utime, &mut on_message_expired);
         }
 
@@ -176,14 +181,9 @@ impl ContractSubscription {
         Ok(new_account_state)
     }
 
-    pub async fn estimate_fees(
-        &mut self,
-        clock: &dyn Clock,
-        message: &ton_block::Message,
-    ) -> Result<u64> {
+    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
         let transaction = self
             .execute_transaction_locally(
-                clock,
                 message,
                 TransactionExecutionOptions {
                     disable_signature_check: true,
@@ -196,11 +196,13 @@ impl ContractSubscription {
 
     pub async fn execute_transaction_locally(
         &mut self,
-        clock: &dyn Clock,
         message: &ton_block::Message,
         options: TransactionExecutionOptions,
     ) -> Result<ton_block::Transaction> {
-        let blockchain_config = self.transport.get_blockchain_config(clock).await?;
+        let blockchain_config = self
+            .transport
+            .get_blockchain_config(self.clock.as_ref())
+            .await?;
         let state = match self.transport.get_contract_state(&self.address).await? {
             RawContractState::Exists(state) => state,
             RawContractState::NotExists => {
@@ -209,7 +211,7 @@ impl ContractSubscription {
         };
 
         let mut executor = Executor::new(
-            clock,
+            self.clock.as_ref(),
             blockchain_config,
             state.account,
             state.timings,

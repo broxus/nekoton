@@ -22,6 +22,7 @@ const STORAGE_OWNERS_CACHE: &str = "__core__owners_cache";
 /// Stores a map to resolve owner's wallet address from token wallet address
 pub struct OwnersCache {
     key: String,
+    clock: Arc<dyn Clock>,
     storage: Arc<dyn Storage>,
     transport: Arc<dyn Transport>,
     owners: RwLock<HashMap<MsgAddressInt, MsgAddressInt>>,
@@ -32,6 +33,7 @@ pub struct OwnersCache {
 impl OwnersCache {
     pub async fn load(
         network_group: &str,
+        clock: Arc<dyn Clock>,
         storage: Arc<dyn Storage>,
         transport: Arc<dyn Transport>,
         concurrent_resolvers: usize,
@@ -58,6 +60,7 @@ impl OwnersCache {
 
         Ok(Self {
             key,
+            clock,
             storage,
             transport,
             owners: RwLock::new(data),
@@ -68,12 +71,14 @@ impl OwnersCache {
 
     pub async fn load_unchecked(
         network_name: &str,
+        clock: Arc<dyn Clock>,
         storage: Arc<dyn Storage>,
         transport: Arc<dyn Transport>,
         concurrent_resolvers: usize,
     ) -> Self {
         Self::load(
             network_name,
+            clock.clone(),
             storage.clone(),
             transport.clone(),
             concurrent_resolvers,
@@ -81,6 +86,7 @@ impl OwnersCache {
         .await
         .unwrap_or_else(|_| Self {
             key: make_key(network_name),
+            clock,
             storage,
             transport,
             owners: Default::default(),
@@ -98,6 +104,7 @@ impl OwnersCache {
         match token_contract_states.entry(root_token_contract.clone()) {
             hash_map::Entry::Occupied(entry) => {
                 check_token_wallet(
+                    self.clock.as_ref(),
                     self.transport.as_ref(),
                     &self.owners,
                     entry.get(),
@@ -117,9 +124,12 @@ impl OwnersCache {
                     }
                 };
 
-                let version = RootTokenContractState(&state).guess_details()?.version;
+                let version = RootTokenContractState(&state)
+                    .guess_details(self.clock.as_ref())?
+                    .version;
 
                 check_token_wallet(
+                    self.clock.as_ref(),
                     self.transport.as_ref(),
                     &self.owners,
                     entry.insert((state, version)),
@@ -137,6 +147,7 @@ impl OwnersCache {
         token_wallets: &[MsgAddressInt],
     ) -> HashMap<MsgAddressInt, MsgAddressInt> {
         let semaphore = &self.resolver_semaphore;
+        let clock = self.clock.as_ref();
         let transport = self.transport.as_ref();
         let owners = &self.owners;
 
@@ -158,8 +169,8 @@ impl OwnersCache {
                 };
 
                 let state = TokenWalletContractState(&contract_state);
-                let version = state.get_version().ok()?;
-                let details = state.get_details(version).ok()?;
+                let version = state.get_version(clock).ok()?;
+                let details = state.get_details(clock, version).ok()?;
 
                 owners
                     .write()
@@ -230,14 +241,15 @@ impl OwnersCache {
     }
 }
 
-async fn check_token_wallet<'a>(
-    transport: &'a dyn Transport,
-    owners: &'a RwLock<OwnersMap>,
-    (state, version): &'a (ExistingContract, TokenWalletVersion),
-    owner_wallet: &'a MsgAddressInt,
+async fn check_token_wallet(
+    clock: &dyn Clock,
+    transport: &dyn Transport,
+    owners: &RwLock<OwnersMap>,
+    (state, version): &(ExistingContract, TokenWalletVersion),
+    owner_wallet: &MsgAddressInt,
 ) -> Result<RecipientWallet> {
     let token_wallet =
-        RootTokenContractState(state).get_wallet_address(*version, owner_wallet, None)?;
+        RootTokenContractState(state).get_wallet_address(clock, *version, owner_wallet, None)?;
 
     {
         let mut owners = owners.write().await;

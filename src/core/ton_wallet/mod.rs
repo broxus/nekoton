@@ -31,6 +31,7 @@ pub mod wallet_v3;
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
 pub struct TonWallet {
+    clock: Arc<dyn Clock>,
     public_key: PublicKey,
     wallet_type: WalletType,
     contract_subscription: ContractSubscription,
@@ -40,6 +41,7 @@ pub struct TonWallet {
 
 impl TonWallet {
     pub async fn subscribe(
+        clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         workchain: i8,
         public_key: PublicKey,
@@ -51,14 +53,22 @@ impl TonWallet {
         let mut wallet_data = WalletData::default();
 
         let contract_subscription = ContractSubscription::subscribe(
+            clock.clone(),
             transport,
             address,
-            make_contract_state_handler(&handler, &public_key, wallet_type, &mut wallet_data),
+            make_contract_state_handler(
+                clock.as_ref(),
+                &handler,
+                &public_key,
+                wallet_type,
+                &mut wallet_data,
+            ),
             make_transactions_handler(&handler, wallet_type),
         )
         .await?;
 
         Ok(Self {
+            clock,
             public_key,
             wallet_type,
             contract_subscription,
@@ -68,6 +78,7 @@ impl TonWallet {
     }
 
     pub async fn subscribe_by_address(
+        clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
@@ -80,14 +91,22 @@ impl TonWallet {
         let mut wallet_data = WalletData::default();
 
         let contract_subscription = ContractSubscription::subscribe(
+            clock.clone(),
             transport,
             address,
-            make_contract_state_handler(&handler, &public_key, wallet_type, &mut wallet_data),
+            make_contract_state_handler(
+                clock.as_ref(),
+                &handler,
+                &public_key,
+                wallet_type,
+                &mut wallet_data,
+            ),
             make_transactions_handler(&handler, wallet_type),
         )
         .await?;
 
         Ok(Self {
+            clock,
             public_key,
             wallet_type,
             contract_subscription,
@@ -97,6 +116,7 @@ impl TonWallet {
     }
 
     pub async fn subscribe_by_existing(
+        clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         existing_wallet: ExistingWalletInfo,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
@@ -104,9 +124,11 @@ impl TonWallet {
         let mut wallet_data = WalletData::default();
 
         let contract_subscription = ContractSubscription::subscribe(
+            clock.clone(),
             transport,
             existing_wallet.address,
             make_contract_state_handler(
+                clock.as_ref(),
                 &handler,
                 &existing_wallet.public_key,
                 existing_wallet.wallet_type,
@@ -117,6 +139,7 @@ impl TonWallet {
         .await?;
 
         Ok(Self {
+            clock,
             public_key: existing_wallet.public_key,
             wallet_type: existing_wallet.wallet_type,
             contract_subscription,
@@ -165,17 +188,16 @@ impl TonWallet {
         &self.wallet_data.custodians
     }
 
-    pub fn prepare_deploy(
-        &self,
-        clock: &dyn Clock,
-        expiration: Expiration,
-    ) -> Result<Box<dyn UnsignedMessage>> {
+    pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
-            WalletType::WalletV3 => {
-                wallet_v3::prepare_deploy(clock, &self.public_key, self.workchain(), expiration)
-            }
+            WalletType::WalletV3 => wallet_v3::prepare_deploy(
+                self.clock.as_ref(),
+                &self.public_key,
+                self.workchain(),
+                expiration,
+            ),
             WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
-                clock,
+                self.clock.as_ref(),
                 &self.public_key,
                 multisig_type,
                 self.workchain(),
@@ -188,14 +210,13 @@ impl TonWallet {
 
     pub fn prepare_deploy_with_multiple_owners(
         &self,
-        clock: &dyn Clock,
         expiration: Expiration,
         custodians: &[PublicKey],
         req_confirms: u8,
     ) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
             WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
-                clock,
+                self.clock.as_ref(),
                 &self.public_key,
                 multisig_type,
                 self.workchain(),
@@ -210,7 +231,6 @@ impl TonWallet {
     #[allow(clippy::too_many_arguments)]
     pub fn prepare_transfer(
         &mut self,
-        clock: &dyn Clock,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         destination: MsgAddressInt,
@@ -232,6 +252,7 @@ impl TonWallet {
                 };
 
                 self.wallet_data.update(
+                    self.clock.as_ref(),
                     &self.public_key,
                     self.wallet_type,
                     current_state,
@@ -244,7 +265,7 @@ impl TonWallet {
                 };
 
                 multisig::prepare_transfer(
-                    clock,
+                    self.clock.as_ref(),
                     public_key,
                     has_multiple_owners,
                     self.address().clone(),
@@ -256,7 +277,7 @@ impl TonWallet {
                 )
             }
             WalletType::WalletV3 => wallet_v3::prepare_transfer(
-                clock,
+                self.clock.as_ref(),
                 public_key,
                 current_state,
                 destination,
@@ -270,7 +291,6 @@ impl TonWallet {
 
     pub fn prepare_confirm_transaction(
         &self,
-        clock: &dyn Clock,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         transaction_id: u64,
@@ -284,6 +304,7 @@ impl TonWallet {
                     .ok_or(TonWalletError::LastTransactionNotFound)?;
 
                 let has_pending_transaction = multisig::find_pending_transaction(
+                    self.clock.as_ref(),
                     multisig_type,
                     Cow::Borrowed(current_state),
                     last_transaction_id,
@@ -294,7 +315,7 @@ impl TonWallet {
                 }
 
                 multisig::prepare_confirm_transaction(
-                    clock,
+                    self.clock.as_ref(),
                     public_key,
                     self.address().clone(),
                     transaction_id,
@@ -313,11 +334,11 @@ impl TonWallet {
         self.contract_subscription.send(message, expire_at).await
     }
 
-    pub async fn refresh(&mut self, clock: &dyn Clock) -> Result<()> {
+    pub async fn refresh(&mut self) -> Result<()> {
         self.contract_subscription
             .refresh(
-                clock,
                 make_contract_state_handler(
+                    self.clock.as_ref(),
                     &self.handler,
                     &self.public_key,
                     self.wallet_type,
@@ -356,14 +377,8 @@ impl TonWallet {
             .await
     }
 
-    pub async fn estimate_fees(
-        &mut self,
-        clock: &dyn Clock,
-        message: &ton_block::Message,
-    ) -> Result<u64> {
-        self.contract_subscription
-            .estimate_fees(clock, message)
-            .await
+    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
+        self.contract_subscription.estimate_fees(message).await
     }
 }
 
@@ -376,6 +391,7 @@ struct WalletData {
 impl WalletData {
     fn update(
         &mut self,
+        clock: &dyn Clock,
         public_key: &PublicKey,
         wallet_type: WalletType,
         account_stuff: &ton_block::AccountStuff,
@@ -398,6 +414,7 @@ impl WalletData {
         // Extract custodians
         if self.custodians.is_none() {
             self.custodians = Some(multisig::get_custodians(
+                clock,
                 multisig_type,
                 Cow::Borrowed(account_stuff),
                 last_transaction_id,
@@ -418,6 +435,7 @@ impl WalletData {
 
         // Extract pending transactions
         let pending_transactions = multisig::get_pending_transaction(
+            clock,
             multisig_type,
             Cow::Borrowed(account_stuff),
             last_transaction_id,
@@ -454,6 +472,7 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
 }
 
 pub fn get_wallet_custodians(
+    clock: &dyn Clock,
     contract: &ExistingContract,
     public_key: &ed25519_dalek::PublicKey,
     wallet_type: WalletType,
@@ -469,6 +488,7 @@ pub fn get_wallet_custodians(
         .ok_or(TonWalletError::LastTransactionNotFound)?;
 
     let custodians = multisig::get_custodians(
+        clock,
         multisig_type,
         Cow::Borrowed(&contract.account),
         last_transaction_id,
@@ -521,7 +541,6 @@ pub struct ExistingWalletInfo {
 pub trait InternalMessageSender {
     fn prepare_transfer(
         &mut self,
-        clock: &dyn Clock,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         message: InternalMessage,
@@ -532,7 +551,6 @@ pub trait InternalMessageSender {
 impl InternalMessageSender for TonWallet {
     fn prepare_transfer(
         &mut self,
-        clock: &dyn Clock,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
         message: InternalMessage,
@@ -543,7 +561,6 @@ impl InternalMessageSender for TonWallet {
         }
 
         self.prepare_transfer(
-            clock,
             current_state,
             public_key,
             message.destination,
@@ -578,6 +595,7 @@ enum TonWalletError {
 }
 
 fn make_contract_state_handler<'a, T>(
+    clock: &'a dyn Clock,
     handler: &'a T,
     public_key: &'a PublicKey,
     wallet_type: WalletType,
@@ -589,6 +607,7 @@ where
     move |contract_state| {
         if let RawContractState::Exists(contract_state) = contract_state {
             if let Err(e) = wallet_data.update(
+                clock,
                 public_key,
                 wallet_type,
                 &contract_state.account,

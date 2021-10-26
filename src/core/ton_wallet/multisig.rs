@@ -242,6 +242,7 @@ fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> to
 }
 
 fn run_local(
+    clock: &dyn Clock,
     multisig_type: MultisigType,
     contract_method: &str,
     account_stuff: ton_block::AccountStuff,
@@ -259,22 +260,19 @@ fn run_local(
 
     let input = Vec::with_capacity(function.inputs.len());
     function
-        .run_local(
-            &ConstClock::in_future(),
-            account_stuff,
-            last_transaction_id,
-            &input,
-        )?
+        .run_local(clock, account_stuff, last_transaction_id, &input)?
         .tokens
         .ok_or_else(|| MultisigError::NonZeroResultCode.into())
 }
 
 pub fn get_custodians(
+    clock: &dyn Clock,
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
     last_transaction_id: &LastTransactionId,
 ) -> Result<Vec<UInt256>> {
     run_local(
+        clock,
         multisig_type,
         "getCustodians",
         account_stuff.into_owned(),
@@ -300,12 +298,14 @@ fn parse_multisig_contract_custodians(tokens: Vec<ton_abi::Token>) -> Result<Vec
 }
 
 pub fn find_pending_transaction(
+    clock: &dyn Clock,
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
     last_transaction_id: &LastTransactionId,
     pending_transaction_id: u64,
 ) -> Result<bool> {
     let tokens = run_local(
+        clock,
         multisig_type,
         "getTransactions",
         account_stuff.into_owned(),
@@ -335,12 +335,14 @@ pub fn find_pending_transaction(
 }
 
 pub fn get_pending_transaction(
+    clock: &dyn Clock,
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
     last_transaction_id: &LastTransactionId,
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingTransaction>> {
     run_local(
+        clock,
         multisig_type,
         "getTransactions",
         account_stuff.into_owned(),

@@ -1,3 +1,6 @@
+use std::convert::TryInto;
+use std::sync::atomic::{AtomicI64, Ordering};
+
 use crate::traits::TrustMe;
 
 pub trait Clock: Send + Sync {
@@ -27,42 +30,51 @@ impl Clock for SimpleClock {
 
 #[derive(Default)]
 pub struct ClockWithOffset {
-    offset_as_sec: i64,
-    offset_as_ms: i64,
+    offset_as_sec: AtomicI64,
+    offset_as_ms: AtomicI64,
 }
 
 impl ClockWithOffset {
-    pub const fn new(offset_ms: i64) -> Self {
+    pub fn new(offset_ms: i64) -> Self {
         Self {
-            offset_as_sec: offset_ms / 1000,
-            offset_as_ms: offset_ms,
+            offset_as_sec: AtomicI64::new(offset_ms / 1000),
+            offset_as_ms: AtomicI64::new(offset_ms),
         }
     }
 
-    pub fn update_offset(&mut self, offset_ms: i64) {
-        self.offset_as_sec = offset_ms / 1000;
-        self.offset_as_ms = offset_ms;
+    pub fn update_offset(&self, offset_ms: i64) {
+        self.offset_as_sec
+            .store(offset_ms / 1000, Ordering::Release);
+        self.offset_as_ms.store(offset_ms, Ordering::Release);
     }
 
-    pub const fn offset_ms(&self) -> i64 {
-        self.offset_as_ms
+    pub fn offset_ms(&self) -> i64 {
+        self.offset_as_ms.load(Ordering::Acquire)
     }
 }
 
 impl Clock for ClockWithOffset {
     #[inline]
     fn now_sec_u64(&self) -> u64 {
-        std::cmp::max(self.offset_as_sec.saturating_add(now_sec_u64() as i64), 0) as u64
+        self.offset_as_sec
+            .load(Ordering::Acquire)
+            .saturating_add(now_sec_u64() as i64)
+            .try_into()
+            .unwrap_or_default()
     }
 
     #[inline]
     fn now_ms_f64(&self) -> f64 {
-        self.offset_as_ms as f64 + now_ms_f64()
+        self.offset_as_ms.load(Ordering::Acquire) as f64 + now_ms_f64()
     }
 
     #[inline]
     fn now_ms_u64(&self) -> u64 {
-        std::cmp::max(self.offset_as_ms.saturating_add(now_ms_u64() as i64), 0) as u64
+        self.offset_as_ms
+            .load(Ordering::Acquire)
+            .saturating_add(now_ms_u64() as i64)
+            .try_into()
+            .unwrap_or_default()
     }
 }
 
@@ -73,11 +85,6 @@ pub struct ConstClock {
 }
 
 impl ConstClock {
-    #[inline]
-    pub const fn in_future() -> Self {
-        Self::from_secs(0xffff0000)
-    }
-
     #[inline]
     pub const fn from_millis(millis: u64) -> Self {
         Self {
