@@ -200,9 +200,12 @@ impl TokenWallet {
             .and_then(|data| if data.len() == 20 { Some(data) } else { None })
             .ok_or(TokenWalletError::InvalidSwapBackDestination)?;
 
-        let callback_payload = match destination.token_value().write_to_cells(2) {
-            Ok(cells) if cells.len() == 1 && cells[0].references().len() == 1 => {
-                cells[0].references()[0].clone()
+        let callback_payload = match destination
+            .token_value()
+            .write_to_cells(&ton_abi::contract::ABI_VERSION_2_0)
+        {
+            Ok(cells) if cells.len() == 1 && cells[0].data.references().len() == 1 => {
+                cells[0].data.references()[0].clone()
             }
             _ => return Err(TokenWalletError::InvalidSwapBackDestination.into()),
         };
@@ -974,15 +977,16 @@ impl ExistingContractExt for ExistingContract {
         function: &ton_abi::Function,
         input: &[ton_abi::Token],
     ) -> Result<Vec<ton_abi::Token>> {
-        let output = function.run_local(
+        let ExecutionOutput {
+            tokens,
+            result_code,
+        } = function.run_local(
             clock,
             self.account.clone(),
             &self.last_transaction_id,
             input,
         )?;
-        output
-            .tokens
-            .ok_or_else(|| TokenWalletError::NonZeroResultCode.into())
+        tokens.ok_or_else(|| TokenWalletError::NonZeroResultCode(result_code).into())
     }
 }
 
@@ -1002,8 +1006,8 @@ enum TokenWalletError {
     InvalidEthEventContract,
     #[error("Invalid TON event contract")]
     InvalidTonEventContract,
-    #[error("Non-zero execution result code")]
-    NonZeroResultCode,
+    #[error("Non-zero execution result code: {}", .0)]
+    NonZeroResultCode(i32),
     #[error("Wallet not deployed")]
     WalletNotDeployed,
 }

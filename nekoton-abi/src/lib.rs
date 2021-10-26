@@ -43,7 +43,7 @@ mod token_unpacker;
 mod tokens_json;
 mod tvm;
 
-const TON_ABI_VERSION: u8 = 2;
+const TON_ABI_VERSION: ton_abi::contract::AbiVersion = ton_abi::contract::ABI_VERSION_2_0;
 
 pub fn read_function_id(data: &SliceData) -> Result<u32> {
     let mut value: u32 = 0;
@@ -135,7 +135,7 @@ pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
             comment.token_value().unnamed(),
         ],
         Vec::new(),
-        2,
+        &TON_ABI_VERSION,
     )
     .map(SliceData::from)
 }
@@ -169,7 +169,7 @@ pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
 
 pub fn pack_into_cell(tokens: &[ton_abi::Token]) -> Result<ton_types::Cell> {
     let cells = Vec::new();
-    ton_abi::TokenValue::pack_values_into_chain(tokens, cells, TON_ABI_VERSION)
+    ton_abi::TokenValue::pack_values_into_chain(tokens, cells, &TON_ABI_VERSION)
         .and_then(|x| x.into_cell())
 }
 
@@ -183,7 +183,7 @@ pub fn unpack_from_cell(
     for param in params {
         let last = Some(param) == params.last();
         let (token_value, new_cursor) =
-            TokenValue::read_from(&param.kind, cursor, last, TON_ABI_VERSION)?;
+            TokenValue::read_from(&param.kind, cursor, last, &TON_ABI_VERSION, allow_partial)?;
 
         cursor = new_cursor;
         tokens.push(Token {
@@ -273,7 +273,7 @@ pub fn insert_state_init_data(
                 return Err(InitDataError::TokenParamTypeMismatch.into());
             }
 
-            let builder = token.pack_into_chain(2)?;
+            let builder = token.pack_into_chain(&TON_ABI_VERSION)?;
             map.set_builder(param.key.write_to_new_cell().trust_me().into(), &builder)?;
         }
     }

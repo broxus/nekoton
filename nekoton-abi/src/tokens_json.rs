@@ -59,6 +59,7 @@ pub fn make_abi_token_value(value: &ton_abi::TokenValue) -> anyhow::Result<serde
             Some(value) => make_abi_token_value(value)?,
             None => serde_json::Value::Null,
         },
+        ton_abi::TokenValue::Ref(value) => make_abi_token_value(value)?,
     })
 }
 
@@ -405,6 +406,9 @@ pub fn parse_abi_token_value(
                 ton_abi::TokenValue::Optional(*param.clone(), Some(value))
             }
         },
+        ton_abi::ParamType::Ref(param) => {
+            ton_abi::TokenValue::Ref(Box::new(parse_abi_token_value(param, value)?))
+        }
     };
 
     Ok(value)

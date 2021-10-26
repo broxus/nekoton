@@ -343,7 +343,7 @@ struct LabsUnsignedMessage {
     header: HeadersMap,
     input: Vec<ton_abi::Token>,
     payload: ton_types::BuilderData,
-    hash: Vec<u8>,
+    hash: ton_types::UInt256,
     expire_at: ExpireAt,
     message: ton_block::Message,
 }
@@ -377,7 +377,12 @@ impl UnsignedMessage for LabsUnsignedMessage {
 
     fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
         let payload = self.payload.clone();
-        let payload = ton_abi::Function::fill_sign(2, Some(signature), None, payload)?;
+        let payload = ton_abi::Function::fill_sign(
+            &ton_abi::contract::ABI_VERSION_2_0,
+            Some(signature),
+            None,
+            payload,
+        )?;
 
         let mut message = self.message.clone();
         message.set_body(payload.into());

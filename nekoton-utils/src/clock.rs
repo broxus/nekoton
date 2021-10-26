@@ -1,8 +1,6 @@
 use std::convert::TryInto;
 use std::sync::atomic::{AtomicI64, Ordering};
 
-use crate::traits::TrustMe;
-
 pub trait Clock: Send + Sync {
     fn now_sec_u64(&self) -> u64;
     fn now_ms_f64(&self) -> f64;
@@ -126,6 +124,7 @@ pub fn now_sec_u64() -> u64 {
 
 #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
 pub fn now_sec_u64() -> u64 {
+    use crate::traits::TrustMe;
     use std::time::SystemTime;
 
     (SystemTime::now().duration_since(SystemTime::UNIX_EPOCH))
@@ -140,6 +139,7 @@ pub fn now_ms_f64() -> f64 {
 
 #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
 pub fn now_ms_f64() -> f64 {
+    use crate::traits::TrustMe;
     use std::time::SystemTime;
 
     (SystemTime::now().duration_since(SystemTime::UNIX_EPOCH))
@@ -155,6 +155,7 @@ pub fn now_ms_u64() -> u64 {
 
 #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
 pub fn now_ms_u64() -> u64 {
+    use crate::traits::TrustMe;
     use std::time::SystemTime;
 
     let duration = (SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)).trust_me();

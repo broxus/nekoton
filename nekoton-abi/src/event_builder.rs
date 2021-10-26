@@ -1,4 +1,4 @@
-use ton_abi::contract::{AbiVersion, ABI_VBERSION_2_0};
+use ton_abi::contract::{AbiVersion, ABI_VERSION_2_0};
 use ton_abi::{Event, Param, ParamType};
 
 #[derive(Debug, Clone)]
@@ -18,7 +18,7 @@ impl EventBuilder {
     pub fn new(event_name: &str) -> Self {
         Self {
             name: event_name.to_string(),
-            abi_version: ABI_VBERSION_2_0,
+            abi_version: ABI_VERSION_2_0,
             inputs: Vec::new(),
             event_id: 0,
         }

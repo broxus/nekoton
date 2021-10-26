@@ -259,10 +259,11 @@ fn run_local(
     .function(contract_method)?;
 
     let input = Vec::with_capacity(function.inputs.len());
-    function
-        .run_local(clock, account_stuff, last_transaction_id, &input)?
-        .tokens
-        .ok_or_else(|| MultisigError::NonZeroResultCode.into())
+    let ExecutionOutput {
+        tokens,
+        result_code,
+    } = function.run_local(clock, account_stuff, last_transaction_id, &input)?;
+    tokens.ok_or_else(|| MultisigError::NonZeroResultCode(result_code).into())
 }
 
 pub fn get_custodians(
@@ -373,8 +374,8 @@ fn parse_multisig_contract_pending_transactions(
 
 #[derive(thiserror::Error, Debug)]
 enum MultisigError {
-    #[error("Non-zero execution result code")]
-    NonZeroResultCode,
+    #[error("Non-zero execution result code: {}", .0)]
+    NonZeroResultCode(i32),
 }
 
 #[derive(UnpackAbi)]

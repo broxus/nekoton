@@ -1,6 +1,6 @@
 use std::iter::FromIterator;
 
-use ton_abi::contract::{AbiVersion, ABI_VBERSION_2_0};
+use ton_abi::contract::{AbiVersion, ABI_VERSION_2_0};
 use ton_abi::{Function, Param, ParamType};
 
 use super::{BuildTokenValue, TokenValueExt};
@@ -31,7 +31,7 @@ pub struct FunctionBuilder {
 impl FunctionBuilder {
     pub fn new(function_name: &str) -> Self {
         Self {
-            abi_version: ABI_VBERSION_2_0,
+            abi_version: ABI_VERSION_2_0,
             name: function_name.to_string(),
             header: Vec::new(),
             inputs: Vec::new(),
