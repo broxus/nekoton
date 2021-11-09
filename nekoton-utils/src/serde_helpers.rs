@@ -337,6 +337,36 @@ pub mod serde_bytes_base64 {
     }
 }
 
+pub mod serde_bytes_base64_optional {
+    use super::*;
+
+    pub fn serialize<S, T>(data: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: AsRef<[u8]>,
+    {
+        #[derive(serde::Serialize)]
+        #[serde(transparent)]
+        struct Wrapper<'a>(#[serde(with = "serde_bytes_base64")] &'a [u8]);
+
+        match data {
+            Some(data) => serializer.serialize_some(&Wrapper(data.as_ref())),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Vec<u8>>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(serde::Deserialize)]
+        #[serde(transparent)]
+        struct Wrapper(#[serde(with = "serde_bytes_base64")] Vec<u8>);
+
+        Option::<Wrapper>::deserialize(deserializer).map(|wrapper| wrapper.map(|data| data.0))
+    }
+}
+
 pub mod serde_boc {
     use super::*;
 
