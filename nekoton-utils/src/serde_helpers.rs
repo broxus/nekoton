@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::fmt;
 use std::str::FromStr;
 
 use serde::de::{Deserialize, Error, SeqAccess, Visitor};
@@ -14,15 +15,14 @@ pub mod serde_base64_array {
         T: AsRef<[u8]> + Sized,
         S: serde::Serializer,
     {
-        serializer.serialize_str(&base64::encode(&data.as_ref()))
+        serde_bytes_base64::serialize(data.as_ref(), serializer)
     }
 
     pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<[u8; N], D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        let data = String::deserialize(deserializer)?;
-        let data = base64::decode(data).map_err(D::Error::custom)?;
+        let data = serde_bytes_base64::deserialize(deserializer)?;
         data.try_into()
             .map_err(|_| D::Error::custom(format!("Invalid array length, expected: {}", N)))
     }
@@ -36,15 +36,14 @@ pub mod serde_hex_array {
         T: AsRef<[u8]> + Sized,
         S: serde::Serializer,
     {
-        serializer.serialize_str(&hex::encode(&data.as_ref()))
+        serde_bytes::serialize(data, serializer)
     }
 
     pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<[u8; N], D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        let data = String::deserialize(deserializer)?;
-        let data = hex::decode(data).map_err(D::Error::custom)?;
+        let data = serde_bytes::deserialize(deserializer)?;
         data.try_into()
             .map_err(|_| D::Error::custom(format!("Invalid array length, expected: {}", N)))
     }
@@ -78,15 +77,15 @@ pub mod serde_uint256 {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&data.to_hex_string())
+        serde_hex_array::serialize(data.as_slice(), serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<UInt256, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        let data = String::deserialize(deserializer)?;
-        UInt256::from_str(&data).map_err(|_| D::Error::custom("Invalid uint256"))
+        let data: [u8; 32] = serde_hex_array::deserialize(deserializer)?;
+        Ok(UInt256::from_slice(&data[..]))
     }
 }
 
@@ -226,6 +225,10 @@ pub mod serde_vec_address {
 }
 
 pub mod serde_bytes {
+    use std::fmt;
+
+    use serde::de::Unexpected;
+
     use super::*;
 
     pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
@@ -233,19 +236,61 @@ pub mod serde_bytes {
         T: AsRef<[u8]> + Sized,
         S: serde::Serializer,
     {
-        serializer.serialize_str(&*hex::encode(&data.as_ref()))
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&*hex::encode(&data.as_ref()))
+        } else {
+            serializer.serialize_bytes(data.as_ref())
+        }
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        String::deserialize(deserializer)
-            .and_then(|string| hex::decode(string).map_err(|e| D::Error::custom(e.to_string())))
+        struct HexVisitor;
+
+        impl<'de> Visitor<'de> for HexVisitor {
+            type Value = Vec<u8>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("hex-encoded byte array")
+            }
+
+            fn visit_str<E: Error>(self, value: &str) -> Result<Self::Value, E> {
+                hex::decode(value).map_err(|_| E::invalid_type(Unexpected::Str(value), &self))
+            }
+
+            // See the `deserializing_flattened_field` test for an example why this is needed.
+            fn visit_bytes<E: Error>(self, value: &[u8]) -> Result<Self::Value, E> {
+                Ok(value.to_vec())
+            }
+        }
+
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(HexVisitor)
+        } else {
+            deserializer.deserialize_bytes(BytesVisitor)
+        }
+    }
+}
+
+struct BytesVisitor;
+
+impl<'de> Visitor<'de> for BytesVisitor {
+    type Value = Vec<u8>;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("byte array")
+    }
+
+    fn visit_bytes<E: Error>(self, value: &[u8]) -> Result<Self::Value, E> {
+        Ok(value.to_vec())
     }
 }
 
 pub mod serde_bytes_base64 {
+    use serde::de::Unexpected;
+
     use super::*;
 
     pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
@@ -253,15 +298,71 @@ pub mod serde_bytes_base64 {
         T: AsRef<[u8]> + Sized,
         S: serde::Serializer,
     {
-        serializer.serialize_str(&*base64::encode(&data.as_ref()))
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&*base64::encode(&data.as_ref()))
+        } else {
+            serializer.serialize_bytes(data.as_ref())
+        }
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        String::deserialize(deserializer)
-            .and_then(|string| base64::decode(string).map_err(|e| D::Error::custom(e.to_string())))
+        struct Base64Visitor;
+
+        impl<'de> Visitor<'de> for Base64Visitor {
+            type Value = Vec<u8>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("base64-encoded byte array")
+            }
+
+            fn visit_str<E: Error>(self, value: &str) -> Result<Self::Value, E> {
+                base64::decode(value).map_err(|_| E::invalid_type(Unexpected::Str(value), &self))
+            }
+
+            // See the `deserializing_flattened_field` test for an example why this is needed.
+            fn visit_bytes<E: Error>(self, value: &[u8]) -> Result<Self::Value, E> {
+                Ok(value.to_vec())
+            }
+        }
+
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(Base64Visitor)
+        } else {
+            deserializer.deserialize_bytes(BytesVisitor)
+        }
+    }
+}
+
+pub mod serde_bytes_base64_optional {
+    use super::*;
+
+    pub fn serialize<S, T>(data: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: AsRef<[u8]>,
+    {
+        #[derive(serde::Serialize)]
+        #[serde(transparent)]
+        struct Wrapper<'a>(#[serde(with = "serde_bytes_base64")] &'a [u8]);
+
+        match data {
+            Some(data) => serializer.serialize_some(&Wrapper(data.as_ref())),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Vec<u8>>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(serde::Deserialize)]
+        #[serde(transparent)]
+        struct Wrapper(#[serde(with = "serde_bytes_base64")] Vec<u8>);
+
+        Option::<Wrapper>::deserialize(deserializer).map(|wrapper| wrapper.map(|data| data.0))
     }
 }
 
@@ -293,15 +394,14 @@ pub mod serde_cell {
         use serde::ser::Error;
 
         let bytes = ton_types::serialize_toc(data).map_err(S::Error::custom)?;
-        serializer.serialize_str(&base64::encode(bytes))
+        serde_bytes_base64::serialize(bytes, serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Cell, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        let data = String::deserialize(deserializer)?;
-        let bytes = base64::decode(&data).map_err(D::Error::custom)?;
+        let bytes = serde_bytes_base64::deserialize(deserializer)?;
         let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
             .map_err(D::Error::custom)?;
         Ok(cell)
@@ -309,8 +409,9 @@ pub mod serde_cell {
 }
 
 pub mod serde_message {
-    use super::*;
     use ton_block::{Deserializable, Serializable};
+
+    use super::*;
 
     pub fn serialize<S>(data: &ton_block::Message, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -331,8 +432,9 @@ pub mod serde_message {
 }
 
 pub mod serde_ton_block {
-    use super::*;
     use ton_block::{Deserializable, Serializable};
+
+    use super::*;
 
     pub fn serialize<S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -444,8 +546,9 @@ pub mod serde_vec_public_key {
 pub mod serde_nonce {
     use chacha20poly1305::Nonce;
 
-    use super::*;
     use crate::encryption::NONCE_LENGTH;
+
+    use super::*;
 
     pub fn serialize<S>(data: &Nonce, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -469,5 +572,54 @@ pub mod serde_nonce {
                 Ok(Nonce::clone_from_slice(&x))
             }
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use serde::{Deserialize, Serialize};
+
+    #[test]
+    fn test_hex() {
+        #[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
+        struct Test {
+            #[serde(with = "serde_hex_array")]
+            key: [u8; 32],
+        }
+        let test = Test { key: [1; 32] };
+        let data = serde_json::to_string(&test).unwrap();
+        assert_eq!(
+            data,
+            r#"{"key":"0101010101010101010101010101010101010101010101010101010101010101"}"#
+        );
+        assert_eq!(serde_json::from_str::<Test>(&data).unwrap(), test);
+        let data = bincode::serialize(&test).unwrap();
+        assert!(data.len() < 64);
+        assert_eq!(bincode::deserialize::<Test>(&data).unwrap(), test);
+    }
+
+    #[test]
+    fn test_optional() {
+        #[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
+        struct Test {
+            #[serde(with = "serde_bytes_base64_optional")]
+            key: Option<Vec<u8>>,
+        }
+
+        let data = Test {
+            key: Some(vec![1; 32]),
+        };
+        let res = serde_json::to_string(&data).unwrap();
+        assert_eq!(
+            r#"{"key":"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="}"#,
+            res
+        );
+        assert_eq!(data, serde_json::from_str(&res).unwrap());
+
+        let data = Test { key: None };
+        let res = serde_json::to_string(&data).unwrap();
+        assert_eq!(r#"{"key":null}"#, res);
+        assert_eq!(data, serde_json::from_str(&res).unwrap())
     }
 }
