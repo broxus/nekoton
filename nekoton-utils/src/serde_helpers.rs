@@ -89,7 +89,6 @@ pub mod serde_uint256 {
     }
 }
 
-//todo serde_bytes?
 pub mod serde_vec_uint256 {
     use super::*;
 
@@ -578,11 +577,11 @@ pub mod serde_nonce {
 
 #[cfg(test)]
 mod test {
-    use super::serde_hex_array;
+    use super::*;
+    use serde::{Deserialize, Serialize};
 
     #[test]
     fn test_hex() {
-        use serde::{Deserialize, Serialize};
         #[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
         struct Test {
             #[serde(with = "serde_hex_array")]
@@ -597,5 +596,30 @@ mod test {
         assert_eq!(serde_json::from_str::<Test>(&data).unwrap(), test);
         let data = bincode::serialize(&test).unwrap();
         assert!(data.len() < 64);
+        assert_eq!(bincode::deserialize::<Test>(&data).unwrap(), test);
+    }
+
+    #[test]
+    fn test_optional() {
+        #[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
+        struct Test {
+            #[serde(with = "serde_bytes_base64_optional")]
+            key: Option<Vec<u8>>,
+        }
+
+        let data = Test {
+            key: Some(vec![1; 32]),
+        };
+        let res = serde_json::to_string(&data).unwrap();
+        assert_eq!(
+            r#"{"key":"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="}"#,
+            res
+        );
+        assert_eq!(data, serde_json::from_str(&res).unwrap());
+
+        let data = Test { key: None };
+        let res = serde_json::to_string(&data).unwrap();
+        assert_eq!(r#"{"key":null}"#, res);
+        assert_eq!(data, serde_json::from_str(&res).unwrap())
     }
 }
