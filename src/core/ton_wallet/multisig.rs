@@ -114,9 +114,10 @@ pub fn prepare_transfer(
     });
 
     let (function, input) = if has_multiple_owners {
-        let all_balance = match MessageFlags::try_from(flags)? {
-            MessageFlags::AllBalance => true,
-            _ => false,
+        let all_balance = match MessageFlags::try_from(flags) {
+            Ok(MessageFlags::Normal) => false,
+            Ok(MessageFlags::AllBalance) => true,
+            _ => return Err(MultisigError::UnsupportedFlagsSet.into()),
         };
 
         MessageBuilder::new(
@@ -383,6 +384,8 @@ fn parse_multisig_contract_pending_transactions(
 enum MultisigError {
     #[error("Non-zero execution result code: {}", .0)]
     NonZeroResultCode(i32),
+    #[error("Unsupported message flags set")]
+    UnsupportedFlagsSet,
 }
 
 #[derive(UnpackAbi)]

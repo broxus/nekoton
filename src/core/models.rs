@@ -942,14 +942,14 @@ pub enum MessageFlags {
 }
 
 impl TryFrom<u8> for MessageFlags {
-    type Error = TransactionTypeError;
+    type Error = MessageFlagsError;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             3 => Ok(MessageFlags::Normal),
             131 => Ok(MessageFlags::AllBalance),
             160 => Ok(MessageFlags::AllBalanceDeleteNetworkAccount),
-            _ => Err(TransactionTypeError::UnknownTransactionType),
+            _ => Err(MessageFlagsError::UnknownMessageFlags),
         }
     }
 }
@@ -971,9 +971,9 @@ impl Default for MessageFlags {
 }
 
 #[derive(thiserror::Error, Debug, Copy, Clone)]
-pub enum TransactionTypeError {
-    #[error("Unknown transaction type")]
-    UnknownTransactionType,
+pub enum MessageFlagsError {
+    #[error("Unknown message flags combination")]
+    UnknownMessageFlags,
 }
 
 #[cfg(test)]
