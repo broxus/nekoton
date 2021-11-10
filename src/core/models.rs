@@ -934,6 +934,48 @@ pub(super) enum AccountSubscriptionError {
     InvalidMessageType,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum TransactionType {
+    Normal,
+    AllBalance,
+    AllBalanceDeleteNetworkAccount,
+}
+
+impl TryFrom<u8> for TransactionType {
+    type Error = TransactionTypeError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            3 => Ok(TransactionType::Normal),
+            128 => Ok(TransactionType::AllBalance),
+            160 =>Ok(TransactionType::AllBalanceDeleteNetworkAccount),
+            _ => Err(TransactionTypeError::UnknownTransactionType)
+        }
+    }
+}
+
+impl From<TransactionType> for u8 {
+    fn from(value: TransactionType) -> u8 {
+        match value {
+            TransactionType::Normal => 3,
+            TransactionType::AllBalance => 128,
+            TransactionType::AllBalanceDeleteNetworkAccount => 160,
+        }
+    }
+}
+
+impl Default for TransactionType {
+    fn default() -> Self {
+        TransactionType::Normal
+    }
+}
+
+#[derive(thiserror::Error, Debug, Copy, Clone)]
+pub enum TransactionTypeError {
+    #[error("Unknown transaction type")]
+    UnknownTransactionType,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

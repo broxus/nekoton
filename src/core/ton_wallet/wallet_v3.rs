@@ -75,6 +75,7 @@ pub fn prepare_transfer(
     current_state: &ton_block::AccountStuff,
     destination: MsgAddressInt,
     amount: u64,
+    flags: u8,
     bounce: bool,
     body: Option<SliceData>,
     expiration: Expiration,
@@ -104,7 +105,7 @@ pub fn prepare_transfer(
     }
 
     let gift = Some(Gift {
-        flags: 3,
+        flags,
         bounce,
         destination,
         amount,

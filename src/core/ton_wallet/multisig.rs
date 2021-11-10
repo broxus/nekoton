@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::convert::TryFrom;
 
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
@@ -10,7 +11,7 @@ use nekoton_abi::*;
 use nekoton_utils::*;
 
 use super::{TonWalletDetails, TransferAction};
-use crate::core::models::{Expiration, MultisigPendingTransaction};
+use crate::core::models::{Expiration, MultisigPendingTransaction, TransactionType};
 use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
 
@@ -102,6 +103,7 @@ pub fn prepare_transfer(
     address: MsgAddressInt,
     destination: MsgAddressInt,
     amount: u64,
+    flags: u8,
     bounce: bool,
     body: Option<SliceData>,
     expiration: Expiration,
@@ -112,6 +114,11 @@ pub fn prepare_transfer(
     });
 
     let (function, input) = if has_multiple_owners {
+        let all_balance = match TransactionType::try_from(flags)? {
+            TransactionType::AllBalance => { true }
+            _ => false,
+        };
+
         MessageBuilder::new(
             nekoton_contracts::abi::safe_multisig_wallet(),
             "submitTransaction",
@@ -120,7 +127,7 @@ pub fn prepare_transfer(
         .arg(destination)
         .arg(BigUint128(amount.into()))
         .arg(bounce)
-        .arg(false) // allBalance
+        .arg(all_balance)
         .arg(body.unwrap_or_default().into_cell())
         .build()
     } else {
@@ -132,7 +139,7 @@ pub fn prepare_transfer(
         .arg(destination)
         .arg(BigUint128(amount.into()))
         .arg(bounce)
-        .arg(3u8) // flags
+        .arg(flags)
         .arg(body.unwrap_or_default().into_cell())
         .build()
     };
