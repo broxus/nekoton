@@ -11,7 +11,7 @@ use nekoton_abi::*;
 use nekoton_utils::*;
 
 use super::{TonWalletDetails, TransferAction};
-use crate::core::models::{Expiration, MultisigPendingTransaction, TransactionType};
+use crate::core::models::{Expiration, MessageFlags, MultisigPendingTransaction};
 use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
 
@@ -114,8 +114,8 @@ pub fn prepare_transfer(
     });
 
     let (function, input) = if has_multiple_owners {
-        let all_balance = match TransactionType::try_from(flags)? {
-            TransactionType::AllBalance => { true }
+        let all_balance = match MessageFlags::try_from(flags)? {
+            MessageFlags::AllBalance => true,
             _ => false,
         };
 

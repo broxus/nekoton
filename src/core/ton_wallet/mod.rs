@@ -14,8 +14,8 @@ use nekoton_utils::*;
 
 pub use self::multisig::MultisigType;
 use super::models::{
-    ContractState, Expiration, MultisigPendingTransaction, PendingTransaction, Transaction,
-    TransactionAdditionalInfo, TransactionWithData, TransactionsBatchInfo, TransactionType,
+    ContractState, Expiration, MessageFlags, MultisigPendingTransaction, PendingTransaction,
+    Transaction, TransactionAdditionalInfo, TransactionWithData, TransactionsBatchInfo,
 };
 use super::{ContractSubscription, PollingMethod};
 use crate::core::parsing::*;
@@ -239,7 +239,7 @@ impl TonWallet {
         body: Option<SliceData>,
         expiration: Expiration,
     ) -> Result<TransferAction> {
-        let flags = TransactionType::default();
+        let flags = MessageFlags::default();
 
         match self.wallet_type {
             WalletType::Multisig(_) => {
