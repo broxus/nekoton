@@ -934,6 +934,48 @@ pub(super) enum AccountSubscriptionError {
     InvalidMessageType,
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum MessageFlags {
+    Normal,
+    AllBalance,
+    AllBalanceDeleteNetworkAccount,
+}
+
+impl TryFrom<u8> for MessageFlags {
+    type Error = MessageFlagsError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            3 => Ok(MessageFlags::Normal),
+            131 => Ok(MessageFlags::AllBalance),
+            160 => Ok(MessageFlags::AllBalanceDeleteNetworkAccount),
+            _ => Err(MessageFlagsError::UnknownMessageFlags),
+        }
+    }
+}
+
+impl From<MessageFlags> for u8 {
+    fn from(value: MessageFlags) -> u8 {
+        match value {
+            MessageFlags::Normal => 3,
+            MessageFlags::AllBalance => 128 + 3,
+            MessageFlags::AllBalanceDeleteNetworkAccount => 128 + 32,
+        }
+    }
+}
+
+impl Default for MessageFlags {
+    fn default() -> Self {
+        MessageFlags::Normal
+    }
+}
+
+#[derive(thiserror::Error, Debug, Copy, Clone)]
+pub enum MessageFlagsError {
+    #[error("Unknown message flags combination")]
+    UnknownMessageFlags,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
