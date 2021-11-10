@@ -70,6 +70,30 @@ pub mod serde_string {
     }
 }
 
+pub mod serde_optional_string {
+    use super::*;
+
+    pub fn serialize<S, T>(data: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: std::fmt::Display,
+    {
+        data.as_ref().map(ToString::to_string).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+        T: FromStr,
+        T::Err: std::fmt::Display,
+    {
+        Option::<String>::deserialize(deserializer).and_then(|data| {
+            data.map(|data| T::from_str(&data).map_err(D::Error::custom))
+                .transpose()
+        })
+    }
+}
+
 pub mod serde_uint256 {
     use super::*;
 
