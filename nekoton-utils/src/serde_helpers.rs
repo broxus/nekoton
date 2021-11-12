@@ -390,6 +390,24 @@ pub mod serde_bytes_base64_optional {
     }
 }
 
+pub mod serde_iter {
+    pub fn serialize<S, T, V>(iter: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: IntoIterator<Item = V> + Clone,
+        V: serde::Serialize,
+    {
+        use serde::ser::SerializeSeq;
+
+        let iter = iter.clone().into_iter();
+        let mut seq = serializer.serialize_seq(Some(iter.size_hint().0))?;
+        for value in iter {
+            seq.serialize_element(&value)?;
+        }
+        seq.end()
+    }
+}
+
 pub mod serde_boc {
     use super::*;
 
