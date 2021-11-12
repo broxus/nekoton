@@ -17,7 +17,7 @@ pub fn call(
     stack: Stack,
 ) -> Result<(ton_vm::executor::Engine, i32, bool), ExecutionError> {
     let state = match &mut account.storage.state {
-        ton_block::AccountState::AccountActive(state) => Ok(state),
+        ton_block::AccountState::AccountActive { state_init, .. } => Ok(state_init),
         _ => Err(ExecutionError::AccountIsNotActive),
     }?;
 

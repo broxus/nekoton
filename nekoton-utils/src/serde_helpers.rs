@@ -397,7 +397,7 @@ pub mod serde_boc {
     where
         S: serde::Serializer,
     {
-        serde_cell::serialize(&data.into_cell(), serializer)
+        serde_cell::serialize(&data.clone().into_cell(), serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<SliceData, D::Error>

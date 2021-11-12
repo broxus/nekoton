@@ -203,7 +203,7 @@ pub fn extract_public_key(
     account: &AccountStuff,
 ) -> Result<ed25519_dalek::PublicKey, ExtractionError> {
     let state_init = match &account.storage.state {
-        ton_block::AccountState::AccountActive(state_init) => state_init,
+        ton_block::AccountState::AccountActive { state_init, .. } => state_init,
         _ => return Err(ExtractionError::AccountIsNotActive),
     };
     let mut data: SliceData = match &state_init.data {
@@ -749,6 +749,7 @@ impl Executor {
     pub fn run(&mut self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
         let mut executor = OrdinaryTransactionExecutor::new(self.config.clone());
         executor.set_signature_check_disabled(self.disable_signature_check);
+        #[allow(deprecated)]
         executor.execute_for_account(
             Some(message),
             &mut self.account,
@@ -869,7 +870,7 @@ mod tests {
 
         let encoded_comment = create_comment_payload(comment).unwrap();
         assert_eq!(
-            base64::encode(ton_types::serialize_toc(&encoded_comment.into_cell()).unwrap()),
+            base64::encode(ton_types::serialize_toc(&encoded_comment.clone().into_cell()).unwrap()),
             "te6ccgEBAgEAHgABCAAAAAABACppIGxvdmUgbWVtZXMgYW5kIPCfpoA="
         );
 
