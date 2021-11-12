@@ -43,7 +43,7 @@ impl ExistingContract {
             last_transaction_id: Some(self.last_transaction_id),
             is_deployed: matches!(
                 self.account.storage.state,
-                ton_block::AccountState::AccountActive(_)
+                ton_block::AccountState::AccountActive { .. }
             ),
         }
     }

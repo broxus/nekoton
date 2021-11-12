@@ -631,8 +631,8 @@ pub struct TokenWalletContractState<'a>(pub &'a ExistingContract);
 impl<'a> TokenWalletContractState<'a> {
     pub fn get_code_hash(&self) -> Result<ton_types::UInt256> {
         match &self.0.account.storage.state {
-            ton_block::AccountState::AccountActive(state) => {
-                let code = state
+            ton_block::AccountState::AccountActive { state_init, .. } => {
+                let code = state_init
                     .code
                     .as_ref()
                     .ok_or(TokenWalletError::WalletNotDeployed)?;

@@ -244,13 +244,13 @@ impl TonWallet {
         match self.wallet_type {
             WalletType::Multisig(_) => {
                 match &current_state.storage.state {
-                    ton_block::AccountState::AccountFrozen(_) => {
+                    ton_block::AccountState::AccountFrozen { .. } => {
                         return Err(TonWalletError::AccountIsFrozen.into())
                     }
                     ton_block::AccountState::AccountUninit => {
                         return Ok(TransferAction::DeployFirst)
                     }
-                    ton_block::AccountState::AccountActive(_) => {}
+                    ton_block::AccountState::AccountActive { .. } => {}
                 };
 
                 self.wallet_data.update(
@@ -454,11 +454,15 @@ impl WalletData {
 
 pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKey, WalletType)> {
     let (code, data) = match &contract.account.storage.state {
-        ton_block::AccountState::AccountActive(ton_block::StateInit {
-            code: Some(code),
-            data: Some(data),
+        ton_block::AccountState::AccountActive {
+            state_init:
+                ton_block::StateInit {
+                    code: Some(code),
+                    data: Some(data),
+                    ..
+                },
             ..
-        }) => (code, data),
+        } => (code, data),
         _ => return Err(TonWalletError::AccountNotExists.into()),
     };
 

@@ -76,11 +76,11 @@ pub fn prepare_transfer(
     expiration: Expiration,
 ) -> Result<TransferAction> {
     let (init_data, with_state_init) = match &current_state.storage.state {
-        ton_block::AccountState::AccountActive(active) => match &active.data {
+        ton_block::AccountState::AccountActive { state_init, .. } => match &state_init.data {
             Some(data) => (InitData::try_from(data)?, false),
             None => return Err(HighloadWalletV2Error::InvalidInitData.into()),
         },
-        ton_block::AccountState::AccountFrozen(_) => {
+        ton_block::AccountState::AccountFrozen { .. } => {
             return Err(HighloadWalletV2Error::AccountIsFrozen.into())
         }
         ton_block::AccountState::AccountUninit => (
