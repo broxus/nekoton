@@ -947,7 +947,7 @@ impl TryFrom<u8> for MessageFlags {
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         match value {
             3 => Ok(MessageFlags::Normal),
-            131 => Ok(MessageFlags::AllBalance),
+            128 => Ok(MessageFlags::AllBalance),
             160 => Ok(MessageFlags::AllBalanceDeleteNetworkAccount),
             _ => Err(MessageFlagsError::UnknownMessageFlags),
         }
@@ -958,7 +958,7 @@ impl From<MessageFlags> for u8 {
     fn from(value: MessageFlags) -> u8 {
         match value {
             MessageFlags::Normal => 3,
-            MessageFlags::AllBalance => 128 + 3,
+            MessageFlags::AllBalance => 128,
             MessageFlags::AllBalanceDeleteNetworkAccount => 128 + 32,
         }
     }
