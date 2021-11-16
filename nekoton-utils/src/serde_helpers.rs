@@ -49,6 +49,44 @@ pub mod serde_hex_array {
     }
 }
 
+pub mod serde_optional_hex_array {
+    use serde::{Deserialize, Serialize};
+
+    use super::*;
+
+    pub fn serialize<S, T>(data: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: AsRef<[u8]> + Sized,
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        struct Wrapper<'a>(#[serde(with = "serde_bytes")] &'a [u8]);
+
+        match data {
+            Some(data) => serializer.serialize_some(&Wrapper(data.as_ref())),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<Option<[u8; N]>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct Wrapper(#[serde(with = "serde_bytes")] Vec<u8>);
+
+        let data = Option::<Wrapper>::deserialize(deserializer)?;
+        Ok(match data {
+            Some(data) => {
+                Some(data.0.try_into().map_err(|_| {
+                    D::Error::custom(format!("Invalid array length, expected: {}", N))
+                })?)
+            }
+            None => None,
+        })
+    }
+}
+
 pub mod serde_string {
     use super::*;
 
@@ -663,5 +701,31 @@ mod test {
         let res = serde_json::to_string(&data).unwrap();
         assert_eq!(r#"{"key":null}"#, res);
         assert_eq!(data, serde_json::from_str(&res).unwrap())
+    }
+
+    #[test]
+    fn test_optional_hex_array() {
+        #[derive(Serialize, Deserialize)]
+        struct Test {
+            #[serde(with = "serde_optional_hex_array")]
+            field: Option<[u8; 32]>,
+        }
+
+        let target: [u8; 32] =
+            hex::decode("0101010101010101010101010101010101010101010101010101010101010101")
+                .unwrap()
+                .try_into()
+                .unwrap();
+
+        let serialized = serde_json::to_string(&Test {
+            field: Some(target),
+        })
+        .unwrap();
+        let deserialized: Test = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized.field, Some(target));
+
+        let serialized = serde_json::to_string(&Test { field: None }).unwrap();
+        let deserialized: Test = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(deserialized.field, None);
     }
 }
