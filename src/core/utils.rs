@@ -290,15 +290,9 @@ impl PendingTransactionsExt for Vec<PendingTransaction> {
             _ => return Err(AccountSubscriptionError::InvalidMessageType.into()),
         };
 
-        let body_hash = message
-            .body()
-            .map(|body| body.into_cell().repr_hash())
-            .unwrap_or_default();
-
         let pending_transaction = PendingTransaction {
             message_hash: message.serialize()?.repr_hash(),
             src,
-            body_hash,
             expire_at,
         };
 

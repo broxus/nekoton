@@ -569,9 +569,6 @@ pub struct PendingTransaction {
     /// External message hash
     #[serde(with = "serde_uint256")]
     pub message_hash: UInt256,
-    /// Hash of the external message body. Used to identify message in executed transactions
-    #[serde(with = "serde_uint256")]
-    pub body_hash: UInt256,
     /// Incoming message source
     #[serde(
         default,
@@ -586,8 +583,8 @@ pub struct PendingTransaction {
 impl PartialEq<Transaction> for PendingTransaction {
     fn eq(&self, other: &Transaction) -> bool {
         self.expire_at < other.created_at
+            && self.message_hash == other.in_msg.hash
             && self.src == other.in_msg.src
-            && matches!(&other.in_msg.body, Some(body) if self.body_hash == body.hash)
     }
 }
 
@@ -675,10 +672,13 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
         let total_fees = compute_total_transaction_fees(&data, &desc) as u64;
 
         let in_msg = match data.in_msg.take() {
-            Some(message) => message
-                .read_struct()
-                .map(Message::from)
-                .map_err(|_| TransactionError::InvalidStructure)?,
+            Some(message) => {
+                let hash = message.cell().repr_hash();
+                message
+                    .read_struct()
+                    .map(move |message| Message::from((hash, message)))
+                    .map_err(|_| TransactionError::InvalidStructure)?
+            }
             None => return Err(TransactionError::Unsupported),
         };
 
@@ -692,11 +692,11 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
         let mut out_msgs = Vec::new();
         data.out_msgs
             .iterate_slices(|slice| {
-                if let Ok(message) = slice
-                    .reference(0)
-                    .and_then(ton_block::Message::construct_from_cell)
-                    .map(Message::from)
-                {
+                if let Ok(message) = slice.reference(0).and_then(|cell| {
+                    let hash = cell.repr_hash();
+                    ton_block::Message::construct_from_cell(cell)
+                        .map(|message| Message::from((hash, message)))
+                }) {
                     out_msgs.push(message);
                 }
                 Ok(true)
@@ -756,6 +756,9 @@ impl From<ton_block::AccountStatus> for AccountStatus {
 
 #[derive(Debug, Clone, Default)]
 pub struct Message {
+    /// Message hash
+    pub hash: UInt256,
+
     /// Source message address, `None` for external messages
     pub src: Option<MsgAddressInt>,
 
@@ -786,6 +789,8 @@ impl<'de> Deserialize<'de> for Message {
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase")]
         struct MessageHelper {
+            #[serde(with = "serde_uint256")]
+            hash: UInt256,
             #[serde(default, with = "serde_optional_address")]
             src: Option<MsgAddressInt>,
             #[serde(default, with = "serde_optional_address")]
@@ -810,6 +815,7 @@ impl<'de> Deserialize<'de> for Message {
         };
 
         Ok(Self {
+            hash: parsed.hash,
             src: parsed.src,
             dst: parsed.dst,
             value: parsed.value,
@@ -830,6 +836,8 @@ impl Serialize for Message {
         #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         struct MessageHelper<'a> {
+            #[serde(with = "serde_uint256")]
+            hash: &'a UInt256,
             #[serde(
                 skip_serializing_if = "Option::is_none",
                 with = "serde_optional_address"
@@ -856,6 +864,7 @@ impl Serialize for Message {
         };
 
         MessageHelper {
+            hash: &self.hash,
             src: &self.src,
             dst: &self.dst,
             value: self.value.to_string(),
@@ -868,8 +877,8 @@ impl Serialize for Message {
     }
 }
 
-impl From<ton_block::Message> for Message {
-    fn from(s: ton_block::Message) -> Self {
+impl From<(UInt256, ton_block::Message)> for Message {
+    fn from((hash, s): (UInt256, ton_block::Message)) -> Self {
         let body = s.body().map(|body| {
             let data = body.into_cell();
             MessageBody {
@@ -880,6 +889,7 @@ impl From<ton_block::Message> for Message {
 
         match s.header() {
             ton_block::CommonMsgInfo::IntMsgInfo(header) => Message {
+                hash,
                 src: match &header.src {
                     ton_block::MsgAddressIntOrNone::Some(addr) => Some(addr.clone()),
                     ton_block::MsgAddressIntOrNone::None => None,
@@ -891,12 +901,14 @@ impl From<ton_block::Message> for Message {
                 bounced: header.bounced,
             },
             ton_block::CommonMsgInfo::ExtInMsgInfo(header) => Message {
+                hash,
                 src: None,
                 dst: Some(header.dst.clone()),
                 body,
                 ..Default::default()
             },
             ton_block::CommonMsgInfo::ExtOutMsgInfo(header) => Message {
+                hash,
                 src: match &header.src {
                     ton_block::MsgAddressIntOrNone::Some(addr) => Some(addr.clone()),
                     ton_block::MsgAddressIntOrNone::None => None,

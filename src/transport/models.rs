@@ -99,21 +99,9 @@ impl PartialEq<RawTransaction> for PendingTransaction {
             return false;
         }
 
-        match other
-            .data
-            .in_msg
-            .as_ref()
-            .and_then(|msg| msg.read_struct().ok())
-        {
-            Some(message) if self.src == message.src() => {
-                let body_hash = message
-                    .body()
-                    .map(|body| body.into_cell().repr_hash())
-                    .unwrap_or_default();
-
-                self.body_hash == body_hash
-            }
-            _ => false,
-        }
+        matches!(
+            other.data.in_msg.as_ref().map(|msg| msg.cell().repr_hash()),
+            Some(message_hash) if self.message_hash == message_hash
+        )
     }
 }
