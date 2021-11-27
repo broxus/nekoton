@@ -161,28 +161,6 @@ pub fn parse_transaction_additional_info(
         TokenWalletDeployedNotification::try_from(InputMessage(inputs))
             .map(TransactionAdditionalInfo::TokenWalletDeployed)
             .ok()
-    } else if function_id
-        == token_notifications
-            .notify_ethereum_event_status_changed
-            .input_id
-    {
-        let inputs = token_notifications
-            .notify_ethereum_event_status_changed
-            .decode_input(body, true)
-            .ok()?;
-
-        EthEventStatusChanged::try_from(InputMessage(inputs))
-            .map(|event| TransactionAdditionalInfo::EthEventStatusChanged(event.new_status))
-            .ok()
-    } else if function_id == token_notifications.notify_ton_event_status_changed.input_id {
-        let inputs = token_notifications
-            .notify_ton_event_status_changed
-            .decode_input(body, true)
-            .ok()?;
-
-        TonEventStatusChanged::try_from(InputMessage(inputs))
-            .map(|event| TransactionAdditionalInfo::TonEventStatusChanged(event.new_status))
-            .ok()
     } else {
         None
     }
@@ -211,20 +189,12 @@ impl DePoolParticipantFunctions {
 
 struct WalletNotificationFunctions {
     notify_wallet_deployed: &'static ton_abi::Function,
-    notify_ethereum_event_status_changed: &'static ton_abi::Function,
-    notify_ton_event_status_changed: &'static ton_abi::Function,
 }
 
 impl WalletNotificationFunctions {
     fn new(contract: &'static ton_abi::Contract) -> Self {
         Self {
             notify_wallet_deployed: contract.function("notifyWalletDeployed").trust_me(),
-            notify_ethereum_event_status_changed: contract
-                .function("notifyEthereumEventStatusChanged")
-                .trust_me(),
-            notify_ton_event_status_changed: contract
-                .function("notifyTonEventStatusChanged")
-                .trust_me(),
         }
     }
 
@@ -275,42 +245,6 @@ impl TryFrom<InputMessage> for TokenWalletDeployedNotification {
 
         Ok(Self {
             root_token_contract: input.root_token_contract,
-        })
-    }
-}
-
-#[derive(UnpackAbiPlain)]
-struct EthEventStatusChanged {
-    #[abi(name = "status")]
-    new_status: EthEventStatus,
-}
-
-impl TryFrom<InputMessage> for EthEventStatusChanged {
-    type Error = UnpackerError;
-
-    fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let input: EthEventStatusChanged = value.0.unpack()?;
-
-        Ok(Self {
-            new_status: input.new_status,
-        })
-    }
-}
-
-#[derive(UnpackAbiPlain)]
-struct TonEventStatusChanged {
-    #[abi(name = "status")]
-    new_status: TonEventStatus,
-}
-
-impl TryFrom<InputMessage> for TonEventStatusChanged {
-    type Error = UnpackerError;
-
-    fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let input: TonEventStatusChanged = value.0.unpack()?;
-
-        Ok(Self {
-            new_status: input.new_status,
         })
     }
 }
@@ -809,56 +743,6 @@ mod tests {
         assert!(matches!(
             parse_transaction_additional_info(&tx, WalletType::WalletV3).unwrap(),
             TransactionAdditionalInfo::TokenWalletDeployed(_)
-        ));
-    }
-
-    #[test]
-    fn test_parse_notify_ton_event_in_progress() {
-        let tx = Transaction::construct_from_base64("te6ccgECBQEAARIAA7F3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpY0FkF0icFNiz9eyMoHQj/XjOgvfd/Ty/FCTLIWVObMZeWYygAAAoKVP/JBYFZCYQABQgSAMCAQAXBECIwGGoCaAYehICAIJyfS8JL8YlmU0DmZFQVw8vxQ/7HiHzKY43/AS+wp7M2ylauXc4qj/KSRi2zF7A/86IuQtXzsWopEYjhgirgz9e7AEBoAQAuWgANCX2CqQaEevZ1UVg2Lqddhy1GwOCKNcFg+tItZwPrSsAHZ4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCMBhqABhRYYAAABQUsDJ8EwKyEtCQz2A0AQA==").unwrap();
-
-        assert!(matches!(
-            parse_transaction_additional_info(&tx, WalletType::WalletV3).unwrap(),
-            TransactionAdditionalInfo::TonEventStatusChanged(TonEventStatus::InProcess)
-        ));
-    }
-
-    #[test]
-    fn test_parse_notify_ton_event_confirmed() {
-        let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpY0FkKsGZIkbgb+dAhZwgZ18EGe+NGsuMOe6ebP1mZa9VGBSAAAAoKWNBZBYFZCYQABQIAwIBABUECMBhqAmgGHoSAgCCclq5dziqP8pJGLbMXsD/zoi5C1fOxaikRiOGCKuDP17sST2OxTOw8znrkarFBXwMMjxqG+Yjk6CZ5llzQdlgia8BAaAEALloADQl9gqkGhHr2dVFYNi6nXYctRsDgijXBYPrSLWcD60rAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwjAYagAYUWGAAAAUFLAyfEMCshLQkM9gNAMA=").unwrap();
-
-        assert!(matches!(
-            parse_transaction_additional_info(&tx, WalletType::WalletV3).unwrap(),
-            TransactionAdditionalInfo::TonEventStatusChanged(TonEventStatus::Confirmed)
-        ));
-    }
-
-    #[test]
-    fn test_parse_notify_eth_event_executed() {
-        let tx = Transaction::construct_from_base64("te6ccgECBQEAARAAA7F3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpJyyIHVER8kq3HiJ7CLh63f0L6FNuFHClVei7uztOlIVx5IAgAAAoKR2jIBYFZB0QABQgKAMCAQAVBEBIicQJoBh6EgIAgnJ5eeKyWbIdllmQpwd9nH4qJGD/wzlQHDOWGC8QCKLnKVPlKWjgh4Ae4SGip4eNs+wh2HRqN6GU/Wffzz3PQ0+cAQGgBAC3aADXzfj3weHPfUJKipSKRpGGpGAwOVdhrobopP5lBZqZQQAdni4Be7O/IRDIKFt+HlRYLVRJWtA232uCnysW/gTGMIicQAYUWGAAAAUFJGt/BMCsg5ImeLTNAUA=").unwrap();
-
-        assert!(matches!(
-            parse_transaction_additional_info(&tx, WalletType::WalletV3).unwrap(),
-            TransactionAdditionalInfo::EthEventStatusChanged(EthEventStatus::Executed)
-        ));
-    }
-
-    #[test]
-    fn test_parse_notify_eth_event_in_progress() {
-        let tx = Transaction::construct_from_base64("te6ccgECBQEAARIAA7N3Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoHa2hZg3hyGFZxbZG8DRavBlR+G7vy+yz9PJyQrxh/W4QAAAnbUG/sCYFZBnwABRCRugDAgEAFwSEjciJxAmgGHoSAgCCcp0VD3BI01U2YOaQOUOy9/YQkmqW/wL8IERbo0LGwN/gcu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDgBAaAEALdoANfN+PfB4c99QkqKlIpGkYakYDA5V2Guhuik/mUFmplBAB2eLgF7s78hEMgoW34eVFgtVEla0Dbfa4KfKxb+BMYwiJxABhRYYAAABQUhjxMEwKyDMiZ4tM0AQA==").unwrap();
-
-        assert!(matches!(
-            parse_transaction_additional_info(&tx, WalletType::WalletV3).unwrap(),
-            TransactionAdditionalInfo::EthEventStatusChanged(EthEventStatus::InProcess)
-        ));
-    }
-
-    #[test]
-    fn test_parse_notify_eth_event_confirmed() {
-        let tx = Transaction::construct_from_base64("te6ccgECBQEAAQ4AA693Z4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCAAACgpEEkoLbKTCjolcexnodkGoK58txUv9GyQgugOZ9EMrSi3GIHgAAAoKRBJKBYFZBnwABQIAwIBABMECInECaAYehICAIJycu+lArv8eOIZKRF0FR71vLLq0pv5ZIUL0wCcN2tZnDir/Oq0GrRrpS+ymd9014DHJx3FvKJnpwSicuDNwT4phgEBoAQAt2gA183498Hhz31CSoqUikaRhqRgMDlXYa6G6KT+ZQWamUEAHZ4uAXuzvyEQyChbfh5UWC1USVrQNt9rgp8rFv4ExjCInEAGFFhgAAAFBSGPExDArIMyJni0zQDA").unwrap();
-
-        assert!(matches!(
-            parse_transaction_additional_info(&tx, WalletType::WalletV3).unwrap(),
-            TransactionAdditionalInfo::EthEventStatusChanged(EthEventStatus::Confirmed)
         ));
     }
 

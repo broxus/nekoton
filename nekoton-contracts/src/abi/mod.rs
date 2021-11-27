@@ -16,8 +16,6 @@ declare_abi! {
     setcode_multisig_wallet => "./SetcodeMultisigWallet.abi.json",
     bridge_multisig_wallet => "./BridgeMultisigWallet.abi.json",
     wallet_notifications => "./WalletNotifications.abi.json",
-    ethereum_event => "./EthereumEvent.abi.json",
-    ton_event => "./TonEvent.abi.json",
     root_meta => "./RootMeta.abi.json",
     ton_token_wallet_v2 => "./TONTokenWalletV2.abi.json",
     root_token_contract_v2 => "./RootTokenContractV2.abi.json",

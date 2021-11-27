@@ -15,28 +15,6 @@
       ],
       "outputs": [
       ]
-    },
-    {
-      "name": "notifyEthereumEventStatusChanged",
-      "inputs": [
-        {
-          "name": "status",
-          "type": "uint8"
-        }
-      ],
-      "outputs": [
-      ]
-    },
-    {
-      "name": "notifyTonEventStatusChanged",
-      "inputs": [
-        {
-          "name": "status",
-          "type": "uint8"
-        }
-      ],
-      "outputs": [
-      ]
     }
   ],
   "data": [

@@ -21,10 +21,6 @@ pub enum TransactionAdditionalInfo {
     DePoolReceiveAnswer(DePoolReceiveAnswerNotification),
     /// Token wallet notification
     TokenWalletDeployed(TokenWalletDeployedNotification),
-    /// Eth event notification
-    EthEventStatusChanged(EthEventStatus),
-    /// Ton event notification
-    TonEventStatusChanged(TonEventStatus),
     /// User interaction with wallet contract
     WalletInteraction(WalletInteractionInfo),
 }
@@ -109,25 +105,6 @@ pub struct TokenWalletDeployedNotification {
     #[serde(with = "serde_address")]
     pub root_token_contract: MsgAddressInt,
 }
-
-define_string_enum!(
-    #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, UnpackAbi)]
-    pub enum EthEventStatus {
-        InProcess = 0,
-        Confirmed = 1,
-        Executed = 2,
-        Rejected = 3,
-    }
-);
-
-define_string_enum!(
-    #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, UnpackAbi)]
-    pub enum TonEventStatus {
-        InProcess = 0,
-        Confirmed = 1,
-        Rejected = 2,
-    }
-);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -316,46 +293,6 @@ pub struct TokenSwapBack {
     /// ETH address or something else
     #[serde(with = "serde_cell")]
     pub callback_payload: ton_types::Cell,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
-#[serde(rename_all = "camelCase")]
-pub struct EthEventDetails {
-    pub status: EthEventStatus,
-    pub required_confirmation_count: u16,
-    pub required_rejection_count: u16,
-    pub confirmation_count: u16,
-    pub rejection_count: u16,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EthEventData {
-    #[serde(with = "serde_address")]
-    pub root_token_contract: MsgAddressInt,
-    #[serde(with = "serde_string")]
-    pub tokens: BigUint,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Copy)]
-#[serde(rename_all = "camelCase")]
-pub struct TonEventDetails {
-    pub status: TonEventStatus,
-    pub required_confirmation_count: u16,
-    pub required_rejection_count: u16,
-    pub confirmation_count: u16,
-    pub rejection_count: u16,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TonEventData {
-    #[serde(with = "serde_address")]
-    pub root_token_contract: MsgAddressInt,
-    #[serde(with = "serde_string")]
-    pub tokens: BigUint,
-    /// ETH address
-    pub to: String,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
