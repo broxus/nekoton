@@ -401,15 +401,6 @@ pub struct Symbol {
 define_string_enum!(
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
     pub enum TokenWalletVersion {
-        /// First stable iteration of token wallets.
-        /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/34e466bd42789413f02aeec0051b9d1212fe6de9)
-        Tip3v1,
-        /// Second iteration of token wallets with extended transfer messages payload.
-        /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/97ee321a2d8619372cdd2db8df30bd543e5c7417)
-        Tip3v2,
-        /// Third iteration of token wallets with updated compiler version and responsible getters.
-        /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/e7ef0506081fb36de94ea92d1bc1c50888ca65bc)
-        Tip3v3,
         /// Third iteration of token wallets, but with fixed bugs
         /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/74905260499d79cf7cb0d89a6eb572176fc1fcd5)
         Tip3v4,
@@ -421,9 +412,6 @@ impl TryFrom<u32> for TokenWalletVersion {
 
     fn try_from(version: u32) -> Result<Self, Self::Error> {
         Ok(match version {
-            1 => Self::Tip3v1,
-            2 => Self::Tip3v2,
-            3 => Self::Tip3v3,
             4 => Self::Tip3v4,
             _ => return Err(UnknownTokenWalletVersion.into()),
         })
@@ -444,9 +432,6 @@ pub struct TokenWalletDetails {
     /// Owner wallet address
     #[serde(with = "serde_address")]
     pub owner_address: MsgAddressInt,
-
-    #[serde(skip)]
-    pub code: Option<ton_types::Cell>,
 
     #[serde(skip)]
     pub wallet_public_key: UInt256,

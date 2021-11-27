@@ -191,7 +191,7 @@ mod tests {
 
     #[test]
     fn build() {
-        let original = nekoton_contracts::abi::ton_token_wallet_v3()
+        let original = nekoton_contracts::abi::ton_token_wallet_v4()
             .function("transfer")
             .unwrap();
         let imposter = FunctionBuilder::new("transfer")

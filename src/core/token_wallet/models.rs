@@ -12,24 +12,6 @@ pub struct BriefRootTokenContractDetails {
     pub symbol: String,
     #[abi(uint8)]
     pub decimals: u8,
-    #[abi(cell, name = "wallet_code")]
-    _wallet_code: ton_types::Cell,
-    #[abi(with = "uint256_bytes")]
-    pub root_public_key: UInt256,
-    #[abi(address)]
-    pub root_owner_address: MsgAddressInt,
-    #[abi(with = "uint128_number")]
-    pub total_supply: BigUint,
-}
-
-#[derive(UnpackAbi)]
-pub struct BriefRootTokenContractDetailsV4 {
-    #[abi]
-    pub name: String,
-    #[abi]
-    pub symbol: String,
-    #[abi(uint8)]
-    pub decimals: u8,
     #[abi(with = "uint256_bytes")]
     pub root_public_key: UInt256,
     #[abi(address)]
@@ -40,26 +22,6 @@ pub struct BriefRootTokenContractDetailsV4 {
 
 #[derive(UnpackAbi)]
 pub struct TonTokenWalletDetails {
-    #[abi(address)]
-    pub root_address: MsgAddressInt,
-    #[abi(cell)]
-    pub code: ton_types::Cell,
-    #[abi(with = "uint256_bytes")]
-    pub wallet_public_key: UInt256,
-    #[abi(address)]
-    pub owner_address: MsgAddressInt,
-    #[abi(name = "balance", with = "uint128_number")]
-    pub balance: BigUint,
-    /*#[abi(address)]
-    _receive_callback: MsgAddressInt,
-    #[abi(address)]
-    _bounced_callback: MsgAddressInt,
-    #[abi(bool)]
-    _allow_non_notifiable: bool,*/
-}
-
-#[derive(UnpackAbi)]
-pub struct TonTokenWalletDetailsV4 {
     #[abi(address)]
     pub root_address: MsgAddressInt,
     #[abi(with = "uint256_bytes")]

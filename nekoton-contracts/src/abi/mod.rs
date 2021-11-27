@@ -17,10 +17,6 @@ declare_abi! {
     bridge_multisig_wallet => "./BridgeMultisigWallet.abi.json",
     wallet_notifications => "./WalletNotifications.abi.json",
     root_meta => "./RootMeta.abi.json",
-    ton_token_wallet_v2 => "./TONTokenWalletV2.abi.json",
-    root_token_contract_v2 => "./RootTokenContractV2.abi.json",
-    ton_token_wallet_v3 => "./TONTokenWalletV3.abi.json",
-    root_token_contract_v3 => "./RootTokenContractV3.abi.json",
     ton_token_wallet_v4 => "./TONTokenWalletV4.abi.json",
     root_token_contract_v4 => "./RootTokenContractV4.abi.json",
 }
