@@ -2,12 +2,12 @@ use std::str::FromStr;
 
 use num_bigint::BigUint;
 use num_traits::FromPrimitive;
-use ton_abi::TokenValue;
+use ton_abi::{ParamType, TokenValue};
 use ton_abi::{Token, Uint};
 use ton_block::{MsgAddress, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_abi::{uint256_bytes, UnpackAbiPlain};
+use nekoton_abi::{uint256_bytes, Maybe, UnpackAbiPlain};
 
 #[derive(UnpackAbiPlain, Debug)]
 pub struct InternalTransfer {
@@ -17,6 +17,8 @@ pub struct InternalTransfer {
     pub sender_public_key: UInt256,
     #[abi(address)]
     pub sender_address: MsgAddressInt,
+    #[abi]
+    pub maybe_cell: Maybe<ton_types::Cell>,
 }
 
 fn test() -> InternalTransfer {
@@ -40,7 +42,14 @@ fn test() -> InternalTransfer {
     };
     let sender_address = TokenValue::Address(MsgAddress::AddrStd(address));
     let sender_address = Token::new("sender_address", sender_address);
-    let tokens = vec![tokens, sender_public_key, sender_address];
+    let maybe_cell = Token::new(
+        "maybe_cell",
+        TokenValue::Optional(
+            ParamType::Cell,
+            Some(Box::new(TokenValue::Cell(Default::default()))),
+        ),
+    );
+    let tokens = vec![tokens, sender_public_key, sender_address, maybe_cell];
     let parsed: InternalTransfer = tokens.unpack().unwrap();
     parsed
 }
@@ -56,4 +65,5 @@ fn main() {
         data.sender_address.to_string(),
         "0:18c99afffe13d3081370f77c10fc4d51bc54e52b8e181db6a0e8bb75456d91ff"
     );
+    assert!(data.maybe_cell.0.is_some());
 }

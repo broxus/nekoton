@@ -2,7 +2,7 @@ use ton_abi::{Param, ParamType};
 use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
-use nekoton_abi::{uint256_bytes, KnownParamType, KnownParamTypePlain};
+use nekoton_abi::{uint256_bytes, KnownParamType, KnownParamTypePlain, Maybe};
 
 #[derive(KnownParamTypePlain, Debug)]
 pub struct PlainStruct {
@@ -16,6 +16,8 @@ pub struct PlainStruct {
     pub array: Vec<u32>,
     #[abi(array, uint32)]
     pub array_explicit: Vec<u32>,
+    #[abi]
+    pub maybe_cell: Maybe<ton_types::Cell>,
 }
 
 #[derive(KnownParamType)]
@@ -30,6 +32,8 @@ pub struct Struct {
     pub array: Vec<u32>,
     #[abi(array, uint32)]
     pub array_explicit: Vec<u32>,
+    #[abi]
+    pub maybe_cell: Maybe<ton_types::Cell>,
 }
 
 fn main() {
@@ -42,6 +46,7 @@ fn main() {
             "array_explicit",
             ParamType::Array(Box::new(ParamType::Uint(32))),
         ),
+        Param::new("maybe_cell", ParamType::Optional(Box::new(ParamType::Cell))),
     ];
 
     assert_eq!(params, PlainStruct::param_type());

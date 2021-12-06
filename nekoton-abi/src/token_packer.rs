@@ -118,12 +118,11 @@ impl BuildTokenValue for BuilderData {
 
 impl<T> BuildTokenValue for Maybe<T>
 where
-    T: BuildTokenValue,
-    Maybe<T>: KnownParamType,
+    T: BuildTokenValue + KnownParamType,
 {
     fn token_value(self) -> TokenValue {
         TokenValue::Optional(
-            Self::param_type(),
+            T::param_type(),
             self.0.map(|item| Box::new(item.token_value())),
         )
     }

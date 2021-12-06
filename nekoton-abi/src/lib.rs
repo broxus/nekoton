@@ -762,6 +762,7 @@ impl Executor {
     }
 }
 
+#[derive(Debug)]
 pub struct Maybe<T>(pub Option<T>);
 
 pub trait StandaloneToken {}
@@ -775,6 +776,7 @@ impl StandaloneToken for MsgAddrStd {}
 impl StandaloneToken for UInt256 {}
 impl StandaloneToken for Vec<u8> {}
 impl StandaloneToken for TokenValue {}
+impl StandaloneToken for ton_types::Cell {}
 impl<T> StandaloneToken for Maybe<T> {}
 
 #[cfg(test)]
