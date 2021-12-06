@@ -35,11 +35,29 @@ impl BuildTokenValue for u8 {
     }
 }
 
+impl BuildTokenValue for i16 {
+    fn token_value(self) -> TokenValue {
+        TokenValue::Int(ton_abi::Int {
+            number: BigInt::from(self),
+            size: 16,
+        })
+    }
+}
+
 impl BuildTokenValue for u16 {
     fn token_value(self) -> TokenValue {
         TokenValue::Uint(ton_abi::Uint {
             number: BigUint::from(self),
             size: 16,
+        })
+    }
+}
+
+impl BuildTokenValue for i32 {
+    fn token_value(self) -> TokenValue {
+        TokenValue::Int(ton_abi::Int {
+            number: BigInt::from(self),
+            size: 32,
         })
     }
 }
@@ -53,11 +71,29 @@ impl BuildTokenValue for u32 {
     }
 }
 
+impl BuildTokenValue for i64 {
+    fn token_value(self) -> TokenValue {
+        TokenValue::Int(ton_abi::Int {
+            number: BigInt::from(self),
+            size: 64,
+        })
+    }
+}
+
 impl BuildTokenValue for u64 {
     fn token_value(self) -> TokenValue {
         TokenValue::Uint(ton_abi::Uint {
             number: BigUint::from(self),
             size: 64,
+        })
+    }
+}
+
+impl BuildTokenValue for i128 {
+    fn token_value(self) -> TokenValue {
+        TokenValue::Int(ton_abi::Int {
+            number: BigInt::from(self),
+            size: 128,
         })
     }
 }

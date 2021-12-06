@@ -773,9 +773,13 @@ pub struct Maybe<T>(pub Option<T>);
 pub struct MaybeRef<T>(pub Option<T>);
 
 pub trait StandaloneToken {}
+impl StandaloneToken for i16 {}
 impl StandaloneToken for u16 {}
+impl StandaloneToken for i32 {}
 impl StandaloneToken for u32 {}
+impl StandaloneToken for i64 {}
 impl StandaloneToken for u64 {}
+impl StandaloneToken for i128 {}
 impl StandaloneToken for u128 {}
 impl StandaloneToken for bool {}
 impl StandaloneToken for MsgAddressInt {}

@@ -46,9 +46,21 @@ impl KnownParamType for u8 {
     }
 }
 
+impl KnownParamType for i16 {
+    fn param_type() -> ParamType {
+        ParamType::Int(16)
+    }
+}
+
 impl KnownParamType for u16 {
     fn param_type() -> ParamType {
         ParamType::Uint(16)
+    }
+}
+
+impl KnownParamType for i32 {
+    fn param_type() -> ParamType {
+        ParamType::Int(32)
     }
 }
 
@@ -58,9 +70,21 @@ impl KnownParamType for u32 {
     }
 }
 
+impl KnownParamType for i64 {
+    fn param_type() -> ParamType {
+        ParamType::Int(64)
+    }
+}
+
 impl KnownParamType for u64 {
     fn param_type() -> ParamType {
         ParamType::Uint(64)
+    }
+}
+
+impl KnownParamType for i128 {
+    fn param_type() -> ParamType {
+        ParamType::Int(128)
     }
 }
 

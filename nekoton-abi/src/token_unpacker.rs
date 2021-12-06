@@ -101,10 +101,26 @@ impl UnpackAbi<u8> for TokenValue {
     }
 }
 
+impl UnpackAbi<i16> for TokenValue {
+    fn unpack(self) -> UnpackerResult<i16> {
+        UnpackAbi::<BigInt>::unpack(self)?
+            .to_i16()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
 impl UnpackAbi<u16> for TokenValue {
     fn unpack(self) -> UnpackerResult<u16> {
         UnpackAbi::<BigUint>::unpack(self)?
             .to_u16()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
+impl UnpackAbi<i32> for TokenValue {
+    fn unpack(self) -> UnpackerResult<i32> {
+        UnpackAbi::<BigInt>::unpack(self)?
+            .to_i32()
             .ok_or(UnpackerError::InvalidAbi)
     }
 }
@@ -117,10 +133,26 @@ impl UnpackAbi<u32> for TokenValue {
     }
 }
 
+impl UnpackAbi<i64> for TokenValue {
+    fn unpack(self) -> UnpackerResult<i64> {
+        UnpackAbi::<BigInt>::unpack(self)?
+            .to_i64()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
 impl UnpackAbi<u64> for TokenValue {
     fn unpack(self) -> UnpackerResult<u64> {
         UnpackAbi::<BigUint>::unpack(self)?
             .to_u64()
+            .ok_or(UnpackerError::InvalidAbi)
+    }
+}
+
+impl UnpackAbi<i128> for TokenValue {
+    fn unpack(self) -> UnpackerResult<i128> {
+        UnpackAbi::<BigInt>::unpack(self)?
+            .to_i128()
             .ok_or(UnpackerError::InvalidAbi)
     }
 }

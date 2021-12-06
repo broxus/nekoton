@@ -365,7 +365,7 @@ impl TypeName {
             TypeName::Uint64
         } else if input == "uint128" {
             TypeName::Uint128
-        } else if input == "gram" || input == "grams" {
+        } else if input == "gram" || input == "grams" || input == "token" {
             TypeName::Grams
         } else if input == "bool" {
             TypeName::Bool
