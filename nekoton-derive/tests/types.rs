@@ -75,7 +75,7 @@ fn main() {
         data.data_u256.to_hex_string(),
         "0000000000000000000000000000000000000000000000000000000000000100"
     );
-    assert_eq!(data.data_bool, true);
+    assert!(data.data_bool);
 
     {
         let bytes = data.data_uint128_number.to_bytes_be();

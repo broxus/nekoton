@@ -128,13 +128,13 @@ fn main() {
         "0:18c99afffe13d3081370f77c10fc4d51bc54e52b8e181db6a0e8bb75456d91ff"
     );
     assert_eq!(data.send_flags, 12);
-    assert_eq!(data.bounce, false);
+    assert!(!data.bounce);
     assert_eq!(data.complex.number, 33);
     assert_eq!(
         data.complex.public_key,
         hex::decode("6775b6a6ba3711a1c9ac1a62cacf62890ad1df5fbe4308dd9a17405c75b57f2e").unwrap()
     );
-    assert_eq!(data.complex.flag, true);
+    assert!(data.complex.flag);
 
     let new_data = test_packer(data.clone());
     assert_eq!(data.id, new_data.id);

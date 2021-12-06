@@ -20,10 +20,6 @@ pub struct FunctionBuilder {
     inputs: Vec<Param>,
     /// Function output.
     outputs: Vec<Param>,
-    /// Function ID for inbound messages
-    input_id: u32,
-    /// Function ID for outbound messages
-    output_id: u32,
     /// Whether answer_id is set
     responsible: bool,
 }
@@ -36,8 +32,6 @@ impl FunctionBuilder {
             header: Vec::new(),
             inputs: Vec::new(),
             outputs: Vec::new(),
-            input_id: 0,
-            output_id: 0,
             responsible: false,
         }
     }

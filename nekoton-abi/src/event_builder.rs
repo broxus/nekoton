@@ -10,8 +10,6 @@ pub struct EventBuilder {
     name: String,
     /// Function input.
     inputs: Vec<Param>,
-    /// Event ID
-    event_id: u32,
 }
 
 impl EventBuilder {
@@ -20,7 +18,6 @@ impl EventBuilder {
             name: event_name.to_string(),
             abi_version: ABI_VERSION_2_0,
             inputs: Vec::new(),
-            event_id: 0,
         }
     }
 

@@ -762,6 +762,8 @@ impl Executor {
     }
 }
 
+pub struct Maybe<T>(pub Option<T>);
+
 pub trait StandaloneToken {}
 impl StandaloneToken for u16 {}
 impl StandaloneToken for u32 {}
@@ -773,6 +775,7 @@ impl StandaloneToken for MsgAddrStd {}
 impl StandaloneToken for UInt256 {}
 impl StandaloneToken for Vec<u8> {}
 impl StandaloneToken for TokenValue {}
+impl<T> StandaloneToken for Maybe<T> {}
 
 #[cfg(test)]
 mod tests {

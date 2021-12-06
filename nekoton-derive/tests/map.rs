@@ -132,7 +132,7 @@ fn main() {
 
     assert_eq!(data.total, 100);
     assert_eq!(data.withdraw_value, 30);
-    assert_eq!(data.reinvest, true);
+    assert!(data.reinvest);
     assert_eq!(data.reward, 12);
     assert_eq!(*data.stakes.get(&(12_u64)).unwrap(), 50);
     assert_eq!(

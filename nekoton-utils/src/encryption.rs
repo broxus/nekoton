@@ -70,7 +70,7 @@ pub fn symmetric_key_from_password(password: &str, salt: &[u8]) -> Key {
         N_ITER,
         salt,
         password.as_bytes(),
-        &mut pbkdf2_hash.unsecure_mut(),
+        pbkdf2_hash.unsecure_mut(),
     );
     Key::clone_from_slice((&pbkdf2_hash).borrow())
 }

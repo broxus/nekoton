@@ -585,7 +585,6 @@ impl KeyId {
 
 #[derive(Debug)]
 struct LocalKey {
-    id: KeyId,
     public_key: [u8; 32],
     private_key: [u8; 64],
 }
@@ -608,7 +607,6 @@ impl LocalKey {
         let public_key = ed25519_dalek::PublicKey::from(expended_secret_key).to_bytes();
 
         Self {
-            id: calculate_id(KEY_ED25519, &public_key),
             public_key,
             private_key: expended_secret_key.to_bytes(),
         }
