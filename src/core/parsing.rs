@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 
 use anyhow::Result;
 use num_bigint::BigUint;
-use once_cell::sync::OnceCell;
+use once_cell::race::OnceBox;
 use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
@@ -180,9 +180,11 @@ impl DePoolParticipantFunctions {
     }
 
     fn instance() -> &'static Self {
-        static IDS: OnceCell<DePoolParticipantFunctions> = OnceCell::new();
+        static IDS: OnceBox<DePoolParticipantFunctions> = OnceBox::new();
         IDS.get_or_init(|| {
-            DePoolParticipantFunctions::new(nekoton_contracts::abi::depool_v3_participant())
+            Box::new(DePoolParticipantFunctions::new(
+                nekoton_contracts::abi::depool_v3_participant(),
+            ))
         })
     }
 }
@@ -199,9 +201,11 @@ impl WalletNotificationFunctions {
     }
 
     fn instance() -> &'static Self {
-        static IDS: OnceCell<WalletNotificationFunctions> = OnceCell::new();
+        static IDS: OnceBox<WalletNotificationFunctions> = OnceBox::new();
         IDS.get_or_init(|| {
-            WalletNotificationFunctions::new(nekoton_contracts::abi::wallet_notifications())
+            Box::new(WalletNotificationFunctions::new(
+                nekoton_contracts::abi::wallet_notifications(),
+            ))
         })
     }
 }
@@ -331,8 +335,12 @@ impl MultisigFunctions {
     }
 
     fn instance() -> &'static Self {
-        static IDS: OnceCell<MultisigFunctions> = OnceCell::new();
-        IDS.get_or_init(|| MultisigFunctions::new(nekoton_contracts::abi::safe_multisig_wallet()))
+        static IDS: OnceBox<MultisigFunctions> = OnceBox::new();
+        IDS.get_or_init(|| {
+            Box::new(MultisigFunctions::new(
+                nekoton_contracts::abi::safe_multisig_wallet(),
+            ))
+        })
     }
 }
 
@@ -499,8 +507,10 @@ impl TokenWalletFunctions {
     fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
         Some(match version {
             TokenWalletVersion::Tip3v4 => {
-                static IDS: OnceCell<TokenWalletFunctions> = OnceCell::new();
-                IDS.get_or_init(|| Self::new(nekoton_contracts::abi::ton_token_wallet_v4()))
+                static IDS: OnceBox<TokenWalletFunctions> = OnceBox::new();
+                IDS.get_or_init(|| {
+                    Box::new(Self::new(nekoton_contracts::abi::ton_token_wallet_v4()))
+                })
             }
         })
     }
@@ -520,8 +530,10 @@ impl RootTokenContractFunctions {
     fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
         Some(match version {
             TokenWalletVersion::Tip3v4 => {
-                static IDS: OnceCell<RootTokenContractFunctions> = OnceCell::new();
-                IDS.get_or_init(|| Self::new(nekoton_contracts::abi::root_token_contract_v4()))
+                static IDS: OnceBox<RootTokenContractFunctions> = OnceBox::new();
+                IDS.get_or_init(|| {
+                    Box::new(Self::new(nekoton_contracts::abi::root_token_contract_v4()))
+                })
             }
         })
     }

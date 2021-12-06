@@ -1,11 +1,13 @@
-use once_cell::sync::OnceCell;
+use once_cell::race::OnceBox;
 use ton_abi::Contract;
 
 macro_rules! declare_abi {
     ($($contract:ident => $source:literal),*$(,)?) => {$(
         pub fn $contract() -> &'static Contract {
-            static ABI: OnceCell<Contract> = OnceCell::new();
-            ABI.load(include_bytes!($source))
+            static ABI: OnceBox<Contract> = OnceBox::new();
+            ABI.get_or_init(|| {
+                Box::new(Contract::load(&mut std::io::Cursor::new(include_bytes!($source))).expect("Trust me"))
+            })
         }
     )*};
 }
@@ -19,14 +21,4 @@ declare_abi! {
     root_meta => "./RootMeta.abi.json",
     ton_token_wallet_v4 => "./TONTokenWalletV4.abi.json",
     root_token_contract_v4 => "./RootTokenContractV4.abi.json",
-}
-
-trait OnceCellExt {
-    fn load(&self, data: &[u8]) -> &Contract;
-}
-
-impl OnceCellExt for OnceCell<Contract> {
-    fn load(&self, data: &[u8]) -> &Contract {
-        self.get_or_init(|| Contract::load(&mut std::io::Cursor::new(data)).expect("Trust me"))
-    }
 }
