@@ -762,8 +762,15 @@ impl Executor {
     }
 }
 
+/// Alias for TokenValue::Optional
+///
+/// NOTE: inner value can be in the same cell or in reference
 #[derive(Debug)]
 pub struct Maybe<T>(pub Option<T>);
+
+/// TokenValue::Optional which always store its value in the cell
+#[derive(Debug)]
+pub struct MaybeRef<T>(pub Option<T>);
 
 pub trait StandaloneToken {}
 impl StandaloneToken for u16 {}
@@ -778,6 +785,7 @@ impl StandaloneToken for Vec<u8> {}
 impl StandaloneToken for TokenValue {}
 impl StandaloneToken for ton_types::Cell {}
 impl<T> StandaloneToken for Maybe<T> {}
+impl<T> StandaloneToken for MaybeRef<T> {}
 
 #[cfg(test)]
 mod tests {

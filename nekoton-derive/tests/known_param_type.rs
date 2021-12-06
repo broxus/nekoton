@@ -2,7 +2,7 @@ use ton_abi::{Param, ParamType};
 use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
-use nekoton_abi::{uint256_bytes, KnownParamType, KnownParamTypePlain, Maybe};
+use nekoton_abi::{uint256_bytes, KnownParamType, KnownParamTypePlain, Maybe, MaybeRef};
 
 #[derive(KnownParamTypePlain, Debug)]
 pub struct PlainStruct {
@@ -17,7 +17,9 @@ pub struct PlainStruct {
     #[abi(array, uint32)]
     pub array_explicit: Vec<u32>,
     #[abi]
-    pub maybe_cell: Maybe<ton_types::Cell>,
+    pub maybe_int: Maybe<u32>,
+    #[abi]
+    pub maybe_ref_int: MaybeRef<u32>,
 }
 
 #[derive(KnownParamType)]
@@ -33,7 +35,9 @@ pub struct Struct {
     #[abi(array, uint32)]
     pub array_explicit: Vec<u32>,
     #[abi]
-    pub maybe_cell: Maybe<ton_types::Cell>,
+    pub maybe_int: Maybe<u32>,
+    #[abi]
+    pub maybe_ref_int: MaybeRef<u32>,
 }
 
 fn main() {
@@ -46,7 +50,14 @@ fn main() {
             "array_explicit",
             ParamType::Array(Box::new(ParamType::Uint(32))),
         ),
-        Param::new("maybe_cell", ParamType::Optional(Box::new(ParamType::Cell))),
+        Param::new(
+            "maybe_int",
+            ParamType::Optional(Box::new(ParamType::Uint(32))),
+        ),
+        Param::new(
+            "maybe_ref_int",
+            ParamType::Optional(Box::new(ParamType::Ref(Box::new(ParamType::Uint(32))))),
+        ),
     ];
 
     assert_eq!(params, PlainStruct::param_type());

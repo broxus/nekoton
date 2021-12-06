@@ -3,7 +3,7 @@ use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
 use ton_types::{BuilderData, Cell};
 
-use super::{KnownParamType, Maybe, StandaloneToken};
+use super::{KnownParamType, Maybe, MaybeRef, StandaloneToken};
 
 pub trait PackAbiPlain {
     fn pack(self) -> Vec<Token>;
@@ -128,6 +128,19 @@ where
     }
 }
 
+impl<T> BuildTokenValue for MaybeRef<T>
+where
+    T: BuildTokenValue + KnownParamType,
+{
+    fn token_value(self) -> TokenValue {
+        TokenValue::Optional(
+            ton_abi::ParamType::Ref(Box::new(T::param_type())),
+            self.0
+                .map(|item| Box::new(TokenValue::Ref(Box::new(item.token_value())))),
+        )
+    }
+}
+
 impl<T> BuildTokenValue for Vec<T>
 where
     T: StandaloneToken + KnownParamType + BuildTokenValue,
@@ -152,5 +165,39 @@ where
 {
     fn token_value(self) -> TokenValue {
         self.clone().token_value()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_maybe_ref_serialization() {
+        // Some
+        let value = ton_abi::TokenValue::pack_token_values_into_chain(
+            &[MaybeRef(Some(123u32)).token_value()],
+            Default::default(),
+            ton_abi::contract::ABI_VERSION_2_2,
+        )
+        .unwrap()
+        .into_cell()
+        .unwrap();
+
+        let serialized = base64::encode(ton_types::serialize_toc(&value).unwrap());
+        assert_eq!(serialized, "te6ccgEBAgEACgABAcABAAgAAAB7");
+
+        // None
+        let value = ton_abi::TokenValue::pack_token_values_into_chain(
+            &[MaybeRef(Option::<u32>::None).token_value()],
+            Default::default(),
+            ton_abi::contract::ABI_VERSION_2_2,
+        )
+        .unwrap()
+        .into_cell()
+        .unwrap();
+
+        let serialized = base64::encode(ton_types::serialize_toc(&value).unwrap());
+        assert_eq!(serialized, "te6ccgEBAQEAAwAAAUA=");
     }
 }

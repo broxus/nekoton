@@ -4,7 +4,7 @@ use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::Cell;
 
-use super::Maybe;
+use super::{Maybe, MaybeRef};
 
 pub trait TokenValueExt {
     fn unnamed(self) -> Token;
@@ -224,6 +224,22 @@ where
     fn unpack(self) -> UnpackerResult<Maybe<T>> {
         match self {
             TokenValue::Optional(_, item) => Ok(Maybe(item.map(|item| item.unpack()).transpose()?)),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
+impl<T> UnpackAbi<MaybeRef<T>> for TokenValue
+where
+    TokenValue: UnpackAbi<T>,
+{
+    fn unpack(self) -> UnpackerResult<MaybeRef<T>> {
+        match self {
+            TokenValue::Optional(_, Some(item)) => match *item {
+                TokenValue::Ref(item) => Ok(MaybeRef(Some(item.unpack()?))),
+                _ => Err(UnpackerError::InvalidAbi),
+            },
+            TokenValue::Optional(_, None) => Ok(MaybeRef(None)),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
