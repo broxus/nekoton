@@ -104,6 +104,12 @@ impl BuildTokenValue for &str {
     }
 }
 
+impl BuildTokenValue for ton_block::Grams {
+    fn token_value(self) -> TokenValue {
+        TokenValue::Token(self)
+    }
+}
+
 impl BuildTokenValue for Vec<u8> {
     fn token_value(self) -> TokenValue {
         TokenValue::Bytes(self)

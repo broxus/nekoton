@@ -235,6 +235,9 @@ impl TypeName {
             TypeName::Uint128 => quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 128 })
             },
+            TypeName::Grams => quote! {
+                ::ton_abi::TokenValue::Grams(::ton_block::Grams::from(value))
+            },
             TypeName::Address => quote! {
                 ::ton_abi::TokenValue::Address(match value {
                     ::ton_block::MsgAddressInt::AddrStd(addr) => ::ton_block::MsgAddress::AddrStd(addr),

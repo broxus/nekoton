@@ -342,6 +342,7 @@ pub enum TypeName {
     Uint32,
     Uint64,
     Uint128,
+    Grams,
     Bool,
     Cell,
     Address,
@@ -364,6 +365,8 @@ impl TypeName {
             TypeName::Uint64
         } else if input == "uint128" {
             TypeName::Uint128
+        } else if input == "gram" || input == "grams" {
+            TypeName::Grams
         } else if input == "bool" {
             TypeName::Bool
         } else if input == "cell" {
@@ -398,6 +401,9 @@ impl TypeName {
             },
             TypeName::Uint128 => quote! {
                 ::ton_abi::ParamType::Uint(128)
+            },
+            TypeName::Grams => quote! {
+                ::ton_abi::ParamType::Token
             },
             TypeName::Address => quote! {
                 ::ton_abi::ParamType::Address

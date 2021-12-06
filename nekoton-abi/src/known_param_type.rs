@@ -100,6 +100,12 @@ impl KnownParamType for &str {
     }
 }
 
+impl KnownParamType for ton_block::Grams {
+    fn param_type() -> ParamType {
+        ParamType::Token
+    }
+}
+
 impl KnownParamType for Vec<u8> {
     fn param_type() -> ParamType {
         ParamType::Bytes

@@ -16,6 +16,8 @@ pub struct PlainStruct {
     pub array: Vec<u32>,
     #[abi(array, uint32)]
     pub array_explicit: Vec<u32>,
+    #[abi(grams)]
+    pub grams: ton_block::Grams,
     #[abi]
     pub maybe_int: Maybe<u32>,
     #[abi]
@@ -34,6 +36,8 @@ pub struct Struct {
     pub array: Vec<u32>,
     #[abi(array, uint32)]
     pub array_explicit: Vec<u32>,
+    #[abi(grams)]
+    pub grams: ton_block::Grams,
     #[abi]
     pub maybe_int: Maybe<u32>,
     #[abi]
@@ -50,6 +54,7 @@ fn main() {
             "array_explicit",
             ParamType::Array(Box::new(ParamType::Uint(32))),
         ),
+        Param::new("grams", ParamType::Token),
         Param::new(
             "maybe_int",
             ParamType::Optional(Box::new(ParamType::Uint(32))),

@@ -28,6 +28,12 @@ struct Data {
     data_bool: bool,
     #[abi(bytes)]
     data_bytes: Vec<u8>,
+    #[abi(grams)]
+    pub grams: ton_block::Grams,
+    #[abi(grams)]
+    pub grams_u64: u64,
+    #[abi(grams)]
+    pub grams_u128: u128,
 }
 
 fn test() -> Data {
@@ -43,6 +49,9 @@ fn test() -> Data {
         Token::new("data_uint128_number", TokenValue::Uint(Uint::new(128, 128)));
     let data_bool = Token::new("data_bool", TokenValue::Bool(true));
     let data_bytes = Token::new("data_bytes", TokenValue::Bytes(Vec::from("Test")));
+    let grams = Token::new("grams", TokenValue::Token(111.into()));
+    let grams_u64 = Token::new("grams_u64", TokenValue::Token(123.into()));
+    let grams_u128 = Token::new("grams_u128", TokenValue::Token(32.into()));
 
     let tokens = vec![
         data_i8,
@@ -56,6 +65,9 @@ fn test() -> Data {
         data_uint128_number,
         data_bool,
         data_bytes,
+        grams,
+        grams_u64,
+        grams_u128,
     ];
     let parsed: Data = tokens.unpack().unwrap();
 
@@ -94,4 +106,8 @@ fn main() {
     );
 
     assert_eq!(data.data_bytes, Vec::from("Test"));
+
+    assert_eq!(data.grams.0, 111);
+    assert_eq!(data.grams_u64, 123);
+    assert_eq!(data.grams_u128, 32);
 }

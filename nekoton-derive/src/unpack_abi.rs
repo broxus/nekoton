@@ -331,6 +331,12 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
                 },
             }
         }
+        TypeName::Grams => {
+            quote! {
+                ::ton_abi::TokenValue::Token(::ton_block::Grams(value)) => std::convert::TryFrom::try_from(value)
+                    .map_err(|_| ::nekoton_abi::UnpackerError::InvalidAbi)?,
+            }
+        }
         TypeName::Address => {
             quote! {
                 ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrStd(addr)) => {

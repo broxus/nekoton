@@ -783,6 +783,7 @@ impl StandaloneToken for MsgAddrStd {}
 impl StandaloneToken for UInt256 {}
 impl StandaloneToken for Vec<u8> {}
 impl StandaloneToken for TokenValue {}
+impl StandaloneToken for ton_block::Grams {}
 impl StandaloneToken for ton_types::Cell {}
 impl<T> StandaloneToken for Maybe<T> {}
 impl<T> StandaloneToken for MaybeRef<T> {}

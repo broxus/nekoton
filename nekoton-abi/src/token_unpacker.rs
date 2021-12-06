@@ -210,6 +210,15 @@ impl UnpackAbi<Vec<u8>> for TokenValue {
     }
 }
 
+impl UnpackAbi<ton_block::Grams> for TokenValue {
+    fn unpack(self) -> UnpackerResult<ton_block::Grams> {
+        match self {
+            TokenValue::Token(grams) => Ok(grams),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
 impl UnpackAbi<TokenValue> for TokenValue {
     #[inline]
     fn unpack(self) -> UnpackerResult<TokenValue> {
