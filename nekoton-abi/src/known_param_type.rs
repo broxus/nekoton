@@ -144,7 +144,7 @@ impl KnownParamType for BuilderData {
 
 impl<T> KnownParamType for Maybe<T>
 where
-    T: StandaloneToken + KnownParamType,
+    T: KnownParamType,
 {
     fn param_type() -> ParamType {
         ParamType::Optional(Box::new(T::param_type()))
@@ -153,7 +153,7 @@ where
 
 impl<T> KnownParamType for MaybeRef<T>
 where
-    T: StandaloneToken + KnownParamType,
+    T: KnownParamType,
 {
     fn param_type() -> ParamType {
         ParamType::Optional(Box::new(ParamType::Ref(Box::new(T::param_type()))))
