@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use models::*;
 use serde::Serialize;
 use ton_block::{Block, Deserializable, MsgAddressInt};
 
@@ -9,20 +8,19 @@ use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
 use nekoton_utils::*;
 
 use super::models::{ExistingContract, RawContractState, RawTransaction};
+use super::rest_models::*;
 use super::utils::*;
 use super::{Transport, TransportInfo};
 use crate::core::models::ReliableBehavior;
-use crate::external::JrpcConnection;
-
-mod models;
+use crate::external::RestConnection;
 
 pub struct JrpcTransport {
-    connection: Arc<dyn JrpcConnection>,
+    connection: Arc<dyn RestConnection>,
     config_cache: ConfigCache,
 }
 
 impl JrpcTransport {
-    pub fn new(connection: Arc<dyn JrpcConnection>) -> Self {
+    pub fn new(connection: Arc<dyn RestConnection>) -> Self {
         Self {
             connection,
             config_cache: ConfigCache::new(false),

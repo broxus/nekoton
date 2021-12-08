@@ -16,13 +16,20 @@ pub mod adnl;
 pub mod gql;
 #[cfg(feature = "jrpc_transport")]
 pub mod jrpc;
+
+#[cfg(feature = "explorer_transport")]
+pub mod explorer_transport;
 pub mod models;
 #[cfg(any(
     feature = "adnl_transport",
     feature = "gql_transport",
-    feature = "jrpc_transport"
+    feature = "jrpc_transport",
+    feature = "explorer_transport"
 ))]
 mod utils;
+
+#[cfg(any(feature = "jrpc_transport", feature = "explorer_transport"))]
+mod rest_models;
 
 #[async_trait]
 pub trait Transport: Send + Sync {
