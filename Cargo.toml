@@ -64,7 +64,6 @@ tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 
 [features]
 default = ["gql_transport"]
-explorer_transport = ["tiny-jsonrpc"]
 integration_test = []
 web = ["nekoton-utils/web", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
 gql_transport = ["graphql_client"]

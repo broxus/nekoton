@@ -35,7 +35,7 @@ pub trait GqlConnection: Send + Sync {
     async fn post(&self, data: &str) -> Result<String>;
 }
 
-#[cfg(any(feature = "jrpc_transport", feature = "explorer_transport"))]
+#[cfg(feature = "jrpc_transport")]
 #[async_trait]
 pub trait RestConnection: Send + Sync {
     async fn post(&self, data: &str) -> Result<String>;
