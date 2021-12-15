@@ -231,11 +231,7 @@ impl ContractSubscription {
         let contract_state = self.transport.get_contract_state(&self.address).await?;
         let new_contract_state = contract_state.brief();
 
-        log::info!("OLD CONTRACT STATE: {:?}", self.contract_state);
-        log::info!("NEW CONTRACT STATE: {:?}", new_contract_state);
-
         if new_contract_state == self.contract_state {
-            log::info!("same state");
             return Ok(false);
         }
 
@@ -254,7 +250,6 @@ impl ContractSubscription {
             ) if new_gen_lt <= old_gen_lt => Ok(false),
             // Notify otherwise
             _ => {
-                log::info!("handled called");
                 on_contract_state(&contract_state);
                 self.contract_state = new_contract_state;
                 Ok(true)
