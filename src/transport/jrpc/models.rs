@@ -33,11 +33,36 @@ pub struct GetContractStateResponseData {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub struct GetContractStateResponseTimings {
-    #[serde(with = "serde_string")]
-    pub gen_lt: u64,
-    pub gen_utime: u32,
+#[serde(untagged)]
+pub enum GetContractStateResponseTimings {
+    #[serde(rename_all = "lowercase")]
+    Old {
+        #[serde(with = "serde_string")]
+        gen_lt: u64,
+        gen_utime: u32,
+    },
+    #[serde(rename_all = "camelCase")]
+    New {
+        #[serde(with = "serde_string")]
+        gen_lt: u64,
+        gen_utime: u32,
+    },
+}
+
+impl GetContractStateResponseTimings {
+    pub fn gen_lt(&self) -> u64 {
+        match self {
+            Self::Old { gen_lt, .. } => *gen_lt,
+            Self::New { gen_lt, .. } => *gen_lt,
+        }
+    }
+
+    pub fn gen_utime(&self) -> u32 {
+        match self {
+            Self::Old { gen_utime, .. } => *gen_utime,
+            Self::New { gen_utime, .. } => *gen_utime,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -70,4 +95,36 @@ pub struct ExplorerGetTransactions<'a> {
 pub struct GetBlockResponse {
     #[serde(with = "serde_ton_block")]
     pub block: ton_block::Block,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_deserialize_gen_timings() {
+        let timings = serde_json::from_str::<GetContractStateResponseTimings>(
+            r#"{"gen_lt":"123","gen_utime":321}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            timings,
+            GetContractStateResponseTimings::Old {
+                gen_lt: 123,
+                gen_utime: 321
+            }
+        ));
+
+        let timings = serde_json::from_str::<GetContractStateResponseTimings>(
+            r#"{"genLt":"123","genUtime":321}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            timings,
+            GetContractStateResponseTimings::New {
+                gen_lt: 123,
+                gen_utime: 321
+            }
+        ));
+    }
 }

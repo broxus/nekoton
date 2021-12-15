@@ -85,8 +85,8 @@ impl Transport for JrpcTransport {
             GetContractStateResponse::Exists(data) => RawContractState::Exists(ExistingContract {
                 account: data.account,
                 timings: GenTimings::Known {
-                    gen_lt: data.timings.gen_lt,
-                    gen_utime: data.timings.gen_utime,
+                    gen_lt: data.timings.gen_lt(),
+                    gen_utime: data.timings.gen_utime(),
                 },
                 last_transaction_id: LastTransactionId::Exact(data.last_transaction_id),
             }),
