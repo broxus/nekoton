@@ -81,6 +81,7 @@ pub struct AdnlRpcGetTransactionsResponse {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExplorerGetTransactions<'a> {
     pub limit: u64,
 
