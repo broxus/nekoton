@@ -33,7 +33,7 @@ pub struct GetContractStateResponseData {
 }
 
 #[derive(Deserialize)]
-#[serde(untagged)]
+#[serde(untagged, deny_unknown_fields)]
 pub enum GetContractStateResponseTimings {
     #[serde(rename_all = "lowercase")]
     Old {

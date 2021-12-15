@@ -82,14 +82,19 @@ impl Transport for JrpcTransport {
         let response = tiny_jsonrpc::parse_response::<GetContractStateResponse>(&data)?;
         Ok(match response {
             GetContractStateResponse::NotExists => RawContractState::NotExists,
-            GetContractStateResponse::Exists(data) => RawContractState::Exists(ExistingContract {
-                account: data.account,
-                timings: GenTimings::Known {
-                    gen_lt: data.timings.gen_lt(),
-                    gen_utime: data.timings.gen_utime(),
-                },
-                last_transaction_id: LastTransactionId::Exact(data.last_transaction_id),
-            }),
+            GetContractStateResponse::Exists(data) => {
+                let gen_lt = data.timings.gen_lt();
+                let gen_utime = data.timings.gen_utime();
+                RawContractState::Exists(ExistingContract {
+                    account: data.account,
+                    timings: if gen_lt > 0 && gen_utime > 0 {
+                        GenTimings::Known { gen_lt, gen_utime }
+                    } else {
+                        GenTimings::Unknown
+                    },
+                    last_transaction_id: LastTransactionId::Exact(data.last_transaction_id),
+                })
+            }
         })
     }
 
