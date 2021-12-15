@@ -16,11 +16,12 @@ pub mod adnl;
 pub mod gql;
 #[cfg(feature = "jrpc_transport")]
 pub mod jrpc;
+
 pub mod models;
 #[cfg(any(
     feature = "adnl_transport",
     feature = "gql_transport",
-    feature = "jrpc_transport"
+    feature = "jrpc_transport",
 ))]
 mod utils;
 
