@@ -6,9 +6,9 @@ use nekoton_abi::*;
 
 #[derive(UnpackAbi)]
 pub struct BriefRootTokenContractDetails {
-    #[abi]
+    #[abi(with = "bytes_as_string")]
     pub name: String,
-    #[abi]
+    #[abi(with = "bytes_as_string")]
     pub symbol: String,
     #[abi(uint8)]
     pub decimals: u8,

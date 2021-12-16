@@ -86,6 +86,25 @@ pub mod uint256_bytes {
     }
 }
 
+pub mod bytes_as_string {
+    use super::*;
+
+    pub fn pack(value: String) -> TokenValue {
+        TokenValue::Bytes(value.into_bytes())
+    }
+
+    pub fn unpack(value: &TokenValue) -> UnpackerResult<String> {
+        match value {
+            TokenValue::Bytes(data) => Ok(String::from_utf8_lossy(&data).to_string()),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Bytes
+    }
+}
+
 pub mod uint256_number {
     use super::*;
 
