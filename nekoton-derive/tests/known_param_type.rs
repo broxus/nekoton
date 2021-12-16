@@ -22,6 +22,8 @@ pub struct PlainStruct {
     pub maybe_int: Maybe<u32>,
     #[abi]
     pub maybe_ref_int: MaybeRef<u32>,
+    #[abi(string)]
+    pub string: String,
 }
 
 #[derive(KnownParamType)]
@@ -42,6 +44,8 @@ pub struct Struct {
     pub maybe_int: Maybe<u32>,
     #[abi]
     pub maybe_ref_int: MaybeRef<u32>,
+    #[abi(string)]
+    pub string: String,
 }
 
 fn main() {
@@ -63,6 +67,7 @@ fn main() {
             "maybe_ref_int",
             ParamType::Optional(Box::new(ParamType::Ref(Box::new(ParamType::Uint(32))))),
         ),
+        Param::new("string", ParamType::String),
     ];
 
     assert_eq!(params, PlainStruct::param_type());

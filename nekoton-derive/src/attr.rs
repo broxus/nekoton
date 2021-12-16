@@ -414,9 +414,8 @@ impl TypeName {
             TypeName::Bool => quote! {
                 ::ton_abi::ParamType::Bool
             },
-            // TODO: change for ABI 2.1
             TypeName::String => quote! {
-                ::ton_abi::ParamType::Bytes
+                ::ton_abi::ParamType::String
             },
             TypeName::Bytes => quote! {
                 ::ton_abi::ParamType::Bytes

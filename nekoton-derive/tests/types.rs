@@ -34,6 +34,8 @@ struct Data {
     pub grams_u64: u64,
     #[abi(grams)]
     pub grams_u128: u128,
+    #[abi(string)]
+    pub string: String,
 }
 
 fn test() -> Data {
@@ -52,6 +54,7 @@ fn test() -> Data {
     let grams = Token::new("grams", TokenValue::Token(111.into()));
     let grams_u64 = Token::new("grams_u64", TokenValue::Token(123.into()));
     let grams_u128 = Token::new("grams_u128", TokenValue::Token(32.into()));
+    let string = Token::new("string", TokenValue::String("asd".to_string()));
 
     let tokens = vec![
         data_i8,
@@ -68,6 +71,7 @@ fn test() -> Data {
         grams,
         grams_u64,
         grams_u128,
+        string,
     ];
     let parsed: Data = tokens.unpack().unwrap();
 
@@ -110,4 +114,5 @@ fn main() {
     assert_eq!(data.grams.0, 111);
     assert_eq!(data.grams_u64, 123);
     assert_eq!(data.grams_u128, 32);
+    assert_eq!(data.string, "asd".to_string());
 }

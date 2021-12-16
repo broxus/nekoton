@@ -136,7 +136,13 @@ impl BuildTokenValue for MsgAddrStd {
 
 impl BuildTokenValue for &str {
     fn token_value(self) -> TokenValue {
-        TokenValue::Bytes(self.as_bytes().into())
+        TokenValue::String(self.to_string())
+    }
+}
+
+impl BuildTokenValue for String {
+    fn token_value(self) -> TokenValue {
+        TokenValue::String(self)
     }
 }
 

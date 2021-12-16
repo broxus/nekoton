@@ -21,6 +21,8 @@ pub struct InternalTransfer {
     pub maybe_int: Maybe<u32>,
     #[abi]
     pub maybe_ref_int: MaybeRef<u32>,
+    #[abi(string)]
+    pub test: String,
 }
 
 fn test() -> InternalTransfer {
@@ -55,12 +57,14 @@ fn test() -> InternalTransfer {
             Some(Box::new(TokenValue::Ref(Box::new(321u32.token_value())))),
         ),
     );
+    let test = Token::new("test", TokenValue::String("Asd".to_string()));
     let tokens = vec![
         tokens,
         sender_public_key,
         sender_address,
         maybe_int,
         maybe_ref_int,
+        test,
     ];
     let parsed: InternalTransfer = tokens.unpack().unwrap();
     parsed

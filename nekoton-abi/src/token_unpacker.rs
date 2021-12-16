@@ -209,7 +209,7 @@ impl UnpackAbi<MsgAddrStd> for TokenValue {
 impl UnpackAbi<String> for TokenValue {
     fn unpack(self) -> UnpackerResult<String> {
         match self {
-            TokenValue::Bytes(bytes) => Ok(String::from_utf8_lossy(&bytes).to_string()),
+            TokenValue::String(data) => Ok(data),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }

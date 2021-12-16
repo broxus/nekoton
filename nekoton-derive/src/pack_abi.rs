@@ -250,9 +250,8 @@ impl TypeName {
             TypeName::Bool => quote! {
                 ::ton_abi::TokenValue::Bool(value)
             },
-            // TODO: change for ABI 2.1
             TypeName::String => quote! {
-                ::ton_abi::TokenValue::Bytes(value.as_bytes().into())
+                ::ton_abi::TokenValue::String(value.into())
             },
             TypeName::Bytes => quote! {
                 ::ton_abi::TokenValue::Bytes(value)

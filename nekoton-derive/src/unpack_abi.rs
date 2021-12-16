@@ -361,7 +361,7 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         }
         TypeName::String => {
             quote! {
-                ::ton_abi::TokenValue::Bytes(bytes) => String::from_utf8_lossy(&bytes).to_string(),
+                ::ton_abi::TokenValue::String(data) => data,
             }
         }
         TypeName::Bytes => {

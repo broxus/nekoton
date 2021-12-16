@@ -33,6 +33,8 @@ struct PendingTransaction {
     bounce: bool,
     #[abi]
     complex: Complex,
+    #[abi(string)]
+    string: String,
 }
 
 #[derive(PackAbi, UnpackAbi, Clone)]
@@ -85,6 +87,7 @@ fn test_unpacker() -> PendingTransaction {
     let send_flags = Token::new("sendFlags", TokenValue::Uint(Uint::new(12, 16)));
     let bounce = Token::new("bounce", TokenValue::Bool(false));
     let complex = Token::new("complex", TokenValue::Tuple(complex));
+    let string = Token::new("string", TokenValue::String("asd".to_string()));
 
     let tokens = vec![
         id,
@@ -97,6 +100,7 @@ fn test_unpacker() -> PendingTransaction {
         send_flags,
         bounce,
         complex,
+        string,
     ];
 
     let tuple = Token::new("tuple", TokenValue::Tuple(tokens));
@@ -149,4 +153,5 @@ fn main() {
     assert_eq!(data.complex.number, new_data.complex.number);
     assert_eq!(data.complex.flag, new_data.complex.flag);
     assert_eq!(data.complex.public_key, new_data.complex.public_key);
+    assert_eq!(data.string, "asd".to_string());
 }
