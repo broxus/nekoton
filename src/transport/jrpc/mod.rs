@@ -8,7 +8,7 @@ use nekoton_abi::TransactionId;
 use nekoton_utils::*;
 
 use crate::core::models::ReliableBehavior;
-use crate::external::RestConnection;
+use crate::external::JrpcConnection;
 
 use super::models::{RawContractState, RawTransaction};
 use super::utils::*;
@@ -19,12 +19,12 @@ use self::models::*;
 mod models;
 
 pub struct JrpcTransport {
-    connection: Arc<dyn RestConnection>,
+    connection: Arc<dyn JrpcConnection>,
     config_cache: ConfigCache,
 }
 
 impl JrpcTransport {
-    pub fn new(connection: Arc<dyn RestConnection>) -> Self {
+    pub fn new(connection: Arc<dyn JrpcConnection>) -> Self {
         Self {
             connection,
             config_cache: ConfigCache::new(false),
@@ -150,28 +150,8 @@ mod tests {
     use super::JrpcTransport;
     use super::*;
 
-    const EMPTY_CELL_HASH: [u8; 32] = [
-        0x96, 0xa2, 0x96, 0xd2, 0x24, 0xf2, 0x85, 0xc6, 0x7b, 0xee, 0x93, 0xc3, 0x0f, 0x8a, 0x30,
-        0x91, 0x57, 0xf0, 0xda, 0xa3, 0x5d, 0xc5, 0xb8, 0x7e, 0x41, 0x0b, 0x78, 0x63, 0x0a, 0x09,
-        0xcf, 0xc7,
-    ];
-
-    #[test]
-    fn test_jrpc_empty_transactions_list() {
-        let response = base64::decode("te6ccgEBAQEAAgAAAA==").unwrap();
-
-        let transactions =
-            ton_types::deserialize_cells_tree(&mut std::io::Cursor::new(response)).unwrap();
-
-        assert_eq!(transactions.len(), 1);
-        assert_eq!(
-            transactions.first().unwrap().repr_hash().as_slice(),
-            &EMPTY_CELL_HASH
-        );
-    }
-
     #[async_trait::async_trait]
-    impl RestConnection for reqwest::Client {
+    impl JrpcConnection for reqwest::Client {
         async fn post(&self, data: &str) -> Result<String> {
             println!("{}", data);
             let text = self
