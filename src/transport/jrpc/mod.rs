@@ -18,33 +18,13 @@ use self::models::*;
 
 mod models;
 
-pub struct JrpcConnection(Arc<dyn RestConnection>);
-
-impl JrpcConnection {
-    pub fn new(transport: Arc<dyn RestConnection>) -> Self {
-        Self(transport)
-    }
-
-    pub fn transport_info() -> TransportInfo {
-        TransportInfo {
-            max_transactions_per_fetch: 50,
-            reliable_behavior: ReliableBehavior::IntensivePolling,
-            has_key_blocks: true,
-        }
-    }
-
-    pub fn connection(&self) -> &Arc<dyn RestConnection> {
-        &self.0
-    }
-}
-
 pub struct JrpcTransport {
-    connection: JrpcConnection,
+    connection: Arc<dyn RestConnection>,
     config_cache: ConfigCache,
 }
 
 impl JrpcTransport {
-    pub fn new(connection: JrpcConnection) -> Self {
+    pub fn new(connection: Arc<dyn RestConnection>) -> Self {
         Self {
             connection,
             config_cache: ConfigCache::new(false),
@@ -55,19 +35,23 @@ impl JrpcTransport {
 #[async_trait::async_trait]
 impl Transport for JrpcTransport {
     fn info(&self) -> TransportInfo {
-        JrpcConnection::transport_info()
+        TransportInfo {
+            max_transactions_per_fetch: 50,
+            reliable_behavior: ReliableBehavior::IntensivePolling,
+            has_key_blocks: true,
+        }
     }
 
     async fn send_message(&self, message: &ton_block::Message) -> Result<()> {
-        let node = self.connection.connection();
-        node.post(&make_jrpc_request("sendMessage", &SendMessage { message }))
+        self.connection
+            .post(&make_jrpc_request("sendMessage", &SendMessage { message }))
             .await
             .map(|_| ())
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
-        let node = self.connection.connection();
-        let data = node
+        let data = self
+            .connection
             .post(&make_jrpc_request(
                 "getContractState",
                 &GetContractState { address },
@@ -85,7 +69,6 @@ impl Transport for JrpcTransport {
     ) -> Result<Vec<RawTransaction>> {
         let response = self
             .connection
-            .connection()
             .post(&make_jrpc_request(
                 "getTransactionsList",
                 &ExplorerGetTransactions {
@@ -100,8 +83,8 @@ impl Transport for JrpcTransport {
     }
 
     async fn get_latest_key_block(&self) -> Result<Block> {
-        let node = self.connection.connection();
-        node.post(&make_jrpc_request("getLatestKeyBlock", &()))
+        self.connection
+            .post(&make_jrpc_request("getLatestKeyBlock", &()))
             .await
             .map(|data| tiny_jsonrpc::parse_response(&data))?
             .map(|block: GetBlockResponse| block.block)
@@ -164,8 +147,8 @@ fn decode_raw_transactions_response(response: &[String]) -> Result<Vec<RawTransa
 mod tests {
     use std::str::FromStr;
 
+    use super::JrpcTransport;
     use super::*;
-    use super::{JrpcConnection, JrpcTransport};
 
     const EMPTY_CELL_HASH: [u8; 32] = [
         0x96, 0xa2, 0x96, 0xd2, 0x24, 0xf2, 0x85, 0xc6, 0x7b, 0xee, 0x93, 0xc3, 0x0f, 0x8a, 0x30,
@@ -206,8 +189,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_connection() {
-        let connection = JrpcConnection::new(Arc::new(reqwest::Client::new()));
-        let transport = JrpcTransport::new(connection);
+        let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
         let address = ton_block::MsgAddressInt::from_str(
             "-1:3333333333333333333333333333333333333333333333333333333333333333",
         )
