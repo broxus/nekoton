@@ -181,6 +181,30 @@ pub mod uint160_bytes {
     }
 }
 
+pub mod array_uint160_bytes {
+    use super::*;
+
+    pub fn pack(value: Vec<[u8; 20]>) -> TokenValue {
+        TokenValue::Array(
+            ton_abi::ParamType::Uint(160),
+            value.into_iter().map(uint160_bytes::pack).collect(),
+        )
+    }
+
+    pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<[u8; 20]>> {
+        match value {
+            TokenValue::Array(ton_abi::ParamType::Uint(160), array) => {
+                array.iter().map(uint160_bytes::unpack).collect()
+            }
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Array(Box::new(ParamType::Uint(160)))
+    }
+}
+
 pub mod uint128_bytes {
     use super::*;
 
