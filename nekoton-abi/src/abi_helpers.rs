@@ -95,7 +95,7 @@ pub mod bytes_as_string {
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<String> {
         match value {
-            TokenValue::Bytes(data) => Ok(String::from_utf8_lossy(&data).to_string()),
+            TokenValue::Bytes(data) => Ok(String::from_utf8_lossy(data).to_string()),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }

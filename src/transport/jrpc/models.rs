@@ -49,22 +49,6 @@ pub enum GetContractStateResponseTimings {
     },
 }
 
-impl GetContractStateResponseTimings {
-    pub fn gen_lt(&self) -> u64 {
-        match self {
-            Self::Old { gen_lt, .. } => *gen_lt,
-            Self::New { gen_lt, .. } => *gen_lt,
-        }
-    }
-
-    pub fn gen_utime(&self) -> u32 {
-        match self {
-            Self::Old { gen_utime, .. } => *gen_utime,
-            Self::New { gen_utime, .. } => *gen_utime,
-        }
-    }
-}
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AdnlRpcGetTransactions<'a> {
@@ -80,7 +64,7 @@ pub struct AdnlRpcGetTransactionsResponse {
     pub transactions: Vec<u8>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ExplorerGetTransactions<'a> {
     pub limit: u64,
