@@ -59,6 +59,7 @@ nekoton-abi = { path = "nekoton-abi", features = ["derive"] }
 nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
 
 [dev-dependencies]
+reqwest = { version = "0.11.8", features = ['brotli'] }
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
 tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 
