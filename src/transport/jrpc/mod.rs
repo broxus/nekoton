@@ -85,10 +85,7 @@ impl Transport for JrpcTransport {
     async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>> {
         let response = self
             .connection
-            .post(&make_jrpc_request(
-                "getRawTransaction",
-                &GetTransaction { id },
-            ))
+            .post(&make_jrpc_request("getTransaction", &GetTransaction { id }))
             .await?;
         let data: Option<String> = tiny_jsonrpc::parse_response(&response)?;
         data.map(|boc| decode_raw_transaction(&boc)).transpose()
@@ -197,6 +194,16 @@ mod tests {
             )
             .await
             .unwrap();
+
+        transport
+            .get_transaction(&ton_types::UInt256::from_slice(
+                &hex::decode("4a0a06bfbfaba4da8fcc7f5ad617fdee5344d954a1794e35618df2a4b349d15c")
+                    .unwrap(),
+            ))
+            .await
+            .unwrap()
+            .unwrap();
+
         transport.get_latest_key_block().await.unwrap();
     }
 }
