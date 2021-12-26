@@ -71,7 +71,7 @@ impl Transport for JrpcTransport {
             .connection
             .post(&make_jrpc_request(
                 "getTransactionsList",
-                &ExplorerGetTransactions {
+                &GetTransactions {
                     limit: count as u64,
                     last_transaction_lt: (from.lt != u64::MAX).then(|| from.lt),
                     account: &address,
@@ -79,7 +79,19 @@ impl Transport for JrpcTransport {
             ))
             .await?;
         let data: Vec<String> = tiny_jsonrpc::parse_response(&response)?;
-        Ok(decode_raw_transactions_response(&data)?)
+        data.iter().map(|boc| decode_raw_transaction(boc)).collect()
+    }
+
+    async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>> {
+        let response = self
+            .connection
+            .post(&make_jrpc_request(
+                "getRawTransaction",
+                &GetTransaction { id },
+            ))
+            .await?;
+        let data: Option<String> = tiny_jsonrpc::parse_response(&response)?;
+        data.map(|boc| decode_raw_transaction(&boc)).transpose()
     }
 
     async fn get_latest_key_block(&self) -> Result<Block> {
@@ -129,18 +141,12 @@ where
     }
 }
 
-fn decode_raw_transactions_response(response: &[String]) -> Result<Vec<RawTransaction>> {
-    response
-        .iter()
-        .map(|x| {
-            let bytes = base64::decode(x)?;
-            let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(bytes))?;
-            let hash = cell.repr_hash();
-            let data = ton_block::Transaction::construct_from(&mut cell.into())?;
-
-            Ok(RawTransaction { hash, data })
-        })
-        .collect()
+fn decode_raw_transaction(boc: &str) -> Result<RawTransaction> {
+    let bytes = base64::decode(boc)?;
+    let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(bytes))?;
+    let hash = cell.repr_hash();
+    let data = ton_block::Transaction::construct_from(&mut cell.into())?;
+    Ok(RawTransaction { hash, data })
 }
 
 #[cfg(test)]

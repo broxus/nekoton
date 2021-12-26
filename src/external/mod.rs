@@ -24,7 +24,16 @@ pub trait Storage: Sync + Send {
 pub trait GqlConnection: Send + Sync {
     fn is_local(&self) -> bool;
 
+    // async fn post(&self, url: &str, method: GqlConnectionMethod, data: &str) -> Result<String>;
+
     async fn post(&self, data: &str) -> Result<String>;
+}
+
+#[cfg(feature = "gql_transport")]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum GqlConnectionMethod {
+    Get,
+    Post,
 }
 
 #[cfg(feature = "jrpc_transport")]

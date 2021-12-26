@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use graphql_client::*;
+use graphql_client::{GraphQLQuery, Response};
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
 use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
@@ -54,27 +54,6 @@ impl GqlTransport {
     }
 
     pub async fn get_latest_block(&self, addr: &MsgAddressInt) -> Result<LatestBlock> {
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_latest_masterchain_block.graphql"
-        )]
-        struct QueryLatestMasterchainBlock;
-
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_node_se_conditions.graphql"
-        )]
-        struct QueryNodeSeConditions;
-
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_node_se_latest_block.graphql"
-        )]
-        struct QueryNodeSeLatestBlock;
-
         let workchain_id = addr.get_workchain_id();
 
         let blocks = self
@@ -165,13 +144,6 @@ impl GqlTransport {
     }
 
     pub async fn get_block(&self, id: &str) -> Result<ton_block::Block> {
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_block.graphql"
-        )]
-        struct QueryBlock;
-
         let boc = self
             .fetch::<QueryBlock>(query_block::Variables { id: id.to_owned() })
             .await?
@@ -191,13 +163,6 @@ impl GqlTransport {
         addr: &MsgAddressInt,
         timeout: Duration,
     ) -> Result<String> {
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_next_block.graphql"
-        )]
-        struct QueryNextBlock;
-
         let timeout_ms = timeout.as_secs_f64() * 1000.0;
 
         let block = self
@@ -219,13 +184,6 @@ impl GqlTransport {
             check_shard_match(workchain_id, shard, addr)?,
         ) {
             (Some(block_id), Some(true), false) => {
-                #[derive(GraphQLQuery)]
-                #[graphql(
-                    schema_path = "src/transport/gql/schema.graphql",
-                    query_path = "src/transport/gql/query_block_after_split.graphql"
-                )]
-                struct QueryBlockAfterSplit;
-
                 let result = self
                     .fetch::<QueryBlockAfterSplit>(query_block_after_split::Variables {
                         block_id,
@@ -275,13 +233,6 @@ impl Transport for GqlTransport {
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_account_state.graphql"
-        )]
-        struct QueryAccountState;
-
         let account_state = match self
             .fetch::<QueryAccountState>(query_account_state::Variables {
                 address: address.to_string(),
@@ -320,13 +271,6 @@ impl Transport for GqlTransport {
         from: TransactionId,
         count: u8,
     ) -> Result<Vec<RawTransaction>> {
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_account_transactions.graphql"
-        )]
-        struct QueryAccountTransactions;
-
         self.fetch::<QueryAccountTransactions>(query_account_transactions::Variables {
             address: address.to_string(),
             last_transaction_lt: from.lt.to_string(),
@@ -351,14 +295,31 @@ impl Transport for GqlTransport {
         .collect::<Result<Vec<_>, _>>()
     }
 
-    async fn get_latest_key_block(&self) -> Result<ton_block::Block> {
-        #[derive(GraphQLQuery)]
-        #[graphql(
-            schema_path = "src/transport/gql/schema.graphql",
-            query_path = "src/transport/gql/query_latest_key_block.graphql"
-        )]
-        struct QueryLatestKeyBlock;
+    async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>> {
+        self.fetch::<QueryTransaction>(query_transaction::Variables {
+            hash: id.to_hex_string(),
+        })
+        .await?
+        .transactions
+        .ok_or_else(invalid_response)?
+        .into_iter()
+        .flatten()
+        .map(|transaction| {
+            let bytes = base64::decode(&transaction.boc.ok_or_else(invalid_response)?)?;
+            let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(bytes))
+                .map_err(|_| NodeClientError::InvalidTransaction)?;
+            let hash = cell.repr_hash();
+            Ok(RawTransaction {
+                hash,
+                data: ton_block::Transaction::construct_from_cell(cell)
+                    .map_err(|_| NodeClientError::InvalidTransaction)?,
+            })
+        })
+        .next()
+        .transpose()
+    }
 
+    async fn get_latest_key_block(&self) -> Result<ton_block::Block> {
         let boc = self
             .fetch::<QueryLatestKeyBlock>(query_latest_key_block::Variables)
             .await?
@@ -387,6 +348,76 @@ pub struct LatestBlock {
     pub end_lt: u64,
     pub gen_utime: u32,
 }
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_block.graphql"
+)]
+struct QueryBlock;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_next_block.graphql"
+)]
+struct QueryNextBlock;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_block_after_split.graphql"
+)]
+struct QueryBlockAfterSplit;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_account_state.graphql"
+)]
+struct QueryAccountState;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_account_transactions.graphql"
+)]
+struct QueryAccountTransactions;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_transaction.graphql"
+)]
+struct QueryTransaction;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_latest_masterchain_block.graphql"
+)]
+struct QueryLatestMasterchainBlock;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_latest_key_block.graphql"
+)]
+struct QueryLatestKeyBlock;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_node_se_conditions.graphql"
+)]
+struct QueryNodeSeConditions;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_node_se_latest_block.graphql"
+)]
+struct QueryNodeSeLatestBlock;
 
 #[derive(GraphQLQuery)]
 #[graphql(

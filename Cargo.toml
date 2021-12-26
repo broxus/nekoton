@@ -6,7 +6,7 @@ authors = [
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
     "Ivan Kalinin <i.kalinin@dexpa.io>"
 ]
-edition = "2018"
+edition = "2021"
 
 [workspace]
 members = ["nekoton-contracts", "nekoton-derive", "nekoton-abi", "nekoton-utils", "nekoton-indexer-utils"]
@@ -55,7 +55,7 @@ nekoton-abi = { path = "nekoton-abi", features = ["derive"] }
 nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
 
 [dev-dependencies]
-reqwest = { version = "0.11.8", features = ['brotli'] }
+reqwest = { version = "0.11.8", features = ["gzip"] }
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
 tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 
