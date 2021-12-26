@@ -12,12 +12,10 @@ edition = "2018"
 members = ["nekoton-contracts", "nekoton-derive", "nekoton-abi", "nekoton-utils", "nekoton-indexer-utils"]
 
 [dependencies]
-aes = { version = "0.7.2", features = ["ctr"], default-features = false, optional = true }
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.13"
 chacha20poly1305 = "0.9"
-cipher = { version = "0.3.0", default-features = false, optional = true }
 curve25519-dalek-ng = "4.0"
 downcast-rs = "1.2"
 dyn-clone = "1.0"
@@ -38,8 +36,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.9"
 thiserror = "1.0"
+tiny-jsonrpc = { version = "0.5.0", default-features = false, optional = true }
 tokio = { version = "1.4", default-features = false, features = ["sync"] }
-x25519-dalek-ng = { version = "1.1", optional = true }
 zeroize = "1.2.0"
 
 ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
@@ -47,12 +45,10 @@ tiny-bip39 = { git = "https://github.com/broxus/tiny-bip39.git" }
 tiny-hderive = { git = "https://github.com/broxus/tiny-hderive.git" }
 
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
-ton_api = { git = "https://github.com/broxus/ton-labs-tl.git", package = "ton_api", optional = true }
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
-tiny-jsonrpc = { version = "0.5.0", default-features = false, optional = true }
 
 nekoton-contracts = { path = "nekoton-contracts" }
 nekoton-abi = { path = "nekoton-abi", features = ["derive"] }
@@ -68,5 +64,4 @@ default = ["gql_transport"]
 integration_test = []
 web = ["nekoton-utils/web", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
 gql_transport = ["graphql_client"]
-adnl_transport = ["ton_api", "aes", "cipher", "x25519-dalek-ng"]
 jrpc_transport = ["tiny-jsonrpc"]

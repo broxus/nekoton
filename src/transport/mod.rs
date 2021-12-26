@@ -10,8 +10,6 @@ use crate::core::models::ReliableBehavior;
 
 use self::models::*;
 
-#[cfg(feature = "adnl_transport")]
-pub mod adnl;
 #[cfg(feature = "gql_transport")]
 pub mod gql;
 #[cfg(feature = "jrpc_transport")]

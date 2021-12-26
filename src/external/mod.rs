@@ -1,7 +1,5 @@
 use anyhow::Result;
 use async_trait::async_trait;
-#[cfg(feature = "adnl_transport")]
-use ton_api::ton;
 
 #[async_trait]
 pub trait Storage: Sync + Send {
@@ -19,12 +17,6 @@ pub trait Storage: Sync + Send {
 
     /// Remove data without waiting operation result
     fn remove_unchecked(&self, key: &str);
-}
-
-#[cfg(feature = "adnl_transport")]
-#[async_trait]
-pub trait AdnlConnection: Send + Sync {
-    async fn query(&self, request: ton::TLObject) -> Result<ton::TLObject>;
 }
 
 #[cfg(feature = "gql_transport")]
