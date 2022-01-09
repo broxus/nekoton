@@ -10,19 +10,13 @@ use crate::core::models::ReliableBehavior;
 
 use self::models::*;
 
-#[cfg(feature = "adnl_transport")]
-pub mod adnl;
 #[cfg(feature = "gql_transport")]
 pub mod gql;
 #[cfg(feature = "jrpc_transport")]
 pub mod jrpc;
 
 pub mod models;
-#[cfg(any(
-    feature = "adnl_transport",
-    feature = "gql_transport",
-    feature = "jrpc_transport",
-))]
+#[cfg(any(feature = "gql_transport", feature = "jrpc_transport",))]
 mod utils;
 
 #[async_trait]
@@ -39,6 +33,8 @@ pub trait Transport: Send + Sync {
         from: TransactionId,
         count: u8,
     ) -> Result<Vec<RawTransaction>>;
+
+    async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>>;
 
     async fn get_latest_key_block(&self) -> Result<ton_block::Block>;
 

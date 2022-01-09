@@ -1,44 +1,7 @@
-directive @cacheControl(
-    maxAge: Int
-    scope: CacheControlScope
-) on FIELD_DEFINITION | OBJECT | INTERFACE
-
-#  GraphQL Server info
-type Info {
-    #  Server version
-    version: String
-
-    #  Server unix time in ms
-    time: Float
-
-    #  Blocks latency in ms (server time - max of blocks.gen_utime * 1000)
-    blocksLatency: Float
-
-    #  Messages latency in ms (server time - max of messages.created_at * 1000)
-    messagesLatency: Float
-
-    #  Transactions latency in ms (server time - max of transactions.now * 1000)
-    transactionsLatency: Float
-
-    #  Overall latency (maximum value of blocksLatency, messagesLatency and transactionsLatency)
-    latency: Float
-
-    #  Last block time in ms (maximum value of blocks.gen_utime * 1000)
-    lastBlockTime: Float
-
-    #  Alternative endpoints of q-server
-    endpoints: [String]
-
-    # **EXPERIMENTAL**
-    # Reliable upper boundary for pagination by chain_order field. Before this boundary data inserts are almost impossible
-    # (work in progress to make them fully impossible when the feature goes into production).
-    chainOrderBoundary: String
-}
-
 type Query {
     info: Info
 
-    # This node is experimental
+    # This node is unstable
     blockchain(accessKey: String): BlockchainQuery
     accounts(
         filter: AccountFilter
@@ -211,9 +174,188 @@ type Query {
 
     # Obsolete. Use aggregation queries instead.
     getAccountsTotalBalance(accessKey: String): String
+
+    # Statistics API
+    statistics: StatisticsQuery!
 }
 
-# This type is experimental
+type Mutation {
+    # Post external inbound message to blockchain node.
+    postRequests(
+        # List of message requests
+        requests: [Request]
+
+        # Access key if required
+        accessKey: String
+    ): [String]
+
+    # Register GraphQL services access keys. Returns number of actually registered keys
+    registerAccessKeys(
+        # Account contract address
+        account: String
+
+        # Access keys associated with account
+        keys: [AccessKey]
+
+        # Management access key obtained with getManagementAccessKey and signed using key pair of account contract
+        signedManagementAccessKey: String
+    ): Int
+
+    # Revoke GraphQL services access keys. Returns number of actually revoked keys
+    revokeAccessKeys(
+        # Account contract address
+        account: String
+
+        # Access keys associated with account
+        keys: [String]
+
+        # Management access key obtained with getManagementAccessKey and signed using key pair of account contract
+        signedManagementAccessKey: String
+    ): Int
+
+    # Stop listeners for specified operations
+    finishOperations(
+        # Operation identifiers
+        operationIds: [String]
+    ): Int
+}
+
+type Subscription {
+    accounts(filter: AccountFilter, accessKey: String): Account
+    transactions(filter: TransactionFilter, accessKey: String): Transaction
+    messages(filter: MessageFilter, accessKey: String): Message
+    blocks(filter: BlockFilter, accessKey: String): Block
+    blocks_signatures(
+        filter: BlockSignaturesFilter
+        accessKey: String
+    ): BlockSignatures
+    zerostates(filter: ZerostateFilter, accessKey: String): Zerostate
+    counterparties(filter: CounterpartyFilter, accessKey: String): Counterparty
+}
+
+#  GraphQL Server info
+type Info {
+    #  Server version
+    version: String
+
+    #  Server unix time in ms
+    time: Float
+
+    #  Blocks latency in ms (server time - max of blocks.gen_utime * 1000)
+    blocksLatency: Float
+
+    #  Messages latency in ms (server time - max of messages.created_at * 1000)
+    messagesLatency: Float
+
+    #  Transactions latency in ms (server time - max of transactions.now * 1000)
+    transactionsLatency: Float
+
+    #  Overall latency (maximum value of blocksLatency, messagesLatency and transactionsLatency)
+    latency: Float
+
+    #  Last block time in ms (maximum value of blocks.gen_utime * 1000)
+    lastBlockTime: Float
+
+    #  Alternative endpoints of q-server
+    endpoints: [String]
+
+    # **EXPERIMENTAL**
+    # Reliable upper boundary for pagination by chain_order field. Before this boundary data inserts are almost impossible
+    # (work in progress to make them fully impossible when the feature goes into production).
+    chainOrderBoundary: String
+}
+
+# **UNSTABLE**
+# Block
+type BlockchainBlock implements Node {
+    # BlockchainBlock.id is "block/"-prefixed Block.id.
+    # For id without prefix see "hash".
+    id: ID!
+    hash: String
+    account_blocks: [BlockAccountBlocks]
+    after_merge: Boolean
+    after_split: Boolean
+    before_split: Boolean
+
+    # Serialized bag of cells of this block encoded with base64
+    boc: String
+
+    # Collection-unique field for pagination and sorting. This field is designed to retain logical order.
+    chain_order: String
+
+    # Public key of the collator who produced this block.
+    created_by: String
+
+    # Logical creation time automatically set by the block formation end.
+    end_lt(format: BigIntFormat): String
+
+    # Block file hash
+    file_hash: String
+    flags: Int
+    gen_catchain_seqno: Float
+    gen_software_capabilities(format: BigIntFormat): String
+    gen_software_version: Float
+
+    # uint 32 generation time stamp
+    gen_utime: Float
+    gen_utime_string: String
+    gen_validator_list_hash_short: Float
+
+    # uint32 global block ID
+    global_id: Int
+    in_msg_descr: [InMsg]
+
+    # true if this block is a key block
+    key_block: Boolean
+    master: BlockMaster
+    master_ref: ExtBlkRef
+
+    # Returns last known master block at the time of shard generation.
+    min_ref_mc_seqno: Float
+    out_msg_descr: [OutMsg]
+
+    # External block reference for previous block in case of shard merge.
+    prev_alt_ref: ExtBlkRef
+
+    # Returns a number of a previous key block.
+    prev_key_block_seqno: Float
+
+    # External block reference for previous block.
+    prev_ref: ExtBlkRef
+    prev_vert_alt_ref: ExtBlkRef
+
+    # External block reference for previous block in case of vertical blocks.
+    prev_vert_ref: ExtBlkRef
+    rand_seed: String
+    seq_no: Float
+    shard: String
+
+    # Logical creation time automatically set by the block formation start.
+    # Logical time is a component of the TON Blockchain that also plays an important role in message delivery is the logical time, usually denoted by Lt. It is a non-negative 64-bit integer, assigned to certain events. For more details, see the TON blockchain specification
+    start_lt(format: BigIntFormat): String
+    state_update: BlockStateUpdate
+
+    # Returns block processing status
+    # - 0 – unknown
+    # - 1 – proposed
+    # - 2 – finalized
+    # - 3 – refused
+    status: Int
+    status_name: BlockProcessingStatusEnum
+    tr_count: Int
+    value_flow: BlockValueFlow
+
+    # uin32 block version identifier
+    version: Float
+    vert_seq_no: Float
+    want_merge: Boolean
+    want_split: Boolean
+
+    # uint32 workchain identifier
+    workchain_id: Int
+}
+
+# This type is unstable
 type BlockchainMasterSeqNoRange {
     # Minimum inclusive seq_no of corresponding master blocks
     start: Int
@@ -222,7 +364,7 @@ type BlockchainMasterSeqNoRange {
     end: Int
 }
 
-# This type is experimental
+# This type is unstable
 input BlockchainMasterSeqNoFilter {
     # Minimum inclusive seq_no of corresponding master blocks
     start: Int
@@ -231,21 +373,33 @@ input BlockchainMasterSeqNoFilter {
     end: Int
 }
 
-# This type is experimental
+# This type is unstable
+type BlockchainBlocksConnection {
+    edges: [BlockchainBlocksEdge!]!
+    pageInfo: PageInfo!
+}
+
+# This type is unstable
+type BlockchainBlocksEdge {
+    node: BlockchainBlock!
+    cursor: String!
+}
+
+# This type is unstable
 type BlockchainTransactionsConnection {
     edges: [BlockchainTransactionEdge!]!
     pageInfo: PageInfo!
 }
 
-# This type is experimental
+# This type is unstable
 type BlockchainTransactionEdge {
     node: BlockchainTransaction!
     cursor: String!
 }
 
-# This type is experimental
+# This type is unstable
 type BlockchainQuery {
-    # **EXPERIMENTAL**
+    # **UNSTABLE**
     # Returns seq_no range such that:
     # 1. masterblock(start).chain_order is less or equal to chain_order values of all transactions and blocks with time >= time_start
     # 2. masterblock(end).chain_order is greater than chain_order values of all transactions and blocks with time <= time_end
@@ -256,15 +410,11 @@ type BlockchainQuery {
         time_end: Int
     ): BlockchainMasterSeqNoRange
 
-    # **EXPERIMENTAL**
-    # This node could be used for a cursor-based pagination of transactions filtered by account addresses.
-    account_transactions(
-        # The transactions could be filtered by seq_no of corresponding masterchain blocks.
-        # See also: blockchain { master_seq_no_range }
-        master_seq_no: BlockchainMasterSeqNoFilter
-
-        # The transactions could be filtered by the list of addresses.
-        account_addresses: [String!]
+    # **UNSTABLE**
+    # This node could be used for a cursor-based pagination of key blocks.
+    key_blocks(
+        # Filter by seq_no.
+        seq_no: BlockchainMasterSeqNoFilter
 
         # This field is mutually exclusive with 'last'
         first: Int
@@ -273,17 +423,77 @@ type BlockchainQuery {
         # This field is mutually exclusive with 'first'
         last: Int
         before: String
-    ): BlockchainTransactionsConnection
+    ): BlockchainBlocksConnection
 
-    # **EXPERIMENTAL**
+    # **UNSTABLE**
+    # This node could be used for a cursor-based pagination of blocks (with optional workchain and thread filters).
+    workchain_blocks(
+        # The blocks could be filtered by seq_no of corresponding masterchain blocks.
+        # See also: blockсhain { master_seq_no_range }
+        master_seq_no: BlockchainMasterSeqNoFilter
+
+        # Optional filter by workchain
+        workchain: Int
+
+        # Optional filter by thread (former 'shard'). Workchain filter is required if this filter is used
+        thread: String
+
+        # Optional filter by minimum transactions in a block (unoptimized, query could be dropped by timeout)
+        min_tr_count: Int
+
+        # Optional filter by maximum transactions in a block (unoptimized, query could be dropped by timeout)
+        max_tr_count: Int
+
+        # This field is mutually exclusive with 'last'
+        first: Int
+        after: String
+
+        # This field is mutually exclusive with 'first'
+        last: Int
+        before: String
+    ): BlockchainBlocksConnection
+
+    # **UNSTABLE**
     # This node could be used for a cursor-based pagination of transactions filtered by workchains.
     workchain_transactions(
         # The transactions could be filtered by seq_no of corresponding masterchain blocks.
         # See also: blockchain { master_seq_no_range }
         master_seq_no: BlockchainMasterSeqNoFilter
 
-        # The transactions could be filtered by the list of workchains.
-        workchains: [Int!]
+        # Optional filter by workchain
+        workchain: Int
+
+        # Optional filter by min balance_delta (unoptimized, query could be dropped by timeout)
+        min_balance_delta: Int
+
+        # Optional filter by max balance_delta (unoptimized, query could be dropped by timeout)
+        max_balance_delta: Int
+
+        # This field is mutually exclusive with 'last'
+        first: Int
+        after: String
+
+        # This field is mutually exclusive with 'first'
+        last: Int
+        before: String
+    ): BlockchainTransactionsConnection
+
+    # **UNSTABLE**
+    # This node could be used for a cursor-based pagination of transactions filtered by account addresses.
+    account_transactions(
+        # The transactions could be filtered by seq_no of corresponding masterchain blocks.
+        # See also: blockchain { master_seq_no_range }
+        master_seq_no: BlockchainMasterSeqNoFilter
+
+        # Account address is required (64 hex symbols)
+        account_address: String!
+        aborted: Boolean
+
+        # Optional filter by min balance_delta (unoptimized, query could be dropped by timeout)
+        min_balance_delta: Int
+
+        # Optional filter by max balance_delta (unoptimized, query could be dropped by timeout)
+        max_balance_delta: Int
 
         # This field is mutually exclusive with 'last'
         first: Int
@@ -295,12 +505,12 @@ type BlockchainQuery {
     ): BlockchainTransactionsConnection
 }
 
-# This type is experimental
+# This type is unstable
 interface Node {
     id: ID!
 }
 
-# This type is experimental
+# This type is unstable
 type PageInfo {
     startCursor: String!
     endCursor: String!
@@ -308,8 +518,8 @@ type PageInfo {
     hasPreviousPage: Boolean!
 }
 
-# **EXPERIMENTAL**
-# TON Transaction
+# **UNSTABLE**
+# Transaction
 type BlockchainTransaction implements Node {
     # BlockchainTransaction.id is "transaction/"-prefixed Transaction.id.
     # For id without prefix see "hash".
@@ -3494,19 +3704,6 @@ input QueryOrderBy {
     direction: QueryOrderByDirection
 }
 
-type Subscription {
-    accounts(filter: AccountFilter, accessKey: String): Account
-    transactions(filter: TransactionFilter, accessKey: String): Transaction
-    messages(filter: MessageFilter, accessKey: String): Message
-    blocks(filter: BlockFilter, accessKey: String): Block
-    blocks_signatures(
-        filter: BlockSignaturesFilter
-        accessKey: String
-    ): BlockSignatures
-    zerostates(filter: ZerostateFilter, accessKey: String): Zerostate
-    counterparties(filter: CounterpartyFilter, accessKey: String): Counterparty
-}
-
 # Counterparty
 type Counterparty {
     account: String
@@ -3588,47 +3785,6 @@ input AccessKey {
     restrictToAccounts: [String]
 }
 
-type Mutation {
-    # Post external inbound message to blockchain node.
-    postRequests(
-        # List of message requests
-        requests: [Request]
-
-        # Access key if required
-        accessKey: String
-    ): [String]
-
-    # Register GraphQL services access keys. Returns number of actually registered keys
-    registerAccessKeys(
-        # Account contract address
-        account: String
-
-        # Access keys associated with account
-        keys: [AccessKey]
-
-        # Management access key obtained with getManagementAccessKey and signed using key pair of account contract
-        signedManagementAccessKey: String
-    ): Int
-
-    # Revoke GraphQL services access keys. Returns number of actually revoked keys
-    revokeAccessKeys(
-        # Account contract address
-        account: String
-
-        # Access keys associated with account
-        keys: [String]
-
-        # Management access key obtained with getManagementAccessKey and signed using key pair of account contract
-        signedManagementAccessKey: String
-    ): Int
-
-    # Stop listeners for specified operations
-    finishOperations(
-        # Operation identifiers
-        operationIds: [String]
-    ): Int
-}
-
 enum CacheControlScope {
     PUBLIC
     PRIVATE
@@ -3636,3 +3792,118 @@ enum CacheControlScope {
 
 # The `Upload` scalar type represents a file upload.
 scalar Upload
+
+type AccountsStatisticsQuery {
+    # Count of all accounts
+    totalCount: Int!
+
+    # Network total supply
+    totalSupply: String!
+
+    # Remaining tokens amount on givers
+    amountOnGivers: String!
+
+    # Circulating supply TON
+    circulatingSupply: String!
+
+    # New accounts in 24 hours
+    lastDayCount: Int!
+
+    # Count of different contract code hashes deployed
+    accountTypesCount: Int!
+}
+
+type BlocksStatisticsQuery {
+    # Count of all blocks
+    totalCount: Int!
+
+    # Count of blocks created by current validator set
+    countByCurrentValidators: Int!
+
+    # Average blocks rate per second for last 2 minutes
+    ratePerSecond: Float!
+
+    # Count of blocks with different versions by specified time period
+    countByVersion(period: CountByVersionPeriod!): JSONObject!
+}
+
+enum CountByVersionPeriod {
+    DAY
+    HOUR
+}
+
+type DepoolsStatisticsQuery {
+    # Count of depools with stake > 0
+    activeDepoolCount: Int!
+
+    # Count of participants in all active depools
+    activeParticipantsCount: Int!
+
+    # Sum of rewards for active depools participants
+    totalRewards: String!
+
+    # Sum of stakes in all active depools
+    totalStaked: String!
+}
+
+# A scalar that can represent any JSON Object value.
+scalar JSONObject
+
+type MessagesStatisticsQuery {
+    # Count of all messages
+    totalCount: Int!
+
+    # Average messages rate per second for last 2 minutes
+    ratePerSecond: Float!
+}
+
+type StatisticsQuery {
+    # Stat API version
+    version: String!
+
+    # Statistics related to blocks
+    blocks: BlocksStatisticsQuery!
+
+    # Statistics related to messages
+    messages: MessagesStatisticsQuery!
+
+    # Statistics related to transactions
+    transactions: TransactionsStatisticsQuery!
+
+    # Statistics related to accounts
+    accounts: AccountsStatisticsQuery!
+
+    # Statistics related to validators
+    validators: ValidatorsStatisticsQuery!
+
+    # Statistics related to depools
+    depools: DepoolsStatisticsQuery!
+}
+
+type TransactionsStatisticsQuery {
+    # Count of ordinary transactions
+    totalOrdinaryCount: Int!
+
+    # Count of ordinary transactions by last 24 hours
+    lastDayOrdinaryCount: Int!
+
+    # Average transactions rate per second for last 2 minutes
+    ratePerSecond: Float!
+}
+
+type ValidatorsStatisticsQuery {
+    # Count of active validator set
+    totalCount: Int!
+
+    # Last cycle validators count delta
+    lastCycleCountDelta: Int!
+
+    # Staked tokens amount
+    totalStaked: String!
+
+    # Validators rewards for last 30 days
+    rewardsPer30Days: String!
+
+    # Annual percentage rate
+    apr: Float!
+}
