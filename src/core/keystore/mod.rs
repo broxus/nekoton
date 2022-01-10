@@ -24,9 +24,8 @@ pub struct KeyStore {
 }
 
 impl KeyStore {
-    pub fn builder(storage: Arc<dyn Storage>) -> KeyStoreBuilder {
+    pub fn builder() -> KeyStoreBuilder {
         KeyStoreBuilder {
-            storage,
             signers: Default::default(),
             signer_types: Default::default(),
         }
@@ -258,7 +257,6 @@ impl KeyStoreEntry {
 }
 
 pub struct KeyStoreBuilder {
-    storage: Arc<dyn Storage>,
     signers: HashMap<String, (Box<dyn SignerStorage>, TypeId)>,
     signer_types: HashSet<TypeId>,
 }
@@ -295,8 +293,8 @@ impl KeyStoreBuilder {
         Ok(())
     }
 
-    pub async fn load(mut self) -> Result<KeyStore> {
-        let data = self.load_stored_data().await?;
+    pub async fn load(mut self, storage: Arc<dyn Storage>) -> Result<KeyStore> {
+        let data = Self::load_stored_data(&storage).await?;
 
         let mut entries = HashMap::new();
 
@@ -318,13 +316,13 @@ impl KeyStoreBuilder {
                 signers: transpose_signers(self.signers),
                 entries,
             }),
-            storage: self.storage,
+            storage,
             password_cache: PasswordCache::new()?,
         })
     }
 
-    pub async fn load_unchecked(mut self) -> KeyStore {
-        let data = self.load_stored_data().await.unwrap_or_default();
+    pub async fn load_unchecked(mut self, storage: Arc<dyn Storage>) -> KeyStore {
+        let data = Self::load_stored_data(&storage).await.unwrap_or_default();
 
         let mut entries = HashMap::new();
 
@@ -346,13 +344,13 @@ impl KeyStoreBuilder {
                 signers: transpose_signers(self.signers),
                 entries,
             }),
-            storage: self.storage,
+            storage,
             password_cache: PasswordCache::new().trust_me(),
         }
     }
 
-    async fn load_stored_data(&self) -> Result<Vec<(String, String)>> {
-        match self.storage.get(STORAGE_KEYSTORE).await? {
+    async fn load_stored_data(storage: &Arc<dyn Storage>) -> Result<Vec<(String, String)>> {
+        match storage.get(STORAGE_KEYSTORE).await? {
             Some(data) => {
                 let data = serde_json::from_str(&data)?;
                 Ok(data)
