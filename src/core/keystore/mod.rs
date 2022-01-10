@@ -285,6 +285,16 @@ impl KeyStoreBuilder {
         Ok(self)
     }
 
+    pub async fn verify(mut self, data: &str) -> Result<()> {
+        let data = serde_json::from_str::<Vec<(String, String)>>(data)?;
+        for (name, data) in data {
+            if let Some((storage, _)) = self.signers.get_mut(&name) {
+                storage.load_state(&data)?;
+            }
+        }
+        Ok(())
+    }
+
     pub async fn load(mut self) -> Result<KeyStore> {
         let data = self.load_stored_data().await?;
 

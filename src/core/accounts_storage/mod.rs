@@ -24,48 +24,15 @@ pub struct AccountsStorage {
 type AssetsMap = BTreeMap<String, AssetsList>;
 
 impl AccountsStorage {
+    /// Decodes data as accounts storage
+    pub fn verify(data: &str) -> Result<()> {
+        parse_assets_map(data).map(|_| ())
+    }
+
     /// Loads full accounts storage state. Fails on invalid data
     pub async fn load(storage: Arc<dyn Storage>) -> Result<Self> {
-        struct StoredAssetsMap(AssetsMap);
-
-        impl<'de> serde::Deserialize<'de> for StoredAssetsMap {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: serde::Deserializer<'de>,
-            {
-                use serde::de::Error;
-
-                let accounts = HashMap::<String, String>::deserialize(deserializer)?;
-                let accounts = accounts
-                    .into_iter()
-                    .map(|(mut address, assets)| {
-                        let mut assets = serde_json::from_str::<AssetsList>(&assets)
-                            .map_err(|_| D::Error::custom("Failed to deserialize AssetsList"))?;
-
-                        // Handle special accounts from zerostate
-                        if let Some(special_address) = ton_wallet::map_special_account(
-                            &assets.ton_wallet.public_key,
-                            assets.ton_wallet.contract,
-                            assets.ton_wallet.address.workchain_id() as i8,
-                        ) {
-                            address = special_address.to_string();
-                            assets.ton_wallet.address = special_address;
-                        }
-
-                        Ok((address, assets))
-                    })
-                    .collect::<Result<_, _>>()?;
-                Ok(StoredAssetsMap(accounts))
-            }
-        }
-
-        #[derive(Deserialize)]
-        struct StoredData {
-            assets: StoredAssetsMap,
-        }
-
         let data = match storage.get(STORAGE_ACCOUNTS).await? {
-            Some(data) => serde_json::from_str::<StoredData>(&data)?.assets.0,
+            Some(data) => parse_assets_map(&data)?,
             None => Default::default(),
         };
 
@@ -246,6 +213,48 @@ impl AccountsStorage {
         .trust_me();
         self.storage.set(STORAGE_ACCOUNTS, &data).await
     }
+}
+
+fn parse_assets_map(data: &str) -> Result<AssetsMap> {
+    struct StoredAssetsMap(AssetsMap);
+
+    impl<'de> serde::Deserialize<'de> for StoredAssetsMap {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            use serde::de::Error;
+
+            let accounts = HashMap::<String, String>::deserialize(deserializer)?;
+            let accounts = accounts
+                .into_iter()
+                .map(|(mut address, assets)| {
+                    let mut assets = serde_json::from_str::<AssetsList>(&assets)
+                        .map_err(|_| D::Error::custom("Failed to deserialize AssetsList"))?;
+
+                    // Handle special accounts from zerostate
+                    if let Some(special_address) = ton_wallet::map_special_account(
+                        &assets.ton_wallet.public_key,
+                        assets.ton_wallet.contract,
+                        assets.ton_wallet.address.workchain_id() as i8,
+                    ) {
+                        address = special_address.to_string();
+                        assets.ton_wallet.address = special_address;
+                    }
+
+                    Ok((address, assets))
+                })
+                .collect::<Result<_, _>>()?;
+            Ok(StoredAssetsMap(accounts))
+        }
+    }
+
+    #[derive(Deserialize)]
+    struct StoredData {
+        assets: StoredAssetsMap,
+    }
+
+    Ok(serde_json::from_str::<StoredData>(data)?.assets.0)
 }
 
 #[derive(Debug)]
