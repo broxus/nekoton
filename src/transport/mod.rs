@@ -27,6 +27,13 @@ pub trait Transport: Send + Sync {
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState>;
 
+    async fn get_accounts_by_code_hash(
+        &self,
+        code_hash: &ton_types::UInt256,
+        limit: u8,
+        continuation: &Option<MsgAddressInt>,
+    ) -> Result<Vec<MsgAddressInt>>;
+
     async fn get_transactions(
         &self,
         address: MsgAddressInt,

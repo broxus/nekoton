@@ -8,6 +8,18 @@ pub struct GetContractState<'a> {
     pub address: &'a ton_block::MsgAddressInt,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetAccountsByCodeHash<'a> {
+    pub limit: u32,
+
+    #[serde(default, with = "serde_optional_address")]
+    pub continuation: &'a Option<ton_block::MsgAddressInt>,
+
+    #[serde(with = "serde_uint256")]
+    pub code_hash: &'a ton_types::UInt256,
+}
+
 #[derive(Serialize)]
 pub struct SendMessage<'a> {
     #[serde(with = "serde_message")]

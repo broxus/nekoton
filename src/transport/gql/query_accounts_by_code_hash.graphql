@@ -1,0 +1,10 @@
+query QueryAccountsByCodeHash($code_hash: String!, $continuation: String, $limit: Int!) {
+    accounts(filter: {
+        code_hash: { eq: $code_hash },
+        id: { ge: $continuation }
+    }, orderBy: [
+        { path: "id", direction: ASC },
+    ], limit: $limit) {
+        id
+    }
+}

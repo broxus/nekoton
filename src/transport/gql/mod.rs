@@ -265,6 +265,27 @@ impl Transport for GqlTransport {
         }
     }
 
+    async fn get_accounts_by_code_hash(
+        &self,
+        code_hash: &ton_types::UInt256,
+        limit: u8,
+        continuation: &Option<MsgAddressInt>,
+    ) -> Result<Vec<MsgAddressInt>> {
+        self.fetch::<QueryAccountsByCodeHash>(query_accounts_by_code_hash::Variables {
+            code_hash: code_hash.to_hex_string(),
+            continuation: continuation.as_ref().map(ToString::to_string),
+            limit: limit as i64,
+        })
+        .await?
+        .accounts
+        .ok_or_else(invalid_response)?
+        .into_iter()
+        .flatten()
+        .flat_map(|item| item.id)
+        .map(|account| ton_block::MsgAddressInt::from_str(&account))
+        .collect()
+    }
+
     async fn get_transactions(
         &self,
         address: MsgAddressInt,
@@ -390,6 +411,13 @@ struct QueryAccountTransactions;
     query_path = "src/transport/gql/query_transaction.graphql"
 )]
 struct QueryTransaction;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "src/transport/gql/schema.graphql",
+    query_path = "src/transport/gql/query_accounts_by_code_hash.graphql"
+)]
+struct QueryAccountsByCodeHash;
 
 #[derive(GraphQLQuery)]
 #[graphql(

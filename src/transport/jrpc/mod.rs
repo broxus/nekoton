@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use ton_block::{Block, Deserializable, MsgAddressInt};
 
 use nekoton_abi::TransactionId;
@@ -59,6 +59,33 @@ impl Transport for JrpcTransport {
             .await?;
         let response = tiny_jsonrpc::parse_response::<RawContractState>(&data)?;
         Ok(response)
+    }
+
+    async fn get_accounts_by_code_hash(
+        &self,
+        code_hash: &ton_types::UInt256,
+        limit: u8,
+        continuation: &Option<MsgAddressInt>,
+    ) -> Result<Vec<MsgAddressInt>> {
+        let data = self
+            .connection
+            .post(&make_jrpc_request(
+                "getAccountsByCodeHash",
+                &GetAccountsByCodeHash {
+                    limit: limit as u32,
+                    continuation,
+                    code_hash,
+                },
+            ))
+            .await?;
+
+        #[derive(Deserialize)]
+        struct AddressWrapper(#[serde(with = "serde_address")] ton_block::MsgAddressInt);
+
+        Ok(tiny_jsonrpc::parse_response::<Vec<AddressWrapper>>(&data)?
+            .into_iter()
+            .map(|AddressWrapper(address)| address)
+            .collect())
     }
 
     async fn get_transactions(
@@ -203,6 +230,24 @@ mod tests {
             .await
             .unwrap()
             .unwrap();
+
+        let setcode_multisig_code_hash = ton_types::UInt256::from_str(
+            "e2b60b6b602c10ced7ea8ede4bdf96342c97570a3798066f3fb50a4b2b27a208",
+        )
+        .unwrap();
+
+        let mut continuation = None;
+        loop {
+            let contracts = transport
+                .get_accounts_by_code_hash(&setcode_multisig_code_hash, 50, &continuation)
+                .await
+                .unwrap();
+
+            continuation = contracts.last().cloned();
+            if continuation.is_none() {
+                break;
+            }
+        }
 
         transport.get_latest_key_block().await.unwrap();
     }

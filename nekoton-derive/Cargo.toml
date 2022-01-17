@@ -30,5 +30,5 @@ nekoton-abi = { path = "../nekoton-abi", features = ["derive"] }
 [dependencies]
 proc-macro2 = "1.0.27"
 quote = "1.0.9"
-syn = { version = "1.0.72" }
+syn = { version = "1.0" }
 either = "1.5"
