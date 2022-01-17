@@ -25,6 +25,14 @@ impl PasswordCache {
         })
     }
 
+    pub fn reset(&self) -> Result<()> {
+        *self.state.write() = PasswordCacheState {
+            cipher: make_cipher()?,
+            passwords: Default::default(),
+        };
+        Ok(())
+    }
+
     pub fn process_password(
         &'_ self,
         id: [u8; 32],

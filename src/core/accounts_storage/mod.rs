@@ -50,6 +50,17 @@ impl AccountsStorage {
         })
     }
 
+    pub async fn reload(&self) -> Result<()> {
+        let data = match self.storage.get(STORAGE_ACCOUNTS).await? {
+            Some(data) => parse_assets_map(&data)?,
+            None => Default::default(),
+        };
+
+        *self.accounts.write().await = data;
+
+        Ok(())
+    }
+
     /// Add account. It can later be fetched by ton wallet address
     pub async fn add_account(
         &self,

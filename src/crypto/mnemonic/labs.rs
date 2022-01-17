@@ -37,12 +37,8 @@ pub fn generate_words(entropy: [u8; 16]) -> Vec<String> {
 }
 
 fn ed25519_keys_from_secret_bytes(bytes: &[u8]) -> Result<ed25519_dalek::Keypair, Error> {
-    let secret = ed25519_dalek::SecretKey::from_bytes(bytes).map_err(|e| {
-        Error::msg(format!(
-            "failed to import ton secret key. {}",
-            e.to_string()
-        ))
-    })?;
+    let secret = ed25519_dalek::SecretKey::from_bytes(bytes)
+        .map_err(|e| Error::msg(format!("failed to import ton secret key. {}", e)))?;
 
     let public = ed25519_dalek::PublicKey::from(&secret);
 

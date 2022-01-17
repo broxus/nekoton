@@ -35,6 +35,37 @@ impl KeyStore {
         self.password_cache.contains(id, duration)
     }
 
+    pub async fn reload(&self) -> Result<()> {
+        let data = KeyStoreBuilder::load_stored_data(&self.storage).await?;
+
+        // Update state
+        {
+            let mut state = self.state.write().await;
+
+            let mut entries = HashMap::new();
+            for (name, data) in &data {
+                if let Some((type_id, (_, storage))) = state
+                    .signers
+                    .iter_mut()
+                    .find(|(_, (signer_name, _))| signer_name == name)
+                {
+                    storage.load_state(data)?;
+                    entries.extend(
+                        storage
+                            .get_entries()
+                            .into_iter()
+                            .map(|entry| entry.into_plain(*type_id)),
+                    );
+                }
+            }
+            state.entries = entries;
+        }
+
+        self.password_cache.reset()?;
+
+        Ok(())
+    }
+
     pub async fn get_entries(&self) -> Vec<KeyStoreEntry> {
         let state = self.state.read().await;
         state
