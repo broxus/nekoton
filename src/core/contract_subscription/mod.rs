@@ -187,6 +187,7 @@ impl ContractSubscription {
                 message,
                 TransactionExecutionOptions {
                     disable_signature_check: true,
+                    ..Default::default()
                 },
             )
             .await?;
@@ -203,12 +204,16 @@ impl ContractSubscription {
             .transport
             .get_blockchain_config(self.clock.as_ref())
             .await?;
-        let state = match self.transport.get_contract_state(&self.address).await? {
+        let mut state = match self.transport.get_contract_state(&self.address).await? {
             RawContractState::Exists(state) => state,
             RawContractState::NotExists => {
                 return Err(ContractExecutionError::ContractNotFound.into())
             }
         };
+
+        if let Some(balance) = options.override_balance {
+            state.account.storage.balance.grams.0 = balance as u128;
+        }
 
         let mut executor = Executor::new(
             self.clock.as_ref(),
@@ -410,6 +415,7 @@ impl ContractSubscription {
 #[serde(rename_all = "camelCase")]
 pub struct TransactionExecutionOptions {
     pub disable_signature_check: bool,
+    pub override_balance: Option<u64>,
 }
 
 #[derive(thiserror::Error, Debug)]
