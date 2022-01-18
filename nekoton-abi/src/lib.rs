@@ -749,16 +749,18 @@ impl Executor {
     pub fn run(&mut self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
         let mut executor = OrdinaryTransactionExecutor::new(self.config.clone());
         executor.set_signature_check_disabled(self.disable_signature_check);
-        #[allow(deprecated)]
-        executor.execute_for_account(
-            Some(message),
-            &mut self.account,
-            Default::default(),
-            self.block_utime,
-            self.block_lt,
-            self.last_transaction_lt.clone(),
-            false,
-        )
+
+        let params = ton_executor::ExecuteParams {
+            state_libs: Default::default(),
+            block_unixtime: self.block_utime,
+            block_lt: self.block_lt,
+            last_tr_lt: self.last_transaction_lt.clone(),
+            seed_block: UInt256::default(),
+            debug: false,
+        };
+
+        let mut account_root = self.account.serialize()?;
+        executor.execute_with_libs_and_params(Some(message), &mut account_root, params)
     }
 }
 
