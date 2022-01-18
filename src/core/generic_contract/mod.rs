@@ -98,7 +98,7 @@ impl GenericContract {
             .await
     }
 
-    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
+    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u128> {
         self.contract_subscription.estimate_fees(message).await
     }
 

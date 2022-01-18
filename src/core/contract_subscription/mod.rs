@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
 use nekoton_abi::{Executor, GenTimings, TransactionId};
-use nekoton_utils::Clock;
+use nekoton_utils::*;
 
 use super::models::{
     ContractState, PendingTransaction, TransactionsBatchInfo, TransactionsBatchType,
@@ -181,7 +181,7 @@ impl ContractSubscription {
         Ok(new_account_state)
     }
 
-    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u64> {
+    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u128> {
         let transaction = self
             .execute_transaction_locally(
                 message,
@@ -192,7 +192,13 @@ impl ContractSubscription {
             )
             .await?;
 
-        Ok(transaction.total_fees.grams.0 as u64)
+        Ok(
+            if let ton_block::TransactionDescr::Ordinary(descr) = transaction.read_description()? {
+                compute_total_transaction_fees(&transaction, &descr)
+            } else {
+                transaction.total_fees.grams.0
+            },
+        )
     }
 
     pub async fn execute_transaction_locally(
