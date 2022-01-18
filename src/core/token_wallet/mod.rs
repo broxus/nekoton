@@ -90,6 +90,10 @@ impl TokenWallet {
         })
     }
 
+    pub fn contract_subscription(&self) -> &ContractSubscription {
+        &self.contract_subscription
+    }
+
     pub fn owner(&self) -> &MsgAddressInt {
         &self.owner
     }

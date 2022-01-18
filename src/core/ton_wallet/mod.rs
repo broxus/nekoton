@@ -148,6 +148,10 @@ impl TonWallet {
         })
     }
 
+    pub fn contract_subscription(&self) -> &ContractSubscription {
+        &self.contract_subscription
+    }
+
     pub fn workchain(&self) -> i8 {
         self.contract_subscription.address().workchain_id() as i8
     }
