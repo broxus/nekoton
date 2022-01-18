@@ -181,7 +181,7 @@ impl ContractSubscription {
         Ok(new_account_state)
     }
 
-    pub async fn estimate_fees(&mut self, message: &ton_block::Message) -> Result<u128> {
+    pub async fn estimate_fees(&self, message: &ton_block::Message) -> Result<u128> {
         let transaction = self
             .execute_transaction_locally(
                 message,
@@ -202,7 +202,7 @@ impl ContractSubscription {
     }
 
     pub async fn execute_transaction_locally(
-        &mut self,
+        &self,
         message: &ton_block::Message,
         options: TransactionExecutionOptions,
     ) -> Result<ton_block::Transaction> {
