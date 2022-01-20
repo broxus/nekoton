@@ -9,7 +9,14 @@ authors = [
 edition = "2021"
 
 [workspace]
-members = ["nekoton-contracts", "nekoton-derive", "nekoton-abi", "nekoton-utils", "nekoton-indexer-utils"]
+members = [
+    "nekoton-abi",
+    "nekoton-contracts",
+    "nekoton-derive",
+    "nekoton-indexer-utils",
+    "nekoton-transport",
+    "nekoton-utils",
+]
 
 [dependencies]
 anyhow = "1.0"
