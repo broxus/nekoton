@@ -18,7 +18,7 @@ pub struct GqlNetworkSettings {
     /// Frequency of sync latency detection
     pub latency_detection_interval: Duration,
     /// Maximum value for the endpoint's blockchain data sync latency
-    pub max_latency: u32,
+    pub max_latency: Duration,
     /// Maximum amount of retries during endpoint selection
     pub endpoint_selection_retry_count: usize,
     /// Gql node type
@@ -30,7 +30,7 @@ impl Default for GqlNetworkSettings {
         Self {
             endpoints: Vec::new(),
             latency_detection_interval: Duration::from_secs(60),
-            max_latency: 60000,
+            max_latency: Duration::from_secs(60),
             endpoint_selection_retry_count: 5,
             local: false,
         }
@@ -77,7 +77,7 @@ impl GqlClient {
             client,
             endpoints,
             latency_detection_interval: settings.latency_detection_interval.as_secs(),
-            max_latency: settings.max_latency,
+            max_latency: settings.max_latency.as_millis() as u32,
             endpoint_selection_retry_count: settings.endpoint_selection_retry_count,
             local: settings.local,
             flags: Default::default(),
@@ -86,15 +86,25 @@ impl GqlClient {
     }
 
     async fn select_querying_endpoint(&self) -> Result<&'_ Endpoint> {
+        // Low 4 bytes which are used as endpoint index
         const INDEX_MASK: u64 = 0x0000_0000_ffff_ffff;
+
         const INTERMEDIATE: u64 = 0x0000_0000_ffff_fffe;
+        const IN_PROCESS: u64 = 0x0000_0000_ffff_ffff;
 
         struct Guard<'a> {
             client: &'a GqlClient,
             result: Option<u64>,
         }
 
-        impl Guard<'_> {
+        impl<'a> Guard<'a> {
+            fn new(client: &'a GqlClient) -> Self {
+                Self {
+                    client,
+                    result: None,
+                }
+            }
+
             fn set_result(&mut self, index: usize) {
                 self.result = Some((index as u64) & INDEX_MASK);
             }
@@ -137,7 +147,7 @@ impl GqlClient {
                 INTERMEDIATE => continue,
 
                 // Already searching endpoint
-                INDEX_MASK => match notify_fut.take() {
+                IN_PROCESS => match notify_fut.take() {
                     Some(notify_fut) => notify_fut.await,
                     None => notify_fut = Some(self.notify.notified()),
                 },
@@ -145,7 +155,7 @@ impl GqlClient {
                 _ => {
                     match self.flags.compare_exchange(
                         state,
-                        u64::MAX,
+                        IN_PROCESS,
                         Ordering::Release,
                         Ordering::Relaxed,
                     ) {
@@ -153,13 +163,11 @@ impl GqlClient {
                         Ok(_) => {
                             // This guard will reset the state back in case of error
                             // or unlock other waiters on success
-                            let mut guard = Guard {
-                                client: self,
-                                result: None,
-                            };
+                            let mut guard = Guard::new(self);
 
                             let (index, endpoint) = self.find_best_endpoint().await?;
                             guard.set_result(index);
+
                             break Ok(endpoint);
                         }
                         // State has already been changed
