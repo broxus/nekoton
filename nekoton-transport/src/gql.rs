@@ -1,5 +1,6 @@
 use std::convert::TryInto;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
@@ -49,7 +50,7 @@ pub struct GqlClient {
 }
 
 impl GqlClient {
-    pub fn new(settings: GqlNetworkSettings) -> Result<Self> {
+    pub fn new(settings: GqlNetworkSettings) -> Result<Arc<Self>> {
         let endpoints = settings
             .endpoints
             .into_iter()
@@ -73,7 +74,7 @@ impl GqlClient {
             .build()
             .context("failed to build http client")?;
 
-        Ok(Self {
+        Ok(Arc::new(Self {
             client,
             endpoints,
             latency_detection_interval: settings.latency_detection_interval.as_secs(),
@@ -82,7 +83,7 @@ impl GqlClient {
             local: settings.local,
             flags: Default::default(),
             notify: Default::default(),
-        })
+        }))
     }
 
     async fn select_querying_endpoint(&self) -> Result<&'_ Endpoint> {

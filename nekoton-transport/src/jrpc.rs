@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::{Context, Result};
 use reqwest::{IntoUrl, Url};
 
@@ -7,7 +9,7 @@ pub struct JrpcClient {
 }
 
 impl JrpcClient {
-    pub fn new<U: IntoUrl>(endpoint: U) -> Result<Self> {
+    pub fn new<U: IntoUrl>(endpoint: U) -> Result<Arc<Self>> {
         let url = endpoint.into_url()?;
 
         let mut headers = reqwest::header::HeaderMap::new();
@@ -21,7 +23,7 @@ impl JrpcClient {
             .build()
             .context("failed to build http client")?;
 
-        Ok(Self { client, url })
+        Ok(Arc::new(Self { client, url }))
     }
 }
 
