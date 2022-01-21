@@ -18,7 +18,6 @@ declare_abi! {
     setcode_multisig_wallet => "./SetcodeMultisigWallet.abi.json",
     bridge_multisig_wallet => "./BridgeMultisigWallet.abi.json",
     wallet_notifications => "./WalletNotifications.abi.json",
-    root_meta => "./RootMeta.abi.json",
     ton_token_wallet_v4 => "./TONTokenWalletV4.abi.json",
     root_token_contract_v4 => "./RootTokenContractV4.abi.json",
 }

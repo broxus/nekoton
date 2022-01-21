@@ -403,7 +403,8 @@ define_string_enum!(
     pub enum TokenWalletVersion {
         /// Third iteration of token wallets, but with fixed bugs
         /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/commit/74905260499d79cf7cb0d89a6eb572176fc1fcd5)
-        Tip3v4,
+        OldTip3v4,
+        // Tip3,
     }
 );
 
@@ -412,7 +413,7 @@ impl TryFrom<u32> for TokenWalletVersion {
 
     fn try_from(version: u32) -> Result<Self, Self::Error> {
         Ok(match version {
-            4 => Self::Tip3v4,
+            4 => Self::OldTip3v4,
             _ => return Err(UnknownTokenWalletVersion.into()),
         })
     }

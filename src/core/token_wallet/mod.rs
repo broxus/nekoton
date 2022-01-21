@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use num_bigint::{BigInt, BigUint, ToBigInt};
-use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt, Serializable};
+use ton_block::MsgAddressInt;
 
 use nekoton_abi::*;
 use nekoton_utils::*;
@@ -21,13 +21,11 @@ mod models;
 
 pub struct TokenWallet {
     clock: Arc<dyn Clock>,
-    transport: Arc<dyn Transport>,
     contract_subscription: ContractSubscription,
     handler: Arc<dyn TokenWalletSubscriptionHandler>,
     owner: MsgAddressInt,
     symbol: Symbol,
     version: TokenWalletVersion,
-    root_meta_address: MsgAddressInt,
     balance: BigUint,
 }
 
@@ -56,12 +54,10 @@ impl TokenWallet {
 
         let address = state.get_wallet_address(clock.as_ref(), version, &owner, None)?;
 
-        let root_meta_address = compute_root_meta_address(&root_token_contract);
-
         let mut balance = Default::default();
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
-            transport.clone(),
+            transport,
             address,
             make_contract_state_handler(clock.clone(), version, &mut balance),
             make_transactions_handler(&handler, version),
@@ -79,13 +75,11 @@ impl TokenWallet {
 
         Ok(Self {
             clock,
-            transport,
             contract_subscription,
             handler,
             owner,
             symbol,
             version,
-            root_meta_address,
             balance,
         })
     }
@@ -238,19 +232,6 @@ impl TokenWallet {
         })
     }
 
-    pub async fn get_proxy_address(&self) -> Result<MsgAddressInt> {
-        match self
-            .transport
-            .get_contract_state(&self.root_meta_address)
-            .await?
-        {
-            RawContractState::Exists(state) => Ok(RootMetaContractState(&state)
-                .get_details(self.clock.as_ref())?
-                .proxy_address),
-            RawContractState::NotExists => Err(TokenWalletError::InvalidRootMetaContract.into()),
-        }
-    }
-
     pub async fn refresh(&mut self) -> Result<()> {
         let mut balance = self.balance.clone();
 
@@ -397,7 +378,7 @@ pub async fn get_token_root_details_from_token_wallet(
 
 fn select_token_contract(version: TokenWalletVersion) -> Result<&'static ton_abi::Contract> {
     Ok(match version {
-        TokenWalletVersion::Tip3v4 => nekoton_contracts::abi::ton_token_wallet_v4(),
+        TokenWalletVersion::OldTip3v4 => nekoton_contracts::abi::ton_token_wallet_v4(),
     })
 }
 
@@ -453,7 +434,7 @@ where
 
 pub struct RootTokenContractState<'a>(pub &'a ExistingContract);
 
-impl<'a> RootTokenContractState<'a> {
+impl RootTokenContractState<'_> {
     /// Calculates token wallet address
     pub fn get_wallet_address(
         &self,
@@ -624,31 +605,6 @@ fn unpack_token_wallet_details(
     })
 }
 
-struct RootMetaContractState<'a>(&'a ExistingContract);
-
-impl<'a> RootMetaContractState<'a> {
-    fn get_details(&self, clock: &dyn Clock) -> Result<RootMetaDetails> {
-        let function = FunctionBuilder::new("getMetaByKey")
-            .time_header()
-            .input("key", ton_abi::ParamType::Uint(16))
-            .output("value", ton_abi::ParamType::Cell)
-            .build();
-
-        let value: ton_types::Cell = self
-            .0
-            .run_local(clock, &function, &[0u16.token_value().named("key")])?
-            .unpack_first()?;
-
-        let proxy_address = MsgAddressInt::construct_from_cell(value)?;
-
-        Ok(RootMetaDetails { proxy_address })
-    }
-}
-
-struct RootMetaDetails {
-    proxy_address: MsgAddressInt,
-}
-
 fn adjust_responsible(
     function: &mut FunctionBuilder,
     _version: TokenWalletVersion,
@@ -676,35 +632,6 @@ fn get_version_direct(clock: &dyn Clock, contract: &ExistingContract) -> Result<
 enum GotVersion {
     Known(TokenWalletVersion),
     Unknown,
-}
-
-fn compute_root_meta_address(root_token_contract: &MsgAddressInt) -> MsgAddressInt {
-    let mut code = nekoton_contracts::code::root_meta().into();
-    let mut state_init = ton_block::StateInit::construct_from(&mut code).trust_me();
-
-    state_init.data = {
-        let data: ton_types::SliceData = state_init.data.take().unwrap_or_default().into();
-        let mut map = ton_types::HashmapE::with_hashmap(
-            ton_abi::Contract::DATA_MAP_KEYLEN,
-            data.reference_opt(0),
-        );
-
-        let mut value = ton_types::BuilderData::new();
-        root_token_contract.write_to(&mut value).trust_me();
-
-        map.set(1u64.write_to_new_cell().trust_me().into(), &value.into())
-            .trust_me();
-
-        Some(map.write_to_new_cell().trust_me().into())
-    };
-
-    let hash = state_init.hash().trust_me();
-
-    MsgAddressInt::AddrStd(ton_block::MsgAddrStd {
-        anycast: None,
-        workchain_id: 0,
-        address: hash.into(),
-    })
 }
 
 trait ExistingContractExt {
@@ -742,8 +669,6 @@ enum TokenWalletError {
     UnknownVersion,
     #[error("Invalid root token contract")]
     InvalidRootTokenContract,
-    #[error("Invalid root meta contract")]
-    InvalidRootMetaContract,
     #[error("Invalid swap back destination")]
     InvalidSwapBackDestination,
     #[error("Non-zero execution result code: {}", .0)]
@@ -755,6 +680,7 @@ enum TokenWalletError {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
+    use ton_block::Deserializable;
 
     use nekoton_abi::LastTransactionId;
 
@@ -778,7 +704,7 @@ mod tests {
 
     fn root_token_contract(version: TokenWalletVersion) -> ExistingContract {
         let data = match version {
-            TokenWalletVersion::Tip3v4 => ROOT_TOKEN_STATE_TIP3_V4,
+            TokenWalletVersion::OldTip3v4 => ROOT_TOKEN_STATE_TIP3_V4,
         };
         prepare_contract(data)
     }
@@ -787,46 +713,16 @@ mod tests {
 
     fn token_wallet_contract(version: TokenWalletVersion) -> ExistingContract {
         let data = match version {
-            TokenWalletVersion::Tip3v4 => TOKEN_WALLET_STATE_TIP3_V4,
+            TokenWalletVersion::OldTip3v4 => TOKEN_WALLET_STATE_TIP3_V4,
         };
         prepare_contract(data)
     }
 
     const TOKEN_WALLET_STATE_TIP3_V4: &str = "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";
 
-    fn root_meta_contract() -> ExistingContract {
-        prepare_contract(ROOT_META_STATE)
-    }
-
-    const ROOT_META_STATE: &str = "te6ccgECIAEABTMAAm/ABAsZKyqaNn/39hhm8Rc7ZuF68HUBMp404dxi62++27CCQIk0AwM8/EgAAC2M9HVPCSTj38rTQAQBAdYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwArQkYQ/69uvcjCL+cRQZ4F+JUllwoppK1xBh/jH+rbIGAHdp+ZixpqTS7RWqN6MpbqREpD0MPhd87pEB5/i9rCcewIBAtADAEOAFfqJgTLmfQyxoEQM8CDYAG6TC3wCaoXgObqDWRryUaNQAhD0pCCK7VP0oAcFAQr0pCD0oQYAAAIBIAkIAuL/f40IYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABPhpIds80wABjhKBAgDXGCD5AVj4QiD4ZfkQ8qje0z8Bjh34QyG5IJ8wIPgjgQPoqIIIG3dAoLnekyD4Y+DyNNgw0x8B2zz4R27yfBQKAUDfcCLQ0wP6QDD4aak4ANwhxwDcIdMfId0B2zz4R27yfAoEWCCCEDCEvEi7joDgIIIQR1ZU3LuOgOAgghBfC8/eu46A4CCCEH04jJC7joDgFxIOCwIoIIIQZxU4/rrjAiCCEH04jJC64wINDAFW2zz4TMiL3AAAAAAAAAAAAAAAACDPFs+Bz4HPk/TiMkIhAfQAyXD7AH/4Zx8DqjD4QW7jANH4SY0Ek93bmFibGU6IG5vdCBvd25lcoMjOyfhKIscF8uh7jQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE2zww2zx/+GcfHh0CKCCCEFoF2sq64wIgghBfC8/euuMCEA8BVNs8+ErIi9wAAAAAAAAAAAAAAAAgzxbPgc+Bz5N8Lz96Ic8WyXD7AH/4Zx8DcjD4QW7jANMP0ds8IcD/jiIj0NMB+kAwMcjPhyDOgGDPQM+Bz4HPk2gXayohzxTJcPsA3jDjAH/4Zx8RHQAeyMkh+EyAEPQPksjJ3zExAiggghA3KV4guuMCIIIQR1ZU3LrjAhYTA5Iw+EFu4wD4RvJzcfhm+kDRjQaUm9vdE1ldGE6IFdyb25nIGRlcGxveSBrZXmDIzsn4QvhFIG6SMHDeuvLoZfgAINs8MNs8f/hnFB4dAUrtRNAg10nCAY4b0//TP9MA+kD6QPQF+Gz4a/hqf/hh+Gb4Y/hiFQDmjnD0BY0IYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABPhqcSGAQPQOjiSNCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATf+Gtt+GxwAYBA9A7yvdcL//hicPhjcPhmf/hh4gFU2zz4S8iL3AAAAAAAAAAAAAAAACDPFs+Bz4HPktyleIIhzxbJcPsAf/hnHwIoIIIQDgTSnrrjAiCCEDCEvEi64wIcGAMiMPhBbuMA0w/U0ds82zx/+GcfGR0CkvhJjQST3duYWJsZTogbm90IG93bmVygyM7J+EoixwXy6Hv4J28Q2zyhtX9y+wIiIts8+EnIz4WIzoBtz0DPgc+ByYEAgfsAMFsbGgAa+EwiASJZgBD0F/hsWwAYcGim+2CVaKb+YDHfA2ow+EFu4wD6QNH4SY0Ek93bmFibGU6IG5vdCBvd25lcoMjOyfhKIscF8uh7Ids8MDDbPH/4Zx8eHQA8+ELIy//4Q88LP/hGzwsA+Er4S/hMXiDOzvQAye1UAAgg+GowADztRNDT/9M/0wD6QPpA9AX4bPhr+Gp/+GH4Zvhj+GI=";
-
-    #[test]
-    fn root_meta_address() {
-        let root_contract_address =
-            convert_address("0:53abe27ec16208973c9643911c35b5d033744fbb95b11b5672f71188db5a42dc");
-
-        let root_meta_address = compute_root_meta_address(&root_contract_address);
-        assert_eq!(
-            root_meta_address,
-            convert_address("0:23be4163ef1512a1188d3e74a932e4a1df30403307d281304c388dd7fbe71e81")
-        )
-    }
-
-    #[test]
-    fn root_meta_details() {
-        let contract = root_meta_contract();
-        let proxy_address = RootMetaContractState(&contract)
-            .get_details(&SimpleClock)
-            .unwrap();
-        assert_eq!(
-            proxy_address.proxy_address,
-            convert_address("0:afd44c099733e8658d0220678106c00374985be013542f01cdd41ac8d7928d1a")
-        );
-    }
-
     #[test]
     fn get_token_wallet_balance() {
-        let versions = [TokenWalletVersion::Tip3v4];
+        let versions = [TokenWalletVersion::OldTip3v4];
 
         for &version in &versions {
             let contract = token_wallet_contract(version);
@@ -846,7 +742,7 @@ mod tests {
 
         // pairs of token version and token wallet address
         let versions = [(
-            TokenWalletVersion::Tip3v4,
+            TokenWalletVersion::OldTip3v4,
             "0:e4eb5f354e5f0335f38a73b6dc9808c67d611a717b5ed184d6210fb3e73067ee",
         )];
 
@@ -882,7 +778,7 @@ mod tests {
             BigUint::from_str("6428633292").unwrap()
         );
         assert_eq!(details.decimals, 8);
-        assert_eq!(details.version, TokenWalletVersion::Tip3v4);
+        assert_eq!(details.version, TokenWalletVersion::OldTip3v4);
         assert_eq!(details.symbol, "WBTC");
     }
 
@@ -908,7 +804,7 @@ mod tests {
         let root = RootTokenContractState(&contract);
         root.get_wallet_address(
             &SimpleClock,
-            TokenWalletVersion::Tip3v4,
+            TokenWalletVersion::OldTip3v4,
             &owner_address,
             Some(&pubkey),
         )

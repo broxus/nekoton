@@ -26,7 +26,7 @@ pub fn parse_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
     }
 
     // TODO: somehow determine token wallet version
-    let functions = TokenWalletFunctions::for_version(TokenWalletVersion::Tip3v4)?;
+    let functions = TokenWalletFunctions::for_version(TokenWalletVersion::OldTip3v4)?;
 
     if function_id == functions.transfer.input_id {
         let inputs = functions.transfer.decode_input(payload, true).ok()?;
@@ -506,7 +506,7 @@ impl TokenWalletFunctions {
 
     fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
         Some(match version {
-            TokenWalletVersion::Tip3v4 => {
+            TokenWalletVersion::OldTip3v4 => {
                 static IDS: OnceBox<TokenWalletFunctions> = OnceBox::new();
                 IDS.get_or_init(|| {
                     Box::new(Self::new(nekoton_contracts::abi::ton_token_wallet_v4()))
@@ -529,7 +529,7 @@ impl RootTokenContractFunctions {
 
     fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
         Some(match version {
-            TokenWalletVersion::Tip3v4 => {
+            TokenWalletVersion::OldTip3v4 => {
                 static IDS: OnceBox<RootTokenContractFunctions> = OnceBox::new();
                 IDS.get_or_init(|| {
                     Box::new(Self::new(nekoton_contracts::abi::root_token_contract_v4()))
@@ -803,7 +803,7 @@ mod tests {
         let (tx, description) = parse_transaction("te6ccgECCQEAAiEAA7V9jKvgMYxeLukedeW/PRr7QyRzEpkal33nb9KfgpelA3AAAO1mmxCMEy4UbEGiIQKVpE2nzO2Ar32k7H36ni1NMpxrcPorUNuwAADtZo+e3BYO9BHwADRwGMkIBQQBAhcMSgkCmI36GG92AhEDAgBvyYehIEwUWEAAAAAAAAQAAgAAAAKLF5Ge7DorMQ9dbEzZTgWK7Jiugap8s4dRpkiQl7CNEEBQFgwAnkP1TAqiBAAAAAAAAAAAtgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIBZa/nTbAD2Vcr8A6p+uT7XD4tLowmBLZEuIHLxU1zbeHGgHFi5dfeWnrNgtL3FHE6zw6ysjTJJI3LFFDAgPi3AgHgCAYBAd8HALFoAbGVfAYxi8XdI868t+ejX2hkjmJTI1LvvO36U/BS9KBvABgzjiRJUfoXsV99CuD/WnKK4QN5mlferMiVbk0Y3Jc3ECddFmAGFFhgAAAdrNNiEYTB3oI+QAD5WAHF6/YBDYNj7TABzedO3/4+ENpaE0PhwRx5NFYisFNfpQA2Mq+AxjF4u6R515b89GvtDJHMSmRqXfedv0p+Cl6UDdApiN+gBhRYYAAAHazSjHIEwd6CFH////+MaQuBAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAEA=");
 
         assert!(matches!(
-            parse_token_transaction(&tx, &description, TokenWalletVersion::Tip3v4).unwrap(),
+            parse_token_transaction(&tx, &description, TokenWalletVersion::OldTip3v4).unwrap(),
             TokenWalletTransaction::TransferBounced(_)
         ));
     }
