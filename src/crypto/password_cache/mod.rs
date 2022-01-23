@@ -200,7 +200,7 @@ fn make_cipher() -> Result<ChaCha20Poly1305> {
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum PasswordCacheBehavior {
-    Store(Duration),
+    Store(#[serde(with = "serde_duration_ms")] Duration),
     Remove,
 }
 

@@ -1,11 +1,85 @@
 use std::convert::TryInto;
 use std::fmt;
 use std::str::FromStr;
+use std::time::Duration;
 
 use serde::de::{Deserialize, Error, SeqAccess, Visitor};
 use serde::ser::{Serialize, SerializeSeq};
 use ton_block::MsgAddressInt;
 use ton_types::{Cell, SliceData, UInt256};
+
+struct StringOrNumber(u64);
+
+impl Serialize for StringOrNumber {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        if self.0 <= 0x1fffffffffffffu64 || !serializer.is_human_readable() {
+            serializer.serialize_u64(self.0)
+        } else {
+            serializer.serialize_str(&self.0.to_string())
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for StringOrNumber {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::Deserialize;
+
+        #[derive(Deserialize)]
+        enum Value<'a> {
+            String(&'a str),
+            Number(u64),
+        }
+
+        match Value::deserialize(deserializer)? {
+            Value::String(str) => u64::from_str(str)
+                .map(Self)
+                .map_err(|_| D::Error::custom("Invalid number")),
+            Value::Number(value) => Ok(Self(value)),
+        }
+    }
+}
+
+pub mod serde_duration_sec {
+    use super::*;
+
+    pub fn serialize<S>(data: &Duration, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        StringOrNumber(data.as_secs()).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        StringOrNumber::deserialize(deserializer).map(|StringOrNumber(x)| Duration::from_secs(x))
+    }
+}
+
+pub mod serde_duration_ms {
+    use super::*;
+
+    pub fn serialize<S>(data: &Duration, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        StringOrNumber(data.as_millis() as u64).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Duration, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        StringOrNumber::deserialize(deserializer).map(|StringOrNumber(x)| Duration::from_millis(x))
+    }
+}
 
 pub mod serde_base64_array {
     use super::*;

@@ -16,9 +16,11 @@ use tokio::sync::Notify;
 pub struct GqlNetworkSettings {
     /// Path to graphql api endpoints, e.g. `https://main.ton.dev`
     pub endpoints: Vec<String>,
-    /// Frequency of sync latency detection
+    /// Frequency of sync latency detection. Default: `60000`
+    #[serde(with = "serde_duration_ms")]
     pub latency_detection_interval: Duration,
-    /// Maximum value for the endpoint's blockchain data sync latency
+    /// Maximum value for the endpoint's blockchain data sync latency. Default: `60000`
+    #[serde(with = "serde_duration_ms")]
     pub max_latency: Duration,
     /// Maximum amount of retries during endpoint selection
     pub endpoint_selection_retry_count: usize,
