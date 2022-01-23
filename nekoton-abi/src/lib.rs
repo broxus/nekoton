@@ -128,6 +128,14 @@ pub enum MethodName {
     Guess,
 }
 
+/// Tries to parse text as boc, encodes as comment otherwise
+pub fn create_boc_or_comment_payload(data: &str) -> Result<SliceData> {
+    create_boc_payload(data.trim())
+        .map(Ok)
+        .unwrap_or_else(|_| create_comment_payload(data))
+}
+
+/// Creates slice data with string, encoded as comment
 pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
     ton_abi::TokenValue::pack_values_into_chain(
         &[
@@ -160,6 +168,7 @@ pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
     String::from_utf8(data).ok()
 }
 
+/// Creates slice data from base64 encoded boc
 pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
     let bytes = base64::decode(&cell)?;
     let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
@@ -803,6 +812,21 @@ mod tests {
     use ton_types::serialize_toc;
 
     use super::*;
+
+    #[test]
+    fn correct_text_payload() {
+        let comment = create_boc_or_comment_payload("test").unwrap();
+        assert_eq!(parse_comment_payload(comment).unwrap(), "test");
+
+        const BOC: &str = "te6ccgEBAQEABgAACAAABdA=";
+        let boc = create_boc_or_comment_payload(BOC).unwrap();
+        let target_boc = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(
+            base64::decode(BOC).unwrap(),
+        ))
+        .unwrap();
+        assert!(parse_comment_payload(boc.clone()).is_none());
+        assert_eq!(boc.into_cell(), target_boc);
+    }
 
     #[test]
     fn test_run_local() {

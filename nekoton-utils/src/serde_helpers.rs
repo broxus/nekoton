@@ -3,8 +3,9 @@ use std::fmt;
 use std::str::FromStr;
 use std::time::Duration;
 
-use serde::de::{Deserialize, Error, SeqAccess, Visitor};
-use serde::ser::{Serialize, SerializeSeq};
+use serde::de::{Error, SeqAccess, Visitor};
+use serde::ser::SerializeSeq;
+use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 use ton_types::{Cell, SliceData, UInt256};
 
@@ -28,8 +29,6 @@ impl<'de> Deserialize<'de> for StringOrNumber {
     where
         D: serde::Deserializer<'de>,
     {
-        use serde::Deserialize;
-
         #[derive(Deserialize)]
         enum Value<'a> {
             String(&'a str),
@@ -124,8 +123,6 @@ pub mod serde_hex_array {
 }
 
 pub mod serde_optional_hex_array {
-    use serde::{Deserialize, Serialize};
-
     use super::*;
 
     pub fn serialize<S, T>(data: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
