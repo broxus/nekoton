@@ -11,5 +11,8 @@ edition = "2018"
 [dependencies]
 once_cell = "1.8.0"
 
+ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
+
+nekoton-abi = { path = "../nekoton-abi", features = ["derive"] }
