@@ -262,7 +262,6 @@ impl TonWallet {
                     &self.public_key,
                     self.wallet_type,
                     current_state,
-                    *self.contract_subscription.contract_state(),
                 )?;
 
                 let has_multiple_owners = match &self.wallet_data.custodians {
@@ -306,16 +305,10 @@ impl TonWallet {
     ) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
             WalletType::Multisig(multisig_type) => {
-                let last_transaction_id = &self
-                    .contract_state()
-                    .last_transaction_id
-                    .ok_or(TonWalletError::LastTransactionNotFound)?;
-
                 let has_pending_transaction = multisig::find_pending_transaction(
                     self.clock.as_ref(),
                     multisig_type,
                     Cow::Borrowed(current_state),
-                    last_transaction_id,
                     transaction_id,
                 )?;
                 if !has_pending_transaction {
@@ -403,7 +396,6 @@ impl WalletData {
         public_key: &PublicKey,
         wallet_type: WalletType,
         account_stuff: &ton_block::AccountStuff,
-        contract_state: ContractState,
     ) -> Result<()> {
         let multisig_type = match wallet_type {
             WalletType::Multisig(multisig_type) => multisig_type,
@@ -415,17 +407,12 @@ impl WalletData {
             }
         };
 
-        let last_transaction_id = &contract_state
-            .last_transaction_id
-            .ok_or(TonWalletError::LastTransactionNotFound)?;
-
         // Extract custodians
         if self.custodians.is_none() {
             self.custodians = Some(multisig::get_custodians(
                 clock,
                 multisig_type,
                 Cow::Borrowed(account_stuff),
-                last_transaction_id,
             )?);
         }
 
@@ -446,7 +433,6 @@ impl WalletData {
             clock,
             multisig_type,
             Cow::Borrowed(account_stuff),
-            last_transaction_id,
             custodians,
         )?;
 
@@ -494,17 +480,8 @@ pub fn get_wallet_custodians(
         WalletType::WalletV3 => return Ok(vec![public_key.to_bytes().into()]),
     };
 
-    let contract_state = contract.brief();
-    let last_transaction_id = &contract_state
-        .last_transaction_id
-        .ok_or(TonWalletError::LastTransactionNotFound)?;
-
-    let custodians = multisig::get_custodians(
-        clock,
-        multisig_type,
-        Cow::Borrowed(&contract.account),
-        last_transaction_id,
-    )?;
+    let custodians =
+        multisig::get_custodians(clock, multisig_type, Cow::Borrowed(&contract.account))?;
     Ok(custodians)
 }
 
@@ -598,8 +575,6 @@ enum TonWalletError {
     AccountIsFrozen,
     #[error("Invalid contract type")]
     InvalidContractType,
-    #[error("Last transaction not found")]
-    LastTransactionNotFound,
     #[error("Custodians not found")]
     CustodiansNotFound,
     #[error("Pending transactino not found")]
@@ -618,13 +593,9 @@ where
 {
     move |contract_state| {
         if let RawContractState::Exists(contract_state) = contract_state {
-            if let Err(e) = wallet_data.update(
-                clock,
-                public_key,
-                wallet_type,
-                &contract_state.account,
-                contract_state.brief(),
-            ) {
+            if let Err(e) =
+                wallet_data.update(clock, public_key, wallet_type, &contract_state.account)
+            {
                 log::error!("{}", e);
             }
         }

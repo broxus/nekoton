@@ -11,6 +11,7 @@ pub const TIP6_SID_INTERFACE_ID: u32 = 0x3204ec29;
 ///
 /// # Inputs
 /// * `answerId: uint32` - responsible answer id
+/// * `interfaceID: bytes4` - interface ID
 ///
 /// # Outputs
 /// * `name: string`

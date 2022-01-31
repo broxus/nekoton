@@ -493,6 +493,21 @@ pub fn code_to_tvc(code: ton_types::Cell) -> Result<ton_block::StateInit> {
     })
 }
 
+#[derive(Copy, Clone)]
+pub struct ExecutionContext<'a> {
+    pub clock: &'a dyn Clock,
+    pub account_stuff: &'a AccountStuff,
+}
+
+impl<'a> ExecutionContext<'a> {
+    pub fn run_local(&self, function: &Function, input: &[Token]) -> Result<ExecutionOutput> {
+        let mut account_stuff = self.account_stuff.clone();
+        account_stuff.storage.balance.grams.0 = 100_000_000_000_000; // 100 000 TON
+
+        FunctionAbi::new(function).run_local(self.clock, &mut account_stuff, input)
+    }
+}
+
 pub trait FunctionExt {
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>>;
 
@@ -500,7 +515,6 @@ pub trait FunctionExt {
         &self,
         clock: &dyn Clock,
         account_stuff: AccountStuff,
-        last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput>;
 }
@@ -517,10 +531,9 @@ where
         &self,
         clock: &dyn Clock,
         account_stuff: AccountStuff,
-        last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
-        T::run_local(self, clock, account_stuff, last_transaction_id, input)
+        T::run_local(self, clock, account_stuff, input)
     }
 }
 
@@ -533,12 +546,11 @@ impl FunctionExt for Function {
     fn run_local(
         &self,
         clock: &dyn Clock,
-        account_stuff: AccountStuff,
-        last_transaction_id: &LastTransactionId,
+        mut account_stuff: AccountStuff,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
         let abi = FunctionAbi::new(self);
-        abi.run_local(clock, account_stuff, last_transaction_id, input)
+        abi.run_local(clock, &mut account_stuff, input)
     }
 }
 
@@ -559,8 +571,7 @@ impl<'a> FunctionAbi<'a> {
     fn run_local(
         &self,
         clock: &dyn Clock,
-        account_stuff: AccountStuff,
-        last_transaction_id: &LastTransactionId,
+        account_stuff: &mut AccountStuff,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
         let mut msg =
@@ -571,7 +582,7 @@ impl<'a> FunctionAbi<'a> {
 
         let BlockStats {
             gen_utime, gen_lt, ..
-        } = get_block_stats(clock, None, last_transaction_id);
+        } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
 
         msg.set_body(
             self.fun
@@ -692,32 +703,21 @@ pub struct Executor {
 struct BlockStats {
     gen_utime: u32,
     gen_lt: u64,
-    last_transaction_lt: u64,
 }
 
 fn get_block_stats(
     clock: &dyn Clock,
     timings: Option<GenTimings>,
-    last_transaction_id: &LastTransactionId,
+    last_trans_lt: u64,
 ) -> BlockStats {
     // Additional estimated logical time offset for the latest transaction id
     pub const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
 
-    let last_transaction_lt = match last_transaction_id {
-        LastTransactionId::Exact(id) => id.lt,
-        LastTransactionId::Inexact { latest_lt } => *latest_lt,
-    };
-
     match timings {
-        Some(GenTimings::Known { gen_lt, gen_utime }) => BlockStats {
-            gen_utime,
-            gen_lt,
-            last_transaction_lt,
-        },
+        Some(GenTimings::Known { gen_lt, gen_utime }) => BlockStats { gen_utime, gen_lt },
         _ => BlockStats {
             gen_utime: clock.now_sec_u64() as u32,
-            gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
-            last_transaction_lt,
+            gen_lt: last_trans_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
         },
     }
 }
@@ -728,20 +728,17 @@ impl Executor {
         config: BlockchainConfig,
         account_stuff: AccountStuff,
         _timings: GenTimings,
-        last_transaction_id: &LastTransactionId,
     ) -> Self {
-        let BlockStats {
-            gen_utime,
-            gen_lt,
-            last_transaction_lt,
-        } = get_block_stats(clock, None, last_transaction_id);
+        let last_trans_lt = account_stuff.storage.last_trans_lt;
+
+        let BlockStats { gen_utime, gen_lt } = get_block_stats(clock, None, last_trans_lt);
 
         Self {
             config,
             account: Account::Account(account_stuff),
             block_utime: gen_utime,
             block_lt: gen_lt,
-            last_transaction_lt: Arc::new(AtomicU64::new(last_transaction_lt)),
+            last_transaction_lt: Arc::new(AtomicU64::new(last_trans_lt)),
             disable_signature_check: false,
         }
     }
@@ -899,9 +896,6 @@ mod tests {
             GenTimings::Known {
                 gen_lt: 16916000,
                 gen_utime: 12356000,
-            },
-            &LastTransactionId::Inexact {
-                latest_lt: 12356916000001,
             },
         );
         executor

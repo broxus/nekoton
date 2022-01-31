@@ -653,12 +653,7 @@ impl ExistingContractExt for ExistingContract {
         let ExecutionOutput {
             tokens,
             result_code,
-        } = function.run_local(
-            clock,
-            self.account.clone(),
-            &self.last_transaction_id,
-            input,
-        )?;
+        } = function.run_local(clock, self.account.clone(), input)?;
         tokens.ok_or_else(|| TokenWalletError::NonZeroResultCode(result_code).into())
     }
 }

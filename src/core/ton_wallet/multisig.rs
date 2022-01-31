@@ -254,7 +254,6 @@ fn run_local(
     multisig_type: MultisigType,
     contract_method: &str,
     account_stuff: ton_block::AccountStuff,
-    last_transaction_id: &LastTransactionId,
 ) -> Result<Vec<ton_abi::Token>> {
     let function: &ton_abi::Function = match multisig_type {
         MultisigType::SafeMultisigWallet
@@ -270,7 +269,7 @@ fn run_local(
     let ExecutionOutput {
         tokens,
         result_code,
-    } = function.run_local(clock, account_stuff, last_transaction_id, &input)?;
+    } = function.run_local(clock, account_stuff, &input)?;
     tokens.ok_or_else(|| MultisigError::NonZeroResultCode(result_code).into())
 }
 
@@ -278,14 +277,12 @@ pub fn get_custodians(
     clock: &dyn Clock,
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
-    last_transaction_id: &LastTransactionId,
 ) -> Result<Vec<UInt256>> {
     run_local(
         clock,
         multisig_type,
         "getCustodians",
         account_stuff.into_owned(),
-        last_transaction_id,
     )
     .and_then(parse_multisig_contract_custodians)
 }
@@ -310,7 +307,6 @@ pub fn find_pending_transaction(
     clock: &dyn Clock,
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
-    last_transaction_id: &LastTransactionId,
     pending_transaction_id: u64,
 ) -> Result<bool> {
     let tokens = run_local(
@@ -318,7 +314,6 @@ pub fn find_pending_transaction(
         multisig_type,
         "getTransactions",
         account_stuff.into_owned(),
-        last_transaction_id,
     )?;
 
     let array = match tokens.into_unpacker().unpack_next() {
@@ -347,7 +342,6 @@ pub fn get_pending_transaction(
     clock: &dyn Clock,
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
-    last_transaction_id: &LastTransactionId,
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingTransaction>> {
     run_local(
@@ -355,7 +349,6 @@ pub fn get_pending_transaction(
         multisig_type,
         "getTransactions",
         account_stuff.into_owned(),
-        last_transaction_id,
     )
     .and_then(|tokens| parse_multisig_contract_pending_transactions(tokens, custodians))
 }

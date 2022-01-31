@@ -13,7 +13,7 @@ use ton_vm::stack::{savelist::SaveList, Stack, StackItem};
 pub fn call(
     utime: u32,
     lt: u64,
-    mut account: AccountStuff,
+    account: &mut AccountStuff,
     stack: Stack,
 ) -> Result<(ton_vm::executor::Engine, i32, bool), ExecutionError> {
     let state = match &mut account.storage.state {
@@ -68,7 +68,7 @@ pub fn call(
 pub fn call_msg(
     utime: u32,
     lt: u64,
-    account: AccountStuff,
+    account: &mut AccountStuff,
     msg: &Message,
 ) -> Result<ActionPhaseOutput, ExecutionError> {
     let msg_cell = msg

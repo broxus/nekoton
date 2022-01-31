@@ -226,7 +226,6 @@ impl ContractSubscription {
             blockchain_config,
             state.account,
             state.timings,
-            &state.last_transaction_id,
         );
         if options.disable_signature_check {
             executor.disable_signature_check();

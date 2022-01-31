@@ -1,1 +1,1 @@
-pub mod safe_multisig;
+pub mod multisig;
