@@ -1,3 +1,4 @@
+use nekoton_abi::num_bigint::BigUint;
 use nekoton_abi::*;
 use ton_abi::{Param, ParamType};
 
@@ -25,8 +26,8 @@ pub struct RootTokenContractDetails {
     pub root_public_key: ton_types::UInt256,
     #[abi(address)]
     pub root_owner_address: ton_block::MsgAddressInt,
-    #[abi(uint128)]
-    pub total_supply: u128,
+    #[abi(with = "uint128_number")]
+    pub total_supply: BigUint,
 }
 
 pub fn get_details() -> &'static ton_abi::Function {
@@ -55,8 +56,8 @@ pub fn get_wallet_address() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct MintInputs {
-    #[abi(uint128)]
-    pub tokens: u128,
+    #[abi(with = "uint128_number")]
+    pub tokens: BigUint,
     #[abi(address)]
     pub to: ton_block::MsgAddressInt,
 }
@@ -72,8 +73,8 @@ pub fn mint() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct TokensBurnedInputs {
-    #[abi(uint128)]
-    pub tokens: u128,
+    #[abi(with = "uint128_number")]
+    pub tokens: BigUint,
     #[abi(with = "uint256_bytes")]
     pub sender_public_key: ton_types::UInt256,
     #[abi(address)]

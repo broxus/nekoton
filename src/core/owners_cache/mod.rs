@@ -249,7 +249,7 @@ async fn check_token_wallet(
     owner_wallet: &MsgAddressInt,
 ) -> Result<RecipientWallet> {
     let token_wallet =
-        RootTokenContractState(state).get_wallet_address(clock, *version, owner_wallet, None)?;
+        RootTokenContractState(state).get_wallet_address(clock, *version, owner_wallet)?;
 
     {
         let mut owners = owners.write().await;

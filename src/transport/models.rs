@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
-use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
-use nekoton_utils::serde_ton_block;
+use nekoton_abi::{ExecutionContext, GenTimings, LastTransactionId, TransactionId};
+use nekoton_utils::{serde_ton_block, Clock};
 
 use crate::core::models::{ContractState, PendingTransaction};
 
@@ -45,6 +45,13 @@ impl ExistingContract {
                 self.account.storage.state,
                 ton_block::AccountState::AccountActive { .. }
             ),
+        }
+    }
+
+    pub fn as_context<'a>(&'a self, clock: &'a dyn Clock) -> ExecutionContext<'a> {
+        ExecutionContext {
+            clock,
+            account_stuff: &self.account,
         }
     }
 }

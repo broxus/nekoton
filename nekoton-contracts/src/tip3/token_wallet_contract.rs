@@ -2,7 +2,7 @@ use ton_abi::{Param, ParamType};
 
 use crate::utils::declare_function;
 
-pub const TIP3_TOKEN_WALLET_CONTRACT_INTERFACE_ID: u32 = 0x4F479FA3;
+pub const INTERFACE_ID: u32 = 0x4F479FA3;
 
 /// Returns the token root address.
 ///

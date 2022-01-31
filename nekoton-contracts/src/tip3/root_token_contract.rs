@@ -2,7 +2,7 @@ use ton_abi::{Param, ParamType};
 
 use crate::utils::declare_function;
 
-pub const TIP3_ROOT_TOKEN_CONTRACT_INTERFACE_ID: u32 = 0x4371D8ED;
+pub const INTERFACE_ID: u32 = 0x4371D8ED;
 
 /// Returns the name of the token - e.g. "MyToken".
 ///

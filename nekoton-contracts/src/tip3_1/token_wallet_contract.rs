@@ -1,9 +1,10 @@
-use nekoton_abi::{KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain};
+use nekoton_abi::num_bigint::BigUint;
+use nekoton_abi::*;
 use ton_abi::{Param, ParamType};
 
 use crate::utils::declare_function;
 
-pub const TIP3_1_TOKEN_WALLET_CONTRACT_INTERFACE_ID: u32 = 0x2a4ac43e;
+pub const INTERFACE_ID: u32 = 0x2a4ac43e;
 
 /// Get token wallet owner address
 ///
@@ -80,8 +81,8 @@ pub fn transfer_to_wallet() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
 pub struct AcceptTransferInputs {
-    #[abi(uint128)]
-    pub amount: u128,
+    #[abi(with = "uint128_number")]
+    pub amount: BigUint,
     #[abi(address)]
     pub sender: ton_block::MsgAddressInt,
     #[abi(address, name = "remainingGasTo")]
@@ -98,28 +99,27 @@ pub struct AcceptTransferInputs {
 /// Internal method
 ///
 /// # Inputs
-/// `amount: uint128` - how much tokens to receive
-/// `sender: address` - token wallet owner address
+/// * `amount: uint128` - how much tokens to receive
+/// * `sender: address` - token wallet owner address
+/// * `remainingGasTo` -
+/// * `notify` -
+/// ``
+///
+/// TODO: fill docs
 ///
 pub fn accept_transfer() -> &'static ton_abi::Function {
     declare_function! {
         function_id: 0x67A0B95F,
         name: "acceptTransfer",
-        inputs: vec![
-            Param::new("amount", ParamType::Uint(128)),
-            Param::new("sender", ParamType::Address),
-            Param::new("remainingGasTo", ParamType::Address),
-            Param::new("notify", ParamType::Bool),
-            Param::new("payload", ParamType::Cell),
-        ],
+        inputs: AcceptTransferInputs::param_type(),
         outputs: Vec::new(),
     }
 }
 
 #[derive(Debug, Clone, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
 pub struct AcceptMintInputs {
-    #[abi(uint128)]
-    pub amount: u128,
+    #[abi(with = "uint128_number")]
+    pub amount: BigUint,
     #[abi(address, name = "remainingGasTo")]
     pub remaining_gas_to: ton_block::MsgAddressInt,
     #[abi(bool)]
@@ -143,12 +143,32 @@ pub fn accept_mint() -> &'static ton_abi::Function {
     declare_function! {
         function_id: 0x4384F298,
         name: "acceptMint",
-        inputs: vec![
-            Param::new("amount", ParamType::Uint(128)),
-            Param::new("remainingGasTo", ParamType::Address),
-            Param::new("notify", ParamType::Bool),
-            Param::new("payload", ParamType::Cell),
-        ],
+        inputs: AcceptMintInputs::param_type(),
         outputs: Vec::new(),
+    }
+}
+
+pub mod burnable {
+    use super::*;
+
+    #[derive(Debug, Clone, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
+    pub struct BurnInputs {
+        #[abi(with = "uint128_number")]
+        pub amount: BigUint,
+        #[abi(address, name = "remainingGasTo")]
+        pub remaining_gas_to: ton_block::MsgAddressInt,
+        #[abi(address, name = "callbackTo")]
+        pub callback_to: ton_block::MsgAddressInt,
+        #[abi(cell)]
+        pub payload: ton_types::Cell,
+    }
+
+    /// TODO: fill docs
+    pub fn burn() -> &'static ton_abi::Function {
+        declare_function! {
+            name: "burn",
+            inputs: BurnInputs::param_type(),
+            outputs: Vec::new(),
+        }
     }
 }

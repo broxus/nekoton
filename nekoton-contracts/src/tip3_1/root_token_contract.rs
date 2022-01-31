@@ -1,9 +1,10 @@
-use nekoton_abi::{KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain};
+use nekoton_abi::num_bigint::BigUint;
+use nekoton_abi::*;
 use ton_abi::{Param, ParamType};
 
 use crate::utils::declare_function;
 
-pub const TIP3_1_ROOT_TOKEN_CONTRACT_INTERFACE_ID: u32 = 0x0b1fd263;
+pub const INTERFACE_ID: u32 = 0x0b1fd263;
 
 /// Get root owner
 ///
@@ -49,8 +50,8 @@ pub fn wallet_of() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
 pub struct AcceptBurnInputs {
-    #[abi(uint128)]
-    pub amount: u128,
+    #[abi(with = "uint128_number")]
+    pub amount: BigUint,
     #[abi(address, name = "walletOwner")]
     pub wallet_owner: ton_block::MsgAddressInt,
     #[abi(address, name = "remainingGasTo")]

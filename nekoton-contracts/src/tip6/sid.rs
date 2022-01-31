@@ -2,7 +2,7 @@ use ton_abi::{Param, ParamType};
 
 use crate::utils::declare_function;
 
-pub const TIP6_SID_INTERFACE_ID: u32 = 0x3204ec29;
+pub const INTERFACE_ID: u32 = 0x3204ec29;
 
 /// A contract that is compliant with TIP6 shall implement the following interface
 ///

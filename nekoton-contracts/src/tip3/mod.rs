@@ -1,4 +1,5 @@
 use anyhow::Result;
+use nekoton_abi::num_bigint::BigUint;
 use nekoton_abi::*;
 
 use crate::RunLocalSimple;
@@ -37,7 +38,7 @@ impl RootTokenContract<'_> {
         Ok(result)
     }
 
-    pub fn total_supply(&self) -> Result<u128> {
+    pub fn total_supply(&self) -> Result<BigUint> {
         let inputs = [0u32.token_value().named("answerId")];
         let result = self
             .0
@@ -69,7 +70,7 @@ impl<'a> TokenWalletContract<'a> {
         Ok(result)
     }
 
-    pub fn balance(&self) -> Result<u128> {
+    pub fn balance(&self) -> Result<BigUint> {
         let inputs = [0u32.token_value().named("answerId")];
         let result = self
             .0

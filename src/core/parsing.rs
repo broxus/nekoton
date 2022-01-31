@@ -7,6 +7,7 @@ use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
 use nekoton_abi::*;
+use nekoton_contracts::{old_tip3, tip3, tip3_1};
 
 use crate::core::models::*;
 use crate::core::ton_wallet::WalletType;
@@ -482,8 +483,6 @@ struct TokenWalletFunctions {
 
 impl TokenWalletFunctions {
     fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
-        use nekoton_contracts::old_tip3;
-
         Some(match version {
             TokenWalletVersion::OldTip3v4 => {
                 static IDS: OnceBox<TokenWalletFunctions> = OnceBox::new();
@@ -498,6 +497,18 @@ impl TokenWalletFunctions {
                     })
                 })
             }
+            TokenWalletVersion::Tip3 => {
+                static IDS: OnceBox<TokenWalletFunctions> = OnceBox::new();
+                IDS.get_or_init(|| {
+                    Box::new(Self {
+                        accept: tip3::token_wallet_contract::accept_mint(),
+                        transfer_to_recipient: tip3_1::token_wallet_contract::transfer(),
+                        transfer: tip3_1::token_wallet_contract::transfer_to_wallet(),
+                        internal_transfer: tip3_1::token_wallet_contract::accept_transfer(),
+                        burn_by_owner: tip3_1::token_wallet_contract::burnable::burn(),
+                    })
+                })
+            }
         })
     }
 }
@@ -508,14 +519,20 @@ struct RootTokenContractFunctions {
 
 impl RootTokenContractFunctions {
     fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
-        use nekoton_contracts::old_tip3;
-
         Some(match version {
             TokenWalletVersion::OldTip3v4 => {
                 static IDS: OnceBox<RootTokenContractFunctions> = OnceBox::new();
                 IDS.get_or_init(|| {
                     Box::new(Self {
                         tokens_burned: old_tip3::root_token_contract::tokens_burned(),
+                    })
+                })
+            }
+            TokenWalletVersion::Tip3 => {
+                static IDS: OnceBox<RootTokenContractFunctions> = OnceBox::new();
+                IDS.get_or_init(|| {
+                    Box::new(Self {
+                        tokens_burned: tip3::root_token_contract::accept_burn(),
                     })
                 })
             }

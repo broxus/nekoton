@@ -1,3 +1,4 @@
+use nekoton_abi::num_bigint::BigUint;
 use nekoton_abi::*;
 use ton_abi::{Param, ParamType};
 
@@ -31,8 +32,8 @@ pub struct TokenWalletDetails {
     pub wallet_public_key: ton_types::UInt256,
     #[abi(address)]
     pub owner_address: ton_block::MsgAddressInt,
-    #[abi(uint128)]
-    pub balance: u128,
+    #[abi(with = "uint128_number")]
+    pub balance: BigUint,
     #[abi(address)]
     pub receive_callback: ton_block::MsgAddressInt,
     #[abi(address)]
@@ -53,8 +54,8 @@ pub fn get_details() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct AcceptInputs {
-    #[abi(uint128)]
-    pub tokens: u128,
+    #[abi(with = "uint128_number")]
+    pub tokens: BigUint,
 }
 
 pub fn accept() -> &'static ton_abi::Function {
@@ -72,8 +73,8 @@ pub struct TransferToRecipientInputs {
     pub recipient_public_key: ton_types::UInt256,
     #[abi(address)]
     pub recipient_address: ton_block::MsgAddressInt,
-    #[abi(uint128)]
-    pub tokens: u128,
+    #[abi(with = "uint128_number")]
+    pub tokens: BigUint,
     #[abi(uint128)]
     pub deploy_grams: u128,
     #[abi(uint128)]
@@ -99,8 +100,8 @@ pub fn transfer_to_recipient() -> &'static ton_abi::Function {
 pub struct TransferInputs {
     #[abi(address)]
     pub to: ton_block::MsgAddressInt,
-    #[abi(uint128)]
-    pub tokens: u128,
+    #[abi(with = "uint128_number")]
+    pub tokens: BigUint,
     #[abi(uint128)]
     pub grams: u128,
     #[abi(address)]
@@ -122,8 +123,8 @@ pub fn transfer() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct InternalTransferInputs {
-    #[abi(uint128)]
-    pub tokens: u128,
+    #[abi(with = "uint128_number")]
+    pub tokens: BigUint,
     #[abi(with = "uint256_bytes")]
     pub sender_public_key: ton_types::UInt256,
     #[abi(address)]
@@ -147,8 +148,8 @@ pub fn internal_transfer() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct BurnByOwnerInputs {
-    #[abi(uint128)]
-    pub tokens: u128,
+    #[abi(with = "uint128_number")]
+    pub tokens: BigUint,
     #[abi(uint128)]
     pub grams: u128,
     #[abi(address)]
@@ -170,8 +171,8 @@ pub fn burn_by_owner() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct BurnByRootInputs {
-    #[abi(uint128)]
-    pub tokens: u128,
+    #[abi(with = "uint128_number")]
+    pub tokens: BigUint,
     #[abi(address)]
     pub send_gas_to: ton_block::MsgAddressInt,
     #[abi(address)]
