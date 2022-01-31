@@ -304,10 +304,9 @@ impl TonWallet {
         expiration: Expiration,
     ) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
-            WalletType::Multisig(multisig_type) => {
+            WalletType::Multisig(_) => {
                 let has_pending_transaction = multisig::find_pending_transaction(
                     self.clock.as_ref(),
-                    multisig_type,
                     Cow::Borrowed(current_state),
                     transaction_id,
                 )?;
@@ -397,8 +396,8 @@ impl WalletData {
         wallet_type: WalletType,
         account_stuff: &ton_block::AccountStuff,
     ) -> Result<()> {
-        let multisig_type = match wallet_type {
-            WalletType::Multisig(multisig_type) => multisig_type,
+        match wallet_type {
+            WalletType::Multisig(_) => {}
             WalletType::WalletV3 => {
                 if self.custodians.is_none() {
                     self.custodians = Some(vec![public_key.to_bytes().into()]);
@@ -411,7 +410,6 @@ impl WalletData {
         if self.custodians.is_none() {
             self.custodians = Some(multisig::get_custodians(
                 clock,
-                multisig_type,
                 Cow::Borrowed(account_stuff),
             )?);
         }
@@ -429,12 +427,8 @@ impl WalletData {
         }
 
         // Extract pending transactions
-        let pending_transactions = multisig::get_pending_transaction(
-            clock,
-            multisig_type,
-            Cow::Borrowed(account_stuff),
-            custodians,
-        )?;
+        let pending_transactions =
+            multisig::get_pending_transaction(clock, Cow::Borrowed(account_stuff), custodians)?;
 
         self.unconfirmed_transactions = pending_transactions;
 
@@ -475,14 +469,12 @@ pub fn get_wallet_custodians(
     public_key: &ed25519_dalek::PublicKey,
     wallet_type: WalletType,
 ) -> Result<Vec<UInt256>> {
-    let multisig_type = match wallet_type {
-        WalletType::Multisig(multisig_type) => multisig_type,
-        WalletType::WalletV3 => return Ok(vec![public_key.to_bytes().into()]),
-    };
-
-    let custodians =
-        multisig::get_custodians(clock, multisig_type, Cow::Borrowed(&contract.account))?;
-    Ok(custodians)
+    match wallet_type {
+        WalletType::Multisig(_) => {
+            multisig::get_custodians(clock, Cow::Borrowed(&contract.account))
+        }
+        WalletType::WalletV3 => Ok(vec![public_key.to_bytes().into()]),
+    }
 }
 
 const WALLET_TYPES_BY_POPULARITY: [WalletType; 6] = [

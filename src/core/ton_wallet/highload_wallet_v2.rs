@@ -226,7 +226,7 @@ impl InitData {
 
     pub fn make_state_init(&self) -> Result<ton_block::StateInit> {
         Ok(ton_block::StateInit {
-            code: Some(nekoton_contracts::code::highload_wallet_v2()),
+            code: Some(nekoton_contracts::wallets::code::highload_wallet_v2()),
             data: Some(self.serialize()?),
             ..Default::default()
         })

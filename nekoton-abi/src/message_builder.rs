@@ -1,5 +1,4 @@
-use anyhow::Result;
-use ton_abi::{Contract, Function, Token};
+use ton_abi::{Function, Token};
 
 use super::{BuildTokenValue, PackAbiPlain};
 
@@ -10,16 +9,12 @@ pub struct MessageBuilder<'a> {
 }
 
 impl<'a> MessageBuilder<'a> {
-    pub fn new(contract: &'a Contract, function_name: &str) -> Result<Self> {
-        let function = contract
-            .function(function_name)
-            .map_err(|_| MessageBuilderError::InvalidAbi)?;
+    pub fn new(function: &'a ton_abi::Function) -> Self {
         let input = Vec::with_capacity(function.inputs.len());
-
-        Ok(Self {
+        Self {
             function,
             inputs: input,
-        })
+        }
     }
 
     pub fn arg<A>(mut self, value: A) -> Self
@@ -42,10 +37,4 @@ impl<'a> MessageBuilder<'a> {
     pub fn build(self) -> (&'a Function, Vec<Token>) {
         (self.function, self.inputs)
     }
-}
-
-#[derive(thiserror::Error, Debug)]
-enum MessageBuilderError {
-    #[error("Invalid ABI")]
-    InvalidAbi,
 }

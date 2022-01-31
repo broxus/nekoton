@@ -7,7 +7,6 @@ use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
 use nekoton_abi::*;
-use nekoton_utils::*;
 
 use crate::core::models::*;
 use crate::core::ton_wallet::WalletType;
@@ -172,19 +171,15 @@ struct DePoolParticipantFunctions {
 }
 
 impl DePoolParticipantFunctions {
-    fn new(contract: &'static ton_abi::Contract) -> Self {
-        Self {
-            on_round_complete: contract.function("onRoundComplete").trust_me(),
-            receive_answer: contract.function("receiveAnswer").trust_me(),
-        }
-    }
-
     fn instance() -> &'static Self {
+        use nekoton_contracts::wallets::notifications;
+
         static IDS: OnceBox<DePoolParticipantFunctions> = OnceBox::new();
         IDS.get_or_init(|| {
-            Box::new(DePoolParticipantFunctions::new(
-                nekoton_contracts::abi::depool_v3_participant(),
-            ))
+            Box::new(DePoolParticipantFunctions {
+                on_round_complete: notifications::depool_on_round_complete(),
+                receive_answer: notifications::depool_receive_answer(),
+            })
         })
     }
 }
@@ -194,18 +189,14 @@ struct WalletNotificationFunctions {
 }
 
 impl WalletNotificationFunctions {
-    fn new(contract: &'static ton_abi::Contract) -> Self {
-        Self {
-            notify_wallet_deployed: contract.function("notifyWalletDeployed").trust_me(),
-        }
-    }
-
     fn instance() -> &'static Self {
+        use nekoton_contracts::wallets::notifications;
+
         static IDS: OnceBox<WalletNotificationFunctions> = OnceBox::new();
         IDS.get_or_init(|| {
-            Box::new(WalletNotificationFunctions::new(
-                nekoton_contracts::abi::wallet_notifications(),
-            ))
+            Box::new(WalletNotificationFunctions {
+                notify_wallet_deployed: notifications::notify_wallet_deployed(),
+            })
         })
     }
 }
@@ -326,20 +317,16 @@ struct MultisigFunctions {
 }
 
 impl MultisigFunctions {
-    fn new(contract: &'static ton_abi::Contract) -> Self {
-        Self {
-            send_transaction: contract.function("sendTransaction").trust_me(),
-            submit_transaction: contract.function("submitTransaction").trust_me(),
-            confirm_transaction: contract.function("confirmTransaction").trust_me(),
-        }
-    }
-
     fn instance() -> &'static Self {
+        use nekoton_contracts::wallets::multisig;
+
         static IDS: OnceBox<MultisigFunctions> = OnceBox::new();
         IDS.get_or_init(|| {
-            Box::new(MultisigFunctions::new(
-                nekoton_contracts::abi::safe_multisig_wallet(),
-            ))
+            Box::new(MultisigFunctions {
+                send_transaction: multisig::send_transaction(),
+                submit_transaction: multisig::submit_transaction(),
+                confirm_transaction: multisig::confirm_transaction(),
+            })
         })
     }
 }
@@ -494,22 +481,21 @@ struct TokenWalletFunctions {
 }
 
 impl TokenWalletFunctions {
-    fn new(contract: &'static ton_abi::Contract) -> Self {
-        Self {
-            accept: contract.function("accept").trust_me(),
-            transfer_to_recipient: contract.function("transferToRecipient").trust_me(),
-            transfer: contract.function("transfer").trust_me(),
-            internal_transfer: contract.function("internalTransfer").trust_me(),
-            burn_by_owner: contract.function("burnByOwner").trust_me(),
-        }
-    }
-
     fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
+        use nekoton_contracts::old_tip3;
+
         Some(match version {
             TokenWalletVersion::OldTip3v4 => {
                 static IDS: OnceBox<TokenWalletFunctions> = OnceBox::new();
                 IDS.get_or_init(|| {
-                    Box::new(Self::new(nekoton_contracts::abi::ton_token_wallet_v4()))
+                    Box::new(Self {
+                        accept: old_tip3::token_wallet_contract::accept(),
+                        transfer_to_recipient:
+                            old_tip3::token_wallet_contract::transfer_to_recipient(),
+                        transfer: old_tip3::token_wallet_contract::transfer(),
+                        internal_transfer: old_tip3::token_wallet_contract::internal_transfer(),
+                        burn_by_owner: old_tip3::token_wallet_contract::burn_by_owner(),
+                    })
                 })
             }
         })
@@ -521,18 +507,16 @@ struct RootTokenContractFunctions {
 }
 
 impl RootTokenContractFunctions {
-    fn new(contract: &'static ton_abi::Contract) -> Self {
-        Self {
-            tokens_burned: contract.function("tokensBurned").trust_me(),
-        }
-    }
-
     fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
+        use nekoton_contracts::old_tip3;
+
         Some(match version {
             TokenWalletVersion::OldTip3v4 => {
                 static IDS: OnceBox<RootTokenContractFunctions> = OnceBox::new();
                 IDS.get_or_init(|| {
-                    Box::new(Self::new(nekoton_contracts::abi::root_token_contract_v4()))
+                    Box::new(Self {
+                        tokens_burned: old_tip3::root_token_contract::tokens_burned(),
+                    })
                 })
             }
         })

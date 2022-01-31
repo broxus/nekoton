@@ -112,33 +112,6 @@ impl TokenWallet {
         self.contract_subscription.contract_state()
     }
 
-    pub fn prepare_deploy(&self) -> Result<InternalMessage> {
-        const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
-
-        let (function, input) = MessageBuilder::new(
-            nekoton_contracts::abi::root_token_contract_v4(),
-            "deployEmptyWallet",
-        )
-        .trust_me()
-        .arg(BigUint128(INITIAL_BALANCE.into()))
-        .arg(BigUint256(Default::default()))
-        .arg(&self.owner)
-        .arg(&self.owner)
-        .build();
-
-        let body = function
-            .encode_input(&Default::default(), &input, true, None)?
-            .into();
-
-        Ok(InternalMessage {
-            source: Some(self.owner.clone()),
-            destination: self.symbol.root_token_contract.clone(),
-            amount: ATTACHED_AMOUNT,
-            bounce: true,
-            body,
-        })
-    }
-
     pub fn prepare_transfer(
         &self,
         destination: TransferRecipient,
@@ -146,20 +119,18 @@ impl TokenWallet {
         notify_receiver: bool,
         payload: ton_types::Cell,
     ) -> Result<InternalMessage> {
-        const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
+        use nekoton_contracts::old_tip3;
 
-        let contract = select_token_contract(self.version)?;
+        const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
 
         let (function, input) = match destination {
             TransferRecipient::TokenWallet(token_wallet) => {
-                MessageBuilder::new(contract, "transfer")
-                    .trust_me()
+                MessageBuilder::new(old_tip3::token_wallet_contract::transfer())
                     .arg(token_wallet) // to
                     .arg(BigUint128(tokens)) // tokens
             }
             TransferRecipient::OwnerWallet(owner_wallet) => {
-                MessageBuilder::new(contract, "transferToRecipient")
-                    .trust_me()
+                MessageBuilder::new(old_tip3::token_wallet_contract::transfer_to_recipient())
                     .arg(BigUint256(Default::default())) // recipient_public_key
                     .arg(owner_wallet) // recipient_address
                     .arg(BigUint128(tokens)) // tokens
@@ -191,6 +162,8 @@ impl TokenWallet {
         tokens: BigUint,
         proxy_address: MsgAddressInt,
     ) -> Result<InternalMessage> {
+        use nekoton_contracts::old_tip3;
+
         const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
 
         let destination = hex::decode(destination.trim_start_matches("0x"))
@@ -208,16 +181,14 @@ impl TokenWallet {
             _ => return Err(TokenWalletError::InvalidSwapBackDestination.into()),
         };
 
-        let contract = select_token_contract(self.version)?;
-
-        let (function, input) = MessageBuilder::new(contract, "burnByOwner")
-            .trust_me()
-            .arg(BigUint128(tokens)) // tokens
-            .arg(BigUint128(Default::default())) // grams
-            .arg(&self.owner) // send_gas_to
-            .arg(proxy_address) // callback_address
-            .arg(callback_payload) // callback_payload
-            .build();
+        let (function, input) =
+            MessageBuilder::new(old_tip3::token_wallet_contract::burn_by_owner())
+                .arg(BigUint128(tokens)) // tokens
+                .arg(BigUint128(Default::default())) // grams
+                .arg(&self.owner) // send_gas_to
+                .arg(proxy_address) // callback_address
+                .arg(callback_payload) // callback_payload
+                .build();
 
         let body = function
             .encode_input(&Default::default(), &input, true, None)?
@@ -374,12 +345,6 @@ pub async fn get_token_root_details_from_token_wallet(
     let details = state.get_details(clock, version)?;
 
     Ok((root_token_contract, details))
-}
-
-fn select_token_contract(version: TokenWalletVersion) -> Result<&'static ton_abi::Contract> {
-    Ok(match version {
-        TokenWalletVersion::OldTip3v4 => nekoton_contracts::abi::ton_token_wallet_v4(),
-    })
 }
 
 const INITIAL_BALANCE: u64 = 100_000_000; // 0.1 TON
