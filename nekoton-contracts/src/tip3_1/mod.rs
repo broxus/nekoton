@@ -14,7 +14,7 @@ impl RootTokenContract<'_> {
         let inputs = [0u32.token_value().named("answerId")];
         let result = self
             .0
-            .run_local_simple(root_token_contract::root_owner(), &inputs)?
+            .run_local_responsible_simple(root_token_contract::root_owner(), &inputs)?
             .unpack_first()?;
         Ok(result)
     }
@@ -26,7 +26,7 @@ impl RootTokenContract<'_> {
         ];
         let result = self
             .0
-            .run_local_simple(root_token_contract::wallet_of(), &inputs)?
+            .run_local_responsible_simple(root_token_contract::wallet_of(), &inputs)?
             .unpack_first()?;
         Ok(result)
     }
@@ -40,7 +40,7 @@ impl TokenWalletContract<'_> {
         let inputs = [0u32.token_value().named("answerId")];
         let result = self
             .0
-            .run_local_simple(token_wallet_contract::owner(), &inputs)?
+            .run_local_responsible_simple(token_wallet_contract::owner(), &inputs)?
             .unpack_first()?;
         Ok(result)
     }

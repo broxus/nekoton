@@ -15,11 +15,7 @@ impl SidContract<'_> {
         for &interface in interfaces {
             let inputs = match &mut inputs {
                 Some(inputs) => {
-                    if let ton_abi::TokenValue::FixedBytes(fixed_bytes) = &mut inputs[1].value {
-                        fixed_bytes.copy_from_slice(&interface.to_be_bytes())
-                    } else {
-                        return Ok(false);
-                    }
+                    inputs[1] = make_interface_id(interface);
                     inputs
                 }
                 None => inputs.insert([
@@ -30,7 +26,7 @@ impl SidContract<'_> {
 
             if !self
                 .0
-                .run_local_simple(sid::supports_interface(), inputs.as_ref())?
+                .run_local_responsible_simple(sid::supports_interface(), inputs.as_ref())?
                 .unpack_first::<bool>()?
             {
                 return Ok(false);
@@ -47,15 +43,12 @@ impl SidContract<'_> {
         ];
         let result = self
             .0
-            .run_local_simple(sid::supports_interface(), &inputs)?
+            .run_local_responsible_simple(sid::supports_interface(), &inputs)?
             .unpack_first()?;
         Ok(result)
     }
 }
 
 fn make_interface_id(interface: u32) -> ton_abi::Token {
-    ton_abi::Token::new(
-        "interfaceID",
-        ton_abi::TokenValue::FixedBytes(interface.to_be_bytes().to_vec()),
-    )
+    interface.token_value().named("interfaceID")
 }

@@ -21,7 +21,7 @@ pub fn supports_interface() -> &'static ton_abi::Function {
         name: "supportsInterface",
         inputs: vec![
             Param::new("answerId", ParamType::Uint(32)),
-            Param::new("interfaceID", ParamType::FixedBytes(4))
+            Param::new("interfaceID", ParamType::Uint(32))
         ],
         outputs: vec![Param::new("supports", ParamType::Bool)],
     }

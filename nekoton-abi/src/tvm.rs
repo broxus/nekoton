@@ -77,14 +77,17 @@ pub fn call_msg(
 
     let mut stack = Stack::new();
     let balance = account.storage.balance.grams.value();
-    let function_selector = match msg.header() {
-        CommonMsgInfo::IntMsgInfo(_) => ton_vm::int!(0),
-        CommonMsgInfo::ExtInMsgInfo(_) => ton_vm::int!(-1),
+    let (function_selector, msg_balance) = match msg.header() {
+        CommonMsgInfo::IntMsgInfo(_) => (
+            ton_vm::int!(0),
+            num_bigint::BigInt::from(1_000_000_000_000u64), // 1000 TON
+        ),
+        CommonMsgInfo::ExtInMsgInfo(_) => (ton_vm::int!(-1), num_bigint::BigInt::default()),
         CommonMsgInfo::ExtOutMsgInfo(_) => return Err(ExecutionError::InvalidMessageType),
     };
     stack
         .push(ton_vm::int!(balance)) // token balance of contract
-        .push(ton_vm::int!(0)) // token balance of msg
+        .push(ton_vm::int!(msg_balance)) // token balance of msg
         .push(StackItem::Cell(msg_cell.into())) // message
         .push(StackItem::Slice(msg.body().unwrap_or_default())) // message body
         .push(function_selector); // function selector

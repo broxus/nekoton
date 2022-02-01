@@ -3,6 +3,7 @@ use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 
 use anyhow::Result;
+use num_traits::ToPrimitive;
 use smallvec::smallvec;
 use ton_abi::{Function, Param, Token, TokenValue};
 use ton_block::{
@@ -506,6 +507,17 @@ impl<'a> ExecutionContext<'a> {
 
         FunctionAbi::new(function).run_local(self.clock, &mut account_stuff, input)
     }
+
+    pub fn run_local_responsible(
+        &self,
+        function: &Function,
+        input: &[Token],
+    ) -> Result<ExecutionOutput> {
+        let mut account_stuff = self.account_stuff.clone();
+        account_stuff.storage.balance.grams.0 = 100_000_000_000_000; // 100 000 TON
+
+        FunctionAbi::new(function).run_local_responsible(self.clock, &mut account_stuff, input)
+    }
 }
 
 pub trait FunctionExt {
@@ -555,17 +567,17 @@ impl FunctionExt for Function {
 }
 
 struct FunctionAbi<'a> {
-    fun: &'a Function,
+    abi: &'a Function,
 }
 
 impl<'a> FunctionAbi<'a> {
-    fn new(fun: &'a Function) -> Self {
-        Self { fun }
+    fn new(abi: &'a Function) -> Self {
+        Self { abi }
     }
 
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
         let messages = parse_transaction_messages(tx)?;
-        process_out_messages(&*messages, self.fun)
+        process_out_messages(&*messages, self.abi)
     }
 
     fn run_local(
@@ -585,7 +597,7 @@ impl<'a> FunctionAbi<'a> {
         } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
 
         msg.set_body(
-            self.fun
+            self.abi
                 .encode_run_local_input(gen_utime as u64 * 1000, input)?
                 .into(),
         );
@@ -596,7 +608,85 @@ impl<'a> FunctionAbi<'a> {
         } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg)?;
 
         let tokens = messages
-            .map(|messages| process_out_messages(&messages, self.fun))
+            .map(|messages| process_out_messages(&messages, self.abi))
+            .transpose()?;
+
+        Ok(ExecutionOutput {
+            tokens,
+            result_code,
+        })
+    }
+
+    fn run_local_responsible(
+        &self,
+        clock: &dyn Clock,
+        account_stuff: &mut AccountStuff,
+        input: &[Token],
+    ) -> Result<ExecutionOutput> {
+        let function = self.abi;
+
+        let answer_id = match input.first().map(|token| &token.value) {
+            Some(TokenValue::Uint(ton_abi::Uint { number, size: 32 })) => {
+                number.to_u32().ok_or(AbiError::AnswerIdNotFound)?
+            }
+            _ => return Err(AbiError::AnswerIdNotFound.into()),
+        };
+
+        let mut msg = ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
+            src: ton_block::MsgAddressIntOrNone::Some(account_stuff.addr.clone()),
+            dst: account_stuff.addr.clone(),
+            ..Default::default()
+        });
+
+        let BlockStats {
+            gen_utime, gen_lt, ..
+        } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
+
+        msg.set_body(function.encode_internal_input(input)?.into());
+
+        let tvm::ActionPhaseOutput {
+            messages,
+            exit_code: result_code,
+        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg)?;
+
+        let tokens = messages
+            .map(|messages| {
+                let mut output = None;
+
+                for msg in messages {
+                    if !matches!(msg.header(), ton_block::CommonMsgInfo::IntMsgInfo(_)) {
+                        continue;
+                    }
+
+                    let mut body = match msg.body() {
+                        Some(body) => body,
+                        None => continue,
+                    };
+
+                    if !matches!(
+                        body.get_next_u32(),
+                        Ok(target_answer_id) if target_answer_id == answer_id
+                    ) {
+                        continue;
+                    }
+
+                    if let Ok(tokens) = TokenValue::decode_params(
+                        function.output_params(),
+                        body,
+                        &function.abi_version,
+                        false,
+                    ) {
+                        output = Some(tokens);
+                        break;
+                    }
+                }
+
+                match output {
+                    Some(a) => Ok(a),
+                    None if !function.has_output() => Ok(Default::default()),
+                    None => Err(AbiError::NoMessagesProduced),
+                }
+            })
             .transpose()?;
 
         Ok(ExecutionOutput {
@@ -689,6 +779,8 @@ enum AbiError {
     IncompleteDeserialization(SliceData),
     #[error("Unsupported header")]
     UnsupportedHeader,
+    #[error("Answer id not found")]
+    AnswerIdNotFound,
 }
 
 pub struct Executor {

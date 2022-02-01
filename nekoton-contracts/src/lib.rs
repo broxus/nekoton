@@ -13,6 +13,12 @@ trait RunLocalSimple {
         function: &ton_abi::Function,
         inputs: &[ton_abi::Token],
     ) -> Result<Vec<ton_abi::Token>>;
+
+    fn run_local_responsible_simple(
+        &self,
+        function: &ton_abi::Function,
+        inputs: &[ton_abi::Token],
+    ) -> Result<Vec<ton_abi::Token>>;
 }
 
 impl RunLocalSimple for ExecutionContext<'_> {
@@ -25,6 +31,18 @@ impl RunLocalSimple for ExecutionContext<'_> {
             tokens,
             result_code,
         } = self.run_local(function, inputs)?;
+        tokens.ok_or_else(|| NonZeroResultCode(result_code).into())
+    }
+
+    fn run_local_responsible_simple(
+        &self,
+        function: &ton_abi::Function,
+        inputs: &[ton_abi::Token],
+    ) -> Result<Vec<ton_abi::Token>> {
+        let ExecutionOutput {
+            tokens,
+            result_code,
+        } = self.run_local_responsible(function, inputs)?;
         tokens.ok_or_else(|| NonZeroResultCode(result_code).into())
     }
 }
