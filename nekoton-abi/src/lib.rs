@@ -42,6 +42,7 @@ mod models;
 mod token_packer;
 mod token_unpacker;
 mod tokens_json;
+pub mod transaction_parser;
 mod tvm;
 
 const TON_ABI_VERSION: ton_abi::contract::AbiVersion = ton_abi::contract::ABI_VERSION_2_0;
