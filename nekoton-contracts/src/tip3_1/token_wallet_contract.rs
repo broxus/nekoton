@@ -25,6 +25,22 @@ pub fn owner() -> &'static ton_abi::Function {
     }
 }
 
+#[derive(Debug, Clone, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
+pub struct TransferInputs {
+    #[abi(with = "uint128_number")]
+    pub amount: BigUint,
+    #[abi(address)]
+    pub recipient: ton_block::MsgAddressInt,
+    #[abi(uint128, name = "deployWalletValue")]
+    pub deploy_wallet_value: u128,
+    #[abi(address, name = "remainingGasTo")]
+    pub remaining_gas_to: ton_block::MsgAddressInt,
+    #[abi(bool)]
+    pub notify: bool,
+    #[abi(cell)]
+    pub payload: ton_types::Cell,
+}
+
 /// Transfer tokens and optionally deploy token wallet for the recipient
 ///
 /// # Type
@@ -41,16 +57,23 @@ pub fn owner() -> &'static ton_abi::Function {
 pub fn transfer() -> &'static ton_abi::Function {
     declare_function! {
         name: "transfer",
-        inputs: vec![
-            Param::new("amount", ParamType::Uint(128)),
-            Param::new("recipient", ParamType::Address),
-            Param::new("deployWalletValue", ParamType::Uint(128)),
-            Param::new("remainingGasTo", ParamType::Address),
-            Param::new("notify", ParamType::Bool),
-            Param::new("payload", ParamType::Cell),
-        ],
+        inputs: TransferInputs::param_type(),
         outputs: Vec::new(),
     }
+}
+
+#[derive(Debug, Clone, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
+pub struct TransferToWalletInputs {
+    #[abi(with = "uint128_number")]
+    pub amount: BigUint,
+    #[abi(address, name = "recipientTokenWallet")]
+    pub recipient_token_wallet: ton_block::MsgAddressInt,
+    #[abi(address, name = "remainingGasTo")]
+    pub remaining_gas_to: ton_block::MsgAddressInt,
+    #[abi(bool)]
+    pub notify: bool,
+    #[abi(cell)]
+    pub payload: ton_types::Cell,
 }
 
 /// Transfer tokens using token wallet address
@@ -68,13 +91,7 @@ pub fn transfer() -> &'static ton_abi::Function {
 pub fn transfer_to_wallet() -> &'static ton_abi::Function {
     declare_function! {
         name: "transferToWallet",
-        inputs: vec![
-            Param::new("amount", ParamType::Uint(128)),
-            Param::new("recipientTokenWallet", ParamType::Address),
-            Param::new("remainingGasTo", ParamType::Address),
-            Param::new("notify", ParamType::Bool),
-            Param::new("payload", ParamType::Cell),
-        ],
+        inputs: TransferToWalletInputs::param_type(),
         outputs: Vec::new(),
     }
 }

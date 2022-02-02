@@ -7,7 +7,7 @@ use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
 use nekoton_abi::*;
-use nekoton_contracts::{old_tip3, tip3, tip3_1};
+use nekoton_contracts::{old_tip3, tip3_1};
 
 use crate::core::models::*;
 use crate::core::ton_wallet::WalletType;
@@ -25,33 +25,42 @@ pub fn parse_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
         return parse_comment_payload(payload).map(KnownPayload::Comment);
     }
 
-    // TODO: somehow determine token wallet version
-    let functions = TokenWalletFunctions::for_version(TokenWalletVersion::OldTip3v4)?;
+    for version in [TokenWalletVersion::OldTip3v4, TokenWalletVersion::Tip3] {
+        let functions = TokenWalletFunctions::for_version(version);
 
-    if function_id == functions.transfer.input_id {
-        let inputs = functions.transfer.decode_input(payload, true).ok()?;
+        if function_id == functions.transfer_to_wallet.input_id {
+            let inputs = functions
+                .transfer_to_wallet
+                .decode_input(payload, true)
+                .ok()?;
 
-        TokenOutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByTokenWalletAddress))
+            return TokenOutgoingTransfer::try_from((
+                InputMessage(inputs),
+                TransferType::ByTokenWalletAddress,
+                version,
+            ))
             .map(KnownPayload::TokenOutgoingTransfer)
-            .ok()
-    } else if function_id == functions.transfer_to_recipient.input_id {
-        let inputs = functions
-            .transfer_to_recipient
-            .decode_input(payload, true)
-            .ok()?;
+            .ok();
+        } else if function_id == functions.transfer.input_id {
+            let inputs = functions.transfer.decode_input(payload, true).ok()?;
 
-        TokenOutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByOwnerWalletAddress))
+            return TokenOutgoingTransfer::try_from((
+                InputMessage(inputs),
+                TransferType::ByOwnerWalletAddress,
+                version,
+            ))
             .map(KnownPayload::TokenOutgoingTransfer)
-            .ok()
-    } else if function_id == functions.burn_by_owner.input_id {
-        let inputs = functions.burn_by_owner.decode_input(payload, true).ok()?;
+            .ok();
+        } else if function_id == functions.burn.input_id {
+            let inputs = functions.burn.decode_input(payload, true).ok()?;
 
-        TokenSwapBack::try_from(InputMessage(inputs))
-            .map(KnownPayload::TokenSwapBack)
-            .ok()
-    } else {
-        None
+            return TokenSwapBack::try_from((InputMessage(inputs), version))
+                .map(KnownPayload::TokenSwapBack)
+                .ok();
+        }
     }
+
+    None
 }
 
 pub fn parse_transaction_additional_info(
@@ -408,64 +417,69 @@ pub fn parse_token_transaction(
         return None;
     }
 
-    let functions = TokenWalletFunctions::for_version(version)?;
-
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
 
     let mut body = in_msg.body()?;
     let function_id = read_function_id(&body).ok()?;
 
     let header = in_msg.int_header()?;
+
+    let functions = TokenWalletFunctions::for_version(version);
+
     if header.bounced {
         body.move_by(32).ok()?;
         let function_id = read_function_id(&body).ok()?;
         body.move_by(32).ok()?;
 
-        if function_id == functions.internal_transfer.input_id {
+        if function_id == functions.accept_transfer.input_id {
             return Some(TokenWalletTransaction::TransferBounced(
                 body.get_next_u128().ok()?.into(),
             ));
         }
 
-        let root_contract_functions = RootTokenContractFunctions::for_version(version)?;
-        if function_id == root_contract_functions.tokens_burned.input_id {
+        if function_id == functions.accept_burn.input_id {
             Some(TokenWalletTransaction::SwapBackBounced(
                 body.get_next_u128().ok()?.into(),
             ))
         } else {
             None
         }
-    } else if function_id == functions.accept.input_id {
-        let inputs = functions.accept.decode_input(body, true).ok()?;
+    } else if function_id == functions.accept_mint.input_id {
+        let inputs = functions.accept_mint.decode_input(body, true).ok()?;
 
-        Accept::try_from(InputMessage(inputs))
+        Accept::try_from((InputMessage(inputs), version))
             .map(|Accept { tokens }| TokenWalletTransaction::Accept(tokens))
             .ok()
+    } else if function_id == functions.transfer_to_wallet.input_id {
+        let inputs = functions.transfer_to_wallet.decode_input(body, true).ok()?;
+
+        TokenOutgoingTransfer::try_from((
+            InputMessage(inputs),
+            TransferType::ByTokenWalletAddress,
+            version,
+        ))
+        .map(TokenWalletTransaction::OutgoingTransfer)
+        .ok()
     } else if function_id == functions.transfer.input_id {
         let inputs = functions.transfer.decode_input(body, true).ok()?;
 
-        TokenOutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByTokenWalletAddress))
-            .map(TokenWalletTransaction::OutgoingTransfer)
-            .ok()
-    } else if function_id == functions.transfer_to_recipient.input_id {
-        let inputs = functions
-            .transfer_to_recipient
-            .decode_input(body, true)
-            .ok()?;
+        TokenOutgoingTransfer::try_from((
+            InputMessage(inputs),
+            TransferType::ByOwnerWalletAddress,
+            version,
+        ))
+        .map(TokenWalletTransaction::OutgoingTransfer)
+        .ok()
+    } else if function_id == functions.accept_transfer.input_id {
+        let inputs = functions.accept_transfer.decode_input(body, true).ok()?;
 
-        TokenOutgoingTransfer::try_from((InputMessage(inputs), TransferType::ByOwnerWalletAddress))
-            .map(TokenWalletTransaction::OutgoingTransfer)
-            .ok()
-    } else if function_id == functions.internal_transfer.input_id {
-        let inputs = functions.internal_transfer.decode_input(body, true).ok()?;
-
-        TokenIncomingTransfer::try_from(InputMessage(inputs))
+        TokenIncomingTransfer::try_from((InputMessage(inputs), version))
             .map(TokenWalletTransaction::IncomingTransfer)
             .ok()
-    } else if function_id == functions.burn_by_owner.input_id {
-        let inputs = functions.burn_by_owner.decode_input(body, true).ok()?;
+    } else if function_id == functions.burn.input_id {
+        let inputs = functions.burn.decode_input(body, true).ok()?;
 
-        TokenSwapBack::try_from(InputMessage(inputs))
+        TokenSwapBack::try_from((InputMessage(inputs), version))
             .map(TokenWalletTransaction::SwapBack)
             .ok()
     } else {
@@ -474,26 +488,33 @@ pub fn parse_token_transaction(
 }
 
 struct TokenWalletFunctions {
-    accept: &'static ton_abi::Function,
-    transfer_to_recipient: &'static ton_abi::Function,
+    // Incoming
+    accept_mint: &'static ton_abi::Function,
+    // Incoming
     transfer: &'static ton_abi::Function,
-    internal_transfer: &'static ton_abi::Function,
-    burn_by_owner: &'static ton_abi::Function,
+    // Incoming
+    transfer_to_wallet: &'static ton_abi::Function,
+    // Incoming
+    accept_transfer: &'static ton_abi::Function,
+    // Incoming
+    burn: &'static ton_abi::Function,
+    // Outgoing
+    accept_burn: &'static ton_abi::Function,
 }
 
 impl TokenWalletFunctions {
-    fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
-        Some(match version {
+    pub fn for_version(version: TokenWalletVersion) -> &'static TokenWalletFunctions {
+        match version {
             TokenWalletVersion::OldTip3v4 => {
                 static IDS: OnceBox<TokenWalletFunctions> = OnceBox::new();
                 IDS.get_or_init(|| {
                     Box::new(Self {
-                        accept: old_tip3::token_wallet_contract::accept(),
-                        transfer_to_recipient:
-                            old_tip3::token_wallet_contract::transfer_to_recipient(),
-                        transfer: old_tip3::token_wallet_contract::transfer(),
-                        internal_transfer: old_tip3::token_wallet_contract::internal_transfer(),
-                        burn_by_owner: old_tip3::token_wallet_contract::burn_by_owner(),
+                        accept_mint: old_tip3::token_wallet_contract::accept(),
+                        transfer: old_tip3::token_wallet_contract::transfer_to_recipient(),
+                        transfer_to_wallet: old_tip3::token_wallet_contract::transfer(),
+                        accept_transfer: old_tip3::token_wallet_contract::internal_transfer(),
+                        burn: old_tip3::token_wallet_contract::burn_by_owner(),
+                        accept_burn: old_tip3::root_token_contract::tokens_burned(),
                     })
                 })
             }
@@ -501,87 +522,68 @@ impl TokenWalletFunctions {
                 static IDS: OnceBox<TokenWalletFunctions> = OnceBox::new();
                 IDS.get_or_init(|| {
                     Box::new(Self {
-                        accept: tip3::token_wallet_contract::accept_mint(),
-                        transfer_to_recipient: tip3_1::token_wallet_contract::transfer(),
-                        transfer: tip3_1::token_wallet_contract::transfer_to_wallet(),
-                        internal_transfer: tip3_1::token_wallet_contract::accept_transfer(),
-                        burn_by_owner: tip3_1::token_wallet_contract::burnable::burn(),
+                        accept_mint: tip3_1::token_wallet_contract::accept_mint(),
+                        transfer: tip3_1::token_wallet_contract::transfer(),
+                        transfer_to_wallet: tip3_1::token_wallet_contract::transfer_to_wallet(),
+                        accept_transfer: tip3_1::token_wallet_contract::accept_transfer(),
+                        burn: tip3_1::token_wallet_contract::burnable::burn(),
+                        accept_burn: tip3_1::root_token_contract::accept_burn(),
                     })
                 })
             }
-        })
+        }
     }
 }
 
-struct RootTokenContractFunctions {
-    tokens_burned: &'static ton_abi::Function,
-}
-
-impl RootTokenContractFunctions {
-    fn for_version(version: TokenWalletVersion) -> Option<&'static Self> {
-        Some(match version {
-            TokenWalletVersion::OldTip3v4 => {
-                static IDS: OnceBox<RootTokenContractFunctions> = OnceBox::new();
-                IDS.get_or_init(|| {
-                    Box::new(Self {
-                        tokens_burned: old_tip3::root_token_contract::tokens_burned(),
-                    })
-                })
-            }
-            TokenWalletVersion::Tip3 => {
-                static IDS: OnceBox<RootTokenContractFunctions> = OnceBox::new();
-                IDS.get_or_init(|| {
-                    Box::new(Self {
-                        tokens_burned: tip3::root_token_contract::accept_burn(),
-                    })
-                })
-            }
-        })
-    }
-}
-
-#[derive(UnpackAbiPlain)]
-struct TonTokenWalletBurnByOwner {
-    #[abi(with = "uint128_number")]
-    tokens: BigUint,
-    #[abi(name = "grams", with = "uint128_number")]
-    _grams: BigUint,
-    #[abi(address, name = "send_gas_to")]
-    _send_gas_to: MsgAddressInt,
-    #[abi(address, name = "callback_address")]
-    callback_address: MsgAddressInt,
-    #[abi(cell)]
-    callback_payload: ton_types::Cell,
-}
-
-impl TryFrom<InputMessage> for TokenSwapBack {
+impl TryFrom<(InputMessage, TokenWalletVersion)> for TokenSwapBack {
     type Error = UnpackerError;
 
-    fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let input: TonTokenWalletBurnByOwner = value.0.unpack()?;
+    fn try_from((value, version): (InputMessage, TokenWalletVersion)) -> Result<Self, Self::Error> {
+        Ok(match version {
+            TokenWalletVersion::OldTip3v4 => {
+                let input: old_tip3::token_wallet_contract::BurnByOwnerInputs = value.0.unpack()?;
 
-        Ok(TokenSwapBack {
-            tokens: input.tokens,
-            callback_address: input.callback_address,
-            callback_payload: input.callback_payload,
+                Self {
+                    tokens: input.tokens,
+                    callback_address: input.callback_address,
+                    callback_payload: input.callback_payload,
+                }
+            }
+            TokenWalletVersion::Tip3 => {
+                let input: tip3_1::token_wallet_contract::burnable::BurnInputs =
+                    value.0.unpack()?;
+
+                Self {
+                    tokens: input.amount,
+                    callback_address: input.callback_to,
+                    callback_payload: input.payload,
+                }
+            }
         })
     }
 }
 
-#[derive(UnpackAbiPlain)]
 struct Accept {
-    #[abi(with = "uint128_number")]
     tokens: BigUint,
 }
 
-impl TryFrom<InputMessage> for Accept {
+impl TryFrom<(InputMessage, TokenWalletVersion)> for Accept {
     type Error = UnpackerError;
 
-    fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let input: Accept = value.0.unpack()?;
-
-        Ok(Accept {
-            tokens: input.tokens,
+    fn try_from((value, version): (InputMessage, TokenWalletVersion)) -> Result<Self, Self::Error> {
+        Ok(match version {
+            TokenWalletVersion::OldTip3v4 => {
+                let input: old_tip3::token_wallet_contract::AcceptInputs = value.0.unpack()?;
+                Self {
+                    tokens: input.tokens,
+                }
+            }
+            TokenWalletVersion::Tip3 => {
+                let input: tip3_1::token_wallet_contract::AcceptMintInputs = value.0.unpack()?;
+                Self {
+                    tokens: input.amount,
+                }
+            }
         })
     }
 }
@@ -591,94 +593,84 @@ enum TransferType {
     ByTokenWalletAddress,
 }
 
-#[derive(UnpackAbiPlain)]
-struct TonTokenWalletTransferToRecipient {
-    #[abi(name = "recipient_public_key", with = "uint256_bytes")]
-    _recipient_public_key: UInt256,
-    #[abi(address)]
-    recipient_address: MsgAddressInt,
-    #[abi(with = "uint128_number")]
-    tokens: BigUint,
-    #[abi(name = "deploy_grams", with = "uint128_number")]
-    _deploy_grams: BigUint,
-    #[abi(name = "transfer_grams", with = "uint128_number")]
-    _transfer_grams: BigUint,
-    #[abi(address, name = "send_gas_to")]
-    _send_gas_to: MsgAddressInt,
-    #[abi(bool, name = "notify_receiver")]
-    _notify_receiver: bool,
-    #[abi(cell, name = "payload")]
-    _payload: ton_types::Cell,
-}
-
-#[derive(UnpackAbiPlain)]
-struct TonTokenWalletTransfer {
-    #[abi(address)]
-    to: MsgAddressInt,
-    #[abi(with = "uint128_number")]
-    tokens: BigUint,
-    #[abi(name = "grams", with = "uint128_number")]
-    _grams: BigUint,
-    #[abi(address, name = "send_gas_to")]
-    _send_gas_to: MsgAddressInt,
-    #[abi(bool, name = "notify_receiver")]
-    _notify_receiver: bool,
-    #[abi(cell, name = "payload")]
-    _payload: ton_types::Cell,
-}
-
-impl TryFrom<(InputMessage, TransferType)> for TokenOutgoingTransfer {
+impl TryFrom<(InputMessage, TransferType, TokenWalletVersion)> for TokenOutgoingTransfer {
     type Error = UnpackerError;
 
-    fn try_from((value, transfer_type): (InputMessage, TransferType)) -> Result<Self, Self::Error> {
-        let data = match transfer_type {
-            // "transferToRecipient"
-            TransferType::ByOwnerWalletAddress => {
-                let input: TonTokenWalletTransferToRecipient = value.0.unpack()?;
-                TokenOutgoingTransfer {
-                    to: TransferRecipient::OwnerWallet(input.recipient_address),
-                    tokens: input.tokens,
+    fn try_from(
+        (value, transfer_type, version): (InputMessage, TransferType, TokenWalletVersion),
+    ) -> Result<Self, Self::Error> {
+        Ok(match version {
+            TokenWalletVersion::OldTip3v4 => {
+                match transfer_type {
+                    // "transferToRecipient"
+                    TransferType::ByOwnerWalletAddress => {
+                        let input: old_tip3::token_wallet_contract::TransferToRecipientInputs =
+                            value.0.unpack()?;
+                        Self {
+                            to: TransferRecipient::OwnerWallet(input.recipient_address),
+                            tokens: input.tokens,
+                        }
+                    }
+                    // "transfer
+                    TransferType::ByTokenWalletAddress => {
+                        let input: old_tip3::token_wallet_contract::TransferInputs =
+                            value.0.unpack()?;
+                        Self {
+                            to: TransferRecipient::TokenWallet(input.to),
+                            tokens: input.tokens,
+                        }
+                    }
                 }
             }
-            // "transfer
-            TransferType::ByTokenWalletAddress => {
-                let input: TonTokenWalletTransfer = value.0.unpack()?;
-                TokenOutgoingTransfer {
-                    to: TransferRecipient::TokenWallet(input.to),
-                    tokens: input.tokens,
+            TokenWalletVersion::Tip3 => {
+                match transfer_type {
+                    // "transfer"
+                    TransferType::ByOwnerWalletAddress => {
+                        let input: tip3_1::token_wallet_contract::TransferInputs =
+                            value.0.unpack()?;
+                        Self {
+                            to: TransferRecipient::OwnerWallet(input.recipient),
+                            tokens: input.amount,
+                        }
+                    }
+                    // "transferToWallet"
+                    TransferType::ByTokenWalletAddress => {
+                        let input: tip3_1::token_wallet_contract::TransferToWalletInputs =
+                            value.0.unpack()?;
+                        Self {
+                            to: TransferRecipient::TokenWallet(input.recipient_token_wallet),
+                            tokens: input.amount,
+                        }
+                    }
                 }
             }
-        };
-
-        Ok(data)
+        })
     }
 }
 
-#[derive(UnpackAbiPlain)]
-struct TonTokenWalletInternalTransfer {
-    #[abi(with = "uint128_number")]
-    tokens: BigUint,
-    #[abi(name = "sender_public_key", with = "uint256_bytes")]
-    _sender_public_key: UInt256,
-    #[abi(address, name = "sender_address")]
-    sender_address: MsgAddressInt,
-    #[abi(address, name = "send_gas_to")]
-    _send_gas_to: MsgAddressInt,
-    #[abi(bool, name = "notify_receiver")]
-    _notify_receiver: bool,
-    #[abi(cell, name = "payload")]
-    _payload: ton_types::Cell,
-}
-
-impl TryFrom<InputMessage> for TokenIncomingTransfer {
+impl TryFrom<(InputMessage, TokenWalletVersion)> for TokenIncomingTransfer {
     type Error = UnpackerError;
 
-    fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
-        let input: TonTokenWalletInternalTransfer = value.0.unpack()?;
+    fn try_from((value, version): (InputMessage, TokenWalletVersion)) -> Result<Self, Self::Error> {
+        Ok(match version {
+            TokenWalletVersion::OldTip3v4 => {
+                let input: old_tip3::token_wallet_contract::InternalTransferInputs =
+                    value.0.unpack()?;
 
-        Ok(TokenIncomingTransfer {
-            tokens: input.tokens,
-            sender_address: input.sender_address,
+                Self {
+                    tokens: input.tokens,
+                    sender_address: input.sender_address,
+                }
+            }
+            TokenWalletVersion::Tip3 => {
+                let input: tip3_1::token_wallet_contract::AcceptTransferInputs =
+                    value.0.unpack()?;
+
+                Self {
+                    tokens: input.amount,
+                    sender_address: input.sender,
+                }
+            }
         })
     }
 }
