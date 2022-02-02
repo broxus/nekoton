@@ -185,11 +185,9 @@ mod tests {
 
     #[test]
     fn build() {
-        let original = nekoton_contracts::abi::ton_token_wallet_v4()
-            .function("transfer")
-            .unwrap();
+        let original = nekoton_contracts::old_tip3::token_wallet_contract::transfer();
+
         let imposter = FunctionBuilder::new("transfer")
-            .default_headers()
             .input("to", ParamType::Address)
             .input("tokens", ParamType::Uint(128))
             .input("grams", ParamType::Uint(128))

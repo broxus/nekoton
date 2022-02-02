@@ -62,14 +62,20 @@ impl EventBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ton_abi::ParamType;
+    use ton_abi::{Param, ParamType};
 
     #[test]
     fn build() {
-        let original = &nekoton_contracts::abi::safe_multisig_wallet().events()["TransferAccepted"];
+        let original = ton_abi::Event {
+            abi_version: ton_abi::contract::ABI_VERSION_2_0,
+            name: "TransferAccepted".to_owned(),
+            inputs: vec![Param::new("payload", ParamType::Bytes)],
+            id: 0x7d729cc8,
+        };
+
         let imposter = EventBuilder::new("TransferAccepted")
             .input("payload", ParamType::Bytes)
             .build();
-        assert_eq!(original, &imposter)
+        assert_eq!(original, imposter)
     }
 }

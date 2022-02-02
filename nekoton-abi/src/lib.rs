@@ -3,6 +3,7 @@ use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 
 use anyhow::Result;
+use num_traits::ToPrimitive;
 use smallvec::smallvec;
 use ton_abi::{Function, Param, Token, TokenValue};
 use ton_block::{
@@ -493,6 +494,32 @@ pub fn code_to_tvc(code: ton_types::Cell) -> Result<ton_block::StateInit> {
     })
 }
 
+#[derive(Copy, Clone)]
+pub struct ExecutionContext<'a> {
+    pub clock: &'a dyn Clock,
+    pub account_stuff: &'a AccountStuff,
+}
+
+impl<'a> ExecutionContext<'a> {
+    pub fn run_local(&self, function: &Function, input: &[Token]) -> Result<ExecutionOutput> {
+        let mut account_stuff = self.account_stuff.clone();
+        account_stuff.storage.balance.grams.0 = 100_000_000_000_000; // 100 000 TON
+
+        FunctionAbi::new(function).run_local(self.clock, &mut account_stuff, input)
+    }
+
+    pub fn run_local_responsible(
+        &self,
+        function: &Function,
+        input: &[Token],
+    ) -> Result<ExecutionOutput> {
+        let mut account_stuff = self.account_stuff.clone();
+        account_stuff.storage.balance.grams.0 = 100_000_000_000_000; // 100 000 TON
+
+        FunctionAbi::new(function).run_local_responsible(self.clock, &mut account_stuff, input)
+    }
+}
+
 pub trait FunctionExt {
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>>;
 
@@ -500,7 +527,6 @@ pub trait FunctionExt {
         &self,
         clock: &dyn Clock,
         account_stuff: AccountStuff,
-        last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput>;
 }
@@ -517,10 +543,9 @@ where
         &self,
         clock: &dyn Clock,
         account_stuff: AccountStuff,
-        last_transaction_id: &LastTransactionId,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
-        T::run_local(self, clock, account_stuff, last_transaction_id, input)
+        T::run_local(self, clock, account_stuff, input)
     }
 }
 
@@ -533,34 +558,32 @@ impl FunctionExt for Function {
     fn run_local(
         &self,
         clock: &dyn Clock,
-        account_stuff: AccountStuff,
-        last_transaction_id: &LastTransactionId,
+        mut account_stuff: AccountStuff,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
         let abi = FunctionAbi::new(self);
-        abi.run_local(clock, account_stuff, last_transaction_id, input)
+        abi.run_local(clock, &mut account_stuff, input)
     }
 }
 
 struct FunctionAbi<'a> {
-    fun: &'a Function,
+    abi: &'a Function,
 }
 
 impl<'a> FunctionAbi<'a> {
-    fn new(fun: &'a Function) -> Self {
-        Self { fun }
+    fn new(abi: &'a Function) -> Self {
+        Self { abi }
     }
 
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
         let messages = parse_transaction_messages(tx)?;
-        process_out_messages(&*messages, self.fun)
+        process_out_messages(&*messages, self.abi)
     }
 
     fn run_local(
         &self,
         clock: &dyn Clock,
-        account_stuff: AccountStuff,
-        last_transaction_id: &LastTransactionId,
+        account_stuff: &mut AccountStuff,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
         let mut msg =
@@ -571,10 +594,10 @@ impl<'a> FunctionAbi<'a> {
 
         let BlockStats {
             gen_utime, gen_lt, ..
-        } = get_block_stats(clock, None, last_transaction_id);
+        } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
 
         msg.set_body(
-            self.fun
+            self.abi
                 .encode_run_local_input(gen_utime as u64 * 1000, input)?
                 .into(),
         );
@@ -585,7 +608,85 @@ impl<'a> FunctionAbi<'a> {
         } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg)?;
 
         let tokens = messages
-            .map(|messages| process_out_messages(&messages, self.fun))
+            .map(|messages| process_out_messages(&messages, self.abi))
+            .transpose()?;
+
+        Ok(ExecutionOutput {
+            tokens,
+            result_code,
+        })
+    }
+
+    fn run_local_responsible(
+        &self,
+        clock: &dyn Clock,
+        account_stuff: &mut AccountStuff,
+        input: &[Token],
+    ) -> Result<ExecutionOutput> {
+        let function = self.abi;
+
+        let answer_id = match input.first().map(|token| &token.value) {
+            Some(TokenValue::Uint(ton_abi::Uint { number, size: 32 })) => {
+                number.to_u32().ok_or(AbiError::AnswerIdNotFound)?
+            }
+            _ => return Err(AbiError::AnswerIdNotFound.into()),
+        };
+
+        let mut msg = ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
+            src: ton_block::MsgAddressIntOrNone::Some(account_stuff.addr.clone()),
+            dst: account_stuff.addr.clone(),
+            ..Default::default()
+        });
+
+        let BlockStats {
+            gen_utime, gen_lt, ..
+        } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
+
+        msg.set_body(function.encode_internal_input(input)?.into());
+
+        let tvm::ActionPhaseOutput {
+            messages,
+            exit_code: result_code,
+        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg)?;
+
+        let tokens = messages
+            .map(|messages| {
+                let mut output = None;
+
+                for msg in messages {
+                    if !matches!(msg.header(), ton_block::CommonMsgInfo::IntMsgInfo(_)) {
+                        continue;
+                    }
+
+                    let mut body = match msg.body() {
+                        Some(body) => body,
+                        None => continue,
+                    };
+
+                    if !matches!(
+                        body.get_next_u32(),
+                        Ok(target_answer_id) if target_answer_id == answer_id
+                    ) {
+                        continue;
+                    }
+
+                    if let Ok(tokens) = TokenValue::decode_params(
+                        function.output_params(),
+                        body,
+                        &function.abi_version,
+                        false,
+                    ) {
+                        output = Some(tokens);
+                        break;
+                    }
+                }
+
+                match output {
+                    Some(a) => Ok(a),
+                    None if !function.has_output() => Ok(Default::default()),
+                    None => Err(AbiError::NoMessagesProduced),
+                }
+            })
             .transpose()?;
 
         Ok(ExecutionOutput {
@@ -678,6 +779,8 @@ enum AbiError {
     IncompleteDeserialization(SliceData),
     #[error("Unsupported header")]
     UnsupportedHeader,
+    #[error("Answer id not found")]
+    AnswerIdNotFound,
 }
 
 pub struct Executor {
@@ -692,32 +795,21 @@ pub struct Executor {
 struct BlockStats {
     gen_utime: u32,
     gen_lt: u64,
-    last_transaction_lt: u64,
 }
 
 fn get_block_stats(
     clock: &dyn Clock,
     timings: Option<GenTimings>,
-    last_transaction_id: &LastTransactionId,
+    last_trans_lt: u64,
 ) -> BlockStats {
     // Additional estimated logical time offset for the latest transaction id
     pub const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
 
-    let last_transaction_lt = match last_transaction_id {
-        LastTransactionId::Exact(id) => id.lt,
-        LastTransactionId::Inexact { latest_lt } => *latest_lt,
-    };
-
     match timings {
-        Some(GenTimings::Known { gen_lt, gen_utime }) => BlockStats {
-            gen_utime,
-            gen_lt,
-            last_transaction_lt,
-        },
+        Some(GenTimings::Known { gen_lt, gen_utime }) => BlockStats { gen_utime, gen_lt },
         _ => BlockStats {
             gen_utime: clock.now_sec_u64() as u32,
-            gen_lt: last_transaction_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
-            last_transaction_lt,
+            gen_lt: last_trans_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
         },
     }
 }
@@ -728,20 +820,17 @@ impl Executor {
         config: BlockchainConfig,
         account_stuff: AccountStuff,
         _timings: GenTimings,
-        last_transaction_id: &LastTransactionId,
     ) -> Self {
-        let BlockStats {
-            gen_utime,
-            gen_lt,
-            last_transaction_lt,
-        } = get_block_stats(clock, None, last_transaction_id);
+        let last_trans_lt = account_stuff.storage.last_trans_lt;
+
+        let BlockStats { gen_utime, gen_lt } = get_block_stats(clock, None, last_trans_lt);
 
         Self {
             config,
             account: Account::Account(account_stuff),
             block_utime: gen_utime,
             block_lt: gen_lt,
-            last_transaction_lt: Arc::new(AtomicU64::new(last_transaction_lt)),
+            last_transaction_lt: Arc::new(AtomicU64::new(last_trans_lt)),
             disable_signature_check: false,
         }
     }
@@ -899,9 +988,6 @@ mod tests {
             GenTimings::Known {
                 gen_lt: 16916000,
                 gen_utime: 12356000,
-            },
-            &LastTransactionId::Inexact {
-                latest_lt: 12356916000001,
             },
         );
         executor
