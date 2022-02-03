@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use ton_abi::{Event, Function, Token};
-use ton_block::{CommonMsgInfo, Deserializable, Message};
+use ton_block::{CommonMsgInfo, Deserializable, GetRepresentationHash, Message};
 use ton_types::SliceData;
 
 use crate::read_function_id;
@@ -17,6 +17,24 @@ pub struct Extracted<'a, 'tx> {
     pub tx: &'tx ton_block::Transaction,
     /// The index of the message in the transaction
     pub is_in_message: bool,
+}
+
+impl<'a, 'tx> Extracted<'a, 'tx> {
+    pub fn transaction_hash(&self) -> Result<[u8; 32]> {
+        Ok(*self.tx.hash()?.as_slice())
+    }
+
+    pub fn transaction_sender(&self) -> Option<ton_block::MsgAddressInt> {
+        if let Some(message) = &self.tx.in_msg {
+            message.read_struct().ok()?.src()
+        } else {
+            None
+        }
+    }
+
+    pub fn message_recipient(&self) -> Option<ton_block::MsgAddressInt> {
+        self.message.dst()
+    }
 }
 
 /// Parses message without checking function id
@@ -510,5 +528,35 @@ mod test {
         dbg!(&tokens);
         assert_eq!(tokens.len(), 1);
         assert!(tokens[0].is_in_message);
+    }
+
+    #[test]
+    fn extracted_props() {
+        let tx = "te6ccgECDQEAAyAAA7d2VB824ku5NceaZBGMw6rGxlQqN9/O1HgEwFCS8k2ZO9AAAVMVFx5wFNQvH4whj95/MxrcyudH6mIXPmtR9xuziONpG6+HmOsQAAFTC3uXxBYfv6+gADSALJZXKAUEAQIbBIi0iQ7dAwIYgCsusBEDAgBvyZCnrEwsaZwAAAAAAAQAAgAAAAPIj/VtEDN6Yxv6AoWwgfNOvZVXo/LBGUBGvEwXgDjVFEDQNMQAnksODDzhVAAAAAAAAAABfAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIJ1rOS3KKtMH6NCJSBZtG8thfyDOR3FbomYzeDsV4hG+x3BF61v0LVJIazB4LT4lZqbgMkfW4F8KJziaf7H/JCAgHgCQYBAd8HAbFoAMqD5txJdya480yCMZh1WNjKhUb7+dqPAJgKEl5Jsyd7ADbkuzCNdLZjQqpjYdGVUxGiDlMoDYR2AC9i44IdlAh+EOflHMAGLGniAAAqYqLjzgTD9/X0wAgB7RjSFwIAAAAAAAAAAAAAAAAAACYxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAE5Vihmh7cbifKKrg6ZZhVQZurfljzEaw2QPagjzcnlzQAKNZrKwnj40tH1ZKNi8805q43R63HTLz9wzzOzd/QAWbDAGxaAE5Vihmh7cbifKKrg6ZZhVQZurfljzEaw2QPagjzcnlzQAZUHzbiS7k1x5pkEYzDqsbGVCo3387UeATAUJLyTZk71Dt0DAgBjOoEAAAKmKiiECGw/f14sAKAas/ENGrAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACABRrNZWE8fGlo+rJRsXnmnNXG6PW46ZefuGeZ2bv6ACzAAAAAAAAAAAAAAAAAAATGMAsBgwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAUazWVhPHxpaPqyUbF55pzVxuj1uOmXn7hnmdm7+gAs2AwACAAAAAA=";
+        let tx = Transaction::construct_from_base64(tx).unwrap();
+        let fun = ton_abi::contract::Contract::load(std::io::Cursor::new(TOKEN_WALLET))
+            .unwrap()
+            .functions()["internalTransfer"]
+            .clone();
+        let parser = TransactionParser::builder()
+            .function_input(&fun)
+            .build()
+            .unwrap();
+        let token = parser.parse(&tx).unwrap().remove(0);
+        assert_eq!(
+            "0:db92ecc235d2d98d0aa98d8746554c4688394ca03611d800bd8b8e08765021f8",
+            token.message_recipient().unwrap().to_string()
+        );
+        assert_eq!(
+            "0:9cab143343db8dc4f94557074cb30aa833756fcb1e623586c81ed411e6e4f2e6",
+            token.transaction_sender().unwrap().to_string()
+        );
+        assert!(!token.is_in_message);
+        assert_eq!(
+            token.transaction_hash().unwrap(),
+            hex::decode("e60aa528fa05f1959960d099e3389abe42e3a210350c5e4a87e518974136f53b")
+                .unwrap()
+                .as_slice()
+        );
     }
 }
