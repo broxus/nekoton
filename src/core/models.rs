@@ -454,6 +454,9 @@ pub struct ContractState {
     pub last_transaction_id: Option<LastTransactionId>,
     /// Whether the contract is deployed
     pub is_deployed: bool,
+    /// Contract code hash
+    #[serde(with = "serde_optional_uint256")]
+    pub code_hash: Option<UInt256>,
 }
 
 impl PartialEq for ContractState {

@@ -141,6 +141,7 @@ pub fn parse_block(
             .map(LastTransactionId::Exact)
             .or(contract_state.last_transaction_id),
         is_deployed,
+        code_hash: contract_state.code_hash, // NOTE: code hash update is not visible
     };
 
     let new_transactions =

@@ -222,6 +222,25 @@ pub mod serde_uint256 {
     }
 }
 
+pub mod serde_optional_uint256 {
+    use super::*;
+
+    pub fn serialize<S>(data: &Option<UInt256>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serde_optional_hex_array::serialize(&data.as_ref(), serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<UInt256>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data: Option<[u8; 32]> = serde_optional_hex_array::deserialize(deserializer)?;
+        Ok(data.map(|data| UInt256::from_slice(&data[..])))
+    }
+}
+
 pub mod serde_vec_uint256 {
     use super::*;
 

@@ -45,6 +45,12 @@ impl ExistingContract {
                 self.account.storage.state,
                 ton_block::AccountState::AccountActive { .. }
             ),
+            code_hash: match &self.account.storage.state {
+                ton_block::AccountState::AccountActive { state_init, .. } => {
+                    state_init.code.as_ref().map(ton_types::Cell::repr_hash)
+                }
+                _ => None,
+            },
         }
     }
 
