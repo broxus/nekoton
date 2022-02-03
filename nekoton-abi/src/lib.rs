@@ -504,10 +504,7 @@ pub struct ExecutionContext<'a> {
 
 impl<'a> ExecutionContext<'a> {
     pub fn run_local(&self, function: &Function, input: &[Token]) -> Result<ExecutionOutput> {
-        let mut account_stuff = self.account_stuff.clone();
-        account_stuff.storage.balance.grams.0 = 100_000_000_000_000; // 100 000 TON
-
-        FunctionAbi::new(function).run_local(self.clock, &mut account_stuff, input)
+        function.run_local(self.clock, self.account_stuff.clone(), input)
     }
 
     pub fn run_local_responsible(
@@ -515,10 +512,7 @@ impl<'a> ExecutionContext<'a> {
         function: &Function,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
-        let mut account_stuff = self.account_stuff.clone();
-        account_stuff.storage.balance.grams.0 = 100_000_000_000_000; // 100 000 TON
-
-        FunctionAbi::new(function).run_local_responsible(self.clock, &mut account_stuff, input)
+        function.run_local_responsible(self.clock, self.account_stuff.clone(), input)
     }
 }
 
@@ -526,6 +520,13 @@ pub trait FunctionExt {
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>>;
 
     fn run_local(
+        &self,
+        clock: &dyn Clock,
+        account_stuff: AccountStuff,
+        input: &[Token],
+    ) -> Result<ExecutionOutput>;
+
+    fn run_local_responsible(
         &self,
         clock: &dyn Clock,
         account_stuff: AccountStuff,
@@ -549,6 +550,15 @@ where
     ) -> Result<ExecutionOutput> {
         T::run_local(self, clock, account_stuff, input)
     }
+
+    fn run_local_responsible(
+        &self,
+        clock: &dyn Clock,
+        account_stuff: AccountStuff,
+        input: &[Token],
+    ) -> Result<ExecutionOutput> {
+        T::run_local_responsible(self, clock, account_stuff, input)
+    }
 }
 
 impl FunctionExt for Function {
@@ -563,8 +573,17 @@ impl FunctionExt for Function {
         mut account_stuff: AccountStuff,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
-        let abi = FunctionAbi::new(self);
-        abi.run_local(clock, &mut account_stuff, input)
+        FunctionAbi::new(self).run_local(clock, &mut account_stuff, input)
+    }
+
+    fn run_local_responsible(
+        &self,
+        clock: &dyn Clock,
+        mut account_stuff: AccountStuff,
+        input: &[Token],
+    ) -> Result<ExecutionOutput> {
+        account_stuff.storage.balance.grams.0 = 100_000_000_000_000; // 100 000 TON
+        FunctionAbi::new(self).run_local_responsible(clock, &mut account_stuff, input)
     }
 }
 
