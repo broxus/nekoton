@@ -32,6 +32,7 @@ pub use self::models::*;
 pub use self::token_packer::*;
 pub use self::token_unpacker::*;
 pub use self::tokens_json::*;
+pub use transaction_parser::TransactionParser;
 
 mod abi_helpers;
 mod event_builder;

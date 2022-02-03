@@ -1,66 +1,11 @@
 use std::collections::HashMap;
-use std::fmt;
-use std::fmt::{Debug, Formatter};
 
 use anyhow::{Context, Result};
-use ton_abi::Token;
+use ton_abi::{Event, Function, Token};
 use ton_block::{CommonMsgInfo, Deserializable, Message};
 use ton_types::SliceData;
 
 use crate::read_function_id;
-
-pub enum Extractable<'a> {
-    /// Parses Event
-    Event(&'a ton_abi::Event),
-    ///Parses output of function call
-    FunctionInput(&'a ton_abi::Function),
-    ///Parses input of function call
-    FunctionOutput(&'a ton_abi::Function),
-    ///Function with bounce handler
-    Bounce(FunctionWithOptions<'a>),
-}
-
-impl<'a> Extractable<'a> {
-    fn has_bounce(&self) -> bool {
-        match self {
-            Extractable::Bounce(f) => f.bounce_handler.is_some(),
-            _ => false,
-        }
-    }
-
-    pub fn function_id(&self) -> u32 {
-        match self {
-            Extractable::Event(e) => e.get_function_id(),
-            Extractable::FunctionInput(f) => f.input_id,
-            Extractable::FunctionOutput(f) => f.output_id,
-            Extractable::Bounce(f) => f.fun.input_id,
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        match self {
-            Extractable::Event(e) => &e.name,
-            Extractable::FunctionInput(f) => &f.name,
-            Extractable::FunctionOutput(f) => &f.name,
-            Extractable::Bounce(f) => &f.fun.name,
-        }
-    }
-
-    pub fn parse(&self, msg: &ton_block::Message) -> Result<Option<Vec<Token>>> {
-        let tokens = match self {
-            Extractable::Event(e) => process_event_message(msg, e),
-            Extractable::FunctionInput(f) => {
-                process_function_in_msg(msg, &FunctionWithOptions::new(f))
-            }
-            Extractable::FunctionOutput(f) => {
-                process_function_out_message(msg, &FunctionWithOptions::new(f))
-            }
-            Extractable::Bounce(f) => process_function_in_msg(msg, f),
-        }?;
-
-        Ok(tokens)
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct Extracted<'a, 'tx> {
@@ -78,45 +23,10 @@ fn process_event_message(msg: &Message, event: &ton_abi::Event) -> Result<Option
         return Ok(None);
     }
     let body = match msg.body() {
+        Some(body) => body,
         None => return Ok(None),
-        Some(a) => a,
     };
     let tokens = event.decode_input(body).context("Failed decoding")?;
-
-    Ok(Some(tokens))
-}
-
-/// Parses ext in message without checking function id
-fn process_function_in_msg(
-    msg: &Message,
-    fun: &FunctionWithOptions<'_>,
-) -> Result<Option<Vec<Token>>> {
-    let bounced = message_bounced(msg);
-    let is_internal = msg.is_internal();
-    let body = match msg.body() {
-        None => return Ok(None),
-        Some(mut a) => {
-            if bounced {
-                let _ = a.get_next_u32(); //skip function id
-            }
-            a
-        }
-    };
-    if let Some(bounce_handler) = fun.bounce_handler.as_ref() {
-        if bounced {
-            //todo: rewrite when https://github.com/rust-lang/rust/issues/53667 will be resolved
-            let res = bounce_handler(body);
-            return match res {
-                Ok(a) => Ok(Some(a)),
-                Err(e) => Err(anyhow::anyhow!("Failed handling bounce: {}", e)),
-            };
-        }
-    }
-
-    let tokens = fun
-        .fun
-        .decode_input(body, is_internal)
-        .context("Failed decoding input")?;
 
     Ok(Some(tokens))
 }
@@ -129,42 +39,12 @@ pub fn message_bounced(msg: &Message) -> bool {
     }
 }
 
-/// Parses  out messages without checking function id
-fn process_function_out_message(
-    msg: &Message,
-    fun: &FunctionWithOptions<'_>,
-) -> Result<Option<Vec<Token>>> {
-    // if matches!(msg.header(), ton_block::CommonMsgInfo::ExtInMsgInfo(_)) {
-    //     return Ok(None);
-    // }
-    //todo: match_outgoing
-    let is_internal = msg.is_internal();
-    let body = match msg.body() {
-        None => return Ok(None),
-        Some(a) => a,
-    };
-    let tokens = fun
-        .fun
-        .decode_output(body, is_internal)
-        .context("Failed decoding output")?;
-
-    Ok(Some(tokens))
-}
-
+#[derive(Debug)]
+/// Parses transactions with provided extractors
 pub struct TransactionParser<'a> {
-    functions: HashMap<u32, Extractable<'a>>,
-}
-
-impl Debug for TransactionParser<'_> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_map()
-            .entries(
-                self.functions
-                    .iter()
-                    .map(|(id, fun)| (format!("0x{:08x}", id), fun.name())),
-            )
-            .finish()
-    }
+    functions: HashMap<u32, &'a Function>,
+    events: HashMap<u32, &'a Event>,
+    functions_with_bounce: HashMap<u32, FunctionWithOptions<'a>>,
 }
 
 impl<'a> TransactionParser<'a> {
@@ -178,6 +58,22 @@ impl<'a> TransactionParser<'a> {
     ) -> Result<Vec<Extracted<'a, 'tx>>> {
         let mut output = Vec::new();
 
+        if let Some(msg) = &transaction.in_msg {
+            let msg = msg.read_struct().context("Failed reading in msg")?;
+            if let Some(body) = msg.body() {
+                if let Some(parsed) = self.parse_in_message(&msg, body)? {
+                    output.push(Extracted {
+                        function_id: parsed.function_id,
+                        name: parsed.name,
+                        bounced: parsed.bounced,
+                        tokens: parsed.tokens,
+                        message: msg,
+                        tx: transaction,
+                    });
+                }
+            }
+        }
+
         transaction.out_msgs.iterate_slices(|slice| {
             if let Ok(message) = slice
                 .reference(0)
@@ -185,127 +81,235 @@ impl<'a> TransactionParser<'a> {
             {
                 if let Some(body) = message.body() {
                     let function_id = read_function_id(&body)?;
-                    if let Some(function) = self.functions.get(&function_id) {
-                        if let Some(tokens) = function.parse(&message)? {
-                            output.push(Extracted {
-                                function_id,
-                                name: function.name(),
-                                bounced: false, //only for in messages
-                                tokens,
-                                message,
-                                tx: transaction,
-                            });
-                        }
+                    for parsed in self.parse_out_message(&message, function_id)? {
+                        output.push(Extracted {
+                            function_id,
+                            name: parsed.name,
+                            bounced: false,
+                            tokens: parsed.tokens,
+                            message: message.clone(),
+                            tx: transaction,
+                        });
                     }
                 }
             }
             Ok(true)
         })?;
 
-        if let Some(msg) = &transaction.in_msg {
-            let msg = msg.read_struct().context("Failed reading in msg")?;
-            if let Some(mut body) = msg.body() {
-                if message_bounced(&msg) {
-                    body.get_next_u32()?; //skip bounce bytes
-                }
-                let function_id = read_function_id(&body)?;
-                if let Some(function) = self.functions.get(&function_id) {
-                    if let Some(tokens) = function.parse(&msg)? {
-                        output.push(Extracted {
-                            function_id,
-                            name: function.name(),
-                            bounced: function.has_bounce() && message_bounced(&msg),
-                            tokens,
-                            message: msg,
-                            tx: transaction,
-                        });
-                    }
-                }
+        Ok(output)
+    }
+
+    fn parse_in_message(
+        &self,
+        message: &Message,
+        mut body: SliceData,
+    ) -> Result<Option<ParsedInMessage<'_>>> {
+        if message_bounced(message) {
+            body.get_next_u32()?; //skip bounce bytes
+            let function_id = read_function_id(&body)?;
+            if let Some(fun) = self.functions_with_bounce.get(&function_id) {
+                let tokens = (fun.bounce_handler)(body)?;
+                return Ok(Some(ParsedInMessage {
+                    name: &fun.fun.name,
+                    tokens,
+                    bounced: true,
+                    function_id,
+                }));
             }
         }
 
-        Ok(output)
+        let function_id = read_function_id(&body)?;
+        if let Some(function) = self.functions.get(&function_id) {
+            let is_internal = message.is_internal();
+            let tokens = function
+                .decode_input(body, is_internal)
+                .context("Failed decoding input")?;
+            return Ok(Some(ParsedInMessage {
+                tokens,
+                name: &function.name,
+                function_id,
+                bounced: false,
+            }));
+        }
+        Ok(None)
     }
+
+    fn parse_out_message(
+        &self,
+        message: &Message,
+        function_id: u32,
+    ) -> Result<Vec<ParsedOutMessage<'_>>> {
+        let mut tokens = Vec::new();
+
+        if let Some(event) = self.events.get(&function_id) {
+            if let Some(parsed) = process_event_message(message, event)? {
+                tokens.push(ParsedOutMessage {
+                    tokens: parsed,
+                    name: &event.name,
+                });
+            }
+        }
+
+        if let Some(function) = self.functions.get(&function_id) {
+            let parsed = parse_function(function, message, function_id)?;
+            tokens.push(ParsedOutMessage {
+                tokens: parsed,
+                name: &function.name,
+            });
+        }
+
+        Ok(tokens)
+    }
+}
+
+fn parse_function(
+    function: &ton_abi::Function,
+    message: &ton_block::Message,
+    function_id: u32,
+) -> Result<Vec<Token>> {
+    let is_internal = message.is_internal();
+    let body = message.body().context("No body in message")?;
+    let parsed = if function.input_id == function_id {
+        function
+            .decode_input(body, is_internal)
+            .context("Failed decoding output")?
+    } else {
+        function
+            .decode_output(body, is_internal)
+            .context("Failed decoding output")?
+    };
+    Ok(parsed)
+}
+
+struct ParsedInMessage<'a> {
+    tokens: Vec<Token>,
+    name: &'a str,
+    function_id: u32,
+    bounced: bool,
+}
+
+struct ParsedOutMessage<'a> {
+    tokens: Vec<Token>,
+    name: &'a str,
 }
 
 #[derive(Default)]
 pub struct TransactionParserBuilder<'a> {
-    functions: Vec<Extractable<'a>>,
+    functions_in: Vec<&'a Function>,
+    functions_out: Vec<&'a Function>,
+    events: Vec<&'a Event>,
+    functions_with_bounce: Vec<FunctionWithOptions<'a>>,
 }
 
 impl<'a> TransactionParserBuilder<'a> {
+    /// Matches all messages woth in function_id
     pub fn function_input(mut self, function: &'a ton_abi::Function) -> Self {
-        self.functions.push(Extractable::FunctionInput(function));
+        self.functions_in.push(function);
         self
     }
-
+    /// Matches all messages woth out function_id
     pub fn function_output(mut self, function: &'a ton_abi::Function) -> Self {
-        self.functions.push(Extractable::FunctionOutput(function));
+        self.functions_out.push(function);
         self
     }
-
+    /// Matches out messages with event_id
     pub fn event(mut self, event: &'a ton_abi::Event) -> Self {
-        self.functions.push(Extractable::Event(event));
+        self.events.push(event);
         self
     }
-
+    /// Matches in messages with function_id and applies bounce handler
     pub fn function_bounce(mut self, function: FunctionWithOptions<'a>) -> Self {
-        self.functions.push(Extractable::Bounce(function));
+        self.functions_with_bounce.push(function);
         self
     }
 
     pub fn function_in_list(mut self, functions: &'a [ton_abi::Function]) -> Self {
-        for fun in functions {
-            self.functions.push(Extractable::FunctionInput(fun));
-        }
+        self.functions_in.extend(functions);
         self
     }
 
     pub fn functions_out_list(mut self, functions: &'a [ton_abi::Function]) -> Self {
-        for fun in functions {
-            self.functions.push(Extractable::FunctionOutput(fun));
-        }
+        self.functions_out.extend(functions);
         self
     }
 
     pub fn events_list(mut self, events: &'a [ton_abi::Event]) -> Self {
-        for event in events {
-            self.functions.push(Extractable::Event(event));
-        }
+        self.events.extend(events);
         self
     }
 
     pub fn build(self) -> Result<TransactionParser<'a>> {
-        let mut fun_map = HashMap::with_capacity(self.functions.len());
-        for fun in self.functions {
-            let fun_id = fun.function_id();
-            let fun_name = fun.name().to_string();
-            let res = fun_map.insert(fun.function_id(), fun);
+        let mut functions = HashMap::new();
+        let mut functions_with_bounce = HashMap::new();
+        let mut events = HashMap::new();
+
+        for fun in self.functions_in {
+            let fun_id = fun.input_id;
+            let fun_name = fun.name.clone();
+            let res = functions.insert(fun_id, fun);
             if res.is_some() {
-                anyhow::bail!("duplicate function id. Id: {}. Name: {}", fun_id, fun_name);
+                anyhow::bail!(
+                    "duplicate function id for in function. Id: {}. Name: {}",
+                    fun_id,
+                    fun_name
+                );
             }
         }
-        Ok(TransactionParser { functions: fun_map })
+
+        for fun in self.functions_out {
+            let fun_id = fun.output_id;
+            let fun_name = fun.name.clone();
+            let res = functions.insert(fun_id, fun);
+            if res.is_some() {
+                anyhow::bail!(
+                    "duplicate function id for out function. Id: {}. Name: {}",
+                    fun_id,
+                    fun_name
+                );
+            }
+        }
+
+        for fun in self.functions_with_bounce {
+            let fun_id = fun.fun.input_id;
+            let fun_name = fun.fun.name.clone();
+            let res = functions_with_bounce.insert(fun_id, fun);
+            if res.is_some() {
+                anyhow::bail!(
+                    "duplicate function id for function with bounce. Id: {}. Name: {}",
+                    fun_id,
+                    fun_name
+                );
+            }
+        }
+
+        for event in self.events {
+            let fun_id = event.get_function_id();
+            let fun_name = event.name.clone();
+            let res = events.insert(fun_id, event);
+            if res.is_some() {
+                anyhow::bail!("duplicate event id. Id: {}. Name: {}", fun_id, fun_name);
+            }
+        }
+
+        Ok(TransactionParser {
+            functions,
+            events,
+            functions_with_bounce,
+        })
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct FunctionWithOptions<'a> {
     fun: &'a ton_abi::Function,
-    bounce_handler: Option<BounceHandler>,
+    bounce_handler: BounceHandler,
 }
 
 impl<'a> FunctionWithOptions<'a> {
-    fn new(fun: &'a ton_abi::Function) -> Self {
-        FunctionWithOptions {
-            fun,
-            bounce_handler: None,
-        }
-    }
-
-    pub fn with_bounce_handler(fun: &'a ton_abi::Function, bounce_handler: BounceHandler) -> Self {
+    pub fn new(fun: &'a ton_abi::Function, bounce_handler: BounceHandler) -> Self {
         Self {
             fun,
-            bounce_handler: Some(bounce_handler),
+            bounce_handler,
         }
     }
 }
@@ -418,15 +422,17 @@ mod test {
         let out = parser.parse(&txs[0]).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].name, "internalTransfer");
+
         let out = parser.parse(&txs[1]).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].name, "internalTransfer");
         let out = parser.parse(&txs[2]).unwrap();
 
         assert_eq!(out.len(), 3);
-        assert_eq!(out[0].name, "constructor");
-        assert_eq!(out[1].name, "internalTransfer");
-        assert_eq!(out[2].name, "transferToRecipient");
+        dbg!(&out);
+        assert_eq!(out[0].name, "transferToRecipient");
+        assert_eq!(out[1].name, "constructor");
+        assert_eq!(out[2].name, "internalTransfer");
     }
 
     #[test]
@@ -464,7 +470,7 @@ mod test {
             .functions()["internalTransfer"]
             .clone();
         // internalTransfer - 416421634 416421634
-        let fun = FunctionWithOptions::with_bounce_handler(&fun, bounce_handler);
+        let fun = FunctionWithOptions::new(&fun, bounce_handler);
         let parser = TransactionParser::builder()
             .function_bounce(fun)
             .build()
