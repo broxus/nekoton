@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use ton_abi::{Event, Function, Token};
-use ton_block::{CommonMsgInfo, Deserializable, GetRepresentationHash, Message};
+use ton_block::{CommonMsgInfo, Deserializable, GetRepresentationHash, Message, TransactionDescr};
 use ton_types::SliceData;
 
 use crate::read_function_id;
@@ -34,6 +34,14 @@ impl<'a, 'tx> Extracted<'a, 'tx> {
 
     pub fn message_recipient(&self) -> Option<ton_block::MsgAddressInt> {
         self.message.dst()
+    }
+
+    pub fn success(&self) -> bool {
+        let res = self.tx.description.read_struct().map(|x| match x {
+            TransactionDescr::Ordinary(a) => !a.aborted,
+            _ => false,
+        });
+        res.unwrap_or(false)
     }
 }
 
@@ -558,5 +566,12 @@ mod test {
                 .unwrap()
                 .as_slice()
         );
+        assert!(token.success());
+
+        let tx = "te6ccgECCQEAAhUAA7V33dm+U37BKqMyPH84gieQ9gEkKbVl1DkuWUy3o/BnG/AAAVIf/RIoEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYflboQAD5gosIIAwIBAB8ECQLHmPIBwDBRYQMKLDBAAIJykK7Illr6uxbrw8ubQI665xthjXh4i8gNCYQ1k8rJjaSQrsiWWvq7FuvDy5tAjrrnG2GNeHiLyA0JhDWTysmNpAIB4AYEAQHfBQD5WAD7uzfKb9glVGZHj+cQRPIewCSFNqy6hyXLKZb0fgzjfwAjJ1VPtnxmoxtEIMno5sVjxhZlPEbk/jWsZqPh2RCfgJAsPIYgBhRYYAAAKkP/okUEw/K3Qn////+MaQuBAAAAAAAAAAAAAca/UmNAAAAAAAAAAAAAAAAAAEABsWgBGTqqfbPjNRjaIQZPRzYrHjCzKeI3J/GtYzUfDsiE/AUAH3dm+U37BKqMyPH84gieQ9gEkKbVl1DkuWUy3o/BnG/QLHmPIAYrwzYAACpD/0a3hMPytzLABwHtGNIXAgAAAAAAAAAAAAONfqTGgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAY5RGXuGtI1q+zl3Tv9Upy40cY+oTi+JDkfKiMma6+/fADHKIy9w1pGtX2cu6d/qlOXGjjH1CcXxIcj5URkzXX378IAAA=";
+        let tx = Transaction::construct_from_base64(tx).unwrap();
+        let token = parser.parse(&tx).unwrap().remove(0);
+        assert!(!token.success());
+        assert_eq!(token.name, "internalTransfer");
     }
 }
