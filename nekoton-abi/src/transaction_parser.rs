@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
@@ -69,21 +70,21 @@ pub fn message_bounced(msg: &Message) -> bool {
 
 #[derive(Debug)]
 /// Parses transactions with provided extractors
-pub struct TransactionParser<'a> {
-    functions: HashMap<u32, &'a Function>,
-    events: HashMap<u32, &'a Event>,
-    functions_with_bounce: HashMap<u32, FunctionWithOptions<'a>>,
+pub struct TransactionParser {
+    functions: HashMap<u32, Function>,
+    events: HashMap<u32, Event>,
+    functions_with_bounce: HashMap<u32, FunctionWithOptions>,
 }
 
-impl<'a> TransactionParser<'a> {
-    pub fn builder() -> TransactionParserBuilder<'a> {
+impl TransactionParser {
+    pub fn builder() -> TransactionParserBuilder {
         TransactionParserBuilder::default()
     }
 
-    pub fn parse<'tx>(
-        &'a self,
+    pub fn parse<'this, 'tx>(
+        &'this self,
         transaction: &'tx ton_block::Transaction,
-    ) -> Result<Vec<Extracted<'a, 'tx>>> {
+    ) -> Result<Vec<Extracted<'this, 'tx>>> {
         let mut output = Vec::new();
 
         if let Some(msg) = &transaction.in_msg {
@@ -224,51 +225,60 @@ struct ParsedOutMessage<'a> {
 }
 
 #[derive(Default)]
-pub struct TransactionParserBuilder<'a> {
-    functions_in: Vec<&'a Function>,
-    functions_out: Vec<&'a Function>,
-    events: Vec<&'a Event>,
-    functions_with_bounce: Vec<FunctionWithOptions<'a>>,
+pub struct TransactionParserBuilder {
+    functions_in: Vec<Function>,
+    functions_out: Vec<Function>,
+    events: Vec<Event>,
+    functions_with_bounce: Vec<FunctionWithOptions>,
 }
 
-impl<'a> TransactionParserBuilder<'a> {
+impl TransactionParserBuilder {
     /// Matches all messages woth in function_id
-    pub fn function_input(mut self, function: &'a ton_abi::Function) -> Self {
-        self.functions_in.push(function);
+    pub fn function_input<F>(mut self, function: F) -> Self
+    where
+        F: Borrow<ton_abi::Function>,
+    {
+        self.functions_in.push(function.borrow().clone());
         self
     }
     /// Matches all messages woth out function_id
-    pub fn function_output(mut self, function: &'a ton_abi::Function) -> Self {
-        self.functions_out.push(function);
+    pub fn function_output<F>(mut self, function: F) -> Self
+    where
+        F: Borrow<ton_abi::Function>,
+    {
+        self.functions_out.push(function.borrow().clone());
         self
     }
     /// Matches out messages with event_id
-    pub fn event(mut self, event: &'a ton_abi::Event) -> Self {
-        self.events.push(event);
+    pub fn event<E>(mut self, event: E) -> Self
+    where
+        E: Borrow<ton_abi::Event>,
+    {
+        self.events.push(event.borrow().clone());
         self
     }
     /// Matches in messages with function_id and applies bounce handler
-    pub fn function_bounce(mut self, function: FunctionWithOptions<'a>) -> Self {
+    pub fn function_bounce(mut self, function: FunctionWithOptions) -> Self {
         self.functions_with_bounce.push(function);
         self
     }
 
-    pub fn function_in_list(mut self, functions: &'a [ton_abi::Function]) -> Self {
-        self.functions_in.extend(functions);
+    pub fn function_in_list(mut self, functions: &[ton_abi::Function]) -> Self {
+        self.functions_in.extend(functions.iter().cloned());
         self
     }
 
-    pub fn functions_out_list(mut self, functions: &'a [ton_abi::Function]) -> Self {
-        self.functions_out.extend(functions);
+    pub fn functions_out_list(mut self, functions: &[ton_abi::Function]) -> Self {
+        self.functions_out.extend(functions.iter().cloned());
         self
     }
 
-    pub fn events_list(mut self, events: &'a [ton_abi::Event]) -> Self {
-        self.events.extend(events);
+    pub fn events_list(mut self, events: &[ton_abi::Event]) -> Self {
+        self.events.extend(events.iter().cloned());
         self
     }
 
-    pub fn build(self) -> Result<TransactionParser<'a>> {
+    pub fn build(self) -> Result<TransactionParser> {
         let mut functions = HashMap::new();
         let mut functions_with_bounce = HashMap::new();
         let mut events = HashMap::new();
@@ -330,15 +340,18 @@ impl<'a> TransactionParserBuilder<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct FunctionWithOptions<'a> {
-    fun: &'a ton_abi::Function,
+pub struct FunctionWithOptions {
+    fun: ton_abi::Function,
     bounce_handler: BounceHandler,
 }
 
-impl<'a> FunctionWithOptions<'a> {
-    pub fn new(fun: &'a ton_abi::Function, bounce_handler: BounceHandler) -> Self {
+impl FunctionWithOptions {
+    pub fn new<F>(fun: F, bounce_handler: BounceHandler) -> Self
+    where
+        F: Borrow<ton_abi::Function>,
+    {
         Self {
-            fun,
+            fun: fun.borrow().clone(),
             bounce_handler,
         }
     }
