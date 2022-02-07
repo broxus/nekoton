@@ -30,6 +30,7 @@ impl<'de> Deserialize<'de> for StringOrNumber {
         D: serde::Deserializer<'de>,
     {
         #[derive(Deserialize)]
+        #[serde(untagged)]
         enum Value<'a> {
             String(&'a str),
             Number(u64),
