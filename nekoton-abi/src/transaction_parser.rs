@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use ton_abi::{Event, Function, Token};
+use ton_abi::{Event, Token};
 use ton_block::{CommonMsgInfo, Deserializable, GetRepresentationHash, Message, TransactionDescr};
 use ton_types::SliceData;
 
@@ -71,9 +71,9 @@ pub fn message_bounced(msg: &Message) -> bool {
 #[derive(Debug)]
 /// Parses transactions with provided extractors
 pub struct TransactionParser {
-    functions: HashMap<u32, Function>,
+    functions: HashMap<u32, FunctionOpts>,
     events: HashMap<u32, Event>,
-    functions_with_bounce: HashMap<u32, FunctionWithOptions>,
+    functions_with_bounce: HashMap<u32, FunctionWithBounceHandler>,
 }
 
 impl TransactionParser {
@@ -157,7 +157,7 @@ impl TransactionParser {
                 .context("Failed decoding input")?;
             return Ok(Some(ParsedInMessage {
                 tokens,
-                name: &function.name,
+                name: &function.fun.name,
                 function_id,
                 bounced: false,
             }));
@@ -185,7 +185,7 @@ impl TransactionParser {
             let parsed = parse_function(function, message, function_id)?;
             tokens.push(ParsedOutMessage {
                 tokens: parsed,
-                name: &function.name,
+                name: &function.fun.name,
             });
         }
 
@@ -194,13 +194,13 @@ impl TransactionParser {
 }
 
 fn parse_function(
-    function: &ton_abi::Function,
+    function: &FunctionOpts,
     message: &ton_block::Message,
     function_id: u32,
 ) -> Result<Vec<Token>> {
     let is_internal = message.is_internal();
     let body = message.body().context("No body in message")?;
-    let parsed = if function.input_id == function_id {
+    let parsed = if function.fun.input_id == function_id {
         function
             .decode_input(body, is_internal)
             .context("Failed decoding output")?
@@ -226,27 +226,33 @@ struct ParsedOutMessage<'a> {
 
 #[derive(Default)]
 pub struct TransactionParserBuilder {
-    functions_in: Vec<Function>,
-    functions_out: Vec<Function>,
+    functions_in: Vec<FunctionOpts>,
+    functions_out: Vec<FunctionOpts>,
     events: Vec<Event>,
-    functions_with_bounce: Vec<FunctionWithOptions>,
+    functions_with_bounce: Vec<FunctionWithBounceHandler>,
 }
 
 impl TransactionParserBuilder {
-    /// Matches all messages woth in function_id
-    pub fn function_input<F>(mut self, function: F) -> Self
+    /// Matches all messages with in function_id.
+    /// # Params:
+    /// * 'allow_partial_match' - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
+    pub fn function_input<F>(mut self, function: F, allow_partial_match: bool) -> Self
     where
         F: Borrow<ton_abi::Function>,
     {
-        self.functions_in.push(function.borrow().clone());
+        let fun = FunctionOpts::new(function, allow_partial_match);
+        self.functions_in.push(fun);
         self
     }
-    /// Matches all messages woth out function_id
-    pub fn function_output<F>(mut self, function: F) -> Self
+    /// Matches all messages with out function_id
+    /// # Params:
+    /// * 'allow_partial_match' - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
+    pub fn function_output<F>(mut self, function: F, allow_partial_match: bool) -> Self
     where
         F: Borrow<ton_abi::Function>,
     {
-        self.functions_out.push(function.borrow().clone());
+        let fun = FunctionOpts::new(function, allow_partial_match);
+        self.functions_out.push(fun);
         self
     }
     /// Matches out messages with event_id
@@ -258,18 +264,34 @@ impl TransactionParserBuilder {
         self
     }
     /// Matches in messages with function_id and applies bounce handler
-    pub fn function_bounce(mut self, function: FunctionWithOptions) -> Self {
+    pub fn function_bounce(mut self, function: FunctionWithBounceHandler) -> Self {
         self.functions_with_bounce.push(function);
         self
     }
 
-    pub fn function_in_list(mut self, functions: &[ton_abi::Function]) -> Self {
-        self.functions_in.extend(functions.iter().cloned());
+    pub fn function_in_list(
+        mut self,
+        functions: &[ton_abi::Function],
+        allow_partial_match: bool,
+    ) -> Self {
+        self.functions_in.extend(
+            functions
+                .iter()
+                .map(|f| FunctionOpts::new(f, allow_partial_match)),
+        );
         self
     }
 
-    pub fn functions_out_list(mut self, functions: &[ton_abi::Function]) -> Self {
-        self.functions_out.extend(functions.iter().cloned());
+    pub fn functions_out_list(
+        mut self,
+        functions: &[ton_abi::Function],
+        allow_partial_match: bool,
+    ) -> Self {
+        self.functions_out.extend(
+            functions
+                .iter()
+                .map(|f| FunctionOpts::new(f, allow_partial_match)),
+        );
         self
     }
 
@@ -277,15 +299,16 @@ impl TransactionParserBuilder {
         self.events.extend(events.iter().cloned());
         self
     }
-
+    /// Returns `Err` if there are duplicate function_ids
     pub fn build(self) -> Result<TransactionParser> {
         let mut functions = HashMap::new();
         let mut functions_with_bounce = HashMap::new();
         let mut events = HashMap::new();
 
         for fun in self.functions_in {
-            let fun_id = fun.input_id;
-            let fun_name = fun.name.clone();
+            let f = &fun.fun;
+            let fun_id = f.input_id;
+            let fun_name = f.name.clone();
             let res = functions.insert(fun_id, fun);
             if res.is_some() {
                 anyhow::bail!(
@@ -297,8 +320,9 @@ impl TransactionParserBuilder {
         }
 
         for fun in self.functions_out {
-            let fun_id = fun.output_id;
-            let fun_name = fun.name.clone();
+            let f = &fun.fun;
+            let fun_id = f.output_id;
+            let fun_name = f.name.clone();
             let res = functions.insert(fun_id, fun);
             if res.is_some() {
                 anyhow::bail!(
@@ -340,12 +364,12 @@ impl TransactionParserBuilder {
 }
 
 #[derive(Debug, Clone)]
-pub struct FunctionWithOptions {
+pub struct FunctionWithBounceHandler {
     fun: ton_abi::Function,
     bounce_handler: BounceHandler,
 }
 
-impl FunctionWithOptions {
+impl FunctionWithBounceHandler {
     pub fn new<F>(fun: F, bounce_handler: BounceHandler) -> Self
     where
         F: Borrow<ton_abi::Function>,
@@ -359,6 +383,40 @@ impl FunctionWithOptions {
 
 pub type BounceHandler = fn(SliceData) -> Result<Vec<Token>>;
 
+#[derive(Debug, Clone)]
+struct FunctionOpts {
+    fun: ton_abi::Function,
+    allow_partial_match: bool,
+}
+
+impl FunctionOpts {
+    fn new<F>(fun: F, allow_partial_match: bool) -> Self
+    where
+        F: Borrow<ton_abi::Function>,
+    {
+        Self {
+            fun: fun.borrow().clone(),
+            allow_partial_match,
+        }
+    }
+
+    fn decode_input(&self, data: SliceData, internal: bool) -> Result<Vec<Token>> {
+        if self.allow_partial_match {
+            self.fun.decode_input_partial(data, internal)
+        } else {
+            self.fun.decode_input(data, internal)
+        }
+    }
+
+    fn decode_output(&self, data: SliceData, internal: bool) -> Result<Vec<Token>> {
+        if self.allow_partial_match {
+            self.fun.decode_output_partial(data, internal)
+        } else {
+            self.fun.decode_output(data, internal)
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use anyhow::Result;
@@ -366,7 +424,9 @@ mod test {
     use ton_block::{Deserializable, Transaction};
     use ton_types::SliceData;
 
-    use crate::transaction_parser::{FunctionWithOptions, TransactionParser};
+    use nekoton_contracts::{tip3, tip3_1};
+
+    use crate::transaction_parser::{FunctionWithBounceHandler, TransactionParser};
     use crate::{EventBuilder, FunctionBuilder};
 
     #[test]
@@ -375,7 +435,7 @@ mod test {
         let evt = EventBuilder::new("kek").build();
 
         super::TransactionParserBuilder::default()
-            .function_input(&fun)
+            .function_input(&fun, false)
             .event(&evt)
             .build()
             .unwrap();
@@ -389,8 +449,8 @@ mod test {
         }
 
         let test = super::TransactionParserBuilder::default()
-            .function_input(&fun)
-            .function_input(&fun)
+            .function_input(&fun, false)
+            .function_input(&fun, false)
             .build();
 
         assert!(test.is_err());
@@ -457,8 +517,8 @@ mod test {
             .map(|x| Transaction::construct_from_base64(x).unwrap())
             .collect();
         let parser = TransactionParser::builder()
-            .function_in_list(&fun)
-            .functions_out_list(&fun)
+            .function_in_list(&fun, false)
+            .functions_out_list(&fun, false)
             .build()
             .unwrap();
 
@@ -487,7 +547,7 @@ mod test {
             .clone();
         let tx = Transaction::construct_from_base64(tx).unwrap();
         let parser = TransactionParser::builder()
-            .function_input(&fun)
+            .function_input(&fun, false)
             .build()
             .unwrap();
 
@@ -513,7 +573,7 @@ mod test {
             .functions()["internalTransfer"]
             .clone();
         // internalTransfer - 416421634 416421634
-        let fun = FunctionWithOptions::new(&fun, bounce_handler);
+        let fun = FunctionWithBounceHandler::new(&fun, bounce_handler);
         let parser = TransactionParser::builder()
             .function_bounce(fun)
             .build()
@@ -535,7 +595,7 @@ mod test {
             .functions()["internalTransfer"]
             .clone();
         let parser = TransactionParser::builder()
-            .function_input(&fun)
+            .function_input(&fun, false)
             .build()
             .unwrap();
         let tokens = parser.parse(&tx).unwrap();
@@ -560,7 +620,7 @@ mod test {
             .functions()["internalTransfer"]
             .clone();
         let parser = TransactionParser::builder()
-            .function_input(&fun)
+            .function_input(&fun, false)
             .build()
             .unwrap();
         let token = parser.parse(&tx).unwrap().remove(0);
@@ -586,5 +646,52 @@ mod test {
         let token = parser.parse(&tx).unwrap().remove(0);
         assert!(!token.success());
         assert_eq!(token.name, "internalTransfer");
+    }
+
+    fn basic_tokens_parser() -> TransactionParser {
+        // basic tip3
+        let accept_transfer_basic = tip3::token_wallet_contract::accept_transfer();
+        let accept_mint_basic = tip3::token_wallet_contract::accept_mint();
+        let accept_burn_basic = tip3::root_token_contract::accept_burn();
+
+        TransactionParser::builder()
+            .function_input(accept_transfer_basic, true)
+            .function_input(accept_mint_basic, true)
+            .function_input(accept_burn_basic, true)
+            .build()
+            .unwrap()
+    }
+
+    #[test]
+    fn test_partial_match() {
+        let tx = "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";
+        let tx = Transaction::construct_from_base64(tx).unwrap();
+        let extractor = basic_tokens_parser();
+        let parsed = extractor.parse(&tx).unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0].tokens.len(), 1);
+    }
+
+    fn tip_3_1_tokens_parser() -> TransactionParser {
+        let accept_transfer = tip3_1::token_wallet_contract::accept_transfer();
+        let accept_mint = tip3_1::token_wallet_contract::accept_mint();
+        let accept_burn = tip3_1::root_token_contract::accept_burn();
+
+        TransactionParser::builder()
+            .function_input(accept_transfer, false)
+            .function_input(accept_mint, false)
+            .function_input(accept_burn, false)
+            .build()
+            .unwrap()
+    }
+
+    #[test]
+    fn test_full_match() {
+        let tx = "te6ccgECdQEAFD4AA7d7RWFFxSEJryatDzm+AxO46pfS+Y2BHcW6TNfwUS+kcvAAAVTkBlGgEJ6cVgRp+0y+eTPP1dhHIahJ3voAuXZ03g/xGN1vJvogAAFU41yQmDYgDuswAFSARBHIaAUEAQIbBICOCQdzWUAYgCdHLREDAgBxygFZfVBPmUqMAAAAAAAGAAIAAAAF94wwfUtBq0HGPAW2OCyu1mRaLq3FwoBMWqmi1syRdYxa1CzcAJ5KDiwehIAAAAAAAAAAATMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIJynzLxfIIfrUOjwlaA7Rp9FBN+S9iq3alDrooENt2ZBWsCGRiQhq6iHJVo5d0cuuWCLWOALjt2OjjtpkGDc08ZDQIB4HEGAgHdCgcBASAIAbFoAWisKLikITXk1aHnN8Bidx1S+l8xsCO4t0ma/gol9I5fABYoaEdi5Ccb//GkfOknvLNaAJ9zIcgKLev41a1oSiPeEE+pP+AGKJa2AAAqnIDKNAbEAd1mwAkBa2eguV8AAAAAAAAAAAAAAAAFXUqAgBtjFM/oxN4rWApvQwiLJv7QvzZgMJ4a9lF8l71yWl+yEHMBASALArNoAWisKLikITXk1aHnN8Bidx1S+l8xsCO4t0ma/gol9I5fABYoaEdi5Ccb//GkfOknvLNaAJ9zIcgKLev41a1oSiPeEBfXhAAIA3C5RAAAKpyAyjQExAHdZ+BTDAJTFaA4+wAAAACAG2MUz+jE3itYCm9DCIsm/tC/NmAwnhr2UXyXvXJaX7IQDg0AQ4AbYxTP6MTeK1gKb0MIiyb+0L82YDCeGvZRfJe9clpfshACBorbNXAPBCSK7VMg4wMgwP/jAiDA/uMC8gtNERB0A77tRNDXScMB+GaJ+Gkh2zzTAAGOGoECANcYIPkBAdMAAZTT/wMBkwL4QuL5EPKoldMAAfJ64tM/AfhDIbnytCD4I4ED6KiCCBt3QKC58rT4Y9MfAfgjvPK50x8B2zzyPGodEgR87UTQ10nDAfhmItDTA/pAMPhpqTgA+ER/b3GCCJiWgG9ybW9zcG90+GTjAiHHAOMCIdcNH/K8IeMDAds88jxKa2sSAiggghBnoLlfu+MCIIIQfW/yVLvjAh8TAzwgghBotV8/uuMCIIIQc+IhQ7rjAiCCEH1v8lS64wIcFhQDNjD4RvLgTPhCbuMAIZPU0dDe+kDR2zww2zzyAEwVUABo+Ev4SccF8uPo+Ev4TfhKcMjPhYDKAHPPQM5xzwtuVSDIz5BT9raCyx/OAcjOzc3JgED7AANOMPhG8uBM+EJu4wAhk9TR0N7Tf/pA03/U0dD6QNIA1NHbPDDbPPIATBdQBG74S/hJxwXy4+glwgDy5Bol+Ey78uQkJPpCbxPXC//DACX4S8cFs7Dy5AbbPHD7AlUD2zyJJcIAUTpqGAGajoCcIfkAyM+KAEDL/8nQ4jH4TCehtX/4bFUhAvhLVQZVBH/Iz4WAygBzz0DOcc8LblVAyM+RnoLlfst/zlUgyM7KAMzNzcmBAID7AFsZAQpUcVTbPBoCuPhL+E34QYjIz44rbNbMzslVBCD5APgo+kJvEsjPhkDKB8v/ydAGJsjPhYjOAfoCi9AAAAAAAAAAAAAAAAAHzxYh2zzMz4NVMMjPkFaA4+7Myx/OAcjOzc3JcfsAcBsANNDSAAGT0gQx3tIAAZPSATHe9AT0BPQE0V8DARww+EJu4wD4RvJz0fLAZB0CFu1E0NdJwgGOgOMNHkwDZnDtRND0BXEhgED0Do6A33IigED0Do6A33AgiPhu+G34bPhr+GqAQPQO8r3XC//4YnD4Y2lpdARQIIIQDwJYqrvjAiCCECDrx2274wIgghBGqdfsu+MCIIIQZ6C5X7vjAj0yKSAEUCCCEElpWH+64wIgghBWJUituuMCIIIQZl3On7rjAiCCEGeguV+64wInJSMhA0ow+Eby4Ez4Qm7jACGT1NHQ3tN/+kDU0dD6QNIA1NHbPDDbPPIATCJQAuT4SSTbPPkAyM+KAEDL/8nQxwXy5EzbPHL7AvhMJaC1f/hsAY41UwH4SVNW+Er4S3DIz4WAygBzz0DOcc8LblVQyM+Rw2J/Js7Lf1UwyM5VIMjOWcjOzM3Nzc2aIcjPhQjOgG/PQOLJgQCApgK1B/sAXwQ6UQPsMPhG8uBM+EJu4wDTH/hEWG91+GTR2zwhjiUj0NMB+kAwMcjPhyDOjQQAAAAAAAAAAAAAAAAOZdzp+M8WzMlwji74RCBvEyFvEvhJVQJvEchyz0DKAHPPQM4B+gL0AIBqz0D4RG8VzwsfzMn4RG8U4vsA4wDyAEwkSAE0+ERwb3KAQG90cG9x+GT4QYjIz44rbNbMzslwA0Yw+Eby4Ez4Qm7jACGT1NHQ3tN/+kDU0dD6QNTR2zww2zzyAEwmUAEW+Ev4SccF8uPo2zxCA/Aw+Eby4Ez4Qm7jANMf+ERYb3X4ZNHbPCGOJiPQ0wH6QDAxyM+HIM6NBAAAAAAAAAAAAAAAAAyWlYf4zxbLf8lwji/4RCBvEyFvEvhJVQJvEchyz0DKAHPPQM4B+gL0AIBqz0D4RG8Vzwsfy3/J+ERvFOL7AOMA8gBMKEgAIPhEcG9ygEBvdHBvcfhk+EwEUCCCEDIE7Cm64wIgghBDhPKYuuMCIIIQRFdChLrjAiCCEEap1+y64wIwLiwqA0ow+Eby4Ez4Qm7jACGT1NHQ3tN/+kDU0dD6QNIA1NHbPDDbPPIATCtQAcz4S/hJxwXy4+gkwgDy5Bok+Ey78uQkI/pCbxPXC//DACT4KMcFs7Dy5AbbPHD7AvhMJaG1f/hsAvhLVRN/yM+FgMoAc89AznHPC25VQMjPkZ6C5X7Lf85VIMjOygDMzc3JgQCA+wBRA+Iw+Eby4Ez4Qm7jANMf+ERYb3X4ZNHbPCGOHSPQ0wH6QDAxyM+HIM5xzwthAcjPkxFdChLOzclwjjH4RCBvEyFvEvhJVQJvEchyz0DKAHPPQM4B+gL0AHHPC2kByPhEbxXPCx/Ozcn4RG8U4vsA4wDyAEwtSAAg+ERwb3KAQG90cG9x+GT4SgNAMPhG8uBM+EJu4wAhk9TR0N7Tf/pA0gDU0ds8MNs88gBML1AB8PhK+EnHBfLj8ts8cvsC+EwkoLV/+GwBjjJUcBL4SvhLcMjPhYDKAHPPQM5xzwtuVTDIz5Hqe3iuzst/WcjOzM3NyYEAgKYCtQf7AI4oIfpCbxPXC//DACL4KMcFs7COFCHIz4UIzoBvz0DJgQCApgK1B/sA3uJfA1ED9DD4RvLgTPhCbuMA0x/4RFhvdfhk0x/R2zwhjiYj0NMB+kAwMcjPhyDOjQQAAAAAAAAAAAAAAAALIE7CmM8WygDJcI4v+EQgbxMhbxL4SVUCbxHIcs9AygBzz0DOAfoC9ACAas9A+ERvFc8LH8oAyfhEbxTi+wDjAPIATDFIAJr4RHBvcoBAb3Rwb3H4ZCCCEDIE7Cm6IYIQT0efo7oighAqSsQ+uiOCEFYlSK26JIIQDC/yDbolghB+3B03ulUFghAPAliqurGxsbGxsQRQIIIQEzKpMbrjAiCCEBWgOPu64wIgghAfATKRuuMCIIIQIOvHbbrjAjs3NTMDNDD4RvLgTPhCbuMAIZPU0dDe+kDR2zzjAPIATDRIAUL4S/hJxwXy4+jbPHD7AsjPhQjOgG/PQMmBAICmArUH+wBSA+Iw+Eby4Ez4Qm7jANMf+ERYb3X4ZNHbPCGOHSPQ0wH6QDAxyM+HIM5xzwthAcjPknwEykbOzclwjjH4RCBvEyFvEvhJVQJvEchyz0DKAHPPQM4B+gL0AHHPC2kByPhEbxXPCx/Ozcn4RG8U4vsA4wDyAEw2SAAg+ERwb3KAQG90cG9x+GT4SwNMMPhG8uBM+EJu4wAhltTTH9TR0JPU0x/i+kDU0dD6QNHbPOMA8gBMOEgCePhJ+ErHBSCOgN/y4GTbPHD7AiD6Qm8T1wv/wwAh+CjHBbOwjhQgyM+FCM6Ab89AyYEAgKYCtQf7AN5fBDlRASYwIds8+QDIz4oAQMv/ydD4SccFOgBUcMjL/3BtgED0Q/hKcViAQPQWAXJYgED0Fsj0AMn4TsjPhID0APQAz4HJA/Aw+Eby4Ez4Qm7jANMf+ERYb3X4ZNHbPCGOJiPQ0wH6QDAxyM+HIM6NBAAAAAAAAAAAAAAAAAkzKpMYzxbLH8lwji/4RCBvEyFvEvhJVQJvEchyz0DKAHPPQM4B+gL0AIBqz0D4RG8Vzwsfyx/J+ERvFOL7AOMA8gBMPEgAIPhEcG9ygEBvdHBvcfhk+E0ETCCCCIV++rrjAiCCCzaRmbrjAiCCEAwv8g264wIgghAPAliquuMCR0NAPgM2MPhG8uBM+EJu4wAhk9TR0N76QNHbPDDbPPIATD9QAEL4S/hJxwXy4+j4TPLULsjPhQjOgG/PQMmBAICmILUH+wADRjD4RvLgTPhCbuMAIZPU0dDe03/6QNTR0PpA1NHbPDDbPPIATEFQARb4SvhJxwXy4/LbPEIBmiPCAPLkGiP4TLvy5CTbPHD7AvhMJKG1f/hsAvhLVQP4Sn/Iz4WAygBzz0DOcc8LblVAyM+QZK1Gxst/zlUgyM5ZyM7Mzc3NyYEAgPsAUQNEMPhG8uBM+EJu4wAhltTTH9TR0JPU0x/i+kDR2zww2zzyAExEUAIo+Er4SccF8uPy+E0iuo6AjoDiXwNGRQFy+ErIzvhLAc74TAHLf/hNAcsfUiDLH1IQzvhOAcwj+wQj0CCLOK2zWMcFk9dN0N7XTNDtHu1Tyds8YgEy2zxw+wIgyM+FCM6Ab89AyYEAgKYCtQf7AFED7DD4RvLgTPhCbuMA0x/4RFhvdfhk0ds8IY4lI9DTAfpAMDHIz4cgzo0EAAAAAAAAAAAAAAAACAhX76jPFszJcI4u+EQgbxMhbxL4SVUCbxHIcs9AygBzz0DOAfoC9ACAas9A+ERvFc8LH8zJ+ERvFOL7AOMA8gBMSUgAKO1E0NP/0z8x+ENYyMv/yz/Oye1UACD4RHBvcoBAb3Rwb3H4ZPhOA7wh1h8x+Eby4Ez4Qm7jANs8cvsCINMfMiCCEGeguV+6jj0h038z+EwhoLV/+Gz4SQH4SvhLcMjPhYDKAHPPQM5xzwtuVSDIz5CfQjemzst/AcjOzc3JgQCApgK1B/sATFFLAYyOQCCCEBkrUbG6jjUh038z+EwhoLV/+Gz4SvhLcMjPhYDKAHPPQM5xzwtuWcjPkHDKgrbOy3/NyYEAgKYCtQf7AN7iW9s8UABK7UTQ0//TP9MAMfpA1NHQ+kDTf9Mf1NH4bvht+Gz4a/hq+GP4YgIK9KQg9KFObQQsoAAAAALbPHL7Aon4aon4a3D4bHD4bVFqak8Dpoj4bokB0CD6QPpA03/TH9Mf+kA3XkD4avhr+Gww+G0y1DD4biD6Qm8T1wv/wwAh+CjHBbOwjhQgyM+FCM6Ab89AyYEAgKYCtQf7AN4w2zz4D/IAdGpQAEb4TvhN+Ez4S/hK+EP4QsjL/8s/z4POVTDIzst/yx/MzcntVAEe+CdvEGim/mChtX/bPLYJUgAMghAF9eEAAgE0WlQBAcBVAgPPoFdWAENIARxLDMBKJ9M0q/RXwQrCjTj5yjT6tEsu6rHO/eV5Jw9pAgEgWVgAQyAFlHnvn4737WHpxEOTNiiSwiIXzGj86O6cHnEUi9D9EQQAQQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAIGits1cFsEJIrtUyDjAyDA/+MCIMD+4wLyC2xdXHQDiu1E0NdJwwH4Zon4aSHbPNMAAZ+BAgDXGCD5AVj4QvkQ8qje0z8B+EMhufK0IPgjgQPoqIIIG3dAoLnytPhj0x8B2zzyPGpmXgNS7UTQ10nDAfhmItDTA/pAMPhpqTgA3CHHAOMCIdcNH/K8IeMDAds88jxra14BFCCCEBWgOPu64wJfBJAw+EJu4wD4RvJzIZbU0x/U0dCT1NMf4vpA1NHQ+kDR+En4SscFII6A346AjhQgyM+FCM6Ab89AyYEAgKYgtQf7AOJfBNs88gBmY2BvAQhdIts8YQJ8+ErIzvhLAc5wAct/cAHLHxLLH874QYjIz44rbNbMzskBzCH7BAHQIIs4rbNYxwWT103Q3tdM0O0e7VPJ2zxwYgAE8AIBHjAh+kJvE9cL/8MAII6A3mQBEDAh2zz4SccFZQF+cMjL/3BtgED0Q/hKcViAQPQWAXJYgED0Fsj0AMn4QYjIz44rbNbMzsnIz4SA9AD0AM+ByfkAyM+KAEDL/8nQcAIW7UTQ10nCAY6A4w1oZwA07UTQ0//TP9MAMfpA1NHQ+kDR+Gv4avhj+GICVHDtRND0BXEhgED0Do6A33IigED0Do6A3/hr+GqAQPQO8r3XC//4YnD4Y2lpAQKJagBDgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAK+Eby4EwCCvSkIPShbm0AFHNvbCAwLjU2LjABGKAAAAACMNs8+A/yAG8ALPhK+EP4QsjL/8s/z4PO+EvIzs3J7VQADCD4Ye0e2QGxaAG2MUz+jE3itYCm9DCIsm/tC/NmAwnhr2UXyXvXJaX7IQAtFYUXFIQmvJq0POb4DE7jql9L5jYEdxbpM1/BRL6Ry9B3NZQABisxYgAAKpyAbqaExAHdWMByAYtz4iFDAAAAAAAAAAAAAAAABV1KgIARxLDMBKJ9M0q/RXwQrCjTj5yjT6tEsu6rHO/eV5Jw9oAAAAAAAAAAAAAAAAC+vCAQcwFDgBtjFM/oxN4rWApvQwiLJv7QvzZgMJ4a9lF8l71yWl+yCHQAAA==";
+        let tx = Transaction::construct_from_base64(tx).unwrap();
+        let extractor = tip_3_1_tokens_parser();
+        let parsed = extractor.parse(&tx).unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0].tokens.len(), 5);
     }
 }
