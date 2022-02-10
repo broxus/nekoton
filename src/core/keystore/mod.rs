@@ -172,7 +172,7 @@ impl KeyStore {
         let mut result = Vec::with_capacity(public_keys.len());
         for SharedSecret {
             source_public_key,
-            target_public_key,
+            recipient_public_key,
             secret,
         } in state
             .get_signer_ref::<T>()?
@@ -191,7 +191,7 @@ impl KeyStore {
                     result.push(EncryptedData {
                         algorithm,
                         source_public_key,
-                        target_public_key,
+                        recipient_public_key,
                         data,
                         nonce: nonce.to_vec(),
                     })
@@ -603,7 +603,7 @@ mod tests {
             EncryptionAlgorithm::ChaCha20Poly1305
         ));
         assert_eq!(encrypted_data.source_public_key, first_key.public_key);
-        assert_eq!(encrypted_data.target_public_key, second_key.public_key);
+        assert_eq!(encrypted_data.recipient_public_key, second_key.public_key);
         assert!(!encrypted_data.data.is_empty());
 
         // Check decryption (first -> second)

@@ -335,7 +335,7 @@ impl StoreSigner for DerivedKeySigner {
                 let secret = super::x25519::compute_shared(&keypair.secret, public_key);
                 SharedSecret {
                     source_public_key: keypair.public,
-                    target_public_key: *public_key,
+                    recipient_public_key: *public_key,
                     secret,
                 }
             })

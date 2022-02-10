@@ -551,7 +551,7 @@ impl CryptoData {
                 let secret = super::x25519::compute_shared(&secret, public_key);
                 SharedSecret {
                     source_public_key: self.pubkey,
-                    target_public_key: *public_key,
+                    recipient_public_key: *public_key,
                     secret,
                 }
             })

@@ -116,7 +116,7 @@ pub struct SignerContext<'a> {
 #[derive(Debug, Clone)]
 pub struct SharedSecret {
     pub source_public_key: PublicKey,
-    pub target_public_key: PublicKey,
+    pub recipient_public_key: PublicKey,
     pub secret: Zeroizing<[u8; 32]>,
 }
 
@@ -130,7 +130,7 @@ pub enum EncryptionAlgorithm {
 pub struct EncryptedData {
     pub algorithm: EncryptionAlgorithm,
     pub source_public_key: PublicKey,
-    pub target_public_key: PublicKey,
+    pub recipient_public_key: PublicKey,
     pub data: Vec<u8>,
     pub nonce: Vec<u8>,
 }
