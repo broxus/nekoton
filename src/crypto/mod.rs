@@ -80,6 +80,13 @@ pub trait Signer: SignerStorage {
         input: Self::GetPublicKeys,
     ) -> Result<Vec<PublicKey>>;
 
+    async fn compute_shared_secrets(
+        &self,
+        ctx: SignerContext<'_>,
+        public_keys: &[PublicKey],
+        input: Self::SignInput,
+    ) -> Result<Vec<[u8; 32]>>;
+
     async fn sign(
         &self,
         ctx: SignerContext<'_>,
@@ -125,4 +132,23 @@ pub fn default_key_name(public_key: &PubKey) -> String {
         hex::encode(&public_key[0..2]),
         hex::encode(&public_key[30..32])
     )
+}
+
+pub mod x25519 {
+    use curve25519_dalek_ng::scalar::Scalar;
+
+    pub fn compute_shared(k: &ed25519_dalek::SecretKey, u: &ed25519_dalek::PublicKey) -> [u8; 32] {
+        let extended = ed25519_dalek::ExpandedSecretKey::from(k);
+        let mut k: [u8; 32] = extended.to_bytes()[0..32].try_into().unwrap();
+        k[0] &= 248;
+        k[31] &= 127;
+        k[31] |= 64;
+
+        let u = curve25519_dalek_ng::edwards::CompressedEdwardsY(u.to_bytes())
+            .decompress()
+            .unwrap() // shouldn't fail because bytes were extracted from public key
+            .to_montgomery();
+
+        (Scalar::from_bits(k) * u).to_bytes()
+    }
 }

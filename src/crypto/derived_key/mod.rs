@@ -36,6 +36,50 @@ impl DerivedKeySigner {
             None => Err(MasterKeyError::MasterKeyNotFound.into()),
         }
     }
+
+    fn use_sign_input(
+        &'_ self,
+        password_cache: &PasswordCache,
+        input: <Self as StoreSigner>::SignInput,
+    ) -> Result<ed25519_dalek::Keypair> {
+        let (master_key, account_id, password) = match input {
+            DerivedKeySignParams::ByAccountId {
+                master_key,
+                account_id,
+                password,
+            } => (self.get_master_key(&master_key)?, account_id, password),
+            DerivedKeySignParams::ByPublicKey {
+                master_key,
+                public_key,
+                password,
+            } => {
+                let master_key = self.get_master_key(&master_key)?;
+                match master_key.accounts_map.get(public_key.as_bytes()) {
+                    Some(account) => (master_key, account.account_id, password),
+                    None => return Err(MasterKeyError::DerivedKeyNotFound.into()),
+                }
+            }
+        };
+
+        let password =
+            password_cache.process_password(master_key.public_key.to_bytes(), password)?;
+
+        let decrypter = ChaCha20Poly1305::new(&symmetric_key_from_password(
+            password.as_ref(),
+            &master_key.salt,
+        ));
+
+        let master = decrypt_secure(
+            &decrypter,
+            &master_key.entropy_nonce,
+            &master_key.enc_entropy,
+        )?;
+
+        let signer = derive_from_master(account_id, master.unsecure())?;
+
+        password.proceed();
+        Ok(signer)
+    }
 }
 
 #[async_trait]
@@ -278,50 +322,27 @@ impl StoreSigner for DerivedKeySigner {
         Ok(public_keys)
     }
 
+    async fn compute_shared_secrets(
+        &self,
+        ctx: SignerContext<'_>,
+        public_keys: &[PublicKey],
+        input: Self::SignInput,
+    ) -> Result<Vec<[u8; 32]>> {
+        let keypair = self.use_sign_input(ctx.password_cache, input)?;
+        Ok(public_keys
+            .iter()
+            .map(|public_key| super::x25519::compute_shared(&keypair.secret, public_key))
+            .collect())
+    }
+
     async fn sign(
         &self,
         ctx: SignerContext<'_>,
         data: &[u8],
         input: Self::SignInput,
     ) -> Result<[u8; 64]> {
-        let (master_key, account_id, password) = match input {
-            Self::SignInput::ByAccountId {
-                master_key,
-                account_id,
-                password,
-            } => (self.get_master_key(&master_key)?, account_id, password),
-            Self::SignInput::ByPublicKey {
-                master_key,
-                public_key,
-                password,
-            } => {
-                let master_key = self.get_master_key(&master_key)?;
-                match master_key.accounts_map.get(public_key.as_bytes()) {
-                    Some(account) => (master_key, account.account_id, password),
-                    None => return Err(MasterKeyError::DerivedKeyNotFound.into()),
-                }
-            }
-        };
-
-        let password = ctx
-            .password_cache
-            .process_password(master_key.public_key.to_bytes(), password)?;
-
-        let decrypter = ChaCha20Poly1305::new(&symmetric_key_from_password(
-            password.as_ref(),
-            &master_key.salt,
-        ));
-
-        let master = decrypt_secure(
-            &decrypter,
-            &master_key.entropy_nonce,
-            &master_key.enc_entropy,
-        )?;
-
-        let signer = derive_from_master(account_id, master.unsecure())?;
-
-        password.proceed();
-        Ok(signer.sign(data).to_bytes())
+        let keypair = self.use_sign_input(ctx.password_cache, input)?;
+        Ok(keypair.sign(data).to_bytes())
     }
 }
 

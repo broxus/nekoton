@@ -127,6 +127,15 @@ impl StoreSigner for LedgerKeySigner {
         Ok(result)
     }
 
+    async fn compute_shared_secrets(
+        &self,
+        _: SignerContext<'_>,
+        _: &[PublicKey],
+        _: Self::SignInput,
+    ) -> Result<Vec<[u8; 32]>> {
+        Err(LedgerKeyError::MethodNotSupported.into())
+    }
+
     async fn sign(
         &self,
         _: SignerContext<'_>,

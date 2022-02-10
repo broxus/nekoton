@@ -155,6 +155,24 @@ impl StoreSigner for EncryptedKeySigner {
         Ok(vec![input.public_key])
     }
 
+    async fn compute_shared_secrets(
+        &self,
+        ctx: SignerContext<'_>,
+        public_keys: &[PublicKey],
+        input: Self::SignInput,
+    ) -> Result<Vec<[u8; 32]>> {
+        let key = self.get_key(&input.public_key)?;
+
+        let password = ctx
+            .password_cache
+            .process_password(input.public_key.to_bytes(), input.password)?;
+
+        let shared_keys = key.compute_shared_keys(public_keys, password.as_ref())?;
+
+        password.proceed();
+        Ok(shared_keys)
+    }
+
     async fn sign(
         &self,
         ctx: SignerContext<'_>,
@@ -455,6 +473,14 @@ impl EncryptedKey {
         self.inner.sign(data, password)
     }
 
+    pub fn compute_shared_keys(
+        &self,
+        public_keys: &[PublicKey],
+        password: &str,
+    ) -> Result<Vec<[u8; 32]>> {
+        self.inner.compute_shared_keys(public_keys, password)
+    }
+
     pub fn public_key(&self) -> &PublicKey {
         &self.inner.pubkey
     }
@@ -504,6 +530,27 @@ impl CryptoData {
         data: &[u8],
         password: &str,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
+        let secret = self.decrypt_secret(password)?;
+        let pair = Keypair {
+            secret,
+            public: self.pubkey,
+        };
+        Ok(pair.sign(data).to_bytes())
+    }
+
+    pub fn compute_shared_keys(
+        &self,
+        public_keys: &[PublicKey],
+        password: &str,
+    ) -> Result<Vec<[u8; 32]>> {
+        let secret = self.decrypt_secret(password)?;
+        Ok(public_keys
+            .iter()
+            .map(|public_key| super::x25519::compute_shared(&secret, public_key))
+            .collect())
+    }
+
+    fn decrypt_secret(&self, password: &str) -> Result<ed25519_dalek::SecretKey> {
         let key = symmetric_key_from_password(password, &*self.salt);
         let decrypter = ChaCha20Poly1305::new(&key);
 
@@ -512,13 +559,11 @@ impl CryptoData {
             &self.private_key_nonce,
             &self.encrypted_private_key,
         )?;
+
         let secret = SecretKey::from_bytes(bytes.unsecure())
             .map_err(|_| EncryptedKeyError::InvalidPrivateKey)?;
-        let pair = Keypair {
-            secret,
-            public: self.pubkey,
-        };
-        Ok(pair.sign(data).to_bytes())
+
+        Ok(secret)
     }
 }
 
