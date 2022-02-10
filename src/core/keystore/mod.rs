@@ -498,3 +498,125 @@ pub enum KeyStoreError {
     #[error("Invalid nonce")]
     InvalidNonce,
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::crypto::{
+        DerivedKeyCreateInput, DerivedKeySignParams, DerivedKeySigner, EncryptedKeyCreateInput,
+        EncryptedKeyPassword, EncryptedKeySigner, MnemonicType, Password, PasswordCacheBehavior,
+    };
+    use std::collections::HashMap;
+
+    use super::*;
+
+    #[derive(Default)]
+    struct TestStorage(parking_lot::Mutex<HashMap<String, String>>);
+
+    #[async_trait::async_trait]
+    impl Storage for TestStorage {
+        async fn get(&self, key: &str) -> Result<Option<String>> {
+            Ok(self.0.lock().get(key).cloned())
+        }
+
+        async fn set(&self, key: &str, value: &str) -> Result<()> {
+            self.set_unchecked(key, value);
+            Ok(())
+        }
+
+        fn set_unchecked(&self, key: &str, value: &str) {
+            self.0.lock().insert(key.to_string(), value.to_string());
+        }
+
+        async fn remove(&self, key: &str) -> Result<()> {
+            self.remove_unchecked(key);
+            Ok(())
+        }
+
+        fn remove_unchecked(&self, key: &str) {
+            self.0.lock().remove(key);
+        }
+    }
+
+    const TEST_MNEMONICS: [&str; 2] = [
+        "admit cheap engage ancient audit drink mammal mobile fashion aspect rapid else",
+        "stuff chuckle dirt pig health refuse foam liquid around cream undo forum",
+    ];
+
+    #[tokio::test]
+    async fn correct_encryption() {
+        let storage = Arc::new(TestStorage::default());
+
+        let keystore = KeyStore::builder()
+            .with_signer("master_key", DerivedKeySigner::new())
+            .unwrap()
+            .with_signer("encrypted_key", EncryptedKeySigner::new())
+            .unwrap()
+            .load(storage)
+            .await
+            .unwrap();
+
+        let useless_password = Password::Explicit {
+            password: "test".into(),
+            cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(1000)),
+        };
+
+        let first_key = keystore
+            .add_key::<DerivedKeySigner>(DerivedKeyCreateInput::Import {
+                key_name: None,
+                phrase: TEST_MNEMONICS[0].into(),
+                password: useless_password.clone(),
+            })
+            .await
+            .unwrap();
+
+        let second_key = keystore
+            .add_key::<EncryptedKeySigner>(EncryptedKeyCreateInput {
+                name: None,
+                phrase: TEST_MNEMONICS[1].into(),
+                mnemonic_type: MnemonicType::Labs(0),
+                password: useless_password.clone(),
+            })
+            .await
+            .unwrap();
+
+        const TEST_DATA: &[u8] = b"Hello world!";
+
+        // Check encryption (first -> second)
+        let encrypted_data = keystore
+            .encrypt::<DerivedKeySigner>(
+                TEST_DATA,
+                &[second_key.public_key],
+                EncryptionAlgorithm::ChaCha20Poly1305,
+                DerivedKeySignParams::ByPublicKey {
+                    master_key: first_key.master_key,
+                    public_key: first_key.public_key,
+                    password: Password::FromCache,
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(encrypted_data.len(), 1);
+
+        let encrypted_data = encrypted_data[0].clone();
+        assert!(matches!(
+            encrypted_data.algorithm,
+            EncryptionAlgorithm::ChaCha20Poly1305
+        ));
+        assert_eq!(encrypted_data.source_public_key, first_key.public_key);
+        assert_eq!(encrypted_data.target_public_key, second_key.public_key);
+        assert!(!encrypted_data.data.is_empty());
+
+        // Check decryption (first -> second)
+        let data = keystore
+            .decrypt::<EncryptedKeySigner>(
+                &encrypted_data,
+                EncryptedKeyPassword {
+                    public_key: second_key.public_key,
+                    password: Password::FromCache,
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(data, TEST_DATA);
+    }
+}
