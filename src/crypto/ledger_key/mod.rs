@@ -10,7 +10,10 @@ use serde::{Deserialize, Serialize};
 
 use nekoton_utils::*;
 
-use super::{default_key_name, Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage};
+use super::{
+    default_key_name, SharedSecret, Signer as StoreSigner, SignerContext, SignerEntry,
+    SignerStorage,
+};
 use crate::external::LedgerConnection;
 
 #[derive(Clone)]
@@ -132,7 +135,7 @@ impl StoreSigner for LedgerKeySigner {
         _: SignerContext<'_>,
         _: &[PublicKey],
         _: Self::SignInput,
-    ) -> Result<Vec<[u8; 32]>> {
+    ) -> Result<Vec<SharedSecret>> {
         Err(LedgerKeyError::MethodNotSupported.into())
     }
 

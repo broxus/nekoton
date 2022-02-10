@@ -16,7 +16,7 @@ use nekoton_utils::*;
 
 use super::mnemonic::*;
 use super::{
-    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey,
+    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
     Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
 
@@ -160,7 +160,7 @@ impl StoreSigner for EncryptedKeySigner {
         ctx: SignerContext<'_>,
         public_keys: &[PublicKey],
         input: Self::SignInput,
-    ) -> Result<Vec<[u8; 32]>> {
+    ) -> Result<Vec<SharedSecret>> {
         let key = self.get_key(&input.public_key)?;
 
         let password = ctx
@@ -327,12 +327,12 @@ impl EncryptedKey {
         let mut private_key_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut private_key_nonce)
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
-        let private_key_nonce = Nonce::clone_from_slice(&private_key_nonce);
+        let private_key_nonce = Nonce::from(private_key_nonce);
 
         let mut seed_phrase_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut seed_phrase_nonce)
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
-        let seed_phrase_nonce = Nonce::clone_from_slice(&seed_phrase_nonce);
+        let seed_phrase_nonce = Nonce::from(seed_phrase_nonce);
 
         let mut salt = vec![0u8; CREDENTIAL_LEN];
         rng.fill(salt.as_mut_slice())
@@ -411,15 +411,15 @@ impl EncryptedKey {
         let rng = ring::rand::SystemRandom::new();
 
         // prepare nonce
-        let mut new_private_key_nonce = vec![0u8; NONCE_LENGTH];
+        let mut new_private_key_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut new_private_key_nonce)
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
-        let new_private_key_nonce = Nonce::clone_from_slice(&new_private_key_nonce);
+        let new_private_key_nonce = Nonce::from(new_private_key_nonce);
 
         let mut new_seed_phrase_nonce = [0u8; NONCE_LENGTH];
         rng.fill(&mut new_seed_phrase_nonce)
             .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
-        let new_seed_phrase_nonce = Nonce::clone_from_slice(&new_seed_phrase_nonce);
+        let new_seed_phrase_nonce = Nonce::from(new_seed_phrase_nonce);
 
         let mut new_salt = vec![0u8; CREDENTIAL_LEN];
         rng.fill(&mut new_salt)
@@ -477,7 +477,7 @@ impl EncryptedKey {
         &self,
         public_keys: &[PublicKey],
         password: &str,
-    ) -> Result<Vec<[u8; 32]>> {
+    ) -> Result<Vec<SharedSecret>> {
         self.inner.compute_shared_keys(public_keys, password)
     }
 
@@ -542,11 +542,19 @@ impl CryptoData {
         &self,
         public_keys: &[PublicKey],
         password: &str,
-    ) -> Result<Vec<[u8; 32]>> {
+    ) -> Result<Vec<SharedSecret>> {
         let secret = self.decrypt_secret(password)?;
+
         Ok(public_keys
             .iter()
-            .map(|public_key| super::x25519::compute_shared(&secret, public_key))
+            .map(|public_key| {
+                let secret = super::x25519::compute_shared(&secret, public_key);
+                SharedSecret {
+                    source_public_key: self.pubkey,
+                    target_public_key: *public_key,
+                    secret,
+                }
+            })
             .collect())
     }
 

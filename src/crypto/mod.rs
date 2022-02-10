@@ -5,6 +5,7 @@ use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use zeroize::Zeroizing;
 
 use nekoton_utils::*;
 
@@ -85,7 +86,7 @@ pub trait Signer: SignerStorage {
         ctx: SignerContext<'_>,
         public_keys: &[PublicKey],
         input: Self::SignInput,
-    ) -> Result<Vec<[u8; 32]>>;
+    ) -> Result<Vec<SharedSecret>>;
 
     async fn sign(
         &self,
@@ -112,6 +113,28 @@ pub struct SignerContext<'a> {
     pub password_cache: &'a PasswordCache,
 }
 
+#[derive(Debug, Clone)]
+pub struct SharedSecret {
+    pub source_public_key: PublicKey,
+    pub target_public_key: PublicKey,
+    pub secret: Zeroizing<[u8; 32]>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum EncryptionAlgorithm {
+    ChaCha20Poly1305,
+}
+
+#[derive(Debug, Clone)]
+pub struct EncryptedData {
+    pub algorithm: EncryptionAlgorithm,
+    pub source_public_key: PublicKey,
+    pub target_public_key: PublicKey,
+    pub data: Vec<u8>,
+    pub nonce: Vec<u8>,
+}
+
 pub trait WithPublicKey {
     fn public_key(&self) -> &PublicKey;
 }
@@ -136,8 +159,12 @@ pub fn default_key_name(public_key: &PubKey) -> String {
 
 pub mod x25519 {
     use curve25519_dalek_ng::scalar::Scalar;
+    use zeroize::Zeroizing;
 
-    pub fn compute_shared(k: &ed25519_dalek::SecretKey, u: &ed25519_dalek::PublicKey) -> [u8; 32] {
+    pub fn compute_shared(
+        k: &ed25519_dalek::SecretKey,
+        u: &ed25519_dalek::PublicKey,
+    ) -> Zeroizing<[u8; 32]> {
         let extended = ed25519_dalek::ExpandedSecretKey::from(k);
         let mut k: [u8; 32] = extended.to_bytes()[0..32].try_into().unwrap();
         k[0] &= 248;
@@ -149,6 +176,6 @@ pub mod x25519 {
             .unwrap() // shouldn't fail because bytes were extracted from public key
             .to_montgomery();
 
-        (Scalar::from_bits(k) * u).to_bytes()
+        Zeroizing::new((Scalar::from_bits(k) * u).to_bytes())
     }
 }

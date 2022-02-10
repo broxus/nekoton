@@ -14,7 +14,7 @@ use nekoton_utils::*;
 
 use super::mnemonic::*;
 use super::{
-    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey,
+    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
     Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
 
@@ -327,11 +327,18 @@ impl StoreSigner for DerivedKeySigner {
         ctx: SignerContext<'_>,
         public_keys: &[PublicKey],
         input: Self::SignInput,
-    ) -> Result<Vec<[u8; 32]>> {
+    ) -> Result<Vec<SharedSecret>> {
         let keypair = self.use_sign_input(ctx.password_cache, input)?;
         Ok(public_keys
             .iter()
-            .map(|public_key| super::x25519::compute_shared(&keypair.secret, public_key))
+            .map(|public_key| {
+                let secret = super::x25519::compute_shared(&keypair.secret, public_key);
+                SharedSecret {
+                    source_public_key: keypair.public,
+                    target_public_key: *public_key,
+                    secret,
+                }
+            })
             .collect())
     }
 
@@ -557,8 +564,8 @@ fn compute_encrypted_part(entropy: &[u8], phrase: &[u8], password: &str) -> Resu
     rng.fill(&mut phrase_nonce)
         .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
 
-    let entropy_nonce = Nonce::clone_from_slice(entropy_nonce.as_ref());
-    let phrase_nonce = Nonce::clone_from_slice(phrase_nonce.as_ref());
+    let entropy_nonce = Nonce::from(entropy_nonce);
+    let phrase_nonce = Nonce::from(phrase_nonce);
 
     let encryptor = ChaCha20Poly1305::new(&symmetric_key_from_password(password, &salt));
     let enc_entropy = encrypt(&encryptor, &entropy_nonce, entropy)?;

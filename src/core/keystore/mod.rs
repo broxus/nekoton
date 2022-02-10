@@ -7,12 +7,16 @@ use std::time::Duration;
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use futures::future;
+use rand::Rng;
 use serde::{Serialize, Serializer};
 use tokio::sync::RwLock;
 
 use nekoton_utils::*;
 
-use crate::crypto::{PasswordCache, Signature, Signer, SignerContext, SignerEntry, SignerStorage};
+use crate::crypto::{
+    EncryptedData, EncryptionAlgorithm, PasswordCache, SharedSecret, Signature, Signer,
+    SignerContext, SignerEntry, SignerStorage,
+};
 use crate::external::Storage;
 
 const STORAGE_KEYSTORE: &str = "__core__keystore";
@@ -147,6 +151,87 @@ impl KeyStore {
             .get_signer_ref::<T>()?
             .get_public_keys(ctx, input)
             .await
+    }
+
+    pub async fn encrypt<T>(
+        &self,
+        data: &[u8],
+        public_keys: &[ed25519_dalek::PublicKey],
+        algorithm: EncryptionAlgorithm,
+        input: T::SignInput,
+    ) -> Result<Vec<EncryptedData>>
+    where
+        T: Signer,
+    {
+        let state = self.state.read().await;
+
+        let ctx = SignerContext {
+            password_cache: &self.password_cache,
+        };
+
+        let mut result = Vec::with_capacity(public_keys.len());
+        for SharedSecret {
+            source_public_key,
+            target_public_key,
+            secret,
+        } in state
+            .get_signer_ref::<T>()?
+            .compute_shared_secrets(ctx, public_keys, input)
+            .await?
+        {
+            match algorithm {
+                EncryptionAlgorithm::ChaCha20Poly1305 => {
+                    use chacha20poly1305::aead::NewAead;
+                    use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
+
+                    let nonce = Nonce::from(rand::thread_rng().gen::<[u8; 12]>());
+                    let encryptor =
+                        ChaCha20Poly1305::new(&Key::clone_from_slice(secret.as_slice()));
+                    let data = encrypt(&encryptor, &nonce, data)?;
+                    result.push(EncryptedData {
+                        algorithm,
+                        source_public_key,
+                        target_public_key,
+                        data,
+                        nonce: nonce.to_vec(),
+                    })
+                }
+            }
+        }
+        Ok(result)
+    }
+
+    pub async fn decrypt<T>(&self, data: &EncryptedData, input: T::SignInput) -> Result<Vec<u8>>
+    where
+        T: Signer,
+    {
+        let state = self.state.read().await;
+
+        let ctx = SignerContext {
+            password_cache: &self.password_cache,
+        };
+        let SharedSecret { secret, .. } = state
+            .get_signer_ref::<T>()?
+            .compute_shared_secrets(ctx, &[data.source_public_key], input)
+            .await?
+            .into_iter()
+            .next()
+            .ok_or(KeyStoreError::SharedSecretError)?;
+
+        match data.algorithm {
+            EncryptionAlgorithm::ChaCha20Poly1305 => {
+                use chacha20poly1305::aead::NewAead;
+                use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
+
+                let nonce = <[u8; 12]>::try_from(data.nonce.as_slice())
+                    .map(Nonce::from)
+                    .map_err(|_| KeyStoreError::InvalidNonce)?;
+                let decryptor = ChaCha20Poly1305::new(&Key::clone_from_slice(secret.as_slice()));
+                let data = decrypt(&decryptor, &nonce, &data.data)?;
+
+                Ok(data)
+            }
+        }
     }
 
     pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<Signature>
@@ -408,4 +493,8 @@ pub enum KeyStoreError {
     KeyNotFound,
     #[error("Unsupported signer")]
     UnsupportedSigner,
+    #[error("Failed to compute shared secret")]
+    SharedSecretError,
+    #[error("Invalid nonce")]
+    InvalidNonce,
 }
