@@ -120,11 +120,12 @@ pub struct SharedSecret {
     pub secret: Zeroizing<[u8; 32]>,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum EncryptionAlgorithm {
-    ChaCha20Poly1305,
-}
+define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+    pub enum EncryptionAlgorithm {
+        ChaCha20Poly1305,
+    }
+);
 
 #[derive(Debug, Clone)]
 pub struct EncryptedData {
