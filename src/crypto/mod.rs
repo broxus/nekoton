@@ -127,12 +127,17 @@ define_string_enum!(
     }
 );
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EncryptedData {
     pub algorithm: EncryptionAlgorithm,
+    #[serde(with = "serde_public_key")]
     pub source_public_key: PublicKey,
+    #[serde(with = "serde_public_key")]
     pub recipient_public_key: PublicKey,
+    #[serde(with = "serde_bytes_base64")]
     pub data: Vec<u8>,
+    #[serde(with = "serde_bytes_base64")]
     pub nonce: Vec<u8>,
 }
 
@@ -140,7 +145,8 @@ pub trait WithPublicKey {
     fn public_key(&self) -> &PublicKey;
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SignerEntry {
     pub name: String,
     #[serde(with = "serde_public_key")]
