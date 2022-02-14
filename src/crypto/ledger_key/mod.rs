@@ -14,7 +14,7 @@ use super::{
     default_key_name, SharedSecret, Signer as StoreSigner, SignerContext, SignerEntry,
     SignerStorage,
 };
-use crate::external::LedgerConnection;
+use crate::external::{LedgerConnection, LedgerSignatureContext};
 
 #[derive(Clone)]
 pub struct LedgerKeySigner {
@@ -54,7 +54,7 @@ impl StoreSigner for LedgerKeySigner {
     type ExportKeyOutput = ();
     type GetPublicKeys = LedgerKeyGetPublicKeys;
     type UpdateKeyInput = LedgerUpdateKeyInput;
-    type SignInput = LedgerKeyPublic;
+    type SignInput = LedgerSignInput;
 
     async fn add_key(
         &mut self,
@@ -146,7 +146,10 @@ impl StoreSigner for LedgerKeySigner {
         input: Self::SignInput,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let key = self.get_key(&input.public_key)?;
-        let signature = self.connection.sign(key.account_id, data).await?;
+        let signature = self
+            .connection
+            .sign(key.account_id, data, &input.context)
+            .await?;
         Ok(signature)
     }
 }
@@ -237,6 +240,7 @@ pub struct LedgerKeyGetPublicKeys {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum LedgerUpdateKeyInput {
+    #[serde(rename_all = "camelCase")]
     Rename {
         #[serde(with = "serde_public_key")]
         public_key: PublicKey,
@@ -244,10 +248,13 @@ pub enum LedgerUpdateKeyInput {
     },
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct LedgerKeyPublic {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LedgerSignInput {
     #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
+    #[serde(default)]
+    pub context: Option<LedgerSignatureContext>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

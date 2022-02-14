@@ -1,5 +1,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use nekoton_utils::*;
+use serde::{Deserialize, Serialize};
 
 #[async_trait]
 pub trait Storage: Sync + Send {
@@ -33,6 +35,14 @@ pub trait JrpcConnection: Send + Sync {
     async fn post(&self, data: &str) -> Result<String>;
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LedgerSignatureContext {
+    #[serde(with = "serde_string")]
+    pub amount: u64,
+    #[serde(with = "serde_address")]
+    pub address: ton_block::MsgAddressInt,
+}
+
 #[async_trait]
 pub trait LedgerConnection: Send + Sync {
     async fn get_public_key(
@@ -44,5 +54,6 @@ pub trait LedgerConnection: Send + Sync {
         &self,
         account: u16,
         message: &[u8],
+        context: &Option<LedgerSignatureContext>,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
 }
