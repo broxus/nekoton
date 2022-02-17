@@ -293,6 +293,37 @@ pub async fn get_token_root_details(
     RootTokenContractState(&state).guess_details(clock)
 }
 
+pub async fn get_token_wallet_details(
+    clock: &dyn Clock,
+    transport: &dyn Transport,
+    token_wallet: &MsgAddressInt,
+) -> Result<(TokenWalletDetails, RootTokenContractDetails)> {
+    let token_wallet_state = match transport.get_contract_state(token_wallet).await? {
+        RawContractState::Exists(state) => state,
+        RawContractState::NotExists => {
+            return Err(TokenWalletError::InvalidTokenWalletContract.into())
+        }
+    };
+    let token_wallet_state = TokenWalletContractState(&token_wallet_state);
+
+    let version = token_wallet_state.get_version(clock)?;
+    let token_wallet_details = token_wallet_state.get_details(clock, version)?;
+
+    let root_contract_state = match transport
+        .get_contract_state(&token_wallet_details.root_address)
+        .await?
+    {
+        RawContractState::Exists(state) => state,
+        RawContractState::NotExists => {
+            return Err(TokenWalletError::InvalidRootTokenContract.into())
+        }
+    };
+    let root_contract_details =
+        RootTokenContractState(&root_contract_state).get_details(clock, version)?;
+
+    Ok((token_wallet_details, root_contract_details))
+}
+
 pub async fn get_token_root_details_from_token_wallet(
     clock: &dyn Clock,
     transport: &dyn Transport,
@@ -554,6 +585,8 @@ enum TokenWalletError {
     UnknownVersion,
     #[error("Invalid root token contract")]
     InvalidRootTokenContract,
+    #[error("Invalid token wallet contract")]
+    InvalidTokenWalletContract,
     #[error("Non-zero execution result code: {}", .0)]
     NonZeroResultCode(i32),
     #[error("Wallet not deployed")]
