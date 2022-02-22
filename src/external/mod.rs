@@ -37,6 +37,8 @@ pub trait JrpcConnection: Send + Sync {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LedgerSignatureContext {
+    pub decimals: u8,
+    pub asset: String,
     #[serde(with = "serde_string")]
     pub amount: u64,
     #[serde(with = "serde_address")]
