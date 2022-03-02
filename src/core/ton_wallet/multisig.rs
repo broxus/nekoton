@@ -147,6 +147,7 @@ define_string_enum!(
         SafeMultisigWallet,
         SafeMultisigWallet24h,
         SetcodeMultisigWallet,
+        SetcodeMultisigWallet24h,
         BridgeMultisigWallet,
         SurfWallet,
     }
@@ -164,6 +165,10 @@ const SETCODE_MULTISIG_WALLET_HASH: [u8; 32] = [
     0xe2, 0xb6, 0x0b, 0x6b, 0x60, 0x2c, 0x10, 0xce, 0xd7, 0xea, 0x8e, 0xde, 0x4b, 0xdf, 0x96, 0x34,
     0x2c, 0x97, 0x57, 0x0a, 0x37, 0x98, 0x06, 0x6f, 0x3f, 0xb5, 0x0a, 0x4b, 0x2b, 0x27, 0xa2, 0x08,
 ];
+const SETCODE_MULTISIG_WALLET_24H_HASH: [u8; 32] = [
+    0xa4, 0x91, 0x80, 0x4c, 0xa5, 0x5d, 0xd5, 0xb2, 0x8c, 0xff, 0xdf, 0xf4, 0x8c, 0xb3, 0x41, 0x42,
+    0x93, 0x09, 0x99, 0x62, 0x1a, 0x54, 0xac, 0xee, 0x6b, 0xe8, 0x3c, 0x34, 0x20, 0x51, 0xd8, 0x84,
+];
 const BRIDGE_MULTISIG_WALLET_HASH: [u8; 32] = [
     0xf3, 0xa0, 0x7a, 0xe8, 0x4f, 0xc3, 0x43, 0x25, 0x9d, 0x7f, 0xa4, 0x84, 0x7b, 0x86, 0x33, 0x5b,
     0x3f, 0xdc, 0xfc, 0x8b, 0x31, 0xf1, 0xba, 0x4b, 0x7a, 0x94, 0x99, 0xd5, 0x53, 0x0f, 0x0b, 0x18,
@@ -179,6 +184,7 @@ pub fn guess_multisig_type(code_hash: &UInt256) -> Option<MultisigType> {
         SAFE_MULTISIG_WALLET_24H_HASH => Some(MultisigType::SafeMultisigWallet24h),
         SETCODE_MULTISIG_WALLET_HASH => Some(MultisigType::SetcodeMultisigWallet),
         BRIDGE_MULTISIG_WALLET_HASH => Some(MultisigType::BridgeMultisigWallet),
+        SETCODE_MULTISIG_WALLET_24H_HASH => Some(MultisigType::SetcodeMultisigWallet24h),
         SURF_WALLET_HASH => Some(MultisigType::SurfWallet),
         _ => None,
     }
@@ -208,7 +214,9 @@ pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
         expiration_time: match multisig_type {
             MultisigType::SafeMultisigWallet | MultisigType::SetcodeMultisigWallet => 3600,
             MultisigType::SurfWallet => 3601,
-            MultisigType::SafeMultisigWallet24h | MultisigType::BridgeMultisigWallet => 86400,
+            MultisigType::SafeMultisigWallet24h
+            | MultisigType::SetcodeMultisigWallet24h
+            | MultisigType::BridgeMultisigWallet => 86400,
         },
     }
 }
@@ -220,6 +228,7 @@ fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> to
         MultisigType::SafeMultisigWallet => wallets::code::safe_multisig_wallet(),
         MultisigType::SafeMultisigWallet24h => wallets::code::safe_multisig_wallet_24h(),
         MultisigType::SetcodeMultisigWallet => wallets::code::setcode_multisig_wallet(),
+        MultisigType::SetcodeMultisigWallet24h => wallets::code::setcode_multisig_wallet_24h(),
         MultisigType::BridgeMultisigWallet => wallets::code::bridge_multisig_wallet(),
         MultisigType::SurfWallet => wallets::code::surf_wallet(),
     }
@@ -407,5 +416,24 @@ impl PendingTransaction {
             payload: self.payload,
             bounce: self.bounce,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn correct_address() {
+        let key = ed25519_dalek::PublicKey::from_bytes(
+            &hex::decode("5ace46d93d8f3932499df9f2bc7ef787385e16965e7797258948febd186de7f6")
+                .unwrap(),
+        )
+        .unwrap();
+
+        assert_eq!(
+            compute_contract_address(&key, MultisigType::SetcodeMultisigWallet24h, 0).to_string(),
+            "0:3de70f9212154344a3158768b3fed731fc865ca15948b0d6d0d34daf4c6a7a0a"
+        );
     }
 }

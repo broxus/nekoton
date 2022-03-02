@@ -14,6 +14,7 @@ declare_tvc! {
     safe_multisig_wallet => "./SafeMultisigWallet.tvc" (SAFE_MULTISIG_WALLET_CODE),
     safe_multisig_wallet_24h => "./SafeMultisigWallet24h.tvc" (SAFE_MULTISIG_WALLET24H_CODE),
     setcode_multisig_wallet => "./SetcodeMultisigWallet.tvc" (SETCODE_MULTISIG_WALLET_CODE),
+    setcode_multisig_wallet_24h => "./SetcodeMultisigWallet24h.tvc" (SETCODE_MULTISIG_WALLET24H_CODE),
     bridge_multisig_wallet => "./BridgeMultisigWallet.tvc" (BRIDGE_MULTISIG_WALLET_CODE),
     surf_wallet => "./Surf.tvc" (SURF_WALLET_CODE),
     wallet_v3 => "./wallet_v3_code.boc" (WALLET_V3_CODE),
