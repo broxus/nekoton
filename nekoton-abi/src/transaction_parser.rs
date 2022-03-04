@@ -6,7 +6,10 @@ use ton_abi::{Event, Token};
 use ton_block::{CommonMsgInfo, Deserializable, GetRepresentationHash, Message, TransactionDescr};
 use ton_types::SliceData;
 
+use nekoton_utils::define_string_enum;
+
 use crate::read_function_id;
+use crate::transaction_parser::ParsedType::FunctionInput;
 
 #[derive(Debug, Clone)]
 pub struct Extracted<'a, 'tx> {
@@ -18,6 +21,7 @@ pub struct Extracted<'a, 'tx> {
     pub tx: &'tx ton_block::Transaction,
     /// The index of the message in the transaction
     pub is_in_message: bool,
+    pub parsed_type: ParsedType,
 }
 
 impl<'a, 'tx> Extracted<'a, 'tx> {
@@ -99,6 +103,7 @@ impl TransactionParser {
                         message: msg,
                         tx: transaction,
                         is_in_message: true,
+                        parsed_type: ParsedType::FunctionInput,
                     });
                 }
             }
@@ -112,6 +117,21 @@ impl TransactionParser {
                 if let Some(body) = message.body() {
                     let function_id = read_function_id(&body)?;
                     for parsed in self.parse_out_message(&message, function_id)? {
+                        let parsed_type = if self.events.contains_key(&function_id) {
+                            ParsedType::Event
+                        } else {
+                            self.functions
+                                .get(&function_id)
+                                .map(|x| {
+                                    if x.fun.input_id == function_id {
+                                        ParsedType::FunctionInput
+                                    } else {
+                                        ParsedType::FunctionOutput
+                                    }
+                                })
+                                .unwrap_or(FunctionInput)
+                        };
+
                         output.push(Extracted {
                             function_id,
                             name: parsed.name,
@@ -120,6 +140,7 @@ impl TransactionParser {
                             message: message.clone(),
                             tx: transaction,
                             is_in_message: false,
+                            parsed_type,
                         });
                     }
                 }
@@ -210,6 +231,16 @@ fn parse_function(
             .context("Failed decoding output")?
     };
     Ok(parsed)
+}
+
+define_string_enum! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+     pub enum ParsedType {
+        FunctionInput,
+        FunctionOutput,
+        BouncedFunction,
+        Event,
+    }
 }
 
 struct ParsedInMessage<'a> {
