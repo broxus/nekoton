@@ -2,7 +2,8 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use ton_abi::{Event, Token};
+use ton_abi::contract::AbiVersion;
+use ton_abi::{Event, Param, Token, TokenValue};
 use ton_block::{CommonMsgInfo, Deserializable, GetRepresentationHash, Message, TransactionDescr};
 use ton_types::SliceData;
 
@@ -22,6 +23,7 @@ pub struct Extracted<'a, 'tx> {
     /// The index of the message in the transaction
     pub is_in_message: bool,
     pub parsed_type: ParsedType,
+    pub decoded_headers: Vec<Token>,
 }
 
 impl<'a, 'tx> Extracted<'a, 'tx> {
@@ -77,7 +79,10 @@ pub fn message_bounced(msg: &Message) -> bool {
 pub struct TransactionParser {
     functions: HashMap<u32, FunctionOpts>,
     events: HashMap<u32, Event>,
+    headers: Vec<Param>,
     functions_with_bounce: HashMap<u32, FunctionWithBounceHandler>,
+    abi_version: AbiVersion,
+    match_external_in: bool,
 }
 
 impl TransactionParser {
@@ -104,6 +109,7 @@ impl TransactionParser {
                         tx: transaction,
                         is_in_message: true,
                         parsed_type: ParsedType::FunctionInput,
+                        decoded_headers: parsed.headers,
                     });
                 }
             }
@@ -141,6 +147,7 @@ impl TransactionParser {
                             tx: transaction,
                             is_in_message: false,
                             parsed_type,
+                            decoded_headers: vec![],
                         });
                     }
                 }
@@ -156,6 +163,33 @@ impl TransactionParser {
         message: &Message,
         mut body: SliceData,
     ) -> Result<Option<ParsedInMessage<'_>>> {
+        if let CommonMsgInfo::ExtInMsgInfo(_) = message.header() {
+            if self.match_external_in {
+                let (headers, function_id, body) = ton_abi::Function::decode_header(
+                    &self.abi_version,
+                    body,
+                    &self.headers,
+                    message.is_internal(),
+                )?;
+                return if let Some(fun) = self.functions.get(&function_id) {
+                    let tokens = TokenValue::decode_params(
+                        fun.fun.input_params(),
+                        body,
+                        &self.abi_version,
+                        false,
+                    )?;
+                    Ok(Some(ParsedInMessage {
+                        function_id,
+                        name: &fun.fun.name,
+                        bounced: false,
+                        tokens,
+                        headers,
+                    }))
+                } else {
+                    Ok(None)
+                };
+            }
+        }
         if message_bounced(message) {
             body.get_next_u32()?; //skip bounce bytes
             let function_id = read_function_id(&body)?;
@@ -166,6 +200,7 @@ impl TransactionParser {
                     tokens,
                     bounced: true,
                     function_id,
+                    headers: vec![],
                 }));
             }
         }
@@ -178,6 +213,7 @@ impl TransactionParser {
                 .context("Failed decoding input")?;
             return Ok(Some(ParsedInMessage {
                 tokens,
+                headers: vec![],
                 name: &function.fun.name,
                 function_id,
                 bounced: false,
@@ -245,6 +281,7 @@ define_string_enum! {
 
 struct ParsedInMessage<'a> {
     tokens: Vec<Token>,
+    headers: Vec<Token>,
     name: &'a str,
     function_id: u32,
     bounced: bool,
@@ -331,12 +368,20 @@ impl TransactionParserBuilder {
         self
     }
     /// Returns `Err` if there are duplicate function_ids
-    pub fn build(self) -> Result<TransactionParser> {
+    /// # Params:
+    /// * `match_external_in` - if true, `ExternalIn` messages will be matched. Not compatible with several different contracts.
+    fn build_internal(self, match_external_in: bool) -> Result<TransactionParser> {
         let mut functions = HashMap::new();
         let mut functions_with_bounce = HashMap::new();
         let mut events = HashMap::new();
+        let mut headers = Vec::new();
+        let mut abi_version = None;
 
         for fun in self.functions_in {
+            if abi_version.is_none() {
+                abi_version = Some(fun.fun.abi_version);
+            }
+            headers.push(fun.fun.header.clone());
             let f = &fun.fun;
             let fun_id = f.input_id;
             let fun_name = f.name.clone();
@@ -351,6 +396,10 @@ impl TransactionParserBuilder {
         }
 
         for fun in self.functions_out {
+            if abi_version.is_none() {
+                abi_version = Some(fun.fun.abi_version);
+            }
+            headers.push(fun.fun.header.clone());
             let f = &fun.fun;
             let fun_id = f.output_id;
             let fun_name = f.name.clone();
@@ -365,6 +414,9 @@ impl TransactionParserBuilder {
         }
 
         for fun in self.functions_with_bounce {
+            if abi_version.is_none() {
+                abi_version = Some(fun.fun.abi_version);
+            }
             let fun_id = fun.fun.input_id;
             let fun_name = fun.fun.name.clone();
             let res = functions_with_bounce.insert(fun_id, fun);
@@ -378,6 +430,9 @@ impl TransactionParserBuilder {
         }
 
         for event in self.events {
+            if abi_version.is_none() {
+                abi_version = Some(event.abi_version);
+            }
             let fun_id = event.get_function_id();
             let fun_name = event.name.clone();
             let res = events.insert(fun_id, event);
@@ -386,11 +441,36 @@ impl TransactionParserBuilder {
             }
         }
 
+        headers.sort_by(|a, b| {
+            let a: Vec<_> = a.iter().map(|x| &x.name).collect();
+            let b: Vec<_> = b.iter().map(|x| &x.name).collect();
+            a.cmp(&b)
+        });
+
+        headers.dedup();
+        if headers.len() != 1 && match_external_in {
+            anyhow::bail!("headers must be unique");
+        }
+        let headers = headers.first().cloned().unwrap_or_default();
+
         Ok(TransactionParser {
             functions,
             events,
+            headers,
             functions_with_bounce,
+            abi_version: abi_version.context("Matching functions list is empty")?,
+            match_external_in,
         })
+    }
+
+    /// Returns `Err` if there are duplicate function_ids
+    pub fn build(self) -> Result<TransactionParser> {
+        self.build_internal(false)
+    }
+
+    /// Returns `Err` if there are duplicate function_ids or different contracts are used
+    pub fn build_with_external_in(self) -> Result<TransactionParser> {
+        self.build_internal(true)
     }
 }
 
@@ -724,5 +804,29 @@ mod test {
         let parsed = extractor.parse(&tx).unwrap();
         assert_eq!(parsed.len(), 1);
         assert_eq!(parsed[0].tokens.len(), 5);
+    }
+
+    #[test]
+    fn test_full_contract() {
+        let abi = r#"{"ABI version":2,"data":[{"key":1,"name":"_randomNonce","type":"uint256"}],"events":[{"inputs":[{"name":"previousOwner","type":"uint256"},{"name":"newOwner","type":"uint256"}],"name":"OwnershipTransferred","outputs":[]}],"fields":[{"name":"_pubkey","type":"uint256"},{"name":"_timestamp","type":"uint64"},{"name":"_constructorFlag","type":"bool"},{"name":"owner","type":"uint256"},{"name":"_randomNonce","type":"uint256"}],"functions":[{"inputs":[{"name":"dest","type":"address"},{"name":"value","type":"uint128"},{"name":"bounce","type":"bool"},{"name":"flags","type":"uint8"},{"name":"payload","type":"cell"}],"name":"sendTransaction","outputs":[]},{"inputs":[{"name":"newOwner","type":"uint256"}],"name":"transferOwnership","outputs":[]},{"inputs":[],"name":"constructor","outputs":[]},{"inputs":[],"name":"owner","outputs":[{"name":"owner","type":"uint256"}]},{"inputs":[],"name":"_randomNonce","outputs":[{"name":"_randomNonce","type":"uint256"}]}],"header":["time"],"version":"2.2"}"#;
+        let abi = ton_abi::Contract::load(std::io::Cursor::new(abi)).unwrap();
+        let events = abi.events().iter().map(|x| x.1.clone()).collect::<Vec<_>>();
+        let funs = abi
+            .functions()
+            .iter()
+            .map(|x| x.1.clone())
+            .collect::<Vec<_>>();
+
+        let parser = TransactionParser::builder()
+            .function_in_list(&funs, false)
+            .functions_out_list(&funs, false)
+            .events_list(&events)
+            .build_with_external_in()
+            .unwrap();
+
+        let tx= "te6ccgECCwEAAm8AA7V++NnCdgsS7iubg2YKljkWMK+Nl4rodhkGdA6ME3X1l2AAAVf+pN2AHEqw3VLPrqWO4rwpNsyQj5WeGXAg+bV8rOllzOC4e0FwAAFX/qPpXBYglxvwADRw9u7oBQQBAg8MQEYbHIJEQAMCAG/JiqxsTBx2WAAAAAAAAgAAAAAAAh+1bvDWnLCgRmTLFrApyvKnoCvN5oGbiFWPDRqpjy0EQJAfZACdQy+jE4gAAAAAAAAAACSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIACCcj7pfRHC7sHIea84Hs/hukiSefxdzPwsH4Ne5GCMU2vSK9sdrhKJoUW6Md9cS31zzC4xsPaU5ULRh/WiRm/kBvoCAeAIBgEB3wcBsWgB3xs4TsFiXcVzcGzBUscixhXxsvFdDsMgzoHRgm6+su0ADXqbt4aynxEK1cyy5QQ+J7v5F3aeGaWPbVJjYUSyrwFR3IDsoAYcdoQAACr/1JuwBMQS437ACgHdiAHfGzhOwWJdxXNwbMFSxyLGFfGy8V0OwyDOgdGCbr6y7AV48xwh0kVSa89wWq/VOK3fnIvDljptTJeqcB10t2RV0KCx4Vq1k5kzaY0RhHBKxqT0tiyp/nC0e+1/jx19p/AwAAAF+9ORPq0zuZGyCQFlgAa9TdvDWU+IhWrmWXKCHxPd/Iu7TwzSx7apMbCiWVeAoAAAAAAAAAAAAAAADuaygBAICgBLDgTSnoAdQT3MtmUbh60b5nBYLKOECUJ+GUmxfw3N+6y3zjrx6BA=";
+        let tx = Transaction::construct_from_base64(tx).unwrap();
+        let res = parser.parse(&tx).unwrap();
+        dbg!(&res);
     }
 }
