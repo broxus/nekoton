@@ -573,7 +573,7 @@ pub mod serde_cell {
         D: serde::Deserializer<'de>,
     {
         let bytes = serde_bytes_base64::deserialize(deserializer)?;
-        let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
+        let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
             .map_err(D::Error::custom)?;
         Ok(cell)
     }

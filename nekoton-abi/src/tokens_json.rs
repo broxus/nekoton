@@ -229,7 +229,7 @@ pub fn parse_abi_token_value(
                     base64::decode(&value)
                         .map_err(|_| TokensJsonError::InvalidCell)
                         .and_then(|value| {
-                            ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&value))
+                            ton_types::deserialize_tree_of_cells(&mut value.as_slice())
                                 .map_err(|_| TokensJsonError::InvalidCell)
                         })
                 }

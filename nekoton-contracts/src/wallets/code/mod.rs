@@ -21,6 +21,6 @@ declare_tvc! {
     highload_wallet_v2 => "./highload_wallet_v2_code.boc" (HIGHLOAD_WALLET_V2_CODE),
 }
 
-fn load(data: &[u8]) -> Cell {
-    ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(data)).expect("Trust me")
+fn load(mut data: &[u8]) -> Cell {
+    ton_types::deserialize_tree_of_cells(&mut data).expect("Trust me")
 }

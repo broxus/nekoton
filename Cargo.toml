@@ -33,8 +33,8 @@ hex = "0.4"
 log = "0.4"
 num-bigint = { version = "0.3", features = ["serde"] }
 num-traits = "0.2.14"
-once_cell = "1.9.0"
-parking_lot = "0.11.2"
+once_cell = "1.10.0"
+parking_lot = "0.12.0"
 pin-project-lite = "0.2"
 rand = { version = "0.8", features = ["getrandom"] }
 ring = "0.16"
@@ -69,6 +69,6 @@ tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
 [features]
 default = ["gql_transport"]
 integration_test = []
-web = ["nekoton-utils/web", "getrandom/wasm-bindgen", "parking_lot/wasm-bindgen"]
+web = ["nekoton-utils/web", "getrandom/wasm-bindgen"]
 gql_transport = ["graphql_client"]
 jrpc_transport = ["tiny-jsonrpc"]

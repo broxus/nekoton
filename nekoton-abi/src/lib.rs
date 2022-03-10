@@ -174,7 +174,7 @@ pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
 /// Creates slice data from base64 encoded boc
 pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
     let bytes = base64::decode(&cell)?;
-    let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(&bytes))
+    let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
         .map_err(|_| UnpackerError::InvalidAbi)?;
     Ok(SliceData::from(cell))
 }
@@ -930,10 +930,9 @@ mod tests {
 
         const BOC: &str = "te6ccgEBAQEABgAACAAABdA=";
         let boc = create_boc_or_comment_payload(BOC).unwrap();
-        let target_boc = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(
-            base64::decode(BOC).unwrap(),
-        ))
-        .unwrap();
+        let target_boc =
+            ton_types::deserialize_tree_of_cells(&mut base64::decode(BOC).unwrap().as_slice())
+                .unwrap();
         assert!(parse_comment_payload(boc.clone()).is_none());
         assert_eq!(boc.into_cell(), target_boc);
     }
@@ -1070,7 +1069,7 @@ mod tests {
 
     #[test]
     fn unpack_header() {
-        let body = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(base64::decode("te6ccgEBAwEArAAB4by5SH0Glx7Jnb0imtClvhC4I0DPaT+/su49hM5DQH+xHrEtD9U2dQOJpD2J598bWtYTC4m1Ylxh6MSg9//WKgdEWH2fKWA3SuZNZZ7BBCeDpiGAfwIlOFF981WU06BclcAAAF7d/kbVGEk26dM7mRsgAQFlgBOzHFkFNmE1fX9Dpui0xVFiNtBGdDa6IIntwTxwGs9y4AAAAAAAAAAAAAAAB3NZQAA4AgAA").unwrap())).unwrap().into();
+        let body = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEArAAB4by5SH0Glx7Jnb0imtClvhC4I0DPaT+/su49hM5DQH+xHrEtD9U2dQOJpD2J598bWtYTC4m1Ylxh6MSg9//WKgdEWH2fKWA3SuZNZZ7BBCeDpiGAfwIlOFF981WU06BclcAAAF7d/kbVGEk26dM7mRsgAQFlgBOzHFkFNmE1fX9Dpui0xVFiNtBGdDa6IIntwTxwGs9y4AAAAAAAAAAAAAAAB3NZQAA4AgAA").unwrap().as_slice()).unwrap().into();
 
         let ((pubkey, time, expire), remaining_body) =
             unpack_headers::<(PubkeyHeader, TimeHeader, ExpireHeader)>(&body).unwrap();

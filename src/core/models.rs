@@ -714,7 +714,7 @@ impl<'de> Deserialize<'de> for Message {
         let body = match parsed.body {
             Some(data) => {
                 let data = base64::decode(&data).map_err(D::Error::custom)?;
-                let data = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(data))
+                let data = ton_types::deserialize_tree_of_cells(&mut data.as_slice())
                     .map_err(D::Error::custom)?;
                 let hash = data.repr_hash();
                 Some(MessageBody { hash, data })

@@ -304,7 +304,7 @@ impl Transport for GqlTransport {
         .flatten()
         .map(|transaction| {
             let bytes = base64::decode(&transaction.boc.ok_or_else(invalid_response)?)?;
-            let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(bytes))
+            let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
                 .map_err(|_| NodeClientError::InvalidTransaction)?;
             let hash = cell.repr_hash();
             Ok(RawTransaction {
@@ -327,7 +327,7 @@ impl Transport for GqlTransport {
         .flatten()
         .map(|transaction| {
             let bytes = base64::decode(&transaction.boc.ok_or_else(invalid_response)?)?;
-            let cell = ton_types::deserialize_tree_of_cells(&mut std::io::Cursor::new(bytes))
+            let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
                 .map_err(|_| NodeClientError::InvalidTransaction)?;
             let hash = cell.repr_hash();
             Ok(RawTransaction {
