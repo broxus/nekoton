@@ -194,12 +194,6 @@ impl TonWallet {
 
     pub fn prepare_deploy(&self, expiration: Expiration) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
-            WalletType::WalletV3 => wallet_v3::prepare_deploy(
-                self.clock.as_ref(),
-                &self.public_key,
-                self.workchain(),
-                expiration,
-            ),
             WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
                 self.clock.as_ref(),
                 &self.public_key,
@@ -208,6 +202,18 @@ impl TonWallet {
                 expiration,
                 &[self.public_key],
                 1,
+            ),
+            WalletType::WalletV3 => wallet_v3::prepare_deploy(
+                self.clock.as_ref(),
+                &self.public_key,
+                self.workchain(),
+                expiration,
+            ),
+            WalletType::HighloadWalletV2 => highload_wallet_v2::prepare_deploy(
+                self.clock.as_ref(),
+                &self.public_key,
+                self.workchain(),
+                expiration,
             ),
         }
     }
@@ -228,7 +234,9 @@ impl TonWallet {
                 custodians,
                 req_confirms,
             ),
-            WalletType::WalletV3 => Err(TonWalletError::InvalidContractType.into()),
+            WalletType::WalletV3 | WalletType::HighloadWalletV2 => {
+                Err(TonWalletError::InvalidContractType.into())
+            }
         }
     }
 
@@ -293,6 +301,20 @@ impl TonWallet {
                 body,
                 expiration,
             ),
+            WalletType::HighloadWalletV2 => highload_wallet_v2::prepare_transfer(
+                self.clock.as_ref(),
+                public_key,
+                current_state,
+                vec![highload_wallet_v2::Gift {
+                    flags: flags.into(),
+                    bounce,
+                    destination,
+                    amount,
+                    body,
+                    state_init: None,
+                }],
+                expiration,
+            ),
         }
     }
 
@@ -322,7 +344,9 @@ impl TonWallet {
                     expiration,
                 )
             }
-            WalletType::WalletV3 => Err(TonWalletError::PendingTransactionNotFound.into()),
+            WalletType::WalletV3 | WalletType::HighloadWalletV2 => {
+                Err(TonWalletError::PendingTransactionNotFound.into())
+            }
         }
     }
 
@@ -398,7 +422,7 @@ impl WalletData {
     ) -> Result<()> {
         match wallet_type {
             WalletType::Multisig(_) => {}
-            WalletType::WalletV3 => {
+            WalletType::WalletV3 | WalletType::HighloadWalletV2 => {
                 if self.custodians.is_none() {
                     self.custodians = Some(vec![public_key.to_bytes().into()]);
                 }
@@ -458,6 +482,11 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
         let public_key =
             PublicKey::from_bytes(wallet_v3::InitData::try_from(data)?.public_key()).trust_me();
         Ok((public_key, WalletType::WalletV3))
+    } else if highload_wallet_v2::is_highload_wallet_v2(&code_hash) {
+        let public_key =
+            PublicKey::from_bytes(highload_wallet_v2::InitData::try_from(data)?.public_key())
+                .trust_me();
+        Ok((public_key, WalletType::HighloadWalletV2))
     } else {
         Err(TonWalletError::InvalidContractType.into())
     }
@@ -473,17 +502,20 @@ pub fn get_wallet_custodians(
         WalletType::Multisig(_) => {
             multisig::get_custodians(clock, Cow::Borrowed(&contract.account))
         }
-        WalletType::WalletV3 => Ok(vec![public_key.to_bytes().into()]),
+        WalletType::WalletV3 | WalletType::HighloadWalletV2 => {
+            Ok(vec![public_key.to_bytes().into()])
+        }
     }
 }
 
-const WALLET_TYPES_BY_POPULARITY: [WalletType; 6] = [
+const WALLET_TYPES_BY_POPULARITY: [WalletType; 7] = [
     WalletType::Multisig(MultisigType::SurfWallet),
     WalletType::WalletV3,
     WalletType::Multisig(MultisigType::SafeMultisigWallet),
     WalletType::Multisig(MultisigType::SetcodeMultisigWallet),
     WalletType::Multisig(MultisigType::SafeMultisigWallet24h),
     WalletType::Multisig(MultisigType::BridgeMultisigWallet),
+    WalletType::HighloadWalletV2,
 ];
 
 pub async fn find_existing_wallets(
@@ -660,13 +692,15 @@ pub enum TransferAction {
 pub enum WalletType {
     Multisig(MultisigType),
     WalletV3,
+    HighloadWalletV2,
 }
 
 impl WalletType {
     pub fn details(&self) -> TonWalletDetails {
         match self {
-            WalletType::Multisig(multisig_type) => multisig::ton_wallet_details(*multisig_type),
-            WalletType::WalletV3 => wallet_v3::DETAILS,
+            Self::Multisig(multisig_type) => multisig::ton_wallet_details(*multisig_type),
+            Self::WalletV3 => wallet_v3::DETAILS,
+            Self::HighloadWalletV2 => highload_wallet_v2::DETAILS,
         }
     }
 }
@@ -677,6 +711,7 @@ impl FromStr for WalletType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             "WalletV3" => Self::WalletV3,
+            "HighloadWalletV2" => Self::HighloadWalletV2,
             s => Self::Multisig(MultisigType::from_str(s)?),
         })
     }
@@ -685,8 +720,9 @@ impl FromStr for WalletType {
 impl std::fmt::Display for WalletType {
     fn fmt(&self, f: &'_ mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::WalletV3 => f.write_str("WalletV3"),
             Self::Multisig(multisig_type) => multisig_type.fmt(f),
+            Self::WalletV3 => f.write_str("WalletV3"),
+            Self::HighloadWalletV2 => f.write_str("HighloadWalletV2"),
         }
     }
 }
@@ -750,6 +786,9 @@ pub fn compute_address(
             multisig::compute_contract_address(public_key, multisig_type, workchain_id)
         }
         WalletType::WalletV3 => wallet_v3::compute_contract_address(public_key, workchain_id),
+        WalletType::HighloadWalletV2 => {
+            highload_wallet_v2::compute_contract_address(public_key, workchain_id)
+        }
     }
 }
 

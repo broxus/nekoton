@@ -72,7 +72,7 @@ pub fn parse_transaction_additional_info(
     let int_header = match in_msg.header() {
         ton_block::CommonMsgInfo::ExtInMsgInfo(_) => {
             let (recipient, known_payload, method) = match wallet_type {
-                WalletType::WalletV3 => {
+                WalletType::WalletV3 | WalletType::HighloadWalletV2 => {
                     let mut out_msg = None;
                     tx.out_msgs
                         .iterate(|item| {

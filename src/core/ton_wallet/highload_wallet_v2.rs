@@ -32,7 +32,7 @@ pub fn prepare_deploy(
 
     Ok(Box::new(UnsignedHighloadWalletV2Message {
         init_data,
-        gifts: None,
+        gifts: Vec::new(),
         payload,
         message,
         expire_at,
@@ -100,12 +100,12 @@ pub fn prepare_transfer(
     }
 
     let expire_at = ExpireAt::new(clock, expiration);
-    let (hash, payload) = init_data.make_transfer_payload(&gifts, expire_at.timestamp)?;
+    let (hash, payload) = init_data.make_transfer_payload(gifts.clone(), expire_at.timestamp)?;
 
     Ok(TransferAction::Sign(Box::new(
         UnsignedHighloadWalletV2Message {
             init_data,
-            gifts: Some(gifts),
+            gifts,
             payload,
             hash,
             expire_at,
@@ -117,7 +117,7 @@ pub fn prepare_transfer(
 #[derive(Clone)]
 struct UnsignedHighloadWalletV2Message {
     init_data: InitData,
-    gifts: Option<Vec<Gift>>,
+    gifts: Vec<Gift>,
     payload: BuilderData,
     hash: UInt256,
     expire_at: ExpireAt,
@@ -132,9 +132,11 @@ impl UnsignedMessage for UnsignedHighloadWalletV2Message {
 
         let expire_at = self.expire_at();
 
-        let (hash, payload) = match &self.gifts {
-            Some(gifts) => self.init_data.make_transfer_payload(gifts, expire_at),
-            None => self.init_data.make_deploy_payload(expire_at),
+        let (hash, payload) = if self.gifts.is_empty() {
+            self.init_data.make_deploy_payload(expire_at)
+        } else {
+            self.init_data
+                .make_transfer_payload(self.gifts.clone(), expire_at)
         }
         .trust_me();
 
@@ -256,27 +258,27 @@ impl InitData {
 
     pub fn make_transfer_payload(
         &self,
-        gifts: &[Gift],
+        gifts: impl IntoIterator<Item = Gift>,
         expire_at: u32,
     ) -> Result<(UInt256, BuilderData)> {
         // Prepare messages array
         let mut messages = ton_types::HashmapE::with_bit_len(16);
-        for (i, gift) in gifts.iter().enumerate() {
+        for (i, gift) in gifts.into_iter().enumerate() {
             let mut internal_message =
                 ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
                     ihr_disabled: true,
                     bounce: gift.bounce,
-                    dst: gift.destination.clone(),
+                    dst: gift.destination,
                     value: gift.amount.into(),
                     ..Default::default()
                 });
 
-            if let Some(body) = &gift.body {
-                internal_message.set_body(body.clone());
+            if let Some(body) = gift.body {
+                internal_message.set_body(body);
             }
 
-            if let Some(state_init) = &gift.state_init {
-                internal_message.set_state_init(state_init.clone());
+            if let Some(state_init) = gift.state_init {
+                internal_message.set_state_init(state_init);
             }
 
             let mut item = BuilderData::new();
