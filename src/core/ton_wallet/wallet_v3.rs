@@ -250,7 +250,7 @@ impl InitData {
 
     pub fn make_transfer_payload(
         &self,
-        gift: Option<Gift>,
+        gifts: impl IntoIterator<Item = Gift>,
         expire_at: u32,
     ) -> Result<(UInt256, BuilderData)> {
         let mut payload = BuilderData::new();
@@ -262,7 +262,7 @@ impl InitData {
             .append_u32(self.seqno)?;
 
         // create internal message
-        if let Some(gift) = gift {
+        for gift in gifts.into_iter() {
             let mut internal_message =
                 ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
                     ihr_disabled: true,
