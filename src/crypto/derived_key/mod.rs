@@ -118,9 +118,16 @@ impl StoreSigner for DerivedKeySigner {
                         existing.enc_phrase = master_key.enc_phrase;
                         existing.phrase_nonce = master_key.phrase_nonce;
 
-                        let first_key = existing.accounts_map.get_mut(public_key.as_bytes());
-                        if let Some(account) = first_key {
-                            account.name = key_name.clone();
+                        match existing.accounts_map.entry(public_key.to_bytes()) {
+                            hash_map::Entry::Vacant(entry) => {
+                                entry.insert(Account {
+                                    name: key_name.clone(),
+                                    account_id: 0,
+                                });
+                            }
+                            hash_map::Entry::Occupied(mut entry) => {
+                                entry.get_mut().name = key_name.clone();
+                            }
                         }
                     }
                 };
