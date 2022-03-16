@@ -262,7 +262,7 @@ impl InitData {
             .append_u32(self.seqno)?;
 
         // create internal message
-        for gift in gifts.into_iter() {
+        for gift in gifts {
             let mut internal_message =
                 ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
                     ihr_disabled: true,

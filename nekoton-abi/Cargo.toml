@@ -38,3 +38,4 @@ nekoton-contracts = { path = "../nekoton-contracts" }
 [features]
 default = []
 derive = ["nekoton-derive"]
+web = ["ton_abi/web", "nekoton-derive/web", "nekoton-utils/web"]
