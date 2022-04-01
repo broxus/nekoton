@@ -403,8 +403,13 @@ impl TransactionParserBuilder {
             let f = &fun.fun;
             let fun_id = f.output_id;
             let fun_name = f.name.clone();
-            let res = functions.insert(fun_id, fun);
+            let (input_id, output_id) = (f.input_id, f.output_id);
+            let res = functions.insert(fun_id, fun.clone());
             if res.is_some() {
+                if input_id == output_id {
+                    log::warn!("Function with same input and output id: {}. Adding it only as function input parser", fun.fun.name);
+                    continue;
+                }
                 anyhow::bail!(
                     "duplicate function id for out function. Id: {}. Name: {}",
                     fun_id,
@@ -831,5 +836,25 @@ mod test {
         let res = &res[0];
         assert_eq!(res.tokens.len(), 5);
         assert_eq!(res.decoded_headers.len(), 1);
+    }
+
+    #[test]
+    fn test_full_2() {
+        let abi = r#"{"ABI version": 2, "data": [{"key": 1, "name": "root_", "type": "address"}, {"key": 2, "name": "owner_", "type": "address"}], "events": [], "fields": [{"name": "_pubkey", "type": "uint256"}, {"name": "_timestamp", "type": "uint64"}, {"name": "_constructorFlag", "type": "bool"}, {"name": "root_", "type": "address"}, {"name": "owner_", "type": "address"}, {"name": "balance_", "type": "uint128"}], "functions": [{"inputs": [], "name": "constructor", "outputs": []}, {"inputs": [{"name": "answerId", "type": "uint32"}, {"name": "interfaceID", "type": "uint32"}], "name": "supportsInterface", "outputs": [{"name": "value0", "type": "bool"}]}, {"inputs": [{"name": "remainingGasTo", "type": "address"}], "name": "destroy", "outputs": []}, {"inputs": [{"name": "amount", "type": "uint128"}, {"name": "remainingGasTo", "type": "address"}, {"name": "callbackTo", "type": "address"}, {"name": "payload", "type": "cell"}], "name": "burnByRoot", "outputs": []}, {"inputs": [{"name": "amount", "type": "uint128"}, {"name": "remainingGasTo", "type": "address"}, {"name": "callbackTo", "type": "address"}, {"name": "payload", "type": "cell"}], "name": "burn", "outputs": []}, {"inputs": [{"name": "answerId", "type": "uint32"}], "name": "balance", "outputs": [{"name": "value0", "type": "uint128"}]}, {"inputs": [{"name": "answerId", "type": "uint32"}], "name": "owner", "outputs": [{"name": "value0", "type": "address"}]}, {"inputs": [{"name": "answerId", "type": "uint32"}], "name": "root", "outputs": [{"name": "value0", "type": "address"}]}, {"inputs": [{"name": "answerId", "type": "uint32"}], "name": "walletCode", "outputs": [{"name": "value0", "type": "cell"}]}, {"inputs": [{"name": "amount", "type": "uint128"}, {"name": "recipient", "type": "address"}, {"name": "deployWalletValue", "type": "uint128"}, {"name": "remainingGasTo", "type": "address"}, {"name": "notify", "type": "bool"}, {"name": "payload", "type": "cell"}], "name": "transfer", "outputs": []}, {"inputs": [{"name": "amount", "type": "uint128"}, {"name": "recipientTokenWallet", "type": "address"}, {"name": "remainingGasTo", "type": "address"}, {"name": "notify", "type": "bool"}, {"name": "payload", "type": "cell"}], "name": "transferToWallet", "outputs": []}, {"id": "0x67A0B95F", "inputs": [{"name": "amount", "type": "uint128"}, {"name": "sender", "type": "address"}, {"name": "remainingGasTo", "type": "address"}, {"name": "notify", "type": "bool"}, {"name": "payload", "type": "cell"}], "name": "acceptTransfer", "outputs": []}, {"id": "0x4384F298", "inputs": [{"name": "amount", "type": "uint128"}, {"name": "remainingGasTo", "type": "address"}, {"name": "notify", "type": "bool"}, {"name": "payload", "type": "cell"}], "name": "acceptMint", "outputs": []}, {"inputs": [{"name": "to", "type": "address"}], "name": "sendSurplusGas", "outputs": []}], "header": ["pubkey", "time", "expire"], "version": "2.2"}"#;
+        let abi = ton_abi::Contract::load(std::io::Cursor::new(abi)).unwrap();
+
+        let events = abi.events().iter().map(|x| x.1.clone()).collect::<Vec<_>>();
+        let funs = abi
+            .functions()
+            .iter()
+            .map(|x| x.1.clone())
+            .collect::<Vec<_>>();
+
+        let _parser = TransactionParser::builder()
+            .function_in_list(&funs, false)
+            .functions_out_list(&funs, false)
+            .events_list(&events)
+            .build_with_external_in()
+            .unwrap();
     }
 }
