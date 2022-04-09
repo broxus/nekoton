@@ -508,7 +508,7 @@ pub fn get_wallet_custodians(
     }
 }
 
-const WALLET_TYPES_BY_POPULARITY: [WalletType; 7] = [
+pub const WALLET_TYPES_BY_POPULARITY: [WalletType; 7] = [
     WalletType::Multisig(MultisigType::SurfWallet),
     WalletType::WalletV3,
     WalletType::Multisig(MultisigType::SafeMultisigWallet),
@@ -522,10 +522,11 @@ pub async fn find_existing_wallets(
     transport: &dyn Transport,
     public_key: &PublicKey,
     workchain_id: i8,
+    wallet_types: &[WalletType],
 ) -> Result<Vec<ExistingWalletInfo>> {
     use futures::stream::{FuturesUnordered, TryStreamExt};
 
-    WALLET_TYPES_BY_POPULARITY
+    wallet_types
         .iter()
         .map(|&wallet_type| async move {
             let address = compute_address(public_key, wallet_type, workchain_id);
