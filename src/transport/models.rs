@@ -5,7 +5,7 @@ use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
 use nekoton_abi::{ExecutionContext, GenTimings, LastTransactionId, TransactionId};
-use nekoton_utils::{serde_ton_block, Clock};
+use nekoton_utils::{serde_account_stuff, Clock};
 
 use crate::core::models::{ContractState, PendingTransaction};
 
@@ -29,7 +29,7 @@ impl RawContractState {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExistingContract {
-    #[serde(with = "serde_ton_block")]
+    #[serde(with = "serde_account_stuff")]
     pub account: AccountStuff,
     pub timings: GenTimings,
     pub last_transaction_id: LastTransactionId,
