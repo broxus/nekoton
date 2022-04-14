@@ -68,8 +68,10 @@ impl AccountsStorage {
         public_key: ed25519_dalek::PublicKey,
         contract: ton_wallet::WalletType,
         workchain: i8,
+        explicit_address: Option<MsgAddressInt>,
     ) -> Result<AssetsList> {
-        let address = ton_wallet::compute_address(&public_key, contract, workchain);
+        let address = explicit_address
+            .unwrap_or_else(|| ton_wallet::compute_address(&public_key, contract, workchain));
         let key = address.to_string();
 
         let accounts = &mut *self.accounts.write().await;
@@ -239,20 +241,9 @@ fn parse_assets_map(data: &str) -> Result<AssetsMap> {
             let accounts = HashMap::<String, String>::deserialize(deserializer)?;
             let accounts = accounts
                 .into_iter()
-                .map(|(mut address, assets)| {
-                    let mut assets = serde_json::from_str::<AssetsList>(&assets)
+                .map(|(address, assets)| {
+                    let assets = serde_json::from_str::<AssetsList>(&assets)
                         .map_err(|_| D::Error::custom("Failed to deserialize AssetsList"))?;
-
-                    // Handle special accounts from zerostate
-                    if let Some(special_address) = ton_wallet::map_special_account(
-                        &assets.ton_wallet.public_key,
-                        assets.ton_wallet.contract,
-                        assets.ton_wallet.address.workchain_id() as i8,
-                    ) {
-                        address = special_address.to_string();
-                        assets.ton_wallet.address = special_address;
-                    }
-
                     Ok((address, assets))
                 })
                 .collect::<Result<_, _>>()?;
