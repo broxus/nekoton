@@ -62,38 +62,83 @@ impl AccountsStorage {
     }
 
     /// Add account. It can later be fetched by ton wallet address
-    pub async fn add_account(
-        &self,
-        name: &str,
-        public_key: ed25519_dalek::PublicKey,
-        contract: ton_wallet::WalletType,
-        workchain: i8,
-        explicit_address: Option<MsgAddressInt>,
-    ) -> Result<AssetsList> {
-        let address = explicit_address
-            .unwrap_or_else(|| ton_wallet::compute_address(&public_key, contract, workchain));
+    ///
+    /// **NOTE:** If you want to add multiple accounts use [AccountsStorage::add_accounts].
+    /// Storage is not atomic, so if you add multiple accounts with this method in parallel,
+    /// it will overwrite each other.
+    pub async fn add_account(&self, new_account: AccountToAdd) -> Result<AssetsList> {
+        let mut accounts = self.accounts.write().await;
+
+        let address = new_account.explicit_address.unwrap_or_else(|| {
+            ton_wallet::compute_address(
+                &new_account.public_key,
+                new_account.contract,
+                new_account.workchain,
+            )
+        });
         let key = address.to_string();
 
-        let accounts = &mut *self.accounts.write().await;
         let assets_list = match accounts.entry(key.clone()) {
             btree_map::Entry::Occupied(_) => {
                 return Err(AccountsStorageError::AccountAlreadyExists.into())
             }
             btree_map::Entry::Vacant(entry) => entry
                 .insert(AssetsList {
-                    name: name.to_owned(),
+                    name: new_account.name,
                     ton_wallet: TonWalletAsset {
                         address,
-                        public_key,
-                        contract,
+                        public_key: new_account.public_key,
+                        contract: new_account.contract,
                     },
                     additional_assets: Default::default(),
                 })
                 .clone(),
         };
 
-        self.save(accounts).await?;
+        self.save(&accounts).await?;
         Ok(assets_list)
+    }
+
+    /// Add multiple accounts. It can later be fetched by ton wallet address
+    pub async fn add_accounts<I>(&self, new_accounts: I) -> Result<Vec<AssetsList>>
+    where
+        I: IntoIterator<Item = AccountToAdd>,
+    {
+        let accounts = &mut *self.accounts.write().await;
+
+        let mut created_accounts = Vec::new();
+        for new_account in new_accounts {
+            let address = new_account.explicit_address.unwrap_or_else(|| {
+                ton_wallet::compute_address(
+                    &new_account.public_key,
+                    new_account.contract,
+                    new_account.workchain,
+                )
+            });
+            let key = address.to_string();
+
+            let assets_list = match accounts.entry(key.clone()) {
+                btree_map::Entry::Occupied(_) => {
+                    return Err(AccountsStorageError::AccountAlreadyExists.into())
+                }
+                btree_map::Entry::Vacant(entry) => entry
+                    .insert(AssetsList {
+                        name: new_account.name,
+                        ton_wallet: TonWalletAsset {
+                            address,
+                            public_key: new_account.public_key,
+                            contract: new_account.contract,
+                        },
+                        additional_assets: Default::default(),
+                    })
+                    .clone(),
+            };
+
+            created_accounts.push(assets_list);
+        }
+
+        self.save(accounts).await?;
+        Ok(created_accounts)
     }
 
     pub async fn rename_account(&self, account: &str, name: String) -> Result<AssetsList> {
@@ -174,10 +219,30 @@ impl AccountsStorage {
         Ok(entry)
     }
 
-    /// Removes specified from the storage and resets current account if needed
+    /// Removes specified from the storage
+    ///
+    /// **NOTE:** If you want to remove multiple accounts use [AccountsStorage::remove_accounts].
+    /// Storage is not atomic, so if you remove multiple accounts with this method in parallel,
+    /// it will overwrite each other.
     pub async fn remove_account(&self, account: &str) -> Result<Option<AssetsList>> {
         let assets = &mut *self.accounts.write().await;
         let result = assets.remove(account);
+
+        self.save(assets).await?;
+        Ok(result)
+    }
+
+    /// Removes multiple accounts from the storage
+    pub async fn remove_accounts<'a, I>(&self, accounts: I) -> Result<Vec<AssetsList>>
+    where
+        I: IntoIterator<Item = &'a str>,
+    {
+        let assets = &mut *self.accounts.write().await;
+
+        let mut result = Vec::new();
+        for account in accounts {
+            result.extend(assets.remove(account).into_iter());
+        }
 
         self.save(assets).await?;
         Ok(result)
@@ -257,6 +322,15 @@ fn parse_assets_map(data: &str) -> Result<AssetsMap> {
     }
 
     Ok(serde_json::from_str::<StoredData>(data)?.assets.0)
+}
+
+#[derive(Debug, Clone)]
+pub struct AccountToAdd {
+    pub name: String,
+    pub public_key: ed25519_dalek::PublicKey,
+    pub contract: ton_wallet::WalletType,
+    pub workchain: i8,
+    pub explicit_address: Option<MsgAddressInt>,
 }
 
 #[derive(Debug)]
