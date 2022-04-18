@@ -19,7 +19,7 @@ use crate::crypto::{
 };
 use crate::external::Storage;
 
-const STORAGE_KEYSTORE: &str = "__core__keystore";
+pub const KEYSTORE_STORAGE_KEY: &str = "__core__keystore";
 
 pub struct KeyStore {
     state: RwLock<KeyStoreState>,
@@ -298,7 +298,7 @@ impl KeyStore {
         }
 
         let data = serde_json::to_string(&StoredData(signers))?;
-        self.storage.set(STORAGE_KEYSTORE, &data).await
+        self.storage.set(KEYSTORE_STORAGE_KEY, &data).await
     }
 }
 
@@ -466,7 +466,7 @@ impl KeyStoreBuilder {
     }
 
     async fn load_stored_data(storage: &Arc<dyn Storage>) -> Result<Vec<(String, String)>> {
-        match storage.get(STORAGE_KEYSTORE).await? {
+        match storage.get(KEYSTORE_STORAGE_KEY).await? {
             Some(data) => {
                 let data = serde_json::from_str(&data)?;
                 Ok(data)

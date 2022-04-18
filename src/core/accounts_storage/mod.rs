@@ -12,7 +12,7 @@ use nekoton_utils::*;
 use crate::core::ton_wallet;
 use crate::external::Storage;
 
-const STORAGE_ACCOUNTS: &str = "__core__accounts";
+pub const ACCOUNTS_STORAGE_KEY: &str = "__core__accounts";
 
 const DEFAULT_NETWORK_GROUP: &str = "mainnet";
 
@@ -31,7 +31,7 @@ impl AccountsStorage {
 
     /// Loads full accounts storage state. Fails on invalid data
     pub async fn load(storage: Arc<dyn Storage>) -> Result<Self> {
-        let data = match storage.get(STORAGE_ACCOUNTS).await? {
+        let data = match storage.get(ACCOUNTS_STORAGE_KEY).await? {
             Some(data) => parse_assets_map(&data)?,
             None => Default::default(),
         };
@@ -51,7 +51,7 @@ impl AccountsStorage {
     }
 
     pub async fn reload(&self) -> Result<()> {
-        let data = match self.storage.get(STORAGE_ACCOUNTS).await? {
+        let data = match self.storage.get(ACCOUNTS_STORAGE_KEY).await? {
             Some(data) => parse_assets_map(&data)?,
             None => Default::default(),
         };
@@ -250,12 +250,12 @@ impl AccountsStorage {
 
     /// Removes all accounts and resets current account
     pub async fn clear(&self) -> Result<()> {
-        self.storage.remove(STORAGE_ACCOUNTS).await?;
+        self.storage.remove(ACCOUNTS_STORAGE_KEY).await?;
 
         let assets = &mut *self.accounts.write().await;
         assets.clear();
 
-        self.storage.remove(STORAGE_ACCOUNTS).await
+        self.storage.remove(ACCOUNTS_STORAGE_KEY).await
     }
 
     /// Returns handler to the inner data
@@ -289,7 +289,7 @@ impl AccountsStorage {
             assets: StoredAssetsMap(assets),
         })
         .trust_me();
-        self.storage.set(STORAGE_ACCOUNTS, &data).await
+        self.storage.set(ACCOUNTS_STORAGE_KEY, &data).await
     }
 }
 

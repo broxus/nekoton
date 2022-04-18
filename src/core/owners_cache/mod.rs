@@ -17,7 +17,7 @@ use crate::external::Storage;
 use crate::transport::models::{ExistingContract, RawContractState};
 use crate::transport::Transport;
 
-const STORAGE_OWNERS_CACHE: &str = "__core__owners_cache";
+pub const OWNERS_CACHE_STORAGE_KEY: &str = "__core__owners_cache";
 
 /// Stores a map to resolve owner's wallet address from token wallet address
 pub struct OwnersCache {
@@ -263,7 +263,7 @@ async fn check_token_wallet(
 }
 
 fn make_key(network_name: &str) -> String {
-    format!("{}{}", STORAGE_OWNERS_CACHE, network_name)
+    format!("{}{}", OWNERS_CACHE_STORAGE_KEY, network_name)
 }
 
 #[derive(Debug)]
