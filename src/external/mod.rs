@@ -1,6 +1,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use nekoton_utils::*;
+use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 
 #[async_trait]
@@ -40,7 +41,7 @@ pub struct LedgerSignatureContext {
     pub decimals: u8,
     pub asset: String,
     #[serde(with = "serde_string")]
-    pub amount: u64,
+    pub amount: BigUint,
     #[serde(with = "serde_address")]
     pub address: ton_block::MsgAddressInt,
 }
