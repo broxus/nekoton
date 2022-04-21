@@ -105,12 +105,10 @@ impl KeyStore {
         Ok(KeyStoreEntry::from_signer_entry(signer_name, signer_entry))
     }
 
-    pub async fn add_keys<T>(
-        &self,
-        input: impl IntoIterator<Item = T::CreateKeyInput>,
-    ) -> Result<Vec<KeyStoreEntry>>
+    pub async fn add_keys<T, I>(&self, input: I) -> Result<Vec<KeyStoreEntry>>
     where
         T: Signer,
+        I: IntoIterator<Item = T::CreateKeyInput>,
     {
         let mut state = self.state.write().await;
 

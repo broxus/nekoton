@@ -63,7 +63,7 @@ impl AccountsStorage {
 
     /// Add account. It can later be fetched by ton wallet address
     ///
-    /// **NOTE:** If you want to add multiple accounts use [AccountsStorage::add_accounts].
+    /// **NOTE:** If you want to add multiple accounts use [`AccountsStorage::add_accounts`].
     /// Storage is not atomic, so if you add multiple accounts with this method in parallel,
     /// it will overwrite each other.
     pub async fn add_account(&self, new_account: AccountToAdd) -> Result<AssetsList> {
@@ -221,7 +221,7 @@ impl AccountsStorage {
 
     /// Removes specified from the storage
     ///
-    /// **NOTE:** If you want to remove multiple accounts use [AccountsStorage::remove_accounts].
+    /// **NOTE:** If you want to remove multiple accounts use [`AccountsStorage::remove_accounts`].
     /// Storage is not atomic, so if you remove multiple accounts with this method in parallel,
     /// it will overwrite each other.
     pub async fn remove_account(&self, account: &str) -> Result<Option<AssetsList>> {
