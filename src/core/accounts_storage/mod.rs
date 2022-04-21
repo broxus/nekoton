@@ -118,9 +118,7 @@ impl AccountsStorage {
             let key = address.to_string();
 
             let assets_list = match accounts.entry(key.clone()) {
-                btree_map::Entry::Occupied(_) => {
-                    return Err(AccountsStorageError::AccountAlreadyExists.into())
-                }
+                btree_map::Entry::Occupied(_) => continue,
                 btree_map::Entry::Vacant(entry) => entry
                     .insert(AssetsList {
                         name: new_account.name,
