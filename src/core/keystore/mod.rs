@@ -105,6 +105,40 @@ impl KeyStore {
         Ok(KeyStoreEntry::from_signer_entry(signer_name, signer_entry))
     }
 
+    pub async fn add_keys<T>(
+        &self,
+        input: impl IntoIterator<Item = T::CreateKeyInput>,
+    ) -> Result<Vec<KeyStoreEntry>>
+    where
+        T: Signer,
+    {
+        let mut state = self.state.write().await;
+
+        let ctx = SignerContext {
+            password_cache: &self.password_cache,
+        };
+
+        let mut entries = Vec::new();
+
+        for input in input {
+            let (signer_name, signer): (_, &mut T) = state.get_signer_mut::<T>()?;
+
+            let signer_entry = signer.add_key(ctx, input).await?;
+            state.entries.insert(
+                signer_entry.public_key.to_bytes(),
+                (TypeId::of::<T>(), signer_entry.clone()),
+            );
+
+            entries.push(KeyStoreEntry::from_signer_entry(
+                signer_name.clone(),
+                signer_entry,
+            ));
+        }
+
+        self.save(&state.signers).await?;
+        Ok(entries)
+    }
+
     pub async fn update_key<T>(&self, input: T::UpdateKeyInput) -> Result<KeyStoreEntry>
     where
         T: Signer,
@@ -265,6 +299,34 @@ impl KeyStore {
 
         self.save(&state.signers).await?;
         Ok(entry)
+    }
+
+    pub async fn remove_keys(&self, public_keys: &[PublicKey]) -> Result<Vec<KeyStoreEntry>> {
+        let mut state = self.state.write().await;
+
+        let mut entries = Vec::new();
+
+        for public_key in public_keys {
+            let signer_id = match state.entries.remove(public_key.as_bytes()) {
+                Some((signer_id, _)) => signer_id,
+                None => continue,
+            };
+
+            let (signer_name, signer) = match state.signers.get_mut(&signer_id) {
+                Some(entry) => entry,
+                None => continue,
+            };
+
+            if let Some(signer_entry) = signer.remove_key(public_key).await {
+                entries.push(KeyStoreEntry::from_signer_entry(
+                    signer_name.clone(),
+                    signer_entry,
+                ));
+            }
+        }
+
+        self.save(&state.signers).await?;
+        Ok(entries)
     }
 
     pub async fn clear(&self) -> Result<()> {
