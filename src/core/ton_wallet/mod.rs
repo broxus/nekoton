@@ -602,7 +602,7 @@ enum TonWalletError {
     InvalidContractType,
     #[error("Custodians not found")]
     CustodiansNotFound,
-    #[error("Pending transactino not found")]
+    #[error("Pending transaction not found")]
     PendingTransactionNotFound,
 }
 
