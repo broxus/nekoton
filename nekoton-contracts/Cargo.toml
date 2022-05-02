@@ -18,7 +18,6 @@ ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
 
 nekoton-abi = { path = "../nekoton-abi", features = ["derive"] }
-nekoton-utils = { path = "../nekoton-utils" }
 
 [features]
 web = ["ton_abi/web"]

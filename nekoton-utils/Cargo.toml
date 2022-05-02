@@ -14,13 +14,9 @@ base64 = "0.13"
 chacha20poly1305 = { version = "0.10.0-pre", optional = true }
 hex = "0.4"
 js-sys = { version = "0.3", optional = true }
-log = "0.4"
-num-bigint = { version = "0.3", features = ["serde"] }
-num-traits = "0.2"
 ring = { version = "0.16", optional = true }
 secstr = { version = "0.4.0", features = ["serde"], optional = true }
 serde = { version = "1.0", features = ["derive"] }
-sha2 = "0.9"
 thiserror = "1.0"
 zeroize = { version = "1", optional = true }
 
