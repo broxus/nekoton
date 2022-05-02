@@ -186,7 +186,7 @@ pub mod serde_optional_string {
     pub fn serialize<S, T>(data: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
-        T: std::fmt::Display,
+        T: fmt::Display,
     {
         data.as_ref().map(ToString::to_string).serialize(serializer)
     }
@@ -195,12 +195,46 @@ pub mod serde_optional_string {
     where
         D: serde::Deserializer<'de>,
         T: FromStr,
-        T::Err: std::fmt::Display,
+        T::Err: fmt::Display,
     {
         Option::<String>::deserialize(deserializer).and_then(|data| {
-            data.map(|data| T::from_str(&data).map_err(D::Error::custom))
+            data.map(|data| T::from_str(&data).map_err(Error::custom))
                 .transpose()
         })
+    }
+}
+
+pub mod serde_string_array {
+    use super::*;
+
+    pub fn serialize<S, T>(data: &[T], serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: fmt::Display,
+    {
+        data.iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(",")
+            .serialize(serializer)
+    }
+
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<Vec<T>, D::Error>
+    where
+        T: Deserialize<'de> + FromStr,
+        D: serde::Deserializer<'de>,
+        <T as FromStr>::Err: fmt::Display,
+    {
+        let s = String::deserialize(deserializer)?;
+        if s.contains(',') {
+            let mut v = Vec::new();
+            for url in s.split(',') {
+                v.push(T::from_str(url).map_err(Error::custom)?);
+            }
+            Ok(v)
+        } else {
+            Ok(vec![T::from_str(&s).map_err(Error::custom)?])
+        }
     }
 }
 

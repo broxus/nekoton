@@ -337,7 +337,7 @@ impl ContractSubscription {
             on_transactions_found(new_transactions, batch_info);
         }
 
-        std::mem::drop(transactions);
+        drop(transactions);
 
         if let Some(id) = new_latest_known_transaction {
             self.latest_known_transaction = Some(id);
