@@ -7,8 +7,7 @@ use async_trait::async_trait;
 use chacha20poly1305::aead::NewAead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signer};
-use ring::digest;
-use ring::rand::SecureRandom;
+use rand::Rng;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
@@ -306,7 +305,7 @@ pub enum EncryptedKeyUpdateParams {
     },
 }
 
-const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
+const CREDENTIAL_LEN: usize = 32;
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct EncryptedKey {
@@ -321,22 +320,14 @@ impl EncryptedKey {
         phrase: SecUtf8,
         name: Option<String>,
     ) -> Result<(Self, PasswordCacheTransaction<'_>)> {
-        let rng = ring::rand::SystemRandom::new();
+        let rng = &mut rand::thread_rng();
 
         // prepare nonce
-        let mut private_key_nonce = [0u8; NONCE_LENGTH];
-        rng.fill(&mut private_key_nonce)
-            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
-        let private_key_nonce = Nonce::from(private_key_nonce);
-
-        let mut seed_phrase_nonce = [0u8; NONCE_LENGTH];
-        rng.fill(&mut seed_phrase_nonce)
-            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
-        let seed_phrase_nonce = Nonce::from(seed_phrase_nonce);
+        let private_key_nonce = Nonce::from(rng.gen::<[u8; NONCE_LENGTH]>());
+        let seed_phrase_nonce = Nonce::from(rng.gen::<[u8; NONCE_LENGTH]>());
 
         let mut salt = vec![0u8; CREDENTIAL_LEN];
-        rng.fill(salt.as_mut_slice())
-            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
+        rng.fill(salt.as_mut_slice());
 
         let phrase = phrase.unsecure();
         let keypair = derive_from_phrase(phrase, mnemonic_type)?;
@@ -408,22 +399,14 @@ impl EncryptedKey {
     }
 
     pub fn change_password(&mut self, old_password: &str, new_password: &str) -> Result<()> {
-        let rng = ring::rand::SystemRandom::new();
+        let rng = &mut rand::thread_rng();
 
         // prepare nonce
-        let mut new_private_key_nonce = [0u8; NONCE_LENGTH];
-        rng.fill(&mut new_private_key_nonce)
-            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
-        let new_private_key_nonce = Nonce::from(new_private_key_nonce);
-
-        let mut new_seed_phrase_nonce = [0u8; NONCE_LENGTH];
-        rng.fill(&mut new_seed_phrase_nonce)
-            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
-        let new_seed_phrase_nonce = Nonce::from(new_seed_phrase_nonce);
+        let new_private_key_nonce = Nonce::from(rng.gen::<[u8; NONCE_LENGTH]>());
+        let new_seed_phrase_nonce = Nonce::from(rng.gen::<[u8; NONCE_LENGTH]>());
 
         let mut new_salt = vec![0u8; CREDENTIAL_LEN];
-        rng.fill(&mut new_salt)
-            .map_err(EncryptedKeyError::FailedToGenerateRandomBytes)?;
+        rng.fill(new_salt.as_mut_slice());
 
         // prepare encryptor/decrypter pair
         let old_key = symmetric_key_from_password(old_password, &self.inner.salt);
@@ -632,8 +615,6 @@ fn decrypt_key_pair(
 
 #[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum EncryptedKeyError {
-    #[error("Failed to generate random bytes")]
-    FailedToGenerateRandomBytes(ring::error::Unspecified),
     #[error("Invalid private key")]
     InvalidPrivateKey,
     #[error("Failed to decrypt data")]
@@ -667,7 +648,7 @@ mod tests {
 
     #[test]
     fn test_init() {
-        let cache = PasswordCache::new().unwrap();
+        let cache = PasswordCache::new();
 
         let password = Password::Explicit {
             password: SecUtf8::from(TEST_PASSWORD),
@@ -685,7 +666,7 @@ mod tests {
 
     #[test]
     fn test_bad_password() {
-        let cache = PasswordCache::new().unwrap();
+        let cache = PasswordCache::new();
 
         let password = Password::Explicit {
             password: SecUtf8::from(TEST_PASSWORD),
@@ -728,7 +709,7 @@ mod tests {
 
     #[tokio::test]
     async fn store_load() {
-        let cache = PasswordCache::new().unwrap();
+        let cache = PasswordCache::new();
         let ctx = SignerContext {
             password_cache: &cache,
         };

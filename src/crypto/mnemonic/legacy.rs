@@ -1,16 +1,15 @@
 use std::collections::HashSet;
-use std::convert::TryInto;
-use std::num::NonZeroU32;
 
 use anyhow::Error;
 use ed25519_dalek::Keypair;
-use ring::hmac;
-use ring::pbkdf2::{self, PBKDF2_HMAC_SHA512};
+use hmac::NewMac;
+use nekoton_utils::TrustMe;
+use pbkdf2::pbkdf2;
 
 use super::dict::BIP39;
 use super::utils::{Bits, Bits11, IterExt};
 
-const PBKDF_ITERATIONS: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(100_000) };
+const PBKDF_ITERATIONS: u32 = 100_000;
 
 pub fn derive_from_phrase(phrase: &str) -> Result<Keypair, Error> {
     let phrase: Vec<_> = phrase.split_whitespace().collect();
@@ -27,9 +26,11 @@ pub fn generate_words(entropy: [u8; 32]) -> Vec<String> {
 }
 
 fn from_entropy_unchecked(entropy: [u8; 256 / 8]) -> Vec<String> {
+    #[inline(always)]
     fn sha256_first_byte(input: &[u8]) -> u8 {
-        use ring::digest;
-        digest::digest(&digest::SHA256, input).as_ref()[0]
+        use sha2::Digest;
+
+        sha2::Sha256::digest(input)[0]
     }
 
     let checksum_byte = sha256_first_byte(&entropy);
@@ -47,29 +48,26 @@ fn from_entropy_unchecked(entropy: [u8; 256 / 8]) -> Vec<String> {
         .iter()
         .chain(Some(&checksum_byte))
         .bits()
-        .map(|bits: Bits11| BIP39[bits.bits() as usize]) //todo should we check index?
+        .map(|bits: Bits11| BIP39[bits.bits() as usize])
         .join(" ");
 
     phrase.split_whitespace().map(|x| x.to_string()).collect()
 }
 
 fn phrase_to_entropy(phrase: &[&str]) -> [u8; 64] {
+    use hmac::Mac;
+
     let phrase: String = phrase.join(" ");
-    let key = hmac::Key::new(hmac::HMAC_SHA512, phrase.as_bytes());
-    let res = hmac::sign(&key, b"")
-        .as_ref()
-        .try_into()
-        .expect("Shouldn't' fail");
-    res
+    let key = hmac::Hmac::<sha2::Sha512>::new_from_slice(phrase.as_bytes()).trust_me();
+    key.finalize().into_bytes().into()
 }
 
 fn phrase_to_seed(phrase: &[&str]) -> [u8; 64] {
     let mut storage = [0; 512 / 8];
-    pbkdf2::derive(
-        PBKDF2_HMAC_SHA512,
-        PBKDF_ITERATIONS,
-        b"TON default seed",
+    pbkdf2::<hmac::Hmac<sha2::Sha512>>(
         phrase_to_entropy(phrase).as_ref(),
+        b"TON default seed",
+        PBKDF_ITERATIONS,
         &mut storage,
     );
     storage

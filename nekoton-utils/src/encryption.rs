@@ -1,17 +1,16 @@
 use std::borrow::Borrow;
-use std::num::NonZeroU32;
 
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
-use ring::{digest, pbkdf2};
+use pbkdf2::pbkdf2;
 use secstr::{SecUtf8, SecVec};
 use zeroize::Zeroize;
 
 pub const NONCE_LENGTH: usize = 12;
 
-const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
+const CREDENTIAL_LEN: usize = 32;
 
-const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(100_000) };
+const N_ITER: u32 = 100_000;
 
 /// Decrypts utf8 data using specified decrypter and nonce
 pub fn decrypt_secure_str(
@@ -59,11 +58,10 @@ pub fn encrypt(
 // Calculates symmetric key from user password, using pbkdf2
 pub fn symmetric_key_from_password(password: &str, salt: &[u8]) -> Key {
     let mut pbkdf2_hash = SecVec::new(vec![0; CREDENTIAL_LEN]);
-    pbkdf2::derive(
-        pbkdf2::PBKDF2_HMAC_SHA256,
-        N_ITER,
-        salt,
+    pbkdf2::<hmac::Hmac<sha2::Sha256>>(
         password.as_bytes(),
+        salt,
+        N_ITER,
         pbkdf2_hash.unsecure_mut(),
     );
     Key::clone_from_slice((&pbkdf2_hash).borrow())

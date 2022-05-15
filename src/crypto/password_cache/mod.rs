@@ -5,7 +5,7 @@ use anyhow::Result;
 use chacha20poly1305::aead::{Aead, NewAead};
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
 use parking_lot::RwLock;
-use ring::rand::SecureRandom;
+use rand::Rng;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
@@ -16,21 +16,20 @@ pub struct PasswordCache {
 }
 
 impl PasswordCache {
-    pub fn new() -> Result<Self> {
-        Ok(Self {
+    pub fn new() -> Self {
+        Self {
             state: RwLock::new(PasswordCacheState {
-                cipher: make_cipher()?,
+                cipher: make_cipher(),
                 passwords: Default::default(),
             }),
-        })
+        }
     }
 
-    pub fn reset(&self) -> Result<()> {
+    pub fn reset(&self) {
         *self.state.write() = PasswordCacheState {
-            cipher: make_cipher()?,
+            cipher: make_cipher(),
             passwords: Default::default(),
         };
-        Ok(())
     }
 
     pub fn process_password(
@@ -101,9 +100,7 @@ impl PasswordCache {
 
     pub fn store(&self, id: [u8; 32], password: &[u8], duration: Duration) -> Result<()> {
         let mut nonce = Nonce::default();
-        ring::rand::SystemRandom::new()
-            .fill(&mut nonce)
-            .map_err(|_| PasswordCacheError::FailedToGenerateNonce)?;
+        rand::thread_rng().fill(nonce.as_mut_slice());
 
         let mut state = self.state.write();
 
@@ -130,11 +127,10 @@ impl PasswordCache {
         self.state.write().passwords.remove(id);
     }
 
-    pub fn clear(&self) -> Result<()> {
+    pub fn clear(&self) {
         let mut state = self.state.write();
-        state.cipher = make_cipher()?;
+        state.cipher = make_cipher();
         state.passwords.clear();
-        Ok(())
     }
 
     pub fn refresh(&self) {
@@ -143,6 +139,12 @@ impl PasswordCache {
             .write()
             .passwords
             .retain(|_, item| item.expire_at > now);
+    }
+}
+
+impl Default for PasswordCache {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -190,12 +192,10 @@ pub enum Password {
     FromCache,
 }
 
-fn make_cipher() -> Result<ChaCha20Poly1305> {
+fn make_cipher() -> ChaCha20Poly1305 {
     let mut key = chacha20poly1305::Key::default();
-    ring::rand::SystemRandom::new()
-        .fill(&mut key)
-        .map_err(|_| PasswordCacheError::FailedToGenerateCipher)?;
-    Ok(ChaCha20Poly1305::new(&key))
+    rand::thread_rng().fill(key.as_mut_slice());
+    ChaCha20Poly1305::new(&key)
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
@@ -212,10 +212,6 @@ impl Default for PasswordCacheBehavior {
 
 #[derive(thiserror::Error, Debug)]
 enum PasswordCacheError {
-    #[error("Failed to generate cipher")]
-    FailedToGenerateCipher,
-    #[error("Failed to generate nonce")]
-    FailedToGenerateNonce,
     #[error("Failed to encrypt password")]
     FailedToEncryptPassword,
     #[error("Failed to decrypt password")]

@@ -5,8 +5,6 @@ use async_trait::async_trait;
 use chacha20poly1305::aead::NewAead;
 use chacha20poly1305::{ChaCha20Poly1305, Nonce};
 use ed25519_dalek::{PublicKey, Signer};
-use ring::digest;
-use ring::rand::SecureRandom;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize, Serializer};
 
@@ -17,8 +15,6 @@ use super::{
     default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
     Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
-
-const CREDENTIAL_LEN: usize = digest::SHA256_OUTPUT_LEN;
 
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
 pub struct DerivedKeySigner {
@@ -557,19 +553,18 @@ impl MasterKey {
 }
 
 fn compute_encrypted_part(entropy: &[u8], phrase: &[u8], password: &str) -> Result<EncryptedPart> {
-    let rng = ring::rand::SystemRandom::new();
+    use rand::Rng;
 
-    let mut salt = vec![0u8; CREDENTIAL_LEN];
-    rng.fill(salt.as_mut_slice())
-        .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+    let rng = &mut rand::thread_rng();
+
+    let mut salt = vec![0u8; 32];
+    rng.fill(salt.as_mut_slice());
 
     let mut entropy_nonce = [0u8; NONCE_LENGTH];
-    rng.fill(&mut entropy_nonce)
-        .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+    rng.fill(&mut entropy_nonce);
 
     let mut phrase_nonce = [0u8; NONCE_LENGTH];
-    rng.fill(&mut phrase_nonce)
-        .map_err(|_| MasterKeyError::FailedToGenerateRandomBytes)?;
+    rng.fill(&mut phrase_nonce);
 
     let entropy_nonce = Nonce::from(entropy_nonce);
     let phrase_nonce = Nonce::from(phrase_nonce);
@@ -761,8 +756,6 @@ enum MasterKeyError {
     DerivedKeyNotFound,
     #[error("Failed to derive account from master key")]
     DerivationError,
-    #[error("Failed to generate random bytes")]
-    FailedToGenerateRandomBytes,
     #[error("Derived key already exists")]
     DerivedKeyExists,
 }
@@ -781,7 +774,7 @@ mod tests {
     async fn test_creation() -> Result<()> {
         let mut signer = DerivedKeySigner::new();
 
-        let cache = PasswordCache::new()?;
+        let cache = PasswordCache::new();
         let ctx = SignerContext {
             password_cache: &cache,
         };
@@ -852,7 +845,7 @@ mod tests {
     async fn test_change_password() -> Result<()> {
         let mut signer = DerivedKeySigner::new();
 
-        let cache = PasswordCache::new()?;
+        let cache = PasswordCache::new();
         let ctx = SignerContext {
             password_cache: &cache,
         };
@@ -931,7 +924,7 @@ mod tests {
     async fn store_load() {
         let mut key = DerivedKeySigner::new();
 
-        let cache = PasswordCache::new().unwrap();
+        let cache = PasswordCache::new();
         let ctx = SignerContext {
             password_cache: &cache,
         };

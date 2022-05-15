@@ -65,7 +65,7 @@ impl KeyStore {
             state.entries = entries;
         }
 
-        self.password_cache.reset()?;
+        self.password_cache.reset();
 
         Ok(())
     }
@@ -493,7 +493,7 @@ impl KeyStoreBuilder {
                 entries,
             }),
             storage,
-            password_cache: PasswordCache::new()?,
+            password_cache: PasswordCache::new(),
         })
     }
 
@@ -521,7 +521,7 @@ impl KeyStoreBuilder {
                 entries,
             }),
             storage,
-            password_cache: PasswordCache::new().trust_me(),
+            password_cache: PasswordCache::new(),
         }
     }
 

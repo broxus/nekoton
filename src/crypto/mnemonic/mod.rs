@@ -1,5 +1,6 @@
 use anyhow::Error;
 use ed25519_dalek::Keypair;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 pub mod dict;
@@ -39,29 +40,14 @@ pub fn derive_from_phrase(phrase: &str, mnemonic_type: MnemonicType) -> Result<K
 }
 
 /// Generates mnemonic and keypair.
-pub fn generate_key(account_type: MnemonicType) -> Result<GeneratedKey, Error> {
-    Ok(GeneratedKey {
+pub fn generate_key(account_type: MnemonicType) -> GeneratedKey {
+    let rng = &mut rand::thread_rng();
+
+    GeneratedKey {
         account_type,
         words: match account_type {
-            MnemonicType::Legacy => legacy::generate_words(generate_entropy::<32>()?),
-            MnemonicType::Labs(_) => labs::generate_words(generate_entropy::<16>()?),
+            MnemonicType::Legacy => legacy::generate_words(rng.gen()),
+            MnemonicType::Labs(_) => labs::generate_words(rng.gen()),
         },
-    })
-}
-
-fn generate_entropy<const N: usize>() -> Result<[u8; N], MnemonicError> {
-    use ring::rand::SecureRandom;
-
-    let rng = ring::rand::SystemRandom::new();
-
-    let mut entropy = [0; N];
-    rng.fill(&mut entropy)
-        .map_err(MnemonicError::FailedToGenerateRandomBytes)?;
-    Ok(entropy)
-}
-
-#[derive(thiserror::Error, Debug)]
-enum MnemonicError {
-    #[error("Failed to generate random bytes")]
-    FailedToGenerateRandomBytes(ring::error::Unspecified),
+    }
 }
