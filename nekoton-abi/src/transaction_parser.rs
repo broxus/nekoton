@@ -12,7 +12,7 @@ use nekoton_utils::define_string_enum;
 use crate::read_function_id;
 use crate::transaction_parser::ParsedType::FunctionInput;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Extracted<'a, 'tx> {
     pub function_id: u32,
     pub name: &'a str,
@@ -50,6 +50,34 @@ impl<'a, 'tx> Extracted<'a, 'tx> {
         });
         res.unwrap_or(false)
     }
+
+    pub fn into_owned(self) -> ExtractedOwned {
+        ExtractedOwned {
+            function_id: self.function_id,
+            name: self.name.to_owned(),
+            bounced: self.bounced,
+            tokens: self.tokens,
+            message: self.message,
+            tx: self.tx.clone(),
+            is_in_message: self.is_in_message,
+            parsed_type: self.parsed_type,
+            decoded_headers: self.decoded_headers,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ExtractedOwned {
+    pub function_id: u32,
+    pub name: String,
+    pub bounced: bool,
+    pub tokens: Vec<Token>,
+    pub message: ton_block::Message,
+    pub tx: ton_block::Transaction,
+    /// The index of the message in the transaction
+    pub is_in_message: bool,
+    pub parsed_type: ParsedType,
+    pub decoded_headers: Vec<Token>,
 }
 
 /// Parses message without checking function id
