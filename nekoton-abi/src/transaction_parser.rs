@@ -74,7 +74,7 @@ pub fn message_bounced(msg: &Message) -> bool {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Parses transactions with provided extractors
 pub struct TransactionParser {
     functions: HashMap<u32, FunctionOpts>,
