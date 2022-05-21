@@ -4,7 +4,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Result;
-use futures::stream::{FuturesUnordered, StreamExt};
+use futures_util::stream::{FuturesUnordered, StreamExt};
 use serde::Deserialize;
 use tokio::sync::{RwLock, Semaphore};
 use ton_block::MsgAddressInt;

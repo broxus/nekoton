@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use futures::StreamExt;
+use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 

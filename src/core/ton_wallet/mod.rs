@@ -524,7 +524,7 @@ pub async fn find_existing_wallets(
     workchain_id: i8,
     wallet_types: &[WalletType],
 ) -> Result<Vec<ExistingWalletInfo>> {
-    use futures::stream::{FuturesUnordered, TryStreamExt};
+    use futures_util::stream::{FuturesUnordered, TryStreamExt};
 
     wallet_types
         .iter()

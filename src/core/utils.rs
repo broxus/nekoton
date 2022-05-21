@@ -6,7 +6,7 @@ use std::task::{Context, Poll};
 
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
-use futures::{Future, FutureExt, Stream};
+use futures_util::{Future, FutureExt, Stream};
 use ton_block::{MsgAddressInt, Serializable};
 
 use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};

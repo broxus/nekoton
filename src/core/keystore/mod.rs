@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
-use futures::future;
+use futures_util::future;
 use rand::Rng;
 use serde::{Serialize, Serializer};
 use tokio::sync::RwLock;
