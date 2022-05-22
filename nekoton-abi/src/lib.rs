@@ -919,7 +919,6 @@ mod tests {
 
     use ton_abi::{Param, ParamType, Uint};
     use ton_block::{Deserializable, Message, Transaction};
-    use ton_types::serialize_toc;
 
     use super::*;
 
@@ -968,7 +967,7 @@ mod tests {
             "events": []
         }"#####;
 
-        let contract_abi = ton_abi::Contract::load(&mut std::io::Cursor::new(contract)).trust_me();
+        let contract_abi = ton_abi::Contract::load(contract).trust_me();
         let function = contract_abi.function("submitTransaction").trust_me();
 
         let _msg_code = base64::decode("te6ccgEBBAEA0QABRYgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4MAQHhkN2GJNWURKaCKnkZsRQhhRpn6THu/L5UVbrQqftLTfUQT74cmHie7f1G6gzgchbLtyMtLAADdEgyd74v9hADgPx2uNPC/rcj5o9MEu0xQtT7O4QxICY7yPkDTSqLNRfNQAAAXh+Daz0/////xMdgs2ACAWOAAxkzX//CemECbh7vgh+JqjeKnKVxwwO21B0Xbqitsj/gAAAAAAAAAAAAAAADuaygBAMAAA==").unwrap();
@@ -1032,7 +1031,8 @@ mod tests {
     fn test_encode_cell() {
         let expected = "te6ccgEBAQEAIgAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA5";
         let tokens = &[Token::new("wa", TokenValue::Uint(Uint::new(12345, 256)))];
-        let got = base64::encode(serialize_toc(&pack_into_cell(tokens).unwrap()).unwrap());
+        let got =
+            base64::encode(ton_types::serialize_toc(&pack_into_cell(tokens).unwrap()).unwrap());
         assert_eq!(expected, got);
     }
 
