@@ -25,6 +25,15 @@ macro_rules! define_string_enum {
             $($(#[$inner $($inner_args)*])* $variant$( = $value)?),*,
         }
 
+        impl $type {
+            #[inline(always)]
+            $vis fn as_str(&self) -> &'static str {
+                match self {
+                    $(Self::$variant => stringify!($variant)),*,
+                }
+            }
+        }
+
         impl std::str::FromStr for $type {
             type Err = anyhow::Error;
 
@@ -38,9 +47,7 @@ macro_rules! define_string_enum {
 
         impl std::fmt::Display for $type {
             fn fmt(&self, f: &'_ mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                match self {
-                    $(Self::$variant => f.write_str(stringify!($variant))),*,
-                }
+                f.write_str(self.as_str())
             }
         }
     };
