@@ -68,7 +68,7 @@ pub fn read_input_function_id(
         }
 
         // Skip headers
-        for header in contract.header() {
+        for header in &contract.header {
             match header.kind {
                 ton_abi::ParamType::PublicKey => {
                     if body.get_next_bit()? {
@@ -114,7 +114,7 @@ pub fn guess_method_by_input<'a>(
             }
         }
         None => {
-            for function in contract.functions().values() {
+            for function in contract.functions.values() {
                 if function.input_id == input_id {
                     method = Some(function);
                     break;
@@ -271,13 +271,13 @@ pub fn insert_state_init_data(
         )?;
     }
 
-    if !contract.data().is_empty() {
+    if !contract.data.is_empty() {
         let tokens = tokens
             .into_iter()
             .map(|token| (token.name, token.value))
             .collect::<HashMap<_, _>>();
 
-        for (param_name, param) in contract.data() {
+        for (param_name, param) in &contract.data {
             let token = tokens
                 .get(param_name)
                 .ok_or_else(|| InitDataError::TokenNotFound(param_name.clone()))?;
@@ -333,7 +333,7 @@ pub fn decode_output<'a>(
         }
         MethodName::Guess => {
             let mut function = None;
-            for entry in contract.functions().values() {
+            for entry in contract.functions.values() {
                 if entry.output_id == output_id {
                     function = Some(entry);
                     break;
@@ -357,7 +357,7 @@ pub fn decode_event<'a>(
     message_body: SliceData,
     name: &MethodName,
 ) -> Result<Option<(&'a ton_abi::Event, Vec<ton_abi::Token>)>> {
-    let events = contract.events();
+    let events = &contract.events;
     let event_id = match read_function_id(&message_body) {
         Ok(id) => id,
         Err(_) => return Ok(None),
