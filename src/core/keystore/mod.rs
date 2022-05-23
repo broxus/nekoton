@@ -35,6 +35,11 @@ impl KeyStore {
         }
     }
 
+    #[inline(always)]
+    pub fn password_cache(&self) -> &PasswordCache {
+        &self.password_cache
+    }
+
     pub fn is_password_cached(&self, id: &[u8; 32], duration: Duration) -> bool {
         self.password_cache.contains(id, duration)
     }
