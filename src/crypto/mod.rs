@@ -24,7 +24,7 @@ mod password_cache;
 pub type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
 pub type PubKey = [u8; ed25519_dalek::PUBLIC_KEY_LENGTH];
 
-pub trait UnsignedMessage: DynClone + Send {
+pub trait UnsignedMessage: DynClone + Send + Sync {
     /// Adjust expiration timestamp from now
     fn refresh_timeout(&mut self, clock: &dyn Clock);
 
