@@ -40,23 +40,18 @@ impl PasswordCache {
         match password {
             Password::Explicit {
                 password,
-                cache_behavior: PasswordCacheBehavior::Remove,
-            } => {
-                self.remove(&id);
-                Ok(PasswordCacheTransaction {
-                    id,
-                    password,
-                    store_duration: None,
-                    cache: self,
-                })
-            }
-            Password::Explicit {
-                password,
-                cache_behavior: PasswordCacheBehavior::Store(duration),
+                cache_behavior,
             } => Ok(PasswordCacheTransaction {
                 id,
                 password,
-                store_duration: Some(duration),
+                store_duration: match cache_behavior {
+                    PasswordCacheBehavior::Store(duration) => Some(duration),
+                    PasswordCacheBehavior::Remove => {
+                        self.remove(&id);
+                        None
+                    }
+                    PasswordCacheBehavior::Nop => None,
+                },
                 cache: self,
             }),
             Password::FromCache => match self.get(&id)? {
@@ -200,8 +195,12 @@ fn make_cipher() -> ChaCha20Poly1305 {
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum PasswordCacheBehavior {
+    /// Updates entry ttl or inserts the new entry
     Store(#[serde(with = "serde_duration_ms")] Duration),
+    /// Removes the entry
     Remove,
+    /// Does nothing
+    Nop,
 }
 
 impl Default for PasswordCacheBehavior {
