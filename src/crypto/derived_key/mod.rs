@@ -599,6 +599,7 @@ struct Account {
 type AccountsMap = HashMap<PubKey, Account>;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum DerivedKeySignParams {
     ByAccountId {
         #[serde(with = "serde_public_key")]

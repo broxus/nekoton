@@ -545,8 +545,12 @@ pub async fn find_existing_wallets(
         .await
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExistingWalletInfo {
+    #[serde(with = "serde_address")]
     pub address: MsgAddressInt,
+    #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
     pub wallet_type: WalletType,
     pub contract_state: ContractState,
@@ -690,6 +694,7 @@ pub enum TransferAction {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum WalletType {
     Multisig(MultisigType),
     WalletV3,

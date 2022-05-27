@@ -4,7 +4,8 @@ use downcast_rs::{impl_downcast, Downcast};
 use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use ton_block::Serializable;
 use zeroize::Zeroizing;
 
 use nekoton_utils::*;
@@ -46,6 +47,62 @@ dyn_clone::clone_trait_object!(UnsignedMessage);
 pub struct SignedMessage {
     pub message: ton_block::Message,
     pub expire_at: u32,
+}
+
+impl Serialize for SignedMessage {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::Error;
+
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct SignedMessageHelper {
+            #[serde(with = "serde_uint256")]
+            pub hash: ton_types::UInt256,
+            pub expire_at: u32,
+            #[serde(with = "serde_message")]
+            pub boc: ton_block::Message,
+        }
+
+        let cell: ton_types::Cell = self
+            .message
+            .write_to_new_cell()
+            .map_err(S::Error::custom)?
+            .into();
+        let hash = cell.repr_hash();
+
+        SignedMessageHelper {
+            hash,
+            expire_at: self.expire_at,
+            boc: self.message.to_owned(),
+        }
+        .serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for SignedMessage {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct SignedMessageHelper {
+            pub expire_at: u32,
+            #[serde(with = "serde_message")]
+            pub boc: ton_block::Message,
+        }
+
+        let SignedMessageHelper { expire_at, boc } =
+            SignedMessageHelper::deserialize(deserializer)?;
+
+        Ok(Self {
+            message: boc,
+            expire_at,
+        })
+    }
 }
 
 #[async_trait]
