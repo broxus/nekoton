@@ -2,9 +2,11 @@ use std::collections::BTreeMap;
 use std::str::FromStr;
 
 use num_bigint::BigUint;
+use num_traits::ToPrimitive;
 use ton_abi::{ParamType, TokenValue, Uint};
-use ton_types::UInt256;
+use ton_types::{Cell, UInt256};
 
+use crate::UnpackAbiPlain;
 use nekoton_utils::UInt128;
 
 use super::{BuildTokenValue, KnownParamType, UnpackAbi, UnpackerError, UnpackerResult};
@@ -334,5 +336,91 @@ pub mod map_integer_tuple {
             }
             _ => Err(UnpackerError::InvalidAbi),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct NftCallbackPayload {
+    pub value: u128,
+    pub payload: Cell,
+}
+
+impl UnpackAbiPlain<NftCallbackPayload> for Vec<::ton_abi::Token> {
+    fn unpack(self) -> UnpackerResult<NftCallbackPayload> {
+        let mut tokens = self.into_iter();
+        let value = match tokens.next().unwrap().value {
+            TokenValue::Uint(Uint {
+                number,
+                size: 128usize,
+            }) => number.to_u128().unwrap(),
+            _ => return Err(UnpackerError::InvalidAbi),
+        };
+        let payload = match tokens.next().unwrap().value {
+            TokenValue::Cell(cell) => cell,
+            _ => return Err(UnpackerError::InvalidAbi),
+        };
+        Ok(NftCallbackPayload { value, payload })
+    }
+}
+
+pub mod map_address_tuple {
+    use super::*;
+    use crate::UnpackAbiPlain;
+    use ton_abi::{Param, Token};
+
+    pub fn unpack(value: &TokenValue) -> UnpackerResult<BTreeMap<String, NftCallbackPayload>> {
+        match value {
+            TokenValue::Map(ParamType::Address, _, values) => {
+                let mut map = BTreeMap::<String, NftCallbackPayload>::new();
+                for (key, value) in values {
+                    let key = key.clone();
+
+                    let value: NftCallbackPayload = match value {
+                        TokenValue::Tuple(vec) => vec.clone().unpack()?,
+                        _ => return Err(UnpackerError::InvalidAbi),
+                    };
+                    map.insert(key, value);
+                }
+                Ok(map)
+            }
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+
+    pub fn pack(value: BTreeMap<String, NftCallbackPayload>) -> TokenValue {
+        ton_abi::TokenValue::Map(
+            param_type_key(),
+            param_type_value(),
+            value
+                .into_iter()
+                .map(|value| {
+                    (
+                        value.0.to_string(),
+                        TokenValue::Tuple(vec![
+                            Token::new(
+                                "value",
+                                TokenValue::Uint(Uint::new(value.1.value, 128usize)),
+                            ),
+                            Token::new("payload", TokenValue::Cell(value.1.payload)),
+                        ]),
+                    )
+                })
+                .collect(),
+        )
+    }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Map(Box::new(param_type_key()), Box::new(param_type_value()))
+    }
+
+    pub fn param_type_key() -> ParamType {
+        ParamType::Address
+    }
+
+    pub fn param_type_value() -> ParamType {
+        ParamType::Tuple(vec![
+            Param::new("value", ParamType::Uint(128)),
+            Param::new("payload", ParamType::Cell),
+        ])
     }
 }
