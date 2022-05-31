@@ -26,7 +26,8 @@ impl MnemonicType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GeneratedKey {
     pub words: Vec<String>,
     pub account_type: MnemonicType,

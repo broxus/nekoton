@@ -194,6 +194,7 @@ fn make_cipher() -> ChaCha20Poly1305 {
 }
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum PasswordCacheBehavior {
     /// Updates entry ttl or inserts the new entry
     Store(#[serde(with = "serde_duration_ms")] Duration),

@@ -322,12 +322,18 @@ fn parse_assets_map(data: &str) -> Result<AssetsMap> {
     Ok(serde_json::from_str::<StoredData>(data)?.assets.0)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AccountToAdd {
     pub name: String,
+    #[serde(with = "serde_public_key")]
     pub public_key: ed25519_dalek::PublicKey,
     pub contract: ton_wallet::WalletType,
     pub workchain: i8,
+    #[serde(
+        with = "serde_optional_address",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub explicit_address: Option<MsgAddressInt>,
 }
 

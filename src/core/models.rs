@@ -107,7 +107,7 @@ pub struct TokenWalletDeployedNotification {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum MultisigTransaction {
     Send(MultisigSendTransaction),
     Submit(MultisigSubmitTransaction),
@@ -227,61 +227,13 @@ pub struct TokenOutgoingTransfer {
     pub tokens: BigUint,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum TransferRecipient {
+    #[serde(with = "serde_address")]
     OwnerWallet(MsgAddressInt),
+    #[serde(with = "serde_address")]
     TokenWallet(MsgAddressInt),
-}
-
-impl Serialize for TransferRecipient {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::ser::Serializer,
-    {
-        #[derive(Serialize)]
-        #[serde(transparent)]
-        struct StoredItem<'a>(#[serde(with = "serde_address")] &'a MsgAddressInt);
-
-        #[derive(Serialize)]
-        #[serde(rename_all = "snake_case", tag = "type", content = "address")]
-        enum StoredTransferRecipient<'a> {
-            OwnerWallet(StoredItem<'a>),
-            TokenWallet(StoredItem<'a>),
-        }
-
-        match self {
-            TransferRecipient::OwnerWallet(address) => {
-                StoredTransferRecipient::OwnerWallet(StoredItem(address))
-            }
-            TransferRecipient::TokenWallet(address) => {
-                StoredTransferRecipient::TokenWallet(StoredItem(address))
-            }
-        }
-        .serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for TransferRecipient {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        #[serde(transparent)]
-        struct StoredItem(#[serde(with = "serde_address")] MsgAddressInt);
-
-        #[derive(Deserialize)]
-        #[serde(rename_all = "snake_case", tag = "type", content = "data")]
-        enum StoredTransferRecipient {
-            OwnerWallet(StoredItem),
-            TokenWallet(StoredItem),
-        }
-
-        Ok(match StoredTransferRecipient::deserialize(deserializer)? {
-            StoredTransferRecipient::OwnerWallet(item) => TransferRecipient::OwnerWallet(item.0),
-            StoredTransferRecipient::TokenWallet(item) => TransferRecipient::TokenWallet(item.0),
-        })
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
