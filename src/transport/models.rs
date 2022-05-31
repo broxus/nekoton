@@ -11,7 +11,7 @@ use crate::core::models::{ContractState, PendingTransaction};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "type", content = "data")]
+#[serde(rename_all = "camelCase", tag = "type")]
 pub enum RawContractState {
     NotExists,
     Exists(ExistingContract),
