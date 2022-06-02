@@ -5,8 +5,8 @@ use crate::tip4_1::collection_contract::NftCodeHashOutputs;
 use crate::tip4_1::nft_contract::{ChangeOwnerInputs, GetInfoOutputs};
 use crate::RunLocalSimple;
 
-mod collection_contract;
-mod nft_contract;
+pub mod collection_contract;
+pub mod nft_contract;
 
 #[derive(Copy, Clone)]
 pub struct CollectionContract<'a>(pub ExecutionContext<'a>);

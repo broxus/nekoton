@@ -5,6 +5,8 @@ pub mod old_tip3;
 pub mod tip3;
 pub mod tip3_1;
 pub mod tip4_1;
+pub mod tip4_2;
+pub mod tip4_3;
 pub mod tip6;
 pub mod wallets;
 
