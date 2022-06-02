@@ -694,7 +694,6 @@ pub enum TransferAction {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum WalletType {
     Multisig(MultisigType),
     WalletV3,
