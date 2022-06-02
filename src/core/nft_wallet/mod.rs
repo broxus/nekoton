@@ -119,8 +119,6 @@ impl Nft {
             json_info,
         })
     }
-
-    pub async fn
 }
 
 trait NftCollectionSubscriptionHandler {}
