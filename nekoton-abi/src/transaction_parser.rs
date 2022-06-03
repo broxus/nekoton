@@ -105,12 +105,12 @@ pub fn message_bounced(msg: &Message) -> bool {
 #[derive(Debug, Clone)]
 /// Parses transactions with provided extractors
 pub struct TransactionParser {
-    functions: HashMap<u32, FunctionOpts>,
-    events: HashMap<u32, Event>,
-    headers: Vec<Param>,
-    functions_with_bounce: HashMap<u32, FunctionWithBounceHandler>,
-    abi_version: AbiVersion,
-    match_external_in: bool,
+    pub functions: HashMap<u32, FunctionOpts>,
+    pub events: HashMap<u32, Event>,
+    pub headers: Vec<Param>,
+    pub functions_with_bounce: HashMap<u32, FunctionWithBounceHandler>,
+    pub abi_version: AbiVersion,
+    pub match_external_in: bool,
 }
 
 impl TransactionParser {
@@ -537,8 +537,8 @@ pub type BounceHandler = fn(SliceData) -> Result<Vec<Token>>;
 
 #[derive(Debug, Clone)]
 pub struct FunctionOpts {
-    fun: ton_abi::Function,
-    allow_partial_match: bool,
+    pub fun: ton_abi::Function,
+    pub allow_partial_match: bool,
 }
 
 impl FunctionOpts {
