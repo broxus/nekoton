@@ -276,6 +276,14 @@ impl TransactionParser {
 
         Ok(tokens)
     }
+
+    pub fn get_function(&self, function_id: u32) -> Option<&FunctionOpts> {
+        self.functions.get(&function_id)
+    }
+
+    pub fn get_bounce_handler(&self, function_id: u32) -> Option<&FunctionWithBounceHandler> {
+        self.functions_with_bounce.get(&function_id)
+    }
 }
 
 fn parse_function(
@@ -528,13 +536,13 @@ impl FunctionWithBounceHandler {
 pub type BounceHandler = fn(SliceData) -> Result<Vec<Token>>;
 
 #[derive(Debug, Clone)]
-struct FunctionOpts {
+pub struct FunctionOpts {
     fun: ton_abi::Function,
     allow_partial_match: bool,
 }
 
 impl FunctionOpts {
-    fn new<F>(fun: F, allow_partial_match: bool) -> Self
+    pub fn new<F>(fun: F, allow_partial_match: bool) -> Self
     where
         F: Borrow<ton_abi::Function>,
     {
@@ -544,7 +552,7 @@ impl FunctionOpts {
         }
     }
 
-    fn decode_input(&self, data: SliceData, internal: bool) -> Result<Vec<Token>> {
+    pub fn decode_input(&self, data: SliceData, internal: bool) -> Result<Vec<Token>> {
         if self.allow_partial_match {
             self.fun.decode_input_partial(data, internal)
         } else {
@@ -552,7 +560,7 @@ impl FunctionOpts {
         }
     }
 
-    fn decode_output(&self, data: SliceData, internal: bool) -> Result<Vec<Token>> {
+    pub fn decode_output(&self, data: SliceData, internal: bool) -> Result<Vec<Token>> {
         if self.allow_partial_match {
             self.fun.decode_output_partial(data, internal)
         } else {
