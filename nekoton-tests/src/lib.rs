@@ -34,24 +34,24 @@ pub mod tests {
         let clock = Arc::new(SimpleClock);
         let transport = Arc::new(GqlTransport::new(client));
 
-        let collection =
-            NftCollection::get(clock.clone(), transport.clone(), owner_adrr, coll_addr)
-                .await
-                .unwrap();
-
-        for index in collection.collection_nft_list() {
-            println!("{}", index);
-            let x = Nft::get_by_index_address(clock.clone(), transport.clone(), index)
-                .await
-                .unwrap();
-            println!(
-                "manger:{}, owner:{}, info: {:?}",
-                x.manager(),
-                x.owner(),
-                x.metadata()
-            )
-        }
-
-        println!("{:?}", collection.collection_nft_list());
+        // let collection =
+        //     NftCollection::get(clock.clone(), transport.clone(), owner_adrr, coll_addr)
+        //         .await
+        //         .unwrap();
+        //
+        // for index in collection.collection_nft_list() {
+        //     println!("{}", index);
+        //     let x = Nft::get_by_index_address(clock.clone(), transport.clone(), index)
+        //         .await
+        //         .unwrap();
+        //     println!(
+        //         "manger:{}, owner:{}, info: {:?}",
+        //         x.manager(),
+        //         x.owner(),
+        //         x.metadata()
+        //     )
+        // }
+        //
+        // println!("{:?}", collection.collection_nft_list());
     }
 }
