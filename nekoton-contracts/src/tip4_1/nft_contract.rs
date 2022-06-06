@@ -52,6 +52,26 @@ pub struct ChangeOwnerInputs {
     pub callbacks: BTreeMap<String, NftCallbackPayload>,
 }
 
+#[derive(Debug, Clone, PackAbiPlain, KnownParamTypePlain, UnpackAbiPlain)]
+pub struct ChangeManagerInputs {
+    #[abi(address, name = "newManager")]
+    pub new_manager: MsgAddressInt,
+    #[abi(address, name = "sendGasTo")]
+    pub send_gas_to: MsgAddressInt,
+    #[abi(with = "map_address_tuple")]
+    pub callbacks: BTreeMap<String, NftCallbackPayload>,
+}
+
+#[derive(Debug, Clone, PackAbiPlain, KnownParamTypePlain, UnpackAbiPlain)]
+pub struct TransferInputs {
+    #[abi(address, name = "to")]
+    pub to: MsgAddressInt,
+    #[abi(address, name = "sendGasTo")]
+    pub send_gas_to: MsgAddressInt,
+    #[abi(with = "map_address_tuple")]
+    pub callbacks: BTreeMap<String, NftCallbackPayload>,
+}
+
 ///Change NFT owner
 ///
 /// # Type
@@ -88,8 +108,8 @@ pub fn change_owner() -> &'static ton_abi::Function {
 ///
 pub fn change_manager() -> &'static ton_abi::Function {
     declare_function! {
-        name: "changeOwner",
-        inputs: ChangeOwnerInputs::param_type(),
+        name: "changeManager",
+        inputs: ChangeManagerInputs::param_type(),
         outputs: vec![],
     }
 }
@@ -109,8 +129,8 @@ pub fn change_manager() -> &'static ton_abi::Function {
 ///
 pub fn transfer() -> &'static ton_abi::Function {
     declare_function! {
-        name: "changeOwner",
-        inputs: ChangeOwnerInputs::param_type(),
+        name: "transfer",
+        inputs: TransferInputs::param_type(),
         outputs: vec![],
     }
 }

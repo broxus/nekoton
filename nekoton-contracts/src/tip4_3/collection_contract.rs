@@ -55,7 +55,7 @@ pub fn index_basis_code_hash() -> &'static ton_abi::Function {
 ///
 pub fn index_code() -> &'static ton_abi::Function {
     declare_function! {
-        name: "indexBCode",
+        name: "indexCode",
         inputs: vec![Param::new("answerId", ParamType::Uint(32))],
         outputs: vec![Param::new("code", ParamType::Cell)],
     }
