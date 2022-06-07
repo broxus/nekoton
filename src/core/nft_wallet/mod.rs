@@ -20,6 +20,7 @@ use ton_types::{BuilderData, Cell, UInt256};
 
 const NFT_STAMP: &[u8; 3] = b"nft";
 
+#[derive(Debug)]
 pub struct NftCollection {
     collection_address: MsgAddressInt,
     nfts: Vec<MsgAddressInt>,
@@ -245,36 +246,6 @@ impl Nft {
         })
     }
 }
-
-// pub trait NftSubscription: Send + Sync {
-//     fn on_transfer_completed(&self);
-//
-//     /// Called every time new transactions are detected.
-//     /// - When new block found
-//     /// - When manually requesting the latest transactions (can be called several times)
-//     /// - When preloading transactions
-//     fn on_transactions_found(
-//         &self,
-//         transactions: Vec<TransactionWithData<TokenWalletTransaction>>,
-//         batch_info: TransactionsBatchInfo,
-//     );
-// }
-
-// fn make_contract_state_handler(
-//     clock: Arc<dyn Clock>,
-//     version: TokenWalletVersion,
-//     balance: &'_ mut BigUint,
-// ) -> impl FnMut(&RawContractState) + '_ {
-//     move |contract_state| {
-//         if let RawContractState::Exists(state) = contract_state {
-//             if let Ok(new_balance) =
-//             TokenWalletContractState(state).get_balance(clock.as_ref(), version)
-//             {
-//                 *balance = new_balance;
-//             }
-//         }
-//     }
-// }
 
 pub trait NftSubscriptionHandler: Send + Sync {
     fn on_manager_changed(&self, owner: MsgAddressInt);

@@ -28,8 +28,6 @@ pub fn set_cell_salt(salt: Cell, cell: Cell) -> Result<Cell> {
         _ => Err(anyhow::Error::msg("unknown contract type")),
     }?;
 
-    let b64_cell = base64::encode(&ton_types::cells_serialization::serialize_toc(&cell)?);
-    println!("{}", b64_cell);
     Ok(cell)
 }
 

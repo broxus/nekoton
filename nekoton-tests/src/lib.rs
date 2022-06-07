@@ -1,7 +1,7 @@
 #[cfg(test)]
 pub mod tests {
-    use nekoton::core::nft_wallet::{Nft, NftCollection};
-    use nekoton::external::GqlConnection;
+    use nekoton::core::models::{NftTransaction, TransactionWithData, TransactionsBatchInfo};
+    use nekoton::core::nft_wallet::{Nft, NftCollection, NftSubscriptionHandler};
     use nekoton::transport::gql::GqlTransport;
     use nekoton_transport::gql::{GqlClient, GqlNetworkSettings};
     use nekoton_utils::SimpleClock;
@@ -10,6 +10,28 @@ pub mod tests {
     use std::time::Duration;
     use ton_block::MsgAddressInt;
 
+    struct TestHandler {}
+    impl NftSubscriptionHandler for TestHandler {
+        fn on_manager_changed(&self, owner: MsgAddressInt) {
+            println!("on_manager_changed called. {:x?}", owner);
+        }
+
+        fn on_owner_changed(&self, manager: MsgAddressInt) {
+            println!("on_owner_changed called. {:x?}", manager);
+        }
+
+        fn on_transactions_found(
+            &self,
+            transactions: Vec<TransactionWithData<NftTransaction>>,
+            batch_info: TransactionsBatchInfo,
+        ) {
+            println!(
+                "on_transactions_found called. {:?}. Batch: {:?}",
+                transactions, batch_info
+            );
+        }
+    }
+
     #[tokio::test]
     async fn test() {
         let owner_adrr = MsgAddressInt::from_str(
@@ -17,7 +39,7 @@ pub mod tests {
         )
         .unwrap();
         let coll_addr = MsgAddressInt::from_str(
-            "0:ae07f6957e10527dc4835402e68e68521eb6477ebf1737b772a79c66c5c62cc7",
+            "0:1665249efff626483cf199b6cb1cac78b719c8e9aaa2ce70123128635b1b05a3",
         )
         .unwrap();
 
@@ -34,16 +56,22 @@ pub mod tests {
         let clock = Arc::new(SimpleClock);
         let transport = Arc::new(GqlTransport::new(client));
 
-        // let collection =
-        //     NftCollection::get(clock.clone(), transport.clone(), owner_adrr, coll_addr)
-        //         .await
-        //         .unwrap();
-        //
+        let collection =
+            NftCollection::get(clock.clone(), transport.clone(), owner_adrr, coll_addr)
+                .await
+                .unwrap();
+
+        println!("Collection: {:?}", collection);
+
         // for index in collection.collection_nft_list() {
-        //     println!("{}", index);
-        //     let x = Nft::get_by_index_address(clock.clone(), transport.clone(), index)
-        //         .await
-        //         .unwrap();
+        //     let x = Nft::get_by_index_address(
+        //         clock.clone(),
+        //         transport.clone(),
+        //         index,
+        //         Arc::new(TestHandler {}),
+        //     )
+        //     .await
+        //     .unwrap();
         //     println!(
         //         "manger:{}, owner:{}, info: {:?}",
         //         x.manager(),
@@ -51,7 +79,5 @@ pub mod tests {
         //         x.metadata()
         //     )
         // }
-        //
-        // println!("{:?}", collection.collection_nft_list());
     }
 }
