@@ -1,13 +1,16 @@
-use crate::core::models::NftVersion;
-use crate::core::InternalMessage;
-use crate::transport::models::{ExistingContract, RawContractState};
+use crate::core::models::{
+    NftTransaction, NftVersion, Transaction, TransactionWithData, TransactionsBatchInfo,
+};
+use crate::core::parsing::parse_nft_transaction;
+use crate::core::{ContractSubscription, InternalMessage};
+use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 use anyhow::Result;
 use nekoton_abi::map_address_tuple::*;
 use nekoton_abi::{MessageBuilder, NftCallbackPayload};
 use nekoton_contracts::nft_index::index_contract::IndexGetInfoOutputs;
 use nekoton_contracts::tip4_1::nft_contract;
-use nekoton_contracts::tip4_1::nft_contract::GetInfoOutputs;
+use nekoton_contracts::tip4_1::nft_contract::*;
 use nekoton_contracts::*;
 use nekoton_utils::Clock;
 use std::collections::BTreeMap;
@@ -66,6 +69,8 @@ pub struct Nft {
     owner: MsgAddressInt,
     manager: MsgAddressInt,
     json_info: Option<String>,
+    contract_subscription: ContractSubscription,
+    //handler: Arc<dyn NftSubscriptionHandler>,
 }
 
 impl Nft {
@@ -73,6 +78,7 @@ impl Nft {
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         index_address: &MsgAddressInt,
+        handler: Arc<dyn NftSubscriptionHandler>,
     ) -> Result<Nft> {
         let state = match transport.get_contract_state(index_address).await? {
             RawContractState::Exists(state) => state,
@@ -81,20 +87,22 @@ impl Nft {
         let index_state = IndexContractState(&state);
 
         let info = index_state.get_info(clock.as_ref()).await?;
-        Nft::get_nft_info(&info.nft, transport, clock).await
+        Nft::get_nft_info(&info.nft, transport, clock, handler).await
     }
     pub async fn get(
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         address: &MsgAddressInt,
+        handler: Arc<dyn NftSubscriptionHandler>,
     ) -> Result<Nft> {
-        Nft::get_nft_info(address, transport, clock).await
+        Nft::get_nft_info(address, transport, clock, handler).await
     }
 
     async fn get_nft_info(
         nft_address: &MsgAddressInt,
         transport: Arc<dyn Transport>,
         clock: Arc<dyn Clock>,
+        handler: Arc<dyn NftSubscriptionHandler>,
     ) -> Result<Nft> {
         let state = match transport.get_contract_state(nft_address).await? {
             RawContractState::Exists(state) => state,
@@ -105,18 +113,30 @@ impl Nft {
         let ctx = nft_state.0.as_context(clock.as_ref());
         let tip6_interface = tip6::SidContract(ctx);
 
-        let info = if tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)? {
-            nft_state.get_info(clock.as_ref()).await?
+        let mut info = if tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)? {
+            nft_state.get_info(clock.as_ref())?
         } else {
             return Err(NftError::InvalidNftContact.into());
         };
 
         let json_info =
             if tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)? {
-                Some(nft_state.get_json(clock.as_ref()).await?)
+                Some(nft_state.get_json(clock.as_ref())?)
             } else {
                 None
             };
+
+        let contract_subscription = ContractSubscription::subscribe(
+            clock.clone(),
+            transport,
+            nft_address.clone(),
+            make_contract_state_handler(clock.clone(), &mut info.owner, &mut info.manager),
+            make_transactions_handler(&handler),
+        )
+        .await?;
+
+        handler.on_manager_changed(info.manager.clone());
+        handler.on_owner_changed(info.owner.clone());
 
         Ok(Self {
             address: nft_address.clone(),
@@ -124,7 +144,13 @@ impl Nft {
             owner: info.owner,
             manager: info.manager,
             json_info,
+            contract_subscription,
+            //handler,
         })
+    }
+
+    pub fn contract_subscription(&self) -> &ContractSubscription {
+        &self.contract_subscription
     }
 
     pub fn address(&self) -> &MsgAddressInt {
@@ -220,8 +246,96 @@ impl Nft {
     }
 }
 
-trait NftCollectionSubscriptionHandler {}
-trait NftSubscriptionHandler {}
+// pub trait NftSubscription: Send + Sync {
+//     fn on_transfer_completed(&self);
+//
+//     /// Called every time new transactions are detected.
+//     /// - When new block found
+//     /// - When manually requesting the latest transactions (can be called several times)
+//     /// - When preloading transactions
+//     fn on_transactions_found(
+//         &self,
+//         transactions: Vec<TransactionWithData<TokenWalletTransaction>>,
+//         batch_info: TransactionsBatchInfo,
+//     );
+// }
+
+// fn make_contract_state_handler(
+//     clock: Arc<dyn Clock>,
+//     version: TokenWalletVersion,
+//     balance: &'_ mut BigUint,
+// ) -> impl FnMut(&RawContractState) + '_ {
+//     move |contract_state| {
+//         if let RawContractState::Exists(state) = contract_state {
+//             if let Ok(new_balance) =
+//             TokenWalletContractState(state).get_balance(clock.as_ref(), version)
+//             {
+//                 *balance = new_balance;
+//             }
+//         }
+//     }
+// }
+
+pub trait NftSubscriptionHandler: Send + Sync {
+    fn on_manager_changed(&self, owner: MsgAddressInt);
+
+    fn on_owner_changed(&self, manager: MsgAddressInt);
+
+    /// Called every time new transactions are detected.
+    /// - When new block found
+    /// - When manually requesting the latest transactions (can be called several times)
+    /// - When preloading transactions
+    fn on_transactions_found(
+        &self,
+        transactions: Vec<TransactionWithData<NftTransaction>>,
+        batch_info: TransactionsBatchInfo,
+    );
+}
+
+fn make_contract_state_handler<'a>(
+    clock: Arc<dyn Clock>,
+    owner: &'a mut MsgAddressInt,
+    manager: &'a mut MsgAddressInt,
+) -> impl FnMut(&RawContractState) + 'a {
+    move |contract_state| {
+        if let RawContractState::Exists(state) = contract_state {
+            if let Ok(info) = NftContractState(state).get_info(clock.as_ref()) {
+                *owner = info.owner;
+                *manager = info.manager
+            }
+        }
+    }
+}
+
+fn make_transactions_handler<T>(
+    handler: &'_ T,
+) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_
+where
+    T: AsRef<dyn NftSubscriptionHandler>,
+{
+    move |transactions, batch_info| {
+        let transactions = transactions
+            .into_iter()
+            .filter_map(
+                |transaction| match transaction.data.description.read_struct().ok()? {
+                    ton_block::TransactionDescr::Ordinary(description) => {
+                        let data = parse_nft_transaction(&transaction.data, &description);
+
+                        let transaction =
+                            Transaction::try_from((transaction.hash, transaction.data)).ok()?;
+
+                        Some(TransactionWithData { transaction, data })
+                    }
+                    _ => None,
+                },
+            )
+            .collect();
+
+        handler
+            .as_ref()
+            .on_transactions_found(transactions, batch_info)
+    }
+}
 
 #[derive(Debug)]
 pub struct CollectionContractState<'a>(pub &'a ExistingContract);
@@ -277,13 +391,13 @@ impl<'a> CollectionContractState<'a> {
 pub struct NftContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> NftContractState<'a> {
-    async fn get_json(&self, clock: &dyn Clock) -> Result<String> {
+    fn get_json(&self, clock: &dyn Clock) -> Result<String> {
         let ctx = self.0.as_context(clock);
         let tip4_2_interface = tip4_2::MetadataContract(ctx);
         Ok(tip4_2_interface.get_json()?)
     }
 
-    async fn get_info(&self, clock: &dyn Clock) -> Result<GetInfoOutputs> {
+    fn get_info(&self, clock: &dyn Clock) -> Result<GetInfoOutputs> {
         let ctx = self.0.as_context(clock);
         let tip4_1_interface = tip4_1::NftContract(ctx);
         Ok(tip4_1_interface.get_info()?)

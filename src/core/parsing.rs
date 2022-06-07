@@ -7,6 +7,7 @@ use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
 use nekoton_abi::*;
+use nekoton_contracts::tip4_1::nft_contract;
 use nekoton_contracts::{old_tip3, tip3_1};
 
 use crate::core::models::*;
@@ -487,6 +488,63 @@ pub fn parse_token_transaction(
     }
 }
 
+struct NftFunctions {
+    transfer: &'static ton_abi::Function,
+    change_owner: &'static ton_abi::Function,
+    change_manager: &'static ton_abi::Function,
+}
+
+impl NftFunctions {
+    pub fn instance() -> &'static Self {
+        static IDS: OnceBox<NftFunctions> = OnceBox::new();
+        IDS.get_or_init(|| {
+            Box::new(Self {
+                transfer: nft_contract::transfer(),
+                change_owner: nft_contract::change_owner(),
+                change_manager: nft_contract::change_manager(),
+            })
+        })
+    }
+}
+
+pub fn parse_nft_transaction(
+    tx: &ton_block::Transaction,
+    description: &ton_block::TransactionDescrOrdinary,
+) -> Option<NftTransaction> {
+    if description.aborted {
+        return None;
+    }
+
+    let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
+
+    let body = in_msg.body()?;
+    let function_id = read_function_id(&body).ok()?;
+
+    let functions = NftFunctions::instance();
+
+    if function_id == functions.transfer.input_id {
+        let inputs = functions.transfer.decode_input(body, true).ok()?;
+
+        IncomingNftTransfer::try_from(InputMessage(inputs))
+            .map(NftTransaction::Transfer)
+            .ok()
+    } else if function_id == functions.change_owner.input_id {
+        let inputs = functions.change_owner.decode_input(body, true).ok()?;
+
+        IncomingChangeOwner::try_from(InputMessage(inputs))
+            .map(NftTransaction::ChangeOwner)
+            .ok()
+    } else if function_id == functions.change_manager.input_id {
+        let inputs = functions.transfer.decode_input(body, true).ok()?;
+
+        IncomingChangeManager::try_from(InputMessage(inputs))
+            .map(NftTransaction::ChangeManager)
+            .ok()
+    } else {
+        None
+    }
+}
+
 struct TokenWalletFunctions {
     // Incoming
     accept_mint: &'static ton_abi::Function,
@@ -671,6 +729,48 @@ impl TryFrom<(InputMessage, TokenWalletVersion)> for TokenIncomingTransfer {
                     sender_address: input.sender,
                 }
             }
+        })
+    }
+}
+
+impl TryFrom<InputMessage> for IncomingNftTransfer {
+    type Error = UnpackerError;
+
+    fn try_from(value: InputMessage) -> std::result::Result<Self, Self::Error> {
+        let input: nft_contract::TransferInputs = value.0.unpack()?;
+
+        Ok(Self {
+            send_gas_to: input.send_gas_to,
+            to: input.to,
+            //callbacks: Default::default(),
+        })
+    }
+}
+
+impl TryFrom<InputMessage> for IncomingChangeManager {
+    type Error = UnpackerError;
+
+    fn try_from(value: InputMessage) -> std::result::Result<Self, Self::Error> {
+        let input: nft_contract::ChangeManagerInputs = value.0.unpack()?;
+
+        Ok(Self {
+            send_gas_to: input.send_gas_to,
+            new_manager: input.new_manager,
+            //callbacks: Default::default(),
+        })
+    }
+}
+
+impl TryFrom<InputMessage> for IncomingChangeOwner {
+    type Error = UnpackerError;
+
+    fn try_from(value: InputMessage) -> std::result::Result<Self, Self::Error> {
+        let input: nft_contract::ChangeOwnerInputs = value.0.unpack()?;
+
+        Ok(Self {
+            send_gas_to: input.send_gas_to,
+            new_owner: input.new_owner,
+            //callbacks: Default::default(),
         })
     }
 }

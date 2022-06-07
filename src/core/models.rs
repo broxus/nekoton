@@ -210,6 +210,14 @@ pub enum TokenWalletTransaction {
     SwapBackBounced(BigUint),
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum NftTransaction {
+    Transfer(IncomingNftTransfer),
+    ChangeOwner(IncomingChangeOwner),
+    ChangeManager(IncomingChangeManager),
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TokenIncomingTransfer {
@@ -227,10 +235,34 @@ pub struct TokenOutgoingTransfer {
     pub tokens: BigUint,
 }
 
-#[derive(Clone, Debug)]
-pub enum NftTransferRecipient {
-    Owner(MsgAddressInt),
-    Manager(MsgAddressInt),
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IncomingNftTransfer {
+    #[serde(with = "serde_string")]
+    pub send_gas_to: MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub to: MsgAddressInt,
+    //pub callbacks: BTreeMap<String, NftCallbackPayload>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IncomingChangeOwner {
+    #[serde(with = "serde_address")]
+    pub send_gas_to: MsgAddressInt,
+    #[serde(with = "serde_address")]
+    pub new_owner: MsgAddressInt,
+    //pub callbacks: BTreeMap<String, NftCallbackPayload>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IncomingChangeManager {
+    #[serde(with = "serde_address")]
+    pub send_gas_to: MsgAddressInt,
+    #[serde(with = "serde_address")]
+    pub new_manager: MsgAddressInt,
+    //pub callbacks: BTreeMap<String, NftCallbackPayload>,
 }
 
 #[derive(Clone, Debug)]
