@@ -415,10 +415,7 @@ impl<'a> CollectionContractState<'a> {
 
         let salt = builder.into_cell()?;
 
-        //let b64_cell = base64::encode(&ton_types::cells_serialization::serialize_toc(&salt)?);
-        //println!("base64_salt: {}", &b64_cell);
-
-        let cell = nekoton_abi::set_cell_salt(salt, code_index)?;
+        let cell = nekoton_abi::set_cell_salt(code_index, salt)?;
         Ok(cell.hash(0))
     }
 }
