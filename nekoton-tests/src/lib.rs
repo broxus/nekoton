@@ -1,7 +1,7 @@
 #[cfg(test)]
 pub mod tests {
     use nekoton::core::models::{NftTransaction, TransactionWithData, TransactionsBatchInfo};
-    use nekoton::core::nft_wallet::{Nft, NftCollection, NftSubscriptionHandler};
+    use nekoton::core::nft_wallet::{NftCollection, NftSubscriptionHandler};
     use nekoton::transport::gql::GqlTransport;
     use nekoton_transport::gql::{GqlClient, GqlNetworkSettings};
     use nekoton_utils::SimpleClock;

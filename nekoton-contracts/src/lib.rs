@@ -1,7 +1,6 @@
 use anyhow::Result;
 use nekoton_abi::{ExecutionContext, ExecutionOutput};
 
-pub mod nft_index;
 pub mod old_tip3;
 pub mod tip3;
 pub mod tip3_1;

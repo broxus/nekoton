@@ -1,5 +1,4 @@
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
 use ton_types::{BuilderData, Cell, SliceData};
 
 const OLD_CPP_SELECTOR_DATA: &[u8] = &[
@@ -16,7 +15,7 @@ const NEW_SELECTOR_DATA: &[u8] = &[
 ];
 const MYCODE_SELECTOR_DATA: &[u8] = &[0x8A, 0xDB, 0x35];
 
-pub fn set_cell_salt(salt: Cell, cell: Cell) -> Result<Cell> {
+pub fn set_cell_salt(cell: Cell, salt: Cell) -> Result<Cell> {
     let code_data = cell.data().strip_suffix(&[0x80]).unwrap_or(cell.data());
     let cell = match code_data {
         OLD_CPP_SELECTOR_DATA => set_old_selector_salt(cell, salt),
@@ -87,16 +86,4 @@ fn set_mycode_selector_salt(code: Cell, salt: Cell) -> Result<Cell> {
     let mut builder: BuilderData = code.into();
     builder.replace_reference_cell(1, new_selector);
     builder.into_cell()
-}
-
-// fn deserialize_cell_from_base64(b64: &str) -> Result<Cell> {
-//     let bytes = base64::decode(&b64)?;
-//     let mut bytes = bytes.as_slice();
-//     let cell = ton_types::cells_serialization::deserialize_tree_of_cells(&mut bytes)?;
-//     Ok(cell)
-// }
-
-#[derive(Serialize, Deserialize, Default)]
-pub(crate) struct ResultOfSetCodeSalt {
-    pub code: String,
 }

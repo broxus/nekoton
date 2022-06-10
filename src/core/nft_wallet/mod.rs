@@ -1,22 +1,24 @@
+use std::collections::BTreeMap;
+use std::sync::Arc;
+
+use anyhow::Result;
+use nekoton_abi::{MessageBuilder, TransactionId};
+use nekoton_contracts::tip4_1::nft_contract;
+use nekoton_contracts::tip4_1::nft_contract::*;
+use nekoton_contracts::tip4_3::index_contract::IndexGetInfoOutputs;
+use nekoton_contracts::*;
+use nekoton_utils::Clock;
+use ton_block::{MsgAddressInt, Serializable};
+use ton_types::{BuilderData, Cell, UInt256};
+
 use crate::core::models::{
-    NftTransaction, NftVersion, Transaction, TransactionWithData, TransactionsBatchInfo,
+    NftTransaction, NftVersion, PendingTransaction, Transaction, TransactionWithData,
+    TransactionsBatchInfo,
 };
 use crate::core::parsing::parse_nft_transaction;
 use crate::core::{ContractSubscription, InternalMessage};
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
-use anyhow::Result;
-use nekoton_abi::map_address_tuple::*;
-use nekoton_abi::{MessageBuilder, NftCallbackPayload};
-use nekoton_contracts::nft_index::index_contract::IndexGetInfoOutputs;
-use nekoton_contracts::tip4_1::nft_contract;
-use nekoton_contracts::tip4_1::nft_contract::*;
-use nekoton_contracts::*;
-use nekoton_utils::Clock;
-use std::collections::BTreeMap;
-use std::sync::Arc;
-use ton_block::{MsgAddressInt, Serializable};
-use ton_types::{BuilderData, Cell, UInt256};
 
 const NFT_STAMP: &[u8; 3] = b"nft";
 
@@ -65,17 +67,19 @@ impl NftCollection {
 }
 
 pub struct Nft {
+    clock: Arc<dyn Clock>,
     address: MsgAddressInt,
     collection_address: MsgAddressInt,
     owner: MsgAddressInt,
     manager: MsgAddressInt,
+    version: NftVersion,
     json_info: Option<String>,
     contract_subscription: ContractSubscription,
-    //handler: Arc<dyn NftSubscriptionHandler>,
+    handler: Arc<dyn NftSubscriptionHandler>,
 }
 
 impl Nft {
-    pub async fn get_by_index_address(
+    pub async fn subscribe_by_index_address(
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         index_address: &MsgAddressInt,
@@ -88,18 +92,18 @@ impl Nft {
         let index_state = IndexContractState(&state);
 
         let info = index_state.get_info(clock.as_ref()).await?;
-        Nft::get_nft_info(&info.nft, transport, clock, handler).await
+        Nft::subscribe(&info.nft, transport, clock, handler).await
     }
-    pub async fn get(
+    pub async fn subscribe_by_nft_address(
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         address: &MsgAddressInt,
         handler: Arc<dyn NftSubscriptionHandler>,
     ) -> Result<Nft> {
-        Nft::get_nft_info(address, transport, clock, handler).await
+        Nft::subscribe(address, transport, clock, handler).await
     }
 
-    async fn get_nft_info(
+    async fn subscribe(
         nft_address: &MsgAddressInt,
         transport: Arc<dyn Transport>,
         clock: Arc<dyn Clock>,
@@ -110,44 +114,45 @@ impl Nft {
             RawContractState::NotExists => return Err(NftError::ContractNotExist.into()),
         };
         let nft_state = NftContractState(&state);
-
-        let ctx = nft_state.0.as_context(clock.as_ref());
-        let tip6_interface = tip6::SidContract(ctx);
-
-        let mut info = if tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)? {
-            nft_state.get_info(clock.as_ref())?
-        } else {
-            return Err(NftError::InvalidNftContact.into());
-        };
-
-        let json_info =
-            if tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)? {
-                Some(nft_state.get_json(clock.as_ref())?)
-            } else {
-                None
+        if let Some(version) = nft_state.check_supported_interface(clock.as_ref())? {
+            let (mut info, json_metadata) = match version {
+                NftVersion::Tip4_3 | NftVersion::Tip4_2 => (
+                    nft_state.get_info(clock.as_ref())?,
+                    Some(nft_state.get_json(clock.as_ref())?),
+                ),
+                NftVersion::Tip4_1 => (nft_state.get_info(clock.as_ref())?, None),
             };
 
-        let contract_subscription = ContractSubscription::subscribe(
-            clock.clone(),
-            transport,
-            nft_address.clone(),
-            make_contract_state_handler(clock.clone(), &mut info.owner, &mut info.manager),
-            make_transactions_handler(&handler),
-        )
-        .await?;
+            let contract_subscription = ContractSubscription::subscribe(
+                clock.clone(),
+                transport,
+                nft_address.clone(),
+                make_contract_state_handler(clock.as_ref(), &mut info.owner, &mut info.manager),
+                make_transactions_handler(&handler),
+            )
+            .await?;
 
-        handler.on_manager_changed(info.manager.clone());
-        handler.on_owner_changed(info.owner.clone());
+            handler.on_manager_changed(info.manager.clone());
+            handler.on_owner_changed(info.owner.clone());
 
-        Ok(Self {
-            address: nft_address.clone(),
-            collection_address: info.collection,
-            owner: info.owner,
-            manager: info.manager,
-            json_info,
-            contract_subscription,
-            //handler,
-        })
+            Ok(Self {
+                clock,
+                address: nft_address.clone(),
+                collection_address: info.collection,
+                owner: info.owner,
+                manager: info.manager,
+                version,
+                json_info: json_metadata,
+                contract_subscription,
+                handler,
+            })
+        } else {
+            Err(NftError::InvalidNftContact.into())
+        }
+    }
+
+    pub fn version(&self) -> &NftVersion {
+        &self.version
     }
 
     pub fn contract_subscription(&self) -> &ContractSubscription {
@@ -181,10 +186,10 @@ impl Nft {
         callbacks: BTreeMap<String, NftCallbackPayload>,
     ) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
-        let (function, input) = MessageBuilder::new(nft_contract::transfer())
+        let (function, input) = MessageBuilder::new(transfer())
             .arg(to)
             .arg(send_gas_to)
-            .arg(pack(callbacks))
+            .arg(map_address_tuple::pack(callbacks))
             .build();
 
         let body = function.encode_internal_input(&input)?.into();
@@ -205,10 +210,10 @@ impl Nft {
         callbacks: BTreeMap<String, NftCallbackPayload>,
     ) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
-        let (function, input) = MessageBuilder::new(nft_contract::change_manager())
+        let (function, input) = MessageBuilder::new(change_manager())
             .arg(new_manager)
             .arg(send_gas_to)
-            .arg(pack(callbacks))
+            .arg(map_address_tuple::pack(callbacks))
             .build();
 
         let body = function.encode_internal_input(&input)?.into();
@@ -232,7 +237,7 @@ impl Nft {
         let (function, input) = MessageBuilder::new(nft_contract::change_owner())
             .arg(new_owner)
             .arg(send_gas_to)
-            .arg(pack(callbacks))
+            .arg(map_address_tuple::pack(callbacks))
             .build();
 
         let body = function.encode_internal_input(&input)?.into();
@@ -245,12 +250,48 @@ impl Nft {
             body,
         })
     }
+
+    pub async fn send(
+        &mut self,
+        message: &ton_block::Message,
+        expire_at: u32,
+    ) -> Result<PendingTransaction> {
+        self.contract_subscription.send(message, expire_at).await
+    }
+
+    pub async fn refresh(&mut self) -> Result<()> {
+        self.contract_subscription
+            .refresh(
+                make_contract_state_handler(
+                    self.clock.as_ref(),
+                    &mut self.owner,
+                    &mut self.manager,
+                ),
+                make_transactions_handler(&self.handler),
+                make_message_sent_handler(&self.handler),
+                make_message_expired_handler(&self.handler),
+            )
+            .await
+    }
+
+    pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
+        self.contract_subscription
+            .preload_transactions(from, make_transactions_handler(&self.handler))
+            .await
+    }
 }
 
 pub trait NftSubscriptionHandler: Send + Sync {
     fn on_manager_changed(&self, owner: MsgAddressInt);
 
     fn on_owner_changed(&self, manager: MsgAddressInt);
+
+    /// Called when found transaction which is relative with one of the pending transactions
+    fn on_message_sent(
+        &self,
+        pending_transaction: PendingTransaction,
+        transaction: Option<Transaction>,
+    );
 
     /// Called every time new transactions are detected.
     /// - When new block found
@@ -261,16 +302,19 @@ pub trait NftSubscriptionHandler: Send + Sync {
         transactions: Vec<TransactionWithData<NftTransaction>>,
         batch_info: TransactionsBatchInfo,
     );
+
+    /// Called when no transactions produced for the specific message before some expiration time
+    fn on_message_expired(&self, pending_transaction: PendingTransaction);
 }
 
 fn make_contract_state_handler<'a>(
-    clock: Arc<dyn Clock>,
+    clock: &'a dyn Clock,
     owner: &'a mut MsgAddressInt,
     manager: &'a mut MsgAddressInt,
 ) -> impl FnMut(&RawContractState) + 'a {
     move |contract_state| {
         if let RawContractState::Exists(state) = contract_state {
-            if let Ok(info) = NftContractState(state).get_info(clock.as_ref()) {
+            if let Ok(info) = NftContractState(state).get_info(clock) {
                 *owner = info.owner;
                 *manager = info.manager
             }
@@ -306,6 +350,27 @@ where
             .as_ref()
             .on_transactions_found(transactions, batch_info)
     }
+}
+
+fn make_message_sent_handler<T>(
+    handler: &'_ T,
+) -> impl FnMut(PendingTransaction, RawTransaction) + '_
+where
+    T: AsRef<dyn NftSubscriptionHandler>,
+{
+    move |pending_transaction, transaction| {
+        let transaction = Transaction::try_from((transaction.hash, transaction.data)).ok();
+        handler
+            .as_ref()
+            .on_message_sent(pending_transaction, transaction);
+    }
+}
+
+fn make_message_expired_handler<T>(handler: &'_ T) -> impl FnMut(PendingTransaction) + '_
+where
+    T: AsRef<dyn NftSubscriptionHandler>,
+{
+    move |pending_transaction| handler.as_ref().on_message_expired(pending_transaction)
 }
 
 #[derive(Debug)]
@@ -362,6 +427,24 @@ impl<'a> CollectionContractState<'a> {
 pub struct NftContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> NftContractState<'a> {
+    fn check_supported_interface(&self, clock: &dyn Clock) -> Result<Option<NftVersion>> {
+        let ctx = self.0.as_context(clock);
+        let tip6_interface = tip6::SidContract(ctx);
+        if tip6_interface.supports_interface(tip4_3::nft_contract::INTERFACE_ID)? {
+            return Ok(Some(NftVersion::Tip4_3));
+        }
+
+        if tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)? {
+            return Ok(Some(NftVersion::Tip4_2));
+        }
+
+        if tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)? {
+            return Ok(Some(NftVersion::Tip4_1));
+        }
+
+        Ok(None)
+    }
+
     fn get_json(&self, clock: &dyn Clock) -> Result<String> {
         let ctx = self.0.as_context(clock);
         let tip4_2_interface = tip4_2::MetadataContract(ctx);
@@ -381,7 +464,7 @@ pub struct IndexContractState<'a>(pub &'a ExistingContract);
 impl<'a> IndexContractState<'a> {
     async fn get_info(&self, clock: &dyn Clock) -> Result<IndexGetInfoOutputs> {
         let ctx = self.0.as_context(clock);
-        let index_interface = nft_index::IndexContract(ctx);
+        let index_interface = tip4_3::IndexContract(ctx);
         Ok(index_interface.get_info()?)
     }
 }
