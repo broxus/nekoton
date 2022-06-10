@@ -1,6 +1,8 @@
 #[cfg(test)]
 pub mod tests {
-    use nekoton::core::models::{NftTransaction, TransactionWithData, TransactionsBatchInfo};
+    use nekoton::core::models::{
+        NftTransaction, PendingTransaction, Transaction, TransactionWithData, TransactionsBatchInfo,
+    };
     use nekoton::core::nft_wallet::{NftCollection, NftSubscriptionHandler};
     use nekoton::transport::gql::GqlTransport;
     use nekoton_transport::gql::{GqlClient, GqlNetworkSettings};
@@ -20,6 +22,17 @@ pub mod tests {
             println!("on_owner_changed called. {:x?}", manager);
         }
 
+        fn on_message_sent(
+            &self,
+            pending_transaction: PendingTransaction,
+            transaction: Option<Transaction>,
+        ) {
+            println!(
+                "on_message_sent called. {:?} {:?}",
+                pending_transaction, transaction
+            );
+        }
+
         fn on_transactions_found(
             &self,
             transactions: Vec<TransactionWithData<NftTransaction>>,
@@ -29,6 +42,10 @@ pub mod tests {
                 "on_transactions_found called. {:?}. Batch: {:?}",
                 transactions, batch_info
             );
+        }
+
+        fn on_message_expired(&self, pending_transaction: PendingTransaction) {
+            println!("on_message_expired called. {:?}", pending_transaction);
         }
     }
 
