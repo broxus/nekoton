@@ -870,12 +870,10 @@ impl Executor {
         executor.set_signature_check_disabled(self.disable_signature_check);
 
         let params = ton_executor::ExecuteParams {
-            state_libs: Default::default(),
             block_unixtime: self.block_utime,
             block_lt: self.block_lt,
             last_tr_lt: self.last_transaction_lt.clone(),
-            seed_block: UInt256::default(),
-            debug: false,
+            ..Default::default()
         };
 
         let mut account_root = self.account.serialize()?;

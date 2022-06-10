@@ -29,21 +29,29 @@ pub fn call(
         )
         .map_err(|_| ExecutionError::FailedToPutDataIntoRegisters)?;
 
-    let sci = build_contract_info(&account.addr, &account.storage.balance, utime, lt, lt);
-    ctrls
-        .put(7, &mut sci.into_temp_data())
-        .map_err(|_| ExecutionError::FailedToPutSciIntoRegisters)?;
-
     let gas_limit = 1_000_000_000;
     let gas = Gas::new(gas_limit, 0, gas_limit, 10);
 
     let code = state.code.clone().ok_or(ExecutionError::AccountHasNoCode)?;
-    let mut engine = ton_vm::executor::Engine::new().setup(
-        SliceData::from(code),
-        Some(ctrls),
-        Some(stack),
-        Some(gas),
+
+    let sci = build_contract_info(
+        &account.addr,
+        &account.storage.balance,
+        utime,
+        lt,
+        lt,
+        code.clone(),
+        account.storage.init_code_hash.as_ref(),
     );
+    ctrls
+        .put(7, &mut sci.into_temp_data_item())
+        .map_err(|_| ExecutionError::FailedToPutSciIntoRegisters)?;
+
+    let mut engine = ton_vm::executor::Engine::with_capabilities(
+        (ton_block::GlobalCapabilities::CapMycode as u64)
+            | (ton_block::GlobalCapabilities::CapInitCodeHash as u64),
+    )
+    .setup(SliceData::from(code), Some(ctrls), Some(stack), Some(gas));
 
     let result = engine.execute();
 
@@ -76,7 +84,7 @@ pub fn call_msg(
         .map_err(|_| ExecutionError::FailedToSerializeMessage)?;
 
     let mut stack = Stack::new();
-    let balance = account.storage.balance.grams.value();
+    let balance = account.storage.balance.grams.as_u128();
     let (function_selector, msg_balance) = match msg.header() {
         CommonMsgInfo::IntMsgInfo(_) => (
             ton_vm::int!(0),
@@ -129,15 +137,18 @@ fn build_contract_info(
     block_unixtime: u32,
     block_lt: u64,
     tr_lt: u64,
+    code: ton_types::Cell,
+    init_code_hash: Option<&ton_types::UInt256>,
 ) -> ton_vm::SmartContractInfo {
-    let mut info =
-        ton_vm::SmartContractInfo::with_myself(address.serialize().unwrap_or_default().into());
-    *info.block_lt_mut() = block_lt;
-    *info.trans_lt_mut() = tr_lt;
-    *info.unix_time_mut() = block_unixtime;
-    *info.balance_remaining_grams_mut() = balance.grams.0;
-    *info.balance_remaining_other_mut() = balance.other_as_hashmap();
-
+    let mut info = ton_vm::SmartContractInfo::old_default(code);
+    info.myself = address.serialize().unwrap_or_default().into();
+    info.block_lt = block_lt;
+    info.trans_lt = tr_lt;
+    info.unix_time = block_unixtime;
+    info.balance = balance.clone();
+    if let Some(hash) = init_code_hash {
+        info.set_init_code_hash(*hash);
+    }
     info
 }
 
