@@ -742,7 +742,6 @@ impl TryFrom<InputMessage> for IncomingNftTransfer {
         Ok(Self {
             send_gas_to: input.send_gas_to,
             to: input.to,
-            //callbacks: Default::default(),
         })
     }
 }
@@ -756,7 +755,6 @@ impl TryFrom<InputMessage> for IncomingChangeManager {
         Ok(Self {
             send_gas_to: input.send_gas_to,
             new_manager: input.new_manager,
-            //callbacks: Default::default(),
         })
     }
 }
@@ -770,7 +768,6 @@ impl TryFrom<InputMessage> for IncomingChangeOwner {
         Ok(Self {
             send_gas_to: input.send_gas_to,
             new_owner: input.new_owner,
-            //callbacks: Default::default(),
         })
     }
 }
