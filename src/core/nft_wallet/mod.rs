@@ -50,26 +50,27 @@ impl NftCollection {
     pub async fn get_collection_nfts(
         &self,
         clock: Arc<dyn Clock>,
-        continuation: &Option<MsgAddressInt>,
+        transport: Arc<dyn Transport>,
+        owner: MsgAddressInt,
+        limit: u8,
+        continuation: Option<MsgAddressInt>,
     ) -> Result<Vec<MsgAddressInt>> {
-        // let nfts = match CollectionContractState(&self.state)
-        //     .check_collection_supported_interface(clock.as_ref())?
-        // {
-        //     Some(NftVersion::Tip4_3) => {
-        //         // let index_code = CollectionContractState(&self.state)
-        //         //     .resolve_collection_index_code(clock.as_ref())?;
-        //         // let code_hash = CollectionContractState(&self.state)
-        //         //     .get_collection_code_hash(&owner, index_code)?;
-        //         // transport
-        //         //     .get_accounts_by_code_hash(&code_hash, limit, continuation)
-        //         //     .await?
-        //         todo!()
-        //     }
-        //     None => return Err(NftError::InvalidCollectionContract.into()),
-        //     _ => return Err(NftError::UnsupportedInterfaceVersion.into()),
-        // };
+        let state = CollectionContractState(&self.state);
 
-        Ok(Default::default())
+        let nfts: Vec<MsgAddressInt> =
+            match state.check_collection_supported_interface(clock.as_ref())? {
+                Some(NftVersion::Tip4_3) => {
+                    let index_code = state.resolve_collection_index_code(clock.as_ref())?;
+                    let code_hash = state.get_collection_code_hash(&owner, index_code)?;
+                    transport
+                        .get_accounts_by_code_hash(&code_hash, limit, &continuation)
+                        .await?
+                }
+                None => return Err(NftError::InvalidCollectionContract.into()),
+                _ => return Err(NftError::UnsupportedInterfaceVersion.into()),
+            };
+
+        Ok(nfts)
     }
 }
 
