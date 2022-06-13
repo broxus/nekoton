@@ -24,45 +24,52 @@ const NFT_STAMP: &[u8; 3] = b"nft";
 
 #[derive(Debug)]
 pub struct NftCollection {
-    collection_address: MsgAddressInt,
-    nfts: Vec<MsgAddressInt>,
+    pub collection_address: MsgAddressInt,
+    state: ExistingContract,
 }
 
 impl NftCollection {
     pub fn collection_address(&self) -> &MsgAddressInt {
         &self.collection_address
     }
-    pub fn collection_nft_list(&self) -> &Vec<MsgAddressInt> {
-        &self.nfts
-    }
+
     pub async fn get(
-        clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
-        owner: MsgAddressInt,
         collection_address: MsgAddressInt,
     ) -> Result<NftCollection> {
         let state = match transport.get_contract_state(&collection_address).await? {
             RawContractState::Exists(state) => state,
             RawContractState::NotExists => return Err(NftError::ContractNotExist.into()),
         };
-        let collection_state = CollectionContractState(&state);
 
-        let nfts = match collection_state.check_collection_supported_interface(clock.as_ref())? {
-            Some(NftVersion::Tip4_3) => {
-                let index_code = collection_state.resolve_collection_index_code(clock.as_ref())?;
-                let code_hash = collection_state.get_collection_code_hash(&owner, index_code)?;
-                transport
-                    .get_accounts_by_code_hash(&code_hash, 100, &None)
-                    .await?
-            }
-            None => return Err(NftError::InvalidCollectionContract.into()),
-            _ => return Err(NftError::UnsupportedInterfaceVersion.into()),
-        };
-
-        Ok(Self {
+        Ok(NftCollection {
             collection_address,
-            nfts,
+            state,
         })
+    }
+    pub async fn get_collection_nfts(
+        &self,
+        clock: Arc<dyn Clock>,
+        continuation: &Option<MsgAddressInt>,
+    ) -> Result<Vec<MsgAddressInt>> {
+        // let nfts = match CollectionContractState(&self.state)
+        //     .check_collection_supported_interface(clock.as_ref())?
+        // {
+        //     Some(NftVersion::Tip4_3) => {
+        //         // let index_code = CollectionContractState(&self.state)
+        //         //     .resolve_collection_index_code(clock.as_ref())?;
+        //         // let code_hash = CollectionContractState(&self.state)
+        //         //     .get_collection_code_hash(&owner, index_code)?;
+        //         // transport
+        //         //     .get_accounts_by_code_hash(&code_hash, limit, continuation)
+        //         //     .await?
+        //         todo!()
+        //     }
+        //     None => return Err(NftError::InvalidCollectionContract.into()),
+        //     _ => return Err(NftError::UnsupportedInterfaceVersion.into()),
+        // };
+
+        Ok(Default::default())
     }
 }
 
