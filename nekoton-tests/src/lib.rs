@@ -73,12 +73,15 @@ pub mod tests {
         let clock = Arc::new(SimpleClock);
         let transport = Arc::new(GqlTransport::new(client));
 
-        let collection =
-            NftCollection::get(clock.clone(), transport.clone(), owner_adrr, coll_addr)
-                .await
-                .unwrap();
+        let collection = NftCollection::get(transport.clone(), coll_addr)
+            .await
+            .unwrap();
+        let nfts = collection
+            .get_collection_nfts(clock.clone(), transport.clone(), owner_adrr, 100, None)
+            .await
+            .unwrap();
 
-        println!("Collection: {:?}", collection);
+        println!("Collection nfts: {:?}", nfts);
 
         // for index in collection.collection_nft_list() {
         //     let x = Nft::get_by_index_address(
