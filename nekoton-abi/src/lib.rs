@@ -24,6 +24,7 @@ pub use {
 use nekoton_utils::*;
 
 pub use self::abi_helpers::*;
+pub use self::code_salt::*;
 pub use self::event_builder::*;
 pub use self::function_builder::*;
 pub use self::known_param_type::*;
@@ -35,6 +36,7 @@ pub use self::tokens_json::*;
 pub use transaction_parser::TransactionParser;
 
 mod abi_helpers;
+mod code_salt;
 mod event_builder;
 mod function_builder;
 mod known_param_type;

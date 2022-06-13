@@ -210,6 +210,14 @@ pub enum TokenWalletTransaction {
     SwapBackBounced(BigUint),
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum NftTransaction {
+    Transfer(IncomingNftTransfer),
+    ChangeOwner(IncomingChangeOwner),
+    ChangeManager(IncomingChangeManager),
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TokenIncomingTransfer {
@@ -225,6 +233,36 @@ pub struct TokenOutgoingTransfer {
     pub to: TransferRecipient,
     #[serde(with = "serde_string")]
     pub tokens: BigUint,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IncomingNftTransfer {
+    #[serde(with = "serde_string")]
+    pub send_gas_to: MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub to: MsgAddressInt,
+    //pub callbacks: BTreeMap<String, NftCallbackPayload>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IncomingChangeOwner {
+    #[serde(with = "serde_address")]
+    pub send_gas_to: MsgAddressInt,
+    #[serde(with = "serde_address")]
+    pub new_owner: MsgAddressInt,
+    //pub callbacks: BTreeMap<String, NftCallbackPayload>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IncomingChangeManager {
+    #[serde(with = "serde_address")]
+    pub send_gas_to: MsgAddressInt,
+    #[serde(with = "serde_address")]
+    pub new_manager: MsgAddressInt,
+    //pub callbacks: BTreeMap<String, NftCallbackPayload>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -359,6 +397,21 @@ define_string_enum!(
         /// Latest iteration with completely new standard
         /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/tree/9168190f218fd05a64269f5f24295c69c4840d94)
         Tip3,
+    }
+);
+
+define_string_enum!(
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+    pub enum NftVersion {
+        /// First iteration of NFT
+        /// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/1.md)
+        Tip4_1,
+        /// Second iteration of NFT
+        /// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/2.md)
+        Tip4_2,
+        /// Latest iteration of NFT
+        /// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/3.md)
+        Tip4_3,
     }
 );
 
