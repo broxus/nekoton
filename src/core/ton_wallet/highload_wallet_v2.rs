@@ -368,12 +368,10 @@ pub mod tests {
         let bytes = base64::decode(data).expect("cant decode data");
         let cell =
             ton_types::deserialize_tree_of_cells(&mut bytes.as_slice()).expect("deser failed");
-        let account = ton_block::AccountState::construct_from_cell(cell.clone())?;
+        let account = ton_block::AccountState::construct_from_cell(cell)?;
 
         let data = match account {
-            ton_block::AccountState::AccountActive { state_init } => {
-                state_init.data.clone().unwrap()
-            }
+            ton_block::AccountState::AccountActive { state_init } => state_init.data.unwrap(),
             _ => anyhow::bail!("ACCOUNT NOT ACTIVE"),
         };
 

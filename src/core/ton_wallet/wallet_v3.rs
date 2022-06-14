@@ -32,7 +32,7 @@ pub fn prepare_deploy(
 
     Ok(Box::new(UnsignedWalletV3Message {
         init_data,
-        gift: None,
+        gifts: Vec::new(),
         payload,
         message,
         expire_at,
@@ -68,16 +68,11 @@ impl UnsignedMessage for UnsignedWalletV3Deploy {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn prepare_transfer(
     clock: &dyn Clock,
     public_key: &PublicKey,
     current_state: &ton_block::AccountStuff,
-    destination: MsgAddressInt,
-    amount: u64,
-    flags: u8,
-    bounce: bool,
-    body: Option<SliceData>,
+    gifts: Vec<Gift>,
     expiration: Expiration,
 ) -> Result<TransferAction> {
     let (init_data, with_state_init) = match &current_state.storage.state {
@@ -104,21 +99,12 @@ pub fn prepare_transfer(
         message.set_state_init(init_data.make_state_init()?);
     }
 
-    let gift = Some(Gift {
-        flags,
-        bounce,
-        destination,
-        amount,
-        body,
-        state_init: None,
-    });
-
     let expire_at = ExpireAt::new(clock, expiration);
-    let (hash, payload) = init_data.make_transfer_payload(gift.clone(), expire_at.timestamp)?;
+    let (hash, payload) = init_data.make_transfer_payload(gifts.clone(), expire_at.timestamp)?;
 
     Ok(TransferAction::Sign(Box::new(UnsignedWalletV3Message {
         init_data,
-        gift,
+        gifts,
         payload,
         hash,
         expire_at,
@@ -129,7 +115,7 @@ pub fn prepare_transfer(
 #[derive(Clone)]
 struct UnsignedWalletV3Message {
     init_data: InitData,
-    gift: Option<Gift>,
+    gifts: Vec<Gift>,
     payload: BuilderData,
     hash: UInt256,
     expire_at: ExpireAt,
@@ -144,7 +130,7 @@ impl UnsignedMessage for UnsignedWalletV3Message {
 
         let (hash, payload) = self
             .init_data
-            .make_transfer_payload(self.gift.clone(), self.expire_at())
+            .make_transfer_payload(self.gifts.clone(), self.expire_at())
             .trust_me();
         self.hash = hash;
         self.payload = payload;
