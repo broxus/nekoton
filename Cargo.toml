@@ -44,7 +44,7 @@ serde_json = "1.0"
 sha2 = "0.9.9"
 thiserror = "1.0"
 tiny-jsonrpc = { version = "0.6.0", default-features = false, optional = true }
-tokio = { version = "1.16.1", default-features = false, features = ["sync"] }
+tokio = { version = "1", default-features = false, features = ["sync"] }
 zeroize = "1"
 
 ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
@@ -63,7 +63,7 @@ nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
 [dev-dependencies]
 reqwest = { version = "0.11.8", features = ["gzip"] }
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
-tokio = { version = "1.4.0", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 
 [features]
 default = ["gql_transport"]
