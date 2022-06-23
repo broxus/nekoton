@@ -373,7 +373,7 @@ impl UnsignedMessage for LabsUnsignedMessage {
     fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
         let payload = self.payload.clone();
         let payload = ton_abi::Function::fill_sign(
-            &ton_abi::contract::ABI_VERSION_2_0,
+            &self.function.abi_version,
             Some(signature),
             None,
             payload,
