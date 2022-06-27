@@ -5,11 +5,12 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
-use nekoton_abi::{Executor, GenTimings, TransactionId};
+use nekoton_abi::{Executor, GenTimings, LastTransactionId, TransactionId};
 use nekoton_utils::*;
 
 use super::models::{
-    ContractState, PendingTransaction, TransactionsBatchInfo, TransactionsBatchType,
+    ContractState, PendingTransaction, ReliableBehavior, TransactionsBatchInfo,
+    TransactionsBatchType,
 };
 use super::{utils, PollingMethod};
 use crate::core::utils::PendingTransactionsExt;
@@ -24,6 +25,7 @@ pub struct ContractSubscription {
     contract_state: ContractState,
     latest_known_transaction: Option<TransactionId>,
     pending_transactions: Vec<PendingTransaction>,
+    transactions_synced: bool,
     initialized: bool,
 }
 
@@ -46,6 +48,7 @@ impl ContractSubscription {
             contract_state: Default::default(),
             latest_known_transaction: None,
             pending_transactions: Vec::new(),
+            transactions_synced: true,
             initialized: false,
         };
 
@@ -80,9 +83,25 @@ impl ContractSubscription {
 
     pub fn polling_method(&self) -> PollingMethod {
         if self.pending_transactions.is_empty() {
+            // Relaxed polling when there are no pending transactions
             PollingMethod::Manual
-        } else {
+        } else if self.transactions_synced {
+            // All transports could use reliable polling if there are some
+            // pending transactions and all recent transactions were received
             PollingMethod::Reliable
+        } else {
+            match self.transport.info().reliable_behavior {
+                // Nothing changed for polling, it will just request
+                // transactions one more time during refresh
+                ReliableBehavior::IntensivePolling => PollingMethod::Reliable,
+
+                // Special case for transport which supports block walking
+                // and not all recent transactions were received.
+                //
+                // It is needed to receive all these transactions first,
+                // otherwise there will be gaps.
+                ReliableBehavior::BlockWalking => PollingMethod::Manual,
+            }
         }
     }
 
@@ -125,7 +144,12 @@ impl ContractSubscription {
         // optimistic prediction, that there were at most N new transactions
         const INITIAL_TRANSACTION_COUNT: u8 = 4;
 
-        if self.refresh_contract_state(on_contract_state).await? {
+        // Refresh contracts state every method call
+        //
+        // Refresh transactions every time state changes, or there are new
+        // transactions which we still need to receive (e.g. state has
+        // new last_trasaction_id, but the last known transaction i)
+        if self.refresh_contract_state(on_contract_state).await? || !self.transactions_synced {
             let count = u8::min(
                 self.transport.info().max_transactions_per_fetch,
                 INITIAL_TRANSACTION_COUNT,
@@ -136,7 +160,9 @@ impl ContractSubscription {
                 .await?;
         }
 
-        if !self.pending_transactions.is_empty() {
+        // Only check expired messages when we can guarantee, that
+        // all transactions until current state were received
+        if !self.pending_transactions.is_empty() && self.transactions_synced {
             let current_utime = self
                 .contract_state
                 .gen_timings
@@ -282,10 +308,11 @@ impl ContractSubscription {
         FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
         FM: FnMut(PendingTransaction, RawTransaction),
     {
-        let from = match self.contract_state.last_transaction_id {
-            Some(id) => id.to_transaction_id(),
+        let last_tx_id_from_state = match self.contract_state.last_transaction_id {
+            Some(id) => id,
             None => return Ok(()),
         };
+        let from = last_tx_id_from_state.to_transaction_id();
 
         let mut new_latest_known_transaction = None;
 
@@ -309,11 +336,26 @@ impl ContractSubscription {
         }
 
         let batch_info = match (new_transactions.first(), new_transactions.last()) {
-            (Some(first), Some(last)) => Some(TransactionsBatchInfo {
-                min_lt: last.data.lt, // transactions in response are in descending order
-                max_lt: first.data.lt,
-                batch_type: TransactionsBatchType::New,
-            }),
+            (Some(first), Some(last)) => {
+                let max_lt = first.data.lt;
+
+                self.transactions_synced = match &last_tx_id_from_state {
+                    // In case we know the exact lt of the last transaction,
+                    // transactions are synced when max_lt is equal to it
+                    LastTransactionId::Exact(id_from_state) => id_from_state.lt <= max_lt,
+                    // In case we know only last_trans_lt from AccountStorage,
+                    // we should compute the same last_trans_lt using message count
+                    LastTransactionId::Inexact { latest_lt } => {
+                        *latest_lt <= max_lt + 1 + first.data.outmsg_cnt as u64
+                    }
+                };
+
+                Some(TransactionsBatchInfo {
+                    min_lt: last.data.lt, // transactions in response are in descending order
+                    max_lt,
+                    batch_type: TransactionsBatchType::New,
+                })
+            }
             _ => None,
         };
 
