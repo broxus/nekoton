@@ -482,13 +482,11 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
         let public_key = extract_public_key(&contract.account)?;
         Ok((public_key, WalletType::Multisig(multisig_type)))
     } else if wallet_v3::is_wallet_v3(&code_hash) {
-        let public_key =
-            PublicKey::from_bytes(wallet_v3::InitData::try_from(data)?.public_key()).trust_me();
+        let public_key = PublicKey::from_bytes(wallet_v3::InitData::try_from(data)?.public_key())?;
         Ok((public_key, WalletType::WalletV3))
     } else if highload_wallet_v2::is_highload_wallet_v2(&code_hash) {
         let public_key =
-            PublicKey::from_bytes(highload_wallet_v2::InitData::try_from(data)?.public_key())
-                .trust_me();
+            PublicKey::from_bytes(highload_wallet_v2::InitData::try_from(data)?.public_key())?;
         Ok((public_key, WalletType::HighloadWalletV2))
     } else {
         Err(TonWalletError::InvalidContractType.into())

@@ -370,7 +370,7 @@ impl SignerStorage for DerivedKeySigner {
                 .into_iter()
                 .map(|(public_key, master_key)| {
                     let public_key = hex::decode(&public_key)?;
-                    let public_key = ed25519_dalek::PublicKey::from_bytes(&public_key)?;
+                    let public_key = PublicKey::from_bytes(&public_key)?;
                     Result::<_, anyhow::Error>::Ok((public_key.to_bytes(), master_key))
                 })
                 .collect::<Result<HashMap<_, _>, _>>()?;

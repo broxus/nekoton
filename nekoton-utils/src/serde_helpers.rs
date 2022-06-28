@@ -740,9 +740,8 @@ pub mod serde_public_key {
         D: serde::Deserializer<'de>,
     {
         let data = String::deserialize(deserializer)?;
-        let bytes = hex::decode(&data).map_err(|_| D::Error::custom("Invalid PublicKey"))?;
-        ed25519_dalek::PublicKey::from_bytes(&bytes)
-            .map_err(|_| D::Error::custom("Invalid PublicKey"))
+        let bytes = hex::decode(&data).map_err(|_| Error::custom("Invalid PublicKey"))?;
+        ed25519_dalek::PublicKey::from_bytes(&bytes).map_err(|_| Error::custom("Invalid PublicKey"))
     }
 }
 
@@ -779,7 +778,7 @@ pub mod serde_vec_public_key {
                     let bytes =
                         hex::decode(&elem).map_err(|_| V::Error::custom("Invalid PublicKey"))?;
                     let pubkey = ed25519_dalek::PublicKey::from_bytes(&bytes)
-                        .map_err(|_| V::Error::custom("Invalid PublicKey"))?;
+                        .map_err(|_| Error::custom("Invalid PublicKey"))?;
                     vec.push(pubkey);
                 }
                 Ok(vec)

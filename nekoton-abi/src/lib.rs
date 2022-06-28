@@ -228,14 +228,15 @@ pub fn extract_public_key(
         .get_next_bytes(32)
         .map_err(|_| ExtractionError::CellUnderflow)?;
 
-    Ok(ed25519_dalek::PublicKey::from_bytes(&data).trust_me())
+    ed25519_dalek::PublicKey::from_bytes(&data)
+        .map_err(|_| ExtractionError::InvalidPublicKey.into())
 }
 
 pub fn get_state_init_hash(
     mut state_init: ton_block::StateInit,
     contract: &ton_abi::Contract,
     public_key: &Option<ed25519_dalek::PublicKey>,
-    init_data: Vec<ton_abi::Token>,
+    init_data: Vec<Token>,
 ) -> Result<UInt256> {
     state_init.data = if let Some(data) = state_init.data.take() {
         Some(insert_state_init_data(contract, data.into(), public_key, init_data)?.into_cell())
@@ -249,7 +250,7 @@ pub fn insert_state_init_data(
     contract: &ton_abi::Contract,
     data: SliceData,
     public_key: &Option<ed25519_dalek::PublicKey>,
-    tokens: Vec<ton_abi::Token>,
+    tokens: Vec<Token>,
 ) -> Result<SliceData> {
     #[derive(thiserror::Error, Debug)]
     enum InitDataError {
@@ -300,7 +301,7 @@ pub fn decode_input<'a>(
     message_body: SliceData,
     method: &MethodName,
     internal: bool,
-) -> Result<Option<(&'a ton_abi::Function, Vec<Token>)>> {
+) -> Result<Option<(&'a Function, Vec<Token>)>> {
     let function = match guess_method_by_input(contract, &message_body, method, internal)? {
         Some(function) => function,
         None => return Ok(None),
@@ -314,7 +315,7 @@ pub fn decode_output<'a>(
     contract: &'a ton_abi::Contract,
     message_body: SliceData,
     method: &MethodName,
-) -> Result<Option<(&'a ton_abi::Function, Vec<Token>)>> {
+) -> Result<Option<(&'a Function, Vec<Token>)>> {
     let output_id = match read_function_id(&message_body) {
         Ok(id) => id,
         Err(_) => return Ok(None),
@@ -358,7 +359,7 @@ pub fn decode_event<'a>(
     contract: &'a ton_abi::Contract,
     message_body: SliceData,
     name: &MethodName,
-) -> Result<Option<(&'a ton_abi::Event, Vec<ton_abi::Token>)>> {
+) -> Result<Option<(&'a ton_abi::Event, Vec<Token>)>> {
     let events = &contract.events;
     let event_id = match read_function_id(&message_body) {
         Ok(id) => id,
@@ -477,6 +478,8 @@ pub enum ExtractionError {
     AccountDataNotFound,
     #[error("Cell underflow")]
     CellUnderflow,
+    #[error("Invalid public key")]
+    InvalidPublicKey,
 }
 
 pub fn code_to_tvc(code: ton_types::Cell) -> Result<ton_block::StateInit> {

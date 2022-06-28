@@ -61,10 +61,9 @@ impl StoreSigner for LedgerKeySigner {
         _: SignerContext<'_>,
         input: Self::CreateKeyInput,
     ) -> Result<SignerEntry> {
-        let master_key =
-            ed25519_dalek::PublicKey::from_bytes(&self.connection.get_public_key(0).await?)?;
+        let master_key = PublicKey::from_bytes(&self.connection.get_public_key(0).await?)?;
         let pubkey_bytes = self.connection.get_public_key(input.account_id).await?;
-        let public_key = ed25519_dalek::PublicKey::from_bytes(&pubkey_bytes)?;
+        let public_key = PublicKey::from_bytes(&pubkey_bytes)?;
 
         let name = input
             .name
@@ -120,12 +119,9 @@ impl StoreSigner for LedgerKeySigner {
     ) -> Result<Vec<PublicKey>> {
         let mut result = Vec::with_capacity(input.limit as usize);
         for account_id in input.offset..input.offset.saturating_add(input.limit) {
-            result.push(
-                ed25519_dalek::PublicKey::from_bytes(
-                    &self.connection.get_public_key(account_id).await?,
-                )
-                .trust_me(),
-            );
+            result.push(PublicKey::from_bytes(
+                &self.connection.get_public_key(account_id).await?,
+            )?);
         }
         Ok(result)
     }
