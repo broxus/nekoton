@@ -228,8 +228,7 @@ pub fn extract_public_key(
         .get_next_bytes(32)
         .map_err(|_| ExtractionError::CellUnderflow)?;
 
-    ed25519_dalek::PublicKey::from_bytes(&data)
-        .map_err(|_| ExtractionError::InvalidPublicKey.into())
+    ed25519_dalek::PublicKey::from_bytes(&data).map_err(|_| ExtractionError::InvalidPublicKey)
 }
 
 pub fn get_state_init_hash(
