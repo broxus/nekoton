@@ -48,7 +48,7 @@ tokio = { version = "1", default-features = false, features = ["sync"] }
 zeroize = "1"
 
 ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
-tiny-bip39 = { git = "https://github.com/broxus/tiny-bip39.git" }
+tiny-bip39 = { git = "https://github.com/broxus/tiny-bip39.git", default-features = false }
 tiny-hderive = { git = "https://github.com/broxus/tiny-hderive.git" }
 
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
