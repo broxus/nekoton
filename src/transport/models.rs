@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use ton_block::{AccountStuff, Transaction};
 use ton_types::UInt256;
 
-use nekoton_abi::{ExecutionContext, GenTimings, LastTransactionId, TransactionId};
+use nekoton_abi::{ExecutionContext, GenTimings, LastTransactionId};
 use nekoton_utils::{serde_account_stuff, Clock};
 
 use crate::core::models::{ContractState, PendingTransaction};
@@ -94,15 +94,6 @@ impl PartialOrd for RawTransaction {
 impl Ord for RawTransaction {
     fn cmp(&self, other: &Self) -> Ordering {
         self.data.lt.cmp(&other.data.lt)
-    }
-}
-
-impl RawTransaction {
-    pub fn id(&self) -> TransactionId {
-        TransactionId {
-            lt: self.data.lt,
-            hash: self.hash,
-        }
     }
 }
 

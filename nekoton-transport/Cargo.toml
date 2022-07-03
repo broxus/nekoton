@@ -1,6 +1,6 @@
 [package]
 name = "nekoton-transport"
-version = "0.10.0"
+version = "0.11.0"
 authors = [
     "Alexey Pashinov <pashinov93@gmail.com>",
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
@@ -16,7 +16,7 @@ log = "0.4"
 reqwest = { version = "0.11", features = ["json", "gzip", "rustls-tls"], default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0"
-tokio = { version = "1", features = ["sync", "time"] }  
+tokio = { version = "1", features = ["sync", "time"] }
 
 nekoton-utils = { path = "../nekoton-utils" }
 nekoton = { path = ".." }

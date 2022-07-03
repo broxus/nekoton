@@ -1,10 +1,8 @@
 use anyhow::Result;
 use async_trait::async_trait;
+use nekoton_utils::Clock;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
-
-use nekoton_abi::TransactionId;
-use nekoton_utils::Clock;
 
 use crate::core::models::ReliableBehavior;
 
@@ -36,8 +34,8 @@ pub trait Transport: Send + Sync {
 
     async fn get_transactions(
         &self,
-        address: MsgAddressInt,
-        from: TransactionId,
+        address: &MsgAddressInt,
+        from_lt: u64,
         count: u8,
     ) -> Result<Vec<RawTransaction>>;
 

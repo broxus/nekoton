@@ -56,14 +56,17 @@ impl TonWallet {
             clock.clone(),
             transport,
             address,
-            make_contract_state_handler(
+            &mut make_contract_state_handler(
                 clock.as_ref(),
-                &handler,
+                handler.as_ref(),
                 &public_key,
                 wallet_type,
                 &mut wallet_data,
             ),
-            make_transactions_handler(&handler, wallet_type),
+            Some(&mut make_transactions_handler(
+                handler.as_ref(),
+                wallet_type,
+            )),
         )
         .await?;
 
@@ -94,14 +97,17 @@ impl TonWallet {
             clock.clone(),
             transport,
             address,
-            make_contract_state_handler(
+            &mut make_contract_state_handler(
                 clock.as_ref(),
-                &handler,
+                handler.as_ref(),
                 &public_key,
                 wallet_type,
                 &mut wallet_data,
             ),
-            make_transactions_handler(&handler, wallet_type),
+            Some(&mut make_transactions_handler(
+                handler.as_ref(),
+                wallet_type,
+            )),
         )
         .await?;
 
@@ -127,14 +133,17 @@ impl TonWallet {
             clock.clone(),
             transport,
             existing_wallet.address,
-            make_contract_state_handler(
+            &mut make_contract_state_handler(
                 clock.as_ref(),
-                &handler,
+                handler.as_ref(),
                 &existing_wallet.public_key,
                 existing_wallet.wallet_type,
                 &mut wallet_data,
             ),
-            make_transactions_handler(&handler, existing_wallet.wallet_type),
+            Some(&mut make_transactions_handler(
+                handler.as_ref(),
+                existing_wallet.wallet_type,
+            )),
         )
         .await?;
 
@@ -362,18 +371,19 @@ impl TonWallet {
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
+        let handler = self.handler.as_ref();
         self.contract_subscription
             .refresh(
-                make_contract_state_handler(
+                &mut make_contract_state_handler(
                     self.clock.as_ref(),
-                    &self.handler,
+                    handler,
                     &self.public_key,
                     self.wallet_type,
                     &mut self.wallet_data,
                 ),
-                make_transactions_handler(&self.handler, self.wallet_type),
-                make_message_sent_handler(&self.handler),
-                make_message_expired_handler(&self.handler),
+                &mut make_transactions_handler(handler, self.wallet_type),
+                &mut make_message_sent_handler(handler),
+                &mut make_message_expired_handler(handler),
             )
             .await
     }
@@ -381,25 +391,27 @@ impl TonWallet {
     pub async fn handle_block(&mut self, block: &ton_block::Block) -> Result<()> {
         // TODO: update wallet data here
 
+        let handler = self.handler.as_ref();
         let new_account_state = self.contract_subscription.handle_block(
             block,
-            make_transactions_handler(&self.handler, self.wallet_type),
-            make_message_sent_handler(&self.handler),
-            make_message_expired_handler(&self.handler),
+            &mut make_transactions_handler(handler, self.wallet_type),
+            &mut make_message_sent_handler(handler),
+            &mut make_message_expired_handler(handler),
         )?;
 
         if let Some(account_state) = new_account_state {
-            self.handler.on_state_changed(account_state);
+            handler.on_state_changed(account_state);
         }
 
         Ok(())
     }
 
-    pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
+    pub async fn preload_transactions(&mut self, from_lt: u64) -> Result<()> {
+        let handler = self.handler.as_ref();
         self.contract_subscription
             .preload_transactions(
-                from,
-                make_transactions_handler(&self.handler, self.wallet_type),
+                from_lt,
+                &mut make_transactions_handler(handler, self.wallet_type),
             )
             .await
     }
@@ -496,7 +508,7 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
 pub fn get_wallet_custodians(
     clock: &dyn Clock,
     contract: &ExistingContract,
-    public_key: &ed25519_dalek::PublicKey,
+    public_key: &PublicKey,
     wallet_type: WalletType,
 ) -> Result<Vec<UInt256>> {
     match wallet_type {
@@ -611,16 +623,13 @@ enum TonWalletError {
     PendingTransactionNotFound,
 }
 
-fn make_contract_state_handler<'a, T>(
+fn make_contract_state_handler<'a>(
     clock: &'a dyn Clock,
-    handler: &'a T,
+    handler: &'a dyn TonWalletSubscriptionHandler,
     public_key: &'a PublicKey,
     wallet_type: WalletType,
     wallet_data: &'a mut WalletData,
-) -> impl FnMut(&RawContractState) + 'a
-where
-    T: AsRef<dyn TonWalletSubscriptionHandler>,
-{
+) -> impl FnMut(&RawContractState) + 'a {
     move |contract_state| {
         if let RawContractState::Exists(contract_state) = contract_state {
             if let Err(e) =
@@ -629,17 +638,14 @@ where
                 log::error!("{}", e);
             }
         }
-        handler.as_ref().on_state_changed(contract_state.brief())
+        handler.on_state_changed(contract_state.brief())
     }
 }
 
-fn make_transactions_handler<T>(
-    handler: &'_ T,
+fn make_transactions_handler(
+    handler: &'_ dyn TonWalletSubscriptionHandler,
     wallet_type: WalletType,
-) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_
-where
-    T: AsRef<dyn TonWalletSubscriptionHandler>,
-{
+) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_ {
     move |transactions, batch_info| {
         let transactions = transactions
             .into_iter()
@@ -651,31 +657,23 @@ where
             })
             .collect();
 
-        handler
-            .as_ref()
-            .on_transactions_found(transactions, batch_info)
+        handler.on_transactions_found(transactions, batch_info)
     }
 }
 
-fn make_message_sent_handler<T>(
-    handler: &'_ T,
-) -> impl FnMut(PendingTransaction, RawTransaction) + '_
-where
-    T: AsRef<dyn TonWalletSubscriptionHandler>,
-{
+fn make_message_sent_handler(
+    handler: &'_ dyn TonWalletSubscriptionHandler,
+) -> impl FnMut(PendingTransaction, RawTransaction) + '_ {
     move |pending_transaction, transaction| {
         let transaction = Transaction::try_from((transaction.hash, transaction.data)).ok();
-        handler
-            .as_ref()
-            .on_message_sent(pending_transaction, transaction);
+        handler.on_message_sent(pending_transaction, transaction);
     }
 }
 
-fn make_message_expired_handler<T>(handler: &'_ T) -> impl FnMut(PendingTransaction) + '_
-where
-    T: AsRef<dyn TonWalletSubscriptionHandler>,
-{
-    move |pending_transaction| handler.as_ref().on_message_expired(pending_transaction)
+fn make_message_expired_handler(
+    handler: &'_ dyn TonWalletSubscriptionHandler,
+) -> impl FnMut(PendingTransaction) + '_ {
+    move |pending_transaction| handler.on_message_expired(pending_transaction)
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]

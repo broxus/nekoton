@@ -1,6 +1,6 @@
 [package]
 name = "nekoton-indexer-utils"
-version = "0.10.0"
+version = "0.11.0"
 authors = ["Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>"]
 edition = "2018"
 

@@ -218,8 +218,7 @@ impl KeyStore {
         {
             match algorithm {
                 EncryptionAlgorithm::ChaCha20Poly1305 => {
-                    use chacha20poly1305::aead::NewAead;
-                    use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
+                    use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce};
 
                     let nonce = Nonce::from(rand::thread_rng().gen::<[u8; 12]>());
                     let encryptor =
@@ -257,8 +256,7 @@ impl KeyStore {
 
         match data.algorithm {
             EncryptionAlgorithm::ChaCha20Poly1305 => {
-                use chacha20poly1305::aead::NewAead;
-                use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
+                use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce};
 
                 let nonce = <[u8; 12]>::try_from(data.nonce.as_slice())
                     .map(Nonce::from)

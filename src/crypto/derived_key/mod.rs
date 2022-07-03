@@ -2,8 +2,7 @@ use std::collections::hash_map::{self, HashMap};
 
 use anyhow::Result;
 use async_trait::async_trait;
-use chacha20poly1305::aead::NewAead;
-use chacha20poly1305::{ChaCha20Poly1305, Nonce};
+use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
 use ed25519_dalek::{PublicKey, Signer};
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize, Serializer};

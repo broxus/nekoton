@@ -5,7 +5,7 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
-use nekoton_abi::{Executor, GenTimings, LastTransactionId, TransactionId};
+use nekoton_abi::{Executor, GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
 use super::models::{
@@ -23,48 +23,50 @@ pub struct ContractSubscription {
     transport: Arc<dyn Transport>,
     address: MsgAddressInt,
     contract_state: ContractState,
-    latest_known_transaction: Option<TransactionId>,
+    latest_known_lt: Option<u64>,
     pending_transactions: Vec<PendingTransaction>,
     transactions_synced: bool,
-    initialized: bool,
 }
 
 impl ContractSubscription {
-    pub async fn subscribe<FC, FT>(
+    pub async fn subscribe(
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
-        on_contract_state: FC,
-        on_transactions_found: FT,
-    ) -> Result<Self>
-    where
-        FC: FnMut(&RawContractState),
-        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
-    {
+        on_contract_state: OnContractState<'_>,
+        on_transactions_found: Option<OnTransactionsFound<'_>>,
+    ) -> Result<Self> {
         let mut result = Self {
             clock,
             transport,
             address,
             contract_state: Default::default(),
-            latest_known_transaction: None,
+            latest_known_lt: None,
             pending_transactions: Vec::new(),
-            transactions_synced: true,
-            initialized: false,
+            transactions_synced: false,
         };
 
-        if result.refresh_contract_state(on_contract_state).await? {
-            let count = result.transport.info().max_transactions_per_fetch;
-            result
-                .refresh_latest_transactions(
-                    count,
-                    Some(count as usize),
-                    on_transactions_found,
-                    |_, _| {},
-                )
-                .await?;
+        result.transactions_synced = !result.refresh_contract_state(on_contract_state).await?;
+        if !result.transactions_synced {
+            if let Some(on_transactions_found) = on_transactions_found {
+                // Preload transactions if `on_transactions_found` specified
+                let count = result.transport.info().max_transactions_per_fetch;
+                result
+                    .refresh_latest_transactions(
+                        count,
+                        Some(count as usize),
+                        TransactionsBatchType::Old,
+                        on_transactions_found,
+                        &mut |_, _| {},
+                    )
+                    .await?;
+            } else {
+                // Otherwise assume that all transactions are already loaded
+                result.latest_known_lt =
+                    result.contract_state.last_transaction_id.map(|id| id.lt());
+                result.transactions_synced = true;
+            }
         }
-
-        result.initialized = true;
 
         Ok(result)
     }
@@ -128,27 +130,19 @@ impl ContractSubscription {
         }
     }
 
-    pub async fn refresh<FC, FT, FM, FE>(
+    pub async fn refresh(
         &mut self,
-        on_contract_state: FC,
-        on_transactions_found: FT,
-        on_message_sent: FM,
-        mut on_message_expired: FE,
-    ) -> Result<()>
-    where
-        FC: FnMut(&RawContractState),
-        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
-        FM: FnMut(PendingTransaction, RawTransaction),
-        FE: FnMut(PendingTransaction),
-    {
+        on_contract_state: OnContractState<'_>,
+        on_transactions_found: OnTransactionsFound<'_>,
+        on_message_sent: OnMessageSent<'_>,
+        on_message_expired: OnMessageExpired<'_>,
+    ) -> Result<()> {
         // optimistic prediction, that there were at most N new transactions
         const INITIAL_TRANSACTION_COUNT: u8 = 4;
 
-        // Refresh contracts state every method call
-        //
-        // Refresh transactions every time state changes, or there are new
-        // transactions which we still need to receive (e.g. state has
-        // new last_trasaction_id, but the last known transaction i)
+        // NOTE: refresh transactions every time state changes, or there are
+        // new transactions, which we still need to receive (e.g. state has new
+        // last_transaction_id, but the last known transaction is not equal to id)
         if self.refresh_contract_state(on_contract_state).await? || !self.transactions_synced {
             let count = u8::min(
                 self.transport.info().max_transactions_per_fetch,
@@ -156,8 +150,14 @@ impl ContractSubscription {
             );
 
             // get all new transactions until known id
-            self.refresh_latest_transactions(count, None, on_transactions_found, on_message_sent)
-                .await?;
+            self.refresh_latest_transactions(
+                count,
+                None,
+                TransactionsBatchType::New,
+                on_transactions_found,
+                on_message_sent,
+            )
+            .await?;
         }
 
         // Only check expired messages when we can guarantee, that
@@ -167,24 +167,19 @@ impl ContractSubscription {
                 .contract_state
                 .gen_timings
                 .current_utime(self.clock.as_ref());
-            self.check_expired_transactions(current_utime, &mut on_message_expired);
+            self.check_expired_transactions(current_utime, on_message_expired);
         }
 
         Ok(())
     }
 
-    pub fn handle_block<FT, FM, FE>(
+    pub fn handle_block(
         &mut self,
         block: &ton_block::Block,
-        mut on_transactions_found: FT,
-        mut on_message_sent: FM,
-        mut on_message_expired: FE,
-    ) -> Result<Option<ContractState>>
-    where
-        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
-        FM: FnMut(PendingTransaction, RawTransaction),
-        FE: FnMut(PendingTransaction),
-    {
+        on_transactions_found: OnTransactionsFound<'_>,
+        on_message_sent: OnMessageSent<'_>,
+        on_message_expired: OnMessageExpired<'_>,
+    ) -> Result<Option<ContractState>> {
         let block = utils::parse_block(&self.address, &self.contract_state, block)?;
 
         let mut new_account_state = None;
@@ -193,16 +188,16 @@ impl ContractSubscription {
 
             if let Some((mut new_transactions, batch_info)) = new_transactions {
                 new_transactions.reverse();
-                self.check_executed_transactions(&new_transactions, &mut on_message_sent);
+                self.check_executed_transactions(&new_transactions, on_message_sent);
 
                 if let Some(first) = new_transactions.first() {
-                    self.latest_known_transaction = Some(first.id());
+                    self.latest_known_lt = Some(first.data.lt);
                     on_transactions_found(new_transactions, batch_info);
                 }
             }
         }
 
-        self.check_expired_transactions(block.current_utime, &mut on_message_expired);
+        self.check_expired_transactions(block.current_utime, on_message_expired);
 
         Ok(new_account_state)
     }
@@ -260,10 +255,10 @@ impl ContractSubscription {
         executor.run(message)
     }
 
-    pub async fn refresh_contract_state<FC>(&mut self, mut on_contract_state: FC) -> Result<bool>
-    where
-        FC: FnMut(&RawContractState),
-    {
+    pub async fn refresh_contract_state(
+        &mut self,
+        on_contract_state: OnContractState<'_>,
+    ) -> Result<bool> {
         let contract_state = self.transport.get_contract_state(&self.address).await?;
         let new_contract_state = contract_state.brief();
 
@@ -297,35 +292,28 @@ impl ContractSubscription {
     ///
     /// * `initial_count` - optimistic prediction, that there were at most N new transactions
     /// * `limit` - max transaction count to be requested
-    pub async fn refresh_latest_transactions<FT, FM>(
+    pub async fn refresh_latest_transactions(
         &mut self,
         initial_count: u8,
         limit: Option<usize>,
-        mut on_transactions_found: FT,
-        mut on_message_sent: FM,
-    ) -> Result<()>
-    where
-        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
-        FM: FnMut(PendingTransaction, RawTransaction),
-    {
+        batch_type: TransactionsBatchType,
+        on_transactions_found: OnTransactionsFound<'_>,
+        on_message_sent: OnMessageSent<'_>,
+    ) -> Result<()> {
         let last_tx_id_from_state = match self.contract_state.last_transaction_id {
             Some(id) => id,
             None => return Ok(()),
         };
-        let from = last_tx_id_from_state.to_transaction_id();
+        let from_lt = last_tx_id_from_state.lt();
 
         let mut new_latest_known_transaction = None;
 
         // clone request context, because `&mut self` is needed later
-        let transport = self.transport.clone();
-        let address = self.address.clone();
-        let latest_known_transaction = self.latest_known_transaction;
-
         let mut transactions = utils::request_transactions(
-            transport.as_ref(),
-            &address,
-            from,
-            latest_known_transaction.as_ref(),
+            self.transport.as_ref(),
+            &self.address,
+            from_lt,
+            self.latest_known_lt,
             initial_count,
             limit,
         );
@@ -334,55 +322,43 @@ impl ContractSubscription {
         while let Some(transactions) = transactions.next().await {
             new_transactions.extend(transactions.into_iter());
         }
-
-        let batch_info = match (new_transactions.first(), new_transactions.last()) {
-            (Some(first), Some(last)) => {
-                let max_lt = first.data.lt;
-
-                self.transactions_synced = match &last_tx_id_from_state {
-                    // In case we know the exact lt of the last transaction,
-                    // transactions are synced when max_lt is equal to it
-                    LastTransactionId::Exact(id_from_state) => id_from_state.lt <= max_lt,
-                    // In case we know only last_trans_lt from AccountStorage,
-                    // we should compute the same last_trans_lt using message count
-                    LastTransactionId::Inexact { latest_lt } => {
-                        *latest_lt <= max_lt + 1 + first.data.outmsg_cnt as u64
-                    }
-                };
-
-                Some(TransactionsBatchInfo {
-                    min_lt: last.data.lt, // transactions in response are in descending order
-                    max_lt,
-                    batch_type: TransactionsBatchType::New,
-                })
-            }
-            _ => None,
-        };
-
-        if let Some(mut batch_info) = batch_info {
-            // requires `&mut self`, so `request_transactions` must use outer objects
-            self.check_executed_transactions(&new_transactions, &mut on_message_sent);
-
-            if new_latest_known_transaction.is_none() {
-                new_latest_known_transaction =
-                    new_transactions.first().map(|transaction| transaction.id());
-            }
-
-            // `utils::request_transactions` returns new transactions. So, to mark
-            // first transactions we get as old, we should use initialization flag.
-            batch_info.batch_type = if self.initialized {
-                TransactionsBatchType::New
-            } else {
-                TransactionsBatchType::Old
-            };
-
-            on_transactions_found(new_transactions, batch_info);
-        }
-
         drop(transactions);
 
+        if let (Some(first), Some(last)) = (new_transactions.first(), new_transactions.last()) {
+            // Transactions in response are in descending order
+            let max_lt = first.data.lt;
+            let min_lt = last.data.lt;
+
+            self.transactions_synced = match &last_tx_id_from_state {
+                // In case we know the exact lt of the last transaction,
+                // transactions are synced when max_lt is equal to it
+                LastTransactionId::Exact(id_from_state) => id_from_state.lt <= max_lt,
+                // In case we know only last_trans_lt from AccountStorage,
+                // we should compute the same last_trans_lt using message count
+                LastTransactionId::Inexact { latest_lt } => {
+                    *latest_lt <= max_lt + 1 + first.data.outmsg_cnt as u64
+                }
+            };
+
+            // requires `&mut self`, so `request_transactions` must use outer objects
+            self.check_executed_transactions(&new_transactions, on_message_sent);
+
+            if new_latest_known_transaction.is_none() {
+                new_latest_known_transaction = Some(max_lt);
+            }
+
+            on_transactions_found(
+                new_transactions,
+                TransactionsBatchInfo {
+                    min_lt,
+                    max_lt,
+                    batch_type,
+                },
+            );
+        };
+
         if let Some(id) = new_latest_known_transaction {
-            self.latest_known_transaction = Some(id);
+            self.latest_known_lt = Some(id);
         }
 
         Ok(())
@@ -391,19 +367,16 @@ impl ContractSubscription {
     /// Loads older transactions since specified id and notifies the handler with them
     ///
     /// **NOTE: returns transactions, sorted by lt in descending order**
-    pub async fn preload_transactions<FT>(
+    pub async fn preload_transactions(
         &mut self,
-        from: TransactionId,
-        mut on_transactions_found: FT,
-    ) -> Result<()>
-    where
-        FT: FnMut(Vec<RawTransaction>, TransactionsBatchInfo),
-    {
+        from_lt: u64,
+        on_transactions_found: OnTransactionsFound<'_>,
+    ) -> Result<()> {
         let transactions = self
             .transport
             .get_transactions(
-                self.address.clone(),
-                from,
+                &self.address,
+                from_lt,
                 self.transport.info().max_transactions_per_fetch,
             )
             .await?;
@@ -422,13 +395,11 @@ impl ContractSubscription {
     }
 
     /// Searches executed pending transactions and notifies the handler if some were found
-    fn check_executed_transactions<FM>(
+    fn check_executed_transactions(
         &mut self,
         transactions: &[RawTransaction],
-        on_message_sent: &mut FM,
-    ) where
-        FM: FnMut(PendingTransaction, RawTransaction),
-    {
+        on_message_sent: OnMessageSent<'_>,
+    ) {
         self.pending_transactions.retain(|pending| {
             let transaction = match transactions
                 .iter()
@@ -444,10 +415,11 @@ impl ContractSubscription {
     }
 
     /// Removes expired transactions and notifies the handler with them
-    fn check_expired_transactions<FE>(&mut self, current_utime: u32, on_message_expired: &mut FE)
-    where
-        FE: FnMut(PendingTransaction),
-    {
+    fn check_expired_transactions(
+        &mut self,
+        current_utime: u32,
+        on_message_expired: OnMessageExpired<'_>,
+    ) {
         self.pending_transactions.retain(|pending| {
             let expired = current_utime > pending.expire_at;
             if expired {
@@ -457,6 +429,11 @@ impl ContractSubscription {
         })
     }
 }
+
+type OnContractState<'a> = &'a mut dyn FnMut(&RawContractState);
+type OnTransactionsFound<'a> = &'a mut dyn FnMut(Vec<RawTransaction>, TransactionsBatchInfo);
+type OnMessageSent<'a> = &'a mut dyn FnMut(PendingTransaction, RawTransaction);
+type OnMessageExpired<'a> = &'a mut dyn FnMut(PendingTransaction);
 
 #[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

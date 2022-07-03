@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use anyhow::Result;
-use nekoton_abi::{MessageBuilder, TransactionId};
+use nekoton_abi::MessageBuilder;
 use nekoton_contracts::tip4_1::nft_contract::{
     self, callback_payloads_map, GetInfoOutputs, NftCallbackPayload,
 };
@@ -149,8 +149,8 @@ impl Nft {
             clock.clone(),
             transport,
             nft_address.clone(),
-            make_contract_state_handler(clock.as_ref(), &mut info.owner, &mut info.manager),
-            make_transactions_handler(&handler),
+            &mut make_contract_state_handler(clock.as_ref(), &mut info.owner, &mut info.manager),
+            Some(&mut make_transactions_handler(handler.as_ref())),
         )
         .await?;
 
@@ -279,23 +279,25 @@ impl Nft {
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
+        let handler = self.handler.as_ref();
         self.contract_subscription
             .refresh(
-                make_contract_state_handler(
+                &mut make_contract_state_handler(
                     self.clock.as_ref(),
                     &mut self.owner,
                     &mut self.manager,
                 ),
-                make_transactions_handler(&self.handler),
-                make_message_sent_handler(&self.handler),
-                make_message_expired_handler(&self.handler),
+                &mut make_transactions_handler(handler),
+                &mut make_message_sent_handler(handler),
+                &mut make_message_expired_handler(handler),
             )
             .await
     }
 
-    pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
+    pub async fn preload_transactions(&mut self, from_lt: u64) -> Result<()> {
+        let handler = self.handler.as_ref();
         self.contract_subscription
-            .preload_transactions(from, make_transactions_handler(&self.handler))
+            .preload_transactions(from_lt, &mut make_transactions_handler(handler))
             .await
     }
 }
@@ -341,12 +343,9 @@ fn make_contract_state_handler<'a>(
     }
 }
 
-fn make_transactions_handler<T>(
-    handler: &'_ T,
-) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_
-where
-    T: AsRef<dyn NftSubscriptionHandler>,
-{
+fn make_transactions_handler(
+    handler: &'_ dyn NftSubscriptionHandler,
+) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_ {
     move |transactions, batch_info| {
         let transactions = transactions
             .into_iter()
@@ -365,31 +364,23 @@ where
             )
             .collect();
 
-        handler
-            .as_ref()
-            .on_transactions_found(transactions, batch_info)
+        handler.on_transactions_found(transactions, batch_info)
     }
 }
 
-fn make_message_sent_handler<T>(
-    handler: &'_ T,
-) -> impl FnMut(PendingTransaction, RawTransaction) + '_
-where
-    T: AsRef<dyn NftSubscriptionHandler>,
-{
+fn make_message_sent_handler(
+    handler: &'_ dyn NftSubscriptionHandler,
+) -> impl FnMut(PendingTransaction, RawTransaction) + '_ {
     move |pending_transaction, transaction| {
         let transaction = Transaction::try_from((transaction.hash, transaction.data)).ok();
-        handler
-            .as_ref()
-            .on_message_sent(pending_transaction, transaction);
+        handler.on_message_sent(pending_transaction, transaction);
     }
 }
 
-fn make_message_expired_handler<T>(handler: &'_ T) -> impl FnMut(PendingTransaction) + '_
-where
-    T: AsRef<dyn NftSubscriptionHandler>,
-{
-    move |pending_transaction| handler.as_ref().on_message_expired(pending_transaction)
+fn make_message_expired_handler(
+    handler: &'_ dyn NftSubscriptionHandler,
+) -> impl FnMut(PendingTransaction) + '_ {
+    move |pending_transaction| handler.on_message_expired(pending_transaction)
 }
 
 #[derive(Debug)]

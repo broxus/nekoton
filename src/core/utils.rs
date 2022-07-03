@@ -28,8 +28,8 @@ pub fn convert_transactions(
 pub fn request_transactions<'a>(
     transport: &'a dyn Transport,
     address: &'a MsgAddressInt,
-    from: TransactionId,
-    until: Option<&'a TransactionId>,
+    from_lt: u64,
+    until_lt: Option<u64>,
     initial_count: u8,
     limit: Option<usize>,
 ) -> impl Stream<Item = Vec<RawTransaction>> + 'a {
@@ -37,9 +37,9 @@ pub fn request_transactions<'a>(
 
     LatestTransactions {
         address,
-        until,
+        until_lt,
         transport,
-        fut: Some(transport.get_transactions(address.clone(), from, count)),
+        fut: Some(transport.get_transactions(address, from_lt, count)),
         total_fetched: 0,
         limit,
     }
@@ -173,7 +173,7 @@ type NewTransactions = (Vec<RawTransaction>, TransactionsBatchInfo);
 
 struct LatestTransactions<'a> {
     address: &'a MsgAddressInt,
-    until: Option<&'a TransactionId>,
+    until_lt: Option<u64>,
     transport: &'a dyn Transport,
     fut: Option<TransactionsFut<'a>>,
     total_fetched: usize,
@@ -206,11 +206,11 @@ impl<'a> Stream for LatestTransactions<'a> {
         };
 
         // retain only first elements with lt greater than `until.lt`
-        if let Some(until) = self.until {
+        if let Some(until_lt) = self.until_lt {
             new_transactions.truncate({
                 let mut len = 0;
                 for item in new_transactions.iter() {
-                    if item.data.lt > until.lt {
+                    if item.data.lt > until_lt {
                         len += 1;
                     } else {
                         break;
@@ -228,7 +228,7 @@ impl<'a> Stream for LatestTransactions<'a> {
 
         // check if there are no transactions left or all transactions were requested
         if last.data.prev_trans_lt == 0
-            || matches!(self.until, Some(until) if last.data.prev_trans_lt <= until.lt)
+            || matches!(self.until_lt, Some(until_lt) if last.data.prev_trans_lt <= until_lt)
         {
             return Poll::Ready(Some(new_transactions));
         }
@@ -249,11 +249,8 @@ impl<'a> Stream for LatestTransactions<'a> {
 
         // If there are some unprocessed transactions left we should request remaining
         self.fut = Some(self.transport.get_transactions(
-            self.address.clone(),
-            TransactionId {
-                lt: last.data.prev_trans_lt,
-                hash: last.data.prev_trans_hash,
-            },
+            self.address,
+            last.data.prev_trans_lt,
             next_count,
         ));
 

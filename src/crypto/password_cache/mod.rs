@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use anyhow::Result;
-use chacha20poly1305::aead::{Aead, NewAead};
-use chacha20poly1305::{ChaCha20Poly1305, Nonce};
+use chacha20poly1305::aead::Aead;
+use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
 use parking_lot::RwLock;
 use rand::Rng;
 use secstr::SecUtf8;

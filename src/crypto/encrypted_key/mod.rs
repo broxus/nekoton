@@ -4,8 +4,7 @@ use std::io::Read;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use chacha20poly1305::aead::NewAead;
-use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
+use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signer};
 use rand::Rng;
 use secstr::SecUtf8;

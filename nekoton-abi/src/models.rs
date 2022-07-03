@@ -93,13 +93,10 @@ impl LastTransactionId {
     }
 
     /// Converts last transaction id into real or fake id
-    pub fn to_transaction_id(self) -> TransactionId {
+    pub fn lt(&self) -> u64 {
         match self {
-            Self::Exact(id) => id,
-            Self::Inexact { latest_lt } => TransactionId {
-                lt: latest_lt,
-                hash: Default::default(),
-            },
+            Self::Exact(id) => id.lt,
+            Self::Inexact { latest_lt } => *latest_lt,
         }
     }
 }

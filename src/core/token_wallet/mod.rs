@@ -56,8 +56,8 @@ impl TokenWallet {
             clock.clone(),
             transport,
             address,
-            make_contract_state_handler(clock.clone(), version, &mut balance),
-            make_transactions_handler(&handler, version),
+            &mut make_contract_state_handler(clock.clone(), version, &mut balance),
+            Some(&mut make_transactions_handler(handler.as_ref(), version)),
         )
         .await?;
 
@@ -177,18 +177,19 @@ impl TokenWallet {
     pub async fn refresh(&mut self) -> Result<()> {
         let mut balance = self.balance.clone();
 
+        let handler = self.handler.as_ref();
         self.contract_subscription
             .refresh(
-                make_contract_state_handler(self.clock.clone(), self.version, &mut balance),
-                make_transactions_handler(&self.handler, self.version),
-                |_, _| {},
-                |_| {},
+                &mut make_contract_state_handler(self.clock.clone(), self.version, &mut balance),
+                &mut make_transactions_handler(handler, self.version),
+                &mut |_, _| {},
+                &mut |_| {},
             )
             .await?;
 
         if balance != self.balance {
             self.balance = balance;
-            self.handler.on_balance_changed(self.balance.clone());
+            handler.on_balance_changed(self.balance.clone());
         }
 
         Ok(())
@@ -198,10 +199,10 @@ impl TokenWallet {
         let version = self.version;
         let mut balance: BigInt = self.balance.clone().into();
 
-        let handler = &self.handler;
+        let handler = self.handler.as_ref();
         self.contract_subscription.handle_block(
             block,
-            |transactions, batch_info| {
+            &mut |transactions, batch_info| {
                 let transactions = transactions
                     .into_iter()
                     .filter_map(|transaction| {
@@ -241,26 +242,28 @@ impl TokenWallet {
                     })
                     .collect();
 
-                handler
-                    .as_ref()
-                    .on_transactions_found(transactions, batch_info)
+                handler.on_transactions_found(transactions, batch_info)
             },
-            |_, _| {},
-            |_| {},
+            &mut |_, _| {},
+            &mut |_| {},
         )?;
 
         let balance = balance.to_biguint().unwrap_or_default();
         if balance != self.balance {
             self.balance = balance;
-            self.handler.on_balance_changed(self.balance.clone());
+            handler.on_balance_changed(self.balance.clone());
         }
 
         Ok(())
     }
 
-    pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
+    pub async fn preload_transactions(&mut self, from_lt: u64) -> Result<()> {
+        let handler = self.handler.as_ref();
         self.contract_subscription
-            .preload_transactions(from, make_transactions_handler(&self.handler, self.version))
+            .preload_transactions(
+                from_lt,
+                &mut make_transactions_handler(handler, self.version),
+            )
             .await
     }
 }
@@ -367,13 +370,10 @@ fn make_contract_state_handler(
     }
 }
 
-fn make_transactions_handler<T>(
-    handler: &'_ T,
+fn make_transactions_handler(
+    handler: &'_ dyn TokenWalletSubscriptionHandler,
     version: TokenWalletVersion,
-) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_
-where
-    T: AsRef<dyn TokenWalletSubscriptionHandler>,
-{
+) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_ {
     move |transactions, batch_info| {
         let transactions = transactions
             .into_iter()
@@ -393,9 +393,7 @@ where
             )
             .collect();
 
-        handler
-            .as_ref()
-            .on_transactions_found(transactions, batch_info)
+        handler.on_transactions_found(transactions, batch_info)
     }
 }
 

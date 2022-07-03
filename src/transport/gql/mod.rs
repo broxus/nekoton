@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use graphql_client::{GraphQLQuery, Response};
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
-use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
+use nekoton_abi::{GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
 use crate::core::models::ReliableBehavior;
@@ -282,19 +282,19 @@ impl Transport for GqlTransport {
         .into_iter()
         .flatten()
         .flat_map(|item| item.id)
-        .map(|account| ton_block::MsgAddressInt::from_str(&account))
+        .map(|account| MsgAddressInt::from_str(&account))
         .collect()
     }
 
     async fn get_transactions(
         &self,
-        address: MsgAddressInt,
-        from: TransactionId,
+        address: &MsgAddressInt,
+        from_lt: u64,
         count: u8,
     ) -> Result<Vec<RawTransaction>> {
         self.fetch::<QueryAccountTransactions>(query_account_transactions::Variables {
             address: address.to_string(),
-            last_transaction_lt: from.lt.to_string(),
+            last_transaction_lt: from_lt.to_string(),
             limit: count as i64,
         })
         .await?

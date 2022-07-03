@@ -4,7 +4,6 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use ton_block::{Block, Deserializable, MsgAddressInt};
 
-use nekoton_abi::TransactionId;
 use nekoton_utils::*;
 
 use crate::core::models::ReliableBehavior;
@@ -90,8 +89,8 @@ impl Transport for JrpcTransport {
 
     async fn get_transactions(
         &self,
-        address: MsgAddressInt,
-        from: TransactionId,
+        address: &MsgAddressInt,
+        from_lt: u64,
         count: u8,
     ) -> Result<Vec<RawTransaction>> {
         let response = self
@@ -100,8 +99,8 @@ impl Transport for JrpcTransport {
                 "getTransactionsList",
                 &GetTransactions {
                     limit: count as u64,
-                    last_transaction_lt: (from.lt != u64::MAX).then(|| from.lt),
-                    account: &address,
+                    last_transaction_lt: (from_lt != u64::MAX).then(|| from_lt),
+                    account: address,
                 },
             ))
             .await?;
@@ -200,25 +199,13 @@ mod tests {
     #[tokio::test]
     async fn test_connection() {
         let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
-        let address = ton_block::MsgAddressInt::from_str(
+        let address = MsgAddressInt::from_str(
             "-1:3333333333333333333333333333333333333333333333333333333333333333",
         )
         .unwrap();
         transport.get_contract_state(&address).await.unwrap();
         transport
-            .get_transactions(
-                address,
-                TransactionId {
-                    lt: 21968513000000,
-                    hash: ton_types::UInt256::from_slice(
-                        &hex::decode(
-                            "034009ed3d1d7ee2512e86d4e81fe9780d96503f539ae9a269ff9e8cfef21392",
-                        )
-                        .unwrap(),
-                    ),
-                },
-                10,
-            )
+            .get_transactions(&address, 21968513000000, 10)
             .await
             .unwrap();
 

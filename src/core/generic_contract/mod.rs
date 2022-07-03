@@ -4,7 +4,6 @@ use std::sync::Arc;
 use anyhow::Result;
 use ton_block::{GetRepresentationHash, MsgAddressInt};
 
-use nekoton_abi::TransactionId;
 use nekoton_utils::Clock;
 
 use super::models::{ContractState, PendingTransaction, Transaction, TransactionsBatchInfo};
@@ -24,15 +23,24 @@ impl GenericContract {
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
         handler: Arc<dyn GenericContractSubscriptionHandler>,
+        preload_transactions: bool,
     ) -> Result<Self> {
-        let contract_subscription = ContractSubscription::subscribe(
-            clock,
-            transport,
-            address,
-            make_contract_state_handler(&handler),
-            make_transactions_handler(&handler),
-        )
-        .await?;
+        let contract_subscription = {
+            let handler = handler.as_ref();
+
+            #[allow(trivial_casts)]
+            ContractSubscription::subscribe(
+                clock,
+                transport,
+                address,
+                &mut make_contract_state_handler(handler),
+                preload_transactions
+                    .then(|| make_transactions_handler(handler))
+                    .as_mut()
+                    .map(|x| x as _),
+            )
+            .await?
+        };
 
         Ok(Self {
             contract_subscription,
@@ -65,12 +73,13 @@ impl GenericContract {
     }
 
     pub async fn refresh(&mut self) -> Result<()> {
+        let handler = self.handler.as_ref();
         self.contract_subscription
             .refresh(
-                make_contract_state_handler(&self.handler),
-                make_transactions_handler(&self.handler),
-                make_message_sent_handler(&self.handler),
-                make_message_expired_handler(&self.handler),
+                &mut make_contract_state_handler(handler),
+                &mut make_transactions_handler(handler),
+                &mut make_message_sent_handler(handler),
+                &mut make_message_expired_handler(handler),
             )
             .await?;
 
@@ -78,23 +87,25 @@ impl GenericContract {
     }
 
     pub async fn handle_block(&mut self, block: &ton_block::Block) -> Result<()> {
+        let handler = self.handler.as_ref();
         let new_account_state = self.contract_subscription.handle_block(
             block,
-            make_transactions_handler(&self.handler),
-            make_message_sent_handler(&self.handler),
-            make_message_expired_handler(&self.handler),
+            &mut make_transactions_handler(handler),
+            &mut make_message_sent_handler(handler),
+            &mut make_message_expired_handler(handler),
         )?;
 
         if let Some(account_state) = new_account_state {
-            self.handler.on_state_changed(account_state);
+            handler.on_state_changed(account_state);
         }
 
         Ok(())
     }
 
-    pub async fn preload_transactions(&mut self, from: TransactionId) -> Result<()> {
+    pub async fn preload_transactions(&mut self, from_lt: u64) -> Result<()> {
+        let handler = self.handler.as_ref();
         self.contract_subscription
-            .preload_transactions(from, make_transactions_handler(&self.handler))
+            .preload_transactions(from_lt, &mut make_transactions_handler(handler))
             .await
     }
 
@@ -117,46 +128,34 @@ impl GenericContract {
     }
 }
 
-fn make_contract_state_handler<T>(handler: &'_ T) -> impl FnMut(&RawContractState) + '_
-where
-    T: AsRef<dyn GenericContractSubscriptionHandler>,
-{
-    move |contract_state| handler.as_ref().on_state_changed(contract_state.brief())
+fn make_contract_state_handler(
+    handler: &dyn GenericContractSubscriptionHandler,
+) -> impl FnMut(&RawContractState) + '_ {
+    move |contract_state| handler.on_state_changed(contract_state.brief())
 }
 
-fn make_transactions_handler<T>(
-    handler: &'_ T,
-) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_
-where
-    T: AsRef<dyn GenericContractSubscriptionHandler>,
-{
+fn make_transactions_handler(
+    handler: &dyn GenericContractSubscriptionHandler,
+) -> impl FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + '_ {
     move |transactions, batch_info| {
         let transactions = utils::convert_transactions(transactions).collect();
-        handler
-            .as_ref()
-            .on_transactions_found(transactions, batch_info)
+        handler.on_transactions_found(transactions, batch_info)
     }
 }
 
-fn make_message_sent_handler<T>(
-    handler: &'_ T,
-) -> impl FnMut(PendingTransaction, RawTransaction) + '_
-where
-    T: AsRef<dyn GenericContractSubscriptionHandler>,
-{
+fn make_message_sent_handler(
+    handler: &dyn GenericContractSubscriptionHandler,
+) -> impl FnMut(PendingTransaction, RawTransaction) + '_ {
     move |pending_transaction, transaction| {
         let transaction = Transaction::try_from((transaction.hash, transaction.data)).ok();
-        handler
-            .as_ref()
-            .on_message_sent(pending_transaction, transaction);
+        handler.on_message_sent(pending_transaction, transaction);
     }
 }
 
-fn make_message_expired_handler<T>(handler: &'_ T) -> impl FnMut(PendingTransaction) + '_
-where
-    T: AsRef<dyn GenericContractSubscriptionHandler>,
-{
-    move |pending_transaction| handler.as_ref().on_message_expired(pending_transaction)
+fn make_message_expired_handler(
+    handler: &'_ dyn GenericContractSubscriptionHandler,
+) -> impl FnMut(PendingTransaction) + '_ {
+    move |pending_transaction| handler.on_message_expired(pending_transaction)
 }
 
 pub trait GenericContractSubscriptionHandler: Send + Sync {
