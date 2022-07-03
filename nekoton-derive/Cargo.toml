@@ -18,8 +18,8 @@ path = "tests/progress.rs"
 [dev-dependencies]
 hex = "0.4"
 num-bigint = { version = "0.3", features = ["serde"] }
-num-traits = "0.2.14"
-trybuild = "1.0.42"
+num-traits = "0.2"
+trybuild = "1.0"
 
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
@@ -28,10 +28,10 @@ ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 nekoton-abi = { path = "../nekoton-abi", features = ["derive"] }
 
 [dependencies]
-proc-macro2 = "1.0.27"
-quote = "1.0.9"
+proc-macro2 = "1.0"
+quote = "1.0"
 syn = { version = "1.0" }
-either = "1.5"
+either = "1.7"
 
 [features]
 web = ["nekoton-abi/web", "ton_abi/web"]
