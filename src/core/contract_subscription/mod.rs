@@ -430,10 +430,11 @@ impl ContractSubscription {
     }
 }
 
-type OnContractState<'a> = &'a mut dyn FnMut(&RawContractState);
-type OnTransactionsFound<'a> = &'a mut dyn FnMut(Vec<RawTransaction>, TransactionsBatchInfo);
-type OnMessageSent<'a> = &'a mut dyn FnMut(PendingTransaction, RawTransaction);
-type OnMessageExpired<'a> = &'a mut dyn FnMut(PendingTransaction);
+type OnContractState<'a> = &'a mut (dyn FnMut(&RawContractState) + Send + Sync);
+type OnTransactionsFound<'a> =
+    &'a mut (dyn FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + Send + Sync);
+type OnMessageSent<'a> = &'a mut (dyn FnMut(PendingTransaction, RawTransaction) + Send + Sync);
+type OnMessageExpired<'a> = &'a mut (dyn FnMut(PendingTransaction) + Send + Sync);
 
 #[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
