@@ -48,7 +48,7 @@ impl TransactionParser {
             }
         }
 
-        let mut index_in_transaction = 1;
+        let mut index_in_transaction = 0;
         tx.out_msgs.iterate_slices(|slice| {
             let (body, message) = match slice
                 .reference(0)
@@ -450,6 +450,7 @@ pub struct Extracted<'a> {
     pub tokens: Vec<Token>,
     pub message: ton_block::Message,
     pub tx: &'a ton_block::Transaction,
+    // TODO: change into `is_out`
     pub is_in_message: bool,
     /// The index of the message in the transaction
     pub index_in_transaction: u16,
