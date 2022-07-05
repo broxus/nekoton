@@ -41,12 +41,14 @@ impl TransactionParser {
                     message: msg,
                     tx,
                     is_in_message: true,
+                    index_in_transaction: 0,
                     parsed_type: ParsedType::FunctionInput,
                     decoded_headers: parsed.headers,
                 }));
             }
         }
 
+        let mut index_in_transaction = 1;
         tx.out_msgs.iterate_slices(|slice| {
             let (body, message) = match slice
                 .reference(0)
@@ -68,11 +70,12 @@ impl TransactionParser {
                         message,
                         tx,
                         is_in_message: false,
+                        index_in_transaction,
                         parsed_type: parsed.parsed_type,
                         decoded_headers: Default::default(),
                     }),
             );
-
+            index_in_transaction += 1;
             Ok(true)
         })?;
 
@@ -447,8 +450,9 @@ pub struct Extracted<'a> {
     pub tokens: Vec<Token>,
     pub message: ton_block::Message,
     pub tx: &'a ton_block::Transaction,
-    /// The index of the message in the transaction
     pub is_in_message: bool,
+    /// The index of the message in the transaction
+    pub index_in_transaction: u16,
     pub parsed_type: ParsedType,
     pub decoded_headers: Vec<Token>,
 }
@@ -557,7 +561,7 @@ mod test {
     use anyhow::Result;
     use nekoton_contracts::{tip3, tip3_1};
     use ton_abi::{Token, TokenValue, Uint};
-    use ton_block::{Deserializable, Transaction};
+    use ton_block::{Deserializable, GetRepresentationHash, Transaction};
     use ton_types::SliceData;
 
     use crate::{
@@ -629,6 +633,7 @@ mod test {
         let out = parser.parse(&tx).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!("DepositLiquidity", out[0].name);
+        assert_eq!(out[0].index_in_transaction, 2);
     }
 
     const TOKEN_WALLET: &str = include_str!("../test/token_wallet.json");
@@ -744,6 +749,7 @@ mod test {
         dbg!(&tokens);
         assert_eq!(tokens.len(), 1);
         assert!(tokens[0].is_in_message);
+        assert_eq!(tokens[0].index_in_transaction, 0);
     }
 
     #[test]
