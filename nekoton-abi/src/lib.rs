@@ -921,7 +921,6 @@ mod tests {
 
     use ton_abi::{Param, ParamType, Uint};
     use ton_block::{Deserializable, Message, Transaction};
-    use ton_types::serialize_toc;
 
     use super::*;
 
@@ -1034,7 +1033,8 @@ mod tests {
     fn test_encode_cell() {
         let expected = "te6ccgEBAQEAIgAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA5";
         let tokens = &[Token::new("wa", TokenValue::Uint(Uint::new(12345, 256)))];
-        let got = base64::encode(serialize_toc(&pack_into_cell(tokens).unwrap()).unwrap());
+        let got =
+            base64::encode(ton_types::serialize_toc(&pack_into_cell(tokens).unwrap()).unwrap());
         assert_eq!(expected, got);
     }
 

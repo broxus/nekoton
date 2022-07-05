@@ -1,28 +1,459 @@
-use std::{borrow::Borrow, collections::HashMap};
+use std::collections::hash_map;
 
 use anyhow::{Context, Result};
 use nekoton_utils::define_string_enum;
-use ton_abi::{contract::AbiVersion, Event, Param, Token, TokenValue};
-use ton_block::{CommonMsgInfo, Deserializable, GetRepresentationHash, Message, TransactionDescr};
+use rustc_hash::FxHashMap;
+use ton_abi::contract::AbiVersion;
+use ton_abi::{Token, TokenValue};
+use ton_block::{Deserializable, GetRepresentationHash, TransactionDescr};
 use ton_types::SliceData;
 
-use crate::{read_function_id, transaction_parser::ParsedType::FunctionInput};
+use super::read_function_id;
+
+#[derive(Debug, Clone)]
+/// Parses transactions with provided extractors
+pub struct TransactionParser {
+    abi_version: AbiVersion,
+    headers: Vec<ton_abi::Param>,
+    functions: FxHashMap<u32, WrappedFunction>,
+    functions_with_bounce: FxHashMap<u32, FunctionWithBounceHandler>,
+    events: FxHashMap<u32, ton_abi::Event>,
+    match_external_in: bool,
+}
+
+impl TransactionParser {
+    pub fn builder() -> TransactionParserBuilder {
+        TransactionParserBuilder::default()
+    }
+
+    pub fn parse<'tx>(&'tx self, tx: &'tx ton_block::Transaction) -> Result<Vec<Extracted<'tx>>> {
+        let mut output = Vec::new();
+
+        if let Some(msg) = &tx.in_msg {
+            let msg = msg.read_struct().context("Failed reading in msg")?;
+
+            if let Some(body) = msg.body() {
+                output.extend(self.parse_in_message(&msg, body)?.map(|parsed| Extracted {
+                    function_id: parsed.function_id,
+                    name: parsed.name,
+                    bounced: parsed.bounced,
+                    tokens: parsed.tokens,
+                    message: msg,
+                    tx,
+                    is_in_message: true,
+                    parsed_type: ParsedType::FunctionInput,
+                    decoded_headers: parsed.headers,
+                }));
+            }
+        }
+
+        tx.out_msgs.iterate_slices(|slice| {
+            let (body, message) = match slice
+                .reference(0)
+                .and_then(ton_block::Message::construct_from_cell)
+                .map(|message| (message.body(), message))
+            {
+                Ok((Some(body), message)) => (body, message),
+                _ => return Ok(true),
+            };
+
+            let function_id = read_function_id(&body)?;
+            output.extend(
+                self.parse_out_message(message.header(), function_id, body)?
+                    .map(|parsed| Extracted {
+                        function_id,
+                        name: parsed.name,
+                        bounced: false,
+                        tokens: parsed.tokens,
+                        message,
+                        tx,
+                        is_in_message: false,
+                        parsed_type: parsed.parsed_type,
+                        decoded_headers: Default::default(),
+                    }),
+            );
+
+            Ok(true)
+        })?;
+
+        Ok(output)
+    }
+
+    fn parse_in_message(
+        &self,
+        message: &ton_block::Message,
+        mut body: SliceData,
+    ) -> Result<Option<ParsedInMessage<'_>>> {
+        if matches!(
+            message.header(), ton_block::CommonMsgInfo::ExtInMsgInfo(_)
+            if self.match_external_in
+        ) {
+            let (headers, function_id, body) =
+                ton_abi::Function::decode_header(&self.abi_version, body, &self.headers, false)?;
+
+            return if let Some(fun) = self.functions.get(&function_id) {
+                let tokens = TokenValue::decode_params(
+                    fun.function.input_params(),
+                    body,
+                    &self.abi_version,
+                    false,
+                )?;
+
+                Ok(Some(ParsedInMessage {
+                    function_id,
+                    name: &fun.function.name,
+                    bounced: false,
+                    tokens,
+                    headers,
+                }))
+            } else {
+                Ok(None)
+            };
+        }
+
+        if message.bounced() {
+            body.get_next_u32()?; //skip bounce bytes
+            let function_id = read_function_id(&body)?;
+            if let Some(abi) = self.functions_with_bounce.get(&function_id) {
+                return Ok(Some(ParsedInMessage {
+                    name: &abi.function.name,
+                    function_id,
+                    headers: Default::default(),
+                    tokens: (abi.bounce_handler)(body)?,
+                    bounced: true,
+                }));
+            }
+        }
+
+        let function_id = read_function_id(&body)?;
+        match self.functions.get(&function_id) {
+            Some(abi) => Ok(Some(ParsedInMessage {
+                name: &abi.function.name,
+                function_id,
+                headers: Default::default(),
+                tokens: abi
+                    .decode_input(body, message.is_internal())
+                    .context("Failed decoding input message")?,
+                bounced: false,
+            })),
+            None => Ok(None),
+        }
+    }
+
+    fn parse_out_message(
+        &self,
+        info: &ton_block::CommonMsgInfo,
+        function_id: u32,
+        body: SliceData,
+    ) -> Result<Option<ParsedOutMessage<'_>>> {
+        let is_internal = match info {
+            ton_block::CommonMsgInfo::ExtOutMsgInfo(_) => {
+                if let Some(event) = self.events.get(&function_id) {
+                    return Ok(Some(ParsedOutMessage {
+                        name: &event.name,
+                        parsed_type: ParsedType::Event,
+                        tokens: event.decode_input(body)?,
+                    }));
+                }
+
+                false
+            }
+            ton_block::CommonMsgInfo::IntMsgInfo(_) => true,
+            ton_block::CommonMsgInfo::ExtInMsgInfo(_) => return Ok(None),
+        };
+
+        Ok(if let Some(abi) = self.functions.get(&function_id) {
+            let (parsed_type, tokens) = if abi.function.input_id == function_id {
+                (
+                    ParsedType::FunctionInput,
+                    abi.decode_input(body, is_internal),
+                )
+            } else {
+                (
+                    ParsedType::FunctionOutput,
+                    abi.decode_output(body, is_internal),
+                )
+            };
+
+            Some(ParsedOutMessage {
+                name: &abi.function.name,
+                parsed_type,
+                tokens: tokens.context("Failed decoding output message")?,
+            })
+        } else {
+            None
+        })
+    }
+
+    pub fn get_function(&self, function_id: u32) -> Option<&WrappedFunction> {
+        self.functions.get(&function_id)
+    }
+
+    pub fn get_bounce_handler(&self, function_id: u32) -> Option<&FunctionWithBounceHandler> {
+        self.functions_with_bounce.get(&function_id)
+    }
+}
+
+#[derive(Default)]
+pub struct TransactionParserBuilder {
+    functions_in: Vec<WrappedFunction>,
+    functions_out: Vec<WrappedFunction>,
+    functions_with_bounce: Vec<FunctionWithBounceHandler>,
+    events: Vec<ton_abi::Event>,
+}
+
+impl TransactionParserBuilder {
+    /// Matches all messages with in function_id.
+    /// # Params:
+    /// * 'allow_partial_match' - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
+    pub fn function_input(
+        mut self,
+        function: ton_abi::Function,
+        allow_partial_match: bool,
+    ) -> Self {
+        self.functions_in
+            .push(WrappedFunction::new(function, allow_partial_match));
+        self
+    }
+
+    /// Matches all messages with out function_id
+    /// # Params:
+    /// * 'allow_partial_match' - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
+    pub fn function_output(
+        mut self,
+        function: ton_abi::Function,
+        allow_partial_match: bool,
+    ) -> Self {
+        self.functions_out
+            .push(WrappedFunction::new(function, allow_partial_match));
+        self
+    }
+
+    /// Matches in messages with function_id and applies bounce handler
+    pub fn function_bounce(mut self, function: FunctionWithBounceHandler) -> Self {
+        self.functions_with_bounce.push(function);
+        self
+    }
+
+    /// Matches out messages with event_id
+    pub fn event(mut self, event: ton_abi::Event) -> Self {
+        self.events.push(event);
+        self
+    }
+
+    pub fn function_in_list<I>(mut self, functions: I, allow_partial_match: bool) -> Self
+    where
+        I: IntoIterator<Item = ton_abi::Function>,
+    {
+        self.functions_in.extend(
+            functions
+                .into_iter()
+                .map(|f| WrappedFunction::new(f, allow_partial_match)),
+        );
+        self
+    }
+
+    pub fn functions_out_list<I>(mut self, functions: I, allow_partial_match: bool) -> Self
+    where
+        I: IntoIterator<Item = ton_abi::Function>,
+    {
+        self.functions_out.extend(
+            functions
+                .into_iter()
+                .map(|f| WrappedFunction::new(f, allow_partial_match)),
+        );
+        self
+    }
+
+    pub fn events_list<I>(mut self, events: I) -> Self
+    where
+        I: IntoIterator<Item = ton_abi::Event>,
+    {
+        self.events.extend(events);
+        self
+    }
+
+    /// Returns `Err` if there are duplicate function_ids
+    pub fn build(self) -> Result<TransactionParser> {
+        self.build_impl(false)
+    }
+
+    /// Returns `Err` if there are duplicate function_ids or different contracts are used
+    pub fn build_with_external_in(self) -> Result<TransactionParser> {
+        self.build_impl(true)
+    }
+
+    /// Returns `Err` if there are duplicate function_ids
+    /// # Params:
+    /// * `match_external_in` - if true, `ExternalIn` messages will be matched. Not compatible with several different contracts.
+    fn build_impl(self, match_external_in: bool) -> Result<TransactionParser> {
+        let mut abi_version = None;
+        let mut headers = Vec::new();
+
+        let mut functions = FxHashMap::default();
+        let mut functions_with_bounce = FxHashMap::default();
+        let mut events = FxHashMap::default();
+
+        let mut set_abi_version = |new_version| match abi_version {
+            Some(version) if version == new_version => Ok(()),
+            Some(_) => anyhow::bail!("Multiple different ABI versions"),
+            None => {
+                abi_version = Some(new_version);
+                Ok(())
+            }
+        };
+        let mut set_headers = |new_headers: &mut Vec<ton_abi::Param>| {
+            if !match_external_in {
+                return Ok(());
+            }
+
+            new_headers.sort_unstable_by(|a, b| a.name.cmp(&b.name));
+            if headers.is_empty() {
+                headers = new_headers.clone();
+                Ok(())
+            } else if headers.len() != new_headers.len()
+                || headers
+                    .iter()
+                    .zip(new_headers.iter())
+                    .any(|(a, b)| a.name != b.name)
+            {
+                Err(anyhow::anyhow!("Different headers sets are not supported"))
+            } else {
+                Ok(())
+            }
+        };
+
+        for mut abi in self.functions_in {
+            set_abi_version(abi.function.abi_version)?;
+            set_headers(&mut abi.function.header)?;
+
+            match functions.entry(abi.function.input_id) {
+                hash_map::Entry::Vacant(entry) => {
+                    entry.insert(abi);
+                }
+                hash_map::Entry::Occupied(entry) => {
+                    let WrappedFunction { function, .. } = entry.get();
+                    anyhow::bail!(
+                        "Duplicate function id for IN function. Id: {}. Name: {}",
+                        function.input_id,
+                        function.name,
+                    )
+                }
+            }
+        }
+
+        for mut abi in self.functions_out {
+            set_abi_version(abi.function.abi_version)?;
+            set_headers(&mut abi.function.header)?;
+
+            match functions.entry(abi.function.output_id) {
+                hash_map::Entry::Vacant(entry) => {
+                    entry.insert(abi);
+                }
+                hash_map::Entry::Occupied(entry) => {
+                    let WrappedFunction { function, .. } = entry.get();
+                    if function.input_id == function.output_id {
+                        log::warn!(
+                            "Function with same input and output id: {}. \
+                            Adding it only as IN function parser",
+                            abi.function.name
+                        );
+                        continue;
+                    }
+                    anyhow::bail!(
+                        "Duplicate function id for OUT function. Id: {}. Name: {}",
+                        function.output_id,
+                        function.name
+                    )
+                }
+            }
+        }
+
+        for abi in self.functions_with_bounce {
+            set_abi_version(abi.function.abi_version)?;
+
+            match functions_with_bounce.entry(abi.function.input_id) {
+                hash_map::Entry::Vacant(entry) => {
+                    entry.insert(abi);
+                }
+                hash_map::Entry::Occupied(entry) => {
+                    let FunctionWithBounceHandler { function, .. } = entry.get();
+                    anyhow::bail!(
+                        "Duplicate function id for function with bounce. Id: {}. Name: {}",
+                        function.input_id,
+                        function.name
+                    )
+                }
+            }
+        }
+
+        for event in self.events {
+            set_abi_version(event.abi_version)?;
+
+            match events.entry(event.id) {
+                hash_map::Entry::Vacant(entry) => {
+                    entry.insert(event);
+                }
+                hash_map::Entry::Occupied(entry) => {
+                    let event = entry.get();
+                    anyhow::bail!("Duplicate event id. Id: {}. Name: {}", event.id, event.name);
+                }
+            }
+        }
+
+        Ok(TransactionParser {
+            abi_version: abi_version.context("Matching functions list is empty")?,
+            headers,
+            functions,
+            functions_with_bounce,
+            events,
+            match_external_in,
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FunctionWithBounceHandler {
+    function: ton_abi::Function,
+    bounce_handler: BounceHandler,
+}
+
+impl FunctionWithBounceHandler {
+    pub fn new(function: ton_abi::Function, bounce_handler: BounceHandler) -> Self {
+        Self {
+            function,
+            bounce_handler,
+        }
+    }
+}
+
+pub type BounceHandler = fn(SliceData) -> Result<Vec<Token>>;
+
+define_string_enum! {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+     pub enum ParsedType {
+        FunctionInput,
+        FunctionOutput,
+        BouncedFunction,
+        Event,
+    }
+}
 
 #[derive(Debug)]
-pub struct Extracted<'a, 'tx> {
+pub struct Extracted<'a> {
     pub function_id: u32,
     pub name: &'a str,
     pub bounced: bool,
     pub tokens: Vec<Token>,
     pub message: ton_block::Message,
-    pub tx: &'tx ton_block::Transaction,
+    pub tx: &'a ton_block::Transaction,
     /// The index of the message in the transaction
     pub is_in_message: bool,
     pub parsed_type: ParsedType,
     pub decoded_headers: Vec<Token>,
 }
 
-impl<'a, 'tx> Extracted<'a, 'tx> {
+impl Extracted<'_> {
     pub fn transaction_hash(&self) -> Result<[u8; 32]> {
         Ok(*self.tx.hash()?.as_slice())
     }
@@ -76,491 +507,47 @@ pub struct ExtractedOwned {
     pub decoded_headers: Vec<Token>,
 }
 
-/// Parses message without checking function id
-fn process_event_message(msg: &Message, event: &ton_abi::Event) -> Result<Option<Vec<Token>>> {
-    if !matches!(msg.header(), ton_block::CommonMsgInfo::ExtOutMsgInfo(_)) {
-        return Ok(None);
-    }
-    let body = match msg.body() {
-        Some(body) => body,
-        None => return Ok(None),
-    };
-    let tokens = event.decode_input(body).context("Failed decoding")?;
-
-    Ok(Some(tokens))
-}
-
-pub fn message_bounced(msg: &Message) -> bool {
-    match msg.header() {
-        CommonMsgInfo::IntMsgInfo(a) => a.bounced,
-        CommonMsgInfo::ExtInMsgInfo(_) => false,
-        CommonMsgInfo::ExtOutMsgInfo(_) => false,
-    }
-}
-
-#[derive(Debug, Clone)]
-/// Parses transactions with provided extractors
-pub struct TransactionParser {
-    pub functions: HashMap<u32, FunctionOpts>,
-    pub events: HashMap<u32, Event>,
-    pub headers: Vec<Param>,
-    pub functions_with_bounce: HashMap<u32, FunctionWithBounceHandler>,
-    pub abi_version: AbiVersion,
-    pub match_external_in: bool,
-}
-
-impl TransactionParser {
-    pub fn builder() -> TransactionParserBuilder {
-        TransactionParserBuilder::default()
-    }
-
-    pub fn parse<'this, 'tx>(
-        &'this self,
-        transaction: &'tx ton_block::Transaction,
-    ) -> Result<Vec<Extracted<'this, 'tx>>> {
-        let mut output = Vec::new();
-
-        if let Some(msg) = &transaction.in_msg {
-            let msg = msg.read_struct().context("Failed reading in msg")?;
-            if let Some(body) = msg.body() {
-                if let Some(parsed) = self.parse_in_message(&msg, body)? {
-                    output.push(Extracted {
-                        function_id: parsed.function_id,
-                        name: parsed.name,
-                        bounced: parsed.bounced,
-                        tokens: parsed.tokens,
-                        message: msg,
-                        tx: transaction,
-                        is_in_message: true,
-                        parsed_type: ParsedType::FunctionInput,
-                        decoded_headers: parsed.headers,
-                    });
-                }
-            }
-        }
-
-        transaction.out_msgs.iterate_slices(|slice| {
-            if let Ok(message) = slice
-                .reference(0)
-                .and_then(ton_block::Message::construct_from_cell)
-            {
-                if let Some(body) = message.body() {
-                    let function_id = read_function_id(&body)?;
-                    for parsed in self.parse_out_message(&message, function_id)? {
-                        let parsed_type = if self.events.contains_key(&function_id) {
-                            ParsedType::Event
-                        } else {
-                            self.functions
-                                .get(&function_id)
-                                .map(|x| {
-                                    if x.fun.input_id == function_id {
-                                        ParsedType::FunctionInput
-                                    } else {
-                                        ParsedType::FunctionOutput
-                                    }
-                                })
-                                .unwrap_or(FunctionInput)
-                        };
-
-                        output.push(Extracted {
-                            function_id,
-                            name: parsed.name,
-                            bounced: false,
-                            tokens: parsed.tokens,
-                            message: message.clone(),
-                            tx: transaction,
-                            is_in_message: false,
-                            parsed_type,
-                            decoded_headers: vec![],
-                        });
-                    }
-                }
-            }
-            Ok(true)
-        })?;
-
-        Ok(output)
-    }
-
-    fn parse_in_message(
-        &self,
-        message: &Message,
-        mut body: SliceData,
-    ) -> Result<Option<ParsedInMessage<'_>>> {
-        if let CommonMsgInfo::ExtInMsgInfo(_) = message.header() {
-            if self.match_external_in {
-                let (headers, function_id, body) = ton_abi::Function::decode_header(
-                    &self.abi_version,
-                    body,
-                    &self.headers,
-                    message.is_internal(),
-                )?;
-                return if let Some(fun) = self.functions.get(&function_id) {
-                    let tokens = TokenValue::decode_params(
-                        fun.fun.input_params(),
-                        body,
-                        &self.abi_version,
-                        false,
-                    )?;
-                    Ok(Some(ParsedInMessage {
-                        function_id,
-                        name: &fun.fun.name,
-                        bounced: false,
-                        tokens,
-                        headers,
-                    }))
-                } else {
-                    Ok(None)
-                };
-            }
-        }
-        if message_bounced(message) {
-            body.get_next_u32()?; //skip bounce bytes
-            let function_id = read_function_id(&body)?;
-            if let Some(fun) = self.functions_with_bounce.get(&function_id) {
-                let tokens = (fun.bounce_handler)(body)?;
-                return Ok(Some(ParsedInMessage {
-                    name: &fun.fun.name,
-                    tokens,
-                    bounced: true,
-                    function_id,
-                    headers: vec![],
-                }));
-            }
-        }
-
-        let function_id = read_function_id(&body)?;
-        if let Some(function) = self.functions.get(&function_id) {
-            let is_internal = message.is_internal();
-            let tokens = function
-                .decode_input(body, is_internal)
-                .context("Failed decoding input")?;
-            return Ok(Some(ParsedInMessage {
-                tokens,
-                headers: vec![],
-                name: &function.fun.name,
-                function_id,
-                bounced: false,
-            }));
-        }
-        Ok(None)
-    }
-
-    fn parse_out_message(
-        &self,
-        message: &Message,
-        function_id: u32,
-    ) -> Result<Vec<ParsedOutMessage<'_>>> {
-        let mut tokens = Vec::new();
-
-        if let Some(event) = self.events.get(&function_id) {
-            if let Some(parsed) = process_event_message(message, event)? {
-                tokens.push(ParsedOutMessage {
-                    tokens: parsed,
-                    name: &event.name,
-                });
-            }
-        }
-
-        if let Some(function) = self.functions.get(&function_id) {
-            let parsed = parse_function(function, message, function_id)?;
-            tokens.push(ParsedOutMessage {
-                tokens: parsed,
-                name: &function.fun.name,
-            });
-        }
-
-        Ok(tokens)
-    }
-
-    pub fn get_function(&self, function_id: u32) -> Option<&FunctionOpts> {
-        self.functions.get(&function_id)
-    }
-
-    pub fn get_bounce_handler(&self, function_id: u32) -> Option<&FunctionWithBounceHandler> {
-        self.functions_with_bounce.get(&function_id)
-    }
-}
-
-fn parse_function(
-    function: &FunctionOpts,
-    message: &ton_block::Message,
-    function_id: u32,
-) -> Result<Vec<Token>> {
-    let is_internal = message.is_internal();
-    let body = message.body().context("No body in message")?;
-    let parsed = if function.fun.input_id == function_id {
-        function
-            .decode_input(body, is_internal)
-            .context("Failed decoding output")?
-    } else {
-        function
-            .decode_output(body, is_internal)
-            .context("Failed decoding output")?
-    };
-    Ok(parsed)
-}
-
-define_string_enum! {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-     pub enum ParsedType {
-        FunctionInput,
-        FunctionOutput,
-        BouncedFunction,
-        Event,
-    }
-}
-
 struct ParsedInMessage<'a> {
-    tokens: Vec<Token>,
-    headers: Vec<Token>,
     name: &'a str,
     function_id: u32,
+    headers: Vec<Token>,
+    tokens: Vec<Token>,
     bounced: bool,
 }
 
 struct ParsedOutMessage<'a> {
-    tokens: Vec<Token>,
     name: &'a str,
-}
-
-#[derive(Default)]
-pub struct TransactionParserBuilder {
-    functions_in: Vec<FunctionOpts>,
-    functions_out: Vec<FunctionOpts>,
-    events: Vec<Event>,
-    functions_with_bounce: Vec<FunctionWithBounceHandler>,
-}
-
-impl TransactionParserBuilder {
-    /// Matches all messages with in function_id.
-    /// # Params:
-    /// * 'allow_partial_match' - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
-    pub fn function_input<F>(mut self, function: F, allow_partial_match: bool) -> Self
-    where
-        F: Borrow<ton_abi::Function>,
-    {
-        let fun = FunctionOpts::new(function, allow_partial_match);
-        self.functions_in.push(fun);
-        self
-    }
-    /// Matches all messages with out function_id
-    /// # Params:
-    /// * 'allow_partial_match' - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
-    pub fn function_output<F>(mut self, function: F, allow_partial_match: bool) -> Self
-    where
-        F: Borrow<ton_abi::Function>,
-    {
-        let fun = FunctionOpts::new(function, allow_partial_match);
-        self.functions_out.push(fun);
-        self
-    }
-    /// Matches out messages with event_id
-    pub fn event<E>(mut self, event: E) -> Self
-    where
-        E: Borrow<ton_abi::Event>,
-    {
-        self.events.push(event.borrow().clone());
-        self
-    }
-    /// Matches in messages with function_id and applies bounce handler
-    pub fn function_bounce(mut self, function: FunctionWithBounceHandler) -> Self {
-        self.functions_with_bounce.push(function);
-        self
-    }
-
-    pub fn function_in_list(
-        mut self,
-        functions: &[ton_abi::Function],
-        allow_partial_match: bool,
-    ) -> Self {
-        self.functions_in.extend(
-            functions
-                .iter()
-                .map(|f| FunctionOpts::new(f, allow_partial_match)),
-        );
-        self
-    }
-
-    pub fn functions_out_list(
-        mut self,
-        functions: &[ton_abi::Function],
-        allow_partial_match: bool,
-    ) -> Self {
-        self.functions_out.extend(
-            functions
-                .iter()
-                .map(|f| FunctionOpts::new(f, allow_partial_match)),
-        );
-        self
-    }
-
-    pub fn events_list(mut self, events: &[ton_abi::Event]) -> Self {
-        self.events.extend(events.iter().cloned());
-        self
-    }
-    /// Returns `Err` if there are duplicate function_ids
-    /// # Params:
-    /// * `match_external_in` - if true, `ExternalIn` messages will be matched. Not compatible with several different contracts.
-    fn build_internal(self, match_external_in: bool) -> Result<TransactionParser> {
-        let mut functions = HashMap::new();
-        let mut functions_with_bounce = HashMap::new();
-        let mut events = HashMap::new();
-        let mut headers = Vec::new();
-        let mut abi_version = None;
-
-        for fun in self.functions_in {
-            if abi_version.is_none() {
-                abi_version = Some(fun.fun.abi_version);
-            }
-            headers.push(fun.fun.header.clone());
-            let f = &fun.fun;
-            let fun_id = f.input_id;
-            let fun_name = f.name.clone();
-            let res = functions.insert(fun_id, fun);
-            if res.is_some() {
-                anyhow::bail!(
-                    "duplicate function id for in function. Id: {}. Name: {}",
-                    fun_id,
-                    fun_name
-                );
-            }
-        }
-
-        for fun in self.functions_out {
-            if abi_version.is_none() {
-                abi_version = Some(fun.fun.abi_version);
-            }
-            headers.push(fun.fun.header.clone());
-            let f = &fun.fun;
-            let fun_id = f.output_id;
-            let fun_name = f.name.clone();
-            let (input_id, output_id) = (f.input_id, f.output_id);
-            let res = functions.insert(fun_id, fun.clone());
-            if res.is_some() {
-                if input_id == output_id {
-                    log::warn!("Function with same input and output id: {}. Adding it only as function input parser", fun.fun.name);
-                    continue;
-                }
-                anyhow::bail!(
-                    "duplicate function id for out function. Id: {}. Name: {}",
-                    fun_id,
-                    fun_name
-                );
-            }
-        }
-
-        for fun in self.functions_with_bounce {
-            if abi_version.is_none() {
-                abi_version = Some(fun.fun.abi_version);
-            }
-            let fun_id = fun.fun.input_id;
-            let fun_name = fun.fun.name.clone();
-            let res = functions_with_bounce.insert(fun_id, fun);
-            if res.is_some() {
-                anyhow::bail!(
-                    "duplicate function id for function with bounce. Id: {}. Name: {}",
-                    fun_id,
-                    fun_name
-                );
-            }
-        }
-
-        for event in self.events {
-            if abi_version.is_none() {
-                abi_version = Some(event.abi_version);
-            }
-            let fun_id = event.get_id();
-            let fun_name = event.name.clone();
-            let res = events.insert(fun_id, event);
-            if res.is_some() {
-                anyhow::bail!("duplicate event id. Id: {}. Name: {}", fun_id, fun_name);
-            }
-        }
-
-        headers.sort_by(|a, b| {
-            let a: Vec<_> = a.iter().map(|x| &x.name).collect();
-            let b: Vec<_> = b.iter().map(|x| &x.name).collect();
-            a.cmp(&b)
-        });
-
-        headers.dedup();
-        if !(headers.len() == 1 || headers.is_empty()) && match_external_in {
-            anyhow::bail!("headers must be unique");
-        }
-        let headers = headers.first().cloned().unwrap_or_default();
-
-        Ok(TransactionParser {
-            functions,
-            events,
-            headers,
-            functions_with_bounce,
-            abi_version: abi_version.context("Matching functions list is empty")?,
-            match_external_in,
-        })
-    }
-
-    /// Returns `Err` if there are duplicate function_ids
-    pub fn build(self) -> Result<TransactionParser> {
-        self.build_internal(false)
-    }
-
-    /// Returns `Err` if there are duplicate function_ids or different contracts are used
-    pub fn build_with_external_in(self) -> Result<TransactionParser> {
-        self.build_internal(true)
-    }
+    parsed_type: ParsedType,
+    tokens: Vec<Token>,
 }
 
 #[derive(Debug, Clone)]
-pub struct FunctionWithBounceHandler {
-    fun: ton_abi::Function,
-    bounce_handler: BounceHandler,
-}
-
-impl FunctionWithBounceHandler {
-    pub fn new<F>(fun: F, bounce_handler: BounceHandler) -> Self
-    where
-        F: Borrow<ton_abi::Function>,
-    {
-        Self {
-            fun: fun.borrow().clone(),
-            bounce_handler,
-        }
-    }
-}
-
-pub type BounceHandler = fn(SliceData) -> Result<Vec<Token>>;
-
-#[derive(Debug, Clone)]
-pub struct FunctionOpts {
-    pub fun: ton_abi::Function,
+pub struct WrappedFunction {
+    pub function: ton_abi::Function,
     pub allow_partial_match: bool,
 }
 
-impl FunctionOpts {
-    pub fn new<F>(fun: F, allow_partial_match: bool) -> Self
-    where
-        F: Borrow<ton_abi::Function>,
-    {
+impl WrappedFunction {
+    fn new(function: ton_abi::Function, allow_partial_match: bool) -> Self {
         Self {
-            fun: fun.borrow().clone(),
+            function,
             allow_partial_match,
         }
     }
 
     pub fn decode_input(&self, data: SliceData, internal: bool) -> Result<Vec<Token>> {
         if self.allow_partial_match {
-            self.fun.decode_input_partial(data, internal)
+            self.function.decode_input_partial(data, internal)
         } else {
-            self.fun.decode_input(data, internal)
+            self.function.decode_input(data, internal)
         }
     }
 
     pub fn decode_output(&self, data: SliceData, internal: bool) -> Result<Vec<Token>> {
         if self.allow_partial_match {
-            self.fun.decode_output_partial(data, internal)
+            self.function.decode_output_partial(data, internal)
         } else {
-            self.fun.decode_output(data, internal)
+            self.function.decode_output(data, internal)
         }
     }
 }
@@ -584,8 +571,8 @@ mod test {
         let evt = EventBuilder::new("kek").build();
 
         super::TransactionParserBuilder::default()
-            .function_input(&fun, false)
-            .event(&evt)
+            .function_input(fun, false)
+            .event(evt)
             .build()
             .unwrap();
     }
@@ -598,8 +585,8 @@ mod test {
         }
 
         let test = super::TransactionParserBuilder::default()
-            .function_input(&fun, false)
-            .function_input(&fun, false)
+            .function_input(fun.clone(), false)
+            .function_input(fun, false)
             .build();
 
         assert!(test.is_err());
@@ -629,7 +616,7 @@ mod test {
         let evs = prepare();
         let tx = Transaction::construct_from_base64("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").unwrap();
         let parser = TransactionParser::builder()
-            .events_list(&evs)
+            .events_list(evs)
             .build()
             .unwrap();
         let out = parser.parse(&tx).unwrap();
@@ -665,8 +652,8 @@ mod test {
             .map(|x| Transaction::construct_from_base64(x).unwrap())
             .collect();
         let parser = TransactionParser::builder()
-            .function_in_list(&fun, false)
-            .functions_out_list(&fun, false)
+            .function_in_list(fun.clone(), false)
+            .functions_out_list(fun, false)
             .build()
             .unwrap();
 
@@ -695,7 +682,7 @@ mod test {
             .clone();
         let tx = Transaction::construct_from_base64(tx).unwrap();
         let parser = TransactionParser::builder()
-            .function_input(&fun, false)
+            .function_input(fun, false)
             .build()
             .unwrap();
 
@@ -721,7 +708,7 @@ mod test {
             .functions["internalTransfer"]
             .clone();
         // internalTransfer - 416421634 416421634
-        let fun = FunctionWithBounceHandler::new(&fun, bounce_handler);
+        let fun = FunctionWithBounceHandler::new(fun, bounce_handler);
         let parser = TransactionParser::builder()
             .function_bounce(fun)
             .build()
@@ -743,7 +730,7 @@ mod test {
             .functions["internalTransfer"]
             .clone();
         let parser = TransactionParser::builder()
-            .function_input(&fun, false)
+            .function_input(fun, false)
             .build()
             .unwrap();
         let tokens = parser.parse(&tx).unwrap();
@@ -768,7 +755,7 @@ mod test {
             .functions["internalTransfer"]
             .clone();
         let parser = TransactionParser::builder()
-            .function_input(&fun, false)
+            .function_input(fun, false)
             .build()
             .unwrap();
         let token = parser.parse(&tx).unwrap().remove(0);
@@ -803,9 +790,9 @@ mod test {
         let accept_burn_basic = tip3::root_token_contract::accept_burn();
 
         TransactionParser::builder()
-            .function_input(accept_transfer_basic, true)
-            .function_input(accept_mint_basic, true)
-            .function_input(accept_burn_basic, true)
+            .function_input(accept_transfer_basic.clone(), true)
+            .function_input(accept_mint_basic.clone(), true)
+            .function_input(accept_burn_basic.clone(), true)
             .build()
             .unwrap()
     }
@@ -826,9 +813,9 @@ mod test {
         let accept_burn = tip3_1::root_token_contract::accept_burn();
 
         TransactionParser::builder()
-            .function_input(accept_transfer, false)
-            .function_input(accept_mint, false)
-            .function_input(accept_burn, false)
+            .function_input(accept_transfer.clone(), false)
+            .function_input(accept_mint.clone(), false)
+            .function_input(accept_burn.clone(), false)
             .build()
             .unwrap()
     }
@@ -847,13 +834,13 @@ mod test {
     fn test_full_contract() {
         let abi = r#"{"ABI version":2,"data":[{"key":1,"name":"_randomNonce","type":"uint256"}],"events":[{"inputs":[{"name":"previousOwner","type":"uint256"},{"name":"newOwner","type":"uint256"}],"name":"OwnershipTransferred","outputs":[]}],"fields":[{"name":"_pubkey","type":"uint256"},{"name":"_timestamp","type":"uint64"},{"name":"_constructorFlag","type":"bool"},{"name":"owner","type":"uint256"},{"name":"_randomNonce","type":"uint256"}],"functions":[{"inputs":[{"name":"dest","type":"address"},{"name":"value","type":"uint128"},{"name":"bounce","type":"bool"},{"name":"flags","type":"uint8"},{"name":"payload","type":"cell"}],"name":"sendTransaction","outputs":[]},{"inputs":[{"name":"newOwner","type":"uint256"}],"name":"transferOwnership","outputs":[]},{"inputs":[],"name":"constructor","outputs":[]},{"inputs":[],"name":"owner","outputs":[{"name":"owner","type":"uint256"}]},{"inputs":[],"name":"_randomNonce","outputs":[{"name":"_randomNonce","type":"uint256"}]}],"header":["time"],"version":"2.2"}"#;
         let abi = ton_abi::Contract::load(abi).unwrap();
-        let events = abi.events.values().cloned().collect::<Vec<_>>();
+        let events = abi.events.values().cloned();
         let funs = abi.functions.values().cloned().collect::<Vec<_>>();
 
         let parser = TransactionParser::builder()
-            .function_in_list(&funs, false)
-            .functions_out_list(&funs, false)
-            .events_list(&events)
+            .function_in_list(funs.clone(), false)
+            .functions_out_list(funs, false)
+            .events_list(events)
             .build_with_external_in()
             .unwrap();
 
@@ -875,9 +862,9 @@ mod test {
         let funs = abi.functions.values().cloned().collect::<Vec<_>>();
 
         let _parser = TransactionParser::builder()
-            .function_in_list(&funs, false)
-            .functions_out_list(&funs, false)
-            .events_list(&events)
+            .function_in_list(funs.clone(), false)
+            .functions_out_list(funs, false)
+            .events_list(events)
             .build_with_external_in()
             .unwrap();
     }
@@ -897,7 +884,7 @@ mod test {
             .inspect(|x| println!("{}:{}:{}", x.get_function_id(), x.get_id(), x.name))
             .collect::<Vec<_>>();
         let parser = TransactionParser::builder()
-            .events_list(&events)
+            .events_list(events)
             .build_with_external_in()
             .unwrap();
         let parsed = parser.parse(&tx).unwrap();
