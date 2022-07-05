@@ -562,7 +562,7 @@ mod test {
     use anyhow::Result;
     use nekoton_contracts::{tip3, tip3_1};
     use ton_abi::{Token, TokenValue, Uint};
-    use ton_block::{Deserializable, GetRepresentationHash, Transaction};
+    use ton_block::{Deserializable, Transaction};
     use ton_types::SliceData;
 
     use crate::{
@@ -634,7 +634,7 @@ mod test {
         let out = parser.parse(&tx).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!("DepositLiquidity", out[0].name);
-        assert_eq!(out[0].index_in_transaction, 2);
+        assert_eq!(out[0].index_in_transaction, 1);
     }
 
     const TOKEN_WALLET: &str = include_str!("../test/token_wallet.json");
@@ -747,7 +747,6 @@ mod test {
         let tx = Transaction::construct_from_base64(tx).unwrap();
 
         let tokens = parser.parse(&tx).unwrap();
-        dbg!(&tokens);
         assert_eq!(tokens.len(), 1);
         assert!(tokens[0].is_in_message);
         assert_eq!(tokens[0].index_in_transaction, 0);

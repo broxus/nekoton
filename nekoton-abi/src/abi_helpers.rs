@@ -5,8 +5,6 @@ use num_bigint::BigUint;
 use ton_abi::{ParamType, TokenValue, Uint};
 use ton_types::UInt256;
 
-use nekoton_utils::UInt128;
-
 use super::{BuildTokenValue, KnownParamType, UnpackAbi, UnpackerError, UnpackerResult};
 
 pub struct BigUint128(pub BigUint);
@@ -202,25 +200,6 @@ pub mod array_uint160_bytes {
 
     pub fn param_type() -> ParamType {
         ParamType::Array(Box::new(ParamType::Uint(160)))
-    }
-}
-
-pub mod uint128_bytes {
-    use super::*;
-
-    pub fn pack(value: UInt128) -> TokenValue {
-        BigUint128(BigUint::from_bytes_be(value.as_slice())).token_value()
-    }
-
-    pub fn unpack(value: &TokenValue) -> UnpackerResult<UInt128> {
-        match value {
-            TokenValue::Uint(Uint { number, size: 128 }) => Ok(number.to_bytes_be().into()),
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-
-    pub fn param_type() -> ParamType {
-        ParamType::Uint(128)
     }
 }
 
