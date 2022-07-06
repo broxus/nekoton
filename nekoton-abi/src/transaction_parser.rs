@@ -6,7 +6,7 @@ use rustc_hash::FxHashMap;
 use ton_abi::contract::AbiVersion;
 use ton_abi::{Token, TokenValue};
 use ton_block::{Deserializable, GetRepresentationHash, TransactionDescr};
-use ton_types::SliceData;
+use ton_types::{SliceData, UInt256};
 
 use super::read_function_id;
 
@@ -29,52 +29,56 @@ impl TransactionParser {
     pub fn parse<'tx>(&'tx self, tx: &'tx ton_block::Transaction) -> Result<Vec<Extracted<'tx>>> {
         let mut output = Vec::new();
 
-        if let Some(msg) = &tx.in_msg {
-            let msg = msg.read_struct().context("Failed reading in msg")?;
+        if let Some(message) = &tx.in_msg {
+            let message_hash = message.hash();
+            let message = message.read_struct().context("Failed reading in msg")?;
 
-            if let Some(body) = msg.body() {
-                output.extend(self.parse_in_message(&msg, body)?.map(|parsed| Extracted {
-                    function_id: parsed.function_id,
-                    name: parsed.name,
-                    bounced: parsed.bounced,
-                    tokens: parsed.tokens,
-                    message: msg,
-                    tx,
-                    is_in_message: true,
-                    index_in_transaction: 0,
-                    parsed_type: ParsedType::FunctionInput,
-                    decoded_headers: parsed.headers,
-                }));
+            if let Some(body) = message.body() {
+                output.extend(
+                    self.parse_in_message(&message, body)?
+                        .map(|parsed| Extracted {
+                            function_id: parsed.function_id,
+                            name: parsed.name,
+                            bounced: parsed.bounced,
+                            tokens: parsed.tokens,
+                            message_hash,
+                            message,
+                            tx,
+                            is_in_message: true,
+                            index_in_transaction: 0,
+                            parsed_type: ParsedType::FunctionInput,
+                            decoded_headers: parsed.headers,
+                        }),
+                );
             }
         }
 
         let mut index_in_transaction = 0;
         tx.out_msgs.iterate_slices(|slice| {
-            let (body, message) = match slice
-                .reference(0)
-                .and_then(ton_block::Message::construct_from_cell)
-                .map(|message| (message.body(), message))
-            {
-                Ok((Some(body), message)) => (body, message),
-                _ => return Ok(true),
-            };
+            let message = slice.reference(0)?;
+            let message_hash = message.repr_hash();
+            let message = ton_block::Message::construct_from_cell(message)?;
 
-            let function_id = read_function_id(&body)?;
-            output.extend(
-                self.parse_out_message(message.header(), function_id, body)?
-                    .map(|parsed| Extracted {
-                        function_id,
-                        name: parsed.name,
-                        bounced: false,
-                        tokens: parsed.tokens,
-                        message,
-                        tx,
-                        is_in_message: false,
-                        index_in_transaction,
-                        parsed_type: parsed.parsed_type,
-                        decoded_headers: Default::default(),
-                    }),
-            );
+            if let Some(body) = message.body() {
+                let function_id = read_function_id(&body)?;
+                output.extend(
+                    self.parse_out_message(message.header(), function_id, body)?
+                        .map(|parsed| Extracted {
+                            function_id,
+                            name: parsed.name,
+                            bounced: false,
+                            tokens: parsed.tokens,
+                            message_hash,
+                            message,
+                            tx,
+                            is_in_message: false,
+                            index_in_transaction,
+                            parsed_type: parsed.parsed_type,
+                            decoded_headers: Default::default(),
+                        }),
+                );
+            }
+
             index_in_transaction += 1;
             Ok(true)
         })?;
@@ -448,6 +452,7 @@ pub struct Extracted<'a> {
     pub name: &'a str,
     pub bounced: bool,
     pub tokens: Vec<Token>,
+    pub message_hash: UInt256,
     pub message: ton_block::Message,
     pub tx: &'a ton_block::Transaction,
     // TODO: change into `is_out`
@@ -459,6 +464,7 @@ pub struct Extracted<'a> {
 }
 
 impl Extracted<'_> {
+    #[deprecated(note = "precompute tx hash instead")]
     pub fn transaction_hash(&self) -> Result<[u8; 32]> {
         Ok(*self.tx.hash()?.as_slice())
     }
@@ -489,6 +495,7 @@ impl Extracted<'_> {
             name: self.name.to_owned(),
             bounced: self.bounced,
             tokens: self.tokens,
+            message_hash: self.message_hash,
             message: self.message,
             tx: self.tx.clone(),
             is_in_message: self.is_in_message,
@@ -504,6 +511,7 @@ pub struct ExtractedOwned {
     pub name: String,
     pub bounced: bool,
     pub tokens: Vec<Token>,
+    pub message_hash: UInt256,
     pub message: ton_block::Message,
     pub tx: ton_block::Transaction,
     /// The index of the message in the transaction
@@ -774,12 +782,6 @@ mod test {
             token.transaction_sender().unwrap().to_string()
         );
         assert!(!token.is_in_message);
-        assert_eq!(
-            token.transaction_hash().unwrap(),
-            hex::decode("e60aa528fa05f1959960d099e3389abe42e3a210350c5e4a87e518974136f53b")
-                .unwrap()
-                .as_slice()
-        );
         assert!(token.success());
 
         let tx = "te6ccgECCQEAAhUAA7V33dm+U37BKqMyPH84gieQ9gEkKbVl1DkuWUy3o/BnG/AAAVIf/RIoEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYflboQAD5gosIIAwIBAB8ECQLHmPIBwDBRYQMKLDBAAIJykK7Illr6uxbrw8ubQI665xthjXh4i8gNCYQ1k8rJjaSQrsiWWvq7FuvDy5tAjrrnG2GNeHiLyA0JhDWTysmNpAIB4AYEAQHfBQD5WAD7uzfKb9glVGZHj+cQRPIewCSFNqy6hyXLKZb0fgzjfwAjJ1VPtnxmoxtEIMno5sVjxhZlPEbk/jWsZqPh2RCfgJAsPIYgBhRYYAAAKkP/okUEw/K3Qn////+MaQuBAAAAAAAAAAAAAca/UmNAAAAAAAAAAAAAAAAAAEABsWgBGTqqfbPjNRjaIQZPRzYrHjCzKeI3J/GtYzUfDsiE/AUAH3dm+U37BKqMyPH84gieQ9gEkKbVl1DkuWUy3o/BnG/QLHmPIAYrwzYAACpD/0a3hMPytzLABwHtGNIXAgAAAAAAAAAAAAONfqTGgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAY5RGXuGtI1q+zl3Tv9Upy40cY+oTi+JDkfKiMma6+/fADHKIy9w1pGtX2cu6d/qlOXGjjH1CcXxIcj5URkzXX378IAAA=";
