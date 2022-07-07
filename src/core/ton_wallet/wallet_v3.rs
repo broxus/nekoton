@@ -7,7 +7,7 @@ use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 
 use nekoton_utils::*;
 
-use super::{TonWalletDetails, TransferAction};
+use super::{Gift, TonWalletDetails, TransferAction};
 use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
 
@@ -289,17 +289,6 @@ impl TryFrom<&Cell> for InitData {
             public_key: UInt256::from_be_bytes(&cs.get_next_bytes(32)?),
         })
     }
-}
-
-/// `WalletV3` transfer info
-#[derive(Clone)]
-pub struct Gift {
-    pub flags: u8,
-    pub bounce: bool,
-    pub destination: MsgAddressInt,
-    pub amount: u64,
-    pub body: Option<SliceData>,
-    pub state_init: Option<ton_block::StateInit>,
 }
 
 const WALLET_ID: u32 = 0x4BA92D8A;

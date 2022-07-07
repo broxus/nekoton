@@ -249,19 +249,13 @@ impl TonWallet {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn prepare_transfer(
         &mut self,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
-        destination: MsgAddressInt,
-        amount: u64,
-        bounce: bool,
-        body: Option<SliceData>,
+        gift: Gift,
         expiration: Expiration,
     ) -> Result<TransferAction> {
-        let flags = MessageFlags::default();
-
         match self.wallet_type {
             WalletType::Multisig(_) => {
                 match &current_state.storage.state {
@@ -291,11 +285,7 @@ impl TonWallet {
                     public_key,
                     has_multiple_owners,
                     self.address().clone(),
-                    destination,
-                    amount,
-                    flags.into(),
-                    bounce,
-                    body,
+                    gift,
                     expiration,
                 )
             }
@@ -303,28 +293,14 @@ impl TonWallet {
                 self.clock.as_ref(),
                 public_key,
                 current_state,
-                vec![wallet_v3::Gift {
-                    flags: flags.into(),
-                    bounce,
-                    destination,
-                    amount,
-                    body,
-                    state_init: None,
-                }],
+                vec![gift],
                 expiration,
             ),
             WalletType::HighloadWalletV2 => highload_wallet_v2::prepare_transfer(
                 self.clock.as_ref(),
                 public_key,
                 current_state,
-                vec![highload_wallet_v2::Gift {
-                    flags: flags.into(),
-                    bounce,
-                    destination,
-                    amount,
-                    body,
-                    state_init: None,
-                }],
+                vec![gift],
                 expiration,
             ),
         }
@@ -594,10 +570,14 @@ impl InternalMessageSender for TonWallet {
         self.prepare_transfer(
             current_state,
             public_key,
-            message.destination,
-            message.amount,
-            message.bounce,
-            Some(message.body),
+            Gift {
+                flags: MessageFlags::default().into(),
+                bounce: message.bounce,
+                destination: message.destination,
+                amount: message.amount,
+                body: Some(message.body),
+                state_init: None,
+            },
             expiration,
         )
     }
@@ -684,6 +664,17 @@ pub struct TonWalletDetails {
     pub supports_payload: bool,
     pub supports_multiple_owners: bool,
     pub expiration_time: u32,
+}
+
+/// Message info
+#[derive(Clone)]
+pub struct Gift {
+    pub flags: u8,
+    pub bounce: bool,
+    pub destination: MsgAddressInt,
+    pub amount: u64,
+    pub body: Option<SliceData>,
+    pub state_init: Option<ton_block::StateInit>,
 }
 
 #[derive(Clone)]

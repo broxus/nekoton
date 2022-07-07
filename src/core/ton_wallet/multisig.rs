@@ -5,12 +5,12 @@ use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use num_bigint::BigUint;
 use ton_block::{Deserializable, GetRepresentationHash, MsgAddressInt};
-use ton_types::{SliceData, UInt256};
+use ton_types::UInt256;
 
 use nekoton_abi::*;
 use nekoton_utils::*;
 
-use super::{TonWalletDetails, TransferAction};
+use super::{Gift, TonWalletDetails, TransferAction};
 use crate::core::models::{Expiration, MessageFlags, MultisigPendingTransaction};
 use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
@@ -89,17 +89,12 @@ pub fn prepare_confirm_transaction(
     )
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn prepare_transfer(
     clock: &dyn Clock,
     public_key: &PublicKey,
     has_multiple_owners: bool,
     address: MsgAddressInt,
-    destination: MsgAddressInt,
-    amount: u64,
-    flags: u8,
-    bounce: bool,
-    body: Option<SliceData>,
+    gift: Gift,
     expiration: Expiration,
 ) -> Result<TransferAction> {
     let message = ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
@@ -108,26 +103,26 @@ pub fn prepare_transfer(
     });
 
     let (function, input) = if has_multiple_owners {
-        let all_balance = match MessageFlags::try_from(flags) {
+        let all_balance = match MessageFlags::try_from(gift.flags) {
             Ok(MessageFlags::Normal) => false,
             Ok(MessageFlags::AllBalance) => true,
             _ => return Err(MultisigError::UnsupportedFlagsSet.into()),
         };
 
         MessageBuilder::new(nekoton_contracts::wallets::multisig::submit_transaction())
-            .arg(destination)
-            .arg(BigUint128(amount.into()))
-            .arg(bounce)
+            .arg(gift.destination)
+            .arg(BigUint128(gift.amount.into()))
+            .arg(gift.bounce)
             .arg(all_balance)
-            .arg(body.unwrap_or_default().into_cell())
+            .arg(gift.body.unwrap_or_default().into_cell())
             .build()
     } else {
         MessageBuilder::new(nekoton_contracts::wallets::multisig::send_transaction())
-            .arg(destination)
-            .arg(BigUint128(amount.into()))
-            .arg(bounce)
-            .arg(flags)
-            .arg(body.unwrap_or_default().into_cell())
+            .arg(gift.destination)
+            .arg(BigUint128(gift.amount.into()))
+            .arg(gift.bounce)
+            .arg(gift.flags)
+            .arg(gift.body.unwrap_or_default().into_cell())
             .build()
     };
 
