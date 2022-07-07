@@ -204,7 +204,9 @@ pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
     TonWalletDetails {
         requires_separate_deploy: true,
         min_amount: 1000000, // 0.001 TON
+        max_messages: 1,
         supports_payload: true,
+        supports_state_init: false,
         supports_multiple_owners: true,
         expiration_time: match multisig_type {
             MultisigType::SafeMultisigWallet | MultisigType::SetcodeMultisigWallet => 3600,

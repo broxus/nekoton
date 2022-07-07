@@ -75,6 +75,10 @@ pub fn prepare_transfer(
     gifts: Vec<Gift>,
     expiration: Expiration,
 ) -> Result<TransferAction> {
+    if gifts.len() > DETAILS.max_messages {
+        return Err(WalletV3Error::TooManyGifts.into());
+    }
+
     let (init_data, with_state_init) = match &current_state.storage.state {
         ton_block::AccountState::AccountActive { state_init, .. } => match &state_init.data {
             Some(data) => (InitData::try_from(data)?, false),
@@ -177,7 +181,9 @@ pub fn compute_contract_address(public_key: &PublicKey, workchain_id: i8) -> Msg
 pub static DETAILS: TonWalletDetails = TonWalletDetails {
     requires_separate_deploy: false,
     min_amount: 1, // 0.000000001 TON
+    max_messages: 4,
     supports_payload: true,
+    supports_state_init: true,
     supports_multiple_owners: false,
     expiration_time: 0,
 };
@@ -299,4 +305,6 @@ enum WalletV3Error {
     InvalidInitData,
     #[error("Account is frozen")]
     AccountIsFrozen,
+    #[error("Too many outgoing messages")]
+    TooManyGifts,
 }

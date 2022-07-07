@@ -661,7 +661,9 @@ pub struct TonWalletDetails {
     pub requires_separate_deploy: bool,
     #[serde(with = "serde_string")]
     pub min_amount: u64,
+    pub max_messages: usize,
     pub supports_payload: bool,
+    pub supports_state_init: bool,
     pub supports_multiple_owners: bool,
     pub expiration_time: u32,
 }
