@@ -45,6 +45,24 @@ impl<'de> Deserialize<'de> for StringOrNumber {
     }
 }
 
+pub mod serde_u64 {
+    use super::*;
+
+    pub fn serialize<S>(data: &u64, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        StringOrNumber(*data).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<u64, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        StringOrNumber::deserialize(deserializer).map(|StringOrNumber(x)| x)
+    }
+}
+
 pub mod serde_duration_sec {
     use super::*;
 
