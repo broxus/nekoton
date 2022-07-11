@@ -618,14 +618,12 @@ impl<'a> FunctionAbi<'a> {
             });
 
         let BlockStats {
-            gen_utime, gen_lt, ..
+            now_ms,
+            gen_utime,
+            gen_lt,
         } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
 
-        msg.set_body(
-            self.abi
-                .encode_run_local_input(gen_utime as u64 * 1000, input)?
-                .into(),
-        );
+        msg.set_body(self.abi.encode_run_local_input(now_ms, input)?.into());
 
         let tvm::ActionPhaseOutput {
             messages,
@@ -818,6 +816,7 @@ pub struct Executor {
 }
 
 struct BlockStats {
+    now_ms: u64,
     gen_utime: u32,
     gen_lt: u64,
 }
@@ -830,10 +829,17 @@ fn get_block_stats(
     // Additional estimated logical time offset for the latest transaction id
     pub const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
 
+    let now_ms = clock.now_ms_u64();
+
     match timings {
-        Some(GenTimings::Known { gen_lt, gen_utime }) => BlockStats { gen_utime, gen_lt },
+        Some(GenTimings::Known { gen_lt, gen_utime }) => BlockStats {
+            now_ms,
+            gen_utime,
+            gen_lt,
+        },
         _ => BlockStats {
-            gen_utime: clock.now_sec_u64() as u32,
+            now_ms,
+            gen_utime: now_ms as u32,
             gen_lt: last_trans_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
         },
     }
@@ -848,7 +854,9 @@ impl Executor {
     ) -> Self {
         let last_trans_lt = account_stuff.storage.last_trans_lt;
 
-        let BlockStats { gen_utime, gen_lt } = get_block_stats(clock, None, last_trans_lt);
+        let BlockStats {
+            gen_utime, gen_lt, ..
+        } = get_block_stats(clock, None, last_trans_lt);
 
         Self {
             config,
