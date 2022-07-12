@@ -839,7 +839,7 @@ fn get_block_stats(
         },
         _ => BlockStats {
             now_ms,
-            gen_utime: now_ms as u32,
+            gen_utime: (now_ms / 1000) as u32,
             gen_lt: last_trans_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
         },
     }
