@@ -93,11 +93,10 @@ pub fn prepare_transfer(
         ),
     };
 
-    // if let Some(data) = &init_data.data {
-    //     if data.len()? >= 500_usize {
-    //         anyhow::bail!("too many messages");
-    //     }
-    // }
+    if init_data.data.len()? >= 500_usize {
+        return Err(HighloadWalletV2Error::InitDataTooLarge.into());
+    }
+
     let mut message =
         ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
             dst: current_state.addr.clone(),
@@ -349,6 +348,8 @@ enum HighloadWalletV2Error {
     AccountIsFrozen,
     #[error("Too many outgoing messages")]
     TooManyGifts,
+    #[error("Account init data is too large")]
+    InitDataTooLarge,
 }
 
 #[cfg(test)]
