@@ -868,6 +868,25 @@ impl Executor {
         }
     }
 
+    pub fn with_account(clock: &dyn Clock, config: BlockchainConfig, account: Account) -> Self {
+        let last_trans_lt = match &account {
+            Account::AccountNone => 0,
+            Account::Account(a) => a.storage.last_trans_lt,
+        };
+        let BlockStats {
+            gen_utime, gen_lt, ..
+        } = get_block_stats(clock, None, last_trans_lt);
+
+        Self {
+            config,
+            account,
+            block_utime: gen_utime,
+            block_lt: gen_lt,
+            last_transaction_lt: Arc::new(AtomicU64::new(last_trans_lt)),
+            disable_signature_check: false,
+        }
+    }
+
     pub fn disable_signature_check(&mut self) -> &mut Self {
         self.disable_signature_check = true;
         self
@@ -877,7 +896,8 @@ impl Executor {
         &self.account
     }
 
-    pub fn run(&mut self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
+    /// Executes message without mutating the account state.
+    pub fn run(&self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
         let mut executor = OrdinaryTransactionExecutor::new(self.config.clone());
         executor.set_signature_check_disabled(self.disable_signature_check);
 
@@ -890,6 +910,24 @@ impl Executor {
 
         let mut account_root = self.account.serialize()?;
         executor.execute_with_libs_and_params(Some(message), &mut account_root, params)
+    }
+
+    /// Executes message and mutates the account state.
+    pub fn run_mut(&mut self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
+        let mut executor = OrdinaryTransactionExecutor::new(self.config.clone());
+        executor.set_signature_check_disabled(self.disable_signature_check);
+
+        let params = ton_executor::ExecuteParams {
+            block_unixtime: self.block_utime,
+            block_lt: self.block_lt,
+            last_tr_lt: self.last_transaction_lt.clone(),
+            ..Default::default()
+        };
+
+        let mut account_root = self.account.serialize()?;
+        let tx = executor.execute_with_libs_and_params(Some(message), &mut account_root, params);
+        self.account = Account::construct_from_cell(account_root)?;
+        tx
     }
 }
 

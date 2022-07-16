@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use serde::{Deserialize, Serialize};
-use ton_block::{AccountStuff, Transaction};
+use ton_block::{Account, AccountStuff, Transaction};
 use ton_types::UInt256;
 
 use nekoton_abi::{ExecutionContext, GenTimings, LastTransactionId};
@@ -22,6 +22,13 @@ impl RawContractState {
         match self {
             Self::NotExists => ContractState::default(),
             Self::Exists(state) => state.brief(),
+        }
+    }
+
+    pub(crate) fn state(self) -> Account {
+        match self {
+            Self::NotExists => Account::AccountNone,
+            Self::Exists(state) => Account::Account(state.account),
         }
     }
 }
