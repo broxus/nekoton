@@ -245,9 +245,8 @@ impl ContractSubscription {
         let mut executor = Executor::new(
             self.clock.as_ref(),
             blockchain_config,
-            state.account,
-            state.timings,
-        );
+            ton_block::Account::Account(state.account),
+        )?;
         if options.disable_signature_check {
             executor.disable_signature_check();
         }

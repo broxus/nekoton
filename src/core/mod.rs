@@ -16,6 +16,7 @@ pub mod owners_cache;
 pub mod parsing;
 pub mod token_wallet;
 pub mod ton_wallet;
+pub mod transactions_tree;
 pub mod utils;
 
 pub struct TonInterface {
