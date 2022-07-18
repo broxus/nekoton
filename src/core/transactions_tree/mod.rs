@@ -1,157 +1,148 @@
-use crate::transport::models::{ExistingContract, RawContractState};
-use crate::transport::Transport;
-use nekoton_abi::{Executor, GenTimings, LastTransactionId};
-use nekoton_utils::{Clock, ConstClock, SimpleClock};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
-use ton_block::{Account, Message, MsgAddressInt, Transaction};
 
-type Result<T> = std::result::Result<T, Error>;
+use nekoton_abi::Executor;
+use nekoton_utils::Clock;
+use ton_block::{Account, Message, MsgAddressInt, Serializable, Transaction};
+
+use crate::transport::Transport;
 
 pub struct TransactionsTreeStream {
-    states: HashMap<MsgAddressInt, Account>,
+    states: HashMap<MsgAddressInt, StoredAccount>,
     messages: VecDeque<Message>,
     config: ton_executor::BlockchainConfig,
+    disable_signature_check: bool,
     transport: Arc<dyn Transport>,
     clock: Arc<dyn Clock>,
 }
 
 impl TransactionsTreeStream {
-    pub async fn stream(
+    pub fn new(
         message: Message,
+        config: ton_executor::BlockchainConfig,
         transport: Arc<dyn Transport>,
-        clock: Option<Arc<dyn Clock>>,
-    ) -> Result<(Self, Transaction)> {
-        let dst = match message.dst() {
-            Some(dst) => dst,
-            None => return Err(Error::ExternalOutMessage),
-        };
-
-        let dst_state = transport
-            .get_contract_state(&dst)
-            .await
-            .map_err(Error::TransportError)?;
-
-        let config = transport
-            .get_blockchain_config(&nekoton_utils::SimpleClock)
-            .await
-            .map_err(Error::TransportError)?;
-
-        let clock = clock.unwrap_or_else(|| Arc::new(SimpleClock));
-
-        let state = dst_state.state();
-        let mut executor = Executor::with_account(clock.as_ref(), config.clone(), state);
-
-        let tx = executor.run_mut(&message).map_err(Error::ExecutionError)?;
-        let state = executor.account().clone();
-
-        let mut map = HashMap::new();
-        map.insert(dst, state);
-
-        let mut out_messages = VecDeque::new();
-        tx.iterate_out_msgs(|x| {
-            out_messages.push_back(x);
-            Ok(true)
-        })
-        .map_err(Error::ExecutionError)?;
-
-        Ok((
-            Self {
-                states: map,
-                messages: out_messages,
-                config,
-                transport,
-                clock,
-            },
-            tx,
-        ))
+        clock: Arc<dyn Clock>,
+    ) -> Self {
+        Self {
+            states: Default::default(),
+            messages: VecDeque::from([message]),
+            config,
+            disable_signature_check: false,
+            transport,
+            clock,
+        }
     }
 
-    pub async fn next(&mut self) -> Result<TreeItem> {
-        let message = match self.messages.pop_front() {
-            None => {
-                return Ok(TreeItem::Finished);
-            }
-            Some(m) => m,
+    pub fn disable_signature_check(&mut self) -> &mut Self {
+        self.disable_signature_check = true;
+        self
+    }
+
+    pub async fn next(&mut self) -> TransactionTreeResult<Option<Transaction>> {
+        match self.messages.pop_front() {
+            Some(message) => self.step(message).await.map(Some),
+            None => Ok(None),
+        }
+    }
+
+    async fn step(&mut self, message: Message) -> TransactionTreeResult<Transaction> {
+        let dst = match message.dst() {
+            Some(dst) => dst,
+            _ => return Err(TransactionTreeError::ExternalOutMessage),
         };
-        let tx = self.step(message).await?;
+        let StoredAccount {
+            root_cell,
+            last_transaction_lt,
+            last_paid,
+        } = self.get_state(&dst).await?;
+
+        let now_ms = match last_paid {
+            Some(last_paid) => std::cmp::max(last_paid as u64 * 1000, self.clock.now_ms_u64()),
+            None => self.clock.now_ms_u64(),
+        };
+
+        let utime = (now_ms / 1000) as u32;
+        let lt = last_transaction_lt;
+
+        let mut executor = Executor::with_params(
+            self.config.clone(),
+            root_cell,
+            last_transaction_lt,
+            utime,
+            lt,
+        );
+        if self.disable_signature_check {
+            executor.disable_signature_check();
+        }
+
+        let tx = executor
+            .run_mut(&message)
+            .map_err(TransactionTreeError::ExecutionError)?;
+
+        self.states.insert(
+            dst,
+            StoredAccount {
+                root_cell: executor.account_root_cell().clone(),
+                last_transaction_lt: executor.last_transaction_lt(),
+                last_paid: Some(utime),
+            },
+        );
+
+        tx.iterate_out_msgs(|x| {
+            if x.is_internal() {
+                self.messages.push_back(x);
+            }
+            Ok(true)
+        })
+        .map_err(TransactionTreeError::ExecutionError)?;
 
         Ok(tx)
     }
 
-    async fn step(&mut self, message: Message) -> Result<TreeItem> {
-        let dst = match message.dst() {
-            Some(dst) => dst,
-            None => return Ok(TreeItem::ShouldNotProduce),
-        };
-        let dst_state = self.get_state(&dst).await?;
+    async fn get_state(&self, address: &MsgAddressInt) -> TransactionTreeResult<StoredAccount> {
+        match self.states.get(address) {
+            None => {
+                let acc = self
+                    .transport
+                    .get_contract_state(address)
+                    .await
+                    .map_err(TransactionTreeError::TransportError)?
+                    .into_state();
 
-        let dst_time = match &dst_state {
-            Account::AccountNone => ConstClock::from_secs(self.clock.now_sec_u64()),
-            Account::Account(a) => ConstClock::from_secs(a.storage_stat.last_paid as u64),
-        };
+                let (last_transaction_lt, last_paid) = match &acc {
+                    Account::Account(account) => (
+                        account.storage.last_trans_lt,
+                        Some(account.storage_stat.last_paid),
+                    ),
+                    Account::AccountNone => (0, None),
+                };
 
-        let mut executor = Executor::with_account(&dst_time, self.config.clone(), dst_state);
-        let tx = executor.run_mut(&message).map_err(Error::ExecutionError)?;
-        let state = executor.account().clone();
-        self.states.insert(dst, state);
+                let root_cell = acc
+                    .serialize()
+                    .map_err(TransactionTreeError::TransportError)?;
 
-        let mut cnt = 0;
-        tx.iterate_out_msgs(|x| {
-            cnt += 1;
-            self.messages.push_back(x);
-            Ok(true)
-        })
-        .map_err(Error::ExecutionError)?;
-
-        println!("Added {cnt} messages");
-
-        Ok(TreeItem::Ok(tx))
-    }
-
-    async fn get_state(&self, address: &MsgAddressInt) -> Result<Account> {
-        let state = self.states.get(address);
-        let state = match state {
-            None => self
-                .transport
-                .get_contract_state(address)
-                .await
-                .map_err(Error::TransportError)?
-                .state(),
-            Some(s) => s.clone(),
-        };
-
-        Ok(state)
-    }
-
-    /// returns modified account state after tree traversal
-    pub fn state(&self, address: &MsgAddressInt) -> Option<RawContractState> {
-        let state = self.states.get(address)?;
-        let account = match state {
-            Account::AccountNone => RawContractState::NotExists,
-            Account::Account(a) => RawContractState::Exists(ExistingContract {
-                account: a.clone(),
-                timings: GenTimings::Unknown,
-                last_transaction_id: LastTransactionId::Inexact {
-                    latest_lt: a.storage.last_trans_lt,
-                },
-            }),
-        };
-
-        Some(account)
+                Ok(StoredAccount {
+                    root_cell,
+                    last_transaction_lt,
+                    last_paid,
+                })
+            }
+            Some(account) => Ok(account.clone()),
+        }
     }
 }
 
-#[allow(clippy::large_enum_variant)]
-#[derive(Debug)]
-pub enum TreeItem {
-    Ok(Transaction),
-    ShouldNotProduce,
-    Finished,
+#[derive(Clone)]
+struct StoredAccount {
+    root_cell: ton_types::Cell,
+    last_transaction_lt: u64,
+    last_paid: Option<u32>,
 }
+
+type TransactionTreeResult<T> = Result<T, TransactionTreeError>;
 
 #[derive(Debug, thiserror::Error)]
-pub enum Error {
+pub enum TransactionTreeError {
     #[error("External out message")]
     ExternalOutMessage,
     #[error("Transport error: {0}")]
@@ -163,55 +154,59 @@ pub enum Error {
 #[cfg(test)]
 #[cfg(feature = "jrpc_transport")]
 mod test {
+    use anyhow::Result;
+
     use crate::transport::jrpc::JrpcTransport;
 
     use nekoton_abi::TransactionParser;
-    use nekoton_utils::ConstClock;
+    use nekoton_utils::{ConstClock, SimpleClock};
 
     use ton_block::{Deserializable, GetRepresentationHash, MsgAddrStd};
 
     use super::*;
 
     #[tokio::test]
-    async fn test() {
+    async fn test() -> Result<()> {
         let connection = reqwest::Client::new();
-        let transport = JrpcTransport::new(Arc::new(connection));
+        let transport = Arc::new(JrpcTransport::new(Arc::new(connection)));
 
         let message = "te6ccgECCwEAAiAAAUWIAXu46jwbX3fmTWCR+sOP7NSfC9w6Ieb8ey6yinH94TG6DAEB4cHe2X7ZSGJPEZ8yA3uMskehJrNV78S5dTI7RkmjJAW2amO4V7DBILqXcTRnnbX9dABGRV0t4ouCjVWw6UYUZIR8drjTwv63I+aPTBLtMULU+zuEMSAmO8j5A00qizUXzUAAAGCAkCZIGLReThM7mRsgAgFlgAqvKvl06VY7ioloEDfQPiQRWucy+ulWduWysMlINu80gAAAAAAAAAAAAAAANOYs4BA4AwFraJxXwwAAAAAAAAAAAAAAADuaygCAEdfCW6r8F9gtsIJr8E6H1Ja37Lgfs8pNl/Q6IaXh4oBQBAFDgBe7jqPBtfd+ZNYJH6w4/s1J8L3Doh5vx7LrKKcf3hMbsAUBQ4Acl5cuaS7g+1r0QlJsMoOfX8ZyPtWIG7T55ZRTha2dV7AGA5UEABCKHoVX1z4AAAAAAAAAAAAAAAAF9eEAAAAAAAAAAAAAAAAAAALitIAYb2f1+Ut++m4JYQP7z76p5TDm3cCzftpl9YS+vMELftAJCAcAMgEAEIoehVfXPgAAAAAAAAAAAAAAAAX14QAAMgAAEIoehVfXPgAAAAAAAAAAAAAAAAX14QABYwAAAAAAAAAAAAAAAAABTVaAFKM/M3a62qPfKx2kmmb1rrQ47hELuahao6zMfz+bWfZQCgAgAAAAAAAAAAAAAAAAAAFLzA==";
-        let message = Message::construct_from_base64(message).unwrap();
+        let message = Message::construct_from_base64(message)?;
+
+        let config = transport.get_blockchain_config(&SimpleClock).await?;
 
         let time = 1657895160;
-        let (mut stream, _first_tx) = TransactionsTreeStream::stream(
+        let mut stream = TransactionsTreeStream::new(
             message,
-            Arc::new(transport),
-            Some(Arc::new(ConstClock::from_secs(time))),
-        )
-        .await
-        .unwrap();
+            config,
+            transport.clone(),
+            Arc::new(ConstClock::from_secs(time)),
+        );
 
-        loop {
-            let res = stream.next().await.unwrap();
-            match res {
-                TreeItem::Ok(tx) => {
-                    if let Err(_e) = parse(&tx).await {}
-                    let is_aborted = tx.read_description().unwrap().is_aborted();
-                    if is_aborted {
-                        let addr = MsgAddrStd::with_address(None, 0, tx.account_addr.clone());
-                        let acc = stream.states.get(&MsgAddressInt::AddrStd(addr)).unwrap();
-                        dbg!(acc);
-                    }
-                }
-                TreeItem::ShouldNotProduce => {
-                    println!("Should not produce");
-                }
-                TreeItem::Finished => break,
-            }
+        while let Some(tx) = stream.next().await.unwrap() {
+            parse(&tx).await.ok();
+
+            let descr = tx.read_description()?;
+            let is_aborted = descr.is_aborted();
+            let exit_code = descr.compute_phase_ref().and_then(|c| match c {
+                ton_block::TrComputePhase::Vm(c) => Some(c.exit_code),
+                ton_block::TrComputePhase::Skipped(_) => None,
+            });
+
+            println!(
+                "{:x}: aborted={}, exit_code={:?}",
+                tx.hash().unwrap(),
+                is_aborted,
+                exit_code
+            );
         }
+
+        Ok(())
     }
 
-    async fn parse(tx: &Transaction) -> anyhow::Result<()> {
+    async fn parse(tx: &Transaction) -> Result<()> {
         let addr = MsgAddrStd::with_address(None, 0, tx.account_addr.clone());
-        let abi = reqwest::get(format!("https://verify.everscan.io/abi/address/{}", addr))
+        let abi = reqwest::get(format!("https://verify.everscan.io/abi/address/{addr}"))
             .await?
             .text()
             .await?;

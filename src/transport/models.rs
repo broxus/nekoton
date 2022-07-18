@@ -25,7 +25,7 @@ impl RawContractState {
         }
     }
 
-    pub(crate) fn state(self) -> Account {
+    pub fn into_state(self) -> Account {
         match self {
             Self::NotExists => Account::AccountNone,
             Self::Exists(state) => Account::Account(state.account),
