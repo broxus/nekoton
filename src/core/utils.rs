@@ -316,7 +316,8 @@ pub fn make_labs_unsigned_message(
     let time = clock.now_ms_u64();
     let (expire_at, header) = default_headers(time, expiration, public_key);
 
-    let (payload, hash) = function.create_unsigned_call(&header, &input, false, true)?;
+    let (payload, hash) =
+        function.create_unsigned_call(&header, &input, false, true, message.dst())?;
 
     Ok(Box::new(LabsUnsignedMessage {
         function,
@@ -353,7 +354,7 @@ impl UnsignedMessage for LabsUnsignedMessage {
 
         let (payload, hash) = self
             .function
-            .create_unsigned_call(&self.header, &self.input, false, true)
+            .create_unsigned_call(&self.header, &self.input, false, true, self.message.dst())
             .trust_me();
         self.payload = payload;
         self.hash = hash;
