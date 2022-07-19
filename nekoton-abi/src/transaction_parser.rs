@@ -303,8 +303,8 @@ impl TransactionParserBuilder {
 
         let mut set_abi_version = |new_version| match abi_version {
             Some(version) if version == new_version => Ok(()),
-            Some(_) => anyhow::bail!("Multiple different ABI versions"),
-            None => {
+            Some(_) if match_external_in => anyhow::bail!("Multiple different ABI versions"),
+            _ => {
                 abi_version = Some(new_version);
                 Ok(())
             }
