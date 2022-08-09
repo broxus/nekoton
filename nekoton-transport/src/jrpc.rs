@@ -5,7 +5,8 @@ use reqwest::{IntoUrl, Url};
 
 pub struct JrpcClient {
     client: reqwest::Client,
-    url: Url,
+    base_url: Url,
+    alternative_url: Option<Url>,
 }
 
 impl JrpcClient {
@@ -23,32 +24,42 @@ impl JrpcClient {
             .build()
             .context("failed to build http client")?;
 
-        Ok(Arc::new(Self { client, url }))
+        Ok(Arc::new(Self {
+            client,
+            base_url: url,
+            alternative_url: None,
+        }))
+    }
+
+    /// Set an alternative URL which will be used for requests that don't require a db
+    pub fn set_alternative_url<U: IntoUrl>(&mut self, endpoint: U) -> Result<()> {
+        self.alternative_url = Some(endpoint.into_url()?);
+        Ok(())
     }
 }
 
 #[async_trait::async_trait]
 impl nekoton::external::JrpcConnection for JrpcClient {
-    async fn post(&self, data: &str) -> Result<String> {
-        let response = self
-            .client
-            .post(self.url.clone())
-            .body(data.to_owned())
-            .send()
-            .await?;
+    async fn post(&self, req: nekoton::external::JrpcRequest) -> Result<String> {
+        let url = if req.requires_db {
+            self.alternative_url.as_ref().unwrap_or(&self.base_url)
+        } else {
+            &self.base_url
+        };
+        let response = self.client.post(url.clone()).body(req.data).send().await?;
         Ok(response.text().await?)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use nekoton::external::JrpcConnection;
+    use nekoton::external::{JrpcConnection, JrpcRequest};
 
     use super::*;
 
     #[tokio::test]
     async fn jrpc_client_works() {
-        let client = JrpcClient::new("https://extension-api.broxus.com/rpc").unwrap();
+        let client = JrpcClient::new("https://jrpc.everwallet.net/rpc").unwrap();
 
         const QUERY: &str = r#"{
             "jsonrpc": "2.0",
@@ -59,7 +70,13 @@ mod tests {
             }
         }"#;
 
-        let response = client.post(QUERY).await.unwrap();
+        let response = client
+            .post(JrpcRequest {
+                data: QUERY.to_owned(),
+                requires_db: true,
+            })
+            .await
+            .unwrap();
         println!("{}", response);
     }
 }

@@ -7,7 +7,7 @@ use ton_block::{Block, Deserializable, MsgAddressInt};
 use nekoton_utils::*;
 
 use crate::core::models::ReliableBehavior;
-use crate::external::JrpcConnection;
+use crate::external::{self, JrpcConnection};
 
 use super::models::{RawContractState, RawTransaction};
 use super::utils::*;
@@ -42,20 +42,19 @@ impl Transport for JrpcTransport {
     }
 
     async fn send_message(&self, message: &ton_block::Message) -> Result<()> {
-        self.connection
-            .post(&make_jrpc_request("sendMessage", &SendMessage { message }))
-            .await
-            .map(|_| ())
+        let req = external::JrpcRequest {
+            data: make_jrpc_request("sendMessage", &SendMessage { message }),
+            requires_db: false,
+        };
+        self.connection.post(req).await.map(|_| ())
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
-        let data = self
-            .connection
-            .post(&make_jrpc_request(
-                "getContractState",
-                &GetContractState { address },
-            ))
-            .await?;
+        let req = external::JrpcRequest {
+            data: make_jrpc_request("getContractState", &GetContractState { address }),
+            requires_db: false,
+        };
+        let data = self.connection.post(req).await?;
         let response = tiny_jsonrpc::parse_response::<RawContractState>(&data)?;
         Ok(response)
     }
@@ -66,20 +65,21 @@ impl Transport for JrpcTransport {
         limit: u8,
         continuation: &Option<MsgAddressInt>,
     ) -> Result<Vec<MsgAddressInt>> {
-        let data = self
-            .connection
-            .post(&make_jrpc_request(
+        let req = external::JrpcRequest {
+            data: make_jrpc_request(
                 "getAccountsByCodeHash",
                 &GetAccountsByCodeHash {
                     limit: limit as u32,
                     continuation,
                     code_hash,
                 },
-            ))
-            .await?;
+            ),
+            requires_db: true,
+        };
+        let data = self.connection.post(req).await?;
 
         #[derive(Deserialize)]
-        struct AddressWrapper(#[serde(with = "serde_address")] ton_block::MsgAddressInt);
+        struct AddressWrapper(#[serde(with = "serde_address")] MsgAddressInt);
 
         Ok(tiny_jsonrpc::parse_response::<Vec<AddressWrapper>>(&data)?
             .into_iter()
@@ -93,33 +93,39 @@ impl Transport for JrpcTransport {
         from_lt: u64,
         count: u8,
     ) -> Result<Vec<RawTransaction>> {
-        let response = self
-            .connection
-            .post(&make_jrpc_request(
+        let req = external::JrpcRequest {
+            data: make_jrpc_request(
                 "getTransactionsList",
                 &GetTransactions {
                     limit: count as u64,
                     last_transaction_lt: (from_lt != u64::MAX).then(|| from_lt),
                     account: address,
                 },
-            ))
-            .await?;
+            ),
+            requires_db: true,
+        };
+        let response = self.connection.post(req).await?;
         let data: Vec<String> = tiny_jsonrpc::parse_response(&response)?;
         data.iter().map(|boc| decode_raw_transaction(boc)).collect()
     }
 
     async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>> {
-        let response = self
-            .connection
-            .post(&make_jrpc_request("getTransaction", &GetTransaction { id }))
-            .await?;
+        let req = external::JrpcRequest {
+            data: make_jrpc_request("getTransaction", &GetTransaction { id }),
+            requires_db: true,
+        };
+        let response = self.connection.post(req).await?;
         let data: Option<String> = tiny_jsonrpc::parse_response(&response)?;
         data.map(|boc| decode_raw_transaction(&boc)).transpose()
     }
 
     async fn get_latest_key_block(&self) -> Result<Block> {
+        let req = external::JrpcRequest {
+            data: make_jrpc_request("getLatestKeyBlock", &()),
+            requires_db: true,
+        };
         self.connection
-            .post(&make_jrpc_request("getLatestKeyBlock", &()))
+            .post(req)
             .await
             .map(|data| tiny_jsonrpc::parse_response(&data))?
             .map(|block: GetBlockResponse| block.block)
@@ -181,11 +187,11 @@ mod tests {
 
     #[async_trait::async_trait]
     impl JrpcConnection for reqwest::Client {
-        async fn post(&self, data: &str) -> Result<String> {
-            println!("{}", data);
+        async fn post(&self, req: external::JrpcRequest) -> Result<String> {
+            println!("{req:?}");
             let text = self
                 .post("https://extension-api.broxus.com/rpc")
-                .body(data.to_string())
+                .body(req.data)
                 .header("Content-Type", "application/json")
                 .send()
                 .await?

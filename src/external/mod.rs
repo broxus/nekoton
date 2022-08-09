@@ -31,9 +31,16 @@ pub trait GqlConnection: Send + Sync {
 }
 
 #[cfg(feature = "jrpc_transport")]
+#[derive(Debug, Clone)]
+pub struct JrpcRequest {
+    pub data: String,
+    pub requires_db: bool,
+}
+
+#[cfg(feature = "jrpc_transport")]
 #[async_trait]
 pub trait JrpcConnection: Send + Sync {
-    async fn post(&self, data: &str) -> Result<String>;
+    async fn post(&self, req: JrpcRequest) -> Result<String>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
