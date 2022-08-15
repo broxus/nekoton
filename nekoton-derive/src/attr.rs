@@ -334,7 +334,7 @@ impl<'c> BoolAttr<'c> {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum TypeName {
     Int8,
     Uint8,

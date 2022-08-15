@@ -114,7 +114,7 @@ pub enum MultisigTransaction {
     Confirm(MultisigConfirmTransaction),
 }
 
-#[derive(UnpackAbiPlain, Clone, Debug, PartialEq, Serialize, Deserialize, Copy)]
+#[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize, Copy)]
 #[serde(rename_all = "camelCase")]
 pub struct MultisigConfirmTransaction {
     #[serde(with = "serde_uint256")]
@@ -125,7 +125,7 @@ pub struct MultisigConfirmTransaction {
     pub transaction_id: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MultisigSubmitTransaction {
     #[serde(with = "serde_uint256")]
@@ -148,7 +148,7 @@ pub struct MultisigSubmitTransaction {
     pub trans_id: u64,
 }
 
-#[derive(UnpackAbiPlain, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct MultisigSendTransaction {
     #[abi(address)]
     #[serde(with = "serde_address")]
@@ -218,7 +218,7 @@ pub enum NftTransaction {
     ChangeManager(IncomingChangeManager),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TokenIncomingTransfer {
     #[serde(with = "serde_string")]
@@ -235,7 +235,7 @@ pub struct TokenOutgoingTransfer {
     pub tokens: BigUint,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IncomingNftTransfer {
     #[serde(with = "serde_string")]
@@ -245,7 +245,7 @@ pub struct IncomingNftTransfer {
     //pub callbacks: BTreeMap<String, NftCallbackPayload>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IncomingChangeOwner {
     #[serde(with = "serde_address")]
@@ -255,7 +255,7 @@ pub struct IncomingChangeOwner {
     //pub callbacks: BTreeMap<String, NftCallbackPayload>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IncomingChangeManager {
     #[serde(with = "serde_address")]
@@ -274,7 +274,7 @@ pub enum TransferRecipient {
     TokenWallet(MsgAddressInt),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TokenSwapBack {
     #[serde(with = "serde_string")]
     pub tokens: BigUint,
@@ -489,13 +489,17 @@ pub struct PendingTransaction {
         with = "serde_optional_address"
     )]
     pub src: Option<MsgAddressInt>,
-    /// Expiration timestamp, unixtime
+    /// Last known lt at the time the message was sent
+    pub latest_lt: u64,
+    /// Message broadcast timestamp (adjusted)
+    pub created_at: u32,
+    /// Expiration timestamp (adjusted)
     pub expire_at: u32,
 }
 
 impl PartialEq<Transaction> for PendingTransaction {
     fn eq(&self, other: &Transaction) -> bool {
-        self.expire_at < other.created_at
+        self.expire_at <= other.created_at
             && self.message_hash == other.in_msg.hash
             && self.src == other.in_msg.src
     }

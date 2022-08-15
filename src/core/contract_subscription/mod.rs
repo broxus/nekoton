@@ -13,7 +13,7 @@ use super::models::{
     TransactionsBatchType,
 };
 use super::{utils, PollingMethod};
-use crate::core::utils::PendingTransactionsExt;
+use crate::core::utils::{MessageContext, PendingTransactionsExt};
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 
@@ -116,9 +116,19 @@ impl ContractSubscription {
         message: &ton_block::Message,
         expire_at: u32,
     ) -> Result<PendingTransaction> {
+        let ctx = MessageContext {
+            latest_lt: self
+                .contract_state
+                .last_transaction_id
+                .map(|id| id.lt())
+                .unwrap_or_default(),
+            created_at: self.clock.now_sec_u64() as u32,
+            expire_at,
+        };
         let pending_transaction =
             self.pending_transactions
-                .add_message(&self.address, message, expire_at)?;
+                .add_message(&self.address, message, ctx)?;
+
         match self.transport.send_message(message).await {
             // return pending transaction on success
             Ok(()) => Ok(pending_transaction),

@@ -8,7 +8,7 @@ use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 use nekoton_utils::*;
 
 use super::{Gift, TonWalletDetails, TransferAction};
-use crate::core::models::{Expiration, ExpireAt};
+use crate::core::models::{Expiration, ExpireAt, PendingTransaction};
 use crate::crypto::{SignedMessage, UnsignedMessage};
 
 pub fn prepare_deploy(
@@ -68,18 +68,67 @@ impl UnsignedMessage for UnsignedWalletV3Deploy {
     }
 }
 
+/// Adjusts seqno if there are some recent pending transactions that have not expired
+pub fn estimate_seqno_offset(
+    clock: &dyn Clock,
+    current_state: &ton_block::AccountStuff,
+    pending_transactions: &[PendingTransaction],
+) -> u32 {
+    const SEQNO_ADJUST_INTERVAL: u32 = 30; // seconds
+    const MAX_SEQNO_OFFSET: u32 = 2;
+
+    #[inline]
+    fn same_lt(lt_from_pending: u64, lt_from_state: u64) -> bool {
+        // NOTE: `pending.latest_lt` can be exact transaction lt, or
+        // `storage.last_trans_lt` which is a bit greater
+        const ALLOWED_LT_DIFF: u64 = 1 + MAX_MESSAGES as u64;
+
+        (lt_from_pending..=lt_from_pending + ALLOWED_LT_DIFF).contains(&lt_from_state)
+    }
+
+    if pending_transactions.is_empty() {
+        return 0;
+    }
+
+    let now = clock.now_sec_u64() as u32;
+    let latest_lt = current_state.storage.last_trans_lt;
+
+    let mut seqno_offset = 0;
+    for pending in pending_transactions.iter().rev() {
+        // Adjust only for sufficiently new pending transactions.
+        if now > pending.created_at + SEQNO_ADJUST_INTERVAL {
+            break;
+        }
+
+        // Adjust only if account state hasn't changed
+        if !same_lt(pending.latest_lt, latest_lt) {
+            break;
+        }
+
+        if now < pending.expire_at {
+            seqno_offset += 1;
+            if seqno_offset >= MAX_SEQNO_OFFSET {
+                break;
+            }
+        }
+    }
+
+    seqno_offset
+}
+
 pub fn prepare_transfer(
     clock: &dyn Clock,
     public_key: &PublicKey,
     current_state: &ton_block::AccountStuff,
+    seqno_offset: u32,
     gifts: Vec<Gift>,
     expiration: Expiration,
 ) -> Result<TransferAction> {
-    if gifts.len() > DETAILS.max_messages {
+    if gifts.len() > MAX_MESSAGES {
         return Err(WalletV3Error::TooManyGifts.into());
     }
 
-    let (init_data, with_state_init) = match &current_state.storage.state {
+    let (mut init_data, with_state_init) = match &current_state.storage.state {
         ton_block::AccountState::AccountActive { state_init, .. } => match &state_init.data {
             Some(data) => (InitData::try_from(data)?, false),
             None => return Err(WalletV3Error::InvalidInitData.into()),
@@ -92,6 +141,8 @@ pub fn prepare_transfer(
             true,
         ),
     };
+
+    init_data.seqno += seqno_offset;
 
     let mut message =
         ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
@@ -181,12 +232,14 @@ pub fn compute_contract_address(public_key: &PublicKey, workchain_id: i8) -> Msg
 pub static DETAILS: TonWalletDetails = TonWalletDetails {
     requires_separate_deploy: false,
     min_amount: 1, // 0.000000001 TON
-    max_messages: 4,
+    max_messages: MAX_MESSAGES,
     supports_payload: true,
     supports_state_init: true,
     supports_multiple_owners: false,
     expiration_time: 0,
 };
+
+const MAX_MESSAGES: usize = 4;
 
 /// `WalletV3` init data
 #[derive(Clone, Copy)]

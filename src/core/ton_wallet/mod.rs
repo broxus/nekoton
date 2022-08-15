@@ -289,13 +289,22 @@ impl TonWallet {
                     expiration,
                 )
             }
-            WalletType::WalletV3 => wallet_v3::prepare_transfer(
-                self.clock.as_ref(),
-                public_key,
-                current_state,
-                vec![gift],
-                expiration,
-            ),
+            WalletType::WalletV3 => {
+                let seqno_offset = wallet_v3::estimate_seqno_offset(
+                    self.clock.as_ref(),
+                    current_state,
+                    self.contract_subscription.pending_transactions(),
+                );
+
+                wallet_v3::prepare_transfer(
+                    self.clock.as_ref(),
+                    public_key,
+                    current_state,
+                    seqno_offset,
+                    vec![gift],
+                    expiration,
+                )
+            }
             WalletType::HighloadWalletV2 => highload_wallet_v2::prepare_transfer(
                 self.clock.as_ref(),
                 public_key,

@@ -259,12 +259,19 @@ impl<'a> Stream for LatestTransactions<'a> {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct MessageContext {
+    pub latest_lt: u64,
+    pub created_at: u32,
+    pub expire_at: u32,
+}
+
 pub trait PendingTransactionsExt {
     fn add_message(
         &mut self,
         target: &MsgAddressInt,
         message: &ton_block::Message,
-        expire_at: u32,
+        ctx: MessageContext,
     ) -> Result<PendingTransaction>;
 
     fn cancel(&mut self, pending_transaction: &PendingTransaction);
@@ -275,7 +282,7 @@ impl PendingTransactionsExt for Vec<PendingTransaction> {
         &mut self,
         target: &MsgAddressInt,
         message: &ton_block::Message,
-        expire_at: u32,
+        ctx: MessageContext,
     ) -> Result<PendingTransaction> {
         let src = match message.header() {
             ton_block::CommonMsgInfo::ExtInMsgInfo(header) => {
@@ -291,7 +298,9 @@ impl PendingTransactionsExt for Vec<PendingTransaction> {
         let pending_transaction = PendingTransaction {
             message_hash: message.serialize()?.repr_hash(),
             src,
-            expire_at,
+            latest_lt: ctx.latest_lt,
+            created_at: ctx.created_at,
+            expire_at: ctx.expire_at,
         };
 
         self.push(pending_transaction.clone());
