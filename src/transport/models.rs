@@ -78,6 +78,15 @@ impl PartialEq for ExistingContract {
     }
 }
 
+impl PartialOrd for ExistingContract {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.account
+            .storage
+            .last_trans_lt
+            .partial_cmp(&other.account.storage.last_trans_lt)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct RawTransaction {
     pub hash: UInt256,
