@@ -75,7 +75,6 @@ pub fn estimate_seqno_offset(
     pending_transactions: &[PendingTransaction],
 ) -> u32 {
     const SEQNO_ADJUST_INTERVAL: u32 = 30; // seconds
-    const MAX_SEQNO_OFFSET: u32 = 2;
 
     #[inline]
     fn same_lt(lt_from_pending: u64, lt_from_state: u64) -> bool {
@@ -107,9 +106,6 @@ pub fn estimate_seqno_offset(
 
         if now < pending.expire_at {
             seqno_offset += 1;
-            if seqno_offset >= MAX_SEQNO_OFFSET {
-                break;
-            }
         }
     }
 
