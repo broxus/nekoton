@@ -6,8 +6,10 @@ use ton_block::{GetRepresentationHash, MsgAddressInt};
 
 use nekoton_utils::Clock;
 
-use super::models::{ContractState, PendingTransaction, Transaction, TransactionsBatchInfo};
-use super::{ContractSubscription, PollingMethod, TransactionExecutionOptions};
+use super::contract_subscription::*;
+use super::models::{
+    ContractState, PendingTransaction, PollingMethod, Transaction, TransactionsBatchInfo,
+};
 use crate::core::utils;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;

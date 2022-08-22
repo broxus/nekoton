@@ -9,7 +9,7 @@ use ton_block::MsgAddressInt;
 
 use nekoton_utils::*;
 
-use crate::core::ton_wallet;
+use crate::core::native_wallet;
 use crate::external::Storage;
 
 pub const ACCOUNTS_STORAGE_KEY: &str = "__core__accounts";
@@ -70,7 +70,7 @@ impl AccountsStorage {
         let mut accounts = self.accounts.write().await;
 
         let address = new_account.explicit_address.unwrap_or_else(|| {
-            ton_wallet::compute_address(
+            native_wallet::compute_address(
                 &new_account.public_key,
                 new_account.contract,
                 new_account.workchain,
@@ -85,7 +85,7 @@ impl AccountsStorage {
             btree_map::Entry::Vacant(entry) => entry
                 .insert(AssetsList {
                     name: new_account.name,
-                    ton_wallet: TonWalletAsset {
+                    native_wallet: NativeWalletAsset {
                         address,
                         public_key: new_account.public_key,
                         contract: new_account.contract,
@@ -109,7 +109,7 @@ impl AccountsStorage {
         let mut created_accounts = Vec::new();
         for new_account in new_accounts {
             let address = new_account.explicit_address.unwrap_or_else(|| {
-                ton_wallet::compute_address(
+                native_wallet::compute_address(
                     &new_account.public_key,
                     new_account.contract,
                     new_account.workchain,
@@ -122,7 +122,7 @@ impl AccountsStorage {
                 btree_map::Entry::Vacant(entry) => entry
                     .insert(AssetsList {
                         name: new_account.name,
-                        ton_wallet: TonWalletAsset {
+                        native_wallet: NativeWalletAsset {
                             address,
                             public_key: new_account.public_key,
                             contract: new_account.contract,
@@ -306,7 +306,7 @@ fn parse_assets_map(data: &str) -> Result<AssetsMap> {
                 .into_iter()
                 .map(|(address, assets)| {
                     let assets = serde_json::from_str::<AssetsList>(&assets)
-                        .map_err(|_| D::Error::custom("Failed to deserialize AssetsList"))?;
+                        .map_err(|_| Error::custom("Failed to deserialize AssetsList"))?;
                     Ok((address, assets))
                 })
                 .collect::<Result<_, _>>()?;
@@ -328,7 +328,7 @@ pub struct AccountToAdd {
     pub name: String,
     #[serde(with = "serde_public_key")]
     pub public_key: ed25519_dalek::PublicKey,
-    pub contract: ton_wallet::WalletType,
+    pub contract: native_wallet::WalletType,
     pub workchain: i8,
     #[serde(
         with = "serde_optional_address",
@@ -351,7 +351,7 @@ pub type NetworkGroup = String;
 #[derive(Debug, Clone, Serialize)]
 pub struct AssetsList {
     pub name: String,
-    pub ton_wallet: TonWalletAsset,
+    pub native_wallet: NativeWalletAsset,
 
     /// Additional assets, grouped by network group
     pub additional_assets: HashMap<NetworkGroup, AdditionalAssets>,
@@ -413,23 +413,28 @@ impl<'de> serde::Deserialize<'de> for AssetsList {
         #[derive(Deserialize)]
         #[serde(untagged)]
         enum ParsedAssetsList {
-            Old {
+            V1 {
                 name: String,
-                ton_wallet: TonWalletAsset,
+                ton_wallet: NativeWalletAsset,
                 token_wallets: Vec<TokenWalletAsset>,
                 depools: Vec<DePoolAsset>,
             },
-            New {
+            V2 {
                 name: String,
-                ton_wallet: TonWalletAsset,
+                ton_wallet: NativeWalletAsset,
+                additional_assets: HashMap<String, AdditionalAssets>,
+            },
+            V3 {
+                name: String,
+                native_wallet: NativeWalletAsset,
                 additional_assets: HashMap<String, AdditionalAssets>,
             },
         }
 
         Ok(match ParsedAssetsList::deserialize(deserializer)? {
-            ParsedAssetsList::Old {
+            ParsedAssetsList::V1 {
                 name,
-                ton_wallet,
+                ton_wallet: native_wallet,
                 token_wallets,
                 depools,
             } => {
@@ -444,17 +449,22 @@ impl<'de> serde::Deserialize<'de> for AssetsList {
 
                 AssetsList {
                     name,
-                    ton_wallet,
+                    native_wallet,
                     additional_assets,
                 }
             }
-            ParsedAssetsList::New {
+            ParsedAssetsList::V2 {
                 name,
-                ton_wallet,
+                ton_wallet: native_wallet,
+                additional_assets,
+            }
+            | ParsedAssetsList::V3 {
+                name,
+                native_wallet,
                 additional_assets,
             } => AssetsList {
                 name,
-                ton_wallet,
+                native_wallet,
                 additional_assets,
             },
         })
@@ -462,12 +472,12 @@ impl<'de> serde::Deserialize<'de> for AssetsList {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TonWalletAsset {
+pub struct NativeWalletAsset {
     #[serde(with = "serde_address")]
     pub address: MsgAddressInt,
     #[serde(with = "serde_public_key")]
     pub public_key: ed25519_dalek::PublicKey,
-    pub contract: ton_wallet::WalletType,
+    pub contract: native_wallet::WalletType,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

@@ -354,7 +354,7 @@ enum HighloadWalletV2Error {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::core::ton_wallet::highload_wallet_v2::InitData;
+    use crate::core::native_wallet::highload_wallet_v2::InitData;
     use anyhow::Result;
     use ton_block::Deserializable;
     use ton_types::HashmapType;

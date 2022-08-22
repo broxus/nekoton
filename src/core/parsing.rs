@@ -11,7 +11,7 @@ use nekoton_contracts::tip4_1::nft_contract;
 use nekoton_contracts::{old_tip3, tip3_1};
 
 use crate::core::models::*;
-use crate::core::ton_wallet::WalletType;
+use crate::core::native_wallet::WalletType;
 
 pub struct InputMessage(pub Vec<ton_abi::Token>);
 
@@ -779,7 +779,7 @@ mod tests {
     use ton_block::{Deserializable, Transaction, TransactionDescrOrdinary};
 
     use super::*;
-    use crate::core::ton_wallet::MultisigType;
+    use crate::core::native_wallet::MultisigType;
 
     fn parse_transaction(data: &str) -> (Transaction, TransactionDescrOrdinary) {
         let tx = Transaction::construct_from_base64(data).unwrap();

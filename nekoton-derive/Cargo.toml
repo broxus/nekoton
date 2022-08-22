@@ -6,7 +6,7 @@ authors = [
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
     "Ivan Kalinin <i.kalinin@dexpa.io>"
 ]
-edition = "2018"
+edition = "2021"
 
 [lib]
 proc-macro = true

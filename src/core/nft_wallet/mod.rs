@@ -12,12 +12,12 @@ use nekoton_utils::Clock;
 use ton_block::{MsgAddressInt, Serializable};
 use ton_types::{BuilderData, Cell, UInt256};
 
+use super::contract_subscription::*;
 use crate::core::models::{
-    NftTransaction, NftVersion, PendingTransaction, Transaction, TransactionWithData,
-    TransactionsBatchInfo,
+    InternalMessage, NftTransaction, NftVersion, PendingTransaction, Transaction,
+    TransactionWithData, TransactionsBatchInfo,
 };
 use crate::core::parsing::parse_nft_transaction;
-use crate::core::{ContractSubscription, InternalMessage};
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 

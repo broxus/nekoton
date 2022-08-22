@@ -9,12 +9,11 @@ use nekoton_abi::*;
 use nekoton_contracts::{old_tip3, tip3, tip3_1, tip6};
 use nekoton_utils::*;
 
-use crate::core::models::*;
-use crate::core::parsing::*;
+use super::contract_subscription::*;
+use super::models::*;
+use super::parsing::*;
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
-
-use super::{ContractSubscription, InternalMessage};
 
 pub struct TokenWallet {
     clock: Arc<dyn Clock>,

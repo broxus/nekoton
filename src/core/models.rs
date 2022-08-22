@@ -905,6 +905,22 @@ pub enum MessageFlagsError {
     UnknownMessageFlags,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct InternalMessage {
+    #[serde(
+        with = "serde_optional_address",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub source: Option<ton_block::MsgAddressInt>,
+    #[serde(with = "serde_address")]
+    pub destination: ton_block::MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub amount: u64,
+    pub bounce: bool,
+    #[serde(with = "serde_boc")]
+    pub body: ton_types::SliceData,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -8,8 +8,8 @@ pub mod tests {
         ContractState, Expiration, PendingTransaction, Transaction, TransactionAdditionalInfo,
         TransactionWithData, TransactionsBatchInfo,
     };
-    use nekoton::core::ton_wallet::WalletType::HighloadWalletV2;
-    use nekoton::core::ton_wallet::*;
+    use nekoton::core::native_wallet::WalletType::HighloadWalletV2;
+    use nekoton::core::native_wallet::*;
     use nekoton::crypto::MnemonicType;
     use nekoton::transport::gql::GqlTransport;
     use nekoton_transport::gql::{GqlClient, GqlNetworkSettings};

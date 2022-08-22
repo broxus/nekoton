@@ -22,7 +22,5 @@ ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 
 ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
 
-
-
 [dev-dependencies]
 tokio = { version = "1", features = ["sync", "time", "macros"] }

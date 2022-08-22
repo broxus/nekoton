@@ -9,10 +9,10 @@ use nekoton_abi::{Executor, GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
 use super::models::{
-    ContractState, PendingTransaction, ReliableBehavior, TransactionsBatchInfo,
+    ContractState, PendingTransaction, PollingMethod, ReliableBehavior, TransactionsBatchInfo,
     TransactionsBatchType,
 };
-use super::{utils, PollingMethod};
+use super::utils;
 use crate::core::utils::{MessageContext, PendingTransactionsExt};
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
