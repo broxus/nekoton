@@ -102,12 +102,11 @@ pub mod serde_duration_ms {
 pub mod serde_base64_array {
     use super::*;
 
-    pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &dyn AsRef<[u8]>, serializer: S) -> Result<S::Ok, S::Error>
     where
-        T: AsRef<[u8]> + Sized,
         S: serde::Serializer,
     {
-        serde_bytes_base64::serialize(data.as_ref(), serializer)
+        serde_bytes_base64::serialize(data, serializer)
     }
 
     pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<[u8; N], D::Error>
@@ -123,9 +122,8 @@ pub mod serde_base64_array {
 pub mod serde_hex_array {
     use super::*;
 
-    pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &dyn AsRef<[u8]>, serializer: S) -> Result<S::Ok, S::Error>
     where
-        T: AsRef<[u8]> + Sized,
         S: serde::Serializer,
     {
         serde_bytes::serialize(data, serializer)
@@ -167,11 +165,11 @@ pub mod serde_optional_hex_array {
 
         let data = Option::<Wrapper>::deserialize(deserializer)?;
         Ok(match data {
-            Some(data) => {
-                Some(data.0.try_into().map_err(|_| {
-                    D::Error::custom(format!("Invalid array length, expected: {}", N))
-                })?)
-            }
+            Some(data) => Some(
+                data.0
+                    .try_into()
+                    .map_err(|_| Error::custom(format!("Invalid array length, expected: {}", N)))?,
+            ),
             None => None,
         })
     }
@@ -180,7 +178,7 @@ pub mod serde_optional_hex_array {
 pub mod serde_string {
     use super::*;
 
-    pub fn serialize<S>(data: &dyn std::fmt::Display, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &dyn fmt::Display, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -407,7 +405,7 @@ pub mod serde_vec_address {
         impl<'de> Visitor<'de> for VecVisitor {
             type Value = Vec<MsgAddressInt>;
 
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("vector of addresses")
             }
 
@@ -436,9 +434,8 @@ pub mod serde_bytes {
 
     use super::*;
 
-    pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &dyn AsRef<[u8]>, serializer: S) -> Result<S::Ok, S::Error>
     where
-        T: AsRef<[u8]> + Sized,
         S: serde::Serializer,
     {
         if serializer.is_human_readable() {
@@ -498,13 +495,12 @@ pub mod serde_bytes_base64 {
 
     use super::*;
 
-    pub fn serialize<S, T>(data: T, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &dyn AsRef<[u8]>, serializer: S) -> Result<S::Ok, S::Error>
     where
-        T: AsRef<[u8]> + Sized,
         S: serde::Serializer,
     {
         if serializer.is_human_readable() {
-            serializer.serialize_str(&*base64::encode(&data.as_ref()))
+            serializer.serialize_str(base64::encode(&data.as_ref()).as_str())
         } else {
             serializer.serialize_bytes(data.as_ref())
         }
@@ -616,8 +612,8 @@ pub mod serde_cell {
     {
         use serde::ser::Error;
 
-        let bytes = ton_types::serialize_toc(data).map_err(S::Error::custom)?;
-        serde_bytes_base64::serialize(bytes, serializer)
+        let bytes = ton_types::serialize_toc(data).map_err(Error::custom)?;
+        serde_bytes_base64::serialize(&bytes, serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Cell, D::Error>
@@ -625,32 +621,9 @@ pub mod serde_cell {
         D: serde::Deserializer<'de>,
     {
         let bytes = serde_bytes_base64::deserialize(deserializer)?;
-        let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
-            .map_err(D::Error::custom)?;
+        let cell =
+            ton_types::deserialize_tree_of_cells(&mut bytes.as_slice()).map_err(Error::custom)?;
         Ok(cell)
-    }
-}
-
-pub mod serde_message {
-    use ton_block::{Deserializable, Serializable};
-
-    use super::*;
-
-    pub fn serialize<S>(data: &ton_block::Message, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::Error;
-
-        serde_cell::serialize(&data.serialize().map_err(S::Error::custom)?, serializer)
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<ton_block::Message, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let data = String::deserialize(deserializer)?;
-        ton_block::Message::construct_from_base64(&data).map_err(D::Error::custom)
     }
 }
 
@@ -659,14 +632,13 @@ pub mod serde_ton_block {
 
     use super::*;
 
-    pub fn serialize<S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &dyn Serializable, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
-        T: Serializable,
     {
         use serde::ser::Error;
 
-        serde_cell::serialize(&data.serialize().map_err(S::Error::custom)?, serializer)
+        serde_cell::serialize(&data.serialize().map_err(Error::custom)?, serializer)
     }
 
     pub fn deserialize<'de, D, T>(deserializer: D) -> Result<T, D::Error>
@@ -675,7 +647,7 @@ pub mod serde_ton_block {
         T: Deserializable,
     {
         let data = String::deserialize(deserializer)?;
-        T::construct_from_base64(&data).map_err(D::Error::custom)
+        T::construct_from_base64(&data).map_err(Error::custom)
     }
 }
 

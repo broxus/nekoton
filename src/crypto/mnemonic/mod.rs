@@ -1,50 +1,49 @@
-use anyhow::Error;
+use anyhow::Result;
 use ed25519_dalek::Keypair;
-use rand::Rng;
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
+use zeroize::Zeroize;
 
+pub mod bip39;
 pub mod dict;
-pub(super) mod labs;
-pub(super) mod legacy;
+pub mod legacy;
 
-const LANGUAGE: bip39::Language = bip39::Language::English;
+const LANGUAGE: ::bip39::Language = ::bip39::Language::English;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub enum MnemonicType {
     /// Phrase with 24 words, used in Crystal Wallet
     Legacy,
-    /// Phrase with 12 words, used everywhere else. The additional parameter is used in
-    /// derivation path to create multiple keys from one mnemonic
-    Labs(u16),
+    /// Phrase with 12-24 words, used everywhere else
+    Bip39,
 }
 
-impl MnemonicType {
-    pub fn account_id(self) -> u16 {
-        match self {
-            Self::Legacy => 0,
-            Self::Labs(id) => id,
+pub fn derive_from_phrase(
+    phrase: &str,
+    mnemonic_type: MnemonicType,
+    account_id: u16,
+) -> Result<Keypair> {
+    match mnemonic_type {
+        MnemonicType::Legacy if account_id == 0 => legacy::derive_from_phrase(phrase),
+        MnemonicType::Legacy => Err(MnemonicError::UnsupportedAccountId.into()),
+        MnemonicType::Bip39 => {
+            bip39::derive_from_phrase(phrase, &bip39::make_default_path(account_id))
         }
     }
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GeneratedKey {
-    pub words: Vec<&'static str>,
-    pub account_type: MnemonicType,
-}
-
-pub fn derive_from_phrase(phrase: &str, mnemonic_type: MnemonicType) -> Result<Keypair, Error> {
-    match mnemonic_type {
-        MnemonicType::Legacy => legacy::derive_from_phrase(phrase),
-        MnemonicType::Labs(account_id) => labs::derive_from_phrase(phrase, account_id),
-    }
+#[derive(Copy, Clone, Debug)]
+pub enum NewMnemonicType {
+    /// Phrase with 24 words, used in Crystal Wallet
+    Legacy,
+    /// Phrase with 12-24 words, used everywhere else
+    Bip39(bip39::MnemonicType),
 }
 
 /// Generates mnemonic and keypair.
-pub fn generate_key(account_type: MnemonicType) -> GeneratedKey {
-    use bip39::util::{Bits11, IterExt};
+pub fn generate_phrase(mnemonic_type: NewMnemonicType) -> Vec<&'static str> {
+    use ::bip39::util::{Bits11, IterExt};
 
     let rng = &mut rand::thread_rng();
 
@@ -61,17 +60,25 @@ pub fn generate_key(account_type: MnemonicType) -> GeneratedKey {
             .collect()
     }
 
-    GeneratedKey {
-        account_type,
-        words: match account_type {
-            MnemonicType::Legacy => {
-                let entropy: [u8; 32] = rng.gen();
-                generate_words(&entropy)
-            }
-            MnemonicType::Labs(_) => {
-                let entropy: [u8; 16] = rng.gen();
-                generate_words(&entropy)
-            }
-        },
-    }
+    let mut entropy = [0u8; 32];
+    let words = match mnemonic_type {
+        NewMnemonicType::Legacy => {
+            rng.fill_bytes(&mut entropy);
+            generate_words(&entropy)
+        }
+        NewMnemonicType::Bip39(mnemonic_type) => {
+            let entropy = &mut entropy[..mnemonic_type.entropy_bits() / 8];
+            rng.fill_bytes(entropy);
+            generate_words(entropy)
+        }
+    };
+    entropy.zeroize();
+
+    words
+}
+
+#[derive(thiserror::Error, Debug)]
+enum MnemonicError {
+    #[error("Unsupported account id")]
+    UnsupportedAccountId,
 }

@@ -13,10 +13,9 @@ use tokio::sync::RwLock;
 
 use nekoton_utils::*;
 
-use crate::crypto::{
-    EncryptedData, EncryptionAlgorithm, PasswordCache, SharedSecret, Signature, Signer,
-    SignerContext, SignerEntry, SignerStorage,
-};
+use crate::crypto::password_cache::*;
+use crate::crypto::signer::{self, Signer, SignerContext};
+use crate::crypto::{EncryptedData, EncryptionAlgorithm, SharedSecret};
 use crate::external::Storage;
 
 pub const KEYSTORE_STORAGE_KEY: &str = "__core__keystore";
@@ -193,7 +192,7 @@ impl KeyStore {
     pub async fn encrypt<T>(
         &self,
         data: &[u8],
-        public_keys: &[ed25519_dalek::PublicKey],
+        public_keys: &[PublicKey],
         algorithm: EncryptionAlgorithm,
         input: T::SignInput,
     ) -> Result<Vec<EncryptedData>>
@@ -269,7 +268,7 @@ impl KeyStore {
         }
     }
 
-    pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<Signature>
+    pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<[u8; 64]>
     where
         T: Signer,
     {
@@ -370,8 +369,8 @@ struct KeyStoreState {
     entries: EntriesMap,
 }
 
-type SignersMap = HashMap<TypeId, (String, Box<dyn SignerStorage>)>;
-type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (TypeId, SignerEntry)>;
+type SignersMap = HashMap<TypeId, (String, Box<dyn signer::SignerStorage>)>;
+type EntriesMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], (TypeId, signer::SignerEntry)>;
 
 impl KeyStoreState {
     fn get_signer_ref<T>(&self) -> Result<&T>
@@ -403,7 +402,7 @@ impl KeyStoreState {
     }
 }
 
-impl SignerEntry {
+impl signer::SignerEntry {
     fn into_plain(
         self,
         type_id: TypeId,
@@ -424,7 +423,7 @@ pub struct KeyStoreEntry {
 }
 
 impl KeyStoreEntry {
-    fn from_signer_entry(signer_name: String, signer_entry: SignerEntry) -> Self {
+    fn from_signer_entry(signer_name: String, signer_entry: signer::SignerEntry) -> Self {
         Self {
             signer_name,
             name: signer_entry.name,
@@ -436,11 +435,11 @@ impl KeyStoreEntry {
 }
 
 pub struct KeyStoreBuilder {
-    signers: HashMap<String, (Box<dyn SignerStorage>, TypeId)>,
+    signers: HashMap<String, (Box<dyn signer::SignerStorage>, TypeId)>,
     signer_types: HashSet<TypeId>,
 }
 
-type BuilderSignersMap = HashMap<String, (Box<dyn SignerStorage>, TypeId)>;
+type BuilderSignersMap = HashMap<String, (Box<dyn signer::SignerStorage>, TypeId)>;
 
 impl KeyStoreBuilder {
     pub fn with_signer<T>(mut self, name: &str, signer: T) -> Result<Self, KeyStoreError>
@@ -564,13 +563,8 @@ pub enum KeyStoreError {
 
 #[cfg(test)]
 mod tests {
-    use crate::crypto::{
-        DerivedKeyCreateInput, DerivedKeySignParams, DerivedKeySigner, EncryptedKeyCreateInput,
-        EncryptedKeyPassword, EncryptedKeySigner, MnemonicType, Password, PasswordCacheBehavior,
-    };
-    use std::collections::HashMap;
-
     use super::*;
+    use crate::crypto::MnemonicType;
 
     #[derive(Default)]
     struct TestStorage(parking_lot::Mutex<HashMap<String, String>>);
@@ -610,9 +604,9 @@ mod tests {
         let storage = Arc::new(TestStorage::default());
 
         let keystore = KeyStore::builder()
-            .with_signer("master_key", DerivedKeySigner::new())
+            .with_signer("master_key", signer::DerivedSigner::new())
             .unwrap()
-            .with_signer("encrypted_key", EncryptedKeySigner::new())
+            .with_signer("encrypted_key", signer::SimpleSigner::new())
             .unwrap()
             .load(storage)
             .await
@@ -624,7 +618,7 @@ mod tests {
         };
 
         let first_key = keystore
-            .add_key::<DerivedKeySigner>(DerivedKeyCreateInput::Import {
+            .add_key::<signer::DerivedSigner>(signer::derived::CreateKeyParams::Import {
                 key_name: None,
                 phrase: TEST_MNEMONICS[0].into(),
                 password: useless_password.clone(),
@@ -633,10 +627,13 @@ mod tests {
             .unwrap();
 
         let second_key = keystore
-            .add_key::<EncryptedKeySigner>(EncryptedKeyCreateInput {
+            .add_key::<signer::SimpleSigner>(signer::simple::CreateKeyParams {
                 name: None,
-                phrase: TEST_MNEMONICS[1].into(),
-                mnemonic_type: MnemonicType::Labs(0),
+                data: signer::simple::KeyData::Phrase {
+                    phrase: TEST_MNEMONICS[1].into(),
+                    mnemonic_type: MnemonicType::Bip39,
+                    account_id: 0,
+                },
                 password: useless_password.clone(),
             })
             .await
@@ -646,11 +643,11 @@ mod tests {
 
         // Check encryption (first -> second)
         let encrypted_data = keystore
-            .encrypt::<DerivedKeySigner>(
+            .encrypt::<signer::DerivedSigner>(
                 TEST_DATA,
                 &[second_key.public_key],
                 EncryptionAlgorithm::ChaCha20Poly1305,
-                DerivedKeySignParams::ByPublicKey {
+                signer::derived::SignParams::ByPublicKey {
                     master_key: first_key.master_key,
                     public_key: first_key.public_key,
                     password: Password::FromCache,
@@ -671,9 +668,9 @@ mod tests {
 
         // Check decryption (first -> second)
         let data = keystore
-            .decrypt::<EncryptedKeySigner>(
+            .decrypt::<signer::SimpleSigner>(
                 &encrypted_data,
-                EncryptedKeyPassword {
+                signer::simple::KeyPassword {
                     public_key: second_key.public_key,
                     password: Password::FromCache,
                 },

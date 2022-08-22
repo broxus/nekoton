@@ -110,8 +110,9 @@ pub mod tests {
 
         let test_mnemonic =
             "razor advice advance announce palace decide tone catch fat journey position recipe";
-        let key_pair = nekoton::crypto::derive_from_phrase(test_mnemonic, MnemonicType::Labs(0))
-            .expect("Failed to derive from mnemonic");
+        let key_pair =
+            nekoton::crypto::mnemonic::derive_from_phrase(test_mnemonic, MnemonicType::Bip39, 0)
+                .expect("Failed to derive from mnemonic");
 
         let handler = Arc::new(TestHandler {});
 

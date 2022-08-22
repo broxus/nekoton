@@ -3,24 +3,23 @@ use std::collections::hash_map::{self, HashMap};
 use anyhow::Result;
 use async_trait::async_trait;
 use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
-use ed25519_dalek::{PublicKey, Signer};
+use ed25519_dalek::PublicKey;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize, Serializer};
 
 use nekoton_utils::*;
 
-use super::mnemonic::*;
-use super::{
-    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
-    Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
-};
+use super::{default_key_name, Signer, SignerContext, SignerEntry, SignerStorage};
+use crate::crypto::mnemonic::*;
+use crate::crypto::password_cache::*;
+use crate::crypto::SharedSecret;
 
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
-pub struct DerivedKeySigner {
+pub struct DerivedSigner {
     master_keys: HashMap<[u8; 32], MasterKey>,
 }
 
-impl DerivedKeySigner {
+impl DerivedSigner {
     pub fn new() -> Self {
         Self::default()
     }
@@ -35,15 +34,15 @@ impl DerivedKeySigner {
     fn use_sign_input(
         &'_ self,
         password_cache: &PasswordCache,
-        input: <Self as StoreSigner>::SignInput,
+        input: <Self as Signer>::SignInput,
     ) -> Result<ed25519_dalek::Keypair> {
         let (master_key, account_id, password) = match input {
-            DerivedKeySignParams::ByAccountId {
+            SignParams::ByAccountId {
                 master_key,
                 account_id,
                 password,
             } => (self.get_master_key(&master_key)?, account_id, password),
-            DerivedKeySignParams::ByPublicKey {
+            SignParams::ByPublicKey {
                 master_key,
                 public_key,
                 password,
@@ -78,13 +77,13 @@ impl DerivedKeySigner {
 }
 
 #[async_trait]
-impl StoreSigner for DerivedKeySigner {
-    type CreateKeyInput = DerivedKeyCreateInput;
-    type ExportKeyInput = DerivedKeyExportParams;
-    type ExportKeyOutput = DerivedKeyExportOutput;
-    type GetPublicKeys = DerivedKeyGetPublicKeys;
-    type UpdateKeyInput = DerivedKeyUpdateParams;
-    type SignInput = DerivedKeySignParams;
+impl Signer for DerivedSigner {
+    type CreateKeyInput = CreateKeyParams;
+    type ExportKeyInput = ExportKeyParams;
+    type ExportKeyOutput = ExportedKey;
+    type GetPublicKeys = GetPublicKeysParams;
+    type UpdateKeyInput = UpdateKeyParams;
+    type SignInput = SignParams;
 
     async fn add_key(
         &mut self,
@@ -92,7 +91,7 @@ impl StoreSigner for DerivedKeySigner {
         input: Self::CreateKeyInput,
     ) -> Result<SignerEntry> {
         Ok(match input {
-            DerivedKeyCreateInput::Import {
+            CreateKeyParams::Import {
                 phrase,
                 password,
                 key_name,
@@ -135,7 +134,7 @@ impl StoreSigner for DerivedKeySigner {
                     account_id: 0,
                 }
             }
-            DerivedKeyCreateInput::Derive {
+            CreateKeyParams::Derive {
                 master_key,
                 account_id,
                 password,
@@ -333,14 +332,7 @@ impl StoreSigner for DerivedKeySigner {
         let keypair = self.use_sign_input(ctx.password_cache, input)?;
         Ok(public_keys
             .iter()
-            .map(|public_key| {
-                let secret = super::x25519::compute_shared(&keypair.secret, public_key);
-                SharedSecret {
-                    source_public_key: keypair.public,
-                    recipient_public_key: *public_key,
-                    secret,
-                }
-            })
+            .map(|public_key| SharedSecret::x25519(&keypair, public_key))
             .collect())
     }
 
@@ -351,12 +343,12 @@ impl StoreSigner for DerivedKeySigner {
         input: Self::SignInput,
     ) -> Result<[u8; 64]> {
         let keypair = self.use_sign_input(ctx.password_cache, input)?;
-        Ok(keypair.sign(data).to_bytes())
+        Ok(ed25519_dalek::Signer::sign(&keypair, data).to_bytes())
     }
 }
 
 #[async_trait]
-impl SignerStorage for DerivedKeySigner {
+impl SignerStorage for DerivedSigner {
     fn load_state(&mut self, data: &str) -> Result<()> {
         #[derive(Deserialize)]
         struct ParsedDerivedKeySigner {
@@ -490,23 +482,23 @@ impl MasterKey {
         let mut phrase = phrase.unsecure().to_string();
 
         // SECURITY: private key will be zeroized here
-        let public_key = derive_from_phrase(&phrase, MnemonicType::Labs(0))?.public;
+        let public_key = derive_from_phrase(&phrase, MnemonicType::Bip39, 0)?.public;
 
         let key_name = key_name.unwrap_or_else(|| default_key_name(public_key.as_bytes()));
 
         let password = password_cache.process_password(public_key.to_bytes(), password)?;
 
-        let mut entropy = labs::derive_master_key(&phrase)?;
+        let mut master_key = bip39::derive_master_key(&phrase)?;
         let EncryptedPart {
             salt,
-            enc_entropy,
-            entropy_nonce,
+            enc_master_key: enc_entropy,
+            master_key_nonce: entropy_nonce,
             enc_phrase,
             phrase_nonce,
-        } = compute_encrypted_part(&entropy, phrase.as_bytes(), password.as_ref())?;
+        } = compute_encrypted_part(&master_key, phrase.as_bytes(), password.as_ref())?;
 
         phrase.zeroize();
-        entropy.zeroize();
+        master_key.zeroize();
 
         let mut accounts_map = AccountsMap::new();
         accounts_map.insert(
@@ -542,8 +534,8 @@ impl MasterKey {
         let encrypted_part =
             compute_encrypted_part(entropy.unsecure(), phrase.unsecure(), new_password)?;
         self.salt = encrypted_part.salt;
-        self.enc_entropy = encrypted_part.enc_entropy;
-        self.entropy_nonce = encrypted_part.entropy_nonce;
+        self.enc_entropy = encrypted_part.enc_master_key;
+        self.entropy_nonce = encrypted_part.master_key_nonce;
         self.enc_phrase = encrypted_part.enc_phrase;
         self.phrase_nonce = encrypted_part.phrase_nonce;
 
@@ -551,7 +543,11 @@ impl MasterKey {
     }
 }
 
-fn compute_encrypted_part(entropy: &[u8], phrase: &[u8], password: &str) -> Result<EncryptedPart> {
+fn compute_encrypted_part(
+    master_key: &[u8],
+    phrase: &[u8],
+    password: &str,
+) -> Result<EncryptedPart> {
     use rand::Rng;
 
     let rng = &mut rand::thread_rng();
@@ -565,17 +561,17 @@ fn compute_encrypted_part(entropy: &[u8], phrase: &[u8], password: &str) -> Resu
     let mut phrase_nonce = [0u8; NONCE_LENGTH];
     rng.fill(&mut phrase_nonce);
 
-    let entropy_nonce = Nonce::from(entropy_nonce);
+    let master_key_nonce = Nonce::from(entropy_nonce);
     let phrase_nonce = Nonce::from(phrase_nonce);
 
     let encryptor = ChaCha20Poly1305::new(&symmetric_key_from_password(password, &salt));
-    let enc_entropy = encrypt(&encryptor, &entropy_nonce, entropy)?;
+    let enc_master_key = encrypt(&encryptor, &master_key_nonce, master_key)?;
     let enc_phrase = encrypt(&encryptor, &phrase_nonce, phrase)?;
 
     Ok(EncryptedPart {
         salt,
-        enc_entropy,
-        entropy_nonce,
+        enc_master_key,
+        master_key_nonce,
         enc_phrase,
         phrase_nonce,
     })
@@ -583,8 +579,8 @@ fn compute_encrypted_part(entropy: &[u8], phrase: &[u8], password: &str) -> Resu
 
 struct EncryptedPart {
     salt: Vec<u8>,
-    enc_entropy: Vec<u8>,
-    entropy_nonce: Nonce,
+    enc_master_key: Vec<u8>,
+    master_key_nonce: Nonce,
     enc_phrase: Vec<u8>,
     phrase_nonce: Nonce,
 }
@@ -595,11 +591,11 @@ struct Account {
     account_id: u16,
 }
 
-type AccountsMap = HashMap<PubKey, Account>;
+type AccountsMap = HashMap<[u8; 32], Account>;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
-pub enum DerivedKeySignParams {
+pub enum SignParams {
     ByAccountId {
         #[serde(with = "serde_public_key")]
         master_key: PublicKey,
@@ -616,19 +612,19 @@ pub enum DerivedKeySignParams {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct DerivedKeyExportParams {
+pub struct ExportKeyParams {
     #[serde(with = "serde_public_key")]
     pub master_key: PublicKey,
     pub password: Password,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct DerivedKeyExportOutput {
+pub struct ExportedKey {
     pub phrase: SecUtf8,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct DerivedKeyGetPublicKeys {
+pub struct GetPublicKeysParams {
     #[serde(with = "serde_public_key")]
     pub master_key: PublicKey,
     pub password: Password,
@@ -638,7 +634,7 @@ pub struct DerivedKeyGetPublicKeys {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
-pub enum DerivedKeyUpdateParams {
+pub enum UpdateKeyParams {
     RenameKey {
         #[serde(with = "serde_public_key")]
         master_key: PublicKey,
@@ -656,7 +652,7 @@ pub enum DerivedKeyUpdateParams {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
-pub enum DerivedKeyCreateInput {
+pub enum CreateKeyParams {
     Import {
         key_name: Option<String>,
         phrase: SecUtf8,
@@ -720,13 +716,14 @@ mod serde_accounts_map {
         stored_data
             .into_iter()
             .map(|(public_key, StoredItem { name, account_id })| {
-                let public_key = hex::decode(&public_key)
-                    .map_err(D::Error::custom)
-                    .and_then(|public_key| {
-                        public_key
-                            .try_into()
-                            .map_err(|_| D::Error::custom("Invalid public key"))
-                    })?;
+                let public_key =
+                    hex::decode(&public_key)
+                        .map_err(Error::custom)
+                        .and_then(|public_key| {
+                            public_key
+                                .try_into()
+                                .map_err(|_| Error::custom("Invalid public key"))
+                        })?;
                 let name = name.unwrap_or_else(|| default_key_name(&public_key));
                 Ok((public_key, Account { name, account_id }))
             })
@@ -765,14 +762,13 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
-    use crate::crypto::PasswordCacheBehavior;
 
     const TEST_PHRASE: &str =
         "pioneer fever hazard scan install wise reform corn bubble leisure amazing note";
 
     #[tokio::test]
     async fn test_creation() -> Result<()> {
-        let mut signer = DerivedKeySigner::new();
+        let mut signer = DerivedSigner::new();
 
         let cache = PasswordCache::new();
         let ctx = SignerContext {
@@ -783,7 +779,7 @@ mod tests {
         let entry = signer
             .add_key(
                 ctx,
-                DerivedKeyCreateInput::Import {
+                CreateKeyParams::Import {
                     key_name: Some("Key".to_owned()),
                     phrase: SecUtf8::from(TEST_PHRASE),
                     password: Password::Explicit {
@@ -799,7 +795,7 @@ mod tests {
         signer
             .export_key(
                 ctx,
-                DerivedKeyExportParams {
+                ExportKeyParams {
                     master_key: entry.master_key,
                     password: Password::FromCache,
                 },
@@ -811,7 +807,7 @@ mod tests {
         let entry = signer
             .add_key(
                 ctx,
-                DerivedKeyCreateInput::Import {
+                CreateKeyParams::Import {
                     key_name: Some("Key 2".to_owned()),
                     phrase: SecUtf8::from(TEST_PHRASE),
                     password: Password::Explicit {
@@ -827,7 +823,7 @@ mod tests {
         signer
             .export_key(
                 ctx,
-                DerivedKeyExportParams {
+                ExportKeyParams {
                     master_key: entry.master_key,
                     password: Password::Explicit {
                         password: SecUtf8::from("321"),
@@ -843,7 +839,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_change_password() -> Result<()> {
-        let mut signer = DerivedKeySigner::new();
+        let mut signer = DerivedSigner::new();
 
         let cache = PasswordCache::new();
         let ctx = SignerContext {
@@ -853,7 +849,7 @@ mod tests {
         let entry = signer
             .add_key(
                 ctx,
-                DerivedKeyCreateInput::Import {
+                CreateKeyParams::Import {
                     key_name: Some("Key".to_owned()),
                     phrase: SecUtf8::from(TEST_PHRASE),
                     password: Password::Explicit {
@@ -867,7 +863,7 @@ mod tests {
         signer
             .update_key(
                 ctx,
-                DerivedKeyUpdateParams::ChangePassword {
+                UpdateKeyParams::ChangePassword {
                     master_key: entry.master_key,
                     old_password: Password::Explicit {
                         password: SecUtf8::from("123"),
@@ -884,7 +880,7 @@ mod tests {
         assert!(signer
             .update_key(
                 ctx,
-                DerivedKeyUpdateParams::ChangePassword {
+                UpdateKeyParams::ChangePassword {
                     master_key: entry.master_key,
                     old_password: Password::Explicit {
                         password: SecUtf8::from("totally different"),
@@ -922,7 +918,7 @@ mod tests {
 
     #[tokio::test]
     async fn store_load() {
-        let mut key = DerivedKeySigner::new();
+        let mut key = DerivedSigner::new();
 
         let cache = PasswordCache::new();
         let ctx = SignerContext {
@@ -932,7 +928,7 @@ mod tests {
         let master = key
             .add_key(
                 ctx,
-                DerivedKeyCreateInput::Import {
+                CreateKeyParams::Import {
                     key_name: Some("from giver".into()),
                     phrase: TEST_PHRASE.into(),
                     password: Password::Explicit {
@@ -946,7 +942,7 @@ mod tests {
             .master_key;
         key.add_key(
             ctx,
-            DerivedKeyCreateInput::Derive {
+            CreateKeyParams::Derive {
                 key_name: Some("all my money 🤑".into()),
                 master_key: master,
                 password: Password::Explicit {
@@ -960,7 +956,7 @@ mod tests {
         .unwrap();
         key.add_key(
             ctx,
-            DerivedKeyCreateInput::Derive {
+            CreateKeyParams::Derive {
                 key_name: Some("史萊克的模因.".into()),
                 master_key: master,
                 password: Password::Explicit {
@@ -974,7 +970,7 @@ mod tests {
         .unwrap();
         let serialized = key.store_state();
 
-        let mut loaded = DerivedKeySigner::new();
+        let mut loaded = DerivedSigner::new();
         loaded.load_state(&serialized).unwrap();
         assert_eq!(loaded, key);
     }
@@ -1005,7 +1001,7 @@ mod tests {
         }
     }
 }"#;
-        let mut loaded = DerivedKeySigner::new();
+        let mut loaded = DerivedSigner::new();
         loaded.load_state(json).unwrap();
     }
 }

@@ -10,21 +10,19 @@ use serde::{Deserialize, Serialize};
 
 use nekoton_utils::*;
 
-use super::{
-    default_key_name, SharedSecret, Signer as StoreSigner, SignerContext, SignerEntry,
-    SignerStorage,
-};
+use super::{default_key_name, Signer, SignerContext, SignerEntry, SignerStorage};
+use crate::crypto::SharedSecret;
 use crate::external::{LedgerConnection, LedgerSignatureContext};
 
 #[derive(Clone)]
-pub struct LedgerKeySigner {
+pub struct LedgerSigner {
     keys: KeysMap,
     connection: Arc<dyn LedgerConnection>,
 }
 
 type KeysMap = HashMap<[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], LedgerKey>;
 
-impl LedgerKeySigner {
+impl LedgerSigner {
     pub fn new(connection: Arc<dyn LedgerConnection>) -> Self {
         Self {
             keys: Default::default(),
@@ -48,13 +46,13 @@ impl LedgerKeySigner {
 }
 
 #[async_trait]
-impl StoreSigner for LedgerKeySigner {
-    type CreateKeyInput = LedgerKeyCreateInput;
+impl Signer for LedgerSigner {
+    type CreateKeyInput = CreateKeyParams;
     type ExportKeyInput = ();
     type ExportKeyOutput = ();
-    type GetPublicKeys = LedgerKeyGetPublicKeys;
-    type UpdateKeyInput = LedgerUpdateKeyInput;
-    type SignInput = LedgerSignInput;
+    type GetPublicKeys = GetPublicKeysParams;
+    type UpdateKeyInput = UpdateKeyParams;
+    type SignInput = SignParams;
 
     async fn add_key(
         &mut self,
@@ -151,7 +149,7 @@ impl StoreSigner for LedgerKeySigner {
 }
 
 #[async_trait]
-impl SignerStorage for LedgerKeySigner {
+impl SignerStorage for LedgerSigner {
     fn load_state(&mut self, data: &str) -> Result<()> {
         let data = serde_json::from_str::<Vec<(String, String)>>(data)?;
 
@@ -222,20 +220,20 @@ impl SignerStorage for LedgerKeySigner {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LedgerKeyCreateInput {
+pub struct CreateKeyParams {
     pub name: Option<String>,
     pub account_id: u16,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct LedgerKeyGetPublicKeys {
+pub struct GetPublicKeysParams {
     pub offset: u16,
     pub limit: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
-pub enum LedgerUpdateKeyInput {
+pub enum UpdateKeyParams {
     #[serde(rename_all = "camelCase")]
     Rename {
         #[serde(with = "serde_public_key")]
@@ -246,7 +244,7 @@ pub enum LedgerUpdateKeyInput {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LedgerSignInput {
+pub struct SignParams {
     #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
     #[serde(default)]
@@ -305,5 +303,3 @@ pub enum LedgerKeyError {
     #[error("Method not supported")]
     MethodNotSupported,
 }
-
-mod test {}
