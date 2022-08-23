@@ -62,21 +62,20 @@ impl Serialize for SignedMessage {
             #[serde(with = "serde_uint256")]
             pub hash: ton_types::UInt256,
             pub expire_at: u32,
-            #[serde(with = "serde_message")]
-            pub boc: ton_block::Message,
+            #[serde(with = "serde_cell")]
+            pub boc: ton_types::Cell,
         }
 
         let cell: ton_types::Cell = self
             .message
             .write_to_new_cell()
-            .map_err(S::Error::custom)?
+            .map_err(Error::custom)?
             .into();
-        let hash = cell.repr_hash();
 
         SignedMessageHelper {
-            hash,
+            hash: cell.repr_hash(),
             expire_at: self.expire_at,
-            boc: self.message.to_owned(),
+            boc: cell,
         }
         .serialize(serializer)
     }
@@ -91,7 +90,7 @@ impl<'de> Deserialize<'de> for SignedMessage {
         #[serde(rename_all = "camelCase")]
         struct SignedMessageHelper {
             pub expire_at: u32,
-            #[serde(with = "serde_message")]
+            #[serde(with = "serde_ton_block")]
             pub boc: ton_block::Message,
         }
 

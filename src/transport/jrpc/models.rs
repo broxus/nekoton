@@ -22,7 +22,7 @@ pub struct GetAccountsByCodeHash<'a> {
 
 #[derive(Serialize)]
 pub struct SendMessage<'a> {
-    #[serde(with = "serde_message")]
+    #[serde(with = "serde_ton_block")]
     pub message: &'a ton_block::Message,
 }
 
