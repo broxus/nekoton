@@ -5,11 +5,11 @@ use ed25519_dalek::PublicKey;
 use ton_block::{MsgAddrStd, MsgAddressInt, Serializable};
 use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 
+use nekoton_abi::{SignedMessage, UnsignedMessage};
 use nekoton_utils::*;
 
 use super::{Gift, TonWalletDetails, TransferAction};
-use crate::core::models::{Expiration, ExpireAt, PendingTransaction};
-use crate::crypto::{SignedMessage, UnsignedMessage};
+use crate::models::{Expiration, ExpireAt, PendingTransaction};
 
 pub fn prepare_deploy(
     clock: &dyn Clock,

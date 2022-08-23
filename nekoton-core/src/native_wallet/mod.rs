@@ -15,13 +15,12 @@ use nekoton_utils::*;
 pub use self::multisig::MultisigType;
 use super::contract_subscription::*;
 use super::models::{
-    ContractState, Expiration, InternalMessage, MessageFlags, MultisigPendingTransaction,
-    PendingTransaction, PollingMethod, Transaction, TransactionAdditionalInfo, TransactionWithData,
+    ContractState, ExistingContract, Expiration, InternalMessage, MessageFlags,
+    MultisigPendingTransaction, PendingTransaction, PollingMethod, RawContractState,
+    RawTransaction, Transaction, TransactionAdditionalInfo, TransactionWithData,
     TransactionsBatchInfo,
 };
 use super::parsing::*;
-use crate::crypto::UnsignedMessage;
-use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 
 pub mod highload_wallet_v2;

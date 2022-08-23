@@ -8,11 +8,11 @@ use nekoton_utils::Clock;
 
 use super::contract_subscription::*;
 use super::models::{
-    ContractState, PendingTransaction, PollingMethod, Transaction, TransactionsBatchInfo,
+    ContractState, PendingTransaction, PollingMethod, RawContractState, RawTransaction,
+    Transaction, TransactionsBatchInfo,
 };
-use crate::core::utils;
-use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
+use crate::utils;
 
 pub struct GenericContract {
     contract_subscription: ContractSubscription,

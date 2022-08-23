@@ -5,11 +5,11 @@ use ed25519_dalek::PublicKey;
 use ton_block::{MsgAddrStd, MsgAddressInt, Serializable};
 use ton_types::{BuilderData, Cell, HashmapE, HashmapType, IBitstring, SliceData, UInt256};
 
+use nekoton_abi::{SignedMessage, UnsignedMessage};
 use nekoton_utils::*;
 
 use super::{Gift, TonWalletDetails, TransferAction};
-use crate::core::models::{Expiration, ExpireAt};
-use crate::crypto::{SignedMessage, UnsignedMessage};
+use crate::models::{Expiration, ExpireAt};
 
 pub fn prepare_deploy(
     clock: &dyn Clock,
@@ -354,7 +354,7 @@ enum HighloadWalletV2Error {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::core::native_wallet::highload_wallet_v2::InitData;
+    use crate::native_wallet::highload_wallet_v2::InitData;
     use anyhow::Result;
     use ton_block::Deserializable;
     use ton_types::HashmapType;

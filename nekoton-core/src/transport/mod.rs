@@ -4,18 +4,15 @@ use nekoton_utils::Clock;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
-use crate::core::models::ReliableBehavior;
-
-use self::models::*;
+use crate::models::{RawContractState, RawTransaction, ReliableBehavior};
 
 #[cfg(feature = "gql_transport")]
 pub mod gql;
 #[cfg(feature = "jrpc_transport")]
 pub mod jrpc;
 
-pub mod models;
 #[cfg(any(feature = "gql_transport", feature = "jrpc_transport",))]
-mod utils;
+mod config_cache;
 
 #[async_trait]
 pub trait Transport: Send + Sync {

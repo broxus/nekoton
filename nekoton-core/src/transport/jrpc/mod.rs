@@ -1,21 +1,30 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use ton_block::{Block, Deserializable, MsgAddressInt};
 
 use nekoton_utils::*;
 
-use crate::core::models::ReliableBehavior;
-use crate::external::{self, JrpcConnection};
-
-use super::models::{RawContractState, RawTransaction};
-use super::utils::*;
-use super::{Transport, TransportInfo};
+use crate::models::{RawContractState, RawTransaction, ReliableBehavior};
 
 use self::models::*;
+use super::config_cache::*;
+use super::{Transport, TransportInfo};
 
 mod models;
+
+#[derive(Debug, Clone)]
+pub struct JrpcRequest {
+    pub data: String,
+    pub requires_db: bool,
+}
+
+#[async_trait]
+pub trait JrpcConnection: Send + Sync {
+    async fn post(&self, req: JrpcRequest) -> Result<String>;
+}
 
 pub struct JrpcTransport {
     connection: Arc<dyn JrpcConnection>,
@@ -42,7 +51,7 @@ impl Transport for JrpcTransport {
     }
 
     async fn send_message(&self, message: &ton_block::Message) -> Result<()> {
-        let req = external::JrpcRequest {
+        let req = JrpcRequest {
             data: make_jrpc_request("sendMessage", &SendMessage { message }),
             requires_db: false,
         };
@@ -50,7 +59,7 @@ impl Transport for JrpcTransport {
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
-        let req = external::JrpcRequest {
+        let req = JrpcRequest {
             data: make_jrpc_request("getContractState", &GetContractState { address }),
             requires_db: false,
         };
@@ -65,7 +74,7 @@ impl Transport for JrpcTransport {
         limit: u8,
         continuation: &Option<MsgAddressInt>,
     ) -> Result<Vec<MsgAddressInt>> {
-        let req = external::JrpcRequest {
+        let req = JrpcRequest {
             data: make_jrpc_request(
                 "getAccountsByCodeHash",
                 &GetAccountsByCodeHash {
@@ -93,7 +102,7 @@ impl Transport for JrpcTransport {
         from_lt: u64,
         count: u8,
     ) -> Result<Vec<RawTransaction>> {
-        let req = external::JrpcRequest {
+        let req = JrpcRequest {
             data: make_jrpc_request(
                 "getTransactionsList",
                 &GetTransactions {
@@ -110,7 +119,7 @@ impl Transport for JrpcTransport {
     }
 
     async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>> {
-        let req = external::JrpcRequest {
+        let req = JrpcRequest {
             data: make_jrpc_request("getTransaction", &GetTransaction { id }),
             requires_db: true,
         };
@@ -120,7 +129,7 @@ impl Transport for JrpcTransport {
     }
 
     async fn get_latest_key_block(&self) -> Result<Block> {
-        let req = external::JrpcRequest {
+        let req = JrpcRequest {
             data: make_jrpc_request("getLatestKeyBlock", &()),
             requires_db: true,
         };
@@ -143,31 +152,31 @@ pub fn make_jrpc_request<S>(method: &str, params: &S) -> String
 where
     S: Serialize,
 {
-    serde_json::to_string(&JrpcRequest { method, params }).trust_me()
-}
-
-pub struct JrpcRequest<'a, T> {
-    method: &'a str,
-    params: &'a T,
-}
-
-impl<'a, T> serde::Serialize for JrpcRequest<'a, T>
-where
-    T: serde::Serialize,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeStruct;
-
-        let mut ser = serializer.serialize_struct("JrpcRequest", 4)?;
-        ser.serialize_field("jsonrpc", "2.0")?;
-        ser.serialize_field("id", &1)?;
-        ser.serialize_field("method", self.method)?;
-        ser.serialize_field("params", self.params)?;
-        ser.end()
+    struct RawJrpcRequest<'a, T> {
+        method: &'a str,
+        params: &'a T,
     }
+
+    impl<'a, T> serde::Serialize for RawJrpcRequest<'a, T>
+    where
+        T: serde::Serialize,
+    {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            use serde::ser::SerializeStruct;
+
+            let mut ser = serializer.serialize_struct("JrpcRequest", 4)?;
+            ser.serialize_field("jsonrpc", "2.0")?;
+            ser.serialize_field("id", &1)?;
+            ser.serialize_field("method", self.method)?;
+            ser.serialize_field("params", self.params)?;
+            ser.end()
+        }
+    }
+
+    serde_json::to_string(&RawJrpcRequest { method, params }).trust_me()
 }
 
 fn decode_raw_transaction(boc: &str) -> Result<RawTransaction> {
@@ -180,14 +189,12 @@ fn decode_raw_transaction(boc: &str) -> Result<RawTransaction> {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use super::JrpcTransport;
     use super::*;
+    use std::str::FromStr;
 
     #[async_trait::async_trait]
     impl JrpcConnection for reqwest::Client {
-        async fn post(&self, req: external::JrpcRequest) -> Result<String> {
+        async fn post(&self, req: JrpcRequest) -> Result<String> {
             println!("{req:?}");
             let text = self
                 .post("https://extension-api.broxus.com/rpc")

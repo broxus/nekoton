@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -5,17 +6,15 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
-use nekoton_abi::{Executor, GenTimings, LastTransactionId};
+use nekoton_abi::Executor;
 use nekoton_utils::*;
 
 use super::models::{
-    ContractState, PendingTransaction, PollingMethod, ReliableBehavior, TransactionsBatchInfo,
-    TransactionsBatchType,
+    ContractState, LastTransactionId, PendingTransaction, PollingMethod, RawContractState,
+    RawTransaction, ReliableBehavior, TransactionsBatchInfo, TransactionsBatchType,
 };
-use super::utils;
-use crate::core::utils::{MessageContext, PendingTransactionsExt};
-use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
+use crate::utils::{parse_block, request_transactions, MessageContext, PendingTransactionsExt};
 
 /// Used as a base object for different listeners implementation
 pub struct ContractSubscription {
@@ -173,10 +172,10 @@ impl ContractSubscription {
         // Only check expired messages when we can guarantee, that
         // all transactions until current state were received
         if !self.pending_transactions.is_empty() && self.transactions_synced {
-            let current_utime = self
-                .contract_state
-                .gen_timings
-                .current_utime(self.clock.as_ref());
+            // Optimistic expiration offset
+            pub const GEN_TIMINGS_ALLOWABLE_INTERVAL: u32 = 30; // sec
+
+            let current_utime = self.clock.now_sec_u64() as u32 - GEN_TIMINGS_ALLOWABLE_INTERVAL;
             self.check_expired_transactions(current_utime, on_message_expired);
         }
 
@@ -190,7 +189,7 @@ impl ContractSubscription {
         on_message_sent: OnMessageSent<'_>,
         on_message_expired: OnMessageExpired<'_>,
     ) -> Result<Option<ContractState>> {
-        let block = utils::parse_block(&self.address, &self.contract_state, block)?;
+        let block = parse_block(&self.address, &self.contract_state, block)?;
 
         let mut new_account_state = None;
         if let Some((account_state, new_transactions)) = block.data {
@@ -271,29 +270,14 @@ impl ContractSubscription {
         let contract_state = self.transport.get_contract_state(&self.address).await?;
         let new_contract_state = contract_state.brief();
 
-        if new_contract_state == self.contract_state {
-            return Ok(false);
-        }
-
-        match (
-            new_contract_state.gen_timings,
-            self.contract_state.gen_timings,
-        ) {
-            // Do nothing if we received a state with the old logical time
-            (
-                GenTimings::Known {
-                    gen_lt: new_gen_lt, ..
-                },
-                GenTimings::Known {
-                    gen_lt: old_gen_lt, ..
-                },
-            ) if new_gen_lt <= old_gen_lt => Ok(false),
-            // Notify otherwise
-            _ => {
+        match new_contract_state.last_lt.cmp(&self.contract_state.last_lt) {
+            // Notify with new state
+            Ordering::Greater => {
                 on_contract_state(&contract_state);
                 self.contract_state = new_contract_state;
                 Ok(true)
             }
+            _ => Ok(false),
         }
     }
 
@@ -318,7 +302,7 @@ impl ContractSubscription {
         let mut new_latest_known_transaction = None;
 
         // clone request context, because `&mut self` is needed later
-        let mut transactions = utils::request_transactions(
+        let mut transactions = request_transactions(
             self.transport.as_ref(),
             &self.address,
             from_lt,

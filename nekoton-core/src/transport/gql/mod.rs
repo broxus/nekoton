@@ -7,15 +7,21 @@ use async_trait::async_trait;
 use graphql_client::{GraphQLQuery, Response};
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
-use nekoton_abi::{GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
-use crate::core::models::ReliableBehavior;
-use crate::external::GqlConnection;
+use crate::models::{
+    ExistingContract, LastTransactionId, RawContractState, RawTransaction, ReliableBehavior,
+};
 
-use super::models::*;
-use super::utils::ConfigCache;
+use super::config_cache::ConfigCache;
 use super::{Transport, TransportInfo};
+
+#[async_trait]
+pub trait GqlConnection: Send + Sync {
+    fn is_local(&self) -> bool;
+
+    async fn post(&self, data: &str) -> Result<String>;
+}
 
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
@@ -256,7 +262,6 @@ impl Transport for GqlTransport {
 
                 Ok(RawContractState::Exists(ExistingContract {
                     account,
-                    timings: GenTimings::Unknown,
                     last_transaction_id,
                 }))
             }

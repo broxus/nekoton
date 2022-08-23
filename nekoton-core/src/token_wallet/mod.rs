@@ -12,7 +12,6 @@ use nekoton_utils::*;
 use super::contract_subscription::*;
 use super::models::*;
 use super::parsing::*;
-use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 
 pub struct TokenWallet {
@@ -595,8 +594,6 @@ mod tests {
     use std::str::FromStr;
     use ton_block::Deserializable;
 
-    use nekoton_abi::LastTransactionId;
-
     use super::*;
 
     fn convert_address(addr: &str) -> MsgAddressInt {
@@ -610,7 +607,6 @@ mod tests {
         };
         ExistingContract {
             account,
-            timings: Default::default(),
             last_transaction_id: LastTransactionId::Inexact { latest_lt: 0 },
         }
     }

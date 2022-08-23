@@ -29,7 +29,6 @@ pub use self::event_builder::*;
 pub use self::function_builder::*;
 pub use self::known_param_type::*;
 pub use self::message_builder::*;
-pub use self::models::*;
 pub use self::token_packer::*;
 pub use self::token_unpacker::*;
 pub use self::tokens_json::*;
@@ -41,14 +40,11 @@ mod event_builder;
 mod function_builder;
 mod known_param_type;
 mod message_builder;
-mod models;
 mod token_packer;
 mod token_unpacker;
 mod tokens_json;
 pub mod transaction_parser;
 mod tvm;
-
-const TON_ABI_VERSION: ton_abi::contract::AbiVersion = ton_abi::contract::ABI_VERSION_2_0;
 
 pub fn read_function_id(data: &SliceData) -> Result<u32> {
     let mut value: u32 = 0;
@@ -92,7 +88,7 @@ pub fn guess_method_by_input<'a>(
     message_body: &SliceData,
     method: &MethodName,
     internal: bool,
-) -> Result<Option<&'a ton_abi::Function>> {
+) -> Result<Option<&'a Function>> {
     let names = match method {
         MethodName::Known(name) => return Ok(Some(contract.function(name)?)),
         MethodName::GuessInRange(names) => Some(names),
@@ -142,13 +138,13 @@ pub fn create_boc_or_comment_payload(data: &str) -> Result<SliceData> {
 
 /// Creates slice data with string, encoded as comment
 pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
-    ton_abi::TokenValue::pack_values_into_chain(
+    TokenValue::pack_values_into_chain(
         &[
             0u32.token_value().unnamed(),
             comment.token_value().unnamed(),
         ],
         Vec::new(),
-        &TON_ABI_VERSION,
+        &ton_abi::contract::ABI_VERSION_2_0,
     )
     .map(SliceData::from)
 }
@@ -181,23 +177,26 @@ pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
     Ok(SliceData::from(cell))
 }
 
-pub fn pack_into_cell(tokens: &[ton_abi::Token]) -> Result<ton_types::Cell> {
+pub fn pack_into_cell(
+    tokens: &[Token],
+    abi_version: ton_abi::contract::AbiVersion,
+) -> Result<ton_types::Cell> {
     let cells = Vec::new();
-    ton_abi::TokenValue::pack_values_into_chain(tokens, cells, &TON_ABI_VERSION)
-        .and_then(|x| x.into_cell())
+    TokenValue::pack_values_into_chain(tokens, cells, &abi_version).and_then(|x| x.into_cell())
 }
 
 pub fn unpack_from_cell(
     params: &[Param],
     mut cursor: SliceData,
     allow_partial: bool,
+    abi_version: ton_abi::contract::AbiVersion,
 ) -> Result<Vec<Token>> {
     let mut tokens = Vec::new();
 
     for param in params {
         let last = Some(param) == params.last();
         let (token_value, new_cursor) =
-            TokenValue::read_from(&param.kind, cursor, last, &TON_ABI_VERSION, allow_partial)?;
+            TokenValue::read_from(&param.kind, cursor, last, &abi_version, allow_partial)?;
 
         cursor = new_cursor;
         tokens.push(Token {
@@ -253,7 +252,7 @@ pub fn insert_state_init_data(
 ) -> Result<SliceData> {
     #[derive(thiserror::Error, Debug)]
     enum InitDataError {
-        #[error("Token not found: {}", .0)]
+        #[error("Token not found: {0}")]
         TokenNotFound(String),
         #[error("Token param type mismatch")]
         TokenParamTypeMismatch,
@@ -287,7 +286,7 @@ pub fn insert_state_init_data(
                 return Err(InitDataError::TokenParamTypeMismatch.into());
             }
 
-            let builder = token.pack_into_chain(&TON_ABI_VERSION)?;
+            let builder = token.pack_into_chain(&contract.abi_version)?;
             map.set_builder(param.key.write_to_new_cell().trust_me().into(), &builder)?;
         }
     }
@@ -621,7 +620,7 @@ impl<'a> FunctionAbi<'a> {
             now_ms,
             gen_utime,
             gen_lt,
-        } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
+        } = get_block_stats(clock, account_stuff.storage.last_trans_lt);
 
         msg.set_body(self.abi.encode_run_local_input(now_ms, input)?.into());
 
@@ -663,7 +662,7 @@ impl<'a> FunctionAbi<'a> {
 
         let BlockStats {
             gen_utime, gen_lt, ..
-        } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
+        } = get_block_stats(clock, account_stuff.storage.last_trans_lt);
 
         msg.set_body(function.encode_internal_input(input)?.into());
 
@@ -823,7 +822,7 @@ impl Executor {
         };
         let BlockStats {
             gen_utime, gen_lt, ..
-        } = get_block_stats(clock, None, last_trans_lt);
+        } = get_block_stats(clock, last_trans_lt);
 
         let root_cell = account.serialize()?;
 
@@ -903,27 +902,15 @@ struct BlockStats {
     gen_lt: u64,
 }
 
-fn get_block_stats(
-    clock: &dyn Clock,
-    timings: Option<GenTimings>,
-    last_trans_lt: u64,
-) -> BlockStats {
+fn get_block_stats(clock: &dyn Clock, last_trans_lt: u64) -> BlockStats {
     // Additional estimated logical time offset for the latest transaction id
     pub const UNKNOWN_TRANSACTION_LT_OFFSET: u64 = 10;
 
     let now_ms = clock.now_ms_u64();
-
-    match timings {
-        Some(GenTimings::Known { gen_lt, gen_utime }) => BlockStats {
-            now_ms,
-            gen_utime,
-            gen_lt,
-        },
-        _ => BlockStats {
-            now_ms,
-            gen_utime: (now_ms / 1000) as u32,
-            gen_lt: last_trans_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
-        },
+    BlockStats {
+        now_ms,
+        gen_utime: (now_ms / 1000) as u32,
+        gen_lt: last_trans_lt + UNKNOWN_TRANSACTION_LT_OFFSET,
     }
 }
 
@@ -965,6 +952,8 @@ mod tests {
     use ton_block::{Deserializable, Message, Transaction};
 
     use super::*;
+
+    const DEFAULT_ABI_VERSION: ton_abi::contract::AbiVersion = ton_abi::contract::ABI_VERSION_2_0;
 
     #[test]
     fn correct_text_payload() {
@@ -1063,18 +1052,20 @@ mod tests {
     fn test_encode_cell() {
         let expected = "te6ccgEBAQEAIgAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA5";
         let tokens = &[Token::new("wa", TokenValue::Uint(Uint::new(12345, 256)))];
-        let got =
-            base64::encode(ton_types::serialize_toc(&pack_into_cell(tokens).unwrap()).unwrap());
+        let got = base64::encode(
+            ton_types::serialize_toc(&pack_into_cell(tokens, DEFAULT_ABI_VERSION).unwrap())
+                .unwrap(),
+        );
         assert_eq!(expected, got);
     }
 
     #[test]
     fn test_decode_cell() {
         let tokens = [Token::new("wa", TokenValue::Uint(Uint::new(12345, 256)))];
-        let cell = pack_into_cell(&tokens).unwrap();
+        let cell = pack_into_cell(&tokens, DEFAULT_ABI_VERSION).unwrap();
         let data = SliceData::construct_from_cell(cell).unwrap();
         let params = &[Param::new("wa", ParamType::Uint(256))];
-        let got = unpack_from_cell(params, data, true).unwrap();
+        let got = unpack_from_cell(params, data, true, DEFAULT_ABI_VERSION).unwrap();
         assert_eq!(&tokens, got.as_slice());
     }
 
@@ -1084,15 +1075,17 @@ mod tests {
             Token::new("first", TokenValue::Uint(Uint::new(12345, 256))),
             Token::new("second", TokenValue::Uint(Uint::new(1337, 64))),
         ];
-        let cell = pack_into_cell(&tokens).unwrap();
+        let cell = pack_into_cell(&tokens, DEFAULT_ABI_VERSION).unwrap();
 
         let data: SliceData = cell.into();
 
         let partial_params = &[Param::new("first", ParamType::Uint(256))];
 
-        assert!(unpack_from_cell(partial_params, data.clone(), false).is_err());
+        assert!(
+            unpack_from_cell(partial_params, data.clone(), false, DEFAULT_ABI_VERSION).is_err()
+        );
 
-        let got = unpack_from_cell(partial_params, data, true).unwrap();
+        let got = unpack_from_cell(partial_params, data, true, DEFAULT_ABI_VERSION).unwrap();
         assert_eq!(
             &[Token::new("first", TokenValue::Uint(Uint::new(12345, 256))),],
             got.as_slice()

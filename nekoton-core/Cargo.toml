@@ -1,5 +1,5 @@
 [package]
-name = "nekoton"
+name = "nekoton-core"
 version = "0.11.0"
 authors = [
     "Alexey Pashinov <pashinov93@gmail.com>",
@@ -8,40 +8,19 @@ authors = [
 ]
 edition = "2021"
 
-[workspace]
-members = [
-    "nekoton-abi",
-    "nekoton-contracts",
-    "nekoton-core",
-    "nekoton-derive",
-    "nekoton-transport",
-    "nekoton-utils",
-    "nekoton-tests"
-]
-
 [dependencies]
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.13"
-chacha20poly1305 = "0.10.1"
-curve25519-dalek-ng = "4.1.1"
 downcast-rs = "1.2"
-dyn-clone = "1.0"
 futures-util = "0.3"
 getrandom = "0.2.4"
 graphql_client = { version = "0.11", optional = true }
 hex = "0.4"
-hmac = "0.11.0"
 log = "0.4"
-num-bigint = { version = "0.3", features = ["serde"] }
-once_cell = "1.12.0"
-parking_lot = "0.12.0"
-pbkdf2 = "0.9.0"
-rand = { version = "0.8", features = ["getrandom"] }
-secstr = { version = "0.5.0", features = ["serde"] }
+once_cell = "1.13"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-sha2 = "0.9.9"
 thiserror = "1.0"
 tiny-jsonrpc = { version = "0.6.0", default-features = false, optional = true }
 tokio = { version = "1", default-features = false, features = ["sync"] }
@@ -56,18 +35,17 @@ ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 
-nekoton-contracts = { path = "nekoton-contracts" }
-nekoton-abi = { path = "nekoton-abi", features = ["derive"] }
-nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
+nekoton-abi = { path = "../nekoton-abi", features = ["derive"] }
+nekoton-contracts = { path = "../nekoton-contracts" }
+nekoton-utils = { path = "../nekoton-utils" }
 
 [dev-dependencies]
-reqwest = { version = "0.11.8", features = ["gzip"] }
-cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+reqwest = { version = "0.11", features = ["json", "gzip"] }
+tokio = { version = "1", default-features = false, features = ["sync", "rt", "macros"] }
 
 [features]
 default = ["gql_transport"]
-integration_test = []
 web = ["nekoton-contracts/web", "nekoton-abi/web", "nekoton-utils/web", "getrandom/wasm-bindgen", "ton_abi/web"]
 gql_transport = ["graphql_client"]
 jrpc_transport = ["tiny-jsonrpc"]
+

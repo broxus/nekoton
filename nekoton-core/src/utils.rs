@@ -9,12 +9,10 @@ use ed25519_dalek::PublicKey;
 use futures_util::{Future, FutureExt, Stream};
 use ton_block::{MsgAddressInt, Serializable};
 
-use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
+use nekoton_abi::{SignedMessage, UnsignedMessage};
 use nekoton_utils::*;
 
-use crate::core::models::*;
-use crate::crypto::{SignedMessage, UnsignedMessage};
-use crate::transport::models::RawTransaction;
+use crate::models::*;
 use crate::transport::Transport;
 
 pub fn convert_transactions(
@@ -102,6 +100,7 @@ pub fn parse_block(
     let mut balance = contract_state.balance as i128;
     let mut new_transactions = Vec::new();
 
+    let mut last_lt = contract_state.last_lt;
     let mut latest_transaction_id: Option<TransactionId> = None;
     let mut is_deployed = contract_state.is_deployed;
 
@@ -128,15 +127,13 @@ pub fn parse_block(
             })
         }
 
-        new_transactions.push(transaction)
+        last_lt = std::cmp::max(last_lt, compute_account_lt(&transaction.data));
+        new_transactions.push(transaction);
     }
 
     let new_contract_state = ContractState {
+        last_lt,
         balance: balance as u64,
-        gen_timings: GenTimings::Known {
-            gen_lt: info.end_lt(),
-            gen_utime: info.gen_utime().0,
-        },
         last_transaction_id: latest_transaction_id
             .map(LastTransactionId::Exact)
             .or(contract_state.last_transaction_id),

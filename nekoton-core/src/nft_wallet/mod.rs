@@ -13,12 +13,11 @@ use ton_block::{MsgAddressInt, Serializable};
 use ton_types::{BuilderData, Cell, UInt256};
 
 use super::contract_subscription::*;
-use crate::core::models::{
-    InternalMessage, NftTransaction, NftVersion, PendingTransaction, Transaction,
-    TransactionWithData, TransactionsBatchInfo,
+use crate::models::{
+    ExistingContract, InternalMessage, NftTransaction, NftVersion, PendingTransaction,
+    RawContractState, RawTransaction, Transaction, TransactionWithData, TransactionsBatchInfo,
 };
-use crate::core::parsing::parse_nft_transaction;
-use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
+use crate::parsing::parse_nft_transaction;
 use crate::transport::Transport;
 
 const NFT_STAMP: &[u8; 3] = b"nft";

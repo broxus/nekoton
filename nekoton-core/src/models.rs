@@ -1,4 +1,6 @@
+use std::cmp::Ordering;
 use std::convert::TryFrom;
+use std::str::FromStr;
 
 use anyhow::Result;
 use num_bigint::BigUint;
@@ -447,14 +449,132 @@ pub struct RootTokenContractDetails {
     pub total_supply: BigUint,
 }
 
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum RawContractState {
+    NotExists,
+    Exists(ExistingContract),
+}
+
+impl RawContractState {
+    pub fn brief(&self) -> ContractState {
+        match self {
+            Self::NotExists => ContractState::default(),
+            Self::Exists(state) => state.brief(),
+        }
+    }
+
+    pub fn into_state(self) -> ton_block::Account {
+        match self {
+            Self::NotExists => ton_block::Account::AccountNone,
+            Self::Exists(state) => ton_block::Account::Account(state.account),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExistingContract {
+    #[serde(with = "serde_account_stuff")]
+    pub account: ton_block::AccountStuff,
+    pub last_transaction_id: LastTransactionId,
+}
+
+impl ExistingContract {
+    pub fn brief(&self) -> ContractState {
+        ContractState {
+            last_lt: self.account.storage.last_trans_lt,
+            balance: self.account.storage.balance.grams.0 as u64,
+            last_transaction_id: Some(self.last_transaction_id),
+            is_deployed: matches!(
+                self.account.storage.state,
+                ton_block::AccountState::AccountActive { .. }
+            ),
+            code_hash: match &self.account.storage.state {
+                ton_block::AccountState::AccountActive { state_init, .. } => {
+                    state_init.code.as_ref().map(ton_types::Cell::repr_hash)
+                }
+                _ => None,
+            },
+        }
+    }
+
+    pub fn as_context<'a>(&'a self, clock: &'a dyn Clock) -> ExecutionContext<'a> {
+        ExecutionContext {
+            clock,
+            account_stuff: &self.account,
+        }
+    }
+}
+
+impl PartialEq for ExistingContract {
+    fn eq(&self, other: &Self) -> bool {
+        self.account
+            .storage
+            .last_trans_lt
+            .eq(&other.account.storage.last_trans_lt)
+    }
+}
+
+impl PartialOrd for ExistingContract {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.account
+            .storage
+            .last_trans_lt
+            .partial_cmp(&other.account.storage.last_trans_lt)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct RawTransaction {
+    pub hash: UInt256,
+    pub data: ton_block::Transaction,
+}
+
+impl PartialEq for RawTransaction {
+    fn eq(&self, other: &Self) -> bool {
+        self.data.lt == other.data.lt && self.hash == other.hash
+    }
+}
+
+impl Eq for RawTransaction {}
+
+impl PartialOrd for RawTransaction {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.data.lt.partial_cmp(&other.data.lt)
+    }
+}
+
+impl Ord for RawTransaction {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.data.lt.cmp(&other.data.lt)
+    }
+}
+
+impl PartialEq<RawTransaction> for PendingTransaction {
+    fn eq(&self, other: &RawTransaction) -> bool {
+        if other.data.now >= self.expire_at {
+            return false;
+        }
+
+        matches!(
+            other.data.in_msg.as_ref().map(|msg| msg.cell().repr_hash()),
+            Some(message_hash) if self.message_hash == message_hash
+        )
+    }
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]
 #[serde(rename_all = "camelCase")]
 pub struct ContractState {
+    /// Latest known lt
+    #[serde(skip)]
+    pub last_lt: u64,
+
     /// Full account balance in nano TON
     #[serde(with = "serde_string")]
     pub balance: u64,
-    /// At what point was this state obtained
-    pub gen_timings: GenTimings,
     /// Last transaction id
     pub last_transaction_id: Option<LastTransactionId>,
     /// Whether the contract is deployed
@@ -466,11 +586,7 @@ pub struct ContractState {
 
 impl PartialEq for ContractState {
     fn eq(&self, other: &Self) -> bool {
-        // Ignore timings change
-
-        self.balance == other.balance
-            && self.last_transaction_id == other.last_transaction_id
-            && self.is_deployed == other.is_deployed
+        self.last_lt == other.last_lt
     }
 }
 
@@ -537,6 +653,144 @@ pub struct TransactionsBatchInfo {
 pub enum TransactionsBatchType {
     Old,
     New,
+}
+
+#[derive(Debug, Copy, Clone, Eq)]
+pub enum LastTransactionId {
+    Exact(TransactionId),
+    Inexact { latest_lt: u64 },
+}
+
+impl LastTransactionId {
+    /// Whether the exact id is known
+    pub fn is_exact(&self) -> bool {
+        matches!(self, Self::Exact(_))
+    }
+
+    /// Converts last transaction id into real or fake id
+    pub fn lt(&self) -> u64 {
+        match self {
+            Self::Exact(id) => id.lt,
+            Self::Inexact { latest_lt } => *latest_lt,
+        }
+    }
+}
+
+impl Serialize for LastTransactionId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct LastTransactionIdHelper {
+            is_exact: bool,
+            lt: String,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            hash: Option<String>,
+        }
+
+        let (is_exact, lt, hash) = match self {
+            Self::Exact(id) => (true, &id.lt, Some(id.hash.to_hex_string())),
+            Self::Inexact { latest_lt } => (false, latest_lt, None),
+        };
+
+        LastTransactionIdHelper {
+            is_exact,
+            lt: lt.to_string(),
+            hash,
+        }
+        .serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for LastTransactionId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct LastTransactionIdHelper {
+            is_exact: bool,
+            lt: String,
+            #[serde(default)]
+            hash: Option<String>,
+        }
+
+        let LastTransactionIdHelper { is_exact, lt, hash } =
+            <LastTransactionIdHelper as Deserialize>::deserialize(deserializer)?;
+
+        let lt = u64::from_str(&lt).map_err(Error::custom)?;
+        match (is_exact, hash) {
+            (true, Some(hash)) => {
+                let hash = UInt256::from_str(&hash).map_err(Error::custom)?;
+                Ok(Self::Exact(TransactionId { lt, hash }))
+            }
+            (false, None) => Ok(Self::Inexact { latest_lt: lt }),
+            _ => Err(Error::custom("invalid last transaction id")),
+        }
+    }
+}
+
+impl PartialEq for LastTransactionId {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Exact(left), Self::Exact(right)) => left == right,
+            (Self::Inexact { latest_lt: left }, Self::Inexact { latest_lt: right }) => {
+                left == right
+            }
+            _ => false,
+        }
+    }
+}
+
+impl PartialOrd for LastTransactionId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for LastTransactionId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let left = match self {
+            Self::Exact(id) => &id.lt,
+            Self::Inexact { latest_lt } => latest_lt,
+        };
+        let right = match other {
+            Self::Exact(id) => &id.lt,
+            Self::Inexact { latest_lt } => latest_lt,
+        };
+        left.cmp(right)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, Serialize, Deserialize)]
+pub struct TransactionId {
+    #[serde(with = "serde_string")]
+    pub lt: u64,
+    #[serde(with = "serde_uint256")]
+    pub hash: UInt256,
+}
+
+impl PartialEq for TransactionId {
+    fn eq(&self, other: &Self) -> bool {
+        self.lt == other.lt
+    }
+}
+
+impl PartialOrd for TransactionId {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for TransactionId {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.lt.cmp(&other.lt)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -719,12 +973,12 @@ impl<'de> Deserialize<'de> for Message {
             body: Option<String>,
         }
 
-        let parsed = MessageHelper::deserialize(deserializer)?;
+        let parsed = <MessageHelper as Deserialize>::deserialize(deserializer)?;
         let body = match parsed.body {
             Some(data) => {
-                let data = base64::decode(&data).map_err(D::Error::custom)?;
+                let data = base64::decode(&data).map_err(Error::custom)?;
                 let data = ton_types::deserialize_tree_of_cells(&mut data.as_slice())
-                    .map_err(D::Error::custom)?;
+                    .map_err(Error::custom)?;
                 let hash = data.repr_hash();
                 Some(MessageBody { hash, data })
             }
@@ -774,7 +1028,7 @@ impl Serialize for Message {
 
         let (body, body_hash) = match &self.body {
             Some(body) => {
-                let data = ton_types::serialize_toc(&body.data).map_err(S::Error::custom)?;
+                let data = ton_types::serialize_toc(&body.data).map_err(Error::custom)?;
                 (Some(base64::encode(data)), Some(body.hash.to_hex_string()))
             }
             None => (None, None),
@@ -911,9 +1165,9 @@ pub struct InternalMessage {
         with = "serde_optional_address",
         skip_serializing_if = "Option::is_none"
     )]
-    pub source: Option<ton_block::MsgAddressInt>,
+    pub source: Option<MsgAddressInt>,
     #[serde(with = "serde_address")]
-    pub destination: ton_block::MsgAddressInt,
+    pub destination: MsgAddressInt,
     #[serde(with = "serde_string")]
     pub amount: u64,
     pub bounce: bool,

@@ -11,9 +11,8 @@ use nekoton_abi::*;
 use nekoton_utils::*;
 
 use super::{Gift, TonWalletDetails, TransferAction};
-use crate::core::models::{Expiration, MessageFlags, MultisigPendingTransaction};
-use crate::core::utils::*;
-use crate::crypto::UnsignedMessage;
+use crate::models::{Expiration, MessageFlags, MultisigPendingTransaction};
+use crate::utils::*;
 
 pub fn prepare_deploy(
     clock: &dyn Clock,
