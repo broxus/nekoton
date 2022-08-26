@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, HashMap};
+
 use num_bigint::{BigInt, BigUint};
 use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
@@ -212,7 +213,7 @@ impl<K,V> BuildTokenValue for HashMap<K,V>
         for (k, v) in self.into_iter() {
             map.insert(k.to_string(), v.token_value());
         }
-        TokenValue::Map(K::param_type(), V::param_type(), map).token_value()
+        TokenValue::Map(K::param_type(), V::param_type(), map)
     }
 }
 
