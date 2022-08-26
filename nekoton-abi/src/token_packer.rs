@@ -205,7 +205,7 @@ where
 
 impl<K, V> BuildTokenValue for HashMap<K, V>
 where
-    K: Ord + ToString + KnownParamType,
+    K: ToString + KnownParamType,
     V: KnownParamType + BuildTokenValue,
 {
     fn token_value(self) -> TokenValue {
