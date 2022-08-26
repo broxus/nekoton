@@ -1,3 +1,4 @@
+use std::collections::{BTreeMap, HashMap};
 use num_bigint::{BigInt, BigUint};
 use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
@@ -198,6 +199,20 @@ where
             T::param_type(),
             self.into_iter().map(BuildTokenValue::token_value).collect(),
         )
+    }
+}
+
+impl<K,V> BuildTokenValue for HashMap<K,V>
+    where
+        K: Ord + ToString + KnownParamType,
+        V: KnownParamType + BuildTokenValue,
+{
+    fn token_value(self) -> TokenValue {
+        let mut map = BTreeMap::<String,TokenValue>::new();
+        for (k, v) in self.into_iter() {
+            map.insert(k.to_string(), v.token_value());
+        }
+        TokenValue::Map(K::param_type(), V::param_type(), map).token_value()
     }
 }
 
