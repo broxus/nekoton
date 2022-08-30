@@ -146,7 +146,7 @@ pub mod query_account_state {
 
     #[derive(Deserialize)]
     pub struct QueryAccountStateAccounts {
-        pub boc: String,
+        pub boc: Option<String>,
     }
 }
 

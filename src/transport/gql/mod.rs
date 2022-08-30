@@ -210,8 +210,9 @@ impl Transport for GqlTransport {
             .accounts
             .into_iter()
             .next()
+            .and_then(|state| state.boc)
         {
-            Some(account_state) => account_state.boc,
+            Some(boc) => boc,
             None => return Ok(RawContractState::NotExists),
         };
 
