@@ -119,6 +119,19 @@ impl Transport for JrpcTransport {
         data.map(|boc| decode_raw_transaction(&boc)).transpose()
     }
 
+    async fn get_dst_transaction(
+        &self,
+        message_hash: &ton_types::UInt256,
+    ) -> Result<Option<RawTransaction>> {
+        let req = external::JrpcRequest {
+            data: make_jrpc_request("getDstTransaction", &GetDstTransaction { message_hash }),
+            requires_db: true,
+        };
+        let response = self.connection.post(req).await?;
+        let data: Option<String> = tiny_jsonrpc::parse_response(&response)?;
+        data.map(|boc| decode_raw_transaction(&boc)).transpose()
+    }
+
     async fn get_latest_key_block(&self) -> Result<Block> {
         let req = external::JrpcRequest {
             data: make_jrpc_request("getLatestKeyBlock", &()),
@@ -182,7 +195,6 @@ fn decode_raw_transaction(boc: &str) -> Result<RawTransaction> {
 mod tests {
     use std::str::FromStr;
 
-    use super::JrpcTransport;
     use super::*;
 
     #[async_trait::async_trait]
@@ -190,7 +202,7 @@ mod tests {
         async fn post(&self, req: external::JrpcRequest) -> Result<String> {
             println!("{req:?}");
             let text = self
-                .post("https://extension-api.broxus.com/rpc")
+                .post("https://jrpc.everwallet.net/rpc")
                 .body(req.data)
                 .header("Content-Type", "application/json")
                 .send()

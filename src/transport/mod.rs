@@ -41,6 +41,11 @@ pub trait Transport: Send + Sync {
 
     async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>>;
 
+    async fn get_dst_transaction(
+        &self,
+        message_hash: &ton_types::UInt256,
+    ) -> Result<Option<RawTransaction>>;
+
     async fn get_latest_key_block(&self) -> Result<ton_block::Block>;
 
     // NOTE: clock is used for caching here

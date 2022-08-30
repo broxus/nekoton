@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use graphql_client::{GraphQLQuery, Response};
+use serde::Deserialize;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
 use nekoton_abi::{GenTimings, LastTransactionId};
@@ -13,9 +13,12 @@ use nekoton_utils::*;
 use crate::core::models::ReliableBehavior;
 use crate::external::GqlConnection;
 
+use self::queries::*;
 use super::models::*;
 use super::utils::ConfigCache;
 use super::{Transport, TransportInfo};
+
+mod queries;
 
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
@@ -34,20 +37,24 @@ impl GqlTransport {
 
     async fn fetch<T>(&self, params: T::Variables) -> Result<T::ResponseData>
     where
-        T: GraphQLQuery,
+        T: GqlQuery,
     {
-        let request_body = T::build_query(params);
+        let request_body = serde_json::to_string(&T::build_query(&params)).trust_me();
         let response = self
             .connection
-            .post(&serde_json::to_string(&request_body).trust_me())
+            .post(&request_body)
             .await
             .map_err(api_failure)?;
+
+        #[derive(Deserialize)]
+        pub struct Response<T> {
+            pub data: Option<T>,
+        }
 
         match serde_json::from_str::<Response<T::ResponseData>>(&response) {
             Ok(response) => response.data.ok_or_else(|| invalid_response().into()),
             Err(e) => Err(api_failure(format!(
-                "Failed parsing api response: {}. Response data: {}",
-                e, response
+                "Failed parsing api response: {e}. Response data: {response}"
             ))
             .into()),
         }
@@ -56,51 +63,32 @@ impl GqlTransport {
     pub async fn get_latest_block(&self, addr: &MsgAddressInt) -> Result<LatestBlock> {
         let workchain_id = addr.get_workchain_id();
 
-        let blocks = self
-            .fetch::<QueryLatestMasterchainBlock>(query_latest_masterchain_block::Variables)
+        let block = self
+            .fetch::<QueryLatestMasterchainBlock>(())
             .await?
             .blocks
-            .ok_or_else(no_blocks_found)?;
+            .into_iter()
+            .next();
 
-        match blocks.into_iter().flatten().next() {
+        match block {
             Some(block) => {
                 // Handle simple case when searched account is in masterchain
                 if workchain_id == -1 {
-                    return match (block.id, block.end_lt, block.gen_utime) {
-                        (Some(id), Some(end_lt), Some(gen_utime)) => Ok(LatestBlock {
-                            id,
-                            end_lt: u64::from_str(&end_lt).unwrap_or_default(),
-                            gen_utime: gen_utime as u32,
-                        }),
-                        _ => Err(no_blocks_found().into()),
-                    };
+                    return Ok(LatestBlock {
+                        id: block.id,
+                        end_lt: parse_lt(&block.end_lt)?,
+                        gen_utime: block.gen_utime as u32,
+                    });
                 }
 
-                // Find account's shard block
-                let shards: Vec<_> = block
-                    .master
-                    .and_then(|master| master.shard_hashes)
-                    .ok_or_else(no_blocks_found)?;
-
                 // Find matching shard
-                for item in shards.into_iter().flatten() {
-                    match (item.workchain_id, item.shard) {
-                        (Some(workchain_id), Some(shard)) => {
-                            if check_shard_match(workchain_id, &shard, addr)? {
-                                return item
-                                    .descr
-                                    .and_then(|descr| {
-                                        Some(LatestBlock {
-                                            id: descr.root_hash?,
-                                            end_lt: u64::from_str(&descr.end_lt?)
-                                                .unwrap_or_default(),
-                                            gen_utime: descr.gen_utime? as u32,
-                                        })
-                                    })
-                                    .ok_or_else(|| no_blocks_found().into());
-                            }
-                        }
-                        _ => return Err(no_blocks_found().into()),
+                for item in block.master.shard_hashes {
+                    if check_shard_match(item.workchain_id, &item.shard, addr)? {
+                        return Ok(LatestBlock {
+                            id: item.descr.root_hash,
+                            end_lt: parse_lt(&item.descr.end_lt)?,
+                            gen_utime: item.descr.gen_utime as u32,
+                        });
                     }
                 }
 
@@ -108,50 +96,42 @@ impl GqlTransport {
             }
             // Node SE case (without masterchain and sharding)
             None => {
-                let block = self
+                let blocks = self
                     .fetch::<QueryNodeSeConditions>(query_node_se_conditions::Variables {
-                        workchain: workchain_id as i64,
+                        workchain: workchain_id,
                     })
                     .await?
-                    .blocks
-                    .and_then(|blocks| blocks.into_iter().flatten().next())
-                    .ok_or_else(no_blocks_found)?;
+                    .blocks;
+                let block = blocks.into_iter().next().ok_or_else(no_blocks_found)?;
 
-                match (block.after_merge, &block.shard) {
-                    (Some(after_merge), Some(shard))
-                        if !after_merge && shard == "8000000000000000" => {}
-                    // If workchain is sharded then it is not Node SE and missing masterchain blocks is error
-                    _ => return Err(no_blocks_found().into()),
+                // If workchain is sharded then it is not Node SE and missing masterchain blocks is error
+                if block.after_merge || block.shard != "8000000000000000" {
+                    return Err(no_blocks_found().into());
                 }
 
-                self.fetch::<QueryNodeSeLatestBlock>(query_node_se_latest_block::Variables {
-                    workchain: workchain_id as i64,
-                })
-                .await?
-                .blocks
-                .and_then(|blocks| {
-                    blocks.into_iter().flatten().next().and_then(|block| {
-                        Some(LatestBlock {
-                            id: block.id?,
-                            end_lt: u64::from_str(&block.end_lt?).unwrap_or_default(),
-                            gen_utime: block.gen_utime? as u32,
-                        })
+                let blocks = self
+                    .fetch::<QueryNodeSeLatestBlock>(query_node_se_latest_block::Variables {
+                        workchain: workchain_id,
                     })
+                    .await?
+                    .blocks;
+                let block = blocks.into_iter().next().ok_or_else(no_blocks_found)?;
+
+                Ok(LatestBlock {
+                    id: block.id,
+                    end_lt: parse_lt(&block.end_lt)?,
+                    gen_utime: block.gen_utime as u32,
                 })
-                .ok_or_else(|| no_blocks_found().into())
             }
         }
     }
 
     pub async fn get_block(&self, id: &str) -> Result<ton_block::Block> {
-        let boc = self
+        let blocks = self
             .fetch::<QueryBlock>(query_block::Variables { id: id.to_owned() })
             .await?
-            .blocks
-            .and_then(|block| block.into_iter().flatten().next())
-            .ok_or_else(no_blocks_found)?
-            .boc
-            .ok_or_else(invalid_response)?;
+            .blocks;
+        let boc = blocks.into_iter().next().ok_or_else(no_blocks_found)?.boc;
 
         ton_block::Block::construct_from_base64(&boc)
             .map_err(|_| NodeClientError::InvalidBlock.into())
@@ -165,42 +145,31 @@ impl GqlTransport {
     ) -> Result<String> {
         let timeout_ms = timeout.as_secs_f64() * 1000.0;
 
-        let block = self
+        let blocks = self
             .fetch::<QueryNextBlock>(query_next_block::Variables {
                 id: current.to_owned(),
                 timeout: timeout_ms,
             })
             .await?
-            .blocks
-            .and_then(|blocks| blocks.into_iter().flatten().next())
-            .ok_or_else(no_blocks_found)?;
+            .blocks;
+        let block = blocks.into_iter().next().ok_or_else(no_blocks_found)?;
 
-        let workchain_id = block.workchain_id.ok_or_else(invalid_response)?;
-        let shard = block.shard.as_ref().ok_or_else(invalid_response)?;
-
-        match (
-            block.id,
-            block.after_split,
-            check_shard_match(workchain_id, shard, addr)?,
-        ) {
-            (Some(block_id), Some(true), false) => {
-                let result = self
+        let block_id =
+            if block.after_split && !check_shard_match(block.workchain_id, &block.shard, addr)? {
+                let blocks = self
                     .fetch::<QueryBlockAfterSplit>(query_block_after_split::Variables {
-                        block_id,
+                        block_id: block.id,
                         prev_id: current.to_owned(),
                         timeout: timeout_ms,
                     })
                     .await?
-                    .blocks
-                    .and_then(|block| block.into_iter().flatten().next())
-                    .ok_or_else(no_blocks_found)?
-                    .id
-                    .ok_or_else(invalid_response)?;
-                Ok(result)
-            }
-            (Some(block_id), _, _) => Ok(block_id),
-            _ => Err(invalid_response().into()),
-        }
+                    .blocks;
+                blocks.into_iter().next().ok_or_else(no_blocks_found)?.id
+            } else {
+                block.id
+            };
+
+        Ok(block_id)
     }
 }
 
@@ -239,12 +208,10 @@ impl Transport for GqlTransport {
             })
             .await?
             .accounts
-            .ok_or_else(invalid_response)?
             .into_iter()
             .next()
-            .and_then(|item| item.and_then(|account| account.boc))
         {
-            Some(account_state) => account_state,
+            Some(account_state) => account_state.boc,
             None => return Ok(RawContractState::NotExists),
         };
 
@@ -274,15 +241,12 @@ impl Transport for GqlTransport {
         self.fetch::<QueryAccountsByCodeHash>(query_accounts_by_code_hash::Variables {
             code_hash: code_hash.to_hex_string(),
             continuation: continuation.as_ref().map(ToString::to_string),
-            limit: limit as i64,
+            limit,
         })
         .await?
         .accounts
-        .ok_or_else(invalid_response)?
         .into_iter()
-        .flatten()
-        .flat_map(|item| item.id)
-        .map(|account| MsgAddressInt::from_str(&account))
+        .map(|account| MsgAddressInt::from_str(&account.id))
         .collect()
     }
 
@@ -295,15 +259,13 @@ impl Transport for GqlTransport {
         self.fetch::<QueryAccountTransactions>(query_account_transactions::Variables {
             address: address.to_string(),
             last_transaction_lt: from_lt.to_string(),
-            limit: count as i64,
+            limit: count,
         })
         .await?
         .transactions
-        .ok_or_else(invalid_response)?
         .into_iter()
-        .flatten()
         .map(|transaction| {
-            let bytes = base64::decode(&transaction.boc.ok_or_else(invalid_response)?)?;
+            let bytes = base64::decode(&transaction.boc)?;
             let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
                 .map_err(|_| NodeClientError::InvalidTransaction)?;
             let hash = cell.repr_hash();
@@ -313,7 +275,7 @@ impl Transport for GqlTransport {
                     .map_err(|_| NodeClientError::InvalidTransaction)?,
             })
         })
-        .collect::<Result<Vec<_>, _>>()
+        .collect()
     }
 
     async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>> {
@@ -322,11 +284,34 @@ impl Transport for GqlTransport {
         })
         .await?
         .transactions
-        .ok_or_else(invalid_response)?
         .into_iter()
-        .flatten()
         .map(|transaction| {
-            let bytes = base64::decode(&transaction.boc.ok_or_else(invalid_response)?)?;
+            let bytes = base64::decode(&transaction.boc)?;
+            let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
+                .map_err(|_| NodeClientError::InvalidTransaction)?;
+            let hash = cell.repr_hash();
+            Ok(RawTransaction {
+                hash,
+                data: ton_block::Transaction::construct_from_cell(cell)
+                    .map_err(|_| NodeClientError::InvalidTransaction)?,
+            })
+        })
+        .next()
+        .transpose()
+    }
+
+    async fn get_dst_transaction(
+        &self,
+        message_hash: &ton_types::UInt256,
+    ) -> Result<Option<RawTransaction>> {
+        self.fetch::<QueryDstTransaction>(query_dst_transaction::Variables {
+            hash: message_hash.to_hex_string(),
+        })
+        .await?
+        .transactions
+        .into_iter()
+        .map(|transaction| {
+            let bytes = base64::decode(&transaction.boc)?;
             let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
                 .map_err(|_| NodeClientError::InvalidTransaction)?;
             let hash = cell.repr_hash();
@@ -341,18 +326,11 @@ impl Transport for GqlTransport {
     }
 
     async fn get_latest_key_block(&self) -> Result<ton_block::Block> {
-        let boc = self
-            .fetch::<QueryLatestKeyBlock>(query_latest_key_block::Variables)
-            .await?
-            .blocks
-            .and_then(|block| block.into_iter().flatten().next())
-            .ok_or_else(no_blocks_found)?
-            .boc
-            .ok_or_else(invalid_response)?;
+        let blocks = self.fetch::<QueryLatestKeyBlock>(()).await?.blocks;
+        let boc = blocks.into_iter().next().ok_or_else(no_blocks_found)?.boc;
 
-        let block = ton_block::Block::construct_from_base64(&boc)
-            .map_err(|_| NodeClientError::InvalidBlock)?;
-        Ok(block)
+        ton_block::Block::construct_from_base64(&boc)
+            .map_err(|_| NodeClientError::InvalidBlock.into())
     }
 
     async fn get_blockchain_config(
@@ -370,95 +348,11 @@ pub struct LatestBlock {
     pub gen_utime: u32,
 }
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_block.graphql"
-)]
-struct QueryBlock;
+fn check_shard_match(workchain_id: i32, shard: &str, addr: &MsgAddressInt) -> Result<bool> {
+    let shard = u64::from_str_radix(shard, 16)?;
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_next_block.graphql"
-)]
-struct QueryNextBlock;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_block_after_split.graphql"
-)]
-struct QueryBlockAfterSplit;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_account_state.graphql"
-)]
-struct QueryAccountState;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_account_transactions.graphql"
-)]
-struct QueryAccountTransactions;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_transaction.graphql"
-)]
-struct QueryTransaction;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_accounts_by_code_hash.graphql"
-)]
-struct QueryAccountsByCodeHash;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_latest_masterchain_block.graphql"
-)]
-struct QueryLatestMasterchainBlock;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_latest_key_block.graphql"
-)]
-struct QueryLatestKeyBlock;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_node_se_conditions.graphql"
-)]
-struct QueryNodeSeConditions;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/query_node_se_latest_block.graphql"
-)]
-struct QueryNodeSeLatestBlock;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "src/transport/gql/schema.graphql",
-    query_path = "src/transport/gql/mutation_send_message.graphql"
-)]
-struct MutationSendMessage;
-
-fn check_shard_match(workchain_id: i64, shard: &str, addr: &MsgAddressInt) -> Result<bool> {
-    let shard = u64::from_str_radix(shard, 16).map_err(|_| NodeClientError::NoBlocksFound)?;
-
-    let ident = ton_block::ShardIdent::with_tagged_prefix(workchain_id as i32, shard)
-        .map_err(api_failure)?;
+    let ident =
+        ton_block::ShardIdent::with_tagged_prefix(workchain_id, shard).map_err(api_failure)?;
 
     let prefix = ton_block::AccountIdPrefixFull::prefix(addr).map_err(api_failure)?;
     Ok(ident.contains_full_prefix(&prefix))
@@ -470,6 +364,13 @@ where
 {
     NodeClientError::ApiFailure {
         reason: e.to_string(),
+    }
+}
+
+fn parse_lt(lt: &str) -> Result<u64, std::num::ParseIntError> {
+    match lt.strip_prefix("0x") {
+        Some(lt) => u64::from_str_radix(lt, 16),
+        None => u64::from_str(lt),
     }
 }
 
@@ -501,4 +402,85 @@ pub enum NodeClientError {
     InvalidBlock,
     #[error("Invalid config")]
     InvalidConfig,
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[async_trait::async_trait]
+    impl GqlConnection for reqwest::Client {
+        fn is_local(&self) -> bool {
+            false
+        }
+
+        async fn post(&self, data: &str) -> Result<String> {
+            println!("{data}");
+            let text = self
+                .post("https://gra01.main.everos.dev/graphql")
+                .body(data.to_owned())
+                .header("Content-Type", "application/json")
+                .send()
+                .await?
+                .text()
+                .await?;
+            // println!("{text}");
+            Ok(text)
+        }
+    }
+
+    #[tokio::test]
+    async fn test_connection() {
+        let transport = GqlTransport::new(Arc::new(reqwest::Client::new()));
+        let address = MsgAddressInt::from_str(
+            "-1:3333333333333333333333333333333333333333333333333333333333333333",
+        )
+        .unwrap();
+        let base_wc_address = MsgAddressInt::from_str(
+            "0:3333333333333333333333333333333333333333333333333333333333333333",
+        )
+        .unwrap();
+
+        transport.send_message(&Message::default()).await.unwrap();
+
+        transport.get_contract_state(&address).await.unwrap();
+        transport
+            .get_transactions(&address, 21968513000000, 10)
+            .await
+            .unwrap();
+
+        transport.get_latest_block(&address).await.unwrap();
+        transport.get_latest_block(&base_wc_address).await.unwrap();
+
+        transport
+            .get_transaction(&ton_types::UInt256::from_slice(
+                &hex::decode("4a0a06bfbfaba4da8fcc7f5ad617fdee5344d954a1794e35618df2a4b349d15c")
+                    .unwrap(),
+            ))
+            .await
+            .unwrap()
+            .unwrap();
+
+        let setcode_multisig_code_hash = ton_types::UInt256::from_str(
+            "e2b60b6b602c10ced7ea8ede4bdf96342c97570a3798066f3fb50a4b2b27a208",
+        )
+        .unwrap();
+
+        let mut continuation = None;
+        loop {
+            let contracts = transport
+                .get_accounts_by_code_hash(&setcode_multisig_code_hash, 50, &continuation)
+                .await
+                .unwrap();
+
+            continuation = contracts.last().cloned();
+            if continuation.is_none() {
+                break;
+            }
+        }
+
+        transport.get_latest_key_block().await.unwrap();
+    }
 }

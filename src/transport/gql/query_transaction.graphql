@@ -1,7 +1,0 @@
-query QueryTransaction($hash: String!) {
-    transactions(filter: {
-        id: { eq: $hash }
-    }, limit: 1) {
-        boc
-    }
-}

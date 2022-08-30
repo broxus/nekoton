@@ -45,6 +45,13 @@ pub struct GetTransaction<'a> {
     pub id: &'a ton_types::UInt256,
 }
 
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct GetDstTransaction<'a> {
+    #[serde(with = "serde_uint256")]
+    pub message_hash: &'a ton_types::UInt256,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetBlockResponse {
     #[serde(with = "serde_ton_block")]
