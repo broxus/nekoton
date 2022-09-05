@@ -1,4 +1,5 @@
 pub use self::address::*;
+pub use self::cell::*;
 pub use self::clock::*;
 #[cfg(feature = "encryption")]
 pub use self::encryption::*;
@@ -7,6 +8,7 @@ pub use self::traits::*;
 pub use self::transaction::*;
 
 mod address;
+mod cell;
 mod clock;
 mod crc;
 #[cfg(feature = "encryption")]

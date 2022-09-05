@@ -241,22 +241,16 @@ impl ContractSubscription {
             .transport
             .get_blockchain_config(self.clock.as_ref())
             .await?;
-        let mut state = match self.transport.get_contract_state(&self.address).await? {
-            RawContractState::Exists(state) => state,
-            RawContractState::NotExists => {
-                return Err(ContractExecutionError::ContractNotFound.into())
-            }
+        let mut account = match self.transport.get_contract_state(&self.address).await? {
+            RawContractState::Exists(state) => ton_block::Account::Account(state.account),
+            RawContractState::NotExists => ton_block::Account::AccountNone,
         };
 
         if let Some(balance) = options.override_balance {
-            state.account.storage.balance.grams.0 = balance as u128;
+            account.set_balance(balance.into());
         }
 
-        let mut executor = Executor::new(
-            self.clock.as_ref(),
-            blockchain_config,
-            ton_block::Account::Account(state.account),
-        )?;
+        let mut executor = Executor::new(self.clock.as_ref(), blockchain_config, account)?;
         if options.disable_signature_check {
             executor.disable_signature_check();
         }
@@ -450,10 +444,4 @@ type OnMessageExpired<'a> = &'a mut (dyn FnMut(PendingTransaction) + Send + Sync
 pub struct TransactionExecutionOptions {
     pub disable_signature_check: bool,
     pub override_balance: Option<u64>,
-}
-
-#[derive(thiserror::Error, Debug)]
-enum ContractExecutionError {
-    #[error("Contract not found")]
-    ContractNotFound,
 }
