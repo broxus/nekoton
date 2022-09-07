@@ -243,12 +243,12 @@ impl nekoton::external::GqlConnection for GqlClient {
         self.local
     }
 
-    async fn post(&self, data: &str) -> Result<String> {
+    async fn post(&self, req: nekoton::external::GqlRequest) -> Result<String> {
         let endpoint = self.select_querying_endpoint().await?;
         let response = self
             .client
             .post(endpoint.gql.clone())
-            .body(data.to_owned())
+            .body(req.data)
             .send()
             .await?;
         Ok(response.text().await?)
@@ -293,7 +293,7 @@ enum GqlClientError {
 
 #[cfg(test)]
 mod tests {
-    use nekoton::external::GqlConnection;
+    use nekoton::external::{GqlConnection, GqlRequest};
 
     use super::*;
 
@@ -314,7 +314,13 @@ mod tests {
             "query": "query { accounts { id } }"
         }"#;
 
-        let response = client.post(QUERY).await.unwrap();
+        let response = client
+            .post(GqlRequest {
+                data: QUERY.to_string(),
+                long_query: false,
+            })
+            .await
+            .unwrap();
         println!("{}", response);
     }
 }

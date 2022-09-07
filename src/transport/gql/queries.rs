@@ -4,6 +4,8 @@ pub trait GqlQuery {
     type Variables: serde::Serialize;
     type ResponseData: for<'de> serde::Deserialize<'de>;
 
+    const LONG_QUERY: bool = false;
+
     fn build_query(variables: &'_ Self::Variables) -> QueryBody<'_>;
 }
 
@@ -25,12 +27,14 @@ impl Serialize for QueryBody<'_> {
 }
 
 macro_rules! declare_queries {
-    ($($query:ident => $query_module:tt),*$(,)?) => {
+    ($($query:ident => $query_module:tt $((LONG_QUERY = $long_query:literal))?),*$(,)?) => {
         $(pub struct $query;
 
         impl GqlQuery for $query {
             type Variables = $query_module::Variables;
             type ResponseData = $query_module::ResponseData;
+
+            $(const LONG_QUERY: bool = $long_query;)?
 
             fn build_query(variables: &'_ Self::Variables) -> QueryBody<'_> {
                 QueryBody {
@@ -44,8 +48,8 @@ macro_rules! declare_queries {
 
 declare_queries! {
     QueryBlock => query_block,
-    QueryNextBlock => query_next_block,
-    QueryBlockAfterSplit => query_block_after_split,
+    QueryNextBlock => query_next_block (LONG_QUERY = true),
+    QueryBlockAfterSplit => query_block_after_split (LONG_QUERY = true),
     QueryAccountState => query_account_state,
     QueryAccountTransactions => query_account_transactions,
     QueryTransaction => query_transaction,

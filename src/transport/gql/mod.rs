@@ -11,7 +11,7 @@ use nekoton_abi::{GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
 use crate::core::models::ReliableBehavior;
-use crate::external::GqlConnection;
+use crate::external::{GqlConnection, GqlRequest};
 
 use self::queries::*;
 use super::models::*;
@@ -42,7 +42,10 @@ impl GqlTransport {
         let request_body = serde_json::to_string(&T::build_query(&params)).trust_me();
         let response = self
             .connection
-            .post(&request_body)
+            .post(GqlRequest {
+                data: request_body,
+                long_query: T::LONG_QUERY,
+            })
             .await
             .map_err(api_failure)?;
 
@@ -417,11 +420,11 @@ mod tests {
             false
         }
 
-        async fn post(&self, data: &str) -> Result<String> {
-            println!("{data}");
+        async fn post(&self, req: GqlRequest) -> Result<String> {
+            println!("{req:?}");
             let text = self
                 .post("https://gra01.main.everos.dev/graphql")
-                .body(data.to_owned())
+                .body(req.data)
                 .header("Content-Type", "application/json")
                 .send()
                 .await?

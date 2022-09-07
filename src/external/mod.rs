@@ -23,11 +23,18 @@ pub trait Storage: Sync + Send {
 }
 
 #[cfg(feature = "gql_transport")]
+#[derive(Debug, Clone)]
+pub struct GqlRequest {
+    pub data: String,
+    pub long_query: bool,
+}
+
+#[cfg(feature = "gql_transport")]
 #[async_trait]
 pub trait GqlConnection: Send + Sync {
     fn is_local(&self) -> bool;
 
-    async fn post(&self, data: &str) -> Result<String>;
+    async fn post(&self, req: GqlRequest) -> Result<String>;
 }
 
 #[cfg(feature = "jrpc_transport")]
