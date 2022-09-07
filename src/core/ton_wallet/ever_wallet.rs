@@ -79,8 +79,8 @@ pub fn prepare_transfer(
     };
 
     let mut gifts = gifts.into_iter();
-    let (function, input) = match (gifts.next(), gifts.len()) {
-        (Some(gift), 1) if gift.state_init.is_none() => {
+    let (function, input) = match (gifts.len(), gifts.next()) {
+        (1, Some(gift)) if gift.state_init.is_none() => {
             MessageBuilder::new(ever_wallet::send_transaction())
                 .arg(gift.destination)
                 .arg(BigUint128(gift.amount.into()))
@@ -89,7 +89,7 @@ pub fn prepare_transfer(
                 .arg(gift.body.unwrap_or_default().into_cell())
                 .build()
         }
-        (gift, len) => {
+        (len, gift) => {
             let function = match len {
                 0 => ever_wallet::send_transaction_raw_0(),
                 1 => ever_wallet::send_transaction_raw_1(),
