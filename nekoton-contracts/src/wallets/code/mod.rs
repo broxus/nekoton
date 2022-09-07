@@ -19,6 +19,7 @@ declare_tvc! {
     surf_wallet => "./Surf.tvc" (SURF_WALLET_CODE),
     wallet_v3 => "./wallet_v3_code.boc" (WALLET_V3_CODE),
     highload_wallet_v2 => "./highload_wallet_v2_code.boc" (HIGHLOAD_WALLET_V2_CODE),
+    ever_wallet => "./ever_wallet_code.boc" (EVER_WALLET_CODE),
 }
 
 fn load(mut data: &[u8]) -> Cell {

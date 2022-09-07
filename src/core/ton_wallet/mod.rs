@@ -24,6 +24,7 @@ use crate::crypto::UnsignedMessage;
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 
+pub mod ever_wallet;
 pub mod highload_wallet_v2;
 pub mod multisig;
 pub mod wallet_v3;
@@ -218,6 +219,12 @@ impl TonWallet {
                 self.workchain(),
                 expiration,
             ),
+            WalletType::EverWallet => ever_wallet::prepare_deploy(
+                self.clock.as_ref(),
+                &self.public_key,
+                self.workchain(),
+                expiration,
+            ),
             WalletType::HighloadWalletV2 => highload_wallet_v2::prepare_deploy(
                 self.clock.as_ref(),
                 &self.public_key,
@@ -243,9 +250,8 @@ impl TonWallet {
                 custodians,
                 req_confirms,
             ),
-            WalletType::WalletV3 | WalletType::HighloadWalletV2 => {
-                Err(TonWalletError::InvalidContractType.into())
-            }
+            // Non-multisig wallets doesn't support multiple owners
+            _ => Err(TonWalletError::InvalidContractType.into()),
         }
     }
 
@@ -289,22 +295,22 @@ impl TonWallet {
                     expiration,
                 )
             }
-            WalletType::WalletV3 => {
-                let seqno_offset = wallet_v3::estimate_seqno_offset(
-                    self.clock.as_ref(),
-                    current_state,
-                    self.contract_subscription.pending_transactions(),
-                );
-
-                wallet_v3::prepare_transfer(
-                    self.clock.as_ref(),
-                    public_key,
-                    current_state,
-                    seqno_offset,
-                    vec![gift],
-                    expiration,
-                )
-            }
+            WalletType::WalletV3 => wallet_v3::prepare_transfer(
+                self.clock.as_ref(),
+                public_key,
+                current_state,
+                0,
+                vec![gift],
+                expiration,
+            ),
+            WalletType::EverWallet => ever_wallet::prepare_transfer(
+                self.clock.as_ref(),
+                public_key,
+                current_state,
+                self.address().clone(),
+                vec![gift],
+                expiration,
+            ),
             WalletType::HighloadWalletV2 => highload_wallet_v2::prepare_transfer(
                 self.clock.as_ref(),
                 public_key,
@@ -341,9 +347,8 @@ impl TonWallet {
                     expiration,
                 )
             }
-            WalletType::WalletV3 | WalletType::HighloadWalletV2 => {
-                Err(TonWalletError::PendingTransactionNotFound.into())
-            }
+            // Non-multisig wallets doesn't support pending transactions
+            _ => Err(TonWalletError::PendingTransactionNotFound.into()),
         }
     }
 
@@ -420,15 +425,13 @@ impl WalletData {
         wallet_type: WalletType,
         account_stuff: &ton_block::AccountStuff,
     ) -> Result<()> {
-        match wallet_type {
-            WalletType::Multisig(_) => {}
-            WalletType::WalletV3 | WalletType::HighloadWalletV2 => {
-                if self.custodians.is_none() {
-                    self.custodians = Some(vec![public_key.to_bytes().into()]);
-                }
-                return Ok(());
+        // Simple path for wallets with single custodian
+        if !matches!(wallet_type, WalletType::Multisig(_)) {
+            if self.custodians.is_none() {
+                self.custodians = Some(vec![public_key.to_bytes().into()]);
             }
-        };
+            return Ok(());
+        }
 
         // Extract custodians
         if self.custodians.is_none() {
@@ -481,6 +484,9 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
     } else if wallet_v3::is_wallet_v3(&code_hash) {
         let public_key = PublicKey::from_bytes(wallet_v3::InitData::try_from(data)?.public_key())?;
         Ok((public_key, WalletType::WalletV3))
+    } else if ever_wallet::is_ever_wallet(&code_hash) {
+        let public_key = extract_public_key(&contract.account)?;
+        Ok((public_key, WalletType::EverWallet))
     } else if highload_wallet_v2::is_highload_wallet_v2(&code_hash) {
         let public_key =
             PublicKey::from_bytes(highload_wallet_v2::InitData::try_from(data)?.public_key())?;
@@ -500,16 +506,15 @@ pub fn get_wallet_custodians(
         WalletType::Multisig(_) => {
             multisig::get_custodians(clock, Cow::Borrowed(&contract.account))
         }
-        WalletType::WalletV3 | WalletType::HighloadWalletV2 => {
-            Ok(vec![public_key.to_bytes().into()])
-        }
+        _ => Ok(vec![public_key.to_bytes().into()]),
     }
 }
 
-pub const WALLET_TYPES_BY_POPULARITY: [WalletType; 7] = [
+pub const WALLET_TYPES_BY_POPULARITY: [WalletType; 8] = [
+    WalletType::Multisig(MultisigType::SafeMultisigWallet),
     WalletType::Multisig(MultisigType::SurfWallet),
     WalletType::WalletV3,
-    WalletType::Multisig(MultisigType::SafeMultisigWallet),
+    WalletType::EverWallet,
     WalletType::Multisig(MultisigType::SetcodeMultisigWallet),
     WalletType::Multisig(MultisigType::SafeMultisigWallet24h),
     WalletType::Multisig(MultisigType::BridgeMultisigWallet),
@@ -699,6 +704,7 @@ pub enum WalletType {
     Multisig(MultisigType),
     WalletV3,
     HighloadWalletV2,
+    EverWallet,
 }
 
 impl WalletType {
@@ -707,6 +713,7 @@ impl WalletType {
             Self::Multisig(multisig_type) => multisig::ton_wallet_details(*multisig_type),
             Self::WalletV3 => wallet_v3::DETAILS,
             Self::HighloadWalletV2 => highload_wallet_v2::DETAILS,
+            Self::EverWallet => ever_wallet::DETAILS,
         }
     }
 }
@@ -718,6 +725,7 @@ impl FromStr for WalletType {
         Ok(match s {
             "WalletV3" => Self::WalletV3,
             "HighloadWalletV2" => Self::HighloadWalletV2,
+            "EverWallet" => Self::EverWallet,
             s => Self::Multisig(MultisigType::from_str(s)?),
         })
     }
@@ -729,6 +737,7 @@ impl std::fmt::Display for WalletType {
             Self::Multisig(multisig_type) => multisig_type.fmt(f),
             Self::WalletV3 => f.write_str("WalletV3"),
             Self::HighloadWalletV2 => f.write_str("HighloadWalletV2"),
+            Self::EverWallet => f.write_str("EverWallet"),
         }
     }
 }
@@ -743,6 +752,7 @@ pub fn compute_address(
             multisig::compute_contract_address(public_key, multisig_type, workchain_id)
         }
         WalletType::WalletV3 => wallet_v3::compute_contract_address(public_key, workchain_id),
+        WalletType::EverWallet => ever_wallet::compute_contract_address(public_key, workchain_id),
         WalletType::HighloadWalletV2 => {
             highload_wallet_v2::compute_contract_address(public_key, workchain_id)
         }
