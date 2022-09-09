@@ -510,11 +510,12 @@ pub fn get_wallet_custodians(
     }
 }
 
-pub const WALLET_TYPES_BY_POPULARITY: [WalletType; 8] = [
+pub const WALLET_TYPES_BY_POPULARITY: [WalletType; 9] = [
     WalletType::Multisig(MultisigType::SafeMultisigWallet),
     WalletType::Multisig(MultisigType::SurfWallet),
     WalletType::WalletV3,
     WalletType::EverWallet,
+    WalletType::Multisig(MultisigType::Multisig2),
     WalletType::Multisig(MultisigType::SetcodeMultisigWallet),
     WalletType::Multisig(MultisigType::SafeMultisigWallet24h),
     WalletType::Multisig(MultisigType::BridgeMultisigWallet),
