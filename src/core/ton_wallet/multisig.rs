@@ -145,6 +145,7 @@ define_string_enum!(
         SetcodeMultisigWallet24h,
         BridgeMultisigWallet,
         SurfWallet,
+        Multisig2,
     }
 );
 
@@ -172,6 +173,10 @@ const SURF_WALLET_HASH: [u8; 32] = [
     0x20, 0x7d, 0xc5, 0x60, 0xc5, 0x95, 0x6d, 0xe1, 0xa2, 0xc1, 0x47, 0x93, 0x56, 0xf8, 0xf3, 0xee,
     0x70, 0xa5, 0x97, 0x67, 0xdb, 0x2b, 0xf4, 0x78, 0x8b, 0x1d, 0x61, 0xad, 0x42, 0xcd, 0xad, 0x82,
 ];
+const MULTISIG2_HASH: [u8; 32] = [
+    0xad, 0x57, 0xa7, 0x72, 0xca, 0x0c, 0x56, 0x46, 0x2e, 0x07, 0xa0, 0x86, 0xe4, 0x47, 0xab, 0xbb,
+    0x76, 0x05, 0xbd, 0x6a, 0xc1, 0x42, 0x4c, 0xc4, 0x17, 0x8d, 0xc9, 0xf4, 0x73, 0x00, 0x93, 0xff,
+];
 
 pub fn guess_multisig_type(code_hash: &UInt256) -> Option<MultisigType> {
     match *code_hash.as_slice() {
@@ -181,6 +186,7 @@ pub fn guess_multisig_type(code_hash: &UInt256) -> Option<MultisigType> {
         BRIDGE_MULTISIG_WALLET_HASH => Some(MultisigType::BridgeMultisigWallet),
         SETCODE_MULTISIG_WALLET_24H_HASH => Some(MultisigType::SetcodeMultisigWallet24h),
         SURF_WALLET_HASH => Some(MultisigType::SurfWallet),
+        MULTISIG2_HASH => Some(MultisigType::Multisig2),
         _ => None,
     }
 }
@@ -209,7 +215,9 @@ pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
         supports_state_init: false,
         supports_multiple_owners: true,
         expiration_time: match multisig_type {
-            MultisigType::SafeMultisigWallet | MultisigType::SetcodeMultisigWallet => 3600,
+            MultisigType::SafeMultisigWallet
+            | MultisigType::SetcodeMultisigWallet
+            | MultisigType::Multisig2 => 3600,
             MultisigType::SurfWallet => 3601,
             MultisigType::SafeMultisigWallet24h
             | MultisigType::SetcodeMultisigWallet24h
@@ -228,6 +236,7 @@ fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> to
         MultisigType::SetcodeMultisigWallet24h => wallets::code::setcode_multisig_wallet_24h(),
         MultisigType::BridgeMultisigWallet => wallets::code::bridge_multisig_wallet(),
         MultisigType::SurfWallet => wallets::code::surf_wallet(),
+        MultisigType::Multisig2 => wallets::code::multisig2(),
     }
     .into();
 
