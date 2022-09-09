@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
 use num_bigint::{BigInt, BigUint};
 use num_traits::ToPrimitive;
 use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::Cell;
 
-use super::{Maybe, MaybeRef};
+use super::{Maybe, MaybeRef, StandaloneToken};
 
 pub trait TokenValueExt {
     fn unnamed(self) -> Token;
@@ -242,6 +244,25 @@ impl UnpackAbi<Vec<u8>> for TokenValue {
     }
 }
 
+impl<T> UnpackAbi<Vec<T>> for TokenValue
+where
+    TokenValue: UnpackAbi<T>,
+    T: StandaloneToken,
+{
+    fn unpack(self) -> UnpackerResult<Vec<T>> {
+        match self {
+            TokenValue::Array(_, tokens) | TokenValue::FixedArray(_, tokens) => {
+                let mut vec = Vec::with_capacity(tokens.len());
+                for token in tokens {
+                    vec.push(token.unpack()?);
+                }
+                Ok(vec)
+            }
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
 impl UnpackAbi<ton_block::Grams> for TokenValue {
     fn unpack(self) -> UnpackerResult<ton_block::Grams> {
         match self {
@@ -283,6 +304,24 @@ where
             TokenValue::Optional(_, None) => Ok(MaybeRef(None)),
             _ => Err(UnpackerError::InvalidAbi),
         }
+    }
+}
+
+impl<T> UnpackAbi<Box<T>> for TokenValue
+where
+    TokenValue: UnpackAbi<T>,
+{
+    fn unpack(self) -> UnpackerResult<Box<T>> {
+        self.unpack().map(Box::new)
+    }
+}
+
+impl<T> UnpackAbi<Arc<T>> for TokenValue
+where
+    TokenValue: UnpackAbi<T>,
+{
+    fn unpack(self) -> UnpackerResult<Arc<T>> {
+        self.unpack().map(Arc::new)
     }
 }
 

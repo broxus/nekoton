@@ -951,12 +951,15 @@ impl StandaloneToken for bool {}
 impl StandaloneToken for MsgAddressInt {}
 impl StandaloneToken for MsgAddrStd {}
 impl StandaloneToken for UInt256 {}
-impl StandaloneToken for Vec<u8> {}
 impl StandaloneToken for TokenValue {}
 impl StandaloneToken for ton_block::Grams {}
 impl StandaloneToken for ton_types::Cell {}
 impl<T> StandaloneToken for Maybe<T> {}
 impl<T> StandaloneToken for MaybeRef<T> {}
+impl<T> StandaloneToken for Vec<T> {}
+impl<T: StandaloneToken> StandaloneToken for Box<T> {}
+impl<T: StandaloneToken> StandaloneToken for Arc<T> {}
+impl<T: StandaloneToken> StandaloneToken for &T {}
 
 #[cfg(test)]
 mod tests {
