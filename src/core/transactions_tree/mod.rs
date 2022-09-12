@@ -107,7 +107,7 @@ impl TransactionsTreeStream {
                     .get_contract_state(address)
                     .await
                     .map_err(TransactionTreeError::TransportError)?
-                    .into_state();
+                    .into_account();
 
                 let (last_transaction_lt, last_paid) = match &acc {
                     Account::Account(account) => (

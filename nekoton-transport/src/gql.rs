@@ -301,9 +301,11 @@ mod tests {
     async fn gql_client_works() {
         let client = GqlClient::new(GqlNetworkSettings {
             endpoints: vec![
-                "main2.ton.dev".to_string(),
-                "main3.ton.dev".to_string(),
-                "main4.ton.dev".to_string(),
+                "eri01.main.everos.dev".to_string(),
+                "gra01.main.everos.dev".to_string(),
+                "gra02.main.everos.dev".to_string(),
+                "lim01.main.everos.dev".to_string(),
+                "rbx01.main.everos.dev".to_string(),
             ],
             latency_detection_interval: Duration::from_secs(1),
             ..Default::default()

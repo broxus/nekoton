@@ -15,8 +15,7 @@ members = [
     "nekoton-derive",
     "nekoton-indexer-utils",
     "nekoton-transport",
-    "nekoton-utils",
-    "nekoton-tests"
+    "nekoton-utils"
 ]
 
 [dependencies]

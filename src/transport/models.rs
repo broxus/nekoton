@@ -25,11 +25,24 @@ impl RawContractState {
         }
     }
 
-    pub fn into_state(self) -> Account {
+    pub fn into_account(self) -> Account {
         match self {
             Self::NotExists => Account::AccountNone,
             Self::Exists(state) => Account::Account(state.account),
         }
+    }
+
+    pub fn into_contract(self) -> Option<ExistingContract> {
+        match self {
+            Self::NotExists => None,
+            Self::Exists(contract) => Some(contract),
+        }
+    }
+}
+
+impl From<RawContractState> for Option<ExistingContract> {
+    fn from(state: RawContractState) -> Self {
+        state.into_contract()
     }
 }
 
