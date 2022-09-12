@@ -24,3 +24,24 @@ pub fn query() -> &'static ton_abi::Function {
         outputs: vec![Param::new("value", ParamType::Optional(Box::new(ParamType::Cell)))],
     }
 }
+
+/// Returns full domain path
+///
+/// NOTE: Can also be used for DeNS root contract
+///
+/// # Type
+/// Responsible getter method
+///
+/// # Inputs
+/// * `answerId: uint32` - responsible answer id
+///
+/// # Outputs
+/// * `path: string`
+pub fn get_path() -> &'static ton_abi::Function {
+    declare_function! {
+        abi: v2_2,
+        name: "getPath",
+        inputs: vec![Param::new("answerId", ParamType::Uint(32))],
+        outputs: vec![Param::new("path", ParamType::String)],
+    }
+}
