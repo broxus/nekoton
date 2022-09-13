@@ -1,10 +1,12 @@
 use std::collections::hash_map::{self, HashMap};
+use std::num::NonZeroUsize;
 use std::sync::Arc;
 
 use anyhow::Result;
+use lru::LruCache;
 use nekoton_contracts::dens;
 use nekoton_utils::Clock;
-use parking_lot::RwLock;
+use parking_lot::{Mutex, RwLock};
 use ton_block::MsgAddressInt;
 
 use crate::transport::models::{ExistingContract, RawContractState};
@@ -14,6 +16,7 @@ use crate::transport::Transport;
 #[derive(Default)]
 pub struct Dens {
     tld: RwLock<HashMap<String, Arc<DensTld>>>,
+    contract_address_cache: Option<Mutex<LruCache<String, MsgAddressInt>>>,
 }
 
 impl Dens {
@@ -40,23 +43,54 @@ impl Dens {
     }
 
     pub async fn try_resolve_contract_address(&self, path: &str) -> Result<Option<MsgAddressInt>> {
-        self.find_tld(path)?
+        if !validate_address(path) {
+            return Err(DensError::InvalidPath.into());
+        }
+
+        if let Some(contract_address_cache) = &self.contract_address_cache {
+            if let Some(address) = contract_address_cache.lock().get(path) {
+                return Ok(Some(address.clone()));
+            }
+        }
+
+        let address = self
+            .find_tld(path)?
             .try_resolve_contract_address(path)
-            .await
+            .await?;
+
+        if let Some(address) = &address {
+            if let Some(contract_address_cache) = &self.contract_address_cache {
+                contract_address_cache
+                    .lock()
+                    .push(path.to_owned(), address.clone());
+            }
+        }
+
+        Ok(address)
     }
 
     pub async fn try_resolve(&self, path: &str, record: u32) -> Result<ResolvedValue> {
+        if !validate_address(path) {
+            return Err(DensError::InvalidPath.into());
+        }
+
         self.find_tld(path)?.try_resolve(path, record).await
+    }
+
+    pub fn reset_cache(&self) {
+        if let Some(contract_address_cache) = &self.contract_address_cache {
+            contract_address_cache.lock().clear();
+        }
     }
 
     fn find_tld(&self, path: &str) -> Result<Arc<DensTld>> {
         match path.rsplit_once('.') {
-            Some((_, tld)) if validate_address(path) => {
+            Some((_, tld)) => {
                 let state = self.tld.read();
                 let tld = state.get(tld).cloned();
                 tld.ok_or_else(|| DensError::TldNotFound.into())
             }
-            _ => Err(DensError::InvalidPath.into()),
+            None => Err(DensError::InvalidPath.into()),
         }
     }
 }
@@ -80,6 +114,13 @@ impl DensBuilder {
         let tld = DensTld::new(self.clock.clone(), self.transport.clone(), tld_address).await?;
         self.dens.add_tld(Arc::new(tld))?;
         Ok(self)
+    }
+
+    pub fn with_contract_address_cache(mut self, capacity: usize) -> Self {
+        self.dens.contract_address_cache = NonZeroUsize::new(capacity)
+            .map(LruCache::new)
+            .map(Mutex::new);
+        self
     }
 
     pub fn build(self) -> Dens {
