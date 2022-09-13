@@ -58,6 +58,7 @@ pub struct ExistingContract {
 impl ExistingContract {
     pub fn brief(&self) -> ContractState {
         ContractState {
+            last_lt: self.account.storage.last_trans_lt,
             balance: self.account.storage.balance.grams.0 as u64,
             gen_timings: self.timings,
             last_transaction_id: Some(self.last_transaction_id),

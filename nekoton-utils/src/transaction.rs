@@ -1,3 +1,8 @@
+pub fn compute_account_lt(transaction: &ton_block::Transaction) -> u64 {
+    // TODO: read in_msg and check whether dst has rewrite_pfx
+    transaction.lt + 1 + transaction.outmsg_cnt as u64
+}
+
 pub fn compute_balance_change(transaction: &ton_block::Transaction) -> i128 {
     let mut diff = 0;
 

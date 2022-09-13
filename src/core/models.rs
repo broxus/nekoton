@@ -450,6 +450,10 @@ pub struct RootTokenContractDetails {
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]
 #[serde(rename_all = "camelCase")]
 pub struct ContractState {
+    /// Latest known lt
+    #[serde(skip)]
+    pub last_lt: u64,
+
     /// Full account balance in nano TON
     #[serde(with = "serde_string")]
     pub balance: u64,
@@ -466,11 +470,7 @@ pub struct ContractState {
 
 impl PartialEq for ContractState {
     fn eq(&self, other: &Self) -> bool {
-        // Ignore timings change
-
-        self.balance == other.balance
-            && self.last_transaction_id == other.last_transaction_id
-            && self.is_deployed == other.is_deployed
+        self.last_lt == other.last_lt
     }
 }
 

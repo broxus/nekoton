@@ -5,7 +5,7 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
-use nekoton_abi::{Executor, GenTimings, LastTransactionId};
+use nekoton_abi::{Executor, LastTransactionId};
 use nekoton_utils::*;
 
 use super::models::{
@@ -265,29 +265,14 @@ impl ContractSubscription {
         let contract_state = self.transport.get_contract_state(&self.address).await?;
         let new_contract_state = contract_state.brief();
 
-        if new_contract_state == self.contract_state {
-            return Ok(false);
-        }
-
-        match (
-            new_contract_state.gen_timings,
-            self.contract_state.gen_timings,
-        ) {
-            // Do nothing if we received a state with the old logical time
-            (
-                GenTimings::Known {
-                    gen_lt: new_gen_lt, ..
-                },
-                GenTimings::Known {
-                    gen_lt: old_gen_lt, ..
-                },
-            ) if new_gen_lt <= old_gen_lt => Ok(false),
-            // Notify otherwise
-            _ => {
+        match new_contract_state.last_lt.cmp(&self.contract_state.last_lt) {
+            // Notify with new state
+            std::cmp::Ordering::Greater => {
                 on_contract_state(&contract_state);
                 self.contract_state = new_contract_state;
                 Ok(true)
             }
+            _ => Ok(false),
         }
     }
 
