@@ -1,7 +1,7 @@
-use nekoton_abi::num_traits::ToPrimitive;
-use nekoton_abi::*;
 use std::collections::BTreeMap;
-use ton_abi::{Param, ParamType, TokenValue};
+
+use nekoton_abi::*;
+use ton_abi::{Param, ParamType};
 use ton_block::MsgAddressInt;
 use ton_types::{Cell, UInt256};
 
@@ -49,8 +49,7 @@ pub struct ChangeOwnerInputs {
     pub new_owner: MsgAddressInt,
     #[abi(address, name = "sendGasTo")]
     pub send_gas_to: MsgAddressInt,
-    #[abi(with = "callback_payloads_map")]
-    pub callbacks: BTreeMap<String, NftCallbackPayload>,
+    pub callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
 }
 
 #[derive(Debug, Clone, PackAbiPlain, KnownParamTypePlain, UnpackAbiPlain)]
@@ -59,8 +58,7 @@ pub struct ChangeManagerInputs {
     pub new_manager: MsgAddressInt,
     #[abi(address, name = "sendGasTo")]
     pub send_gas_to: MsgAddressInt,
-    #[abi(with = "callback_payloads_map")]
-    pub callbacks: BTreeMap<String, NftCallbackPayload>,
+    pub callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
 }
 
 #[derive(Debug, Clone, PackAbiPlain, KnownParamTypePlain, UnpackAbiPlain)]
@@ -69,8 +67,7 @@ pub struct TransferInputs {
     pub to: MsgAddressInt,
     #[abi(address, name = "sendGasTo")]
     pub send_gas_to: MsgAddressInt,
-    #[abi(with = "callback_payloads_map")]
-    pub callbacks: BTreeMap<String, NftCallbackPayload>,
+    pub callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
 }
 
 ///Change NFT owner
@@ -136,85 +133,10 @@ pub fn transfer() -> &'static ton_abi::Function {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PackAbi, KnownParamType, UnpackAbi)]
 pub struct NftCallbackPayload {
+    #[abi(uint128)]
     pub value: u128,
+    #[abi(cell)]
     pub payload: Cell,
-}
-
-impl UnpackAbiPlain<NftCallbackPayload> for Vec<::ton_abi::Token> {
-    fn unpack(self) -> UnpackerResult<NftCallbackPayload> {
-        let mut tokens = self.into_iter();
-        let value = match tokens.next().unwrap().value {
-            TokenValue::Uint(ton_abi::Uint { number, size: 128 }) => number.to_u128().unwrap(),
-            _ => return Err(UnpackerError::InvalidAbi),
-        };
-        let payload = match tokens.next().unwrap().value {
-            TokenValue::Cell(cell) => cell,
-            _ => return Err(UnpackerError::InvalidAbi),
-        };
-        Ok(NftCallbackPayload { value, payload })
-    }
-}
-
-pub mod callback_payloads_map {
-    use super::*;
-    use ton_abi::{Param, Token};
-    use UnpackAbiPlain;
-
-    pub fn unpack(value: &TokenValue) -> UnpackerResult<BTreeMap<String, NftCallbackPayload>> {
-        match value {
-            TokenValue::Map(ParamType::Address, _, values) => {
-                let mut map = BTreeMap::<String, NftCallbackPayload>::new();
-                for (key, value) in values {
-                    let key = key.clone();
-
-                    let value: NftCallbackPayload = match value {
-                        TokenValue::Tuple(vec) => vec.clone().unpack()?,
-                        _ => return Err(UnpackerError::InvalidAbi),
-                    };
-                    map.insert(key, value);
-                }
-                Ok(map)
-            }
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-
-    pub fn pack(value: BTreeMap<String, NftCallbackPayload>) -> TokenValue {
-        TokenValue::Map(
-            param_type_key(),
-            param_type_value(),
-            value
-                .into_iter()
-                .map(|value| {
-                    (
-                        value.0.to_string(),
-                        TokenValue::Tuple(vec![
-                            Token::new(
-                                "value",
-                                TokenValue::Uint(ton_abi::Uint::new(value.1.value, 128usize)),
-                            ),
-                            Token::new("payload", TokenValue::Cell(value.1.payload)),
-                        ]),
-                    )
-                })
-                .collect(),
-        )
-    }
-
-    pub fn param_type() -> ParamType {
-        ParamType::Map(Box::new(param_type_key()), Box::new(param_type_value()))
-    }
-
-    pub fn param_type_key() -> ParamType {
-        ParamType::Address
-    }
-
-    pub fn param_type_value() -> ParamType {
-        ParamType::Tuple(vec![
-            Param::new("value", ParamType::Uint(128)),
-            Param::new("payload", ParamType::Cell),
-        ])
-    }
 }

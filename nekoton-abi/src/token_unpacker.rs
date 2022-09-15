@@ -1,3 +1,5 @@
+use std::collections::{BTreeMap, HashMap};
+use std::hash::{BuildHasher, Hash};
 use std::sync::Arc;
 
 use num_bigint::{BigInt, BigUint};
@@ -267,6 +269,49 @@ impl UnpackAbi<ton_block::Grams> for TokenValue {
     fn unpack(self) -> UnpackerResult<ton_block::Grams> {
         match self {
             TokenValue::Token(grams) => Ok(grams),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
+impl<K, V> UnpackAbi<BTreeMap<K, V>> for TokenValue
+where
+    K: Ord,
+    TokenValue: UnpackAbi<K> + UnpackAbi<V>,
+{
+    fn unpack(self) -> UnpackerResult<BTreeMap<K, V>> {
+        match self {
+            TokenValue::Map(_, _, values) => {
+                let mut map = BTreeMap::<K, V>::new();
+                for (key, value) in values {
+                    let key = TokenValue::from(key.to_owned()).unpack()?;
+                    let value: V = value.to_owned().unpack()?;
+                    map.insert(key, value);
+                }
+                Ok(map)
+            }
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
+impl<K, V, S> UnpackAbi<HashMap<K, V, S>> for TokenValue
+where
+    K: Eq + Hash,
+    TokenValue: UnpackAbi<K> + UnpackAbi<V>,
+    S: BuildHasher + Default,
+{
+    fn unpack(self) -> UnpackerResult<HashMap<K, V, S>> {
+        match self {
+            TokenValue::Map(_, _, values) => {
+                let mut map = HashMap::with_capacity_and_hasher(values.len(), Default::default());
+                for (key, value) in values {
+                    let key = TokenValue::from(key.to_owned()).unpack()?;
+                    let value = value.to_owned().unpack()?;
+                    map.insert(key, value);
+                }
+                Ok(map)
+            }
             _ => Err(UnpackerError::InvalidAbi),
         }
     }

@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use std::collections::BTreeMap;
-use ton_abi::{ParamType, TokenValue};
+use ton_abi::{MapKeyTokenValue, ParamType, TokenValue};
 use ton_abi::{Token, Uint};
 use ton_block::{MsgAddress, MsgAddressInt};
 
@@ -21,7 +21,7 @@ struct VestingsComponents {
     owner: MsgAddressInt,
 }
 
-#[derive(UnpackAbi)]
+#[derive(Debug, UnpackAbi)]
 struct ParticipantInfo {
     #[abi(uint64)]
     total: u64,
@@ -31,33 +31,10 @@ struct ParticipantInfo {
     reinvest: bool,
     #[abi(uint64)]
     reward: u64,
-    #[abi(unpack_with = "stakes_unpacker")]
+    #[abi]
     stakes: BTreeMap<u64, u64>,
-    #[abi(with = "map_integer_tuple")]
+    #[abi]
     vestings: BTreeMap<u64, VestingsComponents>,
-}
-
-fn stakes_unpacker(value: &TokenValue) -> UnpackerResult<BTreeMap<u64, u64>> {
-    match value {
-        TokenValue::Map(ParamType::Uint(64), _, values) => {
-            let mut map = BTreeMap::<u64, u64>::new();
-            for (key, value) in values {
-                let key = key.parse::<u64>().map_err(|_| UnpackerError::InvalidAbi)?;
-                let value = match value {
-                    TokenValue::Uint(Uint {
-                        number: value,
-                        size: 64,
-                    }) => {
-                        num_traits::ToPrimitive::to_u64(value).ok_or(UnpackerError::InvalidAbi)?
-                    }
-                    _ => return Err(UnpackerError::InvalidAbi),
-                };
-                map.insert(key, value);
-            }
-            Ok(map)
-        }
-        _ => Err(UnpackerError::InvalidAbi),
-    }
 }
 
 fn test() -> ParticipantInfo {
@@ -66,8 +43,11 @@ fn test() -> ParticipantInfo {
     let reinvest = Token::new("reinvest", TokenValue::Bool(true));
     let reward = Token::new("reward", TokenValue::Uint(Uint::new(12, 64)));
 
-    let mut stakes_bmap = BTreeMap::<String, TokenValue>::new();
-    stakes_bmap.insert("12".to_string(), TokenValue::Uint(Uint::new(50, 64)));
+    let mut stakes_bmap = BTreeMap::new();
+    stakes_bmap.insert(
+        MapKeyTokenValue::Uint(Uint::new(12, 64)),
+        TokenValue::Uint(Uint::new(50, 64)),
+    );
 
     let stakes = Token::new(
         "stakes",
@@ -107,8 +87,11 @@ fn test() -> ParticipantInfo {
         vestings_owner,
     ];
 
-    let mut vestings_bmap = BTreeMap::<String, TokenValue>::new();
-    vestings_bmap.insert("1".to_string(), TokenValue::Tuple(vestings_tokens));
+    let mut vestings_bmap = BTreeMap::new();
+    vestings_bmap.insert(
+        MapKeyTokenValue::Uint(Uint::new(1, 64)),
+        TokenValue::Tuple(vestings_tokens),
+    );
 
     let vestings = Token::new(
         "vestings",

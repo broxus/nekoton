@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::convert::TryInto;
 use std::str::FromStr;
 
 use num_bigint::{BigInt, BigUint};
@@ -37,7 +38,7 @@ pub fn make_abi_token_value(value: &ton_abi::TokenValue) -> anyhow::Result<serde
                 .iter()
                 .map(|(key, value)| {
                     Result::<serde_json::Value, anyhow::Error>::Ok(serde_json::Value::Array(vec![
-                        serde_json::Value::String(key.clone()),
+                        serde_json::Value::String(key.to_string()),
                         make_abi_token_value(value)?,
                     ]))
                 })
@@ -259,10 +260,12 @@ pub fn parse_abi_token_value(
                     _ => return Err(TokensJsonError::MapItemExpected),
                 };
 
-                let key = parse_abi_token_value(param_key.as_ref(), key)?;
+                let key = parse_abi_token_value(param_key.as_ref(), key)?
+                    .try_into()
+                    .map_err(|_| TokensJsonError::InvalidMappingKey)?;
                 let value = parse_abi_token_value(param_value.as_ref(), value)?;
 
-                result.insert(key.to_string(), value);
+                result.insert(key, value);
             }
 
             ton_abi::TokenValue::Map(*param_key.clone(), *param_value.clone(), result)

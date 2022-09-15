@@ -1,11 +1,8 @@
-use std::collections::BTreeMap;
-use std::str::FromStr;
-
 use num_bigint::BigUint;
 use ton_abi::{ParamType, TokenValue, Uint};
 use ton_types::UInt256;
 
-use super::{BuildTokenValue, KnownParamType, UnpackAbi, UnpackerError, UnpackerResult};
+use super::{BuildTokenValue, KnownParamType, UnpackerError, UnpackerResult};
 
 pub struct BigUint128(pub BigUint);
 
@@ -127,14 +124,14 @@ pub mod array_uint256_bytes {
 
     pub fn pack(value: Vec<UInt256>) -> TokenValue {
         TokenValue::Array(
-            ton_abi::ParamType::Uint(256),
+            ParamType::Uint(256),
             value.into_iter().map(uint256_bytes::pack).collect(),
         )
     }
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<UInt256>> {
         match value {
-            TokenValue::Array(ton_abi::ParamType::Uint(256), array) => {
+            TokenValue::Array(ParamType::Uint(256), array) => {
                 array.iter().map(uint256_bytes::unpack).collect()
             }
             _ => Err(UnpackerError::InvalidAbi),
@@ -184,14 +181,14 @@ pub mod array_uint160_bytes {
 
     pub fn pack(value: Vec<[u8; 20]>) -> TokenValue {
         TokenValue::Array(
-            ton_abi::ParamType::Uint(160),
+            ParamType::Uint(160),
             value.into_iter().map(uint160_bytes::pack).collect(),
         )
     }
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<[u8; 20]>> {
         match value {
-            TokenValue::Array(ton_abi::ParamType::Uint(160), array) => {
+            TokenValue::Array(ParamType::Uint(160), array) => {
                 array.iter().map(uint160_bytes::unpack).collect()
             }
             _ => Err(UnpackerError::InvalidAbi),
@@ -215,7 +212,7 @@ pub mod uint128_number {
 
     pub fn unpack(value: &TokenValue) -> UnpackerResult<BigUint> {
         match value {
-            TokenValue::Uint(ton_abi::Uint { number, size: 128 }) => Ok(number.clone()),
+            TokenValue::Uint(Uint { number, size: 128 }) => Ok(number.clone()),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
@@ -255,7 +252,7 @@ pub mod array_address_only_hash {
     use super::*;
 
     pub fn pack(value: Vec<UInt256>) -> TokenValue {
-        ton_abi::TokenValue::Array(
+        TokenValue::Array(
             param_type(),
             value
                 .into_iter()
@@ -289,29 +286,6 @@ pub mod array_address_only_hash {
     }
 
     pub fn param_type() -> ParamType {
-        ton_abi::ParamType::Array(Box::new(ParamType::Address))
-    }
-}
-
-pub mod map_integer_tuple {
-    use super::*;
-
-    pub fn unpack<K, V>(value: &TokenValue) -> UnpackerResult<BTreeMap<K, V>>
-    where
-        K: Ord + FromStr,
-        TokenValue: UnpackAbi<V>,
-    {
-        match value {
-            TokenValue::Map(ParamType::Uint(64), _, values) => {
-                let mut map = BTreeMap::<K, V>::new();
-                for (key, value) in values {
-                    let key = key.parse::<K>().map_err(|_| UnpackerError::InvalidAbi)?;
-                    let value: V = value.to_owned().unpack()?;
-                    map.insert(key, value);
-                }
-                Ok(map)
-            }
-            _ => Err(UnpackerError::InvalidAbi),
-        }
+        ParamType::Array(Box::new(ParamType::Address))
     }
 }

@@ -3,9 +3,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use nekoton_abi::MessageBuilder;
-use nekoton_contracts::tip4_1::nft_contract::{
-    self, callback_payloads_map, GetInfoOutputs, NftCallbackPayload,
-};
+use nekoton_contracts::tip4_1::nft_contract::{self, GetInfoOutputs, NftCallbackPayload};
 use nekoton_contracts::tip4_3::index_contract::IndexGetInfoOutputs;
 use nekoton_contracts::*;
 use nekoton_utils::Clock;
@@ -202,13 +200,13 @@ impl Nft {
         &self,
         to: MsgAddressInt,
         send_gas_to: MsgAddressInt,
-        callbacks: BTreeMap<String, NftCallbackPayload>,
+        callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
     ) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
         let (function, input) = MessageBuilder::new(nft_contract::transfer())
             .arg(to)
             .arg(send_gas_to)
-            .arg(callback_payloads_map::pack(callbacks))
+            .arg(callbacks)
             .build();
 
         let body = function.encode_internal_input(&input)?.into();
@@ -226,13 +224,13 @@ impl Nft {
         &self,
         new_manager: MsgAddressInt,
         send_gas_to: MsgAddressInt,
-        callbacks: BTreeMap<String, NftCallbackPayload>,
+        callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
     ) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
         let (function, input) = MessageBuilder::new(nft_contract::change_manager())
             .arg(new_manager)
             .arg(send_gas_to)
-            .arg(callback_payloads_map::pack(callbacks))
+            .arg(callbacks)
             .build();
 
         let body = function.encode_internal_input(&input)?.into();
@@ -250,13 +248,13 @@ impl Nft {
         &self,
         new_owner: MsgAddressInt,
         send_gas_to: MsgAddressInt,
-        callbacks: BTreeMap<String, NftCallbackPayload>,
+        callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
     ) -> Result<InternalMessage> {
         const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
         let (function, input) = MessageBuilder::new(nft_contract::change_owner())
             .arg(new_owner)
             .arg(send_gas_to)
-            .arg(callback_payloads_map::pack(callbacks))
+            .arg(callbacks)
             .build();
 
         let body = function.encode_internal_input(&input)?.into();

@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use ton_abi::{Param, ParamType};
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::{BuilderData, Cell};
@@ -166,5 +168,15 @@ where
 {
     fn param_type() -> ParamType {
         ParamType::Array(Box::new(T::param_type()))
+    }
+}
+
+impl<K, V> KnownParamType for BTreeMap<K, V>
+where
+    K: KnownParamType,
+    V: KnownParamType,
+{
+    fn param_type() -> ParamType {
+        ParamType::Map(Box::new(K::param_type()), Box::new(V::param_type()))
     }
 }

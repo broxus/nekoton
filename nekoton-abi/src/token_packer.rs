@@ -1,7 +1,8 @@
 use std::collections::{BTreeMap, HashMap};
+use std::hash::BuildHasher;
 
 use num_bigint::{BigInt, BigUint};
-use ton_abi::{Token, TokenValue};
+use ton_abi::{MapKeyTokenValue, Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
 use ton_types::{BuilderData, Cell};
 
@@ -19,95 +20,39 @@ pub trait BuildTokenValue {
     fn token_value(self) -> TokenValue;
 }
 
-impl BuildTokenValue for i8 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Int(ton_abi::Int {
-            number: BigInt::from(self),
-            size: 8,
-        })
-    }
+pub trait BuildMepKeyTokenValue {
+    fn map_key_token_value(self) -> MapKeyTokenValue;
 }
 
-impl BuildTokenValue for u8 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: BigUint::from(self),
-            size: 8,
-        })
-    }
+macro_rules! impl_integer {
+    ($int:ty, $abi:ident, $bigint:ident, $size:literal) => {
+        impl BuildTokenValue for $int {
+            fn token_value(self) -> TokenValue {
+                self.map_key_token_value().into()
+            }
+        }
+
+        impl BuildMepKeyTokenValue for $int {
+            fn map_key_token_value(self) -> MapKeyTokenValue {
+                MapKeyTokenValue::$abi(ton_abi::$abi {
+                    number: $bigint::from(self),
+                    size: $size,
+                })
+            }
+        }
+    };
 }
 
-impl BuildTokenValue for i16 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Int(ton_abi::Int {
-            number: BigInt::from(self),
-            size: 16,
-        })
-    }
-}
-
-impl BuildTokenValue for u16 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: BigUint::from(self),
-            size: 16,
-        })
-    }
-}
-
-impl BuildTokenValue for i32 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Int(ton_abi::Int {
-            number: BigInt::from(self),
-            size: 32,
-        })
-    }
-}
-
-impl BuildTokenValue for u32 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: BigUint::from(self),
-            size: 32,
-        })
-    }
-}
-
-impl BuildTokenValue for i64 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Int(ton_abi::Int {
-            number: BigInt::from(self),
-            size: 64,
-        })
-    }
-}
-
-impl BuildTokenValue for u64 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: BigUint::from(self),
-            size: 64,
-        })
-    }
-}
-
-impl BuildTokenValue for i128 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Int(ton_abi::Int {
-            number: BigInt::from(self),
-            size: 128,
-        })
-    }
-}
-
-impl BuildTokenValue for u128 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(ton_abi::Uint {
-            number: BigUint::from(self),
-            size: 128,
-        })
-    }
-}
+impl_integer!(i8, Int, BigInt, 8);
+impl_integer!(u8, Uint, BigUint, 8);
+impl_integer!(i16, Int, BigInt, 16);
+impl_integer!(u16, Uint, BigUint, 16);
+impl_integer!(i32, Int, BigInt, 32);
+impl_integer!(u32, Uint, BigUint, 32);
+impl_integer!(i64, Int, BigInt, 64);
+impl_integer!(u64, Uint, BigUint, 64);
+impl_integer!(i128, Int, BigInt, 128);
+impl_integer!(u128, Uint, BigUint, 128);
 
 impl BuildTokenValue for bool {
     fn token_value(self) -> TokenValue {
@@ -123,7 +68,13 @@ impl BuildTokenValue for Cell {
 
 impl BuildTokenValue for MsgAddressInt {
     fn token_value(self) -> TokenValue {
-        TokenValue::Address(match self {
+        self.map_key_token_value().into()
+    }
+}
+
+impl BuildMepKeyTokenValue for MsgAddressInt {
+    fn map_key_token_value(self) -> MapKeyTokenValue {
+        MapKeyTokenValue::Address(match self {
             MsgAddressInt::AddrStd(addr) => MsgAddress::AddrStd(addr),
             MsgAddressInt::AddrVar(addr) => MsgAddress::AddrVar(addr),
         })
@@ -133,6 +84,12 @@ impl BuildTokenValue for MsgAddressInt {
 impl BuildTokenValue for MsgAddrStd {
     fn token_value(self) -> TokenValue {
         TokenValue::Address(MsgAddress::AddrStd(self))
+    }
+}
+
+impl BuildMepKeyTokenValue for MsgAddrStd {
+    fn map_key_token_value(self) -> MapKeyTokenValue {
+        MapKeyTokenValue::Address(MsgAddress::AddrStd(self))
     }
 }
 
@@ -203,15 +160,30 @@ where
     }
 }
 
-impl<K, V> BuildTokenValue for HashMap<K, V>
+impl<K, V> BuildTokenValue for BTreeMap<K, V>
 where
-    K: ToString + KnownParamType,
+    K: KnownParamType + BuildMepKeyTokenValue,
     V: KnownParamType + BuildTokenValue,
 {
     fn token_value(self) -> TokenValue {
-        let mut map = BTreeMap::<String, TokenValue>::new();
+        let mut map = BTreeMap::new();
         for (k, v) in self.into_iter() {
-            map.insert(k.to_string(), v.token_value());
+            map.insert(k.map_key_token_value(), v.token_value());
+        }
+        TokenValue::Map(K::param_type(), V::param_type(), map)
+    }
+}
+
+impl<K, V, S> BuildTokenValue for HashMap<K, V, S>
+where
+    K: KnownParamType + BuildMepKeyTokenValue,
+    V: KnownParamType + BuildTokenValue,
+    S: BuildHasher,
+{
+    fn token_value(self) -> TokenValue {
+        let mut map = BTreeMap::new();
+        for (k, v) in self.into_iter() {
+            map.insert(k.map_key_token_value(), v.token_value());
         }
         TokenValue::Map(K::param_type(), V::param_type(), map)
     }
