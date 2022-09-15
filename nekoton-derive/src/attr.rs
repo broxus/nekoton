@@ -43,6 +43,7 @@ impl Container {
 }
 
 pub struct Field {
+    pub skip: bool,
     pub name: Option<String>,
     pub type_name: Option<TypeName>,
     pub with: Option<syn::Expr>,
@@ -61,6 +62,9 @@ impl Field {
         let mut unpack_with = Attr::none(cx, UNPACK_WITH);
         let mut param_type_with = Attr::none(cx, PARAM_TYPE_WITH);
         let mut is_array = BoolAttr::none(cx, ARRAY);
+        let mut skip = BoolAttr::none(cx, SKIP);
+
+        let has_abi_attr = has_abi_attr(&input.attrs);
 
         for (from, meta_item) in input
             .attrs
@@ -75,6 +79,7 @@ impl Field {
                     }
                 }
                 (AttrFrom::Abi, Meta(Path(word))) if word == ARRAY => is_array.set_true(word),
+                (AttrFrom::Abi, Meta(Path(word))) if word == SKIP => skip.set_true(word),
                 (AttrFrom::Abi, Meta(Path(word))) => {
                     if let Some(word) = word.get_ident() {
                         let pt = TypeName::from(&word.to_string());
@@ -112,6 +117,15 @@ impl Field {
             }
         }
 
+        if !has_abi_attr {
+            cx.error_spanned_by(
+                input,
+                "#[abi] attribute is mandatory. Use #[abi(skip)] to skip the field",
+            );
+        }
+
+        let skip = skip.get();
+
         let type_name = type_name.get();
         let with = with.get();
         let pack_with = pack_with.get();
@@ -119,21 +133,31 @@ impl Field {
         let param_type_with = param_type_with.get();
 
         match (
+            skip,
             &type_name,
             &with,
             &pack_with,
             &unpack_with,
             &param_type_with,
         ) {
-            (Some(_), None, None, None, None)
-            | (None, Some(_), None, None, None)
-            | (None, None, ..) => {}
+            (true, tn, w, pw, uw, ptw) => {
+                if tn.is_some() || w.is_some() || pw.is_some() || uw.is_some() || ptw.is_some() {
+                    cx.error_spanned_by(
+                        input,
+                        "#[abi(skip)] attribute can't be used with other attributes",
+                    )
+                }
+            }
+            (_, Some(_), None, None, None, None)
+            | (_, None, Some(_), None, None, None)
+            | (_, None, None, ..) => {}
             _ => {
                 cx.error_spanned_by(input, "Only one of attributes ('type', 'with', 'pack_with/unpack_with/param_type_with') can be selected at time");
             }
         };
 
         Some(Self {
+            skip,
             name: name.get(),
             type_name,
             with,
@@ -143,6 +167,10 @@ impl Field {
             is_array: is_array.get(),
         })
     }
+}
+
+fn has_abi_attr(attrs: &[syn::Attribute]) -> bool {
+    attrs.iter().any(|attr| attr.path == ABI)
 }
 
 fn parse_lit_into_expr(
@@ -249,7 +277,7 @@ fn get_meta_items(
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 enum AttrFrom {
     Abi,
 }

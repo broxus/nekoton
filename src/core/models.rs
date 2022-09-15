@@ -117,6 +117,7 @@ pub enum MultisigTransaction {
 #[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize, Copy)]
 #[serde(rename_all = "camelCase")]
 pub struct MultisigConfirmTransaction {
+    #[abi(skip)]
     #[serde(with = "serde_uint256")]
     pub custodian: UInt256,
 

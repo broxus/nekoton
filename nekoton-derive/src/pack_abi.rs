@@ -129,70 +129,70 @@ fn serialize_struct(
     };
 
     let build_fields = fields.iter().map(|f| {
-        if is_abi(&f.original.attrs) {
-            let name = f.original.ident.as_ref().unwrap();
-            let field_name = match &f.attrs.name {
-                Some(v) => v.clone(),
-                None => name.to_string(),
-            };
+        if f.attrs.skip {
+            return quote! {}; // do nothing
+        }
 
-            let ty = &f.original.ty;
+        let name = f.original.ident.as_ref().unwrap();
+        let field_name = match &f.attrs.name {
+            Some(v) => v.clone(),
+            None => name.to_string(),
+        };
 
-            if let Some(type_name) = f.attrs.type_name.as_ref() {
-                let param_type = type_name.get_param_type();
-                let handler = type_name.get_handler();
-                match f.attrs.is_array {
-                    true => {
-                        quote! {
-                            tokens.push(::ton_abi::Token::new(
-                                #field_name,
-                                ::ton_abi::TokenValue::Array(
-                                    #param_type,
-                                    self.#name.into_iter().map(|value| #handler).collect()
-                                )
-                            ))
-                        }
-                    }
-                    false => {
-                        quote! {
-                            let value = self.#name;
-                            tokens.push(::ton_abi::Token::new(#field_name, #handler))
-                        }
+        let ty = &f.original.ty;
+
+        if let Some(type_name) = f.attrs.type_name.as_ref() {
+            let param_type = type_name.get_param_type();
+            let handler = type_name.get_handler();
+            match f.attrs.is_array {
+                true => {
+                    quote! {
+                        tokens.push(::ton_abi::Token::new(
+                            #field_name,
+                            ::ton_abi::TokenValue::Array(
+                                #param_type,
+                                self.#name.into_iter().map(|value| #handler).collect()
+                            )
+                        ))
                     }
                 }
-            } else if let Some(with) = f.attrs.with.as_ref() {
-                quote! {
-                    tokens.push(::ton_abi::Token::new(#field_name, #with::pack(self.#name)))
-                }
-            } else if let Some(pack_with) = f.attrs.pack_with.as_ref() {
-                quote! {
-                    tokens.push(::ton_abi::Token::new(#field_name, #pack_with(self.#name)))
-                }
-            } else {
-                match f.attrs.is_array {
-                    true => {
-                        quote! {
-                            tokens.push(::nekoton_abi::TokenValueExt::named(
-                                ::ton_abi::TokenValue::Array(
-                                    <#ty as ::nekoton_abi::KnownParamTypeArray<_>>::item_param_type(),
-                                    self.#name.into_iter().map(::nekoton_abi::BuildTokenValue::token_value).collect()
-                                ),
-                                #field_name
-                            ))
-                        }
-                    }
-                    false => {
-                        quote! {
-                            tokens.push(::nekoton_abi::TokenValueExt::named(
-                                ::nekoton_abi::BuildTokenValue::token_value(self.#name),
-                                #field_name
-                            ))
-                        }
+                false => {
+                    quote! {
+                        let value = self.#name;
+                        tokens.push(::ton_abi::Token::new(#field_name, #handler))
                     }
                 }
             }
+        } else if let Some(with) = f.attrs.with.as_ref() {
+            quote! {
+                tokens.push(::ton_abi::Token::new(#field_name, #with::pack(self.#name)))
+            }
+        } else if let Some(pack_with) = f.attrs.pack_with.as_ref() {
+            quote! {
+                tokens.push(::ton_abi::Token::new(#field_name, #pack_with(self.#name)))
+            }
         } else {
-            quote! {} // do nothing
+            match f.attrs.is_array {
+                true => {
+                    quote! {
+                        tokens.push(::nekoton_abi::TokenValueExt::named(
+                            ::ton_abi::TokenValue::Array(
+                                <#ty as ::nekoton_abi::KnownParamTypeArray<_>>::item_param_type(),
+                                self.#name.into_iter().map(::nekoton_abi::BuildTokenValue::token_value).collect()
+                            ),
+                            #field_name
+                        ))
+                    }
+                }
+                false => {
+                    quote! {
+                        tokens.push(::nekoton_abi::TokenValueExt::named(
+                            ::nekoton_abi::BuildTokenValue::token_value(self.#name),
+                            #field_name
+                        ))
+                    }
+                }
+            }
         }
     });
 

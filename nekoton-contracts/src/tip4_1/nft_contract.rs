@@ -49,6 +49,7 @@ pub struct ChangeOwnerInputs {
     pub new_owner: MsgAddressInt,
     #[abi(address, name = "sendGasTo")]
     pub send_gas_to: MsgAddressInt,
+    #[abi]
     pub callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
 }
 
@@ -58,6 +59,7 @@ pub struct ChangeManagerInputs {
     pub new_manager: MsgAddressInt,
     #[abi(address, name = "sendGasTo")]
     pub send_gas_to: MsgAddressInt,
+    #[abi]
     pub callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
 }
 
@@ -67,6 +69,7 @@ pub struct TransferInputs {
     pub to: MsgAddressInt,
     #[abi(address, name = "sendGasTo")]
     pub send_gas_to: MsgAddressInt,
+    #[abi]
     pub callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
 }
 

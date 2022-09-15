@@ -22,6 +22,7 @@ define_symbols! {
     UNPACK_WITH => "unpack_with",
     PARAM_TYPE_WITH => "param_type_with",
     ARRAY => "array",
+    SKIP => "skip",
 }
 
 #[derive(Copy, Clone)]

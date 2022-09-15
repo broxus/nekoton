@@ -1,4 +1,4 @@
-use either::*;
+use either::Either;
 use syn::punctuated::Punctuated;
 
 use crate::attr;
