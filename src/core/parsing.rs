@@ -11,7 +11,7 @@ use nekoton_contracts::tip4_1::nft_contract;
 use nekoton_contracts::{old_tip3, tip3_1};
 
 use crate::core::models::*;
-use crate::core::ton_wallet::WalletType;
+use crate::core::ton_wallet::{MultisigType, WalletType};
 
 pub struct InputMessage(pub Vec<ton_abi::Token>);
 
@@ -96,8 +96,8 @@ pub fn parse_transaction_additional_info(
                         WalletInteractionMethod::WalletV3Transfer,
                     )
                 }
-                WalletType::Multisig(_) => {
-                    let method = parse_multisig_transaction_impl(in_msg, tx)?;
+                WalletType::Multisig(multisig_type) => {
+                    let method = parse_multisig_transaction_impl(multisig_type, in_msg, tx)?;
                     let (recipient, known_payload) = match &method {
                         MultisigTransaction::Submit(MultisigSubmitTransaction {
                             payload,
@@ -255,15 +255,19 @@ impl TryFrom<InputMessage> for TokenWalletDeployedNotification {
     }
 }
 
-pub fn parse_multisig_transaction(tx: &ton_block::Transaction) -> Option<MultisigTransaction> {
+pub fn parse_multisig_transaction(
+    multisig_type: MultisigType,
+    tx: &ton_block::Transaction,
+) -> Option<MultisigTransaction> {
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
     if !matches!(in_msg.header(), ton_block::CommonMsgInfo::ExtInMsgInfo(_)) {
         return None;
     }
-    parse_multisig_transaction_impl(in_msg, tx)
+    parse_multisig_transaction_impl(multisig_type, in_msg, tx)
 }
 
 fn parse_multisig_transaction_impl(
+    multisig_type: MultisigType,
     in_msg: ton_block::Message,
     tx: &ton_block::Transaction,
 ) -> Option<MultisigTransaction> {
@@ -283,7 +287,7 @@ fn parse_multisig_transaction_impl(
         read_function_id(&body).ok()?
     };
 
-    let functions = MultisigFunctions::instance();
+    let functions = MultisigFunctions::instance(multisig_type);
 
     if function_id == functions.send_transaction.input_id {
         let tokens = functions.send_transaction.decode_input(body, false).ok()?;
@@ -328,17 +332,28 @@ struct MultisigFunctions {
 }
 
 impl MultisigFunctions {
-    fn instance() -> &'static Self {
-        use nekoton_contracts::wallets::multisig;
+    fn instance(multisig_type: MultisigType) -> &'static Self {
+        use nekoton_contracts::wallets::{multisig, multisig2};
 
-        static IDS: OnceBox<MultisigFunctions> = OnceBox::new();
-        IDS.get_or_init(|| {
-            Box::new(MultisigFunctions {
-                send_transaction: multisig::send_transaction(),
-                submit_transaction: multisig::submit_transaction(),
-                confirm_transaction: multisig::confirm_transaction(),
-            })
-        })
+        static OLD_FUNCTIONS: OnceBox<MultisigFunctions> = OnceBox::new();
+        static NEW_FUNCTIONS: OnceBox<MultisigFunctions> = OnceBox::new();
+
+        match multisig_type {
+            MultisigType::Multisig2 => NEW_FUNCTIONS.get_or_init(|| {
+                Box::new(MultisigFunctions {
+                    send_transaction: multisig2::send_transaction(),
+                    submit_transaction: multisig2::submit_transaction(),
+                    confirm_transaction: multisig2::confirm_transaction(),
+                })
+            }),
+            _ => OLD_FUNCTIONS.get_or_init(|| {
+                Box::new(MultisigFunctions {
+                    send_transaction: multisig::send_transaction(),
+                    submit_transaction: multisig::submit_transaction(),
+                    confirm_transaction: multisig::confirm_transaction(),
+                })
+            }),
+        }
     }
 }
 
