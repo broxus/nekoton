@@ -928,12 +928,6 @@ fn get_block_stats(
     }
 }
 
-/// Alias for TokenValue::Optional
-///
-/// NOTE: inner value can be in the same cell or in reference
-#[derive(Debug)]
-pub struct Maybe<T>(pub Option<T>);
-
 /// TokenValue::Optional which always store its value in the cell
 #[derive(Debug)]
 pub struct MaybeRef<T>(pub Option<T>);
@@ -954,7 +948,7 @@ impl StandaloneToken for UInt256 {}
 impl StandaloneToken for TokenValue {}
 impl StandaloneToken for ton_block::Grams {}
 impl StandaloneToken for ton_types::Cell {}
-impl<T> StandaloneToken for Maybe<T> {}
+impl<T> StandaloneToken for Option<T> {}
 impl<T> StandaloneToken for MaybeRef<T> {}
 impl<T> StandaloneToken for Vec<T> {}
 impl<T: StandaloneToken> StandaloneToken for Box<T> {}

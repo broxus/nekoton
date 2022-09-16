@@ -7,7 +7,7 @@ use ton_abi::{Token, Uint};
 use ton_block::{MsgAddress, MsgAddressInt};
 use ton_types::UInt256;
 
-use nekoton_abi::{uint256_bytes, BuildTokenValue, Maybe, MaybeRef, UnpackAbiPlain};
+use nekoton_abi::{uint256_bytes, BuildTokenValue, MaybeRef, UnpackAbiPlain};
 
 #[derive(UnpackAbiPlain, Debug)]
 pub struct InternalTransfer {
@@ -18,7 +18,7 @@ pub struct InternalTransfer {
     #[abi(address)]
     pub sender_address: MsgAddressInt,
     #[abi]
-    pub maybe_int: Maybe<u32>,
+    pub maybe_int: Option<u32>,
     #[abi]
     pub maybe_ref_int: MaybeRef<u32>,
     #[abi(string)]
@@ -81,6 +81,6 @@ fn main() {
         data.sender_address.to_string(),
         "0:18c99afffe13d3081370f77c10fc4d51bc54e52b8e181db6a0e8bb75456d91ff"
     );
-    assert_eq!(data.maybe_int.0, Some(123u32));
+    assert_eq!(data.maybe_int, Some(123u32));
     assert_eq!(data.maybe_ref_int.0, Some(321u32));
 }

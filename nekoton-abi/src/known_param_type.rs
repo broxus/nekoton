@@ -4,7 +4,7 @@ use ton_abi::{Param, ParamType};
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::{BuilderData, Cell};
 
-use super::{Maybe, MaybeRef, StandaloneToken};
+use super::{MaybeRef, StandaloneToken};
 
 pub trait KnownParamTypePlain {
     fn param_type() -> Vec<Param>;
@@ -144,7 +144,7 @@ impl KnownParamType for BuilderData {
     }
 }
 
-impl<T> KnownParamType for Maybe<T>
+impl<T> KnownParamType for Option<T>
 where
     T: KnownParamType,
 {

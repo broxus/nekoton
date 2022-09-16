@@ -67,7 +67,7 @@ impl DomainContract<'_> {
             0u32.token_value().named("answerId"),
             record.token_value().named("key"),
         ];
-        let Maybe(result) = self
+        let result = self
             .0
             .run_local_responsible_simple(domain_contract::query(), &inputs)?
             .unpack_first()?;

@@ -8,7 +8,7 @@ use ton_abi::{Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddressInt};
 use ton_types::Cell;
 
-use super::{Maybe, MaybeRef, StandaloneToken};
+use super::{MaybeRef, StandaloneToken};
 
 pub trait TokenValueExt {
     fn unnamed(self) -> Token;
@@ -324,13 +324,13 @@ impl UnpackAbi<TokenValue> for TokenValue {
     }
 }
 
-impl<T> UnpackAbi<Maybe<T>> for TokenValue
+impl<T> UnpackAbi<Option<T>> for TokenValue
 where
     TokenValue: UnpackAbi<T>,
 {
-    fn unpack(self) -> UnpackerResult<Maybe<T>> {
+    fn unpack(self) -> UnpackerResult<Option<T>> {
         match self {
-            TokenValue::Optional(_, item) => Ok(Maybe(item.map(|item| item.unpack()).transpose()?)),
+            TokenValue::Optional(_, item) => item.map(|item| item.unpack()).transpose(),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
@@ -409,6 +409,4 @@ pub type UnpackerResult<T> = Result<T, UnpackerError>;
 pub enum UnpackerError {
     #[error("Invalid ABI")]
     InvalidAbi,
-    #[error("Invalid name (expected {expected:?}, found {found:?})")]
-    InvalidName { expected: String, found: String },
 }

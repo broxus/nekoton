@@ -6,7 +6,7 @@ use ton_abi::{MapKeyTokenValue, Token, TokenValue};
 use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
 use ton_types::{BuilderData, Cell};
 
-use super::{KnownParamType, Maybe, MaybeRef, StandaloneToken};
+use super::{KnownParamType, MaybeRef, StandaloneToken};
 
 pub trait PackAbiPlain {
     fn pack(self) -> Vec<Token>;
@@ -123,14 +123,14 @@ impl BuildTokenValue for BuilderData {
     }
 }
 
-impl<T> BuildTokenValue for Maybe<T>
+impl<T> BuildTokenValue for Option<T>
 where
     T: BuildTokenValue + KnownParamType,
 {
     fn token_value(self) -> TokenValue {
         TokenValue::Optional(
             T::param_type(),
-            self.0.map(|item| Box::new(item.token_value())),
+            self.map(|item| Box::new(item.token_value())),
         )
     }
 }

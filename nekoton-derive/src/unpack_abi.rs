@@ -141,11 +141,6 @@ fn serialize_struct(
                #name: std::default::Default::default()
             }
         } else {
-            let field_name = match &f.attrs.name {
-                Some(v) => v.clone(),
-                None => name.to_string(),
-            };
-
             let try_unpack = try_unpack(
                 &f.attrs.type_name,
                 &f.attrs.with,
@@ -156,18 +151,7 @@ fn serialize_struct(
             quote! {
                 #name: {
                     let token = tokens.next();
-                    let name = match &token {
-                        Some(token) => token.name.clone(),
-                        None => return Err(::nekoton_abi::UnpackerError::InvalidAbi),
-                    };
-                    if name == #field_name {
-                        #try_unpack
-                    } else {
-                        return Err(::nekoton_abi::UnpackerError::InvalidName{
-                            expected: #field_name.to_string(),
-                            found: name,
-                        });
-                    }
+                    #try_unpack
                 }
             }
         }

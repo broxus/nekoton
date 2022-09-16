@@ -2,7 +2,7 @@ use ton_abi::{Param, ParamType};
 use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
-use nekoton_abi::{uint256_bytes, KnownParamType, KnownParamTypePlain, Maybe, MaybeRef};
+use nekoton_abi::{uint256_bytes, KnownParamType, KnownParamTypePlain, MaybeRef};
 
 #[derive(KnownParamTypePlain, Debug)]
 pub struct PlainStruct {
@@ -19,7 +19,7 @@ pub struct PlainStruct {
     #[abi(grams)]
     pub grams: ton_block::Grams,
     #[abi]
-    pub maybe_int: Maybe<u32>,
+    pub maybe_int: Option<u32>,
     #[abi]
     pub maybe_ref_int: MaybeRef<u32>,
     #[abi(string)]
@@ -41,7 +41,7 @@ pub struct Struct {
     #[abi(grams)]
     pub grams: ton_block::Grams,
     #[abi]
-    pub maybe_int: Maybe<u32>,
+    pub maybe_int: Option<u32>,
     #[abi]
     pub maybe_ref_int: MaybeRef<u32>,
     #[abi(string)]
