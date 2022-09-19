@@ -32,7 +32,7 @@ pub fn request_transactions<'a>(
     until_lt: Option<u64>,
     initial_count: u8,
     limit: Option<usize>,
-) -> impl Stream<Item = Vec<RawTransaction>> + 'a {
+) -> impl Stream<Item = Result<Vec<RawTransaction>>> + 'a {
     let count = u8::min(initial_count, transport.info().max_transactions_per_fetch);
 
     LatestTransactions {
@@ -186,9 +186,10 @@ struct LatestTransactions<'a> {
 type TransactionsFut<'a> = Pin<Box<dyn Future<Output = Result<Vec<RawTransaction>>> + Send + 'a>>;
 
 impl<'a> Stream for LatestTransactions<'a> {
-    type Item = Vec<RawTransaction>;
+    type Item = Result<Vec<RawTransaction>>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        // poll `get_transactions` future
         let new_transactions = match self.fut.take() {
             Some(mut fut) => match fut.poll_unpin(cx) {
                 Poll::Ready(result) => result,
@@ -202,10 +203,8 @@ impl<'a> Stream for LatestTransactions<'a> {
 
         let mut new_transactions = match new_transactions {
             Ok(transactions) => transactions,
-            Err(_) => {
-                // TODO: retry?
-                return Poll::Ready(None);
-            }
+            // return error without resetting future
+            Err(e) => return Poll::Ready(Some(Err(e))),
         };
 
         // retain only first elements with lt greater than `until.lt`
@@ -233,7 +232,7 @@ impl<'a> Stream for LatestTransactions<'a> {
         if last.data.prev_trans_lt == 0
             || matches!(self.until_lt, Some(until_lt) if last.data.prev_trans_lt <= until_lt)
         {
-            return Poll::Ready(Some(new_transactions));
+            return Poll::Ready(Some(Ok(new_transactions)));
         }
 
         // update counters
@@ -241,7 +240,7 @@ impl<'a> Stream for LatestTransactions<'a> {
 
         let next_count = match self.limit {
             Some(limit) if self.total_fetched >= limit => {
-                return Poll::Ready(Some(new_transactions))
+                return Poll::Ready(Some(Ok(new_transactions)))
             }
             Some(limit) => usize::min(
                 limit - self.total_fetched,
@@ -258,7 +257,7 @@ impl<'a> Stream for LatestTransactions<'a> {
         ));
 
         // Return result
-        Poll::Ready(Some(new_transactions))
+        Poll::Ready(Some(Ok(new_transactions)))
     }
 }
 

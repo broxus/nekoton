@@ -308,7 +308,7 @@ impl ContractSubscription {
 
         let mut new_transactions = Vec::new();
         while let Some(transactions) = transactions.next().await {
-            new_transactions.extend(transactions.into_iter());
+            new_transactions.extend(transactions?.into_iter());
         }
         drop(transactions);
 
