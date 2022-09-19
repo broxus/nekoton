@@ -195,6 +195,8 @@ fn decode_raw_transaction(boc: &str) -> Result<RawTransaction> {
 mod tests {
     use std::str::FromStr;
 
+    use futures_util::StreamExt;
+
     use super::*;
 
     #[async_trait::async_trait]
@@ -215,38 +217,61 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_connection() {
+    async fn test_transactions_stream() -> Result<()> {
+        let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
+
+        let mut from_lt = 30526271000007;
+        let test_address =
+            "0:cd809fb1cde24b6d3cd4a3dd9102e10c0f73ddfa21c7118f233dc7309bbb0b73".parse()?;
+
+        let mut transactions = crate::core::utils::request_transactions(
+            &transport,
+            &test_address,
+            from_lt,
+            None,
+            2,
+            None,
+        );
+
+        while let Some(transactions) = transactions.next().await {
+            for transaction in transactions?.into_iter() {
+                assert_eq!(transaction.data.lt, from_lt);
+                from_lt = transaction.data.prev_trans_lt;
+            }
+        }
+
+        assert_eq!(from_lt, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_connection() -> Result<()> {
         let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
         let address = MsgAddressInt::from_str(
             "-1:3333333333333333333333333333333333333333333333333333333333333333",
-        )
-        .unwrap();
-        transport.get_contract_state(&address).await.unwrap();
+        )?;
+        transport.get_contract_state(&address).await?;
         transport
             .get_transactions(&address, 21968513000000, 10)
-            .await
-            .unwrap();
+            .await?;
 
         transport
             .get_transaction(&ton_types::UInt256::from_slice(
                 &hex::decode("4a0a06bfbfaba4da8fcc7f5ad617fdee5344d954a1794e35618df2a4b349d15c")
                     .unwrap(),
             ))
-            .await
-            .unwrap()
+            .await?
             .unwrap();
 
         let setcode_multisig_code_hash = ton_types::UInt256::from_str(
             "e2b60b6b602c10ced7ea8ede4bdf96342c97570a3798066f3fb50a4b2b27a208",
-        )
-        .unwrap();
+        )?;
 
         let mut continuation = None;
         loop {
             let contracts = transport
                 .get_accounts_by_code_hash(&setcode_multisig_code_hash, 50, &continuation)
-                .await
-                .unwrap();
+                .await?;
 
             continuation = contracts.last().cloned();
             if continuation.is_none() {
@@ -254,6 +279,8 @@ mod tests {
             }
         }
 
-        transport.get_latest_key_block().await.unwrap();
+        transport.get_latest_key_block().await?;
+
+        Ok(())
     }
 }

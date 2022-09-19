@@ -37,6 +37,7 @@ pub fn request_transactions<'a>(
 
     LatestTransactions {
         address,
+        from_lt,
         until_lt,
         transport,
         fut: Some(transport.get_transactions(address, from_lt, count)),
@@ -176,6 +177,7 @@ type NewTransactions = (Vec<RawTransaction>, TransactionsBatchInfo);
 
 struct LatestTransactions<'a> {
     address: &'a MsgAddressInt,
+    from_lt: u64,
     until_lt: Option<u64>,
     transport: &'a dyn Transport,
     fut: Option<TransactionsFut<'a>>,
@@ -207,19 +209,30 @@ impl<'a> Stream for LatestTransactions<'a> {
             Err(e) => return Poll::Ready(Some(Err(e))),
         };
 
-        // retain only first elements with lt greater than `until.lt`
-        if let Some(until_lt) = self.until_lt {
-            new_transactions.truncate({
-                let mut len = 0;
-                for item in new_transactions.iter() {
-                    if item.data.lt > until_lt {
-                        len += 1;
-                    } else {
-                        break;
-                    }
+        // ensure that transactions are sorted in reverse order (from the latest lt)
+        new_transactions.sort_by_key(|tx| std::cmp::Reverse(tx.data.lt));
+
+        let mut truncated = false;
+        if let Some(first_tx) = new_transactions.first() {
+            if first_tx.data.lt > self.from_lt {
+                // retain only elements in range (until_lt; from_lt]
+                // NOTE: `until_lt < from_lt`
+                let range = (self.until_lt.unwrap_or_default() + 1)..=self.from_lt;
+
+                new_transactions.retain(|item| range.contains(&item.data.lt));
+                truncated = true;
+            }
+        }
+
+        if !truncated {
+            if let Some(until_lt) = self.until_lt {
+                if let Some(len) = new_transactions
+                    .iter()
+                    .position(|tx| tx.data.lt <= until_lt)
+                {
+                    new_transactions.truncate(len);
                 }
-                len
-            });
+            }
         }
 
         // get batch info
@@ -227,6 +240,9 @@ impl<'a> Stream for LatestTransactions<'a> {
             Some(last) => last,
             None => return Poll::Ready(None),
         };
+
+        // set next batch bound
+        self.from_lt = last.data.prev_trans_lt;
 
         // check if there are no transactions left or all transactions were requested
         if last.data.prev_trans_lt == 0

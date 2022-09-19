@@ -306,7 +306,7 @@ impl ContractSubscription {
             limit,
         );
 
-        let mut new_transactions = Vec::new();
+        let mut new_transactions = Vec::<RawTransaction>::new();
         while let Some(transactions) = transactions.next().await {
             new_transactions.extend(transactions?.into_iter());
         }
