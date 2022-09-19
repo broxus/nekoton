@@ -235,7 +235,7 @@ mod tests {
         );
 
         while let Some(transactions) = transactions.next().await {
-            for transaction in transactions?.into_iter() {
+            for transaction in transactions? {
                 assert_eq!(transaction.data.lt, from_lt);
                 from_lt = transaction.data.prev_trans_lt;
             }

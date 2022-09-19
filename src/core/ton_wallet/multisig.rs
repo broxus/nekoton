@@ -359,7 +359,7 @@ pub fn find_pending_transaction(
         _ => return Err(UnpackerError::InvalidAbi.into()),
     };
 
-    for item in array.into_iter() {
+    for item in array {
         let MultisigTransactionId { id } = item.unpack()?;
         if pending_transaction_id == id {
             return Ok(true);

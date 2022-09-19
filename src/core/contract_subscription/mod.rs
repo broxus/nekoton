@@ -258,6 +258,9 @@ impl ContractSubscription {
         executor.run(message)
     }
 
+    /// Updates contract state. Returns whether the state was changed
+    ///
+    /// NOTE: resets `transactions_synced` if state changes
     pub async fn refresh_contract_state(
         &mut self,
         on_contract_state: OnContractState<'_>,
