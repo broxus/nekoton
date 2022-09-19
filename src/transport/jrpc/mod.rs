@@ -221,6 +221,7 @@ mod tests {
         let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
 
         let mut from_lt = 30526271000007;
+        let until_lt = 26005429000001;
         let test_address =
             "0:cd809fb1cde24b6d3cd4a3dd9102e10c0f73ddfa21c7118f233dc7309bbb0b73".parse()?;
 
@@ -228,7 +229,7 @@ mod tests {
             &transport,
             &test_address,
             from_lt,
-            None,
+            Some(until_lt),
             2,
             None,
         );
@@ -240,7 +241,7 @@ mod tests {
             }
         }
 
-        assert_eq!(from_lt, 0);
+        assert_eq!(from_lt, until_lt);
         Ok(())
     }
 

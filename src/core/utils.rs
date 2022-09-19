@@ -33,14 +33,16 @@ pub fn request_transactions<'a>(
     initial_count: u8,
     limit: Option<usize>,
 ) -> impl Stream<Item = Result<Vec<RawTransaction>>> + 'a {
-    let count = u8::min(initial_count, transport.info().max_transactions_per_fetch);
+    let initial_count = u8::min(initial_count, transport.info().max_transactions_per_fetch);
+    let fut = transport.get_transactions(address, from_lt, initial_count);
 
     LatestTransactions {
         address,
         from_lt,
         until_lt,
         transport,
-        fut: Some(transport.get_transactions(address, from_lt, count)),
+        fut: Some(fut),
+        initial_count,
         total_fetched: 0,
         limit,
     }
@@ -181,6 +183,7 @@ struct LatestTransactions<'a> {
     until_lt: Option<u64>,
     transport: &'a dyn Transport,
     fut: Option<TransactionsFut<'a>>,
+    initial_count: u8,
     total_fetched: usize,
     limit: Option<usize>,
 }
@@ -191,89 +194,113 @@ impl<'a> Stream for LatestTransactions<'a> {
     type Item = Result<Vec<RawTransaction>>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        // poll `get_transactions` future
-        let new_transactions = match self.fut.take() {
-            Some(mut fut) => match fut.poll_unpin(cx) {
-                Poll::Ready(result) => result,
-                Poll::Pending => {
-                    self.fut = Some(fut);
-                    return Poll::Pending;
+        loop {
+            // poll `get_transactions` future
+            let new_transactions = match self.fut.take() {
+                Some(mut fut) => match fut.poll_unpin(cx) {
+                    Poll::Ready(result) => result,
+                    Poll::Pending => {
+                        self.fut = Some(fut);
+                        return Poll::Pending;
+                    }
+                },
+                None => return Poll::Ready(None),
+            };
+
+            let mut new_transactions = match new_transactions {
+                Ok(transactions) => transactions,
+                // return error without resetting future
+                Err(e) => return Poll::Ready(Some(Err(e))),
+            };
+
+            // ensure that transactions are sorted in reverse order (from the latest lt)
+            new_transactions.sort_by_key(|tx| std::cmp::Reverse(tx.data.lt));
+
+            // get next lt from the unfiltered response to continue
+            // fetching transactions if filter produced empty array
+            let next_lt_from_response = match new_transactions.last() {
+                Some(last) => last.data.prev_trans_lt,
+                // early return on empty response
+                None => return Poll::Ready(None),
+            };
+            let mut possibly_has_more = next_lt_from_response > 0;
+
+            let mut truncated = false;
+            if let Some(first_tx) = new_transactions.first() {
+                if first_tx.data.lt > self.from_lt {
+                    // retain only elements in range (until_lt; from_lt]
+                    // NOTE: `until_lt < from_lt`
+                    let until_lt = self.until_lt.unwrap_or_default();
+                    let range = (until_lt + 1)..=self.from_lt;
+
+                    new_transactions.retain(|item| {
+                        possibly_has_more &= item.data.lt > until_lt;
+                        range.contains(&item.data.lt)
+                    });
+                    truncated = true;
                 }
-            },
-            None => return Poll::Ready(None),
-        };
-
-        let mut new_transactions = match new_transactions {
-            Ok(transactions) => transactions,
-            // return error without resetting future
-            Err(e) => return Poll::Ready(Some(Err(e))),
-        };
-
-        // ensure that transactions are sorted in reverse order (from the latest lt)
-        new_transactions.sort_by_key(|tx| std::cmp::Reverse(tx.data.lt));
-
-        let mut truncated = false;
-        if let Some(first_tx) = new_transactions.first() {
-            if first_tx.data.lt > self.from_lt {
-                // retain only elements in range (until_lt; from_lt]
-                // NOTE: `until_lt < from_lt`
-                let range = (self.until_lt.unwrap_or_default() + 1)..=self.from_lt;
-
-                new_transactions.retain(|item| range.contains(&item.data.lt));
-                truncated = true;
             }
-        }
 
-        if !truncated {
-            if let Some(until_lt) = self.until_lt {
-                if let Some(len) = new_transactions
-                    .iter()
-                    .position(|tx| tx.data.lt <= until_lt)
-                {
-                    new_transactions.truncate(len);
+            if !truncated {
+                if let Some(until_lt) = self.until_lt {
+                    if let Some(len) = new_transactions
+                        .iter()
+                        .position(|tx| tx.data.lt <= until_lt)
+                    {
+                        new_transactions.truncate(len);
+                        possibly_has_more = false;
+                    }
                 }
             }
-        }
 
-        // get batch info
-        let last = match new_transactions.last() {
-            Some(last) => last,
-            None => return Poll::Ready(None),
-        };
+            // get batch info
+            let last = match new_transactions.last() {
+                Some(last) => last,
+                None if possibly_has_more => {
+                    self.fut = Some(self.transport.get_transactions(
+                        self.address,
+                        next_lt_from_response,
+                        self.initial_count,
+                    ));
+                    continue;
+                }
+                None => return Poll::Ready(None),
+            };
 
-        // set next batch bound
-        self.from_lt = last.data.prev_trans_lt;
+            // set next batch bound
+            self.from_lt = last.data.prev_trans_lt;
 
-        // check if there are no transactions left or all transactions were requested
-        if last.data.prev_trans_lt == 0
-            || matches!(self.until_lt, Some(until_lt) if last.data.prev_trans_lt <= until_lt)
-        {
+            // check if there are no transactions left or all transactions were requested
+            if last.data.prev_trans_lt == 0
+                || matches!(self.until_lt, Some(until_lt) if last.data.prev_trans_lt <= until_lt)
+            {
+                return Poll::Ready(Some(Ok(new_transactions)));
+            }
+
+            // update counters
+            self.total_fetched += new_transactions.len();
+
+            let next_count = match self.limit {
+                Some(limit) if self.total_fetched >= limit => {
+                    return Poll::Ready(Some(Ok(new_transactions)))
+                }
+                Some(limit) => usize::min(
+                    limit - self.total_fetched,
+                    self.transport.info().max_transactions_per_fetch as usize,
+                ) as u8,
+                None => self.transport.info().max_transactions_per_fetch,
+            };
+
+            // If there are some unprocessed transactions left we should request remaining
+            self.fut = Some(self.transport.get_transactions(
+                self.address,
+                last.data.prev_trans_lt,
+                next_count,
+            ));
+
+            // Return result
             return Poll::Ready(Some(Ok(new_transactions)));
         }
-
-        // update counters
-        self.total_fetched += new_transactions.len();
-
-        let next_count = match self.limit {
-            Some(limit) if self.total_fetched >= limit => {
-                return Poll::Ready(Some(Ok(new_transactions)))
-            }
-            Some(limit) => usize::min(
-                limit - self.total_fetched,
-                self.transport.info().max_transactions_per_fetch as usize,
-            ) as u8,
-            None => self.transport.info().max_transactions_per_fetch,
-        };
-
-        // If there are some unprocessed transactions left we should request remaining
-        self.fut = Some(self.transport.get_transactions(
-            self.address,
-            last.data.prev_trans_lt,
-            next_count,
-        ));
-
-        // Return result
-        Poll::Ready(Some(Ok(new_transactions)))
     }
 }
 
