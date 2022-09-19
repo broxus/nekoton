@@ -270,6 +270,7 @@ impl ContractSubscription {
             std::cmp::Ordering::Greater => {
                 on_contract_state(&contract_state);
                 self.contract_state = new_contract_state;
+                self.transactions_synced = false;
                 Ok(true)
             }
             _ => Ok(false),
