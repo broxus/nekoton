@@ -623,7 +623,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
 
         Ok(Self {
             id: TransactionId { lt: data.lt, hash },
-            prev_trans_id: (data.prev_trans_lt != 0).then(|| TransactionId {
+            prev_trans_id: (data.prev_trans_lt != 0).then_some(TransactionId {
                 lt: data.prev_trans_lt,
                 hash: data.prev_trans_hash,
             }),

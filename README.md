@@ -12,5 +12,5 @@
 </p>
 
 ### Requirements
-- Rust 1.61+
+- Rust 1.62+
 - `wasm-pack` 0.9.1+ (to test build for wasm target)

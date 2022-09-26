@@ -98,7 +98,7 @@ impl Transport for JrpcTransport {
                 "getTransactionsList",
                 &GetTransactions {
                     limit: count as u64,
-                    last_transaction_lt: (from_lt != u64::MAX).then(|| from_lt),
+                    last_transaction_lt: (from_lt != u64::MAX).then_some(from_lt),
                     account: address,
                 },
             ),

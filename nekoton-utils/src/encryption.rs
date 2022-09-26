@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
 use pbkdf2::pbkdf2;
@@ -64,7 +62,7 @@ pub fn symmetric_key_from_password(password: &str, salt: &[u8]) -> Key {
         N_ITER,
         pbkdf2_hash.unsecure_mut(),
     );
-    Key::clone_from_slice((&pbkdf2_hash).borrow())
+    Key::clone_from_slice(pbkdf2_hash.unsecure())
 }
 
 #[derive(thiserror::Error, Debug, Copy, Clone)]
