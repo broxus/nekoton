@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["INTERFACE_ID",""]],"fn":[["accept_mint","Called by root token contract on mint"],["accept_transfer","Called by another token wallet on transfer"],["balance","Returns the token wallet balance."],["root","Returns the token root address."],["wallet_code","Returns the token wallet code."]]};

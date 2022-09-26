@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["domain_contract",""],["root_contract",""]],"struct":[["AdnlAddressRecord",""],["DomainContract",""],["RawRecord",""],["RootContract",""],["TargetAddressRecord",""]],"trait":[["CertificateRecord",""]]};

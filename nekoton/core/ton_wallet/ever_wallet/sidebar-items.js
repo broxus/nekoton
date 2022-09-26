@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["CODE_HASH",""]],"fn":[["compute_contract_address",""],["is_ever_wallet",""],["make_state_init",""],["prepare_deploy",""],["prepare_transfer",""]],"static":[["DETAILS",""]]};

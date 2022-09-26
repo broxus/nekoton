@@ -1,0 +1,766 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/highload_wallet_v2.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>highload_wallet_v2.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
+
+<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
+<span class="kw">use</span> <span class="ident">ed25519_dalek::PublicKey</span>;
+<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">MsgAddrStd</span>, <span class="ident">MsgAddressInt</span>, <span class="ident">Serializable</span>};
+<span class="kw">use</span> <span class="ident">ton_types</span>::{<span class="ident">BuilderData</span>, <span class="ident">Cell</span>, <span class="ident">HashmapE</span>, <span class="ident">HashmapType</span>, <span class="ident">IBitstring</span>, <span class="ident">SliceData</span>, <span class="ident">UInt256</span>};
+
+<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Gift</span>, <span class="ident">TonWalletDetails</span>, <span class="ident">TransferAction</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::models</span>::{<span class="ident">Expiration</span>, <span class="ident">ExpireAt</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto</span>::{<span class="ident">SignedMessage</span>, <span class="ident">UnsignedMessage</span>};
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_deploy</span>(
+    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
+    <span class="ident">workchain</span>: <span class="ident">i8</span>,
+    <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">UnsignedMessage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">init_data</span> <span class="op">=</span> <span class="ident">InitData::from_key</span>(<span class="ident">public_key</span>).<span class="ident">with_wallet_id</span>(<span class="ident">WALLET_ID</span>);
+    <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">compute_contract_address</span>(<span class="ident">public_key</span>, <span class="ident">workchain</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span>
+        <span class="ident">ton_block::Message::with_ext_in_header</span>(<span class="ident">ton_block::ExternalInboundMessageHeader</span> {
+            <span class="ident">dst</span>,
+            ..<span class="ident">Default::default</span>()
+        });
+
+    <span class="ident">message</span>.<span class="ident">set_state_init</span>(<span class="ident">init_data</span>.<span class="ident">make_state_init</span>()<span class="question-mark">?</span>);
+
+    <span class="kw">let</span> <span class="ident">expire_at</span> <span class="op">=</span> <span class="ident">ExpireAt::new</span>(<span class="ident">clock</span>, <span class="ident">expiration</span>);
+    <span class="kw">let</span> (<span class="ident">hash</span>, <span class="ident">payload</span>) <span class="op">=</span> <span class="ident">init_data</span>.<span class="ident">make_deploy_payload</span>(<span class="ident">expire_at</span>.<span class="ident">timestamp</span>)<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(<span class="ident">Box::new</span>(<span class="ident">UnsignedHighloadWalletV2Message</span> {
+        <span class="ident">init_data</span>,
+        <span class="ident">gifts</span>: <span class="ident">Vec::new</span>(),
+        <span class="ident">payload</span>,
+        <span class="ident">message</span>,
+        <span class="ident">expire_at</span>,
+        <span class="ident">hash</span>,
+    }))
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="kw">struct</span> <span class="ident">UnsignedWalletV3Deploy</span> {
+    <span class="ident">message</span>: <span class="ident">ton_block::Message</span>,
+    <span class="ident">expire_at</span>: <span class="ident">ExpireAt</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">UnsignedMessage</span> <span class="kw">for</span> <span class="ident">UnsignedWalletV3Deploy</span> {
+    <span class="kw">fn</span> <span class="ident">refresh_timeout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>) {
+        <span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">refresh</span>(<span class="ident">clock</span>);
+    }
+
+    <span class="kw">fn</span> <span class="ident">expire_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
+        <span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">timestamp</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+        <span class="comment">// return empty hash, because there is no message body</span>
+        <span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>]
+    }
+
+    <span class="kw">fn</span> <span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="ident">ed25519_dalek::SIGNATURE_LENGTH</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignedMessage</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">SignedMessage</span> {
+            <span class="ident">message</span>: <span class="self">self</span>.<span class="ident">message</span>.<span class="ident">clone</span>(),
+            <span class="ident">expire_at</span>: <span class="self">self</span>.<span class="ident">expire_at</span>(),
+        })
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_transfer</span>(
+    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
+    <span class="ident">current_state</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
+    <span class="ident">gifts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Gift</span><span class="op">&gt;</span>,
+    <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransferAction</span><span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="ident">gifts</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">DETAILS</span>.<span class="ident">max_messages</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">HighloadWalletV2Error::TooManyGifts</span>.<span class="ident">into</span>());
+    }
+
+    <span class="kw">let</span> (<span class="ident">init_data</span>, <span class="ident">with_state_init</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">current_state</span>.<span class="ident">storage</span>.<span class="ident">state</span> {
+        <span class="ident">ton_block::AccountState::AccountActive</span> { <span class="ident">state_init</span>, .. } =&gt; <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">state_init</span>.<span class="ident">data</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">data</span>) =&gt; (<span class="ident">InitData::try_from</span>(<span class="ident">data</span>)<span class="question-mark">?</span>, <span class="bool-val">false</span>),
+            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">HighloadWalletV2Error::InvalidInitData</span>.<span class="ident">into</span>()),
+        },
+        <span class="ident">ton_block::AccountState::AccountFrozen</span> { .. } =&gt; {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">HighloadWalletV2Error::AccountIsFrozen</span>.<span class="ident">into</span>())
+        }
+        <span class="ident">ton_block::AccountState::AccountUninit</span> =&gt; (
+            <span class="ident">InitData::from_key</span>(<span class="ident">public_key</span>).<span class="ident">with_wallet_id</span>(<span class="ident">WALLET_ID</span>),
+            <span class="bool-val">true</span>,
+        ),
+    };
+
+    <span class="kw">if</span> <span class="ident">init_data</span>.<span class="ident">data</span>.<span class="ident">len</span>()<span class="question-mark">?</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">500_usize</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">HighloadWalletV2Error::InitDataTooLarge</span>.<span class="ident">into</span>());
+    }
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span>
+        <span class="ident">ton_block::Message::with_ext_in_header</span>(<span class="ident">ton_block::ExternalInboundMessageHeader</span> {
+            <span class="ident">dst</span>: <span class="ident">current_state</span>.<span class="ident">addr</span>.<span class="ident">clone</span>(),
+            ..<span class="ident">Default::default</span>()
+        });
+
+    <span class="kw">if</span> <span class="ident">with_state_init</span> {
+        <span class="ident">message</span>.<span class="ident">set_state_init</span>(<span class="ident">init_data</span>.<span class="ident">make_state_init</span>()<span class="question-mark">?</span>);
+    }
+
+    <span class="kw">let</span> <span class="ident">expire_at</span> <span class="op">=</span> <span class="ident">ExpireAt::new</span>(<span class="ident">clock</span>, <span class="ident">expiration</span>);
+    <span class="kw">let</span> (<span class="ident">hash</span>, <span class="ident">payload</span>) <span class="op">=</span> <span class="ident">init_data</span>.<span class="ident">make_transfer_payload</span>(<span class="ident">gifts</span>.<span class="ident">clone</span>(), <span class="ident">expire_at</span>.<span class="ident">timestamp</span>)<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(<span class="ident">TransferAction::Sign</span>(<span class="ident">Box::new</span>(
+        <span class="ident">UnsignedHighloadWalletV2Message</span> {
+            <span class="ident">init_data</span>,
+            <span class="ident">gifts</span>,
+            <span class="ident">payload</span>,
+            <span class="ident">hash</span>,
+            <span class="ident">expire_at</span>,
+            <span class="ident">message</span>,
+        },
+    )))
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="kw">struct</span> <span class="ident">UnsignedHighloadWalletV2Message</span> {
+    <span class="ident">init_data</span>: <span class="ident">InitData</span>,
+    <span class="ident">gifts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Gift</span><span class="op">&gt;</span>,
+    <span class="ident">payload</span>: <span class="ident">BuilderData</span>,
+    <span class="ident">hash</span>: <span class="ident">UInt256</span>,
+    <span class="ident">expire_at</span>: <span class="ident">ExpireAt</span>,
+    <span class="ident">message</span>: <span class="ident">ton_block::Message</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">UnsignedMessage</span> <span class="kw">for</span> <span class="ident">UnsignedHighloadWalletV2Message</span> {
+    <span class="kw">fn</span> <span class="ident">refresh_timeout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">refresh</span>(<span class="ident">clock</span>) {
+            <span class="kw">return</span>;
+        }
+
+        <span class="kw">let</span> <span class="ident">expire_at</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">expire_at</span>();
+
+        <span class="kw">let</span> (<span class="ident">hash</span>, <span class="ident">payload</span>) <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">gifts</span>.<span class="ident">is_empty</span>() {
+            <span class="self">self</span>.<span class="ident">init_data</span>.<span class="ident">make_deploy_payload</span>(<span class="ident">expire_at</span>)
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">init_data</span>
+                .<span class="ident">make_transfer_payload</span>(<span class="self">self</span>.<span class="ident">gifts</span>.<span class="ident">clone</span>(), <span class="ident">expire_at</span>)
+        }
+        .<span class="ident">trust_me</span>();
+
+        <span class="self">self</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash</span>;
+        <span class="self">self</span>.<span class="ident">payload</span> <span class="op">=</span> <span class="ident">payload</span>;
+    }
+
+    <span class="kw">fn</span> <span class="ident">expire_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
+        <span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">timestamp</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+        <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">as_slice</span>()
+    }
+
+    <span class="kw">fn</span> <span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signature</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="ident">ed25519_dalek::SIGNATURE_LENGTH</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignedMessage</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">payload</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">payload</span>.<span class="ident">clone</span>();
+        <span class="ident">payload</span>.<span class="ident">prepend_raw</span>(<span class="ident">signature</span>, <span class="ident">signature</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="number">8</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">message</span>.<span class="ident">clone</span>();
+        <span class="ident">message</span>.<span class="ident">set_body</span>(<span class="ident">payload</span>.<span class="ident">into</span>());
+
+        <span class="prelude-val">Ok</span>(<span class="ident">SignedMessage</span> {
+            <span class="ident">message</span>,
+            <span class="ident">expire_at</span>: <span class="self">self</span>.<span class="ident">expire_at</span>(),
+        })
+    }
+}
+
+<span class="kw">const</span> <span class="ident">HIGHLOAD_WALLET_V2_HASH</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+    <span class="number">0x0b</span>, <span class="number">0x3a</span>, <span class="number">0x88</span>, <span class="number">0x7a</span>, <span class="number">0xea</span>, <span class="number">0xcd</span>, <span class="number">0x2a</span>, <span class="number">0x7d</span>, <span class="number">0x40</span>, <span class="number">0xbb</span>, <span class="number">0x55</span>, <span class="number">0x50</span>, <span class="number">0xbc</span>, <span class="number">0x92</span>, <span class="number">0x53</span>, <span class="number">0x15</span>,
+    <span class="number">0x6a</span>, <span class="number">0x02</span>, <span class="number">0x90</span>, <span class="number">0x65</span>, <span class="number">0xae</span>, <span class="number">0xfb</span>, <span class="number">0x6d</span>, <span class="number">0x6b</span>, <span class="number">0x58</span>, <span class="number">0x37</span>, <span class="number">0x35</span>, <span class="number">0xd5</span>, <span class="number">0x8d</span>, <span class="number">0xa9</span>, <span class="number">0xd5</span>, <span class="number">0xbe</span>,
+];
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_highload_wallet_v2</span>(<span class="ident">code_hash</span>: <span class="kw-2">&amp;</span><span class="ident">UInt256</span>) -&gt; <span class="ident">bool</span> {
+    <span class="ident">code_hash</span>.<span class="ident">as_slice</span>() <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">HIGHLOAD_WALLET_V2_HASH</span>
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_contract_address</span>(<span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>, <span class="ident">workchain_id</span>: <span class="ident">i8</span>) -&gt; <span class="ident">MsgAddressInt</span> {
+    <span class="ident">InitData::from_key</span>(<span class="ident">public_key</span>)
+        .<span class="ident">with_wallet_id</span>(<span class="ident">WALLET_ID</span>)
+        .<span class="ident">compute_addr</span>(<span class="ident">workchain_id</span>)
+        .<span class="ident">trust_me</span>()
+}
+
+<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">DETAILS</span>: <span class="ident">TonWalletDetails</span> <span class="op">=</span> <span class="ident">TonWalletDetails</span> {
+    <span class="ident">requires_separate_deploy</span>: <span class="bool-val">false</span>,
+    <span class="ident">min_amount</span>: <span class="number">1</span>, <span class="comment">// 0.000000001 TON</span>
+    <span class="ident">max_messages</span>: <span class="number">250</span>,
+    <span class="ident">supports_payload</span>: <span class="bool-val">true</span>,
+    <span class="ident">supports_state_init</span>: <span class="bool-val">true</span>,
+    <span class="ident">supports_multiple_owners</span>: <span class="bool-val">false</span>,
+    <span class="ident">expiration_time</span>: <span class="number">0</span>,
+};
+
+<span class="doccomment">/// `HighloadWalletV2` init data</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InitData</span> {
+    <span class="kw">pub</span> <span class="ident">wallet_id</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">last_cleaned</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">UInt256</span>,
+    <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">HashmapE</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">InitData</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">public_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>] {
+        <span class="self">self</span>.<span class="ident">public_key</span>.<span class="ident">as_slice</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">wallet_id</span>: <span class="number">0</span>,
+            <span class="ident">last_cleaned</span>: <span class="number">0</span>,
+            <span class="ident">public_key</span>: <span class="ident">key</span>.<span class="ident">as_bytes</span>().<span class="ident">into</span>(),
+            <span class="ident">data</span>: <span class="ident">HashmapE::default</span>(),
+        }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_wallet_id</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">wallet_id</span> <span class="op">=</span> <span class="ident">id</span>;
+        <span class="self">self</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_addr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">workchain_id</span>: <span class="ident">i8</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">init_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">make_state_init</span>()<span class="question-mark">?</span>.<span class="ident">serialize</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">init_state</span>.<span class="ident">repr_hash</span>();
+        <span class="prelude-val">Ok</span>(<span class="ident">MsgAddressInt::AddrStd</span>(<span class="ident">MsgAddrStd</span> {
+            <span class="ident">anycast</span>: <span class="prelude-val">None</span>,
+            <span class="ident">workchain_id</span>,
+            <span class="ident">address</span>: <span class="ident">hash</span>.<span class="ident">into</span>(),
+        }))
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_state_init</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_block::StateInit</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">ton_block::StateInit</span> {
+            <span class="ident">code</span>: <span class="prelude-val">Some</span>(<span class="ident">nekoton_contracts::wallets::code::highload_wallet_v2</span>()),
+            <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">serialize</span>()<span class="question-mark">?</span>),
+            ..<span class="ident">Default::default</span>()
+        })
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">BuilderData::new</span>();
+        <span class="ident">data</span>.<span class="ident">append_u32</span>(<span class="self">self</span>.<span class="ident">wallet_id</span>)<span class="question-mark">?</span>
+            .<span class="ident">append_u64</span>(<span class="self">self</span>.<span class="ident">last_cleaned</span>)<span class="question-mark">?</span>
+            .<span class="ident">append_raw</span>(<span class="self">self</span>.<span class="ident">public_key</span>.<span class="ident">as_slice</span>(), <span class="number">256</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">write_hashmap_data</span>(<span class="kw-2">&amp;mut</span> <span class="ident">data</span>)<span class="question-mark">?</span>;
+        <span class="ident">data</span>.<span class="ident">into_cell</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_deploy_payload</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">expire_at</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">UInt256</span>, <span class="ident">BuilderData</span>)<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">BuilderData::new</span>();
+        <span class="ident">payload</span>
+            .<span class="ident">append_u32</span>(<span class="self">self</span>.<span class="ident">wallet_id</span>)<span class="question-mark">?</span>
+            .<span class="ident">append_u32</span>(<span class="ident">expire_at</span>)<span class="question-mark">?</span>
+            .<span class="ident">append_u32</span>(<span class="ident">u32::MAX</span>)<span class="question-mark">?</span>
+            .<span class="ident">append_bit_zero</span>()<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">payload</span>.<span class="ident">clone</span>().<span class="ident">into_cell</span>()<span class="question-mark">?</span>.<span class="ident">repr_hash</span>();
+
+        <span class="prelude-val">Ok</span>((<span class="ident">hash</span>, <span class="ident">payload</span>))
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_transfer_payload</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">gifts</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Gift</span><span class="op">&gt;</span>,
+        <span class="ident">expire_at</span>: <span class="ident">u32</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">UInt256</span>, <span class="ident">BuilderData</span>)<span class="op">&gt;</span> {
+        <span class="comment">// Prepare messages array</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">ton_types::HashmapE::with_bit_len</span>(<span class="number">16</span>);
+        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">gift</span>) <span class="kw">in</span> <span class="ident">gifts</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>() {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">internal_message</span> <span class="op">=</span>
+                <span class="ident">ton_block::Message::with_int_header</span>(<span class="ident">ton_block::InternalMessageHeader</span> {
+                    <span class="ident">ihr_disabled</span>: <span class="bool-val">true</span>,
+                    <span class="ident">bounce</span>: <span class="ident">gift</span>.<span class="ident">bounce</span>,
+                    <span class="ident">dst</span>: <span class="ident">gift</span>.<span class="ident">destination</span>,
+                    <span class="ident">value</span>: <span class="ident">gift</span>.<span class="ident">amount</span>.<span class="ident">into</span>(),
+                    ..<span class="ident">Default::default</span>()
+                });
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">body</span>) <span class="op">=</span> <span class="ident">gift</span>.<span class="ident">body</span> {
+                <span class="ident">internal_message</span>.<span class="ident">set_body</span>(<span class="ident">body</span>);
+            }
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">state_init</span>) <span class="op">=</span> <span class="ident">gift</span>.<span class="ident">state_init</span> {
+                <span class="ident">internal_message</span>.<span class="ident">set_state_init</span>(<span class="ident">state_init</span>);
+            }
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">item</span> <span class="op">=</span> <span class="ident">BuilderData::new</span>();
+            <span class="ident">item</span>.<span class="ident">append_u8</span>(<span class="ident">gift</span>.<span class="ident">flags</span>)<span class="question-mark">?</span>
+                .<span class="ident">append_reference_cell</span>(<span class="ident">internal_message</span>.<span class="ident">serialize</span>()<span class="question-mark">?</span>);
+
+            <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> (<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u16</span>).<span class="ident">write_to_new_cell</span>().<span class="ident">unwrap</span>().<span class="ident">into</span>();
+
+            <span class="ident">messages</span>.<span class="ident">set</span>(<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">messages</span>.<span class="ident">serialize</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">messages_hash</span> <span class="op">=</span> <span class="ident">messages</span>.<span class="ident">repr_hash</span>();
+
+        <span class="comment">// Build payload</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">BuilderData::new</span>();
+        <span class="ident">payload</span>
+            .<span class="ident">append_u32</span>(<span class="self">self</span>.<span class="ident">wallet_id</span>)<span class="question-mark">?</span>
+            .<span class="ident">append_u32</span>(<span class="ident">expire_at</span>)<span class="question-mark">?</span>
+            .<span class="ident">append_raw</span>(<span class="kw-2">&amp;</span><span class="ident">messages_hash</span>.<span class="ident">as_slice</span>()[<span class="number">28</span>..<span class="number">32</span>], <span class="number">32</span>)<span class="question-mark">?</span>
+            .<span class="ident">append_builder</span>(<span class="kw-2">&amp;</span><span class="ident">messages</span>.<span class="ident">into</span>())<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">payload</span>.<span class="ident">clone</span>().<span class="ident">into_cell</span>()<span class="question-mark">?</span>.<span class="ident">repr_hash</span>();
+
+        <span class="prelude-val">Ok</span>((<span class="ident">hash</span>, <span class="ident">payload</span>))
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Cell</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">InitData</span> {
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
+
+    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cs</span> <span class="op">=</span> <span class="ident">SliceData::from</span>(<span class="ident">data</span>);
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
+            <span class="ident">wallet_id</span>: <span class="ident">cs</span>.<span class="ident">get_next_u32</span>()<span class="question-mark">?</span>,
+            <span class="ident">last_cleaned</span>: <span class="ident">cs</span>.<span class="ident">get_next_u64</span>()<span class="question-mark">?</span>,
+            <span class="ident">public_key</span>: <span class="ident">UInt256::from_be_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">cs</span>.<span class="ident">get_next_bytes</span>(<span class="number">32</span>)<span class="question-mark">?</span>),
+            <span class="ident">data</span>: {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">HashmapE::with_bit_len</span>(<span class="number">64</span>);
+                <span class="ident">map</span>.<span class="ident">read_hashmap_data</span>(<span class="kw-2">&amp;mut</span> <span class="ident">cs</span>)<span class="question-mark">?</span>;
+                <span class="ident">map</span>
+            },
+        })
+    }
+}
+
+<span class="kw">const</span> <span class="ident">WALLET_ID</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x00000000</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">enum</span> <span class="ident">HighloadWalletV2Error</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid init data&quot;</span>)]</span>
+    <span class="ident">InvalidInitData</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Account is frozen&quot;</span>)]</span>
+    <span class="ident">AccountIsFrozen</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Too many outgoing messages&quot;</span>)]</span>
+    <span class="ident">TooManyGifts</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Account init data is too large&quot;</span>)]</span>
+    <span class="ident">InitDataTooLarge</span>,
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::ton_wallet::highload_wallet_v2::InitData</span>;
+    <span class="kw">use</span> <span class="ident">anyhow::Result</span>;
+    <span class="kw">use</span> <span class="ident">ton_block::Deserializable</span>;
+    <span class="kw">use</span> <span class="ident">ton_types::HashmapType</span>;
+
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">check_state</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;te6ccgICCBAAAQAAOOsAAAIBmggHAAEBWQAAAABij1ipvO9y33lafOQTY2Zjcpu/tM7FomMbSFDp4+8Ei8aUcpwDouTBwAACAgiLsUesAl4AAwIBYgA1AAQCAnAAFAAFAgFIABEABgIBIAAKAAcCAW4ACQAIAAm3P2/0YAAJty45OOACASAADAALAAm7gCmMCAIBIAAQAA0CASAADwAOAAm3SNaR4AAJt2IEcmAACbn59J8wAgEgABMAEgAJvH0s0sQACb0fFP0kAgEgACYAFQIBIAAfABYCASAAGgAXAgEgABkAGAAJulOvR9gACbr90p9IAgFYABwAGwAJuaPhPtACASAAHgAdAAm29FO6oAAJt4e9WeACASAAJQAgAgEgACQAIQIBIAAjACIACbg4HOPQAAm5N8GT0AAJumQHj3gACbxuQUbMAgEgACwAJwIBIAApACgACbxoeVqsAgEgACsAKgAJu3kh5AgACbuT7z2oAgEgADIALQIBIAAxAC4CAUgAMAAvAAm3D/yF4AAJttuTf6AACboR+FvYAgEgADQAMwAJu/xtoCgACbswljEoAgEgAVEANgIBIADGADcCASAAfQA4AgEgAFwAOQIBIABLADoCASAASgA7AgEgAD8APAIBIAA+AD0ACbv67XUoAAm728BYuAIBIABDAEACASAAQgBBAAm4XHbOEAAJuEX0C9ACASAASQBEAgEgAEgARQIBSABHAEYACLJFqpcACLIZDQgACbb/vM5gAAm5tBZx8AAJv6qZvYYCASAAVQBMAgEgAFIATQIBWABRAE4CAWYAUABPAAizva6wAAizJMbvAAm4yrfY0AIBIABUAFMACbv97cQIAAm7rFAKCAIBIABXAFYACbwdUD3MAgEgAFkAWAAJuqMTi4gCA5B3AFsAWgAHqXo6sAAHqTSr0AIBIABsAF0CASAAYwBeAgEgAGIAXwICcQBhAGAACbU816HAAAm0goAhwAAJvMcETxwCASAAawBkAgEgAGoAZQIBIABnAGYACbjQvmEQAgJxAGkAaAAHsBsUkQAHsGq37wAJu6lVp4gACb01zX/cAgEgAHYAbQIBIABzAG4CASAAcABvAAm6QVAyuAIBSAByAHEACbd6cIWgAAm2kdMmYAIBIAB1AHQACbotzlT4AAm66wR8CAIBIAB8AHcCASAAewB4AgEgAHoA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trax3CACASADAgMBAAm7WoeimAIBIAMEAwMACbm8yrWwAAm5HOVjEAIBSAMHAwYACbpktfloAAm7LsDquAIBIAMUAwkCAVgDCwMKAAm6hR6B6AIBIAMPAwwCASADDgMNAAm2f4hroAAJtllCn+ACASADEQMQAAm2Yx6y4AIBIAMTAxIACbSflolAAAm0QerswAIBIAMYAxUCASADFwMWAAm7tkoeSAAJuknHOugACb2TEThEAgEgAzkDGgIBIAMoAxsCASADIQMcAgEgAyADHQIBIAMfAx4ACbuaE9GIAAm76TwyuAAJvTF5SlwCASADJQMiAgFmAyQDIwAJt+MXWCAACbfdIXagAgEgAycDJgAJu+jFS4gACbqhfTLYAgEgAzIDKQIBIAMvAyoCAVgDLgMrAgFYAy0DLAAJtOPh2kAACbTQbPDAAAm5hunfsAIBIAMxAzAACbqF6XDoAAm7UeL9mAIBIAM2AzMCASADNQM0AAm7xZq5KAAJuxrvMUgCASADOAM3AAm7OY2quAAJumXrW7gCASADSwM6AgEgA0YDOwIBIANBAzwCASADPgM9AAm7wUzueAIBIANAAz8ACbmxiDdwAAm5KDyKEAIBIANDA0IACbupeOFIAgEgA0UDRAAJuNLLTRAACbir+oZQAgEgA0oDRwIBIANJA0gACbonQw4YAAm6iJr9KAAJvAwRrswCASADVQNMAgEgA1QDTQIBIANPA04ACbo2gb2IAgFqA1EDUAAJtAxQcEACAVgDUwNSAAex5r87AAex7i7vAAm8a0P6FAIBIANXA1YACb0WUg0sAgEgA1kDWAAJupoiEwgACbsZNqNoAgEgA94DWwIBIAObA1wCASADeANdAgEgA3EDXgIBIANmA18CASADYwNgAgEgA2IDYQAJu3UoScgACbtyxfUoAgEgA2UDZAAJu7/lGDgACbugeIXoAgEgA24DZwIBIANrA2gCASADagNpAAm5vLA10AAJubPahdACASADbQNsAAm5tK+QUAAJuEioGPACAUgDcANvAAm5CURc8AAJuCyslfACAUgDcwNyAAm8IYMwTAIBSAN3A3QCASADdgN1AAm3DbyIoAAJti1cfKAACbgyOlvwAgEgA4oDeQIBIAOBA3oCASADgAN7AgEgA30DfAAJu0UfkFgCASADfwN+AAm4pvk5sAAJua8OZHAA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&quot;</span>;
+
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">base64::decode</span>(<span class="ident">data</span>).<span class="ident">expect</span>(<span class="string">&quot;cant decode data&quot;</span>);
+        <span class="kw">let</span> <span class="ident">cell</span> <span class="op">=</span>
+            <span class="ident">ton_types::deserialize_tree_of_cells</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>.<span class="ident">as_slice</span>()).<span class="ident">expect</span>(<span class="string">&quot;deser failed&quot;</span>);
+        <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">ton_block::AccountState::construct_from_cell</span>(<span class="ident">cell</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">account</span> {
+            <span class="ident">ton_block::AccountState::AccountActive</span> { <span class="ident">state_init</span> } =&gt; <span class="ident">state_init</span>.<span class="ident">data</span>.<span class="ident">unwrap</span>(),
+            <span class="kw">_</span> =&gt; <span class="macro">anyhow::bail!</span>(<span class="string">&quot;ACCOUNT NOT ACTIVE&quot;</span>),
+        };
+
+        <span class="kw">let</span> <span class="ident">init_data</span> <span class="op">=</span> <span class="ident">InitData::try_from</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">expect</span>(<span class="string">&quot;init data failed&quot;</span>);
+
+        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">init_data</span>.<span class="ident">data</span>.<span class="ident">len</span>().<span class="ident">unwrap</span>());
+
+        <span class="prelude-val">Ok</span>(())
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>

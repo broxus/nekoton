@@ -1,0 +1,1460 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/token_wallet/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
+<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+
+<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
+<span class="kw">use</span> <span class="ident">num_bigint</span>::{<span class="ident">BigInt</span>, <span class="ident">BigUint</span>, <span class="ident">ToBigInt</span>};
+<span class="kw">use</span> <span class="ident">ton_block::MsgAddressInt</span>;
+
+<span class="kw">use</span> <span class="ident">nekoton_abi</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">nekoton_contracts</span>::{<span class="ident">old_tip3</span>, <span class="ident">tip3</span>, <span class="ident">tip3_1</span>, <span class="ident">tip6</span>};
+<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::models</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::parsing</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::models</span>::{<span class="ident">ExistingContract</span>, <span class="ident">RawContractState</span>, <span class="ident">RawTransaction</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::Transport</span>;
+
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">ContractSubscription</span>, <span class="ident">InternalMessage</span>};
+
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenWallet</span> {
+    <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
+    <span class="ident">contract_subscription</span>: <span class="ident">ContractSubscription</span>,
+    <span class="ident">handler</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">TokenWalletSubscriptionHandler</span><span class="op">&gt;</span>,
+    <span class="ident">owner</span>: <span class="ident">MsgAddressInt</span>,
+    <span class="ident">symbol</span>: <span class="ident">Symbol</span>,
+    <span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>,
+    <span class="ident">balance</span>: <span class="ident">BigUint</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">TokenWallet</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">subscribe</span>(
+        <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
+        <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
+        <span class="ident">owner</span>: <span class="ident">MsgAddressInt</span>,
+        <span class="ident">root_token_contract</span>: <span class="ident">MsgAddressInt</span>,
+        <span class="ident">handler</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">TokenWalletSubscriptionHandler</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenWallet</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="ident">root_token_contract</span>).<span class="kw">await</span><span class="question-mark">?</span> {
+            <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) =&gt; <span class="ident">state</span>,
+            <span class="ident">RawContractState::NotExists</span> =&gt; {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokenWalletError::InvalidRootTokenContract</span>.<span class="ident">into</span>())
+            }
+        };
+        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">RootTokenContractState</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>);
+        <span class="kw">let</span> <span class="ident">RootTokenContractDetails</span> {
+            <span class="ident">symbol</span>: <span class="ident">name</span>,
+            <span class="ident">decimals</span>,
+            <span class="ident">version</span>,
+            <span class="ident">name</span>: <span class="ident">full_name</span>,
+            ..
+        } <span class="op">=</span> <span class="ident">state</span>.<span class="ident">guess_details</span>(<span class="ident">clock</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">get_wallet_address</span>(<span class="ident">clock</span>.<span class="ident">as_ref</span>(), <span class="ident">version</span>, <span class="kw-2">&amp;</span><span class="ident">owner</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">balance</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+        <span class="kw">let</span> <span class="ident">contract_subscription</span> <span class="op">=</span> <span class="ident">ContractSubscription::subscribe</span>(
+            <span class="ident">clock</span>.<span class="ident">clone</span>(),
+            <span class="ident">transport</span>,
+            <span class="ident">address</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(<span class="ident">clock</span>.<span class="ident">clone</span>(), <span class="ident">version</span>, <span class="kw-2">&amp;mut</span> <span class="ident">balance</span>),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>.<span class="ident">as_ref</span>(), <span class="ident">version</span>)),
+        )
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="ident">handler</span>.<span class="ident">on_balance_changed</span>(<span class="ident">balance</span>.<span class="ident">clone</span>());
+
+        <span class="kw">let</span> <span class="ident">symbol</span> <span class="op">=</span> <span class="ident">Symbol</span> {
+            <span class="ident">name</span>,
+            <span class="ident">full_name</span>,
+            <span class="ident">decimals</span>,
+            <span class="ident">root_token_contract</span>,
+        };
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
+            <span class="ident">clock</span>,
+            <span class="ident">contract_subscription</span>,
+            <span class="ident">handler</span>,
+            <span class="ident">owner</span>,
+            <span class="ident">symbol</span>,
+            <span class="ident">version</span>,
+            <span class="ident">balance</span>,
+        })
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contract_subscription</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">ContractSubscription</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">contract_subscription</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">owner</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">owner</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span> {
+        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">address</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbol</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Symbol</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">symbol</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TokenWalletVersion</span> {
+        <span class="self">self</span>.<span class="ident">version</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">BigUint</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">balance</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contract_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">ContractState</span> {
+        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">contract_state</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_transfer</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">destination</span>: <span class="ident">TransferRecipient</span>,
+        <span class="ident">tokens</span>: <span class="ident">BigUint</span>,
+        <span class="ident">notify_receiver</span>: <span class="ident">bool</span>,
+        <span class="ident">payload</span>: <span class="ident">ton_types::Cell</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">InternalMessage</span><span class="op">&gt;</span> {
+        <span class="kw">const</span> <span class="ident">ATTACHED_AMOUNT</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">500_000_000</span>; <span class="comment">// 0.5 TON</span>
+
+        <span class="kw">let</span> (<span class="ident">function</span>, <span class="ident">input</span>) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">version</span> {
+            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; {
+                <span class="kw">use</span> <span class="ident">old_tip3::token_wallet_contract</span>;
+                <span class="kw">match</span> <span class="ident">destination</span> {
+                    <span class="ident">TransferRecipient::TokenWallet</span>(<span class="ident">token_wallet</span>) =&gt; {
+                        <span class="ident">MessageBuilder::new</span>(<span class="ident">token_wallet_contract::transfer</span>())
+                            .<span class="ident">arg</span>(<span class="ident">token_wallet</span>) <span class="comment">// to</span>
+                            .<span class="ident">arg</span>(<span class="ident">BigUint128</span>(<span class="ident">tokens</span>)) <span class="comment">// tokens</span>
+                    }
+                    <span class="ident">TransferRecipient::OwnerWallet</span>(<span class="ident">owner_wallet</span>) =&gt; {
+                        <span class="ident">MessageBuilder::new</span>(<span class="ident">token_wallet_contract::transfer_to_recipient</span>())
+                            .<span class="ident">arg</span>(<span class="ident">BigUint256</span>(<span class="ident">Default::default</span>())) <span class="comment">// recipient_public_key</span>
+                            .<span class="ident">arg</span>(<span class="ident">owner_wallet</span>) <span class="comment">// recipient_address</span>
+                            .<span class="ident">arg</span>(<span class="ident">BigUint128</span>(<span class="ident">tokens</span>)) <span class="comment">// tokens</span>
+                            .<span class="ident">arg</span>(<span class="ident">BigUint128</span>(<span class="ident">INITIAL_BALANCE</span>.<span class="ident">into</span>())) <span class="comment">// deploy_grams</span>
+                    }
+                }
+                .<span class="ident">arg</span>(<span class="ident">BigUint128</span>(<span class="ident">Default::default</span>())) <span class="comment">// grams / transfer_grams</span>
+                .<span class="ident">arg</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">owner</span>) <span class="comment">// send_gas_to</span>
+                .<span class="ident">arg</span>(<span class="ident">notify_receiver</span>) <span class="comment">// notify_receiver</span>
+                .<span class="ident">arg</span>(<span class="ident">payload</span>) <span class="comment">// payload</span>
+                .<span class="ident">build</span>()
+            }
+            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; {
+                <span class="kw">use</span> <span class="ident">tip3_1::token_wallet_contract</span>;
+                <span class="kw">match</span> <span class="ident">destination</span> {
+                    <span class="ident">TransferRecipient::TokenWallet</span>(<span class="ident">token_wallet</span>) =&gt; {
+                        <span class="ident">MessageBuilder::new</span>(<span class="ident">token_wallet_contract::transfer_to_wallet</span>())
+                            .<span class="ident">arg</span>(<span class="ident">BigUint128</span>(<span class="ident">tokens</span>)) <span class="comment">// amount</span>
+                            .<span class="ident">arg</span>(<span class="ident">token_wallet</span>) <span class="comment">// recipient token wallet</span>
+                    }
+                    <span class="ident">TransferRecipient::OwnerWallet</span>(<span class="ident">owner_wallet</span>) =&gt; {
+                        <span class="ident">MessageBuilder::new</span>(<span class="ident">token_wallet_contract::transfer</span>())
+                            .<span class="ident">arg</span>(<span class="ident">BigUint128</span>(<span class="ident">tokens</span>)) <span class="comment">// amount</span>
+                            .<span class="ident">arg</span>(<span class="ident">owner_wallet</span>) <span class="comment">// recipient</span>
+                            .<span class="ident">arg</span>(<span class="ident">BigUint128</span>(<span class="ident">INITIAL_BALANCE</span>.<span class="ident">into</span>())) <span class="comment">// deployWalletValue</span>
+                    }
+                }
+                .<span class="ident">arg</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">owner</span>) <span class="comment">// remainingGasTo</span>
+                .<span class="ident">arg</span>(<span class="ident">notify_receiver</span>) <span class="comment">// notify</span>
+                .<span class="ident">arg</span>(<span class="ident">payload</span>) <span class="comment">// payload</span>
+                .<span class="ident">build</span>()
+            }
+        };
+
+        <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">function</span>.<span class="ident">encode_internal_input</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>)<span class="question-mark">?</span>.<span class="ident">into</span>();
+
+        <span class="prelude-val">Ok</span>(<span class="ident">InternalMessage</span> {
+            <span class="ident">source</span>: <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">owner</span>.<span class="ident">clone</span>()),
+            <span class="ident">destination</span>: <span class="self">self</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
+            <span class="ident">amount</span>: <span class="ident">ATTACHED_AMOUNT</span>,
+            <span class="ident">bounce</span>: <span class="bool-val">true</span>,
+            <span class="ident">body</span>,
+        })
+    }
+
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">refresh</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">balance</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">balance</span>.<span class="ident">clone</span>();
+
+        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
+        <span class="self">self</span>.<span class="ident">contract_subscription</span>
+            .<span class="ident">refresh</span>(
+                <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(<span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">version</span>, <span class="kw-2">&amp;mut</span> <span class="ident">balance</span>),
+                <span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>, <span class="self">self</span>.<span class="ident">version</span>),
+                <span class="kw-2">&amp;mut</span> <span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> {},
+                <span class="kw-2">&amp;mut</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {},
+            )
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="kw">if</span> <span class="ident">balance</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">balance</span> {
+            <span class="self">self</span>.<span class="ident">balance</span> <span class="op">=</span> <span class="ident">balance</span>;
+            <span class="ident">handler</span>.<span class="ident">on_balance_changed</span>(<span class="self">self</span>.<span class="ident">balance</span>.<span class="ident">clone</span>());
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_block</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Block</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">version</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">balance</span>: <span class="ident">BigInt</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">balance</span>.<span class="ident">clone</span>().<span class="ident">into</span>();
+
+        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
+        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">handle_block</span>(
+            <span class="ident">block</span>,
+            <span class="kw-2">&amp;mut</span> <span class="op">|</span><span class="ident">transactions</span>, <span class="ident">batch_info</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">transactions</span> <span class="op">=</span> <span class="ident">transactions</span>
+                    .<span class="ident">into_iter</span>()
+                    .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">transaction</span><span class="op">|</span> {
+                        <span class="kw">let</span> <span class="ident">description</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">transaction</span>.<span class="ident">data</span>.<span class="ident">description</span>.<span class="ident">read_struct</span>().<span class="ident">ok</span>()<span class="question-mark">?</span> {
+                            <span class="ident">ton_block::TransactionDescr::Ordinary</span>(<span class="ident">description</span>) =&gt; <span class="ident">description</span>,
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+                        };
+
+                        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span>
+                            <span class="ident">parse_token_transaction</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>.<span class="ident">data</span>, <span class="kw-2">&amp;</span><span class="ident">description</span>, <span class="ident">version</span>);
+
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">data</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">data</span> {
+                            <span class="kw">match</span> <span class="ident">data</span> {
+                                <span class="ident">TokenWalletTransaction::IncomingTransfer</span>(
+                                    <span class="ident">TokenIncomingTransfer</span> { <span class="ident">tokens</span>, .. },
+                                )
+                                <span class="op">|</span> <span class="ident">TokenWalletTransaction::Accept</span>(<span class="ident">tokens</span>)
+                                <span class="op">|</span> <span class="ident">TokenWalletTransaction::SwapBackBounced</span>(<span class="ident">tokens</span>)
+                                <span class="op">|</span> <span class="ident">TokenWalletTransaction::TransferBounced</span>(<span class="ident">tokens</span>) =&gt; {
+                                    <span class="ident">balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">tokens</span>.<span class="ident">clone</span>().<span class="ident">to_bigint</span>().<span class="ident">trust_me</span>();
+                                }
+                                <span class="ident">TokenWalletTransaction::OutgoingTransfer</span>(
+                                    <span class="ident">TokenOutgoingTransfer</span> { <span class="ident">tokens</span>, .. },
+                                )
+                                <span class="op">|</span> <span class="ident">TokenWalletTransaction::SwapBack</span>(<span class="ident">TokenSwapBack</span> {
+                                    <span class="ident">tokens</span>, ..
+                                }) =&gt; {
+                                    <span class="ident">balance</span> <span class="op">-</span><span class="op">=</span> <span class="ident">tokens</span>.<span class="ident">clone</span>().<span class="ident">to_bigint</span>().<span class="ident">trust_me</span>();
+                                }
+                            }
+                        }
+
+                        <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span>
+                            <span class="ident">Transaction::try_from</span>((<span class="ident">transaction</span>.<span class="ident">hash</span>, <span class="ident">transaction</span>.<span class="ident">data</span>)).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+
+                        <span class="prelude-val">Some</span>(<span class="ident">TransactionWithData</span> { <span class="ident">transaction</span>, <span class="ident">data</span> })
+                    })
+                    .<span class="ident">collect</span>();
+
+                <span class="ident">handler</span>.<span class="ident">on_transactions_found</span>(<span class="ident">transactions</span>, <span class="ident">batch_info</span>)
+            },
+            <span class="kw-2">&amp;mut</span> <span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> {},
+            <span class="kw-2">&amp;mut</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {},
+        )<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">balance</span> <span class="op">=</span> <span class="ident">balance</span>.<span class="ident">to_biguint</span>().<span class="ident">unwrap_or_default</span>();
+        <span class="kw">if</span> <span class="ident">balance</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">balance</span> {
+            <span class="self">self</span>.<span class="ident">balance</span> <span class="op">=</span> <span class="ident">balance</span>;
+            <span class="ident">handler</span>.<span class="ident">on_balance_changed</span>(<span class="self">self</span>.<span class="ident">balance</span>.<span class="ident">clone</span>());
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">preload_transactions</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">from_lt</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
+        <span class="self">self</span>.<span class="ident">contract_subscription</span>
+            .<span class="ident">preload_transactions</span>(
+                <span class="ident">from_lt</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>, <span class="self">self</span>.<span class="ident">version</span>),
+            )
+            .<span class="kw">await</span>
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TokenWalletSubscriptionHandler</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
+    <span class="kw">fn</span> <span class="ident">on_balance_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">balance</span>: <span class="ident">BigUint</span>);
+
+    <span class="doccomment">/// Called every time new transactions are detected.</span>
+    <span class="doccomment">/// - When new block found</span>
+    <span class="doccomment">/// - When manually requesting the latest transactions (can be called several times)</span>
+    <span class="doccomment">/// - When preloading transactions</span>
+    <span class="kw">fn</span> <span class="ident">on_transactions_found</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">transactions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionWithData</span><span class="op">&lt;</span><span class="ident">TokenWalletTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">batch_info</span>: <span class="ident">TransactionsBatchInfo</span>,
+    );
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_token_root_details</span>(
+    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+    <span class="ident">transport</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Transport</span>,
+    <span class="ident">root_token_contract</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RootTokenContractDetails</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="ident">root_token_contract</span>).<span class="kw">await</span><span class="question-mark">?</span> {
+        <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) =&gt; <span class="ident">state</span>,
+        <span class="ident">RawContractState::NotExists</span> =&gt; {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokenWalletError::InvalidRootTokenContract</span>.<span class="ident">into</span>())
+        }
+    };
+    <span class="ident">RootTokenContractState</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>).<span class="ident">guess_details</span>(<span class="ident">clock</span>)
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_token_wallet_details</span>(
+    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+    <span class="ident">transport</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Transport</span>,
+    <span class="ident">token_wallet</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">TokenWalletDetails</span>, <span class="ident">RootTokenContractDetails</span>)<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">token_wallet_state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="ident">token_wallet</span>).<span class="kw">await</span><span class="question-mark">?</span> {
+        <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) =&gt; <span class="ident">state</span>,
+        <span class="ident">RawContractState::NotExists</span> =&gt; {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokenWalletError::InvalidTokenWalletContract</span>.<span class="ident">into</span>())
+        }
+    };
+    <span class="kw">let</span> <span class="ident">token_wallet_state</span> <span class="op">=</span> <span class="ident">TokenWalletContractState</span>(<span class="kw-2">&amp;</span><span class="ident">token_wallet_state</span>);
+
+    <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">token_wallet_state</span>.<span class="ident">get_version</span>(<span class="ident">clock</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">token_wallet_details</span> <span class="op">=</span> <span class="ident">token_wallet_state</span>.<span class="ident">get_details</span>(<span class="ident">clock</span>, <span class="ident">version</span>)<span class="question-mark">?</span>;
+
+    <span class="kw">let</span> <span class="ident">root_contract_state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">transport</span>
+        .<span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="ident">token_wallet_details</span>.<span class="ident">root_address</span>)
+        .<span class="kw">await</span><span class="question-mark">?</span>
+    {
+        <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) =&gt; <span class="ident">state</span>,
+        <span class="ident">RawContractState::NotExists</span> =&gt; {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokenWalletError::InvalidRootTokenContract</span>.<span class="ident">into</span>())
+        }
+    };
+    <span class="kw">let</span> <span class="ident">root_contract_details</span> <span class="op">=</span>
+        <span class="ident">RootTokenContractState</span>(<span class="kw-2">&amp;</span><span class="ident">root_contract_state</span>).<span class="ident">get_details</span>(<span class="ident">clock</span>, <span class="ident">version</span>)<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>((<span class="ident">token_wallet_details</span>, <span class="ident">root_contract_details</span>))
+}
+
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_token_root_details_from_token_wallet</span>(
+    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+    <span class="ident">transport</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Transport</span>,
+    <span class="ident">token_wallet_address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">MsgAddressInt</span>, <span class="ident">RootTokenContractDetails</span>)<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="ident">token_wallet_address</span>).<span class="kw">await</span><span class="question-mark">?</span> {
+        <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) =&gt; <span class="ident">state</span>,
+        <span class="ident">RawContractState::NotExists</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokenWalletError::WalletNotDeployed</span>.<span class="ident">into</span>()),
+    };
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">TokenWalletContractState</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>);
+    <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">get_version</span>(<span class="ident">clock</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">root_token_contract</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">get_details</span>(<span class="ident">clock</span>, <span class="ident">version</span>)<span class="question-mark">?</span>.<span class="ident">root_address</span>;
+
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="ident">root_token_contract</span>).<span class="kw">await</span><span class="question-mark">?</span> {
+        <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) =&gt; <span class="ident">state</span>,
+        <span class="ident">RawContractState::NotExists</span> =&gt; {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokenWalletError::InvalidRootTokenContract</span>.<span class="ident">into</span>())
+        }
+    };
+    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">RootTokenContractState</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>);
+    <span class="kw">let</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">get_details</span>(<span class="ident">clock</span>, <span class="ident">version</span>)<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>((<span class="ident">root_token_contract</span>, <span class="ident">details</span>))
+}
+
+<span class="kw">const</span> <span class="ident">INITIAL_BALANCE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">100_000_000</span>; <span class="comment">// 0.1 TON</span>
+
+<span class="kw">fn</span> <span class="ident">make_contract_state_handler</span>(
+    <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
+    <span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>,
+    <span class="ident">balance</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw-2">mut</span> <span class="ident">BigUint</span>,
+) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">RawContractState</span>) <span class="op">+</span> <span class="lifetime">&#39;_</span> {
+    <span class="kw">move</span> <span class="op">|</span><span class="ident">contract_state</span><span class="op">|</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) <span class="op">=</span> <span class="ident">contract_state</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">new_balance</span>) <span class="op">=</span>
+                <span class="ident">TokenWalletContractState</span>(<span class="ident">state</span>).<span class="ident">get_balance</span>(<span class="ident">clock</span>.<span class="ident">as_ref</span>(), <span class="ident">version</span>)
+            {
+                <span class="kw-2">*</span><span class="ident">balance</span> <span class="op">=</span> <span class="ident">new_balance</span>;
+            }
+        }
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">make_transactions_handler</span>(
+    <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw">dyn</span> <span class="ident">TokenWalletSubscriptionHandler</span>,
+    <span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>,
+) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span>, <span class="ident">TransactionsBatchInfo</span>) <span class="op">+</span> <span class="lifetime">&#39;_</span> {
+    <span class="kw">move</span> <span class="op">|</span><span class="ident">transactions</span>, <span class="ident">batch_info</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">transactions</span> <span class="op">=</span> <span class="ident">transactions</span>
+            .<span class="ident">into_iter</span>()
+            .<span class="ident">filter_map</span>(
+                <span class="op">|</span><span class="ident">transaction</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">transaction</span>.<span class="ident">data</span>.<span class="ident">description</span>.<span class="ident">read_struct</span>().<span class="ident">ok</span>()<span class="question-mark">?</span> {
+                    <span class="ident">ton_block::TransactionDescr::Ordinary</span>(<span class="ident">description</span>) =&gt; {
+                        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span>
+                            <span class="ident">parse_token_transaction</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>.<span class="ident">data</span>, <span class="kw-2">&amp;</span><span class="ident">description</span>, <span class="ident">version</span>);
+
+                        <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span>
+                            <span class="ident">Transaction::try_from</span>((<span class="ident">transaction</span>.<span class="ident">hash</span>, <span class="ident">transaction</span>.<span class="ident">data</span>)).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+
+                        <span class="prelude-val">Some</span>(<span class="ident">TransactionWithData</span> { <span class="ident">transaction</span>, <span class="ident">data</span> })
+                    }
+                    <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+                },
+            )
+            .<span class="ident">collect</span>();
+
+        <span class="ident">handler</span>.<span class="ident">on_transactions_found</span>(<span class="ident">transactions</span>, <span class="ident">batch_info</span>)
+    }
+}
+
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RootTokenContractState</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ExistingContract</span>);
+
+<span class="kw">impl</span> <span class="ident">RootTokenContractState</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Calculates token wallet address</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_wallet_address</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+        <span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>,
+        <span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_context</span>(<span class="ident">clock</span>);
+        <span class="kw">match</span> <span class="ident">version</span> {
+            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; {
+                <span class="ident">old_tip3::RootTokenContract</span>(<span class="ident">ctx</span>).<span class="ident">get_wallet_address</span>(<span class="ident">owner</span>.<span class="ident">clone</span>())
+            }
+            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; <span class="ident">tip3_1::RootTokenContract</span>(<span class="ident">ctx</span>).<span class="ident">wallet_of</span>(<span class="ident">owner</span>.<span class="ident">clone</span>()),
+        }
+    }
+
+    <span class="doccomment">/// Tries to guess version and retrieve details</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">guess_details</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RootTokenContractDetails</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_context</span>(<span class="ident">clock</span>);
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span> <span class="ident">tip6::SidContract</span>(<span class="ident">ctx</span>).<span class="ident">supports_interfaces</span>(<span class="kw-2">&amp;</span>[
+            <span class="ident">tip3::root_token_contract::INTERFACE_ID</span>,
+            <span class="ident">tip3_1::root_token_contract::INTERFACE_ID</span>,
+        ]) {
+            <span class="kw">return</span> <span class="self">self</span>.<span class="ident">get_details</span>(<span class="ident">clock</span>, <span class="ident">TokenWalletVersion::Tip3</span>);
+        }
+
+        <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">old_tip3::RootTokenContract</span>(<span class="ident">ctx</span>).<span class="ident">get_version</span>()<span class="question-mark">?</span> {
+            <span class="number">4</span> =&gt; <span class="ident">TokenWalletVersion::OldTip3v4</span>,
+            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokenWalletError::UnknownVersion</span>.<span class="ident">into</span>()),
+        };
+
+        <span class="self">self</span>.<span class="ident">get_details</span>(<span class="ident">clock</span>, <span class="ident">version</span>)
+    }
+
+    <span class="doccomment">/// Retrieve details using specified version</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_details</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+        <span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RootTokenContractDetails</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_context</span>(<span class="ident">clock</span>);
+        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">version</span> {
+            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; {
+                <span class="kw">let</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">old_tip3::RootTokenContract</span>(<span class="ident">ctx</span>).<span class="ident">get_details</span>()<span class="question-mark">?</span>;
+
+                <span class="ident">RootTokenContractDetails</span> {
+                    <span class="ident">version</span>,
+                    <span class="ident">name</span>: <span class="ident">details</span>.<span class="ident">name</span>,
+                    <span class="ident">symbol</span>: <span class="ident">details</span>.<span class="ident">symbol</span>,
+                    <span class="ident">decimals</span>: <span class="ident">details</span>.<span class="ident">decimals</span>,
+                    <span class="ident">owner_address</span>: <span class="ident">details</span>.<span class="ident">root_owner_address</span>,
+                    <span class="ident">total_supply</span>: <span class="ident">details</span>.<span class="ident">total_supply</span>,
+                }
+            }
+            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; {
+                <span class="kw">let</span> <span class="ident">root_contract</span> <span class="op">=</span> <span class="ident">tip3::RootTokenContract</span>(<span class="ident">ctx</span>);
+                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">root_contract</span>.<span class="ident">name</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">symbol</span> <span class="op">=</span> <span class="ident">root_contract</span>.<span class="ident">symbol</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">decimals</span> <span class="op">=</span> <span class="ident">root_contract</span>.<span class="ident">decimals</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">total_supply</span> <span class="op">=</span> <span class="ident">root_contract</span>.<span class="ident">total_supply</span>()<span class="question-mark">?</span>;
+
+                <span class="kw">let</span> <span class="ident">root_contract</span> <span class="op">=</span> <span class="ident">tip3_1::RootTokenContract</span>(<span class="ident">ctx</span>);
+                <span class="kw">let</span> <span class="ident">owner_address</span> <span class="op">=</span> <span class="ident">root_contract</span>.<span class="ident">root_owner</span>()<span class="question-mark">?</span>;
+
+                <span class="ident">RootTokenContractDetails</span> {
+                    <span class="ident">version</span>,
+                    <span class="ident">name</span>,
+                    <span class="ident">symbol</span>,
+                    <span class="ident">decimals</span>,
+                    <span class="ident">owner_address</span>,
+                    <span class="ident">total_supply</span>,
+                }
+            }
+        })
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenWalletContractState</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ExistingContract</span>);
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">TokenWalletContractState</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_code_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_types::UInt256</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">account</span>.<span class="ident">storage</span>.<span class="ident">state</span> {
+            <span class="ident">ton_block::AccountState::AccountActive</span> { <span class="ident">state_init</span>, .. } =&gt; {
+                <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">state_init</span>
+                    .<span class="ident">code</span>
+                    .<span class="ident">as_ref</span>()
+                    .<span class="ident">ok_or</span>(<span class="ident">TokenWalletError::WalletNotDeployed</span>)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(<span class="ident">code</span>.<span class="ident">repr_hash</span>())
+            }
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">TokenWalletError::WalletNotDeployed</span>.<span class="ident">into</span>()),
+        }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>, <span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BigUint</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_context</span>(<span class="ident">clock</span>);
+        <span class="kw">match</span> <span class="ident">version</span> {
+            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; <span class="ident">old_tip3::TokenWalletContract</span>(<span class="ident">ctx</span>).<span class="ident">balance</span>(),
+            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; <span class="ident">tip3::TokenWalletContract</span>(<span class="ident">ctx</span>).<span class="ident">balance</span>(),
+        }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_details</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+        <span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenWalletDetails</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_context</span>(<span class="ident">clock</span>);
+        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">version</span> {
+            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; {
+                <span class="kw">let</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">old_tip3::TokenWalletContract</span>(<span class="ident">ctx</span>).<span class="ident">get_details</span>()<span class="question-mark">?</span>;
+
+                <span class="ident">TokenWalletDetails</span> {
+                    <span class="ident">root_address</span>: <span class="ident">details</span>.<span class="ident">root_address</span>,
+                    <span class="ident">owner_address</span>: <span class="ident">details</span>.<span class="ident">owner_address</span>,
+                    <span class="ident">balance</span>: <span class="ident">details</span>.<span class="ident">balance</span>,
+                }
+            }
+            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; {
+                <span class="kw">let</span> <span class="ident">token_wallet</span> <span class="op">=</span> <span class="ident">tip3::TokenWalletContract</span>(<span class="ident">ctx</span>);
+                <span class="kw">let</span> <span class="ident">root_address</span> <span class="op">=</span> <span class="ident">token_wallet</span>.<span class="ident">root</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">balance</span> <span class="op">=</span> <span class="ident">token_wallet</span>.<span class="ident">balance</span>()<span class="question-mark">?</span>;
+
+                <span class="kw">let</span> <span class="ident">token_wallet</span> <span class="op">=</span> <span class="ident">tip3_1::TokenWalletContract</span>(<span class="ident">ctx</span>);
+                <span class="kw">let</span> <span class="ident">owner_address</span> <span class="op">=</span> <span class="ident">token_wallet</span>.<span class="ident">owner</span>()<span class="question-mark">?</span>;
+
+                <span class="ident">TokenWalletDetails</span> {
+                    <span class="ident">root_address</span>,
+                    <span class="ident">owner_address</span>,
+                    <span class="ident">balance</span>,
+                }
+            }
+        })
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenWalletVersion</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_context</span>(<span class="ident">clock</span>);
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) <span class="op">=</span> <span class="ident">tip6::SidContract</span>(<span class="ident">ctx</span>).<span class="ident">supports_interfaces</span>(<span class="kw-2">&amp;</span>[
+            <span class="ident">tip3::token_wallet_contract::INTERFACE_ID</span>,
+            <span class="ident">tip3_1::token_wallet_contract::INTERFACE_ID</span>,
+        ]) {
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">TokenWalletVersion::Tip3</span>);
+        }
+
+        <span class="kw">match</span> <span class="ident">old_tip3::TokenWalletContract</span>(<span class="ident">ctx</span>).<span class="ident">get_version</span>()<span class="question-mark">?</span> {
+            <span class="number">4</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">TokenWalletVersion::OldTip3v4</span>),
+            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">TokenWalletError::UnknownVersion</span>.<span class="ident">into</span>()),
+        }
+    }
+}
+
+<span class="kw">trait</span> <span class="ident">ExistingContractExt</span> {
+    <span class="kw">fn</span> <span class="ident">run_local</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+        <span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="ident">ton_abi::Function</span>,
+        <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">ton_abi::Token</span>],
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ton_abi::Token</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+}
+
+<span class="kw">impl</span> <span class="ident">ExistingContractExt</span> <span class="kw">for</span> <span class="ident">ExistingContract</span> {
+    <span class="kw">fn</span> <span class="ident">run_local</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+        <span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="ident">ton_abi::Function</span>,
+        <span class="ident">input</span>: <span class="kw-2">&amp;</span>[<span class="ident">ton_abi::Token</span>],
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ton_abi::Token</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">ExecutionOutput</span> {
+            <span class="ident">tokens</span>,
+            <span class="ident">result_code</span>,
+        } <span class="op">=</span> <span class="ident">function</span>.<span class="ident">run_local</span>(<span class="ident">clock</span>, <span class="self">self</span>.<span class="ident">account</span>.<span class="ident">clone</span>(), <span class="ident">input</span>)<span class="question-mark">?</span>;
+        <span class="ident">tokens</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">TokenWalletError::NonZeroResultCode</span>(<span class="ident">result_code</span>).<span class="ident">into</span>())
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">enum</span> <span class="ident">TokenWalletError</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unknown version&quot;</span>)]</span>
+    <span class="ident">UnknownVersion</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid root token contract&quot;</span>)]</span>
+    <span class="ident">InvalidRootTokenContract</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid token wallet contract&quot;</span>)]</span>
+    <span class="ident">InvalidTokenWalletContract</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Non-zero execution result code: {}&quot;</span>, .<span class="number">0</span>)]</span>
+    <span class="ident">NonZeroResultCode</span>(<span class="ident">i32</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Wallet not deployed&quot;</span>)]</span>
+    <span class="ident">WalletNotDeployed</span>,
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
+    <span class="kw">use</span> <span class="ident">ton_block::Deserializable</span>;
+
+    <span class="kw">use</span> <span class="ident">nekoton_abi::LastTransactionId</span>;
+
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">fn</span> <span class="ident">convert_address</span>(<span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">MsgAddressInt</span> {
+        <span class="ident">MsgAddressInt::from_str</span>(<span class="ident">addr</span>).<span class="ident">unwrap</span>()
+    }
+
+    <span class="kw">fn</span> <span class="ident">prepare_contract</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">ExistingContract</span> {
+        <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ton_block::Account::construct_from_base64</span>(<span class="ident">data</span>).<span class="ident">unwrap</span>() {
+            <span class="ident">ton_block::Account::Account</span>(<span class="ident">stuff</span>) =&gt; <span class="ident">stuff</span>,
+            <span class="ident">ton_block::Account::AccountNone</span> =&gt; <span class="macro">unreachable!</span>(),
+        };
+        <span class="ident">ExistingContract</span> {
+            <span class="ident">account</span>,
+            <span class="ident">timings</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">last_transaction_id</span>: <span class="ident">LastTransactionId::Inexact</span> { <span class="ident">latest_lt</span>: <span class="number">0</span> },
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">root_token_contract</span>(<span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>) -&gt; <span class="ident">ExistingContract</span> {
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">version</span> {
+            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; <span class="ident">ROOT_TOKEN_STATE_OLD_TIP3_V4</span>,
+            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; <span class="ident">ROOT_TOKEN_STATE_TIP3</span>,
+        };
+        <span class="ident">prepare_contract</span>(<span class="ident">data</span>)
+    }
+
+    <span class="kw">const</span> <span class="ident">ROOT_TOKEN_STATE_OLD_TIP3_V4</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;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&quot;</span>;
+    <span class="kw">const</span> <span class="ident">ROOT_TOKEN_STATE_TIP3</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;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&quot;</span>;
+
+    <span class="kw">fn</span> <span class="ident">token_wallet_contract</span>(<span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>) -&gt; <span class="ident">ExistingContract</span> {
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">version</span> {
+            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; <span class="ident">TOKEN_WALLET_STATE_OLD_TIP3_V4</span>,
+            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; <span class="ident">TOKEN_WALLET_STATE_TIP3</span>,
+        };
+        <span class="ident">prepare_contract</span>(<span class="ident">data</span>)
+    }
+
+    <span class="kw">const</span> <span class="ident">TOKEN_WALLET_STATE_OLD_TIP3_V4</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;te6ccgECVQEAFvMAAm/ADk6181Tl8DNfOKc7bcmAjGfWEacXte0YTWIQ+z5zBn7iqqsdAwUjerAAADO+UykFDQDUxEATQAMBAvMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAZ8FYfpuapKqDoI+vbJFnqj3MVTpNYdWW5D5x/ZK5FEMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWWgvABgIDAMmAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAIQ9KQgiu1T9KAGBAEK9KQg9KEFAAACASAKBwEC/wgC/n+NCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT4aSHbPNMAAY4dgQIA1xgg+QEB0wABlNP/AwGTAvhC4iD4ZfkQ8qiV0wAB8nri0z8Bjh34QyG5IJ8wIPgjgQPoqIIIG3dAoLnekyD4Y+DyNNgw0x8B+CO88rkUCQIW0x8B2zz4R26OgN4NCwNu33Ai0NMD+kAw+GmpOAD4RH9vcYIImJaAb3Jtb3Nwb3T4ZI6A4CHHANwh0x8h3QHbPPhHbo6A3ksNCwEGW9s8DAIO+EFu4wDbPFRMBFggghAML/INu46A4CCCECnEiX67joDgIIIQS/Fg4ruOgOAgghB5sl7hu46A4D8rFw4EUCCCEGi1Xz+64wIgghBx7uh1uuMCIIIQdWzN97rjAiCCEHmyXuG64wITEhEPAuow+EFu4wDTH/hEWG91+GTR+ERwb3Jwb3GAQG90+GT4SvhM+E34TvhQ+FH4Um8HIcD/jkIj0NMB+kAwMcjPhyDOgGDPQM+Bz4PIz5PmyXuGIm8nVQYnzxYmzwv/Jc8WJM8Lf8gkzxYjzxYizwoAbHLNzclw+wBUEAG+jlb4RCBvEyFvEvhJVQJvEchyz0DKAHPPQM4B+gL0AIBoz0DPgc+DyPhEbxXPCx8ibydVBifPFibPC/8lzxYkzwt/yCTPFiPPFiLPCgBscs3NyfhEbxT7AOIw4wB/+GdMA+Iw+EFu4wDR+E36Qm8T1wv/wwAglzD4TfhJxwXeII4UMPhMwwAgnDD4TPhFIG6SMHDeut7f8uBk+E36Qm8T1wv/wwCOgJL4AOJt+G/4TfpCbxPXC/+OFfhJyM+FiM6Abc9Az4HPgcmBAID7AN7bPH/4Z1RITAKwMPhBbuMA+kGV1NHQ+kDf1wwAldTR0NIA39H4TfpCbxPXC//DACCXMPhN+EnHBd4gjhQw+EzDACCcMPhM+EUgbpIwcN663t/y4GT4ACH4cCD4clvbPH/4Z1RMAuIw+EFu4wD4RvJzcfhm0fhM+EK6II4UMPhN+kJvE9cL/8AAIJUw+EzAAN/e8uBk+AB/+HL4TfpCbxPXC/+OLfhNyM+FiM6NA8icQAAAAAAAAAAAAAAAAAHPFs+Bz4HPkSFO7N74Ss8WyXH7AN7bPH/4ZxRMAZLtRNAg10nCAY480//TP9MA1fpA+kD4cfhw+G36QNTT/9N/9AQBIG6V0NN/bwLf+G/XCgD4cvhu+Gz4a/hqf/hh+Gb4Y/hijoDiFQH+9AVxIYBA9A6OJI0IYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABN/4anIhgED0D5LIyd/4a3MhgED0DpPXC/+RcOL4bHQhgED0Do4kjQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE3/htcPhubRYAzvhvjQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE+HCNCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAT4cXD4cnABgED0DvK91wv/+GJw+GNw+GZ/+GEDQCCCED8Q0au7joDgIIIQSWlYf7uOgOAgghBL8WDiuuMCIxwYAv4w+EFu4wD6QZXU0dD6QN/XDX+V1NHQ03/f1w1/ldTR0NN/3/pBldTR0PpA39cMAJXU0dDSAN/U0fhN+kJvE9cL/8MAIJcw+E34SccF3iCOFDD4TMMAIJww+Ez4RSBukjBw3rre3/LgZCTCAPLgZCT4Trvy4GUl+kJvE9cL/8MAVBkCMvLgbyX4KMcFs/Lgb/hN+kJvE9cL/8MAjoAbGgHkjmj4J28QJLzy4G4jggr68IC88uBu+AAk+E4BobV/+G4jJn/Iz4WAygBzz0DOAfoCgGnPQM+Bz4PIz5BjSFwKJs8Lf/hMzwv/+E3PFiT6Qm8T1wv/wwCRJJL4KOLPFiPPCgAizxTNyXH7AOJfBts8f/hnTAHuggr68ID4J28Q2zyhtX+2CfgnbxAhggr68ICgtX+88uBuIHL7AiX4TgGhtX/4biZ/yM+FgMoAc89AzoBtz0DPgc+DyM+QY0hcCifPC3/4TM8L//hNzxYl+kJvE9cL/8MAkSWS+E3izxYkzwoAI88UzcmBAIH7ADBTAiggghA/VnlRuuMCIIIQSWlYf7rjAh8dApAw+EFu4wDTH/hEWG91+GTR+ERwb3Jwb3GAQG90+GT4TiHA/44jI9DTAfpAMDHIz4cgzoBgz0DPgc+Bz5MlpWH+Ic8Lf8lw+wBUHgGAjjf4RCBvEyFvEvhJVQJvEchyz0DKAHPPQM4B+gL0AIBoz0DPgc+B+ERvFc8LHyHPC3/J+ERvFPsA4jDjAH/4Z0wE/DD4QW7jAPpBldTR0PpA39cNf5XU0dDTf9/6QZXU0dD6QN/XDACV1NHQ0gDf1NH4T26z8uBr+En4TyBu8n9vEccF8uBsI/hPIG7yf28Qu/LgbSP4Trvy4GUjwgDy4GQk+CjHBbPy4G/4TfpCbxPXC//DAI6AjoDiI/hOAaG1f1QiISABtPhu+E8gbvJ/bxAkobV/+E8gbvJ/bxFvAvhvJH/Iz4WAygBzz0DOgG3PQM+Bz4PIz5BjSFwKJc8Lf/hMzwv/+E3PFiTPFiPPCgAizxTNyYEAgfsAXwXbPH/4Z0wCLts8ggr68IC88uBu+CdvENs8obV/cvsCU1MCcoIK+vCA+CdvENs8obV/tgn4J28QIYIK+vCAoLV/vPLgbiBy+wKCCvrwgPgnbxDbPKG1f7YJcvsCMFNTAiggghAtqU0vuuMCIIIQPxDRq7rjAiokAv4w+EFu4wDXDf+V1NHQ0//f+kGV1NHQ+kDf1w1/ldTR0NN/39cNf5XU0dDTf9/XDX+V1NHQ03/f+kGV1NHQ+kDf1wwAldTR0NIA39TR+E36Qm8T1wv/wwAglzD4TfhJxwXeII4UMPhMwwAgnDD4TPhFIG6SMHDeut7f8uBkJcIAVCUC/PLgZCX4Trvy4GUm+kJvE9cL/8AAIJQwJ8AA3/Lgb/hN+kJvE9cL/8MAjoCOIPgnbxAlJaC1f7zy4G4jggr68IC88uBuJ/hMvfLgZPgA4m0oyMv/cFiAQPRD+EpxWIBA9Bb4S3JYgED0FyjIy/9zWIBA9EMndFiAQPQWyPQAySkmAfz4S8jPhID0APQAz4HJjQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEJsIAjjchIPkA+Cj6Qm8SyM+GQMoHy//J0CghyM+FiM4B+gKAac9Az4PPgyLPFM+Bz5Gi1Xz+yXH7ADExnSH5AMjPigBAy//J0DHi+E0nAbj6Qm8T1wv/wwCOUSf4TgGhtX/4biB/yM+FgMoAc89AzoBtz0DPgc+DyM+QY0hcCinPC3/4TM8L//hNzxYm+kJvE9cL/8MAkSaS+E3izxYlzwoAJM8UzcmBAIH7ACgBvI5TJ/hOAaG1f/huJSF/yM+FgMoAc89AzgH6AoBpz0DPgc+DyM+QY0hcCinPC3/4TM8L//hNzxYm+kJvE9cL/8MAkSaS+CjizxYlzwoAJM8Uzclx+wDiW18I2zx/+GdMAWaCCvrwgPgnbxDbPKG1f7YJ+CdvECGCCvrwgKC1fyegtX+88uBuJ/hNxwWz8uBvIHL7AjBTAegw0x/4RFhvdfhk0XQhwP+OIyPQ0wH6QDAxyM+HIM6AYM9Az4HPgc+StqU0viHPCx/JcPsAjjf4RCBvEyFvEvhJVQJvEchyz0DKAHPPQM4B+gL0AIBoz0DPgc+B+ERvFc8LHyHPCx/J+ERvFPsA4jDjAH/4Z0wDQCCCEBBHyQS7joDgIIIQGNIXAruOgOAgghApxIl+uuMCNy8sAv4w+EFu4wD6QZXU0dD6QN/6QZXU0dD6QN/XDX+V1NHQ03/f1w1/ldTR0NN/3/pBldTR0PpA39cMAJXU0dDSAN/U0fhN+kJvE9cL/8MAIJcw+E34SccF3iCOFDD4TMMAIJww+Ez4RSBukjBw3rre3/LgZCX6Qm8T1wv/wwDy4G8kVC0C9sIA8uBkJibHBbPy4G/4TfpCbxPXC//DAI6Ajlf4J28QJLzy4G4jggr68IByqLV/vPLgbvgAIyfIz4WIzgH6AoBpz0DPgc+DyM+Q/VnlRifPFibPC38k+kJvE9cL/8MAkSSS+CjizxYjzwoAIs8Uzclx+wDiXwfbPH/4Zy5MAcyCCvrwgPgnbxDbPKG1f7YJ+CdvECGCCvrwgHKotX+gtX+88uBuIHL7AifIz4WIzoBtz0DPgc+DyM+Q/VnlRijPFifPC38l+kJvE9cL/8MAkSWS+E3izxYkzwoAI88UzcmBAIH7ADBTAiggghAYbXO8uuMCIIIQGNIXArrjAjUwAv4w+EFu4wDXDX+V1NHQ03/f1w3/ldTR0NP/3/pBldTR0PpA3/pBldTR0PpA39cMAJXU0dDSAN/U0SH4UrEgnDD4UPpCbxPXC//AAN/y4HAkJG0iyMv/cFiAQPRD+EpxWIBA9Bb4S3JYgED0FyLIy/9zWIBA9EMhdFiAQPQWyPQAVDEDvsn4S8jPhID0APQAz4HJIPkAyM+KAEDL/8nQMWwh+EkhxwXy4Gck+E3HBbMglTAl+Ey93/Lgb/hN+kJvE9cL/8MAjoCOgOIm+E4BoLV/+G4iIJww+FD6Qm8T1wv/wwDeNDMyAciOQ/hQyM+FiM6Abc9Az4HPg8jPkWUEfub4KM8W+ErPFijPC38nzwv/yCfPFvhJzxYmzxbI+E7PC38lzxTNzc3JgQCA+wCOFCPIz4WIzoBtz0DPgc+ByYEAgPsA4jBfBts8f/hnTAEY+CdvENs8obV/cvsCUwE8ggr68ID4J28Q2zyhtX+2CfgnbxAhvPLgbiBy+wIwUwKsMPhBbuMA0x/4RFhvdfhk0fhEcG9ycG9xgEBvdPhk+E9us5b4TyBu8n+OJ3CNCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARvAuIhwP9UNgHujiwj0NMB+kAwMcjPhyDOgGDPQM+Bz4HPkmG1zvIhbyJYIs8LfyHPFmwhyXD7AI5A+EQgbxMhbxL4SVUCbxHIcs9AygBzz0DOAfoC9ACAaM9Az4HPgfhEbxXPCx8hbyJYIs8LfyHPFmwhyfhEbxT7AOIw4wB/+GdMAiggghAPAliquuMCIIIQEEfJBLrjAj04A/Yw+EFu4wDXDX+V1NHQ03/f1w1/ldTR0NN/3/pBldTR0PpA3/pBldTR0PpA39TR+E36Qm8T1wv/wwAglzD4TfhJxwXeII4UMPhMwwAgnDD4TPhFIG6SMHDeut7f8uBkJMIA8uBkJPhOu/LgZfhN+kJvE9cL/8MAII6A3iBUPDkCYI4dMPhN+kJvE9cL/8AAIJ4wI/gnbxC7IJQwI8IA3t7f8uBu+E36Qm8T1wv/wwCOgDs6AcKOV/gAJPhOAaG1f/huI/hKf8jPhYDKAHPPQM4B+gKAac9Az4HPg8jPkLiiIqomzwt/+EzPC//4Tc8WJPpCbxPXC//DAJEkkvgo4s8WyCTPFiPPFM3NyXD7AOJfBds8f/hnTAHMggr68ID4J28Q2zyhtX+2CXL7AiT4TgGhtX/4bvhKf8jPhYDKAHPPQM6Abc9Az4HPg8jPkLiiIqomzwt/+EzPC//4Tc8WJPpCbxPXC//DAJEkkvhN4s8WyCTPFiPPFM3NyYEAgPsAUwEKMNs8wgBTAy4w+EFu4wD6QZXU0dD6QN/R2zzbPH/4Z1Q+TAC8+E36Qm8T1wv/wwAglzD4TfhJxwXeII4UMPhMwwAgnDD4TPhFIG6SMHDeut7f8uBk+E7AAPLgZPgAIMjPhQjOjQPID6AAAAAAAAAAAAAAAAABzxbPgc+ByYEAoPsAMAM+IIILIdFzu46A4CCCEAs/z1e7joDgIIIQDC/yDbrjAkVCQAP+MPhBbuMA1w1/ldTR0NN/3/pBldTR0PpA3/pBldTR0PpA39TR+Er4SccF8uBmI8IA8uBkI/hOu/LgZfgnbxDbPKG1f3L7AiP4TgGhtX/4bvhKf8jPhYDKAHPPQM6Abc9Az4HPg8jPkLiiIqolzwt/+EzPC//4Tc8WJM8WyCTPFlRTQQEkI88Uzc3JgQCA+wBfBNs8f/hnTAIoIIIQBcUAD7rjAiCCEAs/z1e64wJEQwJWMPhBbuMA1w1/ldTR0NN/39H4SvhJxwXy4Gb4ACD4TgGgtX/4bjDbPH/4Z1RMApYw+EFu4wD6QZXU0dD6QN/R+E36Qm8T1wv/wwAglzD4TfhJxwXeII4UMPhMwwAgnDD4TPhFIG6SMHDeut7f8uBk+AAg+HEw2zx/+GdUTAIkIIIJfDNZuuMCIIILIdFzuuMCSUYD8DD4QW7jAPpBldTR0PpA39cNf5XU0dDTf9/XDX+V1NHQ03/f0fhN+kJvE9cL/8MAIJcw+E34SccF3iCOFDD4TMMAIJww+Ez4RSBukjBw3rre3/LgZCHAACCWMPhPbrOz3/LgavhN+kJvE9cL/8MAjoCS+ADi+E9us1RIRwGIjhL4TyBu8n9vECK6liAjbwL4b96WICNvAvhv4vhN+kJvE9cL/44V+EnIz4WIzoBtz0DPgc+ByYEAgPsA3l8D2zx/+GdMASaCCvrwgPgnbxDbPKG1f7YJcvsCUwL+MPhBbuMA0x/4RFhvdfhk0fhEcG9ycG9xgEBvdPhk+EshwP+OIiPQ0wH6QDAxyM+HIM6AYM9Az4HPgc+SBfDNZiHPFMlw+wCONvhEIG8TIW8S+ElVAm8RyHLPQMoAc89AzgH6AvQAgGjPQM+Bz4H4RG8VzwsfIc8UyfhEbxT7AFRKAQ7iMOMAf/hnTARAIdYfMfhBbuMA+AAg0x8yIIIQGNIXArqOgI6A4jAw2zxUT01MAKz4QsjL//hDzws/+EbPCwDI+E34UPhRXiDOzs74SvhL+Ez4TvhP+FJeYM8RzszL/8t/ASBus44VyAFvIsgizwt/Ic8WbCHPFwHPg88RkzDPgeLKAMntVAEWIIIQLiiIqrqOgN5OATAh038z+E4BoLV/+G74TfpCbxPXC/+OgN5RAjwh038zIPhOAaC1f/hu+FH6Qm8T1wv/wwCOgI6A4jBSUAEY+E36Qm8T1wv/joDeUQFQggr68ID4J28Q2zyhtX+2CXL7AvhNyM+FiM6Abc9Az4HPgcmBAID7AFMBgPgnbxDbPKG1f3L7AvhRyM+FiM6Abc9Az4HPg8jPkOoV2UL4KM8W+ErPFiLPC3/I+EnPFvhOzwt/zc3JgQCA+wBTABhwaKb7YJVopv5gMd8Afu1E0NP/0z/TANX6QPpA+HH4cPht+kDU0//Tf/QEASBuldDTf28C3/hv1woA+HL4bvhs+Gv4an/4Yfhm+GP4Yg==&quot;</span>;
+    <span class="kw">const</span> <span class="ident">TOKEN_WALLET_STATE_TIP3</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;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&quot;</span>;
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">get_token_wallet_balance</span>() {
+        <span class="kw">let</span> <span class="ident">versions</span> <span class="op">=</span> [<span class="ident">TokenWalletVersion::OldTip3v4</span>, <span class="ident">TokenWalletVersion::Tip3</span>];
+
+        <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">version</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">versions</span> {
+            <span class="kw">let</span> <span class="ident">contract</span> <span class="op">=</span> <span class="ident">token_wallet_contract</span>(<span class="ident">version</span>);
+            <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">TokenWalletContractState</span>(<span class="kw-2">&amp;</span><span class="ident">contract</span>);
+
+            <span class="kw">let</span> <span class="ident">parsed_version</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">get_version</span>(<span class="kw-2">&amp;</span><span class="ident">SimpleClock</span>).<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(<span class="ident">parsed_version</span>, <span class="ident">version</span>);
+
+            <span class="ident">state</span>.<span class="ident">get_details</span>(<span class="kw-2">&amp;</span><span class="ident">SimpleClock</span>, <span class="ident">parsed_version</span>).<span class="ident">unwrap</span>();
+            <span class="ident">state</span>.<span class="ident">get_balance</span>(<span class="kw-2">&amp;</span><span class="ident">SimpleClock</span>, <span class="ident">version</span>).<span class="ident">unwrap</span>();
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">compute_token_wallet_address</span>() {
+        <span class="kw">let</span> <span class="ident">owner_address</span> <span class="op">=</span> <span class="string">&quot;0:a921453472366b7feeec15323a96b5dcf17197c88dc0d4578dfa52900b8a33cb&quot;</span>;
+
+        <span class="comment">// pairs of token version and token wallet address</span>
+        <span class="kw">let</span> <span class="ident">versions</span> <span class="op">=</span> [
+            (
+                <span class="ident">TokenWalletVersion::OldTip3v4</span>,
+                <span class="string">&quot;0:e4eb5f354e5f0335f38a73b6dc9808c67d611a717b5ed184d6210fb3e73067ee&quot;</span>,
+            ),
+            (
+                <span class="ident">TokenWalletVersion::Tip3</span>,
+                <span class="string">&quot;0:a3d6926fc25c9ac9a93b1f0afab9dabe63798290ccdc318c1940b99b1c1dade6&quot;</span>,
+            ),
+        ];
+
+        <span class="comment">// guess details from state for each version</span>
+        <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">version</span>, <span class="ident">token_wallet</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">versions</span> {
+            <span class="kw">let</span> <span class="ident">contract</span> <span class="op">=</span> <span class="ident">root_token_contract</span>(<span class="ident">version</span>);
+            <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">RootTokenContractState</span>(<span class="kw-2">&amp;</span><span class="ident">contract</span>);
+
+            <span class="kw">let</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">guess_details</span>(<span class="kw-2">&amp;</span><span class="ident">SimpleClock</span>).<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq!</span>(<span class="ident">details</span>.<span class="ident">version</span>, <span class="ident">version</span>);
+
+            <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">state</span>
+                .<span class="ident">get_wallet_address</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">SimpleClock</span>,
+                    <span class="ident">details</span>.<span class="ident">version</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">convert_address</span>(<span class="ident">owner_address</span>),
+                )
+                .<span class="ident">unwrap</span>();
+
+            <span class="macro">assert_eq!</span>(<span class="ident">address</span>, <span class="ident">convert_address</span>(<span class="ident">token_wallet</span>));
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">get_root_contract_details</span>() {
+        <span class="comment">// Old</span>
+        <span class="kw">let</span> <span class="ident">root_state</span> <span class="op">=</span> <span class="ident">root_token_contract</span>(<span class="ident">TokenWalletVersion::OldTip3v4</span>);
+        <span class="kw">let</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">RootTokenContractState</span>(<span class="kw-2">&amp;</span><span class="ident">root_state</span>)
+            .<span class="ident">guess_details</span>(<span class="kw-2">&amp;</span><span class="ident">SimpleClock</span>)
+            .<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(
+            <span class="ident">details</span>.<span class="ident">total_supply</span>,
+            <span class="ident">BigUint::from_str</span>(<span class="string">&quot;22000000000&quot;</span>).<span class="ident">unwrap</span>()
+        );
+        <span class="macro">assert_eq!</span>(<span class="ident">details</span>.<span class="ident">decimals</span>, <span class="number">9</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">details</span>.<span class="ident">version</span>, <span class="ident">TokenWalletVersion::OldTip3v4</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">details</span>.<span class="ident">symbol</span>, <span class="string">&quot;WTON&quot;</span>);
+
+        <span class="comment">// New</span>
+        <span class="kw">let</span> <span class="ident">root_state</span> <span class="op">=</span> <span class="ident">root_token_contract</span>(<span class="ident">TokenWalletVersion::Tip3</span>);
+        <span class="kw">let</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">RootTokenContractState</span>(<span class="kw-2">&amp;</span><span class="ident">root_state</span>)
+            .<span class="ident">guess_details</span>(<span class="kw-2">&amp;</span><span class="ident">SimpleClock</span>)
+            .<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(
+            <span class="ident">details</span>.<span class="ident">total_supply</span>,
+            <span class="ident">BigUint::from_str</span>(<span class="string">&quot;555666777000000000&quot;</span>).<span class="ident">unwrap</span>()
+        );
+        <span class="macro">assert_eq!</span>(<span class="ident">details</span>.<span class="ident">decimals</span>, <span class="number">9</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">details</span>.<span class="ident">version</span>, <span class="ident">TokenWalletVersion::Tip3</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">details</span>.<span class="ident">symbol</span>, <span class="string">&quot;TST1&quot;</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">get_strange_root_contract_details</span>() {
+        <span class="kw">let</span> <span class="ident">root_state</span> <span class="op">=</span> <span class="string">r#&quot;{&quot;account&quot;:&quot;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ZSBpcHN1bSBwcmltaXMgaW4gZmF1Y2lidXMgb3JjaSBsdWN0dXMgZXQgdWx0cmljZXMgcG9zdWVyZSBjdWJpbGlhIGN1cmFlOyBWZXN0aWJ1bHVtIHNlZCBkaWFtIHZpdGFlIGxhY3VzIG1vbGVzdFYB/mllIHZhcml1cyBldSBhdCBlcmF0LiBOdWxsYSBsdWN0dXMgcGVsbGVudGVzcXVlIG5pYmggdmVsIHNvZGFsZXMuIFZlc3RpYnVsdW0gYW50ZSBvcmNpLCBwbGFjZXJhdCBhYyBydXRydW0gZWdldCwgYmliZW5kdW0gaW4gYW5XAf50ZS4gTWF1cmlzIG1hdHRpcyBtYXNzYSBldCB0b3J0b3IgbW9sbGlzIGZpbmlidXMuqlBoYXNlbGx1cyBiaWJlbmR1bSBsaWd1bGEgdG9ydG9yLCBpZCB2ZWhpY3VsYSBhcmN1IGNvbnNlcXVhdCBlbGVtZW50dW0uIEFsaXF1WAH+YW0gdnVscHV0YXRlIGhlbmRyZXJpdCBhcmN1IGlkIGZldWdpYXQuIEV0aWFtIGNvbW1vZG8gbG9ib3J0aXMgZWdlc3Rhcy4gSW4gYSBudWxsYSB0ZW1wb3IsIGZyaW5naWxsYSBkdWkgZXUsIGxvYm9ydGlzIHVybmEuIE1hZVkB/mNlbmFzIG9ybmFyZSwgbWkgYWMgdml2ZXJyYSBhdWN0b3IsIGV4IHNlbSBzb2RhbGVzIG9yY2ksIHF1aXMgcnV0cnVtIG1pIHZlbGl0IGEgbmliaC4gRHVpcyBpYWN1bGlzLCBzZW0gZ3JhdmlkYSBpbXBlcmRpZXQgY29uZGlaAf5tZW50dW0sIGlwc3VtIGRpYW0gdWxsYW1jb3JwZXIgZHVpLCBhdCBlbGVtZW50dW0gc2VtIHB1cnVzIHNlZCBhcmN1LiBEb25lYyB2ZWwgb3JuYXJlIG1hZ25hLiBDdXJhYml0dXIgY29uc2VjdGV0dXIgbmVjIG1hZ25hIGF0WwH+IHVsdHJpY2VzLiBJbnRlZ2VyIG5lYyBmaW5pYnVzIHRlbGx1cy4gSW50ZWdlciB2aXRhZSBtYXR0aXMgZHVpLCB2aXRhZSB0cmlzdGlxdWUgbWkuIFNlZCBuaWJoIG9yY2ksIGVsZW1lbnR1bSBub24gbmlzaSBhYywgZmFjaVwB/mxpc2lz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&quot;,&quot;timings&quot;:{&quot;genLt&quot;:&quot;16558098000001&quot;,&quot;genUtime&quot;:1626868952},&quot;lastTransactionId&quot;:{&quot;isExact&quot;:true,&quot;lt&quot;:&quot;16554099000005&quot;,&quot;hash&quot;:&quot;a73789af4437ff5a58f33a5b29a347d01b6b99088009437b8e47d73751f51741&quot;}}&quot;#</span>;
+        <span class="kw">let</span> <span class="ident">root_state</span>: <span class="ident">ExistingContract</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="ident">root_state</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">root_state</span> <span class="op">=</span> <span class="ident">RootTokenContractState</span>(<span class="kw-2">&amp;</span><span class="ident">root_state</span>);
+        <span class="ident">root_state</span>.<span class="ident">guess_details</span>(<span class="kw-2">&amp;</span><span class="ident">SimpleClock</span>).<span class="ident">unwrap</span>();
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>

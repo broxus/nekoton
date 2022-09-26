@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":[["collection_contract",""],["index_contract",""],["nft_contract",""]],"struct":[["CollectionContract",""],["IndexContract",""]]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["resolve","Returns a certificate address derived from the specified path"]]};

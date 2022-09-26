@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["confirm_transaction",""],["constructor",""],["get_custodians",""],["get_parameters",""],["get_transactions",""],["send_transaction",""],["submit_transaction",""]],"struct":[["MultisigCustodian",""],["MultisigTransaction",""],["SetCodeMultisigParams",""]]};

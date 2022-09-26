@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["get_info","Get NFT info"]],"struct":[["IndexGetInfoOutputs",""]]};

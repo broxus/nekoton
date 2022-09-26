@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["depool_on_round_complete",""],["depool_receive_answer",""],["notify_wallet_deployed",""]]};

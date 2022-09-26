@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["OWNERS_CACHE_STORAGE_KEY",""]],"enum":[["OwnersCacheError",""],["RecipientWallet",""]],"struct":[["OwnersCache","Stores a map to resolve owner’s wallet address from token wallet address"]]};

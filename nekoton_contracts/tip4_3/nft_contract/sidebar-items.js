@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":[["INTERFACE_ID",""]],"fn":[["index_code","Get contract index code"],["index_code_hash","Get contract index code hash"],["resolve_index","Resolve contract index"]]};

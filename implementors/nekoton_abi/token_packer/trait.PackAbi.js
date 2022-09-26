@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["nekoton_contracts"] = [{"text":"impl <a class=\"trait\" href=\"nekoton_abi/token_packer/trait.PackAbi.html\" title=\"trait nekoton_abi::token_packer::PackAbi\">PackAbi</a> for <a class=\"struct\" href=\"nekoton_contracts/tip4_1/nft_contract/struct.NftCallbackPayload.html\" title=\"struct nekoton_contracts::tip4_1::nft_contract::NftCallbackPayload\">NftCallbackPayload</a>","synthetic":false,"types":["nekoton_contracts::tip4_1::nft_contract::NftCallbackPayload"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

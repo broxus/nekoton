@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["MultisigType",""]],"fn":[["compute_contract_address",""],["find_pending_transaction",""],["get_custodians",""],["get_pending_transactions",""],["guess_multisig_type",""],["prepare_confirm_transaction",""],["prepare_deploy",""],["prepare_transfer",""],["ton_wallet_details",""]]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["account_prefix",""],["contains_account",""]],"struct":[["LatestShardBlocks",""],["TxContext",""]],"trait":[["ExistingContractExt",""],["ReadFromTransaction",""],["ShardAccountsMapExt","Helper trait to reduce boilerplate for getting accounts from shards state"]],"type":[["ShardAccountsMap",""],["ShardsMap",""]]};
