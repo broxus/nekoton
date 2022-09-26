@@ -3,7 +3,6 @@ var sourcesIndex = JSON.parse('{\
 "nekoton_abi":["",[],["abi_helpers.rs","code_salt.rs","event_builder.rs","function_builder.rs","known_param_type.rs","lib.rs","message_builder.rs","models.rs","token_packer.rs","token_unpacker.rs","tokens_json.rs","transaction_parser.rs","tvm.rs"]],\
 "nekoton_contracts":["",[["dens",[],["domain_contract.rs","mod.rs","root_contract.rs"]],["old_tip3",[],["mod.rs","root_token_contract.rs","token_wallet_contract.rs"]],["tip3",[],["mod.rs","root_token_contract.rs","token_wallet_contract.rs"]],["tip3_1",[],["mod.rs","root_token_contract.rs","token_wallet_contract.rs"]],["tip4_1",[],["collection_contract.rs","mod.rs","nft_contract.rs"]],["tip4_2",[],["metadata_contract.rs","mod.rs"]],["tip4_3",[],["collection_contract.rs","index_contract.rs","mod.rs","nft_contract.rs"]],["tip6",[],["mod.rs","sid.rs"]],["wallets",[["code",[],["mod.rs"]]],["ever_wallet.rs","mod.rs","multisig.rs","multisig2.rs","notifications.rs"]]],["lib.rs"]],\
 "nekoton_derive":["",[],["ast.rs","attr.rs","known_param_type.rs","lib.rs","pack_abi.rs","parsing_context.rs","symbol.rs","unpack_abi.rs","utils.rs"]],\
-"nekoton_indexer_utils":["",[],["existing_contract.rs","lib.rs","shard_utils.rs","tx_context.rs"]],\
 "nekoton_transport":["",[],["gql.rs","lib.rs"]],\
 "nekoton_utils":["",[],["address.rs","cell.rs","clock.rs","crc.rs","encryption.rs","lib.rs","serde_helpers.rs","traits.rs","transaction.rs"]]\
 }');

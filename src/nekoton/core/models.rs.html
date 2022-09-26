@@ -1542,7 +1542,7 @@
 
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">id</span>: <span class="ident">TransactionId</span> { <span class="ident">lt</span>: <span class="ident">data</span>.<span class="ident">lt</span>, <span class="ident">hash</span> },
-            <span class="ident">prev_trans_id</span>: (<span class="ident">data</span>.<span class="ident">prev_trans_lt</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>).<span class="ident">then</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">TransactionId</span> {
+            <span class="ident">prev_trans_id</span>: (<span class="ident">data</span>.<span class="ident">prev_trans_lt</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>).<span class="ident">then_some</span>(<span class="ident">TransactionId</span> {
                 <span class="ident">lt</span>: <span class="ident">data</span>.<span class="ident">prev_trans_lt</span>,
                 <span class="ident">hash</span>: <span class="ident">data</span>.<span class="ident">prev_trans_hash</span>,
             }),
