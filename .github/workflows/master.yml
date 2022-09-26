@@ -20,7 +20,8 @@ jobs:
       - name: Build docs
         uses: actions-rs/cargo@v1
         with:
-          command: doc --workspace --no-deps
+          command: doc
+          args: --workspace --no-deps
 
       - name: Set default page
         run: echo '<meta http-equiv="refresh" content="0; url=nekoton">' > ./target/doc/index.html

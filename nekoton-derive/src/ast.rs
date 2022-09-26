@@ -103,7 +103,7 @@ fn enum_from_ast<'a>(
         })
         .collect();
 
-    (result.len() == variants.len()).then(|| result)
+    (result.len() == variants.len()).then_some(result)
 }
 
 fn struct_from_ast<'a>(
@@ -144,7 +144,7 @@ fn fields_from_ast<'a>(
         })
         .collect();
 
-    (result.len() == fields.len()).then(|| result)
+    (result.len() == fields.len()).then_some(result)
 }
 
 #[derive(Debug, Clone, Copy)]
