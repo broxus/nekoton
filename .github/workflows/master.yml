@@ -3,6 +3,34 @@ on: [push, pull_request]
 name: master
 
 jobs:
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Build docs
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc --workspace --no-deps
+
+      - name: Set default page
+        run: echo '<meta http-equiv="refresh" content="0; url=nekoton">' > ./target/doc/index.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/doc
+
   check:
     name: Check
     runs-on: ubuntu-latest

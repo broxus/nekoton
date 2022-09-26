@@ -37,7 +37,7 @@ pub trait UnsignedMessage: DynClone + Send + Sync {
 
     /// Create signed message from prepared inputs
     /// # Arguments
-    /// `signature` - signature, received from [`hash`]
+    /// `signature` - signature, received from [`UnsignedMessage::hash`]
     fn sign(&self, signature: &Signature) -> Result<SignedMessage>;
 }
 

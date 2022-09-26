@@ -300,13 +300,7 @@ mod tests {
     #[tokio::test]
     async fn gql_client_works() {
         let client = GqlClient::new(GqlNetworkSettings {
-            endpoints: vec![
-                "eri01.main.everos.dev".to_string(),
-                "gra01.main.everos.dev".to_string(),
-                "gra02.main.everos.dev".to_string(),
-                "lim01.main.everos.dev".to_string(),
-                "rbx01.main.everos.dev".to_string(),
-            ],
+            endpoints: vec!["mainnet.evercloud.dev/57a5b802e303424fb0078f612a4fbe35".to_string()],
             latency_detection_interval: Duration::from_secs(1),
             ..Default::default()
         })

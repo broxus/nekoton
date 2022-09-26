@@ -71,3 +71,6 @@ integration_test = []
 web = ["nekoton-contracts/web", "nekoton-abi/web", "nekoton-utils/web", "getrandom/wasm-bindgen", "ton_abi/web"]
 gql_transport = ["dep:erased-serde"]
 jrpc_transport = ["dep:tiny-jsonrpc"]
+
+[package.metadata.docs.rs]
+all-features = true

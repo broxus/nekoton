@@ -423,7 +423,7 @@ mod tests {
         async fn post(&self, req: GqlRequest) -> Result<String> {
             println!("{req:?}");
             let text = self
-                .post("https://gra01.main.everos.dev/graphql")
+                .post("https://mainnet.evercloud.dev/57a5b802e303424fb0078f612a4fbe35/graphql")
                 .body(req.data)
                 .header("Content-Type", "application/json")
                 .send()
