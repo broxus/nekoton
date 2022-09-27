@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 
 pub trait GqlQuery {
     type Variables: serde::Serialize;
@@ -9,21 +9,10 @@ pub trait GqlQuery {
     fn build_query(variables: &'_ Self::Variables) -> QueryBody<'_>;
 }
 
+#[derive(Serialize)]
 pub struct QueryBody<'a> {
     pub variables: &'a dyn erased_serde::Serialize,
     pub query: &'static str,
-}
-
-impl Serialize for QueryBody<'_> {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use serde::ser::SerializeStruct;
-
-        let mut s = serializer.serialize_struct("QueryBody", 3)?;
-        s.serialize_field("variables", self.variables)?;
-        s.serialize_field("query", self.query)?;
-        s.serialize_field("operationName", &())?;
-        s.end()
-    }
 }
 
 macro_rules! declare_queries {
