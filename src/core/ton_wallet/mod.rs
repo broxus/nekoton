@@ -433,6 +433,26 @@ impl WalletData {
         account_stuff: &ton_block::AccountStuff,
         handler: &dyn TonWalletSubscriptionHandler,
     ) -> Result<()> {
+        // Extract details
+        if self.details.is_none() {
+            let mut details = wallet_type.details();
+
+            // Adjust `expiration_time` from the state for multisig2
+            if let WalletType::Multisig(MultisigType::Multisig2) = wallet_type {
+                details.expiration_time = multisig::get_expiration_time(
+                    clock,
+                    MultisigType::Multisig2,
+                    Cow::Borrowed(account_stuff),
+                )?
+                .try_into()
+                .unwrap_or(u32::MAX);
+            }
+
+            self.details = Some(details);
+            handler.on_details_changed(details);
+        }
+
+        // Extract custodians
         let multisig_type = match wallet_type {
             WalletType::Multisig(multisig_type) => multisig_type,
             // Simple path for wallets with single custodian
@@ -444,25 +464,6 @@ impl WalletData {
                 return Ok(());
             }
         };
-
-        // Extract details
-        if self.details.is_none() {
-            let mut details = wallet_type.details();
-
-            // Adjust `expiration_time` from the state for multisig2
-            if multisig_type == MultisigType::Multisig2 {
-                details.expiration_time = multisig::get_expiration_time(
-                    clock,
-                    multisig_type,
-                    Cow::Borrowed(account_stuff),
-                )?
-                .try_into()
-                .unwrap_or(u32::MAX);
-            }
-
-            self.details = Some(details);
-            handler.on_details_changed(details);
-        }
 
         // Extract custodians
         let custodians = match &mut self.custodians {
