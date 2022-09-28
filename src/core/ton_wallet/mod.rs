@@ -464,7 +464,9 @@ impl WalletData {
                     clock,
                     multisig_type,
                     Cow::Borrowed(account_stuff),
-                )?;
+                )?
+                .try_into()
+                .unwrap_or(u32::MAX);
             }
 
             self.details = Some(details);
@@ -716,7 +718,7 @@ pub struct TonWalletDetails {
     pub supports_payload: bool,
     pub supports_state_init: bool,
     pub supports_multiple_owners: bool,
-    pub expiration_time: u64,
+    pub expiration_time: u32,
 }
 
 /// Message info
