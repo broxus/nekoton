@@ -820,6 +820,8 @@
 <span id="820">820</span>
 <span id="821">821</span>
 <span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -1286,7 +1288,9 @@
                     <span class="ident">clock</span>,
                     <span class="ident">multisig_type</span>,
                     <span class="ident">Cow::Borrowed</span>(<span class="ident">account_stuff</span>),
-                )<span class="question-mark">?</span>;
+                )<span class="question-mark">?</span>
+                .<span class="ident">try_into</span>()
+                .<span class="ident">unwrap_or</span>(<span class="ident">u32::MAX</span>);
             }
 
             <span class="self">self</span>.<span class="ident">details</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">details</span>);
@@ -1538,7 +1542,7 @@
     <span class="kw">pub</span> <span class="ident">supports_payload</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">supports_state_init</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">supports_multiple_owners</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">expiration_time</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">expiration_time</span>: <span class="ident">u32</span>,
 }
 
 <span class="doccomment">/// Message info</span>
