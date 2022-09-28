@@ -170,7 +170,7 @@ pub struct MultisigSendTransaction {
     pub payload: ton_types::Cell,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct MultisigPendingTransaction {
     #[serde(with = "serde_string")]
     pub id: u64,

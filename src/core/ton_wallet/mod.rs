@@ -51,7 +51,7 @@ impl TonWallet {
     ) -> Result<Self> {
         let address = compute_address(&public_key, wallet_type, workchain);
 
-        let mut wallet_data = WalletData::uninit(wallet_type);
+        let mut wallet_data = WalletData::default();
 
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
@@ -92,7 +92,7 @@ impl TonWallet {
             RawContractState::NotExists => return Err(TonWalletError::AccountNotExists.into()),
         };
 
-        let mut wallet_data = WalletData::uninit(wallet_type);
+        let mut wallet_data = WalletData::default();
 
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
@@ -128,7 +128,7 @@ impl TonWallet {
         existing_wallet: ExistingWalletInfo,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
     ) -> Result<Self> {
-        let mut wallet_data = WalletData::uninit(existing_wallet.wallet_type);
+        let mut wallet_data = WalletData::default();
 
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
@@ -281,6 +281,7 @@ impl TonWallet {
                     &self.public_key,
                     self.wallet_type,
                     current_state,
+                    self.handler.as_ref(),
                 )?;
 
                 let has_multiple_owners = match &self.wallet_data.custodians {
@@ -416,6 +417,7 @@ impl TonWallet {
     }
 }
 
+#[derive(Default)]
 struct WalletData {
     custodians: Option<Vec<UInt256>>,
     unconfirmed_transactions: Vec<MultisigPendingTransaction>,
@@ -423,32 +425,21 @@ struct WalletData {
 }
 
 impl WalletData {
-    fn uninit(wallet_type: WalletType) -> Self {
-        Self {
-            custodians: Default::default(),
-            unconfirmed_transactions: Default::default(),
-            details: match wallet_type {
-                // Init later
-                WalletType::Multisig(MultisigType::Multisig2) => None,
-                // Constant
-                _ => Some(wallet_type.details()),
-            },
-        }
-    }
-
     fn update(
         &mut self,
         clock: &dyn Clock,
         public_key: &PublicKey,
         wallet_type: WalletType,
         account_stuff: &ton_block::AccountStuff,
+        handler: &dyn TonWalletSubscriptionHandler,
     ) -> Result<()> {
         let multisig_type = match wallet_type {
             WalletType::Multisig(multisig_type) => multisig_type,
             // Simple path for wallets with single custodian
             _ => {
                 if self.custodians.is_none() {
-                    self.custodians = Some(vec![public_key.to_bytes().into()]);
+                    let custodians = self.custodians.insert(vec![public_key.to_bytes().into()]);
+                    handler.on_custodians_changed(custodians);
                 }
                 return Ok(());
             }
@@ -470,16 +461,21 @@ impl WalletData {
             }
 
             self.details = Some(details);
+            handler.on_details_changed(details);
         }
 
         // Extract custodians
         let custodians = match &mut self.custodians {
             Some(custodians) => custodians,
-            None => self.custodians.insert(multisig::get_custodians(
-                clock,
-                multisig_type,
-                Cow::Borrowed(account_stuff),
-            )?),
+            None => {
+                let custodians = self.custodians.insert(multisig::get_custodians(
+                    clock,
+                    multisig_type,
+                    Cow::Borrowed(account_stuff),
+                )?);
+                handler.on_custodians_changed(custodians);
+                custodians
+            }
         };
 
         // Skip pending transactions extraction for single custodian
@@ -495,8 +491,10 @@ impl WalletData {
             custodians,
         )?;
 
-        self.unconfirmed_transactions = pending_transactions;
-
+        if self.unconfirmed_transactions != pending_transactions {
+            self.unconfirmed_transactions = pending_transactions;
+            handler.on_unconfirmed_transactions_changed(&self.unconfirmed_transactions);
+        }
         Ok(())
     }
 }
@@ -665,10 +663,14 @@ fn make_contract_state_handler<'a>(
 ) -> impl FnMut(&RawContractState) + 'a {
     move |contract_state| {
         if let RawContractState::Exists(contract_state) = contract_state {
-            if let Err(e) =
-                wallet_data.update(clock, public_key, wallet_type, &contract_state.account)
-            {
-                log::error!("{}", e);
+            if let Err(e) = wallet_data.update(
+                clock,
+                public_key,
+                wallet_type,
+                &contract_state.account,
+                handler,
+            ) {
+                log::error!("{e}");
             }
         }
         handler.on_state_changed(contract_state.brief())
@@ -810,7 +812,9 @@ pub trait TonWalletSubscriptionHandler: Send + Sync {
     fn on_message_expired(&self, pending_transaction: PendingTransaction);
 
     /// Called every time a new state is detected
-    fn on_state_changed(&self, new_state: ContractState);
+    fn on_state_changed(&self, new_state: ContractState) {
+        let _ = new_state;
+    }
 
     /// Called every time new transactions are detected.
     /// - When new block found
@@ -820,5 +824,26 @@ pub trait TonWalletSubscriptionHandler: Send + Sync {
         &self,
         transactions: Vec<TransactionWithData<TransactionAdditionalInfo>>,
         batch_info: TransactionsBatchInfo,
-    );
+    ) {
+        let _ = transactions;
+        let _ = batch_info;
+    }
+
+    /// Called when wallet details changed (e.g. expiration time or required confirms)
+    fn on_details_changed(&self, details: TonWalletDetails) {
+        let _ = details;
+    }
+
+    /// Called when wallet custodians changed (e.g. on code upgrade or first refresh)
+    fn on_custodians_changed(&self, custodians: &[UInt256]) {
+        let _ = custodians;
+    }
+
+    /// Called when wallet has new pending transactions set
+    fn on_unconfirmed_transactions_changed(
+        &self,
+        unconfirmed_transactions: &[MultisigPendingTransaction],
+    ) {
+        let _ = unconfirmed_transactions;
+    }
 }
