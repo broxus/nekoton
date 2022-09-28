@@ -847,6 +847,7 @@
 <span id="847">847</span>
 <span id="848">848</span>
 <span id="849">849</span>
+<span id="850">850</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
@@ -1282,6 +1283,26 @@
         <span class="ident">account_stuff</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
         <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="comment">// Extract details</span>
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">details</span>.<span class="ident">is_none</span>() {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">wallet_type</span>.<span class="ident">details</span>();
+
+            <span class="comment">// Adjust `expiration_time` from the state for multisig2</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::Multisig2</span>) <span class="op">=</span> <span class="ident">wallet_type</span> {
+                <span class="ident">details</span>.<span class="ident">expiration_time</span> <span class="op">=</span> <span class="ident">multisig::get_expiration_time</span>(
+                    <span class="ident">clock</span>,
+                    <span class="ident">MultisigType::Multisig2</span>,
+                    <span class="ident">Cow::Borrowed</span>(<span class="ident">account_stuff</span>),
+                )<span class="question-mark">?</span>
+                .<span class="ident">try_into</span>()
+                .<span class="ident">unwrap_or</span>(<span class="ident">u32::MAX</span>);
+            }
+
+            <span class="self">self</span>.<span class="ident">details</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">details</span>);
+            <span class="ident">handler</span>.<span class="ident">on_details_changed</span>(<span class="ident">details</span>);
+        }
+
+        <span class="comment">// Extract custodians</span>
         <span class="kw">let</span> <span class="ident">multisig_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">wallet_type</span> {
             <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; <span class="ident">multisig_type</span>,
             <span class="comment">// Simple path for wallets with single custodian</span>
@@ -1293,25 +1314,6 @@
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
             }
         };
-
-        <span class="comment">// Extract details</span>
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">details</span>.<span class="ident">is_none</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">wallet_type</span>.<span class="ident">details</span>();
-
-            <span class="comment">// Adjust `expiration_time` from the state for multisig2</span>
-            <span class="kw">if</span> <span class="ident">multisig_type</span> <span class="op">==</span> <span class="ident">MultisigType::Multisig2</span> {
-                <span class="ident">details</span>.<span class="ident">expiration_time</span> <span class="op">=</span> <span class="ident">multisig::get_expiration_time</span>(
-                    <span class="ident">clock</span>,
-                    <span class="ident">multisig_type</span>,
-                    <span class="ident">Cow::Borrowed</span>(<span class="ident">account_stuff</span>),
-                )<span class="question-mark">?</span>
-                .<span class="ident">try_into</span>()
-                .<span class="ident">unwrap_or</span>(<span class="ident">u32::MAX</span>);
-            }
-
-            <span class="self">self</span>.<span class="ident">details</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">details</span>);
-            <span class="ident">handler</span>.<span class="ident">on_details_changed</span>(<span class="ident">details</span>);
-        }
 
         <span class="comment">// Extract custodians</span>
         <span class="kw">let</span> <span class="ident">custodians</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">custodians</span> {
