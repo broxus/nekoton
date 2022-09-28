@@ -51,7 +51,7 @@ impl TonWallet {
     ) -> Result<Self> {
         let address = compute_address(&public_key, wallet_type, workchain);
 
-        let mut wallet_data = WalletData::default();
+        let mut wallet_data = WalletData::uninit(wallet_type);
 
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
@@ -92,7 +92,7 @@ impl TonWallet {
             RawContractState::NotExists => return Err(TonWalletError::AccountNotExists.into()),
         };
 
-        let mut wallet_data = WalletData::default();
+        let mut wallet_data = WalletData::uninit(wallet_type);
 
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
@@ -128,7 +128,7 @@ impl TonWallet {
         existing_wallet: ExistingWalletInfo,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
     ) -> Result<Self> {
-        let mut wallet_data = WalletData::default();
+        let mut wallet_data = WalletData::uninit(existing_wallet.wallet_type);
 
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
@@ -191,7 +191,9 @@ impl TonWallet {
     }
 
     pub fn details(&self) -> TonWalletDetails {
-        self.wallet_type.details()
+        self.wallet_data
+            .details
+            .unwrap_or_else(|| self.wallet_type.details())
     }
 
     pub fn get_unconfirmed_transactions(&self) -> &[MultisigPendingTransaction] {
@@ -414,13 +416,26 @@ impl TonWallet {
     }
 }
 
-#[derive(Default)]
 struct WalletData {
     custodians: Option<Vec<UInt256>>,
     unconfirmed_transactions: Vec<MultisigPendingTransaction>,
+    details: Option<TonWalletDetails>,
 }
 
 impl WalletData {
+    fn uninit(wallet_type: WalletType) -> Self {
+        Self {
+            custodians: Default::default(),
+            unconfirmed_transactions: Default::default(),
+            details: match wallet_type {
+                // Init later
+                WalletType::Multisig(MultisigType::Multisig2) => None,
+                // Constant
+                _ => Some(wallet_type.details()),
+            },
+        }
+    }
+
     fn update(
         &mut self,
         clock: &dyn Clock,
@@ -438,6 +453,22 @@ impl WalletData {
                 return Ok(());
             }
         };
+
+        // Extract details
+        if self.details.is_none() {
+            let mut details = wallet_type.details();
+
+            // Adjust `expiration_time` from the state for multisig2
+            if multisig_type == MultisigType::Multisig2 {
+                details.expiration_time = multisig::get_expiration_time(
+                    clock,
+                    multisig_type,
+                    Cow::Borrowed(account_stuff),
+                )?;
+            }
+
+            self.details = Some(details);
+        }
 
         // Extract custodians
         let custodians = match &mut self.custodians {
@@ -685,7 +716,7 @@ pub struct TonWalletDetails {
     pub supports_payload: bool,
     pub supports_state_init: bool,
     pub supports_multiple_owners: bool,
-    pub expiration_time: u32,
+    pub expiration_time: u64,
 }
 
 /// Message info

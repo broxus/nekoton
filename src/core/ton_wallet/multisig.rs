@@ -210,8 +210,8 @@ const SURF_WALLET_HASH: [u8; 32] = [
     0x70, 0xa5, 0x97, 0x67, 0xdb, 0x2b, 0xf4, 0x78, 0x8b, 0x1d, 0x61, 0xad, 0x42, 0xcd, 0xad, 0x82,
 ];
 const MULTISIG2_HASH: [u8; 32] = [
-    0xb4, 0xf5, 0xc9, 0x44, 0xa3, 0x9f, 0xe4, 0x5b, 0x01, 0x81, 0xe8, 0x45, 0xfc, 0x74, 0x6f, 0xef,
-    0x8b, 0x7f, 0x60, 0xa4, 0xc0, 0xdc, 0x7a, 0xd3, 0x60, 0x16, 0x02, 0x6f, 0xb7, 0x56, 0x2b, 0x1a,
+    0x29, 0xb2, 0x47, 0x76, 0xb3, 0xdf, 0x6a, 0x05, 0xc5, 0xa1, 0xb8, 0xd8, 0xfd, 0x75, 0xcb, 0x72,
+    0xa1, 0xd3, 0x3c, 0x0a, 0x44, 0x38, 0x53, 0x32, 0xa8, 0xbf, 0xc2, 0x72, 0x7f, 0xb6, 0x65, 0x90,
 ];
 
 pub fn guess_multisig_type(code_hash: &UInt256) -> Option<MultisigType> {
@@ -302,6 +302,40 @@ fn run_local(
         result_code,
     } = function.run_local(clock, account_stuff, &[])?;
     tokens.ok_or_else(|| MultisigError::NonZeroResultCode(result_code).into())
+}
+
+pub fn get_expiration_time(
+    clock: &dyn Clock,
+    multisig_type: MultisigType,
+    account_stuff: Cow<'_, ton_block::AccountStuff>,
+) -> Result<u64> {
+    #[derive(Copy, Clone, UnpackAbi)]
+    pub struct SetCodeMultisigParamsPrefix {
+        #[abi(uint8, name = "maxQueuedTransactions")]
+        pub _max_queued_transactions: u8,
+        #[abi(uint8, name = "maxCustodianCount")]
+        pub _max_custodian_count: u8,
+        #[abi(uint64, name = "expirationTime")]
+        pub expiration_time: u64,
+    }
+
+    let function = match multisig_type {
+        MultisigType::Multisig2 => nekoton_contracts::wallets::multisig2::get_parameters(),
+        MultisigType::SafeMultisigWallet
+        | MultisigType::SafeMultisigWallet24h
+        | MultisigType::BridgeMultisigWallet => {
+            nekoton_contracts::wallets::multisig::safe_multisig::get_parameters()
+        }
+        MultisigType::SetcodeMultisigWallet
+        | MultisigType::SetcodeMultisigWallet24h
+        | MultisigType::SurfWallet => {
+            nekoton_contracts::wallets::multisig::set_code_multisig::get_parameters()
+        }
+    };
+
+    let output: SetCodeMultisigParamsPrefix =
+        run_local(clock, function, account_stuff.into_owned())?.unpack_first()?;
+    Ok(output.expiration_time)
 }
 
 pub fn get_custodians(
