@@ -309,7 +309,7 @@ pub fn get_expiration_time(
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
 ) -> Result<u64> {
-    #[derive(Copy, Clone, UnpackAbi)]
+    #[derive(Copy, Clone, UnpackAbiPlain)]
     pub struct SetCodeMultisigParamsPrefix {
         #[abi(uint8, name = "maxQueuedTransactions")]
         pub _max_queued_transactions: u8,
@@ -334,7 +334,7 @@ pub fn get_expiration_time(
     };
 
     let output: SetCodeMultisigParamsPrefix =
-        run_local(clock, function, account_stuff.into_owned())?.unpack_first()?;
+        run_local(clock, function, account_stuff.into_owned())?.unpack()?;
     Ok(output.expiration_time)
 }
 
