@@ -482,6 +482,29 @@
 <span id="482">482</span>
 <span id="483">483</span>
 <span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
@@ -498,14 +521,30 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::utils</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto::UnsignedMessage</span>;
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DeployParams</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="ident">owners</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">PublicKey</span>],
+    <span class="kw">pub</span> <span class="ident">req_confirms</span>: <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">expiration_time</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">DeployParams</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">single_custodian</span>(<span class="ident">pubkey</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">PublicKey</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">owners</span>: <span class="ident">std::slice::from_ref</span>(<span class="ident">pubkey</span>),
+            <span class="ident">req_confirms</span>: <span class="number">1</span>,
+            <span class="ident">expiration_time</span>: <span class="prelude-val">None</span>,
+        }
+    }
+}
+
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_deploy</span>(
     <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
     <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
     <span class="ident">multisig_type</span>: <span class="ident">MultisigType</span>,
     <span class="ident">workchain</span>: <span class="ident">i8</span>,
     <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-    <span class="ident">owners</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
-    <span class="ident">req_confirms</span>: <span class="ident">u8</span>,
+    <span class="ident">params</span>: <span class="ident">DeployParams</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">UnsignedMessage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">state_init</span> <span class="op">=</span> <span class="ident">prepare_state_init</span>(<span class="ident">public_key</span>, <span class="ident">multisig_type</span>);
     <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">state_init</span>.<span class="ident">hash</span>().<span class="ident">trust_me</span>();
@@ -524,7 +563,8 @@
 
     <span class="ident">message</span>.<span class="ident">set_state_init</span>(<span class="ident">state_init</span>);
 
-    <span class="kw">let</span> <span class="ident">owners</span> <span class="op">=</span> <span class="ident">owners</span>
+    <span class="kw">let</span> <span class="ident">owners</span> <span class="op">=</span> <span class="ident">params</span>
+        .<span class="ident">owners</span>
         .<span class="ident">iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">public_key</span><span class="op">|</span> <span class="ident">UInt256::from</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()))
         .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span><span class="op">&gt;</span>();
@@ -532,14 +572,18 @@
     <span class="kw">let</span> <span class="ident">is_new_multisig</span> <span class="op">=</span> <span class="ident">multisig_type</span> <span class="op">==</span> <span class="ident">MultisigType::Multisig2</span>;
     <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_new_multisig</span> {
         <span class="ident">nekoton_contracts::wallets::multisig2::constructor</span>()
-    } <span class="kw">else</span> {
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">params</span>.<span class="ident">expiration_time</span>.<span class="ident">is_none</span>() {
         <span class="ident">nekoton_contracts::wallets::multisig::constructor</span>()
+    } <span class="kw">else</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MultisigError::CustomExpirationTimeNotSupported</span>.<span class="ident">into</span>());
     };
 
     <span class="kw">let</span> (<span class="ident">function</span>, <span class="ident">input</span>) <span class="op">=</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">MessageBuilder::new</span>(<span class="ident">function</span>).<span class="ident">arg</span>(<span class="ident">owners</span>).<span class="ident">arg</span>(<span class="ident">req_confirms</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">MessageBuilder::new</span>(<span class="ident">function</span>)
+            .<span class="ident">arg</span>(<span class="ident">owners</span>)
+            .<span class="ident">arg</span>(<span class="ident">params</span>.<span class="ident">req_confirms</span>);
         <span class="kw">if</span> <span class="ident">is_new_multisig</span> {
-            <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">arg</span>(<span class="ident">DEFAULT_LIFETIME</span>);
+            <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">arg</span>(<span class="ident">params</span>.<span class="ident">expiration_time</span>.<span class="ident">unwrap_or</span>(<span class="ident">DEFAULT_LIFETIME</span>));
         }
         <span class="ident">message</span>.<span class="ident">build</span>()
     };
@@ -946,6 +990,8 @@
     <span class="ident">NonZeroResultCode</span>(<span class="ident">i32</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unsupported message flags set&quot;</span>)]</span>
     <span class="ident">UnsupportedFlagsSet</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Custom lifetime is not supported for this contract type&quot;</span>)]</span>
+    <span class="ident">CustomExpirationTimeNotSupported</span>,
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
