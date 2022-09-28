@@ -448,6 +448,40 @@
 <span id="448">448</span>
 <span id="449">449</span>
 <span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 
@@ -660,8 +694,8 @@
     <span class="number">0x70</span>, <span class="number">0xa5</span>, <span class="number">0x97</span>, <span class="number">0x67</span>, <span class="number">0xdb</span>, <span class="number">0x2b</span>, <span class="number">0xf4</span>, <span class="number">0x78</span>, <span class="number">0x8b</span>, <span class="number">0x1d</span>, <span class="number">0x61</span>, <span class="number">0xad</span>, <span class="number">0x42</span>, <span class="number">0xcd</span>, <span class="number">0xad</span>, <span class="number">0x82</span>,
 ];
 <span class="kw">const</span> <span class="ident">MULTISIG2_HASH</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
-    <span class="number">0xb4</span>, <span class="number">0xf5</span>, <span class="number">0xc9</span>, <span class="number">0x44</span>, <span class="number">0xa3</span>, <span class="number">0x9f</span>, <span class="number">0xe4</span>, <span class="number">0x5b</span>, <span class="number">0x01</span>, <span class="number">0x81</span>, <span class="number">0xe8</span>, <span class="number">0x45</span>, <span class="number">0xfc</span>, <span class="number">0x74</span>, <span class="number">0x6f</span>, <span class="number">0xef</span>,
-    <span class="number">0x8b</span>, <span class="number">0x7f</span>, <span class="number">0x60</span>, <span class="number">0xa4</span>, <span class="number">0xc0</span>, <span class="number">0xdc</span>, <span class="number">0x7a</span>, <span class="number">0xd3</span>, <span class="number">0x60</span>, <span class="number">0x16</span>, <span class="number">0x02</span>, <span class="number">0x6f</span>, <span class="number">0xb7</span>, <span class="number">0x56</span>, <span class="number">0x2b</span>, <span class="number">0x1a</span>,
+    <span class="number">0x29</span>, <span class="number">0xb2</span>, <span class="number">0x47</span>, <span class="number">0x76</span>, <span class="number">0xb3</span>, <span class="number">0xdf</span>, <span class="number">0x6a</span>, <span class="number">0x05</span>, <span class="number">0xc5</span>, <span class="number">0xa1</span>, <span class="number">0xb8</span>, <span class="number">0xd8</span>, <span class="number">0xfd</span>, <span class="number">0x75</span>, <span class="number">0xcb</span>, <span class="number">0x72</span>,
+    <span class="number">0xa1</span>, <span class="number">0xd3</span>, <span class="number">0x3c</span>, <span class="number">0x0a</span>, <span class="number">0x44</span>, <span class="number">0x38</span>, <span class="number">0x53</span>, <span class="number">0x32</span>, <span class="number">0xa8</span>, <span class="number">0xbf</span>, <span class="number">0xc2</span>, <span class="number">0x72</span>, <span class="number">0x7f</span>, <span class="number">0xb6</span>, <span class="number">0x65</span>, <span class="number">0x90</span>,
 ];
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">guess_multisig_type</span>(<span class="ident">code_hash</span>: <span class="kw-2">&amp;</span><span class="ident">UInt256</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MultisigType</span><span class="op">&gt;</span> {
@@ -752,6 +786,40 @@
         <span class="ident">result_code</span>,
     } <span class="op">=</span> <span class="ident">function</span>.<span class="ident">run_local</span>(<span class="ident">clock</span>, <span class="ident">account_stuff</span>, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
     <span class="ident">tokens</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">MultisigError::NonZeroResultCode</span>(<span class="ident">result_code</span>).<span class="ident">into</span>())
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_expiration_time</span>(
+    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
+    <span class="ident">multisig_type</span>: <span class="ident">MultisigType</span>,
+    <span class="ident">account_stuff</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">ton_block::AccountStuff</span><span class="op">&gt;</span>,
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbi</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SetCodeMultisigParamsPrefix</span> {
+        <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;maxQueuedTransactions&quot;</span>)]</span>
+        <span class="kw">pub</span> <span class="ident">_max_queued_transactions</span>: <span class="ident">u8</span>,
+        <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;maxCustodianCount&quot;</span>)]</span>
+        <span class="kw">pub</span> <span class="ident">_max_custodian_count</span>: <span class="ident">u8</span>,
+        <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;expirationTime&quot;</span>)]</span>
+        <span class="kw">pub</span> <span class="ident">expiration_time</span>: <span class="ident">u64</span>,
+    }
+
+    <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">multisig_type</span> {
+        <span class="ident">MultisigType::Multisig2</span> =&gt; <span class="ident">nekoton_contracts::wallets::multisig2::get_parameters</span>(),
+        <span class="ident">MultisigType::SafeMultisigWallet</span>
+        <span class="op">|</span> <span class="ident">MultisigType::SafeMultisigWallet24h</span>
+        <span class="op">|</span> <span class="ident">MultisigType::BridgeMultisigWallet</span> =&gt; {
+            <span class="ident">nekoton_contracts::wallets::multisig::safe_multisig::get_parameters</span>()
+        }
+        <span class="ident">MultisigType::SetcodeMultisigWallet</span>
+        <span class="op">|</span> <span class="ident">MultisigType::SetcodeMultisigWallet24h</span>
+        <span class="op">|</span> <span class="ident">MultisigType::SurfWallet</span> =&gt; {
+            <span class="ident">nekoton_contracts::wallets::multisig::set_code_multisig::get_parameters</span>()
+        }
+    };
+
+    <span class="kw">let</span> <span class="ident">output</span>: <span class="ident">SetCodeMultisigParamsPrefix</span> <span class="op">=</span>
+        <span class="ident">run_local</span>(<span class="ident">clock</span>, <span class="ident">function</span>, <span class="ident">account_stuff</span>.<span class="ident">into_owned</span>())<span class="question-mark">?</span>.<span class="ident">unpack_first</span>()<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(<span class="ident">output</span>.<span class="ident">expiration_time</span>)
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_custodians</span>(
