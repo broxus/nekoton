@@ -793,7 +793,7 @@
     <span class="ident">multisig_type</span>: <span class="ident">MultisigType</span>,
     <span class="ident">account_stuff</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">ton_block::AccountStuff</span><span class="op">&gt;</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbi</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbiPlain</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SetCodeMultisigParamsPrefix</span> {
         <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;maxQueuedTransactions&quot;</span>)]</span>
         <span class="kw">pub</span> <span class="ident">_max_queued_transactions</span>: <span class="ident">u8</span>,
@@ -818,7 +818,7 @@
     };
 
     <span class="kw">let</span> <span class="ident">output</span>: <span class="ident">SetCodeMultisigParamsPrefix</span> <span class="op">=</span>
-        <span class="ident">run_local</span>(<span class="ident">clock</span>, <span class="ident">function</span>, <span class="ident">account_stuff</span>.<span class="ident">into_owned</span>())<span class="question-mark">?</span>.<span class="ident">unpack_first</span>()<span class="question-mark">?</span>;
+        <span class="ident">run_local</span>(<span class="ident">clock</span>, <span class="ident">function</span>, <span class="ident">account_stuff</span>.<span class="ident">into_owned</span>())<span class="question-mark">?</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">output</span>.<span class="ident">expiration_time</span>)
 }
 
