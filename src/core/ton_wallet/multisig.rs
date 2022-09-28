@@ -14,14 +14,30 @@ use crate::core::models::{Expiration, MessageFlags, MultisigPendingTransaction};
 use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
 
+#[derive(Copy, Clone, Debug)]
+pub struct DeployParams<'a> {
+    pub owners: &'a [PublicKey],
+    pub req_confirms: u8,
+    pub expiration_time: Option<u32>,
+}
+
+impl<'a> DeployParams<'a> {
+    pub fn single_custodian(pubkey: &'a PublicKey) -> Self {
+        Self {
+            owners: std::slice::from_ref(pubkey),
+            req_confirms: 1,
+            expiration_time: None,
+        }
+    }
+}
+
 pub fn prepare_deploy(
     clock: &dyn Clock,
     public_key: &PublicKey,
     multisig_type: MultisigType,
     workchain: i8,
     expiration: Expiration,
-    owners: &[PublicKey],
-    req_confirms: u8,
+    params: DeployParams<'_>,
 ) -> Result<Box<dyn UnsignedMessage>> {
     let state_init = prepare_state_init(public_key, multisig_type);
     let hash = state_init.hash().trust_me();
@@ -40,7 +56,8 @@ pub fn prepare_deploy(
 
     message.set_state_init(state_init);
 
-    let owners = owners
+    let owners = params
+        .owners
         .iter()
         .map(|public_key| UInt256::from(public_key.as_bytes()))
         .collect::<Vec<UInt256>>();
@@ -48,14 +65,18 @@ pub fn prepare_deploy(
     let is_new_multisig = multisig_type == MultisigType::Multisig2;
     let function = if is_new_multisig {
         nekoton_contracts::wallets::multisig2::constructor()
-    } else {
+    } else if params.expiration_time.is_none() {
         nekoton_contracts::wallets::multisig::constructor()
+    } else {
+        return Err(MultisigError::CustomExpirationTimeNotSupported.into());
     };
 
     let (function, input) = {
-        let mut message = MessageBuilder::new(function).arg(owners).arg(req_confirms);
+        let mut message = MessageBuilder::new(function)
+            .arg(owners)
+            .arg(params.req_confirms);
         if is_new_multisig {
-            message = message.arg(DEFAULT_LIFETIME);
+            message = message.arg(params.expiration_time.unwrap_or(DEFAULT_LIFETIME));
         }
         message.build()
     };
@@ -462,6 +483,8 @@ enum MultisigError {
     NonZeroResultCode(i32),
     #[error("Unsupported message flags set")]
     UnsupportedFlagsSet,
+    #[error("Custom lifetime is not supported for this contract type")]
+    CustomExpirationTimeNotSupported,
 }
 
 #[cfg(test)]

@@ -212,8 +212,7 @@ impl TonWallet {
                 multisig_type,
                 self.workchain(),
                 expiration,
-                &[self.public_key],
-                1,
+                multisig::DeployParams::single_custodian(&self.public_key),
             ),
             WalletType::WalletV3 => wallet_v3::prepare_deploy(
                 self.clock.as_ref(),
@@ -241,6 +240,7 @@ impl TonWallet {
         expiration: Expiration,
         custodians: &[PublicKey],
         req_confirms: u8,
+        expiration_time: Option<u32>,
     ) -> Result<Box<dyn UnsignedMessage>> {
         match self.wallet_type {
             WalletType::Multisig(multisig_type) => multisig::prepare_deploy(
@@ -249,8 +249,11 @@ impl TonWallet {
                 multisig_type,
                 self.workchain(),
                 expiration,
-                custodians,
-                req_confirms,
+                multisig::DeployParams {
+                    owners: custodians,
+                    req_confirms,
+                    expiration_time,
+                },
             ),
             // Non-multisig wallets doesn't support multiple owners
             _ => Err(TonWalletError::InvalidContractType.into()),
