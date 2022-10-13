@@ -33,11 +33,8 @@ ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
 nekoton-derive = { path = "../nekoton-derive", optional = true }
 nekoton-utils = { path = "../nekoton-utils" }
 
-
 [dev-dependencies]
 nekoton-contracts = { path = "../nekoton-contracts" }
-reqwest = { version = "0.11.12", features = ["json"] }
-tokio = { features = ["full"], version = "1" }
 
 [features]
 default = []

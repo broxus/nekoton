@@ -1,0 +1,306 @@
+{
+    "ABI version": 2,
+    "data": [],
+    "events": [
+        {
+            "inputs": [
+                {
+                    "name": "payload",
+                    "type": "bytes"
+                }
+            ],
+            "name": "TransferAccepted",
+            "outputs": []
+        }
+    ],
+    "functions": [
+        {
+            "inputs": [
+                {
+                    "name": "owners",
+                    "type": "uint256[]"
+                },
+                {
+                    "name": "reqConfirms",
+                    "type": "uint8"
+                }
+            ],
+            "name": "constructor",
+            "outputs": []
+        },
+        {
+            "inputs": [
+                {
+                    "name": "payload",
+                    "type": "bytes"
+                }
+            ],
+            "name": "acceptTransfer",
+            "outputs": []
+        },
+        {
+            "inputs": [
+                {
+                    "name": "dest",
+                    "type": "address"
+                },
+                {
+                    "name": "value",
+                    "type": "uint128"
+                },
+                {
+                    "name": "bounce",
+                    "type": "bool"
+                },
+                {
+                    "name": "flags",
+                    "type": "uint8"
+                },
+                {
+                    "name": "payload",
+                    "type": "cell"
+                }
+            ],
+            "name": "sendTransaction",
+            "outputs": []
+        },
+        {
+            "inputs": [
+                {
+                    "name": "dest",
+                    "type": "address"
+                },
+                {
+                    "name": "value",
+                    "type": "uint128"
+                },
+                {
+                    "name": "bounce",
+                    "type": "bool"
+                },
+                {
+                    "name": "allBalance",
+                    "type": "bool"
+                },
+                {
+                    "name": "payload",
+                    "type": "cell"
+                }
+            ],
+            "name": "submitTransaction",
+            "outputs": [
+                {
+                    "name": "transId",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "inputs": [
+                {
+                    "name": "transactionId",
+                    "type": "uint64"
+                }
+            ],
+            "name": "confirmTransaction",
+            "outputs": []
+        },
+        {
+            "inputs": [
+                {
+                    "name": "mask",
+                    "type": "uint32"
+                },
+                {
+                    "name": "index",
+                    "type": "uint8"
+                }
+            ],
+            "name": "isConfirmed",
+            "outputs": [
+                {
+                    "name": "confirmed",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "inputs": [],
+            "name": "getParameters",
+            "outputs": [
+                {
+                    "name": "maxQueuedTransactions",
+                    "type": "uint8"
+                },
+                {
+                    "name": "maxCustodianCount",
+                    "type": "uint8"
+                },
+                {
+                    "name": "expirationTime",
+                    "type": "uint64"
+                },
+                {
+                    "name": "minValue",
+                    "type": "uint128"
+                },
+                {
+                    "name": "requiredTxnConfirms",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
+            "inputs": [
+                {
+                    "name": "transactionId",
+                    "type": "uint64"
+                }
+            ],
+            "name": "getTransaction",
+            "outputs": [
+                {
+                    "components": [
+                        {
+                            "name": "id",
+                            "type": "uint64"
+                        },
+                        {
+                            "name": "confirmationsMask",
+                            "type": "uint32"
+                        },
+                        {
+                            "name": "signsRequired",
+                            "type": "uint8"
+                        },
+                        {
+                            "name": "signsReceived",
+                            "type": "uint8"
+                        },
+                        {
+                            "name": "creator",
+                            "type": "uint256"
+                        },
+                        {
+                            "name": "index",
+                            "type": "uint8"
+                        },
+                        {
+                            "name": "dest",
+                            "type": "address"
+                        },
+                        {
+                            "name": "value",
+                            "type": "uint128"
+                        },
+                        {
+                            "name": "sendFlags",
+                            "type": "uint16"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "cell"
+                        },
+                        {
+                            "name": "bounce",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "trans",
+                    "type": "tuple"
+                }
+            ]
+        },
+        {
+            "inputs": [],
+            "name": "getTransactions",
+            "outputs": [
+                {
+                    "components": [
+                        {
+                            "name": "id",
+                            "type": "uint64"
+                        },
+                        {
+                            "name": "confirmationsMask",
+                            "type": "uint32"
+                        },
+                        {
+                            "name": "signsRequired",
+                            "type": "uint8"
+                        },
+                        {
+                            "name": "signsReceived",
+                            "type": "uint8"
+                        },
+                        {
+                            "name": "creator",
+                            "type": "uint256"
+                        },
+                        {
+                            "name": "index",
+                            "type": "uint8"
+                        },
+                        {
+                            "name": "dest",
+                            "type": "address"
+                        },
+                        {
+                            "name": "value",
+                            "type": "uint128"
+                        },
+                        {
+                            "name": "sendFlags",
+                            "type": "uint16"
+                        },
+                        {
+                            "name": "payload",
+                            "type": "cell"
+                        },
+                        {
+                            "name": "bounce",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "transactions",
+                    "type": "tuple[]"
+                }
+            ]
+        },
+        {
+            "inputs": [],
+            "name": "getTransactionIds",
+            "outputs": [
+                {
+                    "name": "ids",
+                    "type": "uint64[]"
+                }
+            ]
+        },
+        {
+            "inputs": [],
+            "name": "getCustodians",
+            "outputs": [
+                {
+                    "components": [
+                        {
+                            "name": "index",
+                            "type": "uint8"
+                        },
+                        {
+                            "name": "pubkey",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "custodians",
+                    "type": "tuple[]"
+                }
+            ]
+        }
+    ],
+    "header": [
+        "pubkey",
+        "time",
+        "expire"
+    ]
+}
