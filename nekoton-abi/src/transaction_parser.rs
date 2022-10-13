@@ -211,9 +211,9 @@ pub struct TransactionParserBuilder {
 }
 
 impl TransactionParserBuilder {
-    /// Matches all messages with in function_id.
+    /// Matches all messages with in `function_id`.
     /// # Params:
-    /// * 'allow_partial_match' - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
+    /// * `allow_partial_match` - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
     pub fn function_input(
         mut self,
         function: ton_abi::Function,
@@ -224,9 +224,9 @@ impl TransactionParserBuilder {
         self
     }
 
-    /// Matches all messages with out function_id
+    /// Matches all messages with out `function_id`
     /// # Params:
-    /// * 'allow_partial_match' - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
+    /// * `allow_partial_match` - if true, won't return error if there are unparsed bytes left in the message. Set false by default.
     pub fn function_output(
         mut self,
         function: ton_abi::Function,
@@ -237,13 +237,13 @@ impl TransactionParserBuilder {
         self
     }
 
-    /// Matches in messages with function_id and applies bounce handler
+    /// Matches in messages with `function_id` and applies bounce handler
     pub fn function_bounce(mut self, function: FunctionWithBounceHandler) -> Self {
         self.functions_with_bounce.push(function);
         self
     }
 
-    /// Matches out messages with event_id
+    /// Matches out messages with `event_id`
     pub fn event(mut self, event: ton_abi::Event) -> Self {
         self.events.push(event);
         self
@@ -281,17 +281,17 @@ impl TransactionParserBuilder {
         self
     }
 
-    /// Returns `Err` if there are duplicate function_ids
+    /// Returns `Err` if there are duplicate `function_ids`
     pub fn build(self) -> Result<TransactionParser> {
         self.build_impl(false)
     }
 
-    /// Returns `Err` if there are duplicate function_ids or different contracts are used
+    /// Returns `Err` if there are duplicate `function_ids` or different contracts are used
     pub fn build_with_external_in(self) -> Result<TransactionParser> {
         self.build_impl(true)
     }
 
-    /// Returns `Err` if there are duplicate function_ids
+    /// Returns `Err` if there are duplicate `function_ids`
     /// # Params:
     /// * `match_external_in` - if true, `ExternalIn` messages will be matched. Not compatible with several different contracts.
     fn build_impl(self, match_external_in: bool) -> Result<TransactionParser> {

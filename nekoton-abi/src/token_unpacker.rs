@@ -405,7 +405,7 @@ where
 
 pub type UnpackerResult<T> = Result<T, UnpackerError>;
 
-#[derive(thiserror::Error, Debug, Clone)]
+#[derive(thiserror::Error, Debug, Clone, Copy)]
 pub enum UnpackerError {
     #[error("Invalid ABI")]
     InvalidAbi,
