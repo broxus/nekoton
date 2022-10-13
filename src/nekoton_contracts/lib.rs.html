@@ -315,7 +315,7 @@
 
         (@<span class="ident">header</span>) =&gt; { <span class="ident">Vec::new</span>() };
         (@<span class="ident">header</span> $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">header</span>:<span class="ident">ident</span>),<span class="op">+</span>) =&gt; {
-            <span class="macro">vec!</span>[$(<span class="macro-nonterminal">$</span><span class="macro">crate::utils::declare_function!</span>(@<span class="macro-nonterminal">header_item</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">header</span>)),<span class="kw-2">*</span>]
+            <span class="macro">vec!</span>[$(<span class="macro-nonterminal">$</span><span class="macro">crate::utils::declare_function!</span>(@<span class="macro-nonterminal">header_item</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">header</span>)),<span class="op">+</span>]
         };
         (@<span class="ident">header_item</span> <span class="ident">pubkey</span>) =&gt; {
             <span class="ident">::ton_abi::Param::new</span>(<span class="string">&quot;pubkey&quot;</span>, <span class="ident">::ton_abi::ParamType::PublicKey</span>)
