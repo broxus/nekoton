@@ -167,7 +167,7 @@ where
 {
     fn token_value(self) -> TokenValue {
         let mut map = BTreeMap::new();
-        for (k, v) in self.into_iter() {
+        for (k, v) in self {
             map.insert(k.map_key_token_value(), v.token_value());
         }
         TokenValue::Map(K::param_type(), V::param_type(), map)
@@ -182,7 +182,7 @@ where
 {
     fn token_value(self) -> TokenValue {
         let mut map = BTreeMap::new();
-        for (k, v) in self.into_iter() {
+        for (k, v) in self {
             map.insert(k.map_key_token_value(), v.token_value());
         }
         TokenValue::Map(K::param_type(), V::param_type(), map)

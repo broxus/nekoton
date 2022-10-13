@@ -134,7 +134,7 @@ impl GqlClient {
 
         let now = now_sec_u64();
 
-        let mut notify_fut: Option<Notified> = None;
+        let mut notify_fut: Option<Notified<'_>> = None;
         loop {
             let state = self.flags.load(Ordering::Acquire);
             match state >> 32 {

@@ -63,8 +63,8 @@ pub fn impl_derive_known_param_type(
 }
 
 fn serialize_struct(
-    _container: &Container,
-    fields: &[Field],
+    _container: &Container<'_>,
+    fields: &[Field<'_>],
     struct_type: StructType,
 ) -> proc_macro2::TokenStream {
     let field_count = fields.len();

@@ -7,6 +7,7 @@ pub trait Clock: Send + Sync {
     fn now_ms_u64(&self) -> u64;
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct SimpleClock;
 
 impl Clock for SimpleClock {

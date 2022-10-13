@@ -1,3 +1,56 @@
+#![warn(
+    missing_copy_implementations,
+    macro_use_extern_crate,
+    keyword_idents,
+    explicit_outlives_requirements,
+    meta_variable_misuse,
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    clippy::await_holding_lock,
+    clippy::dbg_macro,
+    clippy::debug_assert_with_mut_call,
+    clippy::doc_markdown,
+    clippy::empty_enum,
+    clippy::enum_glob_use,
+    clippy::exit,
+    clippy::explicit_into_iter_loop,
+    clippy::filter_map_next,
+    clippy::fn_params_excessive_bools,
+    clippy::if_let_mutex,
+    clippy::imprecise_flops,
+    clippy::inefficient_to_string,
+    clippy::let_unit_value,
+    clippy::linkedlist,
+    clippy::lossy_float_literal,
+    clippy::macro_use_imports,
+    clippy::map_flatten,
+    clippy::map_unwrap_or,
+    clippy::match_on_vec_items,
+    clippy::match_same_arms,
+    clippy::match_wildcard_for_single_variants,
+    clippy::mem_forget,
+    clippy::mismatched_target_os,
+    clippy::needless_borrow,
+    clippy::needless_continue,
+    clippy::option_option,
+    clippy::ref_option_ref,
+    clippy::rest_pat_in_fully_bound_structs,
+    clippy::string_add_assign,
+    clippy::string_add,
+    clippy::string_to_string,
+    clippy::suboptimal_flops,
+    clippy::todo,
+    clippy::unimplemented,
+    clippy::unnested_or_patterns,
+    clippy::unused_self,
+    clippy::verbose_file_reads,
+    future_incompatible,
+    nonstandard_style,
+    rust_2018_idioms,
+    clippy::print_stdout,
+    clippy::dbg_macro
+)]
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
@@ -133,9 +186,7 @@ pub enum MethodName {
 
 /// Tries to parse text as boc, encodes as comment otherwise
 pub fn create_boc_or_comment_payload(data: &str) -> Result<SliceData> {
-    create_boc_payload(data.trim())
-        .map(Ok)
-        .unwrap_or_else(|_| create_comment_payload(data))
+    create_boc_payload(data.trim()).map_or_else(|_| create_comment_payload(data), Ok)
 }
 
 /// Creates slice data with string, encoded as comment
@@ -414,7 +465,7 @@ where
 
 macro_rules! impl_unpack_header {
     ($($header:ident),+) => {
-        impl UnpackHeader for ($($header),*) {
+        impl UnpackHeader for ($($header),+) {
             type Output = ($(<$header as UnpackHeader>::Output),+);
 
             fn unpack_header(body: &mut SliceData) -> Result<Self::Output> {
@@ -432,6 +483,7 @@ pub trait UnpackHeader {
     fn unpack_header(body: &mut SliceData) -> Result<Self::Output>;
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct PubkeyHeader;
 
 impl UnpackHeader for PubkeyHeader {
@@ -450,6 +502,7 @@ impl UnpackHeader for PubkeyHeader {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct TimeHeader;
 
 impl UnpackHeader for TimeHeader {
@@ -460,6 +513,7 @@ impl UnpackHeader for TimeHeader {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct ExpireHeader;
 
 impl UnpackHeader for ExpireHeader {
@@ -928,7 +982,7 @@ fn get_block_stats(
     }
 }
 
-/// TokenValue::Optional which always store its value in the cell
+/// `TokenValue::Optional` which always store its value in the cell
 #[derive(Debug)]
 pub struct MaybeRef<T>(pub Option<T>);
 

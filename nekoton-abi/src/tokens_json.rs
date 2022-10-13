@@ -250,7 +250,7 @@ pub fn parse_abi_token_value(
 
             let mut result = BTreeMap::new();
 
-            for value in value.into_iter() {
+            for value in value {
                 let mut value = match value {
                     serde_json::Value::Array(value) => value.into_iter(),
                     _ => return Err(TokensJsonError::MapItemExpected),

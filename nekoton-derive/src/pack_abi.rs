@@ -76,8 +76,8 @@ pub fn impl_derive_pack_abi(
 }
 
 fn serialize_enum(
-    container: &Container,
-    variants: &[Variant],
+    container: &Container<'_>,
+    variants: &[Variant<'_>],
     enum_type: EnumType,
 ) -> proc_macro2::TokenStream {
     let name = &container.ident;
@@ -118,8 +118,8 @@ fn serialize_enum(
 }
 
 fn serialize_struct(
-    _container: &Container,
-    fields: &[Field],
+    _container: &Container<'_>,
+    fields: &[Field<'_>],
     struct_type: StructType,
 ) -> proc_macro2::TokenStream {
     let field_count = fields.len();

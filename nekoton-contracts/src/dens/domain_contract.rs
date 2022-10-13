@@ -27,7 +27,7 @@ pub fn query() -> &'static ton_abi::Function {
 
 /// Returns full domain path
 ///
-/// NOTE: Can also be used for DeNS root contract
+/// NOTE: Can also be used for `DeNS` root contract
 ///
 /// # Type
 /// Responsible getter method

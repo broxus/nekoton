@@ -120,7 +120,7 @@ pub struct AcceptTransferInputs {
 /// * `sender: address` - token wallet owner address
 /// * `remainingGasTo` -
 /// * `notify` -
-/// ``
+///
 ///
 /// TODO: fill docs
 ///
