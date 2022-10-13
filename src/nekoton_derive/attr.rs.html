@@ -455,8 +455,8 @@
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">proc_macro2</span>::{<span class="ident">Group</span>, <span class="ident">Span</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenTree</span>};
 <span class="kw">use</span> <span class="ident">quote::quote</span>;
 <span class="kw">use</span> <span class="ident">quote::ToTokens</span>;
-<span class="kw">use</span> <span class="ident">syn::Meta</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">syn::NestedMeta</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">syn::Meta</span>::{<span class="ident">List</span>, <span class="ident">NameValue</span>, <span class="ident">Path</span>};
+<span class="kw">use</span> <span class="ident">syn::NestedMeta::Meta</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parsing_context</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::symbol</span>::<span class="kw-2">*</span>;

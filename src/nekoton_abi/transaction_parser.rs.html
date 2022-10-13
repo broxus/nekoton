@@ -1164,9 +1164,9 @@
 }
 
 <span class="kw">impl</span> <span class="ident">TransactionParserBuilder</span> {
-    <span class="doccomment">/// Matches all messages with in function_id.</span>
+    <span class="doccomment">/// Matches all messages with in `function_id`.</span>
     <span class="doccomment">/// # Params:</span>
-    <span class="doccomment">/// * &#39;allow_partial_match&#39; - if true, won&#39;t return error if there are unparsed bytes left in the message. Set false by default.</span>
+    <span class="doccomment">/// * `allow_partial_match` - if true, won&#39;t return error if there are unparsed bytes left in the message. Set false by default.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">function_input</span>(
         <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">function</span>: <span class="ident">ton_abi::Function</span>,
@@ -1177,9 +1177,9 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Matches all messages with out function_id</span>
+    <span class="doccomment">/// Matches all messages with out `function_id`</span>
     <span class="doccomment">/// # Params:</span>
-    <span class="doccomment">/// * &#39;allow_partial_match&#39; - if true, won&#39;t return error if there are unparsed bytes left in the message. Set false by default.</span>
+    <span class="doccomment">/// * `allow_partial_match` - if true, won&#39;t return error if there are unparsed bytes left in the message. Set false by default.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">function_output</span>(
         <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">function</span>: <span class="ident">ton_abi::Function</span>,
@@ -1190,13 +1190,13 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Matches in messages with function_id and applies bounce handler</span>
+    <span class="doccomment">/// Matches in messages with `function_id` and applies bounce handler</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">function_bounce</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">function</span>: <span class="ident">FunctionWithBounceHandler</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">functions_with_bounce</span>.<span class="ident">push</span>(<span class="ident">function</span>);
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Matches out messages with event_id</span>
+    <span class="doccomment">/// Matches out messages with `event_id`</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">event</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">ton_abi::Event</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">push</span>(<span class="ident">event</span>);
         <span class="self">self</span>
@@ -1234,17 +1234,17 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Returns `Err` if there are duplicate function_ids</span>
+    <span class="doccomment">/// Returns `Err` if there are duplicate `function_ids`</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransactionParser</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">build_impl</span>(<span class="bool-val">false</span>)
     }
 
-    <span class="doccomment">/// Returns `Err` if there are duplicate function_ids or different contracts are used</span>
+    <span class="doccomment">/// Returns `Err` if there are duplicate `function_ids` or different contracts are used</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_with_external_in</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransactionParser</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">build_impl</span>(<span class="bool-val">true</span>)
     }
 
-    <span class="doccomment">/// Returns `Err` if there are duplicate function_ids</span>
+    <span class="doccomment">/// Returns `Err` if there are duplicate `function_ids`</span>
     <span class="doccomment">/// # Params:</span>
     <span class="doccomment">/// * `match_external_in` - if true, `ExternalIn` messages will be matched. Not compatible with several different contracts.</span>
     <span class="kw">fn</span> <span class="ident">build_impl</span>(<span class="self">self</span>, <span class="ident">match_external_in</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransactionParser</span><span class="op">&gt;</span> {

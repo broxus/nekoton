@@ -288,7 +288,7 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">UnpackAbi</span>, <span class="ident">KnownParamType</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">UnpackAbi</span>, <span class="ident">KnownParamType</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultisigCustodian</span> {
     <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>)]</span>
     <span class="kw">pub</span> <span class="ident">index</span>: <span class="ident">u8</span>,
@@ -311,7 +311,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">safe_multisig</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbiPlain</span>, <span class="ident">KnownParamTypePlain</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">UnpackAbiPlain</span>, <span class="ident">KnownParamTypePlain</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SafeMultisigParams</span> {
         <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;maxQueuedTransactions&quot;</span>)]</span>
         <span class="kw">pub</span> <span class="ident">max_queued_transactions</span>: <span class="ident">u8</span>,
@@ -339,7 +339,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">set_code_multisig</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbiPlain</span>, <span class="ident">KnownParamTypePlain</span>)]</span>
+    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">UnpackAbiPlain</span>, <span class="ident">KnownParamTypePlain</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SetCodeMultisigParams</span> {
         <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;maxQueuedTransactions&quot;</span>)]</span>
         <span class="kw">pub</span> <span class="ident">max_queued_transactions</span>: <span class="ident">u8</span>,

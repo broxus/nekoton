@@ -173,6 +173,7 @@
 <span id="173">173</span>
 <span id="174">174</span>
 <span id="175">175</span>
+<span id="176">176</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
 <span class="kw">use</span> <span class="ident">std::sync::atomic</span>::{<span class="ident">AtomicI64</span>, <span class="ident">Ordering</span>};
 
@@ -182,6 +183,7 @@
     <span class="kw">fn</span> <span class="ident">now_ms_u64</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span>;
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SimpleClock</span>;
 
 <span class="kw">impl</span> <span class="ident">Clock</span> <span class="kw">for</span> <span class="ident">SimpleClock</span> {
