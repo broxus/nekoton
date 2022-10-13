@@ -100,7 +100,7 @@ pub fn get_transactions() -> &'static ton_abi::Function {
     }
 }
 
-#[derive(Debug, UnpackAbi, KnownParamType)]
+#[derive(Debug, Clone, Copy, UnpackAbi, KnownParamType)]
 pub struct MultisigCustodian {
     #[abi(uint8)]
     pub index: u8,
@@ -120,7 +120,7 @@ pub fn get_custodians() -> &'static ton_abi::Function {
     }
 }
 
-#[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
+#[derive(Debug, Clone, Copy, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct SetCodeMultisigParams {
     #[abi(uint8, name = "maxQueuedTransactions")]
     pub max_queued_transactions: u8,

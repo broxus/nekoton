@@ -1,8 +1,8 @@
 use proc_macro2::{Group, Span, TokenStream, TokenTree};
 use quote::quote;
 use quote::ToTokens;
-use syn::Meta::*;
-use syn::NestedMeta::*;
+use syn::Meta::{List, NameValue, Path};
+use syn::NestedMeta::Meta;
 
 use crate::parsing_context::*;
 use crate::symbol::*;

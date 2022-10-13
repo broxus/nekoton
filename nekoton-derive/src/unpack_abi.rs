@@ -64,8 +64,8 @@ pub fn impl_derive_unpack_abi(
 }
 
 fn serialize_enum(
-    container: &Container,
-    variants: &[Variant],
+    container: &Container<'_>,
+    variants: &[Variant<'_>],
     enum_type: EnumType,
 ) -> proc_macro2::TokenStream {
     let name = &container.ident;
@@ -127,8 +127,8 @@ fn serialize_enum(
 }
 
 fn serialize_struct(
-    container: &Container,
-    fields: &[Field],
+    container: &Container<'_>,
+    fields: &[Field<'_>],
     struct_type: StructType,
 ) -> proc_macro2::TokenStream {
     let name = &container.ident;

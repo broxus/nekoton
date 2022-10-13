@@ -90,7 +90,7 @@ fn enum_from_ast<'a>(
         return None;
     }
 
-    let result: Vec<Variant> = variants
+    let result: Vec<Variant<'_>> = variants
         .iter()
         .flat_map(|variant| {
             let (style, fields) = struct_from_ast(cx, &variant.fields)?;
@@ -128,7 +128,7 @@ fn fields_from_ast<'a>(
     cx: &ParsingContext,
     fields: &'a Punctuated<syn::Field, syn::Token![,]>,
 ) -> Option<Vec<Field<'a>>> {
-    let result: Vec<Field> = fields
+    let result: Vec<Field<'_>> = fields
         .iter()
         .enumerate()
         .flat_map(|(i, field)| {

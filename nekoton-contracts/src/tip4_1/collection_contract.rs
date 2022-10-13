@@ -34,7 +34,7 @@ pub fn total_supply() -> &'static ton_abi::Function {
 /// * `answerId: uint32` - responsible answer id
 ///
 /// # Outputs
-/// * `code: cell` - NFT code as TvmCell
+/// * `code: cell` - NFT code as `TvmCell`
 ///
 pub fn nft_code() -> &'static ton_abi::Function {
     declare_function! {
@@ -44,7 +44,7 @@ pub fn nft_code() -> &'static ton_abi::Function {
     }
 }
 
-#[derive(Debug, Clone, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
+#[derive(Debug, Clone, Copy, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
 pub struct NftCodeHashOutputs {
     #[abi(with = "uint256_bytes", name = "codeHash")]
     pub code_hash: UInt256,

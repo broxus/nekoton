@@ -25,7 +25,7 @@ pub fn root_owner() -> &'static ton_abi::Function {
     }
 }
 
-/// Derive TokenWallet address from owner address
+/// Derive `TokenWallet` address from owner address
 ///
 /// # Type
 /// Responsible getter method
@@ -117,7 +117,7 @@ pub fn mint() -> &'static ton_abi::Function {
     }
 }
 
-/// Deploy new TokenWallet
+/// Deploy new `TokenWallet`
 ///
 /// # Type
 /// Internal responsible method

@@ -4,7 +4,7 @@ use crate::utils::declare_function;
 
 pub const INTERFACE_ID: u32 = 0x4371D8ED;
 
-/// Returns the name of the token - e.g. "MyToken".
+/// Returns the name of the token - e.g. `MyToken`.
 ///
 /// # Type
 /// Responsible getter method
