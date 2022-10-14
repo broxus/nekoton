@@ -166,6 +166,7 @@ mod test {
     use super::*;
 
     #[tokio::test]
+    #[ignore]
     async fn test() -> Result<()> {
         let connection = reqwest::Client::new();
         let transport = Arc::new(JrpcTransport::new(Arc::new(connection)));
