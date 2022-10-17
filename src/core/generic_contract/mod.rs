@@ -28,16 +28,19 @@ impl GenericContract {
         let contract_subscription = {
             let handler = handler.as_ref();
 
+            // NOTE: create handler beforehead to prevent lifetime issues
+            let mut on_transactions_found = match preload_transactions {
+                true => Some(make_transactions_handler(handler)),
+                false => None,
+            };
+
             #[allow(trivial_casts)]
             ContractSubscription::subscribe(
                 clock,
                 transport,
                 address,
                 &mut make_contract_state_handler(handler),
-                preload_transactions
-                    .then(|| make_transactions_handler(handler))
-                    .as_mut()
-                    .map(|x| x as _),
+                on_transactions_found.as_mut().map(|handler| handler as _),
             )
             .await?
         };
