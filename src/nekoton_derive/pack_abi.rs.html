@@ -260,6 +260,9 @@
 <span id="260">260</span>
 <span id="261">261</span>
 <span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">quote::quote</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ast</span>::<span class="kw-2">*</span>;
@@ -496,6 +499,9 @@
             },
             <span class="ident">TypeName::Uint128</span> =&gt; <span class="macro">quote!</span> {
                 <span class="ident">::ton_abi::TokenValue::Uint</span>(<span class="ident">::ton_abi::Uint</span> { <span class="ident">number</span>: <span class="ident">::nekoton_abi::num_bigint::BigUint::from</span>(<span class="ident">value</span>), <span class="ident">size</span>: <span class="number">128</span> })
+            },
+            <span class="ident">TypeName::Uint256</span> =&gt; <span class="macro">quote!</span> {
+                <span class="ident">::ton_abi::TokenValue::Uint</span>(<span class="ident">::ton_abi::Uint</span> { <span class="ident">number</span>: <span class="ident">::nekoton_abi::num_bigint::BigUint::from_bytes_be</span>(<span class="ident">value</span>.<span class="ident">as_slice</span>()), <span class="ident">size</span>: <span class="number">256</span> })
             },
             <span class="ident">TypeName::Grams</span> =&gt; <span class="macro">quote!</span> {
                 <span class="ident">::ton_abi::TokenValue::Grams</span>(<span class="ident">::ton_block::Grams::from</span>(<span class="ident">value</span>))

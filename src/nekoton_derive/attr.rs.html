@@ -445,13 +445,6 @@
 <span id="445">445</span>
 <span id="446">446</span>
 <span id="447">447</span>
-<span id="448">448</span>
-<span id="449">449</span>
-<span id="450">450</span>
-<span id="451">451</span>
-<span id="452">452</span>
-<span id="453">453</span>
-<span id="454">454</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">proc_macro2</span>::{<span class="ident">Group</span>, <span class="ident">Span</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenTree</span>};
 <span class="kw">use</span> <span class="ident">quote::quote</span>;
 <span class="kw">use</span> <span class="ident">quote::ToTokens</span>;
@@ -824,6 +817,7 @@
     <span class="ident">Uint32</span>,
     <span class="ident">Uint64</span>,
     <span class="ident">Uint128</span>,
+    <span class="ident">Uint256</span>,
     <span class="ident">Grams</span>,
     <span class="ident">Bool</span>,
     <span class="ident">Cell</span>,
@@ -835,32 +829,21 @@
 
 <span class="kw">impl</span> <span class="ident">TypeName</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">TypeName</span> {
-        <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;int8&quot;</span> {
-            <span class="ident">TypeName::Int8</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;uint8&quot;</span> {
-            <span class="ident">TypeName::Uint8</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;uint16&quot;</span> {
-            <span class="ident">TypeName::Uint16</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;uint32&quot;</span> {
-            <span class="ident">TypeName::Uint32</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;uint64&quot;</span> {
-            <span class="ident">TypeName::Uint64</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;uint128&quot;</span> {
-            <span class="ident">TypeName::Uint128</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;gram&quot;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;grams&quot;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;token&quot;</span> {
-            <span class="ident">TypeName::Grams</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;bool&quot;</span> {
-            <span class="ident">TypeName::Bool</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;cell&quot;</span> {
-            <span class="ident">TypeName::Cell</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;address&quot;</span> {
-            <span class="ident">TypeName::Address</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;string&quot;</span> {
-            <span class="ident">TypeName::String</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">input</span> <span class="op">==</span> <span class="string">&quot;bytes&quot;</span> {
-            <span class="ident">TypeName::Bytes</span>
-        } <span class="kw">else</span> {
-            <span class="ident">TypeName::None</span>
+        <span class="kw">match</span> <span class="ident">input</span> {
+            <span class="string">&quot;int8&quot;</span> =&gt; <span class="ident">TypeName::Int8</span>,
+            <span class="string">&quot;uint8&quot;</span> =&gt; <span class="ident">TypeName::Uint8</span>,
+            <span class="string">&quot;uint16&quot;</span> =&gt; <span class="ident">TypeName::Uint16</span>,
+            <span class="string">&quot;uint32&quot;</span> =&gt; <span class="ident">TypeName::Uint32</span>,
+            <span class="string">&quot;uint64&quot;</span> =&gt; <span class="ident">TypeName::Uint64</span>,
+            <span class="string">&quot;uint128&quot;</span> =&gt; <span class="ident">TypeName::Uint128</span>,
+            <span class="string">&quot;uint256&quot;</span> =&gt; <span class="ident">TypeName::Uint256</span>,
+            <span class="string">&quot;gram&quot;</span> <span class="op">|</span> <span class="string">&quot;grams&quot;</span> <span class="op">|</span> <span class="string">&quot;token&quot;</span> <span class="op">|</span> <span class="string">&quot;tokens&quot;</span> =&gt; <span class="ident">TypeName::Grams</span>,
+            <span class="string">&quot;bool&quot;</span> =&gt; <span class="ident">TypeName::Bool</span>,
+            <span class="string">&quot;cell&quot;</span> =&gt; <span class="ident">TypeName::Cell</span>,
+            <span class="string">&quot;address&quot;</span> =&gt; <span class="ident">TypeName::Address</span>,
+            <span class="string">&quot;string&quot;</span> =&gt; <span class="ident">TypeName::String</span>,
+            <span class="string">&quot;bytes&quot;</span> =&gt; <span class="ident">TypeName::Bytes</span>,
+            <span class="kw">_</span> =&gt; <span class="ident">TypeName::None</span>,
         }
     }
 
@@ -883,6 +866,9 @@
             },
             <span class="ident">TypeName::Uint128</span> =&gt; <span class="macro">quote!</span> {
                 <span class="ident">::ton_abi::ParamType::Uint</span>(<span class="number">128</span>)
+            },
+            <span class="ident">TypeName::Uint256</span> =&gt; <span class="macro">quote!</span> {
+                <span class="ident">::ton_abi::ParamType::Uint</span>(<span class="number">256</span>)
             },
             <span class="ident">TypeName::Grams</span> =&gt; <span class="macro">quote!</span> {
                 <span class="ident">::ton_abi::ParamType::Token</span>

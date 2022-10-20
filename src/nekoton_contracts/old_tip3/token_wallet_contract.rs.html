@@ -237,7 +237,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenWalletDetails</span> {
     <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
     <span class="kw">pub</span> <span class="ident">root_address</span>: <span class="ident">ton_block::MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint256_bytes&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
     <span class="kw">pub</span> <span class="ident">wallet_public_key</span>: <span class="ident">ton_types::UInt256</span>,
     <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
     <span class="kw">pub</span> <span class="ident">owner_address</span>: <span class="ident">ton_block::MsgAddressInt</span>,
@@ -278,7 +278,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbiPlain</span>, <span class="ident">KnownParamTypePlain</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransferToRecipientInputs</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint256_bytes&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
     <span class="kw">pub</span> <span class="ident">recipient_public_key</span>: <span class="ident">ton_types::UInt256</span>,
     <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
     <span class="kw">pub</span> <span class="ident">recipient_address</span>: <span class="ident">ton_block::MsgAddressInt</span>,
@@ -334,7 +334,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InternalTransferInputs</span> {
     <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint128_number&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">tokens</span>: <span class="ident">BigUint</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint256_bytes&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
     <span class="kw">pub</span> <span class="ident">sender_public_key</span>: <span class="ident">ton_types::UInt256</span>,
     <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
     <span class="kw">pub</span> <span class="ident">sender_address</span>: <span class="ident">ton_block::MsgAddressInt</span>,

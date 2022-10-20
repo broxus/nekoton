@@ -237,6 +237,21 @@
 <span id="237">237</span>
 <span id="238">238</span>
 <span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeMap</span>, <span class="ident">HashMap</span>};
 <span class="kw">use</span> <span class="ident">std::hash::BuildHasher</span>;
 
@@ -259,7 +274,7 @@
     <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span>;
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">BuildMepKeyTokenValue</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">BuildMapKeyTokenValue</span> {
     <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span>;
 }
 
@@ -271,7 +286,7 @@
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">BuildMepKeyTokenValue</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">int</span> {
+        <span class="kw">impl</span> <span class="ident">BuildMapKeyTokenValue</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">int</span> {
             <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span> {
                 <span class="ident">MapKeyTokenValue</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">abi</span>(<span class="ident">ton_abi</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">abi</span> {
                     <span class="ident">number</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bigint::from</span>(<span class="self">self</span>),
@@ -293,6 +308,21 @@
 <span class="macro">impl_integer!</span>(<span class="ident">i128</span>, <span class="ident">Int</span>, <span class="ident">BigInt</span>, <span class="number">128</span>);
 <span class="macro">impl_integer!</span>(<span class="ident">u128</span>, <span class="ident">Uint</span>, <span class="ident">BigUint</span>, <span class="number">128</span>);
 
+<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">ton_types::UInt256</span> {
+    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
+        <span class="self">self</span>.<span class="ident">map_key_token_value</span>().<span class="ident">into</span>()
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">BuildMapKeyTokenValue</span> <span class="kw">for</span> <span class="ident">ton_types::UInt256</span> {
+    <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span> {
+        <span class="ident">MapKeyTokenValue::Uint</span>(<span class="ident">ton_abi::Uint</span> {
+            <span class="ident">number</span>: <span class="ident">BigUint::from_bytes_be</span>(<span class="self">self</span>.<span class="ident">as_slice</span>()),
+            <span class="ident">size</span>: <span class="number">256</span>,
+        })
+    }
+}
+
 <span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">bool</span> {
     <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
         <span class="ident">TokenValue::Bool</span>(<span class="self">self</span>)
@@ -311,7 +341,7 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildMepKeyTokenValue</span> <span class="kw">for</span> <span class="ident">MsgAddressInt</span> {
+<span class="kw">impl</span> <span class="ident">BuildMapKeyTokenValue</span> <span class="kw">for</span> <span class="ident">MsgAddressInt</span> {
     <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span> {
         <span class="ident">MapKeyTokenValue::Address</span>(<span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">MsgAddressInt::AddrStd</span>(<span class="ident">addr</span>) =&gt; <span class="ident">MsgAddress::AddrStd</span>(<span class="ident">addr</span>),
@@ -326,7 +356,7 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildMepKeyTokenValue</span> <span class="kw">for</span> <span class="ident">MsgAddrStd</span> {
+<span class="kw">impl</span> <span class="ident">BuildMapKeyTokenValue</span> <span class="kw">for</span> <span class="ident">MsgAddrStd</span> {
     <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span> {
         <span class="ident">MapKeyTokenValue::Address</span>(<span class="ident">MsgAddress::AddrStd</span>(<span class="self">self</span>))
     }
@@ -401,7 +431,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">K</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildMepKeyTokenValue</span>,
+    <span class="ident">K</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildMapKeyTokenValue</span>,
     <span class="ident">V</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildTokenValue</span>,
 {
     <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
@@ -415,7 +445,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span>, <span class="ident">S</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">K</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildMepKeyTokenValue</span>,
+    <span class="ident">K</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildMapKeyTokenValue</span>,
     <span class="ident">V</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildTokenValue</span>,
     <span class="ident">S</span>: <span class="ident">BuildHasher</span>,
 {

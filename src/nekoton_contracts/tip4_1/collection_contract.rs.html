@@ -139,7 +139,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">KnownParamTypePlain</span>, <span class="ident">PackAbiPlain</span>, <span class="ident">UnpackAbiPlain</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NftCodeHashOutputs</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint256_bytes&quot;</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;codeHash&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;codeHash&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">code_hash</span>: <span class="ident">UInt256</span>,
 }
 

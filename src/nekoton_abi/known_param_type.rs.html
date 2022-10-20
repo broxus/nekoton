@@ -180,6 +180,12 @@
 <span id="180">180</span>
 <span id="181">181</span>
 <span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::BTreeMap</span>;
 
 <span class="kw">use</span> <span class="ident">ton_abi</span>::{<span class="ident">Param</span>, <span class="ident">ParamType</span>};
@@ -275,6 +281,12 @@
 <span class="kw">impl</span> <span class="ident">KnownParamType</span> <span class="kw">for</span> <span class="ident">u128</span> {
     <span class="kw">fn</span> <span class="ident">param_type</span>() -&gt; <span class="ident">ParamType</span> {
         <span class="ident">ParamType::Uint</span>(<span class="number">128</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">KnownParamType</span> <span class="kw">for</span> <span class="ident">ton_types::UInt256</span> {
+    <span class="kw">fn</span> <span class="ident">param_type</span>() -&gt; <span class="ident">ParamType</span> {
+        <span class="ident">ParamType::Uint</span>(<span class="number">256</span>)
     }
 }
 

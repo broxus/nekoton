@@ -260,7 +260,7 @@
     <span class="kw">pub</span> <span class="ident">signs_required</span>: <span class="ident">u8</span>,
     <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;signsReceived&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">signs_received</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint256_bytes&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
     <span class="kw">pub</span> <span class="ident">creator</span>: <span class="ident">ton_types::UInt256</span>,
     <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>)]</span>
     <span class="kw">pub</span> <span class="ident">index</span>: <span class="ident">u8</span>,
@@ -292,7 +292,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultisigCustodian</span> {
     <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>)]</span>
     <span class="kw">pub</span> <span class="ident">index</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint256_bytes&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
     <span class="kw">pub</span> <span class="ident">pubkey</span>: <span class="ident">ton_types::UInt256</span>,
 }
 
