@@ -20,7 +20,7 @@ struct Data {
     data_u128: u128,
     #[abi(with = "uint160_bytes")]
     data_u160: [u8; 20],
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     data_u256: UInt256,
     #[abi(with = "uint128_number")]
     data_uint128_number: BigUint,

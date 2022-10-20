@@ -235,6 +235,9 @@ impl TypeName {
             TypeName::Uint128 => quote! {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: 128 })
             },
+            TypeName::Uint256 => quote! {
+                ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from_bytes_be(value.as_slice()), size: 256 })
+            },
             TypeName::Grams => quote! {
                 ::ton_abi::TokenValue::Grams(::ton_block::Grams::from(value))
             },

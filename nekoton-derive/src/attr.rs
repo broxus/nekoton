@@ -370,6 +370,7 @@ pub enum TypeName {
     Uint32,
     Uint64,
     Uint128,
+    Uint256,
     Grams,
     Bool,
     Cell,
@@ -381,32 +382,21 @@ pub enum TypeName {
 
 impl TypeName {
     fn from(input: &str) -> TypeName {
-        if input == "int8" {
-            TypeName::Int8
-        } else if input == "uint8" {
-            TypeName::Uint8
-        } else if input == "uint16" {
-            TypeName::Uint16
-        } else if input == "uint32" {
-            TypeName::Uint32
-        } else if input == "uint64" {
-            TypeName::Uint64
-        } else if input == "uint128" {
-            TypeName::Uint128
-        } else if input == "gram" || input == "grams" || input == "token" {
-            TypeName::Grams
-        } else if input == "bool" {
-            TypeName::Bool
-        } else if input == "cell" {
-            TypeName::Cell
-        } else if input == "address" {
-            TypeName::Address
-        } else if input == "string" {
-            TypeName::String
-        } else if input == "bytes" {
-            TypeName::Bytes
-        } else {
-            TypeName::None
+        match input {
+            "int8" => TypeName::Int8,
+            "uint8" => TypeName::Uint8,
+            "uint16" => TypeName::Uint16,
+            "uint32" => TypeName::Uint32,
+            "uint64" => TypeName::Uint64,
+            "uint128" => TypeName::Uint128,
+            "uint256" => TypeName::Uint256,
+            "gram" | "grams" | "token" | "tokens" => TypeName::Grams,
+            "bool" => TypeName::Bool,
+            "cell" => TypeName::Cell,
+            "address" => TypeName::Address,
+            "string" => TypeName::String,
+            "bytes" => TypeName::Bytes,
+            _ => TypeName::None,
         }
     }
 
@@ -429,6 +419,9 @@ impl TypeName {
             },
             TypeName::Uint128 => quote! {
                 ::ton_abi::ParamType::Uint(128)
+            },
+            TypeName::Uint256 => quote! {
+                ::ton_abi::ParamType::Uint(256)
             },
             TypeName::Grams => quote! {
                 ::ton_abi::ParamType::Token

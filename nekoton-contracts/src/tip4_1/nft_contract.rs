@@ -11,7 +11,7 @@ pub const INTERFACE_ID: u32 = 0x78084F7E;
 
 #[derive(Debug, Clone, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
 pub struct GetInfoOutputs {
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub id: UInt256,
     #[abi(address)]
     pub owner: MsgAddressInt,

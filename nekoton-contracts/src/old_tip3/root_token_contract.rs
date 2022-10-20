@@ -22,7 +22,7 @@ pub struct RootTokenContractDetails {
     pub symbol: String,
     #[abi(uint8)]
     pub decimals: u8,
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub root_public_key: ton_types::UInt256,
     #[abi(address)]
     pub root_owner_address: ton_block::MsgAddressInt,
@@ -75,7 +75,7 @@ pub fn mint() -> &'static ton_abi::Function {
 pub struct TokensBurnedInputs {
     #[abi(with = "uint128_number")]
     pub tokens: BigUint,
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub sender_public_key: ton_types::UInt256,
     #[abi(address)]
     pub sender_address: ton_block::MsgAddressInt,
@@ -98,7 +98,7 @@ pub fn tokens_burned() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct TransferOwnerInputs {
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub root_public_key: ton_types::UInt256,
     #[abi(address)]
     pub root_owner_address: ton_block::MsgAddressInt,

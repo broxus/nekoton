@@ -2,13 +2,13 @@ use ton_abi::{Param, ParamType};
 use ton_block::MsgAddressInt;
 use ton_types::UInt256;
 
-use nekoton_abi::{uint256_bytes, KnownParamType, KnownParamTypePlain, MaybeRef};
+use nekoton_abi::{KnownParamType, KnownParamTypePlain, MaybeRef};
 
 #[derive(KnownParamTypePlain, Debug)]
 pub struct PlainStruct {
     #[abi]
     pub tokens: u128,
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub sender_public_key: UInt256,
     #[abi(address)]
     pub sender_address: MsgAddressInt,
@@ -30,7 +30,7 @@ pub struct PlainStruct {
 pub struct Struct {
     #[abi]
     pub tokens: u128,
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub sender_public_key: UInt256,
     #[abi(address)]
     pub sender_address: MsgAddressInt,

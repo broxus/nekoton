@@ -46,7 +46,7 @@ pub fn nft_code() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, Copy, KnownParamTypePlain, PackAbiPlain, UnpackAbiPlain)]
 pub struct NftCodeHashOutputs {
-    #[abi(with = "uint256_bytes", name = "codeHash")]
+    #[abi(uint256, name = "codeHash")]
     pub code_hash: UInt256,
 }
 

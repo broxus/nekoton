@@ -38,49 +38,6 @@ impl KnownParamType for BigUint256 {
     }
 }
 
-impl BuildTokenValue for UInt256 {
-    fn token_value(self) -> TokenValue {
-        TokenValue::Uint(Uint {
-            number: BigUint::from_bytes_be(self.as_slice()),
-            size: 256,
-        })
-    }
-}
-
-impl KnownParamType for UInt256 {
-    fn param_type() -> ParamType {
-        ParamType::Uint(256)
-    }
-}
-
-pub mod uint256_bytes {
-    use super::*;
-
-    pub fn pack(value: UInt256) -> TokenValue {
-        BigUint256(BigUint::from_bytes_be(value.as_slice())).token_value()
-    }
-
-    pub fn unpack(value: &TokenValue) -> UnpackerResult<UInt256> {
-        match value {
-            TokenValue::Uint(Uint { number, size: 256 }) => {
-                let mut result = [0u8; 32];
-                let data = number.to_bytes_be();
-
-                let len = std::cmp::min(data.len(), 32);
-                let offset = 32 - len;
-                (0..len).for_each(|i| result[i + offset] = data[i]);
-
-                Ok(result.into())
-            }
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-
-    pub fn param_type() -> ParamType {
-        ParamType::Uint(256)
-    }
-}
-
 pub mod bytes_as_string {
     use super::*;
 
@@ -116,30 +73,6 @@ pub mod uint256_number {
 
     pub fn param_type() -> ParamType {
         ParamType::Uint(256)
-    }
-}
-
-pub mod array_uint256_bytes {
-    use super::*;
-
-    pub fn pack(value: Vec<UInt256>) -> TokenValue {
-        TokenValue::Array(
-            ParamType::Uint(256),
-            value.into_iter().map(uint256_bytes::pack).collect(),
-        )
-    }
-
-    pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<UInt256>> {
-        match value {
-            TokenValue::Array(ParamType::Uint(256), array) => {
-                array.iter().map(uint256_bytes::unpack).collect()
-            }
-            _ => Err(UnpackerError::InvalidAbi),
-        }
-    }
-
-    pub fn param_type() -> ParamType {
-        ParamType::Array(Box::new(ParamType::Uint(256)))
     }
 }
 

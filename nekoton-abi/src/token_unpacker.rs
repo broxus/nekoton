@@ -169,6 +169,24 @@ impl UnpackAbi<u128> for TokenValue {
     }
 }
 
+impl UnpackAbi<ton_types::UInt256> for TokenValue {
+    fn unpack(self) -> UnpackerResult<ton_types::UInt256> {
+        match self {
+            TokenValue::Uint(ton_abi::Uint { number, size: 256 }) => {
+                let mut result = [0u8; 32];
+                let data = number.to_bytes_be();
+
+                let len = std::cmp::min(data.len(), 32);
+                let offset = 32 - len;
+                (0..len).for_each(|i| result[i + offset] = data[i]);
+
+                Ok(result.into())
+            }
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
 impl UnpackAbi<bool> for TokenValue {
     fn unpack(self) -> UnpackerResult<bool> {
         match self {

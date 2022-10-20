@@ -20,7 +20,7 @@ pub trait BuildTokenValue {
     fn token_value(self) -> TokenValue;
 }
 
-pub trait BuildMepKeyTokenValue {
+pub trait BuildMapKeyTokenValue {
     fn map_key_token_value(self) -> MapKeyTokenValue;
 }
 
@@ -32,7 +32,7 @@ macro_rules! impl_integer {
             }
         }
 
-        impl BuildMepKeyTokenValue for $int {
+        impl BuildMapKeyTokenValue for $int {
             fn map_key_token_value(self) -> MapKeyTokenValue {
                 MapKeyTokenValue::$abi(ton_abi::$abi {
                     number: $bigint::from(self),
@@ -54,6 +54,21 @@ impl_integer!(u64, Uint, BigUint, 64);
 impl_integer!(i128, Int, BigInt, 128);
 impl_integer!(u128, Uint, BigUint, 128);
 
+impl BuildTokenValue for ton_types::UInt256 {
+    fn token_value(self) -> TokenValue {
+        self.map_key_token_value().into()
+    }
+}
+
+impl BuildMapKeyTokenValue for ton_types::UInt256 {
+    fn map_key_token_value(self) -> MapKeyTokenValue {
+        MapKeyTokenValue::Uint(ton_abi::Uint {
+            number: BigUint::from_bytes_be(self.as_slice()),
+            size: 256,
+        })
+    }
+}
+
 impl BuildTokenValue for bool {
     fn token_value(self) -> TokenValue {
         TokenValue::Bool(self)
@@ -72,7 +87,7 @@ impl BuildTokenValue for MsgAddressInt {
     }
 }
 
-impl BuildMepKeyTokenValue for MsgAddressInt {
+impl BuildMapKeyTokenValue for MsgAddressInt {
     fn map_key_token_value(self) -> MapKeyTokenValue {
         MapKeyTokenValue::Address(match self {
             MsgAddressInt::AddrStd(addr) => MsgAddress::AddrStd(addr),
@@ -87,7 +102,7 @@ impl BuildTokenValue for MsgAddrStd {
     }
 }
 
-impl BuildMepKeyTokenValue for MsgAddrStd {
+impl BuildMapKeyTokenValue for MsgAddrStd {
     fn map_key_token_value(self) -> MapKeyTokenValue {
         MapKeyTokenValue::Address(MsgAddress::AddrStd(self))
     }
@@ -162,7 +177,7 @@ where
 
 impl<K, V> BuildTokenValue for BTreeMap<K, V>
 where
-    K: KnownParamType + BuildMepKeyTokenValue,
+    K: KnownParamType + BuildMapKeyTokenValue,
     V: KnownParamType + BuildTokenValue,
 {
     fn token_value(self) -> TokenValue {
@@ -176,7 +191,7 @@ where
 
 impl<K, V, S> BuildTokenValue for HashMap<K, V, S>
 where
-    K: KnownParamType + BuildMepKeyTokenValue,
+    K: KnownParamType + BuildMapKeyTokenValue,
     V: KnownParamType + BuildTokenValue,
     S: BuildHasher,
 {

@@ -28,7 +28,7 @@ pub fn balance() -> &'static ton_abi::Function {
 pub struct TokenWalletDetails {
     #[abi(address)]
     pub root_address: ton_block::MsgAddressInt,
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub wallet_public_key: ton_types::UInt256,
     #[abi(address)]
     pub owner_address: ton_block::MsgAddressInt,
@@ -69,7 +69,7 @@ pub fn accept() -> &'static ton_abi::Function {
 
 #[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct TransferToRecipientInputs {
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub recipient_public_key: ton_types::UInt256,
     #[abi(address)]
     pub recipient_address: ton_block::MsgAddressInt,
@@ -125,7 +125,7 @@ pub fn transfer() -> &'static ton_abi::Function {
 pub struct InternalTransferInputs {
     #[abi(with = "uint128_number")]
     pub tokens: BigUint,
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub sender_public_key: ton_types::UInt256,
     #[abi(address)]
     pub sender_address: ton_block::MsgAddressInt,

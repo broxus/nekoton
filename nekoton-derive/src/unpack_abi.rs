@@ -315,6 +315,13 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
                 },
             }
         }
+        TypeName::Uint256 => {
+            quote! {
+                value @ ::ton_abi::TokenValue::Uint(::ton_abi::Uint { size: 256, .. }) => {
+                    ::nekoton_abi::UnpackAbi::<::ton_types::UInt256>::unpack(value)?
+                }
+            }
+        }
         TypeName::Grams => {
             quote! {
                 ::ton_abi::TokenValue::Token(::ton_block::Grams(value)) => {

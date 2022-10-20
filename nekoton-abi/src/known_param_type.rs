@@ -96,6 +96,12 @@ impl KnownParamType for u128 {
     }
 }
 
+impl KnownParamType for ton_types::UInt256 {
+    fn param_type() -> ParamType {
+        ParamType::Uint(256)
+    }
+}
+
 impl KnownParamType for bool {
     fn param_type() -> ParamType {
         ParamType::Bool

@@ -68,7 +68,7 @@ pub struct MultisigTransaction {
     pub signs_required: u8,
     #[abi(uint8, name = "signsReceived")]
     pub signs_received: u8,
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub creator: ton_types::UInt256,
     #[abi(uint8)]
     pub index: u8,
@@ -100,7 +100,7 @@ pub fn get_transactions() -> &'static ton_abi::Function {
 pub struct MultisigCustodian {
     #[abi(uint8)]
     pub index: u8,
-    #[abi(with = "uint256_bytes")]
+    #[abi(uint256)]
     pub pubkey: ton_types::UInt256,
 }
 
