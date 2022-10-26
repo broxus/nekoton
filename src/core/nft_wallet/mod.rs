@@ -147,7 +147,12 @@ impl Nft {
             clock.clone(),
             transport,
             nft_address.clone(),
-            &mut make_contract_state_handler(clock.as_ref(), &mut info.owner, &mut info.manager),
+            &mut make_contract_state_handler(
+                clock.as_ref(),
+                &mut info.owner,
+                &mut info.manager,
+                None,
+            ),
             Some(&mut make_transactions_handler(handler.as_ref())),
         )
         .await?;
@@ -278,12 +283,14 @@ impl Nft {
 
     pub async fn refresh(&mut self) -> Result<()> {
         let handler = self.handler.as_ref();
+
         self.contract_subscription
             .refresh(
                 &mut make_contract_state_handler(
                     self.clock.as_ref(),
                     &mut self.owner,
                     &mut self.manager,
+                    Some(handler),
                 ),
                 &mut make_transactions_handler(handler),
                 &mut make_message_sent_handler(handler),
@@ -301,16 +308,23 @@ impl Nft {
 }
 
 pub trait NftSubscriptionHandler: Send + Sync {
-    fn on_manager_changed(&self, owner: MsgAddressInt);
-
-    fn on_owner_changed(&self, manager: MsgAddressInt);
-
     /// Called when found transaction which is relative with one of the pending transactions
     fn on_message_sent(
         &self,
         pending_transaction: PendingTransaction,
         transaction: Option<Transaction>,
     );
+
+    /// Called when no transactions produced for the specific message before some expiration time
+    fn on_message_expired(&self, pending_transaction: PendingTransaction);
+
+    fn on_manager_changed(&self, manager: MsgAddressInt) {
+        let _ = manager;
+    }
+
+    fn on_owner_changed(&self, owner: MsgAddressInt) {
+        let _ = owner;
+    }
 
     /// Called every time new transactions are detected.
     /// - When new block found
@@ -320,22 +334,41 @@ pub trait NftSubscriptionHandler: Send + Sync {
         &self,
         transactions: Vec<TransactionWithData<NftTransaction>>,
         batch_info: TransactionsBatchInfo,
-    );
-
-    /// Called when no transactions produced for the specific message before some expiration time
-    fn on_message_expired(&self, pending_transaction: PendingTransaction);
+    ) {
+        let _ = transactions;
+        let _ = batch_info;
+    }
 }
 
 fn make_contract_state_handler<'a>(
     clock: &'a dyn Clock,
     owner: &'a mut MsgAddressInt,
     manager: &'a mut MsgAddressInt,
+    handler: Option<&'a dyn NftSubscriptionHandler>,
 ) -> impl FnMut(&RawContractState) + 'a {
     move |contract_state| {
         if let RawContractState::Exists(state) = contract_state {
             if let Ok(info) = NftContractState(state).get_info(clock) {
-                *owner = info.owner;
-                *manager = info.manager
+                let mut owner_changed = false;
+                if owner != &info.owner {
+                    *owner = info.owner;
+                    owner_changed = true;
+                }
+
+                let mut manager_changed = false;
+                if manager != &info.manager {
+                    *manager = info.manager;
+                    manager_changed = true;
+                }
+
+                if let Some(handler) = handler {
+                    if owner_changed {
+                        handler.on_owner_changed(owner.clone());
+                    }
+                    if manager_changed {
+                        handler.on_manager_changed(manager.clone());
+                    }
+                }
             }
         }
     }
