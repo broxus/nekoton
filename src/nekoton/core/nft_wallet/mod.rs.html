@@ -489,6 +489,39 @@
 <span id="489">489</span>
 <span id="490">490</span>
 <span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::BTreeMap</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
@@ -638,7 +671,12 @@
             <span class="ident">clock</span>.<span class="ident">clone</span>(),
             <span class="ident">transport</span>,
             <span class="ident">nft_address</span>.<span class="ident">clone</span>(),
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(<span class="ident">clock</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;mut</span> <span class="ident">info</span>.<span class="ident">owner</span>, <span class="kw-2">&amp;mut</span> <span class="ident">info</span>.<span class="ident">manager</span>),
+            <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(
+                <span class="ident">clock</span>.<span class="ident">as_ref</span>(),
+                <span class="kw-2">&amp;mut</span> <span class="ident">info</span>.<span class="ident">owner</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">info</span>.<span class="ident">manager</span>,
+                <span class="prelude-val">None</span>,
+            ),
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>.<span class="ident">as_ref</span>())),
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
@@ -769,12 +807,14 @@
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">refresh</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
+
         <span class="self">self</span>.<span class="ident">contract_subscription</span>
             .<span class="ident">refresh</span>(
                 <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(
                     <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
                     <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">owner</span>,
                     <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">manager</span>,
+                    <span class="prelude-val">Some</span>(<span class="ident">handler</span>),
                 ),
                 <span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>),
                 <span class="kw-2">&amp;mut</span> <span class="ident">make_message_sent_handler</span>(<span class="ident">handler</span>),
@@ -792,16 +832,23 @@
 }
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">NftSubscriptionHandler</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="kw">fn</span> <span class="ident">on_manager_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">owner</span>: <span class="ident">MsgAddressInt</span>);
-
-    <span class="kw">fn</span> <span class="ident">on_owner_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">manager</span>: <span class="ident">MsgAddressInt</span>);
-
     <span class="doccomment">/// Called when found transaction which is relative with one of the pending transactions</span>
     <span class="kw">fn</span> <span class="ident">on_message_sent</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">pending_transaction</span>: <span class="ident">PendingTransaction</span>,
         <span class="ident">transaction</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Transaction</span><span class="op">&gt;</span>,
     );
+
+    <span class="doccomment">/// Called when no transactions produced for the specific message before some expiration time</span>
+    <span class="kw">fn</span> <span class="ident">on_message_expired</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pending_transaction</span>: <span class="ident">PendingTransaction</span>);
+
+    <span class="kw">fn</span> <span class="ident">on_manager_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">manager</span>: <span class="ident">MsgAddressInt</span>) {
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">manager</span>;
+    }
+
+    <span class="kw">fn</span> <span class="ident">on_owner_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">owner</span>: <span class="ident">MsgAddressInt</span>) {
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">owner</span>;
+    }
 
     <span class="doccomment">/// Called every time new transactions are detected.</span>
     <span class="doccomment">/// - When new block found</span>
@@ -811,22 +858,41 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">transactions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionWithData</span><span class="op">&lt;</span><span class="ident">NftTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">batch_info</span>: <span class="ident">TransactionsBatchInfo</span>,
-    );
-
-    <span class="doccomment">/// Called when no transactions produced for the specific message before some expiration time</span>
-    <span class="kw">fn</span> <span class="ident">on_message_expired</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pending_transaction</span>: <span class="ident">PendingTransaction</span>);
+    ) {
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">transactions</span>;
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">batch_info</span>;
+    }
 }
 
 <span class="kw">fn</span> <span class="ident">make_contract_state_handler</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
     <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Clock</span>,
     <span class="ident">owner</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">MsgAddressInt</span>,
     <span class="ident">manager</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">MsgAddressInt</span>,
+    <span class="ident">handler</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">NftSubscriptionHandler</span><span class="op">&gt;</span>,
 ) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">RawContractState</span>) <span class="op">+</span> <span class="lifetime">&#39;a</span> {
     <span class="kw">move</span> <span class="op">|</span><span class="ident">contract_state</span><span class="op">|</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) <span class="op">=</span> <span class="ident">contract_state</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">info</span>) <span class="op">=</span> <span class="ident">NftContractState</span>(<span class="ident">state</span>).<span class="ident">get_info</span>(<span class="ident">clock</span>) {
-                <span class="kw-2">*</span><span class="ident">owner</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">owner</span>;
-                <span class="kw-2">*</span><span class="ident">manager</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">manager</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">owner_changed</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                <span class="kw">if</span> <span class="ident">owner</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">info</span>.<span class="ident">owner</span> {
+                    <span class="kw-2">*</span><span class="ident">owner</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">owner</span>;
+                    <span class="ident">owner_changed</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                }
+
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">manager_changed</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                <span class="kw">if</span> <span class="ident">manager</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">info</span>.<span class="ident">manager</span> {
+                    <span class="kw-2">*</span><span class="ident">manager</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">manager</span>;
+                    <span class="ident">manager_changed</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                }
+
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">handler</span>) <span class="op">=</span> <span class="ident">handler</span> {
+                    <span class="kw">if</span> <span class="ident">owner_changed</span> {
+                        <span class="ident">handler</span>.<span class="ident">on_owner_changed</span>(<span class="ident">owner</span>.<span class="ident">clone</span>());
+                    }
+                    <span class="kw">if</span> <span class="ident">manager_changed</span> {
+                        <span class="ident">handler</span>.<span class="ident">on_manager_changed</span>(<span class="ident">manager</span>.<span class="ident">clone</span>());
+                    }
+                }
             }
         }
     }
