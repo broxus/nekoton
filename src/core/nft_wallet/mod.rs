@@ -26,6 +26,7 @@ pub struct NftCollection {
     collection_address: MsgAddressInt,
     state: ExistingContract,
     index_code: Cell,
+    json_info: Option<String>,
 }
 
 impl NftCollection {
@@ -40,17 +41,25 @@ impl NftCollection {
         };
 
         let contract = CollectionContractState(&state);
-        let index_code = match contract.check_collection_supported_interface(clock)? {
-            Some(NftVersion::Tip4_3) => contract.resolve_collection_index_code(clock)?,
-            Some(_) => return Err(NftError::UnsupportedInterfaceVersion.into()),
-            None => return Err(NftError::InvalidCollectionContract.into()),
-        };
+
+        let interfaces = contract.check_collection_supported_interfaces(clock)?;
+        if !interfaces.tip4_3 {
+            return Err(NftError::InvalidCollectionContract.into());
+        }
+
+        let index_code = contract.resolve_collection_index_code(clock)?;
+
+        let json_info = interfaces
+            .tip4_2
+            .then(|| tip4_2::MetadataContract(state.as_context(clock)).get_json())
+            .transpose()?;
 
         Ok(NftCollection {
             transport,
             collection_address,
             state,
             index_code,
+            json_info,
         })
     }
 
@@ -60,6 +69,10 @@ impl NftCollection {
 
     pub fn index_code(&self) -> &Cell {
         &self.index_code
+    }
+
+    pub fn json_info(&self) -> &Option<String> {
+        &self.json_info
     }
 
     pub fn compute_collection_code_hash(&self, owner: &MsgAddressInt) -> Result<UInt256> {
@@ -418,21 +431,22 @@ fn make_message_expired_handler(
 pub struct CollectionContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> CollectionContractState<'a> {
-    pub fn check_collection_supported_interface(
+    pub fn check_collection_supported_interfaces(
         &self,
         clock: &dyn Clock,
-    ) -> Result<Option<NftVersion>> {
+    ) -> Result<CollectionInterfaces> {
         let ctx = self.0.as_context(clock);
         let tip6_interface = tip6::SidContract(ctx);
+
+        let mut result = CollectionInterfaces::default();
+
         if tip6_interface.supports_interface(tip4_3::collection_contract::INTERFACE_ID)? {
-            return Ok(Some(NftVersion::Tip4_3));
+            result.tip4_3 = true;
+            result.tip4_2 =
+                tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)?;
         }
 
-        if tip6_interface.supports_interface(tip4_1::collection_contract::INTERFACE_ID)? {
-            return Ok(Some(NftVersion::Tip4_1));
-        }
-
-        Ok(None)
+        Ok(result)
     }
 
     pub fn resolve_collection_index_code(&self, clock: &dyn Clock) -> Result<Cell> {
@@ -463,6 +477,12 @@ impl<'a> CollectionContractState<'a> {
         let cell = nekoton_abi::set_code_salt(code_index, salt)?;
         Ok(cell.hash(0))
     }
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct CollectionInterfaces {
+    pub tip4_3: bool,
+    pub tip4_2: bool,
 }
 
 #[derive(Debug)]
@@ -513,8 +533,6 @@ impl<'a> IndexContractState<'a> {
 
 #[derive(thiserror::Error, Debug)]
 enum NftError {
-    #[error("Unsupported interface version")]
-    UnsupportedInterfaceVersion,
     #[error("Invalid collection contract")]
     InvalidCollectionContract,
     #[error("Invalid nft contract")]
