@@ -28,6 +28,7 @@ impl ConfigCache {
         &self,
         transport: &dyn Transport,
         clock: &dyn Clock,
+        force: bool,
     ) -> Result<ton_executor::BlockchainConfig> {
         let mut cache = self.state.lock().await;
 
@@ -44,7 +45,7 @@ impl ConfigCache {
                 });
                 config
             }
-            Some(a) if cache_expired(now, a.phase) => {
+            Some(a) if force || cache_expired(now, a.phase) => {
                 let (config, key_block_seqno) = fetch_config(transport).await?;
                 let phase = compute_next_phase(
                     now,

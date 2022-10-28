@@ -52,6 +52,7 @@ pub trait Transport: Send + Sync {
     async fn get_blockchain_config(
         &self,
         clock: &dyn Clock,
+        force: bool,
     ) -> Result<ton_executor::BlockchainConfig>;
 }
 

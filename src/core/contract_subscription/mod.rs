@@ -243,7 +243,7 @@ impl ContractSubscription {
     ) -> Result<ton_block::Transaction> {
         let blockchain_config = self
             .transport
-            .get_blockchain_config(self.clock.as_ref())
+            .get_blockchain_config(self.clock.as_ref(), true)
             .await?;
         let mut account = match self.transport.get_contract_state(&self.address).await? {
             RawContractState::Exists(state) => ton_block::Account::Account(state.account),
