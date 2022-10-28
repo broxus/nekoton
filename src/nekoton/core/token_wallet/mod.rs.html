@@ -817,6 +817,8 @@
 <span id="817">817</span>
 <span id="818">818</span>
 <span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
@@ -956,7 +958,9 @@
 
         <span class="comment">// Prepare executor</span>
         <span class="kw">let</span> <span class="ident">transport</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">transport</span>().<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">transport</span>.<span class="ident">get_blockchain_config</span>(<span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">transport</span>
+            .<span class="ident">get_blockchain_config</span>(<span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(), <span class="bool-val">true</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tree</span> <span class="op">=</span> <span class="ident">TransactionsTreeStream::new</span>(<span class="ident">message</span>, <span class="ident">config</span>, <span class="ident">transport</span>, <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">clone</span>());
         <span class="ident">tree</span>.<span class="ident">unlimited_account_balance</span>();
