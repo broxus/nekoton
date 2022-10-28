@@ -71,6 +71,10 @@ impl ContractSubscription {
         Ok(result)
     }
 
+    pub fn transport(&self) -> &Arc<dyn Transport> {
+        &self.transport
+    }
+
     pub fn address(&self) -> &MsgAddressInt {
         &self.address
     }
@@ -255,7 +259,7 @@ impl ContractSubscription {
             executor.disable_signature_check();
         }
 
-        executor.run(message)
+        executor.run_once(message)
     }
 
     /// Updates contract state. Returns whether the state was changed

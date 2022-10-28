@@ -11,6 +11,7 @@ use nekoton_utils::*;
 
 use crate::core::models::*;
 use crate::core::parsing::*;
+use crate::core::transactions_tree::*;
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 
@@ -109,14 +110,95 @@ impl TokenWallet {
         self.contract_subscription.contract_state()
     }
 
+    pub async fn estimate_min_attached_amount(
+        &self,
+        destination: TransferRecipient,
+        tokens: BigUint,
+        notify_receiver: bool,
+        payload: ton_types::Cell,
+    ) -> Result<u64> {
+        const FEE_MULTIPLIER: u128 = 2;
+
+        // Prepare internal message
+        let internal_message =
+            self.prepare_transfer(destination, tokens, notify_receiver, payload, 0)?;
+
+        let mut message = ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
+            src: ton_block::MsgAddressIntOrNone::Some(
+                internal_message
+                    .source
+                    .unwrap_or_else(|| self.owner.clone()),
+            ),
+            dst: internal_message.destination,
+            ..Default::default()
+        });
+
+        message.set_body(internal_message.body.clone());
+
+        // Prepare executor
+        let transport = self.contract_subscription.transport().clone();
+        let config = transport.get_blockchain_config(self.clock.as_ref()).await?;
+
+        let mut tree = TransactionsTreeStream::new(message, config, transport, self.clock.clone());
+        tree.unlimited_account_balance();
+        tree.unlimited_message_balance();
+
+        type Err = fn(Option<i32>) -> TokenWalletError;
+        let check_exit_code = |tx: &ton_block::Transaction, err: Err| -> Result<()> {
+            let descr = tx.read_description()?;
+            if descr.is_aborted() {
+                let exit_code = match descr {
+                    ton_block::TransactionDescr::Ordinary(descr) => match descr.compute_ph {
+                        ton_block::TrComputePhase::Vm(phase) => Some(phase.exit_code),
+                        ton_block::TrComputePhase::Skipped(_) => None,
+                    },
+                    _ => None,
+                };
+                Err(err(exit_code).into())
+            } else {
+                Ok(())
+            }
+        };
+
+        let mut attached_amount = 0;
+
+        // Simulate source transaction
+        let source_tx = tree.next().await?.ok_or(TokenWalletError::NoSourceTx)?;
+        check_exit_code(&source_tx, TokenWalletError::SourceTxFailed)?;
+        attached_amount += source_tx.total_fees.grams.0 * FEE_MULTIPLIER;
+
+        if source_tx.outmsg_cnt == 0 {
+            return Err(TokenWalletError::NoDestTx.into());
+        }
+
+        // Remove deployment messages
+        tree.retain_message_queue(|message| {
+            message.state_init().is_none() && message.src_ref() == Some(self.address())
+        });
+        if tree.message_queue().len() != 1 {
+            return Err(TokenWalletError::NoDestTx.into());
+        }
+
+        // Simulate destination transaction
+        let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
+        check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
+        attached_amount += dest_tx.total_fees.grams.0 * FEE_MULTIPLIER;
+
+        // Done
+        Ok(attached_amount as u64)
+    }
+
     pub fn prepare_transfer(
         &self,
         destination: TransferRecipient,
         tokens: BigUint,
         notify_receiver: bool,
         payload: ton_types::Cell,
+        mut attached_amount: u64,
     ) -> Result<InternalMessage> {
-        const ATTACHED_AMOUNT: u64 = 500_000_000; // 0.5 TON
+        if matches!(&destination, TransferRecipient::OwnerWallet(_)) {
+            attached_amount += INITIAL_BALANCE;
+        }
 
         let (function, input) = match self.version {
             TokenWalletVersion::OldTip3v4 => {
@@ -168,7 +250,7 @@ impl TokenWallet {
         Ok(InternalMessage {
             source: Some(self.owner.clone()),
             destination: self.address().clone(),
-            amount: ATTACHED_AMOUNT,
+            amount: attached_amount,
             bounce: true,
             body,
         })
@@ -589,6 +671,14 @@ enum TokenWalletError {
     NonZeroResultCode(i32),
     #[error("Wallet not deployed")]
     WalletNotDeployed,
+    #[error("No source transaction produced")]
+    NoSourceTx,
+    #[error("No destination transaction produced")]
+    NoDestTx,
+    #[error("Source transaction failed with exit code {0:?}")]
+    SourceTxFailed(Option<i32>),
+    #[error("Destination transaction failed with exit code {0:?}")]
+    DestinationTxFailed(Option<i32>),
 }
 
 #[cfg(test)]

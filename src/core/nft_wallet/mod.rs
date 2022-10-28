@@ -80,7 +80,7 @@ impl NftCollection {
             .get_collection_code_hash(owner, self.index_code.clone())
     }
 
-    pub async fn get_nfts(
+    pub async fn get_nft_index_contracts(
         &self,
         owner: &MsgAddressInt,
         limit: u8,

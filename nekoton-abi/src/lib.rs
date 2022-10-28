@@ -863,7 +863,7 @@ enum AbiError {
 
 pub struct Executor {
     config: BlockchainConfig,
-    root_cell: ton_types::Cell,
+    account: Account,
     block_utime: u32,
     block_lt: u64,
     last_transaction_lt: Arc<AtomicU64>,
@@ -880,11 +880,9 @@ impl Executor {
             gen_utime, gen_lt, ..
         } = get_block_stats(clock, None, last_trans_lt);
 
-        let root_cell = account.serialize()?;
-
         Ok(Self::with_params(
             config,
-            root_cell,
+            account,
             last_trans_lt,
             gen_utime,
             gen_lt,
@@ -893,14 +891,14 @@ impl Executor {
 
     pub fn with_params(
         config: BlockchainConfig,
-        root_cell: ton_types::Cell,
+        account: Account,
         last_trans_lt: u64,
         utime: u32,
         lt: u64,
     ) -> Self {
         Self {
             config,
-            root_cell,
+            account,
             block_utime: utime,
             block_lt: lt,
             last_transaction_lt: Arc::new(AtomicU64::new(last_trans_lt)),
@@ -913,15 +911,38 @@ impl Executor {
         self
     }
 
-    pub fn account_root_cell(&self) -> &ton_types::Cell {
-        &self.root_cell
+    pub fn account(&self) -> &Account {
+        &self.account
+    }
+
+    pub fn into_account(self) -> Account {
+        self.account
     }
 
     pub fn last_transaction_lt(&self) -> u64 {
         self.last_transaction_lt.load(Ordering::Acquire)
     }
 
+    /// Consumes account and executes message without mutating the account state.
+    ///
+    /// NOTE: produces transaction without state update
+    pub fn run_once(mut self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
+        let mut executor = OrdinaryTransactionExecutor::new(self.config);
+        executor.set_signature_check_disabled(self.disable_signature_check);
+
+        let params = ton_executor::ExecuteParams {
+            block_unixtime: self.block_utime,
+            block_lt: self.block_lt,
+            last_tr_lt: self.last_transaction_lt,
+            ..Default::default()
+        };
+
+        executor.execute_with_params(Some(message), &mut self.account, params)
+    }
+
     /// Executes message without mutating the account state.
+    ///
+    /// NOTE: produces transaction without state update
     pub fn run(&self, message: &ton_block::Message) -> Result<ton_block::Transaction> {
         let mut executor = OrdinaryTransactionExecutor::new(self.config.clone());
         executor.set_signature_check_disabled(self.disable_signature_check);
@@ -933,7 +954,7 @@ impl Executor {
             ..Default::default()
         };
 
-        executor.execute_with_libs_and_params(Some(message), &mut self.root_cell.clone(), params)
+        executor.execute_with_params(Some(message), &mut self.account.clone(), params)
     }
 
     /// Executes message and mutates the account state.
@@ -948,7 +969,18 @@ impl Executor {
             ..Default::default()
         };
 
-        executor.execute_with_libs_and_params(Some(message), &mut self.root_cell, params)
+        let transaction = executor.execute_with_params(Some(message), &mut self.account, params)?;
+
+        if executor
+            .config()
+            .has_capability(ton_block::GlobalCapabilities::CapFastStorageStat)
+        {
+            self.account.update_storage_stat_fast()?;
+        } else {
+            self.account.update_storage_stat()?;
+        }
+
+        Ok(transaction)
     }
 }
 

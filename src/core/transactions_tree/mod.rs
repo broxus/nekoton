@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use nekoton_abi::Executor;
 use nekoton_utils::Clock;
-use ton_block::{Account, Message, MsgAddressInt, Serializable, Transaction};
+use ton_block::{Account, Message, MsgAddressInt, Transaction};
 
 use crate::transport::Transport;
 
@@ -12,6 +12,8 @@ pub struct TransactionsTreeStream {
     messages: VecDeque<Message>,
     config: ton_executor::BlockchainConfig,
     disable_signature_check: bool,
+    unlimited_message_balance: bool,
+    unlimited_account_balance: bool,
     transport: Arc<dyn Transport>,
     clock: Arc<dyn Clock>,
 }
@@ -28,6 +30,8 @@ impl TransactionsTreeStream {
             messages: VecDeque::from([message]),
             config,
             disable_signature_check: false,
+            unlimited_message_balance: false,
+            unlimited_account_balance: false,
             transport,
             clock,
         }
@@ -38,6 +42,27 @@ impl TransactionsTreeStream {
         self
     }
 
+    pub fn unlimited_message_balance(&mut self) -> &mut Self {
+        self.unlimited_message_balance = true;
+        self
+    }
+
+    pub fn unlimited_account_balance(&mut self) -> &mut Self {
+        self.unlimited_account_balance = true;
+        self
+    }
+
+    pub fn message_queue(&self) -> &VecDeque<ton_block::Message> {
+        &self.messages
+    }
+
+    pub fn retain_message_queue<F>(&mut self, f: F)
+    where
+        F: FnMut(&ton_block::Message) -> bool,
+    {
+        self.messages.retain(f);
+    }
+
     pub async fn next(&mut self) -> TransactionTreeResult<Option<Transaction>> {
         match self.messages.pop_front() {
             Some(message) => self.step(message).await.map(Some),
@@ -45,16 +70,30 @@ impl TransactionsTreeStream {
         }
     }
 
-    async fn step(&mut self, message: Message) -> TransactionTreeResult<Transaction> {
+    async fn step(&mut self, mut message: Message) -> TransactionTreeResult<Transaction> {
+        const A_LOT: u128 = 1_000_000_000_000_000; // 1'000'000 ever
+
+        if self.unlimited_message_balance {
+            if let Some(header) = message.int_header_mut() {
+                header.value.grams.0 = A_LOT;
+            }
+        }
+
         let dst = match message.dst() {
             Some(dst) => dst,
             _ => return Err(TransactionTreeError::ExternalOutMessage),
         };
         let StoredAccount {
-            root_cell,
+            mut account,
             last_transaction_lt,
             last_paid,
         } = self.get_state(&dst).await?;
+
+        if self.unlimited_account_balance {
+            if let Account::Account(account) = &mut account {
+                account.storage.balance.grams.0 = A_LOT;
+            }
+        }
 
         let now_ms = match last_paid {
             Some(last_paid) => std::cmp::max(last_paid as u64 * 1000, self.clock.now_ms_u64()),
@@ -64,13 +103,8 @@ impl TransactionsTreeStream {
         let utime = (now_ms / 1000) as u32;
         let lt = last_transaction_lt;
 
-        let mut executor = Executor::with_params(
-            self.config.clone(),
-            root_cell,
-            last_transaction_lt,
-            utime,
-            lt,
-        );
+        let mut executor =
+            Executor::with_params(self.config.clone(), account, last_transaction_lt, utime, lt);
         if self.disable_signature_check {
             executor.disable_signature_check();
         }
@@ -79,12 +113,16 @@ impl TransactionsTreeStream {
             .run_mut(&message)
             .map_err(TransactionTreeError::ExecutionError)?;
 
+        let last_transaction_lt = executor.last_transaction_lt();
+        let last_paid = Some(utime);
+        let account = executor.into_account();
+
         self.states.insert(
             dst,
             StoredAccount {
-                root_cell: executor.account_root_cell().clone(),
-                last_transaction_lt: executor.last_transaction_lt(),
-                last_paid: Some(utime),
+                account,
+                last_transaction_lt,
+                last_paid,
             },
         );
 
@@ -102,14 +140,14 @@ impl TransactionsTreeStream {
     async fn get_state(&self, address: &MsgAddressInt) -> TransactionTreeResult<StoredAccount> {
         match self.states.get(address) {
             None => {
-                let acc = self
+                let account = self
                     .transport
                     .get_contract_state(address)
                     .await
                     .map_err(TransactionTreeError::TransportError)?
                     .into_account();
 
-                let (last_transaction_lt, last_paid) = match &acc {
+                let (last_transaction_lt, last_paid) = match &account {
                     Account::Account(account) => (
                         account.storage.last_trans_lt,
                         Some(account.storage_stat.last_paid),
@@ -117,12 +155,8 @@ impl TransactionsTreeStream {
                     Account::AccountNone => (0, None),
                 };
 
-                let root_cell = acc
-                    .serialize()
-                    .map_err(TransactionTreeError::TransportError)?;
-
                 Ok(StoredAccount {
-                    root_cell,
+                    account,
                     last_transaction_lt,
                     last_paid,
                 })
@@ -134,7 +168,7 @@ impl TransactionsTreeStream {
 
 #[derive(Clone)]
 struct StoredAccount {
-    root_cell: ton_types::Cell,
+    account: Account,
     last_transaction_lt: u64,
     last_paid: Option<u32>,
 }
