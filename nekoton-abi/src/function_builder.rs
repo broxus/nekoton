@@ -9,6 +9,8 @@ const ANSWER_ID: &str = "_answer_id";
 
 #[derive(Debug, Clone)]
 pub struct FunctionBuilder {
+    /// Explicit function id
+    id: Option<u32>,
     /// Contract function specification.
     /// ABI version
     abi_version: AbiVersion,
@@ -27,6 +29,7 @@ pub struct FunctionBuilder {
 impl FunctionBuilder {
     pub fn new(function_name: &str) -> Self {
         Self {
+            id: None,
             abi_version: ABI_VERSION_2_0,
             name: function_name.to_string(),
             header: Vec::new(),
@@ -70,6 +73,11 @@ impl FunctionBuilder {
 
     pub fn abi_version(mut self, abi_version: AbiVersion) -> Self {
         self.abi_version = abi_version;
+        self
+    }
+
+    pub fn id(mut self, id: u32) -> Self {
+        self.id = Some(id);
         self
     }
 
@@ -133,9 +141,17 @@ impl FunctionBuilder {
             input_id: 0,
             output_id: 0,
         };
-        let id = fun.get_function_id();
-        fun.input_id = id & 0x7FFFFFFF;
-        fun.output_id = id | 0x80000000;
+        match self.id {
+            Some(id) => {
+                fun.input_id = id;
+                fun.output_id = id;
+            }
+            None => {
+                let id = fun.get_function_id();
+                fun.input_id = id & 0x7FFFFFFF;
+                fun.output_id = id | 0x80000000;
+            }
+        }
         fun
     }
 }
