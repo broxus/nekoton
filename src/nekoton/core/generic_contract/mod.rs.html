@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/generic_contract/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/generic_contract/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -185,192 +185,192 @@
 <span id="185">185</span>
 <span id="186">186</span>
 <span id="187">187</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
+<span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">GetRepresentationHash</span>, <span class="ident">MsgAddressInt</span>};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>ton_block::{GetRepresentationHash, MsgAddressInt};
 
-<span class="kw">use</span> <span class="ident">nekoton_utils::Clock</span>;
+<span class="kw">use </span>nekoton_utils::Clock;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::models</span>::{<span class="ident">ContractState</span>, <span class="ident">PendingTransaction</span>, <span class="ident">Transaction</span>, <span class="ident">TransactionsBatchInfo</span>};
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">ContractSubscription</span>, <span class="ident">PollingMethod</span>, <span class="ident">TransactionExecutionOptions</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::utils</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::models</span>::{<span class="ident">RawContractState</span>, <span class="ident">RawTransaction</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::Transport</span>;
+<span class="kw">use </span><span class="kw">super</span>::models::{ContractState, PendingTransaction, Transaction, TransactionsBatchInfo};
+<span class="kw">use super</span>::{ContractSubscription, PollingMethod, TransactionExecutionOptions};
+<span class="kw">use </span><span class="kw">crate</span>::core::utils;
+<span class="kw">use </span><span class="kw">crate</span>::transport::models::{RawContractState, RawTransaction};
+<span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GenericContract</span> {
-    <span class="ident">contract_subscription</span>: <span class="ident">ContractSubscription</span>,
-    <span class="ident">handler</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">GenericContractSubscriptionHandler</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>GenericContract {
+    contract_subscription: ContractSubscription,
+    handler: Arc&lt;<span class="kw">dyn </span>GenericContractSubscriptionHandler&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">GenericContract</span> {
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">subscribe</span>(
-        <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-        <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-        <span class="ident">address</span>: <span class="ident">MsgAddressInt</span>,
-        <span class="ident">handler</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">GenericContractSubscriptionHandler</span><span class="op">&gt;</span>,
-        <span class="ident">preload_transactions</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">contract_subscription</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">handler</span>.<span class="ident">as_ref</span>();
+<span class="kw">impl </span>GenericContract {
+    <span class="kw">pub async fn </span>subscribe(
+        clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+        transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+        address: MsgAddressInt,
+        handler: Arc&lt;<span class="kw">dyn </span>GenericContractSubscriptionHandler&gt;,
+        preload_transactions: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>contract_subscription = {
+            <span class="kw">let </span>handler = handler.as_ref();
 
-            <span class="comment">// NOTE: create handler beforehead to prevent lifetime issues</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">on_transactions_found</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">preload_transactions</span> {
-                <span class="bool-val">true</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>)),
-                <span class="bool-val">false</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="comment">// NOTE: create handler beforehead to prevent lifetime issues
+            </span><span class="kw">let </span><span class="kw-2">mut </span>on_transactions_found = <span class="kw">match </span>preload_transactions {
+                <span class="bool-val">true </span>=&gt; <span class="prelude-val">Some</span>(make_transactions_handler(handler)),
+                <span class="bool-val">false </span>=&gt; <span class="prelude-val">None</span>,
             };
 
-            <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">trivial_casts</span>)]</span>
-            <span class="ident">ContractSubscription::subscribe</span>(
-                <span class="ident">clock</span>,
-                <span class="ident">transport</span>,
-                <span class="ident">address</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(<span class="ident">handler</span>),
-                <span class="ident">on_transactions_found</span>.<span class="ident">as_mut</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">handler</span><span class="op">|</span> <span class="ident">handler</span> <span class="kw">as</span> <span class="kw">_</span>),
+            <span class="attribute">#[allow(trivial_casts)]
+            </span>ContractSubscription::subscribe(
+                clock,
+                transport,
+                address,
+                <span class="kw-2">&amp;mut </span>make_contract_state_handler(handler),
+                on_transactions_found.as_mut().map(|handler| handler <span class="kw">as _</span>),
             )
-            .<span class="kw">await</span><span class="question-mark">?</span>
-        };
+            .<span class="kw">await</span><span class="question-mark">?
+        </span>};
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">contract_subscription</span>,
-            <span class="ident">handler</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            contract_subscription,
+            handler,
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">address</span>()
+    <span class="kw">pub fn </span>address(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>MsgAddressInt {
+        <span class="self">self</span>.contract_subscription.address()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contract_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">ContractState</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">contract_state</span>()
+    <span class="kw">pub fn </span>contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ContractState {
+        <span class="self">self</span>.contract_subscription.contract_state()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pending_transactions</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">PendingTransaction</span>] {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">pending_transactions</span>()
+    <span class="kw">pub fn </span>pending_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[PendingTransaction] {
+        <span class="self">self</span>.contract_subscription.pending_transactions()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">polling_method</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">PollingMethod</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">polling_method</span>()
+    <span class="kw">pub fn </span>polling_method(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PollingMethod {
+        <span class="self">self</span>.contract_subscription.polling_method()
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Message</span>,
-        <span class="ident">expire_at</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PendingTransaction</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">send</span>(<span class="ident">message</span>, <span class="ident">expire_at</span>).<span class="kw">await</span>
-    }
+    <span class="kw">pub async fn </span>send(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        message: <span class="kw-2">&amp;</span>ton_block::Message,
+        expire_at: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PendingTransaction&gt; {
+        <span class="self">self</span>.contract_subscription.send(message, expire_at).<span class="kw">await
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">refresh</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>
-            .<span class="ident">refresh</span>(
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(<span class="ident">handler</span>),
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>),
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_message_sent_handler</span>(<span class="ident">handler</span>),
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_message_expired_handler</span>(<span class="ident">handler</span>),
+    <span class="kw">pub async fn </span>refresh(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>handler = <span class="self">self</span>.handler.as_ref();
+        <span class="self">self</span>.contract_subscription
+            .refresh(
+                <span class="kw-2">&amp;mut </span>make_contract_state_handler(handler),
+                <span class="kw-2">&amp;mut </span>make_transactions_handler(handler),
+                <span class="kw-2">&amp;mut </span>make_message_sent_handler(handler),
+                <span class="kw-2">&amp;mut </span>make_message_expired_handler(handler),
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_block</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Block</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
-        <span class="kw">let</span> <span class="ident">new_account_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">handle_block</span>(
-            <span class="ident">block</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>),
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_message_sent_handler</span>(<span class="ident">handler</span>),
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_message_expired_handler</span>(<span class="ident">handler</span>),
+    <span class="kw">pub async fn </span>handle_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: <span class="kw-2">&amp;</span>ton_block::Block) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>handler = <span class="self">self</span>.handler.as_ref();
+        <span class="kw">let </span>new_account_state = <span class="self">self</span>.contract_subscription.handle_block(
+            block,
+            <span class="kw-2">&amp;mut </span>make_transactions_handler(handler),
+            <span class="kw-2">&amp;mut </span>make_message_sent_handler(handler),
+            <span class="kw-2">&amp;mut </span>make_message_expired_handler(handler),
         )<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">account_state</span>) <span class="op">=</span> <span class="ident">new_account_state</span> {
-            <span class="ident">handler</span>.<span class="ident">on_state_changed</span>(<span class="ident">account_state</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(account_state) = new_account_state {
+            handler.on_state_changed(account_state);
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">preload_transactions</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">from_lt</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>
-            .<span class="ident">preload_transactions</span>(<span class="ident">from_lt</span>, <span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>))
-            .<span class="kw">await</span>
-    }
+    <span class="kw">pub async fn </span>preload_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>, from_lt: u64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>handler = <span class="self">self</span>.handler.as_ref();
+        <span class="self">self</span>.contract_subscription
+            .preload_transactions(from_lt, <span class="kw-2">&amp;mut </span>make_transactions_handler(handler))
+            .<span class="kw">await
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">estimate_fees</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Message</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u128</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">estimate_fees</span>(<span class="ident">message</span>).<span class="kw">await</span>
-    }
+    <span class="kw">pub async fn </span>estimate_fees(<span class="kw-2">&amp;mut </span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>ton_block::Message) -&gt; <span class="prelude-ty">Result</span>&lt;u128&gt; {
+        <span class="self">self</span>.contract_subscription.estimate_fees(message).<span class="kw">await
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">execute_transaction_locally</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Message</span>,
-        <span class="ident">options</span>: <span class="ident">TransactionExecutionOptions</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Transaction</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">contract_subscription</span>
-            .<span class="ident">execute_transaction_locally</span>(<span class="ident">message</span>, <span class="ident">options</span>)
+    <span class="kw">pub async fn </span>execute_transaction_locally(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        message: <span class="kw-2">&amp;</span>ton_block::Message,
+        options: TransactionExecutionOptions,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Transaction&gt; {
+        <span class="kw">let </span>transaction = <span class="self">self
+            </span>.contract_subscription
+            .execute_transaction_locally(message, options)
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">transaction</span>.<span class="ident">hash</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>hash = transaction.hash()<span class="question-mark">?</span>;
 
-        <span class="ident">Transaction::try_from</span>((<span class="ident">hash</span>, <span class="ident">transaction</span>)).<span class="ident">map_err</span>(<span class="ident">From::from</span>)
+        Transaction::try_from((hash, transaction)).map_err(From::from)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">make_contract_state_handler</span>(
-    <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">GenericContractSubscriptionHandler</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">RawContractState</span>) <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="ident">contract_state</span><span class="op">|</span> <span class="ident">handler</span>.<span class="ident">on_state_changed</span>(<span class="ident">contract_state</span>.<span class="ident">brief</span>())
+<span class="kw">fn </span>make_contract_state_handler(
+    handler: <span class="kw-2">&amp;</span><span class="kw">dyn </span>GenericContractSubscriptionHandler,
+) -&gt; <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>RawContractState) + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">move </span>|contract_state| handler.on_state_changed(contract_state.brief())
 }
 
-<span class="kw">fn</span> <span class="ident">make_transactions_handler</span>(
-    <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">GenericContractSubscriptionHandler</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span>, <span class="ident">TransactionsBatchInfo</span>) <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="ident">transactions</span>, <span class="ident">batch_info</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">transactions</span> <span class="op">=</span> <span class="ident">utils::convert_transactions</span>(<span class="ident">transactions</span>).<span class="ident">collect</span>();
-        <span class="ident">handler</span>.<span class="ident">on_transactions_found</span>(<span class="ident">transactions</span>, <span class="ident">batch_info</span>)
+<span class="kw">fn </span>make_transactions_handler(
+    handler: <span class="kw-2">&amp;</span><span class="kw">dyn </span>GenericContractSubscriptionHandler,
+) -&gt; <span class="kw">impl </span>FnMut(Vec&lt;RawTransaction&gt;, TransactionsBatchInfo) + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">move </span>|transactions, batch_info| {
+        <span class="kw">let </span>transactions = utils::convert_transactions(transactions).collect();
+        handler.on_transactions_found(transactions, batch_info)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">make_message_sent_handler</span>(
-    <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">GenericContractSubscriptionHandler</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">PendingTransaction</span>, <span class="ident">RawTransaction</span>) <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="ident">pending_transaction</span>, <span class="ident">transaction</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span> <span class="ident">Transaction::try_from</span>((<span class="ident">transaction</span>.<span class="ident">hash</span>, <span class="ident">transaction</span>.<span class="ident">data</span>)).<span class="ident">ok</span>();
-        <span class="ident">handler</span>.<span class="ident">on_message_sent</span>(<span class="ident">pending_transaction</span>, <span class="ident">transaction</span>);
+<span class="kw">fn </span>make_message_sent_handler(
+    handler: <span class="kw-2">&amp;</span><span class="kw">dyn </span>GenericContractSubscriptionHandler,
+) -&gt; <span class="kw">impl </span>FnMut(PendingTransaction, RawTransaction) + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">move </span>|pending_transaction, transaction| {
+        <span class="kw">let </span>transaction = Transaction::try_from((transaction.hash, transaction.data)).ok();
+        handler.on_message_sent(pending_transaction, transaction);
     }
 }
 
-<span class="kw">fn</span> <span class="ident">make_message_expired_handler</span>(
-    <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw">dyn</span> <span class="ident">GenericContractSubscriptionHandler</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">PendingTransaction</span>) <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="ident">pending_transaction</span><span class="op">|</span> <span class="ident">handler</span>.<span class="ident">on_message_expired</span>(<span class="ident">pending_transaction</span>)
+<span class="kw">fn </span>make_message_expired_handler(
+    handler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw">dyn </span>GenericContractSubscriptionHandler,
+) -&gt; <span class="kw">impl </span>FnMut(PendingTransaction) + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">move </span>|pending_transaction| handler.on_message_expired(pending_transaction)
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">GenericContractSubscriptionHandler</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="doccomment">/// Called when found transaction which is relative with one of the pending transactions</span>
-    <span class="kw">fn</span> <span class="ident">on_message_sent</span>(
+<span class="kw">pub trait </span>GenericContractSubscriptionHandler: Send + Sync {
+    <span class="doccomment">/// Called when found transaction which is relative with one of the pending transactions
+    </span><span class="kw">fn </span>on_message_sent(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">pending_transaction</span>: <span class="ident">PendingTransaction</span>,
-        <span class="ident">transaction</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Transaction</span><span class="op">&gt;</span>,
+        pending_transaction: PendingTransaction,
+        transaction: <span class="prelude-ty">Option</span>&lt;Transaction&gt;,
     );
 
-    <span class="doccomment">/// Called when no transactions produced for the specific message before some expiration time</span>
-    <span class="kw">fn</span> <span class="ident">on_message_expired</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pending_transaction</span>: <span class="ident">PendingTransaction</span>);
+    <span class="doccomment">/// Called when no transactions produced for the specific message before some expiration time
+    </span><span class="kw">fn </span>on_message_expired(<span class="kw-2">&amp;</span><span class="self">self</span>, pending_transaction: PendingTransaction);
 
-    <span class="doccomment">/// Called every time a new state is detected</span>
-    <span class="kw">fn</span> <span class="ident">on_state_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_state</span>: <span class="ident">ContractState</span>);
+    <span class="doccomment">/// Called every time a new state is detected
+    </span><span class="kw">fn </span>on_state_changed(<span class="kw-2">&amp;</span><span class="self">self</span>, new_state: ContractState);
 
-    <span class="doccomment">/// Called every time new transactions are detected.</span>
-    <span class="doccomment">/// - When new block found</span>
-    <span class="doccomment">/// - When manually requesting the latest transactions (can be called several times)</span>
-    <span class="doccomment">/// - When preloading transactions</span>
-    <span class="kw">fn</span> <span class="ident">on_transactions_found</span>(
+    <span class="doccomment">/// Called every time new transactions are detected.
+    /// - When new block found
+    /// - When manually requesting the latest transactions (can be called several times)
+    /// - When preloading transactions
+    </span><span class="kw">fn </span>on_transactions_found(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">transactions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Transaction</span><span class="op">&gt;</span>,
-        <span class="ident">batch_info</span>: <span class="ident">TransactionsBatchInfo</span>,
+        transactions: Vec&lt;Transaction&gt;,
+        batch_info: TransactionsBatchInfo,
     );
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

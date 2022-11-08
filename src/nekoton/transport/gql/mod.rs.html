@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/gql/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/gql/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -491,498 +491,498 @@
 <span id="491">491</span>
 <span id="492">492</span>
 <span id="493">493</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
-<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::str::FromStr;
+<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
-<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">Account</span>, <span class="ident">Deserializable</span>, <span class="ident">Message</span>, <span class="ident">MsgAddressInt</span>, <span class="ident">Serializable</span>};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>serde::Deserialize;
+<span class="kw">use </span>ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
-<span class="kw">use</span> <span class="ident">nekoton_abi</span>::{<span class="ident">GenTimings</span>, <span class="ident">LastTransactionId</span>};
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_abi::{GenTimings, LastTransactionId};
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::models::ReliableBehavior</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::external</span>::{<span class="ident">GqlConnection</span>, <span class="ident">GqlRequest</span>};
+<span class="kw">use </span><span class="kw">crate</span>::core::models::ReliableBehavior;
+<span class="kw">use </span><span class="kw">crate</span>::external::{GqlConnection, GqlRequest};
 
-<span class="kw">use</span> <span class="ident"><span class="self">self</span>::queries</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::models</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::utils::ConfigCache</span>;
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Transport</span>, <span class="ident">TransportInfo</span>};
+<span class="kw">use </span><span class="self">self</span>::queries::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::models::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::utils::ConfigCache;
+<span class="kw">use super</span>::{Transport, TransportInfo};
 
-<span class="kw">mod</span> <span class="ident">queries</span>;
+<span class="kw">mod </span>queries;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GqlTransport</span> {
-    <span class="ident">connection</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">GqlConnection</span><span class="op">&gt;</span>,
-    <span class="ident">config_cache</span>: <span class="ident">ConfigCache</span>,
+<span class="kw">pub struct </span>GqlTransport {
+    connection: Arc&lt;<span class="kw">dyn </span>GqlConnection&gt;,
+    config_cache: ConfigCache,
 }
 
-<span class="kw">impl</span> <span class="ident">GqlTransport</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">connection</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">GqlConnection</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">use_default_config</span> <span class="op">=</span> <span class="ident">connection</span>.<span class="ident">is_local</span>();
+<span class="kw">impl </span>GqlTransport {
+    <span class="kw">pub fn </span>new(connection: Arc&lt;<span class="kw">dyn </span>GqlConnection&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>use_default_config = connection.is_local();
 
-        <span class="self">Self</span> {
-            <span class="ident">connection</span>,
-            <span class="ident">config_cache</span>: <span class="ident">ConfigCache::new</span>(<span class="ident">use_default_config</span>),
+        <span class="self">Self </span>{
+            connection,
+            config_cache: ConfigCache::new(use_default_config),
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">fetch</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">params</span>: <span class="ident">T::Variables</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T::ResponseData</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">GqlQuery</span>,
+    <span class="kw">async fn </span>fetch&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, params: T::Variables) -&gt; <span class="prelude-ty">Result</span>&lt;T::ResponseData&gt;
+    <span class="kw">where
+        </span>T: GqlQuery,
     {
-        <span class="kw">let</span> <span class="ident">request_body</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">T::build_query</span>(<span class="kw-2">&amp;</span><span class="ident">params</span>)).<span class="ident">trust_me</span>();
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">connection</span>
-            .<span class="ident">post</span>(<span class="ident">GqlRequest</span> {
-                <span class="ident">data</span>: <span class="ident">request_body</span>,
-                <span class="ident">long_query</span>: <span class="ident">T::LONG_QUERY</span>,
+        <span class="kw">let </span>request_body = serde_json::to_string(<span class="kw-2">&amp;</span>T::build_query(<span class="kw-2">&amp;</span>params)).trust_me();
+        <span class="kw">let </span>response = <span class="self">self
+            </span>.connection
+            .post(GqlRequest {
+                data: request_body,
+                long_query: T::LONG_QUERY,
             })
-            .<span class="kw">await</span>
-            .<span class="ident">map_err</span>(<span class="ident">api_failure</span>)<span class="question-mark">?</span>;
+            .<span class="kw">await
+            </span>.map_err(api_failure)<span class="question-mark">?</span>;
 
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Response</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-            <span class="kw">pub</span> <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+        <span class="attribute">#[derive(Deserialize)]
+        </span><span class="kw">pub struct </span>Response&lt;T&gt; {
+            <span class="kw">pub </span>data: <span class="prelude-ty">Option</span>&lt;T&gt;,
         }
 
-        <span class="kw">match</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">Response</span><span class="op">&lt;</span><span class="ident">T::ResponseData</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">response</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">response</span>) =&gt; <span class="ident">response</span>.<span class="ident">data</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">invalid_response</span>().<span class="ident">into</span>()),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">api_failure</span>(<span class="macro">format!</span>(
-                <span class="string">&quot;Failed parsing api response: {e}. Response data: {response}&quot;</span>
-            ))
-            .<span class="ident">into</span>()),
+        <span class="kw">match </span>serde_json::from_str::&lt;Response&lt;T::ResponseData&gt;&gt;(<span class="kw-2">&amp;</span>response) {
+            <span class="prelude-val">Ok</span>(response) =&gt; response.data.ok_or_else(|| invalid_response().into()),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(api_failure(<span class="macro">format!</span>(
+                <span class="string">&quot;Failed parsing api response: {e}. Response data: {response}&quot;
+            </span>))
+            .into()),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_latest_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">LatestBlock</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">workchain_id</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">get_workchain_id</span>();
+    <span class="kw">pub async fn </span>get_latest_block(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: <span class="kw-2">&amp;</span>MsgAddressInt) -&gt; <span class="prelude-ty">Result</span>&lt;LatestBlock&gt; {
+        <span class="kw">let </span>workchain_id = addr.get_workchain_id();
 
-        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryLatestMasterchainBlock</span><span class="op">&gt;</span>(())
-            .<span class="kw">await</span><span class="question-mark">?</span>
-            .<span class="ident">blocks</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">next</span>();
+        <span class="kw">let </span>block = <span class="self">self
+            </span>.fetch::&lt;QueryLatestMasterchainBlock&gt;(())
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.blocks
+            .into_iter()
+            .next();
 
-        <span class="kw">match</span> <span class="ident">block</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">block</span>) =&gt; {
-                <span class="comment">// Handle simple case when searched account is in masterchain</span>
-                <span class="kw">if</span> <span class="ident">workchain_id</span> <span class="op">==</span> <span class="op">-</span><span class="number">1</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">LatestBlock</span> {
-                        <span class="ident">id</span>: <span class="ident">block</span>.<span class="ident">id</span>,
-                        <span class="ident">end_lt</span>: <span class="ident">parse_lt</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">end_lt</span>)<span class="question-mark">?</span>,
-                        <span class="ident">gen_utime</span>: <span class="ident">block</span>.<span class="ident">gen_utime</span> <span class="kw">as</span> <span class="ident">u32</span>,
+        <span class="kw">match </span>block {
+            <span class="prelude-val">Some</span>(block) =&gt; {
+                <span class="comment">// Handle simple case when searched account is in masterchain
+                </span><span class="kw">if </span>workchain_id == -<span class="number">1 </span>{
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(LatestBlock {
+                        id: block.id,
+                        end_lt: parse_lt(<span class="kw-2">&amp;</span>block.end_lt)<span class="question-mark">?</span>,
+                        gen_utime: block.gen_utime <span class="kw">as </span>u32,
                     });
                 }
 
-                <span class="comment">// Find matching shard</span>
-                <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="ident">block</span>.<span class="ident">master</span>.<span class="ident">shard_hashes</span> {
-                    <span class="kw">if</span> <span class="ident">check_shard_match</span>(<span class="ident">item</span>.<span class="ident">workchain_id</span>, <span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">shard</span>, <span class="ident">addr</span>)<span class="question-mark">?</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">LatestBlock</span> {
-                            <span class="ident">id</span>: <span class="ident">item</span>.<span class="ident">descr</span>.<span class="ident">root_hash</span>,
-                            <span class="ident">end_lt</span>: <span class="ident">parse_lt</span>(<span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">descr</span>.<span class="ident">end_lt</span>)<span class="question-mark">?</span>,
-                            <span class="ident">gen_utime</span>: <span class="ident">item</span>.<span class="ident">descr</span>.<span class="ident">gen_utime</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                <span class="comment">// Find matching shard
+                </span><span class="kw">for </span>item <span class="kw">in </span>block.master.shard_hashes {
+                    <span class="kw">if </span>check_shard_match(item.workchain_id, <span class="kw-2">&amp;</span>item.shard, addr)<span class="question-mark">? </span>{
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(LatestBlock {
+                            id: item.descr.root_hash,
+                            end_lt: parse_lt(<span class="kw-2">&amp;</span>item.descr.end_lt)<span class="question-mark">?</span>,
+                            gen_utime: item.descr.gen_utime <span class="kw">as </span>u32,
                         });
                     }
                 }
 
-                <span class="prelude-val">Err</span>(<span class="ident">no_blocks_found</span>().<span class="ident">into</span>())
+                <span class="prelude-val">Err</span>(no_blocks_found().into())
             }
-            <span class="comment">// Node SE case (without masterchain and sharding)</span>
-            <span class="prelude-val">None</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryNodeSeConditions</span><span class="op">&gt;</span>(<span class="ident">query_node_se_conditions::Variables</span> {
-                        <span class="ident">workchain</span>: <span class="ident">workchain_id</span>,
+            <span class="comment">// Node SE case (without masterchain and sharding)
+            </span><span class="prelude-val">None </span>=&gt; {
+                <span class="kw">let </span>blocks = <span class="self">self
+                    </span>.fetch::&lt;QueryNodeSeConditions&gt;(query_node_se_conditions::Variables {
+                        workchain: workchain_id,
                     })
-                    .<span class="kw">await</span><span class="question-mark">?</span>
-                    .<span class="ident">blocks</span>;
-                <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">blocks</span>.<span class="ident">into_iter</span>().<span class="ident">next</span>().<span class="ident">ok_or_else</span>(<span class="ident">no_blocks_found</span>)<span class="question-mark">?</span>;
+                    .<span class="kw">await</span><span class="question-mark">?
+                    </span>.blocks;
+                <span class="kw">let </span>block = blocks.into_iter().next().ok_or_else(no_blocks_found)<span class="question-mark">?</span>;
 
-                <span class="comment">// If workchain is sharded then it is not Node SE and missing masterchain blocks is error</span>
-                <span class="kw">if</span> <span class="ident">block</span>.<span class="ident">after_merge</span> <span class="op">|</span><span class="op">|</span> <span class="ident">block</span>.<span class="ident">shard</span> <span class="op">!</span><span class="op">=</span> <span class="string">&quot;8000000000000000&quot;</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">no_blocks_found</span>().<span class="ident">into</span>());
+                <span class="comment">// If workchain is sharded then it is not Node SE and missing masterchain blocks is error
+                </span><span class="kw">if </span>block.after_merge || block.shard != <span class="string">&quot;8000000000000000&quot; </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(no_blocks_found().into());
                 }
 
-                <span class="kw">let</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryNodeSeLatestBlock</span><span class="op">&gt;</span>(<span class="ident">query_node_se_latest_block::Variables</span> {
-                        <span class="ident">workchain</span>: <span class="ident">workchain_id</span>,
+                <span class="kw">let </span>blocks = <span class="self">self
+                    </span>.fetch::&lt;QueryNodeSeLatestBlock&gt;(query_node_se_latest_block::Variables {
+                        workchain: workchain_id,
                     })
-                    .<span class="kw">await</span><span class="question-mark">?</span>
-                    .<span class="ident">blocks</span>;
-                <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">blocks</span>.<span class="ident">into_iter</span>().<span class="ident">next</span>().<span class="ident">ok_or_else</span>(<span class="ident">no_blocks_found</span>)<span class="question-mark">?</span>;
+                    .<span class="kw">await</span><span class="question-mark">?
+                    </span>.blocks;
+                <span class="kw">let </span>block = blocks.into_iter().next().ok_or_else(no_blocks_found)<span class="question-mark">?</span>;
 
-                <span class="prelude-val">Ok</span>(<span class="ident">LatestBlock</span> {
-                    <span class="ident">id</span>: <span class="ident">block</span>.<span class="ident">id</span>,
-                    <span class="ident">end_lt</span>: <span class="ident">parse_lt</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">end_lt</span>)<span class="question-mark">?</span>,
-                    <span class="ident">gen_utime</span>: <span class="ident">block</span>.<span class="ident">gen_utime</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                <span class="prelude-val">Ok</span>(LatestBlock {
+                    id: block.id,
+                    end_lt: parse_lt(<span class="kw-2">&amp;</span>block.end_lt)<span class="question-mark">?</span>,
+                    gen_utime: block.gen_utime <span class="kw">as </span>u32,
                 })
             }
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_block::Block</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryBlock</span><span class="op">&gt;</span>(<span class="ident">query_block::Variables</span> { <span class="ident">id</span>: <span class="ident">id</span>.<span class="ident">to_owned</span>() })
-            .<span class="kw">await</span><span class="question-mark">?</span>
-            .<span class="ident">blocks</span>;
-        <span class="kw">let</span> <span class="ident">boc</span> <span class="op">=</span> <span class="ident">blocks</span>.<span class="ident">into_iter</span>().<span class="ident">next</span>().<span class="ident">ok_or_else</span>(<span class="ident">no_blocks_found</span>)<span class="question-mark">?</span>.<span class="ident">boc</span>;
+    <span class="kw">pub async fn </span>get_block(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;ton_block::Block&gt; {
+        <span class="kw">let </span>blocks = <span class="self">self
+            </span>.fetch::&lt;QueryBlock&gt;(query_block::Variables { id: id.to_owned() })
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.blocks;
+        <span class="kw">let </span>boc = blocks.into_iter().next().ok_or_else(no_blocks_found)<span class="question-mark">?</span>.boc;
 
-        <span class="ident">ton_block::Block::construct_from_base64</span>(<span class="kw-2">&amp;</span><span class="ident">boc</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::InvalidBlock</span>.<span class="ident">into</span>())
+        ton_block::Block::construct_from_base64(<span class="kw-2">&amp;</span>boc)
+            .map_err(|<span class="kw">_</span>| NodeClientError::InvalidBlock.into())
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">wait_for_next_block</span>(
+    <span class="kw">pub async fn </span>wait_for_next_block(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">current</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-        <span class="ident">timeout</span>: <span class="ident">Duration</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">timeout_ms</span> <span class="op">=</span> <span class="ident">timeout</span>.<span class="ident">as_secs_f64</span>() <span class="op">*</span> <span class="number">1000.0</span>;
+        current: <span class="kw-2">&amp;</span>str,
+        addr: <span class="kw-2">&amp;</span>MsgAddressInt,
+        timeout: Duration,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="kw">let </span>timeout_ms = timeout.as_secs_f64() * <span class="number">1000.0</span>;
 
-        <span class="kw">let</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryNextBlock</span><span class="op">&gt;</span>(<span class="ident">query_next_block::Variables</span> {
-                <span class="ident">id</span>: <span class="ident">current</span>.<span class="ident">to_owned</span>(),
-                <span class="ident">timeout</span>: <span class="ident">timeout_ms</span>,
+        <span class="kw">let </span>blocks = <span class="self">self
+            </span>.fetch::&lt;QueryNextBlock&gt;(query_next_block::Variables {
+                id: current.to_owned(),
+                timeout: timeout_ms,
             })
-            .<span class="kw">await</span><span class="question-mark">?</span>
-            .<span class="ident">blocks</span>;
-        <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">blocks</span>.<span class="ident">into_iter</span>().<span class="ident">next</span>().<span class="ident">ok_or_else</span>(<span class="ident">no_blocks_found</span>)<span class="question-mark">?</span>;
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.blocks;
+        <span class="kw">let </span>block = blocks.into_iter().next().ok_or_else(no_blocks_found)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">block_id</span> <span class="op">=</span>
-            <span class="kw">if</span> <span class="ident">block</span>.<span class="ident">after_split</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">check_shard_match</span>(<span class="ident">block</span>.<span class="ident">workchain_id</span>, <span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">shard</span>, <span class="ident">addr</span>)<span class="question-mark">?</span> {
-                <span class="kw">let</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryBlockAfterSplit</span><span class="op">&gt;</span>(<span class="ident">query_block_after_split::Variables</span> {
-                        <span class="ident">block_id</span>: <span class="ident">block</span>.<span class="ident">id</span>,
-                        <span class="ident">prev_id</span>: <span class="ident">current</span>.<span class="ident">to_owned</span>(),
-                        <span class="ident">timeout</span>: <span class="ident">timeout_ms</span>,
+        <span class="kw">let </span>block_id =
+            <span class="kw">if </span>block.after_split &amp;&amp; !check_shard_match(block.workchain_id, <span class="kw-2">&amp;</span>block.shard, addr)<span class="question-mark">? </span>{
+                <span class="kw">let </span>blocks = <span class="self">self
+                    </span>.fetch::&lt;QueryBlockAfterSplit&gt;(query_block_after_split::Variables {
+                        block_id: block.id,
+                        prev_id: current.to_owned(),
+                        timeout: timeout_ms,
                     })
-                    .<span class="kw">await</span><span class="question-mark">?</span>
-                    .<span class="ident">blocks</span>;
-                <span class="ident">blocks</span>.<span class="ident">into_iter</span>().<span class="ident">next</span>().<span class="ident">ok_or_else</span>(<span class="ident">no_blocks_found</span>)<span class="question-mark">?</span>.<span class="ident">id</span>
-            } <span class="kw">else</span> {
-                <span class="ident">block</span>.<span class="ident">id</span>
+                    .<span class="kw">await</span><span class="question-mark">?
+                    </span>.blocks;
+                blocks.into_iter().next().ok_or_else(no_blocks_found)<span class="question-mark">?</span>.id
+            } <span class="kw">else </span>{
+                block.id
             };
 
-        <span class="prelude-val">Ok</span>(<span class="ident">block_id</span>)
+        <span class="prelude-val">Ok</span>(block_id)
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">Transport</span> <span class="kw">for</span> <span class="ident">GqlTransport</span> {
-    <span class="kw">fn</span> <span class="ident">info</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TransportInfo</span> {
-        <span class="ident">TransportInfo</span> {
-            <span class="ident">max_transactions_per_fetch</span>: <span class="number">50</span>,
-            <span class="ident">reliable_behavior</span>: <span class="ident">ReliableBehavior::BlockWalking</span>,
-            <span class="ident">has_key_blocks</span>: <span class="op">!</span><span class="self">self</span>.<span class="ident">connection</span>.<span class="ident">is_local</span>(),
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl </span>Transport <span class="kw">for </span>GqlTransport {
+    <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TransportInfo {
+        TransportInfo {
+            max_transactions_per_fetch: <span class="number">50</span>,
+            reliable_behavior: ReliableBehavior::BlockWalking,
+            has_key_blocks: !<span class="self">self</span>.connection.is_local(),
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">cell</span> <span class="op">=</span> <span class="ident">message</span>
-            .<span class="ident">write_to_new_cell</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::FailedToSerialize</span>)<span class="question-mark">?</span>
-            .<span class="ident">into</span>();
+    <span class="kw">async fn </span>send_message(<span class="kw-2">&amp;</span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>Message) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>cell = message
+            .write_to_new_cell()
+            .map_err(|<span class="kw">_</span>| NodeClientError::FailedToSerialize)<span class="question-mark">?
+            </span>.into();
 
-        <span class="kw">let</span> <span class="ident">boc</span> <span class="op">=</span> <span class="ident">base64::encode</span>(
-            <span class="ident">ton_types::serialize_toc</span>(<span class="kw-2">&amp;</span><span class="ident">cell</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::FailedToSerialize</span>)<span class="question-mark">?</span>,
+        <span class="kw">let </span>boc = base64::encode(
+            ton_types::serialize_toc(<span class="kw-2">&amp;</span>cell).map_err(|<span class="kw">_</span>| NodeClientError::FailedToSerialize)<span class="question-mark">?</span>,
         );
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="kw-2">&amp;</span><span class="ident">cell</span>.<span class="ident">repr_hash</span>());
+        <span class="kw">let </span>id = base64::encode(<span class="kw-2">&amp;</span>cell.repr_hash());
 
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">MutationSendMessage</span><span class="op">&gt;</span>(<span class="ident">mutation_send_message::Variables</span> { <span class="ident">id</span>, <span class="ident">boc</span> })
+        <span class="kw">let _ </span>= <span class="self">self
+            </span>.fetch::&lt;MutationSendMessage&gt;(mutation_send_message::Variables { id, boc })
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RawContractState</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">account_state</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
-            .<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryAccountState</span><span class="op">&gt;</span>(<span class="ident">query_account_state::Variables</span> {
-                <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">to_string</span>(),
+    <span class="kw">async fn </span>get_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>, address: <span class="kw-2">&amp;</span>MsgAddressInt) -&gt; <span class="prelude-ty">Result</span>&lt;RawContractState&gt; {
+        <span class="kw">let </span>account_state = <span class="kw">match </span><span class="self">self
+            </span>.fetch::&lt;QueryAccountState&gt;(query_account_state::Variables {
+                address: address.to_string(),
             })
-            .<span class="kw">await</span><span class="question-mark">?</span>
-            .<span class="ident">accounts</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">next</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">state</span><span class="op">|</span> <span class="ident">state</span>.<span class="ident">boc</span>)
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.accounts
+            .into_iter()
+            .next()
+            .and_then(|state| state.boc)
         {
-            <span class="prelude-val">Some</span>(<span class="ident">boc</span>) =&gt; <span class="ident">boc</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">RawContractState::NotExists</span>),
+            <span class="prelude-val">Some</span>(boc) =&gt; boc,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(RawContractState::NotExists),
         };
 
-        <span class="kw">match</span> <span class="ident">Account::construct_from_base64</span>(<span class="kw-2">&amp;</span><span class="ident">account_state</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">Account::Account</span>(<span class="ident">account</span>)) =&gt; {
-                <span class="kw">let</span> <span class="ident">last_transaction_id</span> <span class="op">=</span> <span class="ident">LastTransactionId::Inexact</span> {
-                    <span class="ident">latest_lt</span>: <span class="ident">account</span>.<span class="ident">storage</span>.<span class="ident">last_trans_lt</span>,
+        <span class="kw">match </span>Account::construct_from_base64(<span class="kw-2">&amp;</span>account_state) {
+            <span class="prelude-val">Ok</span>(Account::Account(account)) =&gt; {
+                <span class="kw">let </span>last_transaction_id = LastTransactionId::Inexact {
+                    latest_lt: account.storage.last_trans_lt,
                 };
 
-                <span class="prelude-val">Ok</span>(<span class="ident">RawContractState::Exists</span>(<span class="ident">ExistingContract</span> {
-                    <span class="ident">account</span>,
-                    <span class="ident">timings</span>: <span class="ident">GenTimings::Unknown</span>,
-                    <span class="ident">last_transaction_id</span>,
+                <span class="prelude-val">Ok</span>(RawContractState::Exists(ExistingContract {
+                    account,
+                    timings: GenTimings::Unknown,
+                    last_transaction_id,
                 }))
             }
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">RawContractState::NotExists</span>),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">NodeClientError::InvalidAccountState</span>.<span class="ident">into</span>()),
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(RawContractState::NotExists),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(NodeClientError::InvalidAccountState.into()),
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_accounts_by_code_hash</span>(
+    <span class="kw">async fn </span>get_accounts_by_code_hash(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">code_hash</span>: <span class="kw-2">&amp;</span><span class="ident">ton_types::UInt256</span>,
-        <span class="ident">limit</span>: <span class="ident">u8</span>,
-        <span class="ident">continuation</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryAccountsByCodeHash</span><span class="op">&gt;</span>(<span class="ident">query_accounts_by_code_hash::Variables</span> {
-            <span class="ident">code_hash</span>: <span class="ident">code_hash</span>.<span class="ident">to_hex_string</span>(),
-            <span class="ident">continuation</span>: <span class="ident">continuation</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="ident">ToString::to_string</span>),
-            <span class="ident">limit</span>,
+        code_hash: <span class="kw-2">&amp;</span>ton_types::UInt256,
+        limit: u8,
+        continuation: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;MsgAddressInt&gt;&gt; {
+        <span class="self">self</span>.fetch::&lt;QueryAccountsByCodeHash&gt;(query_accounts_by_code_hash::Variables {
+            code_hash: code_hash.to_hex_string(),
+            continuation: continuation.as_ref().map(ToString::to_string),
+            limit,
         })
-        .<span class="kw">await</span><span class="question-mark">?</span>
-        .<span class="ident">accounts</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">account</span><span class="op">|</span> <span class="ident">MsgAddressInt::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">id</span>))
-        .<span class="ident">collect</span>()
+        .<span class="kw">await</span><span class="question-mark">?
+        </span>.accounts
+        .into_iter()
+        .map(|account| MsgAddressInt::from_str(<span class="kw-2">&amp;</span>account.id))
+        .collect()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_transactions</span>(
+    <span class="kw">async fn </span>get_transactions(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-        <span class="ident">from_lt</span>: <span class="ident">u64</span>,
-        <span class="ident">count</span>: <span class="ident">u8</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryAccountTransactions</span><span class="op">&gt;</span>(<span class="ident">query_account_transactions::Variables</span> {
-            <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">to_string</span>(),
-            <span class="ident">last_transaction_lt</span>: <span class="ident">from_lt</span>.<span class="ident">to_string</span>(),
-            <span class="ident">limit</span>: <span class="ident">count</span>,
+        address: <span class="kw-2">&amp;</span>MsgAddressInt,
+        from_lt: u64,
+        count: u8,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;RawTransaction&gt;&gt; {
+        <span class="self">self</span>.fetch::&lt;QueryAccountTransactions&gt;(query_account_transactions::Variables {
+            address: address.to_string(),
+            last_transaction_lt: from_lt.to_string(),
+            limit: count,
         })
-        .<span class="kw">await</span><span class="question-mark">?</span>
-        .<span class="ident">transactions</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">transaction</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">base64::decode</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>.<span class="ident">boc</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">cell</span> <span class="op">=</span> <span class="ident">ton_types::deserialize_tree_of_cells</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>.<span class="ident">as_slice</span>())
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::InvalidTransaction</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">cell</span>.<span class="ident">repr_hash</span>();
-            <span class="prelude-val">Ok</span>(<span class="ident">RawTransaction</span> {
-                <span class="ident">hash</span>,
-                <span class="ident">data</span>: <span class="ident">ton_block::Transaction::construct_from_cell</span>(<span class="ident">cell</span>)
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::InvalidTransaction</span>)<span class="question-mark">?</span>,
+        .<span class="kw">await</span><span class="question-mark">?
+        </span>.transactions
+        .into_iter()
+        .map(|transaction| {
+            <span class="kw">let </span>bytes = base64::decode(<span class="kw-2">&amp;</span>transaction.boc)<span class="question-mark">?</span>;
+            <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>bytes.as_slice())
+                .map_err(|<span class="kw">_</span>| NodeClientError::InvalidTransaction)<span class="question-mark">?</span>;
+            <span class="kw">let </span>hash = cell.repr_hash();
+            <span class="prelude-val">Ok</span>(RawTransaction {
+                hash,
+                data: ton_block::Transaction::construct_from_cell(cell)
+                    .map_err(|<span class="kw">_</span>| NodeClientError::InvalidTransaction)<span class="question-mark">?</span>,
             })
         })
-        .<span class="ident">collect</span>()
+        .collect()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_transaction</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">ton_types::UInt256</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryTransaction</span><span class="op">&gt;</span>(<span class="ident">query_transaction::Variables</span> {
-            <span class="ident">hash</span>: <span class="ident">id</span>.<span class="ident">to_hex_string</span>(),
+    <span class="kw">async fn </span>get_transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>ton_types::UInt256) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;RawTransaction&gt;&gt; {
+        <span class="self">self</span>.fetch::&lt;QueryTransaction&gt;(query_transaction::Variables {
+            hash: id.to_hex_string(),
         })
-        .<span class="kw">await</span><span class="question-mark">?</span>
-        .<span class="ident">transactions</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">transaction</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">base64::decode</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>.<span class="ident">boc</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">cell</span> <span class="op">=</span> <span class="ident">ton_types::deserialize_tree_of_cells</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>.<span class="ident">as_slice</span>())
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::InvalidTransaction</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">cell</span>.<span class="ident">repr_hash</span>();
-            <span class="prelude-val">Ok</span>(<span class="ident">RawTransaction</span> {
-                <span class="ident">hash</span>,
-                <span class="ident">data</span>: <span class="ident">ton_block::Transaction::construct_from_cell</span>(<span class="ident">cell</span>)
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::InvalidTransaction</span>)<span class="question-mark">?</span>,
+        .<span class="kw">await</span><span class="question-mark">?
+        </span>.transactions
+        .into_iter()
+        .map(|transaction| {
+            <span class="kw">let </span>bytes = base64::decode(<span class="kw-2">&amp;</span>transaction.boc)<span class="question-mark">?</span>;
+            <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>bytes.as_slice())
+                .map_err(|<span class="kw">_</span>| NodeClientError::InvalidTransaction)<span class="question-mark">?</span>;
+            <span class="kw">let </span>hash = cell.repr_hash();
+            <span class="prelude-val">Ok</span>(RawTransaction {
+                hash,
+                data: ton_block::Transaction::construct_from_cell(cell)
+                    .map_err(|<span class="kw">_</span>| NodeClientError::InvalidTransaction)<span class="question-mark">?</span>,
             })
         })
-        .<span class="ident">next</span>()
-        .<span class="ident">transpose</span>()
+        .next()
+        .transpose()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_dst_transaction</span>(
+    <span class="kw">async fn </span>get_dst_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">message_hash</span>: <span class="kw-2">&amp;</span><span class="ident">ton_types::UInt256</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryDstTransaction</span><span class="op">&gt;</span>(<span class="ident">query_dst_transaction::Variables</span> {
-            <span class="ident">hash</span>: <span class="ident">message_hash</span>.<span class="ident">to_hex_string</span>(),
+        message_hash: <span class="kw-2">&amp;</span>ton_types::UInt256,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;RawTransaction&gt;&gt; {
+        <span class="self">self</span>.fetch::&lt;QueryDstTransaction&gt;(query_dst_transaction::Variables {
+            hash: message_hash.to_hex_string(),
         })
-        .<span class="kw">await</span><span class="question-mark">?</span>
-        .<span class="ident">transactions</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">transaction</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">base64::decode</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>.<span class="ident">boc</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">cell</span> <span class="op">=</span> <span class="ident">ton_types::deserialize_tree_of_cells</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>.<span class="ident">as_slice</span>())
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::InvalidTransaction</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">cell</span>.<span class="ident">repr_hash</span>();
-            <span class="prelude-val">Ok</span>(<span class="ident">RawTransaction</span> {
-                <span class="ident">hash</span>,
-                <span class="ident">data</span>: <span class="ident">ton_block::Transaction::construct_from_cell</span>(<span class="ident">cell</span>)
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::InvalidTransaction</span>)<span class="question-mark">?</span>,
+        .<span class="kw">await</span><span class="question-mark">?
+        </span>.transactions
+        .into_iter()
+        .map(|transaction| {
+            <span class="kw">let </span>bytes = base64::decode(<span class="kw-2">&amp;</span>transaction.boc)<span class="question-mark">?</span>;
+            <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>bytes.as_slice())
+                .map_err(|<span class="kw">_</span>| NodeClientError::InvalidTransaction)<span class="question-mark">?</span>;
+            <span class="kw">let </span>hash = cell.repr_hash();
+            <span class="prelude-val">Ok</span>(RawTransaction {
+                hash,
+                data: ton_block::Transaction::construct_from_cell(cell)
+                    .map_err(|<span class="kw">_</span>| NodeClientError::InvalidTransaction)<span class="question-mark">?</span>,
             })
         })
-        .<span class="ident">next</span>()
-        .<span class="ident">transpose</span>()
+        .next()
+        .transpose()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_latest_key_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_block::Block</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">blocks</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">fetch</span>::<span class="op">&lt;</span><span class="ident">QueryLatestKeyBlock</span><span class="op">&gt;</span>(()).<span class="kw">await</span><span class="question-mark">?</span>.<span class="ident">blocks</span>;
-        <span class="kw">let</span> <span class="ident">boc</span> <span class="op">=</span> <span class="ident">blocks</span>.<span class="ident">into_iter</span>().<span class="ident">next</span>().<span class="ident">ok_or_else</span>(<span class="ident">no_blocks_found</span>)<span class="question-mark">?</span>.<span class="ident">boc</span>;
+    <span class="kw">async fn </span>get_latest_key_block(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ton_block::Block&gt; {
+        <span class="kw">let </span>blocks = <span class="self">self</span>.fetch::&lt;QueryLatestKeyBlock&gt;(()).<span class="kw">await</span><span class="question-mark">?</span>.blocks;
+        <span class="kw">let </span>boc = blocks.into_iter().next().ok_or_else(no_blocks_found)<span class="question-mark">?</span>.boc;
 
-        <span class="ident">ton_block::Block::construct_from_base64</span>(<span class="kw-2">&amp;</span><span class="ident">boc</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">NodeClientError::InvalidBlock</span>.<span class="ident">into</span>())
+        ton_block::Block::construct_from_base64(<span class="kw-2">&amp;</span>boc)
+            .map_err(|<span class="kw">_</span>| NodeClientError::InvalidBlock.into())
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_blockchain_config</span>(
+    <span class="kw">async fn </span>get_blockchain_config(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-        <span class="ident">force</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_executor::BlockchainConfig</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">config_cache</span>
-            .<span class="ident">get_blockchain_config</span>(<span class="self">self</span>, <span class="ident">clock</span>, <span class="ident">force</span>)
-            .<span class="kw">await</span>
-    }
+        clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+        force: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ton_executor::BlockchainConfig&gt; {
+        <span class="self">self</span>.config_cache
+            .get_blockchain_config(<span class="self">self</span>, clock, force)
+            .<span class="kw">await
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LatestBlock</span> {
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
-    <span class="kw">pub</span> <span class="ident">end_lt</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">gen_utime</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>LatestBlock {
+    <span class="kw">pub </span>id: String,
+    <span class="kw">pub </span>end_lt: u64,
+    <span class="kw">pub </span>gen_utime: u32,
 }
 
-<span class="kw">fn</span> <span class="ident">check_shard_match</span>(<span class="ident">workchain_id</span>: <span class="ident">i32</span>, <span class="ident">shard</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">shard</span> <span class="op">=</span> <span class="ident">u64::from_str_radix</span>(<span class="ident">shard</span>, <span class="number">16</span>)<span class="question-mark">?</span>;
+<span class="kw">fn </span>check_shard_match(workchain_id: i32, shard: <span class="kw-2">&amp;</span>str, addr: <span class="kw-2">&amp;</span>MsgAddressInt) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
+    <span class="kw">let </span>shard = u64::from_str_radix(shard, <span class="number">16</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">ident</span> <span class="op">=</span>
-        <span class="ident">ton_block::ShardIdent::with_tagged_prefix</span>(<span class="ident">workchain_id</span>, <span class="ident">shard</span>).<span class="ident">map_err</span>(<span class="ident">api_failure</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>ident =
+        ton_block::ShardIdent::with_tagged_prefix(workchain_id, shard).map_err(api_failure)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">prefix</span> <span class="op">=</span> <span class="ident">ton_block::AccountIdPrefixFull::prefix</span>(<span class="ident">addr</span>).<span class="ident">map_err</span>(<span class="ident">api_failure</span>)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(<span class="ident">ident</span>.<span class="ident">contains_full_prefix</span>(<span class="kw-2">&amp;</span><span class="ident">prefix</span>))
+    <span class="kw">let </span>prefix = ton_block::AccountIdPrefixFull::prefix(addr).map_err(api_failure)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(ident.contains_full_prefix(<span class="kw-2">&amp;</span>prefix))
 }
 
-<span class="kw">fn</span> <span class="ident">api_failure</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">e</span>: <span class="ident">T</span>) -&gt; <span class="ident">NodeClientError</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">std::fmt::Display</span>,
+<span class="kw">fn </span>api_failure&lt;T&gt;(e: T) -&gt; NodeClientError
+<span class="kw">where
+    </span>T: std::fmt::Display,
 {
-    <span class="ident">NodeClientError::ApiFailure</span> {
-        <span class="ident">reason</span>: <span class="ident">e</span>.<span class="ident">to_string</span>(),
+    NodeClientError::ApiFailure {
+        reason: e.to_string(),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">parse_lt</span>(<span class="ident">lt</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">std::num::ParseIntError</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">lt</span>.<span class="ident">strip_prefix</span>(<span class="string">&quot;0x&quot;</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">lt</span>) =&gt; <span class="ident">u64::from_str_radix</span>(<span class="ident">lt</span>, <span class="number">16</span>),
-        <span class="prelude-val">None</span> =&gt; <span class="ident">u64::from_str</span>(<span class="ident">lt</span>),
+<span class="kw">fn </span>parse_lt(lt: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;u64, std::num::ParseIntError&gt; {
+    <span class="kw">match </span>lt.strip_prefix(<span class="string">&quot;0x&quot;</span>) {
+        <span class="prelude-val">Some</span>(lt) =&gt; u64::from_str_radix(lt, <span class="number">16</span>),
+        <span class="prelude-val">None </span>=&gt; u64::from_str(lt),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">invalid_response</span>() -&gt; <span class="ident">NodeClientError</span> {
-    <span class="ident">NodeClientError::InvalidResponse</span>
+<span class="kw">fn </span>invalid_response() -&gt; NodeClientError {
+    NodeClientError::InvalidResponse
 }
 
-<span class="kw">fn</span> <span class="ident">no_blocks_found</span>() -&gt; <span class="ident">NodeClientError</span> {
-    <span class="ident">NodeClientError::NoBlocksFound</span>
+<span class="kw">fn </span>no_blocks_found() -&gt; NodeClientError {
+    NodeClientError::NoBlocksFound
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">thiserror::Error</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">NodeClientError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;API request failed. {reason}&quot;</span>)]</span>
-    <span class="ident">ApiFailure</span> { <span class="ident">reason</span>: <span class="ident">String</span> },
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid response&quot;</span>)]</span>
-    <span class="ident">InvalidResponse</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid transaction data&quot;</span>)]</span>
-    <span class="ident">InvalidTransaction</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to serialize data&quot;</span>)]</span>
-    <span class="ident">FailedToSerialize</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid account state&quot;</span>)]</span>
-    <span class="ident">InvalidAccountState</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;No blocks found&quot;</span>)]</span>
-    <span class="ident">NoBlocksFound</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unsupported network&quot;</span>)]</span>
-    <span class="ident">UnsupportedNetwork</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid block&quot;</span>)]</span>
-    <span class="ident">InvalidBlock</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid config&quot;</span>)]</span>
-    <span class="ident">InvalidConfig</span>,
+<span class="attribute">#[derive(Debug, Clone, thiserror::Error)]
+</span><span class="kw">pub enum </span>NodeClientError {
+    <span class="attribute">#[error(<span class="string">&quot;API request failed. {reason}&quot;</span>)]
+    </span>ApiFailure { reason: String },
+    <span class="attribute">#[error(<span class="string">&quot;Invalid response&quot;</span>)]
+    </span>InvalidResponse,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid transaction data&quot;</span>)]
+    </span>InvalidTransaction,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to serialize data&quot;</span>)]
+    </span>FailedToSerialize,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid account state&quot;</span>)]
+    </span>InvalidAccountState,
+    <span class="attribute">#[error(<span class="string">&quot;No blocks found&quot;</span>)]
+    </span>NoBlocksFound,
+    <span class="attribute">#[error(<span class="string">&quot;Unsupported network&quot;</span>)]
+    </span>UnsupportedNetwork,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid block&quot;</span>)]
+    </span>InvalidBlock,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid config&quot;</span>)]
+    </span>InvalidConfig,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::str::FromStr;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">async_trait::async_trait</span>]</span>
-    <span class="kw">impl</span> <span class="ident">GqlConnection</span> <span class="kw">for</span> <span class="ident">reqwest::Client</span> {
-        <span class="kw">fn</span> <span class="ident">is_local</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-            <span class="bool-val">false</span>
-        }
+    <span class="attribute">#[async_trait::async_trait]
+    </span><span class="kw">impl </span>GqlConnection <span class="kw">for </span>reqwest::Client {
+        <span class="kw">fn </span>is_local(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+            <span class="bool-val">false
+        </span>}
 
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">post</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="ident">GqlRequest</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+        <span class="kw">async fn </span>post(<span class="kw-2">&amp;</span><span class="self">self</span>, req: GqlRequest) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
             <span class="macro">println!</span>(<span class="string">&quot;{req:?}&quot;</span>);
-            <span class="kw">let</span> <span class="ident">text</span> <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">post</span>(<span class="string">&quot;https://mainnet.evercloud.dev/57a5b802e303424fb0078f612a4fbe35/graphql&quot;</span>)
-                .<span class="ident">body</span>(<span class="ident">req</span>.<span class="ident">data</span>)
-                .<span class="ident">header</span>(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)
-                .<span class="ident">send</span>()
-                .<span class="kw">await</span><span class="question-mark">?</span>
-                .<span class="ident">text</span>()
+            <span class="kw">let </span>text = <span class="self">self
+                </span>.post(<span class="string">&quot;https://mainnet.evercloud.dev/57a5b802e303424fb0078f612a4fbe35/graphql&quot;</span>)
+                .body(req.data)
+                .header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)
+                .send()
+                .<span class="kw">await</span><span class="question-mark">?
+                </span>.text()
                 .<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="comment">// println!(&quot;{text}&quot;);</span>
-            <span class="prelude-val">Ok</span>(<span class="ident">text</span>)
+            <span class="comment">// println!(&quot;{text}&quot;);
+            </span><span class="prelude-val">Ok</span>(text)
         }
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_connection</span>() {
-        <span class="kw">let</span> <span class="ident">transport</span> <span class="op">=</span> <span class="ident">GqlTransport::new</span>(<span class="ident">Arc::new</span>(<span class="ident">reqwest::Client::new</span>()));
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">MsgAddressInt::from_str</span>(
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>test_connection() {
+        <span class="kw">let </span>transport = GqlTransport::new(Arc::new(reqwest::Client::new()));
+        <span class="kw">let </span>address = MsgAddressInt::from_str(
             <span class="string">&quot;-1:3333333333333333333333333333333333333333333333333333333333333333&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">base_wc_address</span> <span class="op">=</span> <span class="ident">MsgAddressInt::from_str</span>(
+        .unwrap();
+        <span class="kw">let </span>base_wc_address = MsgAddressInt::from_str(
             <span class="string">&quot;0:3333333333333333333333333333333333333333333333333333333333333333&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
 
-        <span class="ident">transport</span>.<span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">Message::default</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        transport.send_message(<span class="kw-2">&amp;</span>Message::default()).<span class="kw">await</span>.unwrap();
 
-        <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="ident">transport</span>
-            .<span class="ident">get_transactions</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>, <span class="number">21968513000000</span>, <span class="number">10</span>)
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+        transport.get_contract_state(<span class="kw-2">&amp;</span>address).<span class="kw">await</span>.unwrap();
+        transport
+            .get_transactions(<span class="kw-2">&amp;</span>address, <span class="number">21968513000000</span>, <span class="number">10</span>)
+            .<span class="kw">await
+            </span>.unwrap();
 
-        <span class="ident">transport</span>.<span class="ident">get_latest_block</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="ident">transport</span>.<span class="ident">get_latest_block</span>(<span class="kw-2">&amp;</span><span class="ident">base_wc_address</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        transport.get_latest_block(<span class="kw-2">&amp;</span>address).<span class="kw">await</span>.unwrap();
+        transport.get_latest_block(<span class="kw-2">&amp;</span>base_wc_address).<span class="kw">await</span>.unwrap();
 
-        <span class="ident">transport</span>
-            .<span class="ident">get_transaction</span>(<span class="kw-2">&amp;</span><span class="ident">ton_types::UInt256::from_slice</span>(
-                <span class="kw-2">&amp;</span><span class="ident">hex::decode</span>(<span class="string">&quot;4a0a06bfbfaba4da8fcc7f5ad617fdee5344d954a1794e35618df2a4b349d15c&quot;</span>)
-                    .<span class="ident">unwrap</span>(),
+        transport
+            .get_transaction(<span class="kw-2">&amp;</span>ton_types::UInt256::from_slice(
+                <span class="kw-2">&amp;</span>hex::decode(<span class="string">&quot;4a0a06bfbfaba4da8fcc7f5ad617fdee5344d954a1794e35618df2a4b349d15c&quot;</span>)
+                    .unwrap(),
             ))
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">unwrap</span>();
+            .<span class="kw">await
+            </span>.unwrap()
+            .unwrap();
 
-        <span class="kw">let</span> <span class="ident">setcode_multisig_code_hash</span> <span class="op">=</span> <span class="ident">ton_types::UInt256::from_str</span>(
+        <span class="kw">let </span>setcode_multisig_code_hash = ton_types::UInt256::from_str(
             <span class="string">&quot;e2b60b6b602c10ced7ea8ede4bdf96342c97570a3798066f3fb50a4b2b27a208&quot;</span>,
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">continuation</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">loop</span> {
-            <span class="kw">let</span> <span class="ident">contracts</span> <span class="op">=</span> <span class="ident">transport</span>
-                .<span class="ident">get_accounts_by_code_hash</span>(<span class="kw-2">&amp;</span><span class="ident">setcode_multisig_code_hash</span>, <span class="number">50</span>, <span class="kw-2">&amp;</span><span class="ident">continuation</span>)
-                .<span class="kw">await</span>
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>continuation = <span class="prelude-val">None</span>;
+        <span class="kw">loop </span>{
+            <span class="kw">let </span>contracts = transport
+                .get_accounts_by_code_hash(<span class="kw-2">&amp;</span>setcode_multisig_code_hash, <span class="number">50</span>, <span class="kw-2">&amp;</span>continuation)
+                .<span class="kw">await
+                </span>.unwrap();
 
-            <span class="ident">continuation</span> <span class="op">=</span> <span class="ident">contracts</span>.<span class="ident">last</span>().<span class="ident">cloned</span>();
-            <span class="kw">if</span> <span class="ident">continuation</span>.<span class="ident">is_none</span>() {
+            continuation = contracts.last().cloned();
+            <span class="kw">if </span>continuation.is_none() {
                 <span class="kw">break</span>;
             }
         }
 
-        <span class="ident">transport</span>.<span class="ident">get_latest_key_block</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        transport.get_latest_key_block().<span class="kw">await</span>.unwrap();
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

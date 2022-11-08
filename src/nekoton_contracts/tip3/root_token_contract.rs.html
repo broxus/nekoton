@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-contracts/src/tip3/root_token_contract.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>root_token_contract.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton_contracts/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-contracts/src/tip3/root_token_contract.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>root_token_contract.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton_contracts/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -118,125 +118,125 @@
 <span id="118">118</span>
 <span id="119">119</span>
 <span id="120">120</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">ton_abi</span>::{<span class="ident">Param</span>, <span class="ident">ParamType</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>ton_abi::{Param, ParamType};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::declare_function</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::declare_function;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">INTERFACE_ID</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x4371D8ED</span>;
+<span class="kw">pub const </span>INTERFACE_ID: u32 = <span class="number">0x4371D8ED</span>;
 
-<span class="doccomment">/// Returns the name of the token - e.g. `MyToken`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Type</span>
-<span class="doccomment">/// Responsible getter method</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Inputs</span>
-<span class="doccomment">/// * `answerId: uint32` - responsible answer id</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Outputs</span>
-<span class="doccomment">/// * `name: string`</span>
-<span class="doccomment">///</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">name</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">name</span>: <span class="string">&quot;name&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;answerId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>))],
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;name&quot;</span>, <span class="ident">ParamType::String</span>)],
+<span class="doccomment">/// Returns the name of the token - e.g. `MyToken`.
+///
+/// # Type
+/// Responsible getter method
+///
+/// # Inputs
+/// * `answerId: uint32` - responsible answer id
+///
+/// # Outputs
+/// * `name: string`
+///
+</span><span class="kw">pub fn </span>name() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        name: <span class="string">&quot;name&quot;</span>,
+        inputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;answerId&quot;</span>, ParamType::Uint(<span class="number">32</span>))],
+        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;name&quot;</span>, ParamType::String)],
     }
 }
 
-<span class="doccomment">/// Returns the symbol of the token. E.g. &quot;HIX&quot;.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Type</span>
-<span class="doccomment">/// Responsible getter method</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Inputs</span>
-<span class="doccomment">/// * `answerId: uint32` - responsible answer id</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Outputs</span>
-<span class="doccomment">/// * `symbol: string`</span>
-<span class="doccomment">///</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">symbol</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">name</span>: <span class="string">&quot;symbol&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;answerId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>))],
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;symbol&quot;</span>, <span class="ident">ParamType::String</span>)],
+<span class="doccomment">/// Returns the symbol of the token. E.g. &quot;HIX&quot;.
+///
+/// # Type
+/// Responsible getter method
+///
+/// # Inputs
+/// * `answerId: uint32` - responsible answer id
+///
+/// # Outputs
+/// * `symbol: string`
+///
+</span><span class="kw">pub fn </span>symbol() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        name: <span class="string">&quot;symbol&quot;</span>,
+        inputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;answerId&quot;</span>, ParamType::Uint(<span class="number">32</span>))],
+        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;symbol&quot;</span>, ParamType::String)],
     }
 }
 
-<span class="doccomment">/// Returns the number of decimals the token uses - e.g. 8,</span>
-<span class="doccomment">/// means to divide the token amount by 100000000 to get its user representation.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Type</span>
-<span class="doccomment">/// Responsible getter method</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Inputs</span>
-<span class="doccomment">/// * `answerId: uint32` - responsible answer id</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Outputs</span>
-<span class="doccomment">/// * `decimals: uint8`</span>
-<span class="doccomment">///</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">decimals</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">name</span>: <span class="string">&quot;decimals&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;answerId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>))],
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;decimals&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">8</span>))],
+<span class="doccomment">/// Returns the number of decimals the token uses - e.g. 8,
+/// means to divide the token amount by 100000000 to get its user representation.
+///
+/// # Type
+/// Responsible getter method
+///
+/// # Inputs
+/// * `answerId: uint32` - responsible answer id
+///
+/// # Outputs
+/// * `decimals: uint8`
+///
+</span><span class="kw">pub fn </span>decimals() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        name: <span class="string">&quot;decimals&quot;</span>,
+        inputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;answerId&quot;</span>, ParamType::Uint(<span class="number">32</span>))],
+        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;decimals&quot;</span>, ParamType::Uint(<span class="number">8</span>))],
     }
 }
 
-<span class="doccomment">/// Returns the total token supply.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Type</span>
-<span class="doccomment">/// Responsible getter method</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Inputs</span>
-<span class="doccomment">/// * `answerId: uint32` - responsible answer id</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Outputs</span>
-<span class="doccomment">/// * `totalSupply: string`</span>
-<span class="doccomment">///</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">total_supply</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">name</span>: <span class="string">&quot;totalSupply&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;answerId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>))],
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;totalSupply&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">128</span>))],
+<span class="doccomment">/// Returns the total token supply.
+///
+/// # Type
+/// Responsible getter method
+///
+/// # Inputs
+/// * `answerId: uint32` - responsible answer id
+///
+/// # Outputs
+/// * `totalSupply: string`
+///
+</span><span class="kw">pub fn </span>total_supply() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        name: <span class="string">&quot;totalSupply&quot;</span>,
+        inputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;answerId&quot;</span>, ParamType::Uint(<span class="number">32</span>))],
+        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;totalSupply&quot;</span>, ParamType::Uint(<span class="number">128</span>))],
     }
 }
 
-<span class="doccomment">/// Returns the token wallet code.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Type</span>
-<span class="doccomment">/// Responsible getter method</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Inputs</span>
-<span class="doccomment">/// * `answerId: uint32` - responsible answer id</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Outputs</span>
-<span class="doccomment">/// * `walletCode: cell`</span>
-<span class="doccomment">///</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wallet_code</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">name</span>: <span class="string">&quot;walletCode&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;answerId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>))],
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;walletCode&quot;</span>, <span class="ident">ParamType::Cell</span>)],
+<span class="doccomment">/// Returns the token wallet code.
+///
+/// # Type
+/// Responsible getter method
+///
+/// # Inputs
+/// * `answerId: uint32` - responsible answer id
+///
+/// # Outputs
+/// * `walletCode: cell`
+///
+</span><span class="kw">pub fn </span>wallet_code() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        name: <span class="string">&quot;walletCode&quot;</span>,
+        inputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;answerId&quot;</span>, ParamType::Uint(<span class="number">32</span>))],
+        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;walletCode&quot;</span>, ParamType::Cell)],
     }
 }
 
-<span class="doccomment">/// Called by token wallet on burn</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Type</span>
-<span class="doccomment">/// Internal method (PARTIAL)</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Inputs</span>
-<span class="doccomment">/// * `amount: uint128` - amount of tokens</span>
-<span class="doccomment">///</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">accept_burn</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">function_id</span>: <span class="number">0x192B51B1</span>,
-        <span class="ident">name</span>: <span class="string">&quot;acceptBurn&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[
-            <span class="ident">Param::new</span>(<span class="string">&quot;amount&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">128</span>)),
+<span class="doccomment">/// Called by token wallet on burn
+///
+/// # Type
+/// Internal method (PARTIAL)
+///
+/// # Inputs
+/// * `amount: uint128` - amount of tokens
+///
+</span><span class="kw">pub fn </span>accept_burn() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        function_id: <span class="number">0x192B51B1</span>,
+        name: <span class="string">&quot;acceptBurn&quot;</span>,
+        inputs: <span class="macro">vec!</span>[
+            Param::new(<span class="string">&quot;amount&quot;</span>, ParamType::Uint(<span class="number">128</span>)),
         ],
-        <span class="ident">outputs</span>: <span class="ident">Vec::new</span>(),
+        outputs: Vec::new(),
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton_contracts" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton_contracts" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

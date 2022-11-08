@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/function_builder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>function_builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/function_builder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>function_builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -215,222 +215,222 @@
 <span id="215">215</span>
 <span id="216">216</span>
 <span id="217">217</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::iter::FromIterator</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::iter::FromIterator;
 
-<span class="kw">use</span> <span class="ident">ton_abi::contract</span>::{<span class="ident">AbiVersion</span>, <span class="ident">ABI_VERSION_2_0</span>};
-<span class="kw">use</span> <span class="ident">ton_abi</span>::{<span class="ident">Function</span>, <span class="ident">Param</span>, <span class="ident">ParamType</span>};
+<span class="kw">use </span>ton_abi::contract::{AbiVersion, ABI_VERSION_2_0};
+<span class="kw">use </span>ton_abi::{Function, Param, ParamType};
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BuildTokenValue</span>, <span class="ident">TokenValueExt</span>};
+<span class="kw">use super</span>::{BuildTokenValue, TokenValueExt};
 
-<span class="kw">const</span> <span class="ident">ANSWER_ID</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;_answer_id&quot;</span>;
+<span class="kw">const </span>ANSWER_ID: <span class="kw-2">&amp;</span>str = <span class="string">&quot;_answer_id&quot;</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FunctionBuilder</span> {
-    <span class="doccomment">/// Explicit function id</span>
-    <span class="ident">id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Contract function specification.</span>
-    <span class="doccomment">/// ABI version</span>
-    <span class="ident">abi_version</span>: <span class="ident">AbiVersion</span>,
-    <span class="doccomment">/// Function name.</span>
-    <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// Function header parameters.</span>
-    <span class="ident">header</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Param</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Function input.</span>
-    <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Param</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Function output.</span>
-    <span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Param</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Whether answer_id is set</span>
-    <span class="ident">responsible</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>FunctionBuilder {
+    <span class="doccomment">/// Explicit function id
+    </span>id: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+    <span class="doccomment">/// Contract function specification.
+    /// ABI version
+    </span>abi_version: AbiVersion,
+    <span class="doccomment">/// Function name.
+    </span>name: String,
+    <span class="doccomment">/// Function header parameters.
+    </span>header: Vec&lt;Param&gt;,
+    <span class="doccomment">/// Function input.
+    </span>inputs: Vec&lt;Param&gt;,
+    <span class="doccomment">/// Function output.
+    </span>outputs: Vec&lt;Param&gt;,
+    <span class="doccomment">/// Whether answer_id is set
+    </span>responsible: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">FunctionBuilder</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">function_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">id</span>: <span class="prelude-val">None</span>,
-            <span class="ident">abi_version</span>: <span class="ident">ABI_VERSION_2_0</span>,
-            <span class="ident">name</span>: <span class="ident">function_name</span>.<span class="ident">to_string</span>(),
-            <span class="ident">header</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">inputs</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">outputs</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">responsible</span>: <span class="bool-val">false</span>,
+<span class="kw">impl </span>FunctionBuilder {
+    <span class="kw">pub fn </span>new(function_name: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            id: <span class="prelude-val">None</span>,
+            abi_version: ABI_VERSION_2_0,
+            name: function_name.to_string(),
+            header: Vec::new(),
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+            responsible: <span class="bool-val">false</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_responsible</span>(<span class="ident">function_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">function</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">function_name</span>);
-        <span class="ident">function</span>.<span class="ident">make_responsible</span>();
-        <span class="ident">function</span>
+    <span class="kw">pub fn </span>new_responsible(function_name: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>function = <span class="self">Self</span>::new(function_name);
+        function.make_responsible();
+        function
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">default_headers</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">pubkey_header</span>().<span class="ident">time_header</span>().<span class="ident">expire_header</span>()
+    <span class="kw">pub fn </span>default_headers(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.pubkey_header().time_header().expire_header()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pubkey_header</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">header</span>(<span class="string">&quot;pubkey&quot;</span>, <span class="ident">ParamType::PublicKey</span>)
+    <span class="kw">pub fn </span>pubkey_header(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.header(<span class="string">&quot;pubkey&quot;</span>, ParamType::PublicKey)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">time_header</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">header</span>(<span class="string">&quot;time&quot;</span>, <span class="ident">ParamType::Time</span>)
+    <span class="kw">pub fn </span>time_header(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.header(<span class="string">&quot;time&quot;</span>, ParamType::Time)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expire_header</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">header</span>(<span class="string">&quot;expire&quot;</span>, <span class="ident">ParamType::Expire</span>)
+    <span class="kw">pub fn </span>expire_header(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.header(<span class="string">&quot;expire&quot;</span>, ParamType::Expire)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_responsible</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">inputs</span>.<span class="ident">is_empty</span>() {
-            <span class="self">self</span>.<span class="ident">inputs</span>.<span class="ident">push</span>(<span class="ident">Param::new</span>(<span class="ident">ANSWER_ID</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>)));
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">responsible</span> {
-            <span class="self">self</span>.<span class="ident">inputs</span>
-                .<span class="ident">insert</span>(<span class="number">0</span>, <span class="ident">Param::new</span>(<span class="ident">ANSWER_ID</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>)));
+    <span class="kw">pub fn </span>make_responsible(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.inputs.is_empty() {
+            <span class="self">self</span>.inputs.push(Param::new(ANSWER_ID, ParamType::Uint(<span class="number">32</span>)));
+        } <span class="kw">else if </span>!<span class="self">self</span>.responsible {
+            <span class="self">self</span>.inputs
+                .insert(<span class="number">0</span>, Param::new(ANSWER_ID, ParamType::Uint(<span class="number">32</span>)));
         }
-        <span class="self">self</span>.<span class="ident">responsible</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        <span class="self">self</span>.responsible = <span class="bool-val">true</span>;
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">abi_version</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">abi_version</span>: <span class="ident">AbiVersion</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">abi_version</span> <span class="op">=</span> <span class="ident">abi_version</span>;
-        <span class="self">self</span>
+    <span class="kw">pub fn </span>abi_version(<span class="kw-2">mut </span><span class="self">self</span>, abi_version: AbiVersion) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.abi_version = abi_version;
+        <span class="self">self
+    </span>}
+
+    <span class="kw">pub fn </span>id(<span class="kw-2">mut </span><span class="self">self</span>, id: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.id = <span class="prelude-val">Some</span>(id);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Adds input param
+    </span><span class="attribute">#[deprecated(note = <span class="string">&quot;use `input` instead&quot;</span>)]
+    </span><span class="kw">pub fn </span>in_arg(<span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, ty: ParamType) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.input(name, ty)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">id</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>);
-        <span class="self">self</span>
+    <span class="doccomment">/// Adds input param
+    </span><span class="kw">pub fn </span>input(<span class="kw-2">mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, ty: ParamType) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.inputs.push(Param::new(name, ty));
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Sets the input params to the specified
+    ///
+    /// NOTE: Replaces previously added inputs
+    </span><span class="kw">pub fn </span>inputs(<span class="kw-2">mut </span><span class="self">self</span>, inputs: Vec&lt;Param&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.inputs = inputs;
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Adds output param
+    </span><span class="attribute">#[deprecated(note = <span class="string">&quot;use `output` instead&quot;</span>)]
+    </span><span class="kw">pub fn </span>out_arg(<span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, ty: ton_abi::ParamType) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.output(name, ty)
     }
 
-    <span class="doccomment">/// Adds input param</span>
-    <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;use `input` instead&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">in_arg</span>(<span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">ty</span>: <span class="ident">ParamType</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">input</span>(<span class="ident">name</span>, <span class="ident">ty</span>)
-    }
+    <span class="doccomment">/// Adds output param
+    </span><span class="kw">pub fn </span>output(<span class="kw-2">mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, ty: ton_abi::ParamType) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.outputs.push(Param::new(name, ty));
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Adds input param</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">input</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">ty</span>: <span class="ident">ParamType</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">inputs</span>.<span class="ident">push</span>(<span class="ident">Param::new</span>(<span class="ident">name</span>, <span class="ident">ty</span>));
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Sets the output params to the specified
+    ///
+    /// NOTE: Replaces previously added outputs
+    </span><span class="kw">pub fn </span>outputs(<span class="kw-2">mut </span><span class="self">self</span>, outputs: Vec&lt;Param&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.outputs = outputs;
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Sets the input params to the specified</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// NOTE: Replaces previously added inputs</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inputs</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Param</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">inputs</span> <span class="op">=</span> <span class="ident">inputs</span>;
-        <span class="self">self</span>
-    }
+    <span class="kw">pub fn </span>header(<span class="kw-2">mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, arg_type: ton_abi::ParamType) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.header.push(Param::new(name, arg_type));
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Adds output param</span>
-    <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;use `output` instead&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">out_arg</span>(<span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">ty</span>: <span class="ident">ton_abi::ParamType</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">output</span>(<span class="ident">name</span>, <span class="ident">ty</span>)
-    }
+    <span class="kw">pub fn </span>headers(<span class="kw-2">mut </span><span class="self">self</span>, headers: Vec&lt;Param&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.header = headers;
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Adds output param</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">output</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">ty</span>: <span class="ident">ton_abi::ParamType</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">push</span>(<span class="ident">Param::new</span>(<span class="ident">name</span>, <span class="ident">ty</span>));
-        <span class="self">self</span>
-    }
-
-    <span class="doccomment">/// Sets the output params to the specified</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// NOTE: Replaces previously added outputs</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">outputs</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Param</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">outputs</span> <span class="op">=</span> <span class="ident">outputs</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">header</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">arg_type</span>: <span class="ident">ton_abi::ParamType</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">push</span>(<span class="ident">Param::new</span>(<span class="ident">name</span>, <span class="ident">arg_type</span>));
-        <span class="self">self</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">headers</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">headers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Param</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">header</span> <span class="op">=</span> <span class="ident">headers</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; <span class="ident">Function</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fun</span> <span class="op">=</span> <span class="ident">Function</span> {
-            <span class="ident">abi_version</span>: <span class="self">self</span>.<span class="ident">abi_version</span>,
-            <span class="ident">name</span>: <span class="self">self</span>.<span class="ident">name</span>,
-            <span class="ident">header</span>: <span class="self">self</span>.<span class="ident">header</span>,
-            <span class="ident">inputs</span>: <span class="self">self</span>.<span class="ident">inputs</span>,
-            <span class="ident">outputs</span>: <span class="self">self</span>.<span class="ident">outputs</span>,
-            <span class="ident">input_id</span>: <span class="number">0</span>,
-            <span class="ident">output_id</span>: <span class="number">0</span>,
+    <span class="kw">pub fn </span>build(<span class="self">self</span>) -&gt; Function {
+        <span class="kw">let </span><span class="kw-2">mut </span>fun = Function {
+            abi_version: <span class="self">self</span>.abi_version,
+            name: <span class="self">self</span>.name,
+            header: <span class="self">self</span>.header,
+            inputs: <span class="self">self</span>.inputs,
+            outputs: <span class="self">self</span>.outputs,
+            input_id: <span class="number">0</span>,
+            output_id: <span class="number">0</span>,
         };
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">id</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">id</span>) =&gt; {
-                <span class="ident">fun</span>.<span class="ident">input_id</span> <span class="op">=</span> <span class="ident">id</span>;
-                <span class="ident">fun</span>.<span class="ident">output_id</span> <span class="op">=</span> <span class="ident">id</span>;
+        <span class="kw">match </span><span class="self">self</span>.id {
+            <span class="prelude-val">Some</span>(id) =&gt; {
+                fun.input_id = id;
+                fun.output_id = id;
             }
-            <span class="prelude-val">None</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">fun</span>.<span class="ident">get_function_id</span>();
-                <span class="ident">fun</span>.<span class="ident">input_id</span> <span class="op">=</span> <span class="ident">id</span> <span class="op">&amp;</span> <span class="number">0x7FFFFFFF</span>;
-                <span class="ident">fun</span>.<span class="ident">output_id</span> <span class="op">=</span> <span class="ident">id</span> <span class="op">|</span> <span class="number">0x80000000</span>;
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">let </span>id = fun.get_function_id();
+                fun.input_id = id &amp; <span class="number">0x7FFFFFFF</span>;
+                fun.output_id = id | <span class="number">0x80000000</span>;
             }
         }
-        <span class="ident">fun</span>
+        fun
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TupleBuilder</span> {
-    <span class="ident">types</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Param</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default, Debug, Clone)]
+</span><span class="kw">pub struct </span>TupleBuilder {
+    types: Vec&lt;Param&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">TupleBuilder</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::default</span>()
+<span class="kw">impl </span>TupleBuilder {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::default()
     }
 
-    <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;use `item` instead&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arg</span>(<span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">ty</span>: <span class="ident">ParamType</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">item</span>(<span class="ident">name</span>, <span class="ident">ty</span>)
+    <span class="attribute">#[deprecated(note = <span class="string">&quot;use `item` instead&quot;</span>)]
+    </span><span class="kw">pub fn </span>arg(<span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, ty: ParamType) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.item(name, ty)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">item</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">ty</span>: <span class="ident">ParamType</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">types</span>.<span class="ident">push</span>(<span class="ident">Param::new</span>(<span class="ident">name</span>, <span class="ident">ty</span>));
-        <span class="self">self</span>
-    }
+    <span class="kw">pub fn </span>item(<span class="kw-2">mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, ty: ParamType) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.types.push(Param::new(name, ty));
+        <span class="self">self
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; <span class="ident">ParamType</span> {
-        <span class="ident">ParamType::Tuple</span>(<span class="self">self</span>.<span class="ident">types</span>)
+    <span class="kw">pub fn </span>build(<span class="self">self</span>) -&gt; ParamType {
+        ParamType::Tuple(<span class="self">self</span>.types)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">FromIterator</span><span class="op">&lt;</span><span class="ident">Param</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TupleBuilder</span> {
-    <span class="kw">fn</span> <span class="ident">from_iter</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Param</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">types</span>: <span class="ident">iter</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>(),
+<span class="kw">impl </span>FromIterator&lt;Param&gt; <span class="kw">for </span>TupleBuilder {
+    <span class="kw">fn </span>from_iter&lt;T: IntoIterator&lt;Item = Param&gt;&gt;(iter: T) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            types: iter.into_iter().collect(),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">answer_id</span>() -&gt; <span class="ident">ton_abi::Token</span> {
-    <span class="number">0u32</span>.<span class="ident">token_value</span>().<span class="ident">named</span>(<span class="ident">ANSWER_ID</span>)
+<span class="kw">pub fn </span>answer_id() -&gt; ton_abi::Token {
+    <span class="number">0u32</span>.token_value().named(ANSWER_ID)
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">ton_abi::ParamType</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>ton_abi::ParamType;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">build</span>() {
-        <span class="kw">let</span> <span class="ident">original</span> <span class="op">=</span> <span class="ident">nekoton_contracts::old_tip3::token_wallet_contract::transfer</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>build() {
+        <span class="kw">let </span>original = nekoton_contracts::old_tip3::token_wallet_contract::transfer();
 
-        <span class="kw">let</span> <span class="ident">imposter</span> <span class="op">=</span> <span class="ident">FunctionBuilder::new</span>(<span class="string">&quot;transfer&quot;</span>)
-            .<span class="ident">input</span>(<span class="string">&quot;to&quot;</span>, <span class="ident">ParamType::Address</span>)
-            .<span class="ident">input</span>(<span class="string">&quot;tokens&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">128</span>))
-            .<span class="ident">input</span>(<span class="string">&quot;grams&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">128</span>))
-            .<span class="ident">input</span>(<span class="string">&quot;send_gas_to&quot;</span>, <span class="ident">ParamType::Address</span>)
-            .<span class="ident">input</span>(<span class="string">&quot;notify_receiver&quot;</span>, <span class="ident">ParamType::Bool</span>)
-            .<span class="ident">input</span>(<span class="string">&quot;payload&quot;</span>, <span class="ident">ParamType::Cell</span>)
-            .<span class="ident">build</span>();
+        <span class="kw">let </span>imposter = FunctionBuilder::new(<span class="string">&quot;transfer&quot;</span>)
+            .input(<span class="string">&quot;to&quot;</span>, ParamType::Address)
+            .input(<span class="string">&quot;tokens&quot;</span>, ParamType::Uint(<span class="number">128</span>))
+            .input(<span class="string">&quot;grams&quot;</span>, ParamType::Uint(<span class="number">128</span>))
+            .input(<span class="string">&quot;send_gas_to&quot;</span>, ParamType::Address)
+            .input(<span class="string">&quot;notify_receiver&quot;</span>, ParamType::Bool)
+            .input(<span class="string">&quot;payload&quot;</span>, ParamType::Cell)
+            .build();
 
-        <span class="macro">assert_eq!</span>(<span class="ident">original</span>, <span class="kw-2">&amp;</span><span class="ident">imposter</span>)
+        <span class="macro">assert_eq!</span>(original, <span class="kw-2">&amp;</span>imposter)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

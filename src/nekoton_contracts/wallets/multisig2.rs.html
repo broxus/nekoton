@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-contracts/src/wallets/multisig2.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>multisig2.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton_contracts/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-contracts/src/wallets/multisig2.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>multisig2.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton_contracts/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -145,152 +145,152 @@
 <span id="145">145</span>
 <span id="146">146</span>
 <span id="147">147</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">nekoton_abi</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">ton_abi</span>::{<span class="ident">Param</span>, <span class="ident">ParamType</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>nekoton_abi::<span class="kw-2">*</span>;
+<span class="kw">use </span>ton_abi::{Param, ParamType};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::declare_function</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::declare_function;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">constructor</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_3</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;constructor&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[
-            <span class="ident">Param::new</span>(<span class="string">&quot;owners&quot;</span>, <span class="ident">ParamType::Array</span>(<span class="ident">Box::new</span>(<span class="ident">ParamType::Uint</span>(<span class="number">256</span>)))),
-            <span class="ident">Param::new</span>(<span class="string">&quot;reqConfirms&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">8</span>)),
-            <span class="ident">Param::new</span>(<span class="string">&quot;lifetime&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>)),
+<span class="kw">pub fn </span>constructor() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_3,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;constructor&quot;</span>,
+        inputs: <span class="macro">vec!</span>[
+            Param::new(<span class="string">&quot;owners&quot;</span>, ParamType::Array(Box::new(ParamType::Uint(<span class="number">256</span>)))),
+            Param::new(<span class="string">&quot;reqConfirms&quot;</span>, ParamType::Uint(<span class="number">8</span>)),
+            Param::new(<span class="string">&quot;lifetime&quot;</span>, ParamType::Uint(<span class="number">32</span>)),
         ],
-        <span class="ident">outputs</span>: <span class="ident">Vec::new</span>(),
+        outputs: Vec::new(),
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_transaction</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_3</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;sendTransaction&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[
-            <span class="ident">Param::new</span>(<span class="string">&quot;dest&quot;</span>, <span class="ident">ParamType::Address</span>),
-            <span class="ident">Param::new</span>(<span class="string">&quot;value&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">128</span>)),
-            <span class="ident">Param::new</span>(<span class="string">&quot;bounce&quot;</span>, <span class="ident">ParamType::Bool</span>),
-            <span class="ident">Param::new</span>(<span class="string">&quot;flags&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">8</span>)),
-            <span class="ident">Param::new</span>(<span class="string">&quot;payload&quot;</span>, <span class="ident">ParamType::Cell</span>),
+<span class="kw">pub fn </span>send_transaction() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_3,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;sendTransaction&quot;</span>,
+        inputs: <span class="macro">vec!</span>[
+            Param::new(<span class="string">&quot;dest&quot;</span>, ParamType::Address),
+            Param::new(<span class="string">&quot;value&quot;</span>, ParamType::Uint(<span class="number">128</span>)),
+            Param::new(<span class="string">&quot;bounce&quot;</span>, ParamType::Bool),
+            Param::new(<span class="string">&quot;flags&quot;</span>, ParamType::Uint(<span class="number">8</span>)),
+            Param::new(<span class="string">&quot;payload&quot;</span>, ParamType::Cell),
         ],
-        <span class="ident">outputs</span>: <span class="ident">Vec::new</span>(),
+        outputs: Vec::new(),
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">submit_transaction</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_3</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;submitTransaction&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[
-            <span class="ident">Param::new</span>(<span class="string">&quot;dest&quot;</span>, <span class="ident">ParamType::Address</span>),
-            <span class="ident">Param::new</span>(<span class="string">&quot;value&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">128</span>)),
-            <span class="ident">Param::new</span>(<span class="string">&quot;bounce&quot;</span>, <span class="ident">ParamType::Bool</span>),
-            <span class="ident">Param::new</span>(<span class="string">&quot;allBalance&quot;</span>, <span class="ident">ParamType::Bool</span>),
-            <span class="ident">Param::new</span>(<span class="string">&quot;payload&quot;</span>, <span class="ident">ParamType::Cell</span>),
-            <span class="ident">Param::new</span>(<span class="string">&quot;stateInit&quot;</span>, <span class="ident">ParamType::Optional</span>(<span class="ident">Box::new</span>(<span class="ident">ParamType::Cell</span>))),
+<span class="kw">pub fn </span>submit_transaction() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_3,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;submitTransaction&quot;</span>,
+        inputs: <span class="macro">vec!</span>[
+            Param::new(<span class="string">&quot;dest&quot;</span>, ParamType::Address),
+            Param::new(<span class="string">&quot;value&quot;</span>, ParamType::Uint(<span class="number">128</span>)),
+            Param::new(<span class="string">&quot;bounce&quot;</span>, ParamType::Bool),
+            Param::new(<span class="string">&quot;allBalance&quot;</span>, ParamType::Bool),
+            Param::new(<span class="string">&quot;payload&quot;</span>, ParamType::Cell),
+            Param::new(<span class="string">&quot;stateInit&quot;</span>, ParamType::Optional(Box::new(ParamType::Cell))),
         ],
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;transId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">64</span>))],
+        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;transId&quot;</span>, ParamType::Uint(<span class="number">64</span>))],
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">confirm_transaction</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_3</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;confirmTransaction&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;transactionId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">64</span>))],
-        <span class="ident">outputs</span>: <span class="ident">Vec::new</span>(),
+<span class="kw">pub fn </span>confirm_transaction() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_3,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;confirmTransaction&quot;</span>,
+        inputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;transactionId&quot;</span>, ParamType::Uint(<span class="number">64</span>))],
+        outputs: Vec::new(),
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">UnpackAbi</span>, <span class="ident">KnownParamType</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultisigTransaction</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">u64</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint32</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;confirmationsMask&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">confirmation_mask</span>: <span class="ident">u32</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;signsRequired&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">signs_required</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;signsReceived&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">signs_received</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">creator</span>: <span class="ident">ton_types::UInt256</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">index</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">dest</span>: <span class="ident">ton_block::MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint128</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">u128</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint16</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;sendFlags&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">send_flags</span>: <span class="ident">u16</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">cell</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">payload</span>: <span class="ident">ton_types::Cell</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">bool</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">bounce</span>: <span class="ident">bool</span>,
-    <span class="attribute">#[<span class="ident">abi</span>]</span>
-    <span class="kw">pub</span> <span class="ident">state_init</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ton_types::Cell</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug, UnpackAbi, KnownParamType)]
+</span><span class="kw">pub struct </span>MultisigTransaction {
+    <span class="attribute">#[abi(uint64)]
+    </span><span class="kw">pub </span>id: u64,
+    <span class="attribute">#[abi(uint32, name = <span class="string">&quot;confirmationsMask&quot;</span>)]
+    </span><span class="kw">pub </span>confirmation_mask: u32,
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;signsRequired&quot;</span>)]
+    </span><span class="kw">pub </span>signs_required: u8,
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;signsReceived&quot;</span>)]
+    </span><span class="kw">pub </span>signs_received: u8,
+    <span class="attribute">#[abi(uint256)]
+    </span><span class="kw">pub </span>creator: ton_types::UInt256,
+    <span class="attribute">#[abi(uint8)]
+    </span><span class="kw">pub </span>index: u8,
+    <span class="attribute">#[abi(address)]
+    </span><span class="kw">pub </span>dest: ton_block::MsgAddressInt,
+    <span class="attribute">#[abi(uint128)]
+    </span><span class="kw">pub </span>value: u128,
+    <span class="attribute">#[abi(uint16, name = <span class="string">&quot;sendFlags&quot;</span>)]
+    </span><span class="kw">pub </span>send_flags: u16,
+    <span class="attribute">#[abi(cell)]
+    </span><span class="kw">pub </span>payload: ton_types::Cell,
+    <span class="attribute">#[abi(bool)]
+    </span><span class="kw">pub </span>bounce: bool,
+    <span class="attribute">#[abi]
+    </span><span class="kw">pub </span>state_init: <span class="prelude-ty">Option</span>&lt;ton_types::Cell&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_transactions</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_3</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;getTransactions&quot;</span>,
-        <span class="ident">inputs</span>: <span class="ident">Vec::new</span>(),
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[
-            <span class="ident">Param::new</span>(<span class="string">&quot;transactions&quot;</span>, <span class="ident">ParamType::Array</span>(<span class="ident">Box::new</span>(<span class="ident">MultisigTransaction::param_type</span>())))
+<span class="kw">pub fn </span>get_transactions() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_3,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;getTransactions&quot;</span>,
+        inputs: Vec::new(),
+        outputs: <span class="macro">vec!</span>[
+            Param::new(<span class="string">&quot;transactions&quot;</span>, ParamType::Array(Box::new(MultisigTransaction::param_type())))
         ]
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">UnpackAbi</span>, <span class="ident">KnownParamType</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultisigCustodian</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">index</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">pubkey</span>: <span class="ident">ton_types::UInt256</span>,
+<span class="attribute">#[derive(Debug, Clone, Copy, UnpackAbi, KnownParamType)]
+</span><span class="kw">pub struct </span>MultisigCustodian {
+    <span class="attribute">#[abi(uint8)]
+    </span><span class="kw">pub </span>index: u8,
+    <span class="attribute">#[abi(uint256)]
+    </span><span class="kw">pub </span>pubkey: ton_types::UInt256,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_custodians</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_3</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;getCustodians&quot;</span>,
-        <span class="ident">inputs</span>: <span class="ident">Vec::new</span>(),
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[
-            <span class="ident">Param::new</span>(<span class="string">&quot;custodians&quot;</span>, <span class="ident">ParamType::Array</span>(<span class="ident">Box::new</span>(<span class="ident">MultisigCustodian::param_type</span>())))
+<span class="kw">pub fn </span>get_custodians() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_3,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;getCustodians&quot;</span>,
+        inputs: Vec::new(),
+        outputs: <span class="macro">vec!</span>[
+            Param::new(<span class="string">&quot;custodians&quot;</span>, ParamType::Array(Box::new(MultisigCustodian::param_type())))
         ]
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">UnpackAbiPlain</span>, <span class="ident">KnownParamTypePlain</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SetCodeMultisigParams</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;maxQueuedTransactions&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">max_queued_transactions</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;maxCustodianCount&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">max_custodian_count</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;expirationTime&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">expiration_time</span>: <span class="ident">u64</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint128</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;minValue&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">min_value</span>: <span class="ident">u128</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;requiredTxnConfirms&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">required_txn_confirms</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;requiredUpdConfirms&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">required_upd_confirms</span>: <span class="ident">u8</span>,
+<span class="attribute">#[derive(Debug, Clone, Copy, UnpackAbiPlain, KnownParamTypePlain)]
+</span><span class="kw">pub struct </span>SetCodeMultisigParams {
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;maxQueuedTransactions&quot;</span>)]
+    </span><span class="kw">pub </span>max_queued_transactions: u8,
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;maxCustodianCount&quot;</span>)]
+    </span><span class="kw">pub </span>max_custodian_count: u8,
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;expirationTime&quot;</span>)]
+    </span><span class="kw">pub </span>expiration_time: u64,
+    <span class="attribute">#[abi(uint128, name = <span class="string">&quot;minValue&quot;</span>)]
+    </span><span class="kw">pub </span>min_value: u128,
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;requiredTxnConfirms&quot;</span>)]
+    </span><span class="kw">pub </span>required_txn_confirms: u8,
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;requiredUpdConfirms&quot;</span>)]
+    </span><span class="kw">pub </span>required_upd_confirms: u8,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_parameters</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_3</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;getParameters&quot;</span>,
-        <span class="ident">inputs</span>: <span class="ident">Vec::new</span>(),
-        <span class="ident">outputs</span>: <span class="ident">SetCodeMultisigParams::param_type</span>(),
+<span class="kw">pub fn </span>get_parameters() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_3,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;getParameters&quot;</span>,
+        inputs: Vec::new(),
+        outputs: SetCodeMultisigParams::param_type(),
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton_contracts" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton_contracts" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

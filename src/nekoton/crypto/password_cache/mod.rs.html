@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/password_cache/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/password_cache/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -219,226 +219,226 @@
 <span id="219">219</span>
 <span id="220">220</span>
 <span id="221">221</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">chacha20poly1305::aead::Aead</span>;
-<span class="kw">use</span> <span class="ident">chacha20poly1305</span>::{<span class="ident">ChaCha20Poly1305</span>, <span class="ident">KeyInit</span>, <span class="ident">Nonce</span>};
-<span class="kw">use</span> <span class="ident">parking_lot::RwLock</span>;
-<span class="kw">use</span> <span class="ident">rand::Rng</span>;
-<span class="kw">use</span> <span class="ident">secstr::SecUtf8</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>chacha20poly1305::aead::Aead;
+<span class="kw">use </span>chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
+<span class="kw">use </span>parking_lot::RwLock;
+<span class="kw">use </span>rand::Rng;
+<span class="kw">use </span>secstr::SecUtf8;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PasswordCache</span> {
-    <span class="ident">state</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">PasswordCacheState</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>PasswordCache {
+    state: RwLock&lt;PasswordCacheState&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">PasswordCache</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">state</span>: <span class="ident">RwLock::new</span>(<span class="ident">PasswordCacheState</span> {
-                <span class="ident">cipher</span>: <span class="ident">make_cipher</span>(),
-                <span class="ident">passwords</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl </span>PasswordCache {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            state: RwLock::new(PasswordCacheState {
+                cipher: make_cipher(),
+                passwords: Default::default(),
             }),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">state</span>.<span class="ident">write</span>() <span class="op">=</span> <span class="ident">PasswordCacheState</span> {
-            <span class="ident">cipher</span>: <span class="ident">make_cipher</span>(),
-            <span class="ident">passwords</span>: <span class="ident">Default::default</span>(),
+    <span class="kw">pub fn </span>reset(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw-2">*</span><span class="self">self</span>.state.write() = PasswordCacheState {
+            cipher: make_cipher(),
+            passwords: Default::default(),
         };
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process_password</span>(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="self">self</span>,
-        <span class="ident">id</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
-        <span class="ident">password</span>: <span class="ident">Password</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PasswordCacheTransaction</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">password</span> {
-            <span class="ident">Password::Explicit</span> {
-                <span class="ident">password</span>,
-                <span class="ident">cache_behavior</span>,
-            } =&gt; <span class="prelude-val">Ok</span>(<span class="ident">PasswordCacheTransaction</span> {
-                <span class="ident">id</span>,
-                <span class="ident">password</span>,
-                <span class="ident">store_duration</span>: <span class="kw">match</span> <span class="ident">cache_behavior</span> {
-                    <span class="ident">PasswordCacheBehavior::Store</span>(<span class="ident">duration</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">duration</span>),
-                    <span class="ident">PasswordCacheBehavior::Remove</span> =&gt; {
-                        <span class="self">self</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>);
-                        <span class="prelude-val">None</span>
-                    }
-                    <span class="ident">PasswordCacheBehavior::Nop</span> =&gt; <span class="prelude-val">None</span>,
+    <span class="kw">pub fn </span>process_password(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="self">self</span>,
+        id: [u8; <span class="number">32</span>],
+        password: Password,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PasswordCacheTransaction&lt;<span class="lifetime">&#39;_</span>&gt;&gt; {
+        <span class="kw">match </span>password {
+            Password::Explicit {
+                password,
+                cache_behavior,
+            } =&gt; <span class="prelude-val">Ok</span>(PasswordCacheTransaction {
+                id,
+                password,
+                store_duration: <span class="kw">match </span>cache_behavior {
+                    PasswordCacheBehavior::Store(duration) =&gt; <span class="prelude-val">Some</span>(duration),
+                    PasswordCacheBehavior::Remove =&gt; {
+                        <span class="self">self</span>.remove(<span class="kw-2">&amp;</span>id);
+                        <span class="prelude-val">None
+                    </span>}
+                    PasswordCacheBehavior::Nop =&gt; <span class="prelude-val">None</span>,
                 },
-                <span class="ident">cache</span>: <span class="self">self</span>,
+                cache: <span class="self">self</span>,
             }),
-            <span class="ident">Password::FromCache</span> =&gt; <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)<span class="question-mark">?</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">password</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">PasswordCacheTransaction</span> {
-                    <span class="ident">id</span>,
-                    <span class="ident">password</span>,
-                    <span class="ident">store_duration</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">cache</span>: <span class="self">self</span>,
+            Password::FromCache =&gt; <span class="kw">match </span><span class="self">self</span>.get(<span class="kw-2">&amp;</span>id)<span class="question-mark">? </span>{
+                <span class="prelude-val">Some</span>(password) =&gt; <span class="prelude-val">Ok</span>(PasswordCacheTransaction {
+                    id,
+                    password,
+                    store_duration: <span class="prelude-val">None</span>,
+                    cache: <span class="self">self</span>,
                 }),
-                <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">PasswordCacheError::PasswordNotFound</span>.<span class="ident">into</span>()),
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(PasswordCacheError::PasswordNotFound.into()),
             },
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">required_duration</span>: <span class="ident">Duration</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">must_be_alive_at</span> <span class="op">=</span> <span class="ident">required_duration</span>
-            .<span class="ident">as_secs_f64</span>()
-            .<span class="ident">mul_add</span>(<span class="number">1000.0</span>, <span class="ident">now_ms_f64</span>());
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">read</span>().<span class="ident">passwords</span>.<span class="ident">get</span>(<span class="ident">id</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">item</span>) =&gt; <span class="ident">item</span>.<span class="ident">expire_at</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">must_be_alive_at</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
+    <span class="kw">pub fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>[u8; <span class="number">32</span>], required_duration: Duration) -&gt; bool {
+        <span class="kw">let </span>must_be_alive_at = required_duration
+            .as_secs_f64()
+            .mul_add(<span class="number">1000.0</span>, now_ms_f64());
+        <span class="kw">match </span><span class="self">self</span>.state.read().passwords.get(id) {
+            <span class="prelude-val">Some</span>(item) =&gt; item.expire_at &gt;= must_be_alive_at,
+            <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SecUtf8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">read</span>();
+    <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>[u8; <span class="number">32</span>]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;SecUtf8&gt;&gt; {
+        <span class="kw">let </span>state = <span class="self">self</span>.state.read();
 
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">state</span>.<span class="ident">passwords</span>.<span class="ident">get</span>(<span class="ident">id</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">item</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">SecUtf8::from</span>(<span class="ident">String::from_utf8</span>(
-                    <span class="ident">state</span>
-                        .<span class="ident">cipher</span>
-                        .<span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">nonce</span>, <span class="ident">item</span>.<span class="ident">encrypted_password</span>.<span class="ident">as_slice</span>())
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">PasswordCacheError::FailedToDecryptPassword</span>)<span class="question-mark">?</span>,
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>state.passwords.get(id) {
+            <span class="prelude-val">Some</span>(item) =&gt; {
+                <span class="kw">let </span>password = SecUtf8::from(String::from_utf8(
+                    state
+                        .cipher
+                        .decrypt(<span class="kw-2">&amp;</span>item.nonce, item.encrypted_password.as_slice())
+                        .map_err(|<span class="kw">_</span>| PasswordCacheError::FailedToDecryptPassword)<span class="question-mark">?</span>,
                 )<span class="question-mark">?</span>);
-                <span class="prelude-val">Some</span>(<span class="ident">password</span>)
+                <span class="prelude-val">Some</span>(password)
             }
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">store</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: [<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">password</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">duration</span>: <span class="ident">Duration</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nonce</span> <span class="op">=</span> <span class="ident">Nonce::default</span>();
-        <span class="ident">rand::thread_rng</span>().<span class="ident">fill</span>(<span class="ident">nonce</span>.<span class="ident">as_mut_slice</span>());
+    <span class="kw">pub fn </span>store(<span class="kw-2">&amp;</span><span class="self">self</span>, id: [u8; <span class="number">32</span>], password: <span class="kw-2">&amp;</span>[u8], duration: Duration) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>nonce = Nonce::default();
+        rand::thread_rng().fill(nonce.as_mut_slice());
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">write</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="self">self</span>.state.write();
 
-        <span class="kw">let</span> <span class="ident">encrypted_password</span> <span class="op">=</span> <span class="ident">state</span>
-            .<span class="ident">cipher</span>
-            .<span class="ident">encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>, <span class="ident">password</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">PasswordCacheError::FailedToEncryptPassword</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>encrypted_password = state
+            .cipher
+            .encrypt(<span class="kw-2">&amp;</span>nonce, password)
+            .map_err(|<span class="kw">_</span>| PasswordCacheError::FailedToEncryptPassword)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">expire_at</span> <span class="op">=</span> <span class="ident">duration</span>.<span class="ident">as_secs_f64</span>().<span class="ident">mul_add</span>(<span class="number">1000.0</span>, <span class="ident">now_ms_f64</span>());
+        <span class="kw">let </span>expire_at = duration.as_secs_f64().mul_add(<span class="number">1000.0</span>, now_ms_f64());
 
-        <span class="ident">state</span>.<span class="ident">passwords</span>.<span class="ident">insert</span>(
-            <span class="ident">id</span>,
-            <span class="ident">CachedPassword</span> {
-                <span class="ident">encrypted_password</span>,
-                <span class="ident">nonce</span>,
-                <span class="ident">expire_at</span>,
+        state.passwords.insert(
+            id,
+            CachedPassword {
+                encrypted_password,
+                nonce,
+                expire_at,
             },
         );
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>]) {
-        <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">write</span>().<span class="ident">passwords</span>.<span class="ident">remove</span>(<span class="ident">id</span>);
+    <span class="kw">pub fn </span>remove(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>[u8; <span class="number">32</span>]) {
+        <span class="self">self</span>.state.write().passwords.remove(id);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">write</span>();
-        <span class="ident">state</span>.<span class="ident">cipher</span> <span class="op">=</span> <span class="ident">make_cipher</span>();
-        <span class="ident">state</span>.<span class="ident">passwords</span>.<span class="ident">clear</span>();
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="self">self</span>.state.write();
+        state.cipher = make_cipher();
+        state.passwords.clear();
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">refresh</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">now_ms_f64</span>();
-        <span class="self">self</span>.<span class="ident">state</span>
-            .<span class="ident">write</span>()
-            .<span class="ident">passwords</span>
-            .<span class="ident">retain</span>(<span class="op">|</span><span class="kw">_</span>, <span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">expire_at</span> <span class="op">&gt;</span> <span class="ident">now</span>);
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PasswordCache</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::new</span>()
+    <span class="kw">pub fn </span>refresh(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span>now = now_ms_f64();
+        <span class="self">self</span>.state
+            .write()
+            .passwords
+            .retain(|<span class="kw">_</span>, item| item.expire_at &gt; now);
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PasswordCacheTransaction</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">id</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
-    <span class="ident">password</span>: <span class="ident">SecUtf8</span>,
-    <span class="ident">store_duration</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
-    <span class="ident">cache</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">PasswordCache</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>PasswordCache {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
+    }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">PasswordCacheTransaction</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">proceed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">duration</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">store_duration</span> {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">cache</span>
-                .<span class="ident">store</span>(<span class="self">self</span>.<span class="ident">id</span>, <span class="self">self</span>.<span class="ident">password</span>.<span class="ident">unsecure</span>().<span class="ident">as_bytes</span>(), <span class="ident">duration</span>);
+<span class="kw">pub struct </span>PasswordCacheTransaction&lt;<span class="lifetime">&#39;a</span>&gt; {
+    id: [u8; <span class="number">32</span>],
+    password: SecUtf8,
+    store_duration: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
+    cache: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>PasswordCache,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; PasswordCacheTransaction&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">pub fn </span>proceed(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(duration) = <span class="self">self</span>.store_duration {
+            <span class="kw">let _ </span>= <span class="self">self
+                </span>.cache
+                .store(<span class="self">self</span>.id, <span class="self">self</span>.password.unsecure().as_bytes(), duration);
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PasswordCacheTransaction</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="self">self</span>.<span class="ident">password</span>.<span class="ident">unsecure</span>()
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; AsRef&lt;str&gt; <span class="kw">for </span>PasswordCacheTransaction&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="self">self</span>.password.unsecure()
     }
 }
 
-<span class="kw">struct</span> <span class="ident">PasswordCacheState</span> {
-    <span class="ident">cipher</span>: <span class="ident">ChaCha20Poly1305</span>,
-    <span class="ident">passwords</span>: <span class="ident">HashMap</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">CachedPassword</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>PasswordCacheState {
+    cipher: ChaCha20Poly1305,
+    passwords: HashMap&lt;[u8; <span class="number">32</span>], CachedPassword&gt;,
 }
 
-<span class="kw">struct</span> <span class="ident">CachedPassword</span> {
-    <span class="ident">encrypted_password</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">nonce</span>: <span class="ident">Nonce</span>,
-    <span class="ident">expire_at</span>: <span class="ident">f64</span>,
+<span class="kw">struct </span>CachedPassword {
+    encrypted_password: Vec&lt;u8&gt;,
+    nonce: Nonce,
+    expire_at: f64,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Password</span> {
-    <span class="ident">Explicit</span> {
-        <span class="ident">password</span>: <span class="ident">SecUtf8</span>,
-        <span class="ident">cache_behavior</span>: <span class="ident">PasswordCacheBehavior</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>Password {
+    Explicit {
+        password: SecUtf8,
+        cache_behavior: PasswordCacheBehavior,
     },
-    <span class="ident">FromCache</span>,
+    FromCache,
 }
 
-<span class="kw">fn</span> <span class="ident">make_cipher</span>() -&gt; <span class="ident">ChaCha20Poly1305</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">chacha20poly1305::Key::default</span>();
-    <span class="ident">rand::thread_rng</span>().<span class="ident">fill</span>(<span class="ident">key</span>.<span class="ident">as_mut_slice</span>());
-    <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+<span class="kw">fn </span>make_cipher() -&gt; ChaCha20Poly1305 {
+    <span class="kw">let </span><span class="kw-2">mut </span>key = chacha20poly1305::Key::default();
+    rand::thread_rng().fill(key.as_mut_slice());
+    ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>key)
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PasswordCacheBehavior</span> {
-    <span class="doccomment">/// Updates entry ttl or inserts the new entry</span>
-    <span class="ident">Store</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_duration_ms&quot;</span>)]</span> <span class="ident">Duration</span>),
-    <span class="doccomment">/// Removes the entry</span>
-    <span class="ident">Remove</span>,
-    <span class="doccomment">/// Does nothing</span>
-    <span class="ident">Nop</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>PasswordCacheBehavior {
+    <span class="doccomment">/// Updates entry ttl or inserts the new entry
+    </span>Store(<span class="attribute">#[serde(with = <span class="string">&quot;serde_duration_ms&quot;</span>)] </span>Duration),
+    <span class="doccomment">/// Removes the entry
+    </span>Remove,
+    <span class="doccomment">/// Does nothing
+    </span>Nop,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PasswordCacheBehavior</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::Remove</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>PasswordCacheBehavior {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Remove
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">PasswordCacheError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to encrypt password&quot;</span>)]</span>
-    <span class="ident">FailedToEncryptPassword</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to decrypt password&quot;</span>)]</span>
-    <span class="ident">FailedToDecryptPassword</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Password not found&quot;</span>)]</span>
-    <span class="ident">PasswordNotFound</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>PasswordCacheError {
+    <span class="attribute">#[error(<span class="string">&quot;Failed to encrypt password&quot;</span>)]
+    </span>FailedToEncryptPassword,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to decrypt password&quot;</span>)]
+    </span>FailedToDecryptPassword,
+    <span class="attribute">#[error(<span class="string">&quot;Password not found&quot;</span>)]
+    </span>PasswordNotFound,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

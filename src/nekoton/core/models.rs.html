@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/models.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>models.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/models.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>models.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -917,924 +917,924 @@
 <span id="917">917</span>
 <span id="918">918</span>
 <span id="919">919</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">num_bigint::BigUint</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Deserializer</span>, <span class="ident">Serialize</span>, <span class="ident">Serializer</span>};
-<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">Deserializable</span>, <span class="ident">MsgAddressInt</span>};
-<span class="kw">use</span> <span class="ident">ton_types::UInt256</span>;
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>num_bigint::BigUint;
+<span class="kw">use </span>serde::{Deserialize, Deserializer, Serialize, Serializer};
+<span class="kw">use </span>ton_block::{Deserializable, MsgAddressInt};
+<span class="kw">use </span>ton_types::UInt256;
 
-<span class="kw">use</span> <span class="ident">nekoton_abi</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_abi::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransactionAdditionalInfo</span> {
-    <span class="doccomment">/// Transaction with incoming message, which body is valid UTF-8 comment</span>
-    <span class="ident">Comment</span>(<span class="ident">String</span>),
-    <span class="doccomment">/// DePool notification</span>
-    <span class="ident">DePoolOnRoundComplete</span>(<span class="ident">DePoolOnRoundCompleteNotification</span>),
-    <span class="doccomment">/// DePool notification</span>
-    <span class="ident">DePoolReceiveAnswer</span>(<span class="ident">DePoolReceiveAnswerNotification</span>),
-    <span class="doccomment">/// Token wallet notification</span>
-    <span class="ident">TokenWalletDeployed</span>(<span class="ident">TokenWalletDeployedNotification</span>),
-    <span class="doccomment">/// User interaction with wallet contract</span>
-    <span class="ident">WalletInteraction</span>(<span class="ident">WalletInteractionInfo</span>),
+<span class="attribute">#[non_exhaustive]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>TransactionAdditionalInfo {
+    <span class="doccomment">/// Transaction with incoming message, which body is valid UTF-8 comment
+    </span>Comment(String),
+    <span class="doccomment">/// DePool notification
+    </span>DePoolOnRoundComplete(DePoolOnRoundCompleteNotification),
+    <span class="doccomment">/// DePool notification
+    </span>DePoolReceiveAnswer(DePoolReceiveAnswerNotification),
+    <span class="doccomment">/// Token wallet notification
+    </span>TokenWalletDeployed(TokenWalletDeployedNotification),
+    <span class="doccomment">/// User interaction with wallet contract
+    </span>WalletInteraction(WalletInteractionInfo),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WalletInteractionInfo</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(
-        <span class="ident">default</span>,
-        <span class="ident">skip_serializing_if</span> <span class="op">=</span> <span class="string">&quot;Option::is_none&quot;</span>,
-        <span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_optional_address&quot;</span>
-    )]</span>
-    <span class="kw">pub</span> <span class="ident">recipient</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>WalletInteractionInfo {
+    <span class="attribute">#[serde(
+        default,
+        skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>,
+        with = <span class="string">&quot;serde_optional_address&quot;
+    </span>)]
+    </span><span class="kw">pub </span>recipient: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>, <span class="ident">skip_serializing_if</span> <span class="op">=</span> <span class="string">&quot;Option::is_none&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">known_payload</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">KnownPayload</span><span class="op">&gt;</span>,
+    <span class="attribute">#[serde(default, skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>)]
+    </span><span class="kw">pub </span>known_payload: <span class="prelude-ty">Option</span>&lt;KnownPayload&gt;,
 
-    <span class="kw">pub</span> <span class="ident">method</span>: <span class="ident">WalletInteractionMethod</span>,
+    <span class="kw">pub </span>method: WalletInteractionMethod,
 }
 
-<span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">KnownPayload</span> {
-    <span class="ident">Comment</span>(<span class="ident">String</span>),
-    <span class="ident">TokenOutgoingTransfer</span>(<span class="ident">TokenOutgoingTransfer</span>),
-    <span class="ident">TokenSwapBack</span>(<span class="ident">TokenSwapBack</span>),
+<span class="attribute">#[non_exhaustive]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>KnownPayload {
+    Comment(String),
+    TokenOutgoingTransfer(TokenOutgoingTransfer),
+    TokenSwapBack(TokenSwapBack),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WalletInteractionMethod</span> {
-    <span class="ident">WalletV3Transfer</span>,
-    <span class="ident">Multisig</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">MultisigTransaction</span><span class="op">&gt;</span>),
+<span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>WalletInteractionMethod {
+    WalletV3Transfer,
+    Multisig(Box&lt;MultisigTransaction&gt;),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">UnpackAbiPlain</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Copy</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DePoolOnRoundCompleteNotification</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;roundId&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">round_id</span>: <span class="ident">u64</span>,
+<span class="attribute">#[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize, Copy)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>DePoolOnRoundCompleteNotification {
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;roundId&quot;</span>)]
+    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>round_id: u64,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;reward&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">reward</span>: <span class="ident">u64</span>,
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;reward&quot;</span>)]
+    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>reward: u64,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;ordinaryStake&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">ordinary_stake</span>: <span class="ident">u64</span>,
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;ordinaryStake&quot;</span>)]
+    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>ordinary_stake: u64,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;vestingStake&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">vesting_stake</span>: <span class="ident">u64</span>,
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;vestingStake&quot;</span>)]
+    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>vesting_stake: u64,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;lockStake&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">lock_stake</span>: <span class="ident">u64</span>,
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;lockStake&quot;</span>)]
+    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>lock_stake: u64,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">bool</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;reinvest&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">reinvest</span>: <span class="ident">bool</span>,
+    <span class="attribute">#[abi(bool, name = <span class="string">&quot;reinvest&quot;</span>)]
+    </span><span class="kw">pub </span>reinvest: bool,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;reason&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">reason</span>: <span class="ident">u8</span>,
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;reason&quot;</span>)]
+    </span><span class="kw">pub </span>reason: u8,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">UnpackAbiPlain</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Copy</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DePoolReceiveAnswerNotification</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint32</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;errcode&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">error_code</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize, Copy)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>DePoolReceiveAnswerNotification {
+    <span class="attribute">#[abi(uint32, name = <span class="string">&quot;errcode&quot;</span>)]
+    </span><span class="kw">pub </span>error_code: u32,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;comment&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">comment</span>: <span class="ident">u64</span>,
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;comment&quot;</span>)]
+    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>comment: u64,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">UnpackAbiPlain</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenWalletDeployedNotification</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;root&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">root_token_contract</span>: <span class="ident">MsgAddressInt</span>,
+<span class="attribute">#[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>TokenWalletDeployedNotification {
+    <span class="attribute">#[abi(address, name = <span class="string">&quot;root&quot;</span>)]
+    #[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>root_token_contract: MsgAddressInt,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MultisigTransaction</span> {
-    <span class="ident">Send</span>(<span class="ident">MultisigSendTransaction</span>),
-    <span class="ident">Submit</span>(<span class="ident">MultisigSubmitTransaction</span>),
-    <span class="ident">Confirm</span>(<span class="ident">MultisigConfirmTransaction</span>),
+<span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>MultisigTransaction {
+    Send(MultisigSendTransaction),
+    Submit(MultisigSubmitTransaction),
+    Confirm(MultisigConfirmTransaction),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">UnpackAbiPlain</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Copy</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultisigConfirmTransaction</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">skip</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_uint256&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">custodian</span>: <span class="ident">UInt256</span>,
+<span class="attribute">#[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize, Copy)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>MultisigConfirmTransaction {
+    <span class="attribute">#[abi(skip)]
+    #[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>custodian: UInt256,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;transactionId&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">transaction_id</span>: <span class="ident">u64</span>,
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;transactionId&quot;</span>)]
+    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>transaction_id: u64,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultisigSubmitTransaction</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_uint256&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">custodian</span>: <span class="ident">UInt256</span>,
+<span class="attribute">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>MultisigSubmitTransaction {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>custodian: UInt256,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">dest</span>: <span class="ident">MsgAddressInt</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>dest: MsgAddressInt,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">BigUint</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>value: BigUint,
 
-    <span class="kw">pub</span> <span class="ident">bounce</span>: <span class="ident">bool</span>,
+    <span class="kw">pub </span>bounce: bool,
 
-    <span class="kw">pub</span> <span class="ident">all_balance</span>: <span class="ident">bool</span>,
+    <span class="kw">pub </span>all_balance: bool,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_cell&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">payload</span>: <span class="ident">ton_types::Cell</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="kw">pub </span>payload: ton_types::Cell,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">trans_id</span>: <span class="ident">u64</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>trans_id: u64,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">UnpackAbiPlain</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultisigSendTransaction</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">dest</span>: <span class="ident">MsgAddressInt</span>,
+<span class="attribute">#[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>MultisigSendTransaction {
+    <span class="attribute">#[abi(address)]
+    #[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>dest: MsgAddressInt,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;nekoton_abi::uint128_number&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">BigUint</span>,
+    <span class="attribute">#[abi(with = <span class="string">&quot;nekoton_abi::uint128_number&quot;</span>)]
+    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>value: BigUint,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">bool</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">bounce</span>: <span class="ident">bool</span>,
+    <span class="attribute">#[abi(bool)]
+    </span><span class="kw">pub </span>bounce: bool,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">u8</span>,
+    <span class="attribute">#[abi(uint8)]
+    </span><span class="kw">pub </span>flags: u8,
 
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">cell</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_cell&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">payload</span>: <span class="ident">ton_types::Cell</span>,
+    <span class="attribute">#[abi(cell)]
+    #[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="kw">pub </span>payload: ton_types::Cell,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MultisigPendingTransaction</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">u64</span>,
+<span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>MultisigPendingTransaction {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>id: u64,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_vec_uint256&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">confirmations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_vec_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>confirmations: Vec&lt;UInt256&gt;,
 
-    <span class="kw">pub</span> <span class="ident">signs_required</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">signs_received</span>: <span class="ident">u8</span>,
+    <span class="kw">pub </span>signs_required: u8,
+    <span class="kw">pub </span>signs_received: u8,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_uint256&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">creator</span>: <span class="ident">UInt256</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>creator: UInt256,
 
-    <span class="kw">pub</span> <span class="ident">index</span>: <span class="ident">u8</span>,
+    <span class="kw">pub </span>index: u8,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">dest</span>: <span class="ident">MsgAddressInt</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>dest: MsgAddressInt,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">BigUint</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>value: BigUint,
 
-    <span class="kw">pub</span> <span class="ident">send_flags</span>: <span class="ident">u16</span>,
+    <span class="kw">pub </span>send_flags: u16,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_cell&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">payload</span>: <span class="ident">ton_types::Cell</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="kw">pub </span>payload: ton_types::Cell,
 
-    <span class="kw">pub</span> <span class="ident">bounce</span>: <span class="ident">bool</span>,
+    <span class="kw">pub </span>bounce: bool,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TokenWalletTransaction</span> {
-    <span class="ident">IncomingTransfer</span>(<span class="ident">TokenIncomingTransfer</span>),
-    <span class="ident">OutgoingTransfer</span>(<span class="ident">TokenOutgoingTransfer</span>),
-    <span class="ident">SwapBack</span>(<span class="ident">TokenSwapBack</span>),
-    <span class="ident">Accept</span>(<span class="ident">BigUint</span>),
-    <span class="ident">TransferBounced</span>(<span class="ident">BigUint</span>),
-    <span class="ident">SwapBackBounced</span>(<span class="ident">BigUint</span>),
+<span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>TokenWalletTransaction {
+    IncomingTransfer(TokenIncomingTransfer),
+    OutgoingTransfer(TokenOutgoingTransfer),
+    SwapBack(TokenSwapBack),
+    Accept(BigUint),
+    TransferBounced(BigUint),
+    SwapBackBounced(BigUint),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">NftTransaction</span> {
-    <span class="ident">Transfer</span>(<span class="ident">IncomingNftTransfer</span>),
-    <span class="ident">ChangeOwner</span>(<span class="ident">IncomingChangeOwner</span>),
-    <span class="ident">ChangeManager</span>(<span class="ident">IncomingChangeManager</span>),
+<span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>NftTransaction {
+    Transfer(IncomingNftTransfer),
+    ChangeOwner(IncomingChangeOwner),
+    ChangeManager(IncomingChangeManager),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenIncomingTransfer</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">tokens</span>: <span class="ident">BigUint</span>,
-    <span class="doccomment">/// Not the address of the token wallet, but the address of its owner</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">sender_address</span>: <span class="ident">MsgAddressInt</span>,
+<span class="attribute">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>TokenIncomingTransfer {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>tokens: BigUint,
+    <span class="doccomment">/// Not the address of the token wallet, but the address of its owner
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>sender_address: MsgAddressInt,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenOutgoingTransfer</span> {
-    <span class="kw">pub</span> <span class="ident">to</span>: <span class="ident">TransferRecipient</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">tokens</span>: <span class="ident">BigUint</span>,
+<span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>TokenOutgoingTransfer {
+    <span class="kw">pub </span>to: TransferRecipient,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>tokens: BigUint,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IncomingNftTransfer</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">send_gas_to</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">to</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="comment">//pub callbacks: BTreeMap&lt;String, NftCallbackPayload&gt;,</span>
+<span class="attribute">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>IncomingNftTransfer {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>send_gas_to: MsgAddressInt,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>to: MsgAddressInt,
+    <span class="comment">//pub callbacks: BTreeMap&lt;String, NftCallbackPayload&gt;,
+</span>}
+
+<span class="attribute">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>IncomingChangeOwner {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>send_gas_to: MsgAddressInt,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>new_owner: MsgAddressInt,
+    <span class="comment">//pub callbacks: BTreeMap&lt;String, NftCallbackPayload&gt;,
+</span>}
+
+<span class="attribute">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>IncomingChangeManager {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>send_gas_to: MsgAddressInt,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>new_manager: MsgAddressInt,
+    <span class="comment">//pub callbacks: BTreeMap&lt;String, NftCallbackPayload&gt;,
+</span>}
+
+<span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>TransferRecipient {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span>OwnerWallet(MsgAddressInt),
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span>TokenWallet(MsgAddressInt),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IncomingChangeOwner</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">send_gas_to</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">new_owner</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="comment">//pub callbacks: BTreeMap&lt;String, NftCallbackPayload&gt;,</span>
+<span class="attribute">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>TokenSwapBack {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>tokens: BigUint,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>callback_address: MsgAddressInt,
+    <span class="doccomment">/// ETH address or something else
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="kw">pub </span>callback_payload: ton_types::Cell,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IncomingChangeManager</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">send_gas_to</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">new_manager</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="comment">//pub callbacks: BTreeMap&lt;String, NftCallbackPayload&gt;,</span>
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransferRecipient</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="ident">OwnerWallet</span>(<span class="ident">MsgAddressInt</span>),
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="ident">TokenWallet</span>(<span class="ident">MsgAddressInt</span>),
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenSwapBack</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">tokens</span>: <span class="ident">BigUint</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">callback_address</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="doccomment">/// ETH address or something else</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_cell&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">callback_payload</span>: <span class="ident">ton_types::Cell</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;lowercase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PollingMethod</span> {
-    <span class="doccomment">/// Manual polling once a minute or by a click.</span>
-    <span class="doccomment">/// Used when there are no pending transactions</span>
-    <span class="ident">Manual</span>,
-    <span class="doccomment">/// Block-walking for GQL or fast refresh for ADNL.</span>
-    <span class="doccomment">/// Used when there are some pending transactions</span>
-    <span class="ident">Reliable</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>)]
+</span><span class="kw">pub enum </span>PollingMethod {
+    <span class="doccomment">/// Manual polling once a minute or by a click.
+    /// Used when there are no pending transactions
+    </span>Manual,
+    <span class="doccomment">/// Block-walking for GQL or fast refresh for ADNL.
+    /// Used when there are some pending transactions
+    </span>Reliable,
 }
 
 <span class="macro">define_string_enum!</span>(
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ReliableBehavior</span> {
-        <span class="doccomment">/// Used for transports which doesn&#39;t support getting blocks directly (ADNL)</span>
-        <span class="ident">IntensivePolling</span>,
-        <span class="doccomment">/// Used for transports which support getting blocks directly (GQL)</span>
-        <span class="ident">BlockWalking</span>,
+    <span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+    </span><span class="kw">pub enum </span>ReliableBehavior {
+        <span class="doccomment">/// Used for transports which doesn&#39;t support getting blocks directly (ADNL)
+        </span>IntensivePolling,
+        <span class="doccomment">/// Used for transports which support getting blocks directly (GQL)
+        </span>BlockWalking,
     }
 );
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;lowercase&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Expiration</span> {
-    <span class="doccomment">/// Message will never be expired. Not recommended to use</span>
-    <span class="ident">Never</span>,
-    <span class="doccomment">/// Interval after which the message will be invalid.</span>
-    <span class="doccomment">/// Expiration timestamp should be refreshed as close to</span>
-    <span class="doccomment">/// signing as possible</span>
-    <span class="ident">Timeout</span>(<span class="ident">u32</span>),
-    <span class="doccomment">/// The specific moment in time. Will stay the same after each</span>
-    <span class="doccomment">/// refresh</span>
-    <span class="ident">Timestamp</span>(<span class="ident">u32</span>),
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>Expiration {
+    <span class="doccomment">/// Message will never be expired. Not recommended to use
+    </span>Never,
+    <span class="doccomment">/// Interval after which the message will be invalid.
+    /// Expiration timestamp should be refreshed as close to
+    /// signing as possible
+    </span>Timeout(u32),
+    <span class="doccomment">/// The specific moment in time. Will stay the same after each
+    /// refresh
+    </span>Timestamp(u32),
 }
 
-<span class="kw">impl</span> <span class="ident">Expiration</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">timestamp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>) -&gt; <span class="ident">u32</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Never</span> =&gt; <span class="ident">u32::MAX</span>,
-            <span class="ident"><span class="self">Self</span>::Timeout</span>(<span class="ident">timeout</span>) =&gt; <span class="ident">clock</span>.<span class="ident">now_sec_u64</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="ident">timeout</span>,
-            <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Timestamp</span>(<span class="ident">timestamp</span>) =&gt; <span class="ident">timestamp</span>,
+<span class="kw">impl </span>Expiration {
+    <span class="kw">pub fn </span>timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) -&gt; u32 {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Never =&gt; u32::MAX,
+            <span class="self">Self</span>::Timeout(timeout) =&gt; clock.now_sec_u64() <span class="kw">as </span>u32 + timeout,
+            <span class="kw-2">&amp;</span><span class="self">Self</span>::Timestamp(timestamp) =&gt; timestamp,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExpireAt</span> {
-    <span class="kw">pub</span> <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>ExpireAt {
+    <span class="kw">pub </span>expiration: Expiration,
+    <span class="kw">pub </span>timestamp: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">ExpireAt</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>, <span class="ident">expiration</span>: <span class="ident">Expiration</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">expiration</span>,
-            <span class="ident">timestamp</span>: <span class="ident">expiration</span>.<span class="ident">timestamp</span>(<span class="ident">clock</span>),
+<span class="kw">impl </span>ExpireAt {
+    <span class="kw">pub fn </span>new(clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock, expiration: Expiration) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            expiration,
+            timestamp: expiration.timestamp(clock),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_millis</span>(<span class="ident">expiration</span>: <span class="ident">Expiration</span>, <span class="ident">time</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">expire_at</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">expiration</span>,
-            <span class="ident">timestamp</span>: <span class="number">0</span>,
+    <span class="kw">pub fn </span>new_from_millis(expiration: Expiration, time: u64) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>expire_at = <span class="self">Self </span>{
+            expiration,
+            timestamp: <span class="number">0</span>,
         };
-        <span class="ident">expire_at</span>.<span class="ident">refresh_from_millis</span>(<span class="ident">time</span>);
-        <span class="ident">expire_at</span>
+        expire_at.refresh_from_millis(time);
+        expire_at
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">refresh</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">old_timestamp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">timestamp</span>;
-        <span class="self">self</span>.<span class="ident">timestamp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">expiration</span>.<span class="ident">timestamp</span>(<span class="ident">clock</span>);
-        <span class="self">self</span>.<span class="ident">timestamp</span> <span class="op">!</span><span class="op">=</span> <span class="ident">old_timestamp</span>
+    <span class="kw">pub fn </span>refresh(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) -&gt; bool {
+        <span class="kw">let </span>old_timestamp = <span class="self">self</span>.timestamp;
+        <span class="self">self</span>.timestamp = <span class="self">self</span>.expiration.timestamp(clock);
+        <span class="self">self</span>.timestamp != old_timestamp
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">refresh_from_millis</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">time</span>: <span class="ident">u64</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">old_timestamp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">timestamp</span>;
+    <span class="kw">pub fn </span>refresh_from_millis(<span class="kw-2">&amp;mut </span><span class="self">self</span>, time: u64) -&gt; bool {
+        <span class="kw">let </span>old_timestamp = <span class="self">self</span>.timestamp;
 
-        <span class="self">self</span>.<span class="ident">timestamp</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">expiration</span> {
-            <span class="ident">Expiration::Never</span> =&gt; <span class="ident">u32::MAX</span>,
-            <span class="ident">Expiration::Timeout</span>(<span class="ident">timeout</span>) =&gt; (<span class="ident">time</span> <span class="op">/</span> <span class="number">1000</span>) <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="ident">timeout</span>,
-            <span class="ident">Expiration::Timestamp</span>(<span class="ident">timestamp</span>) =&gt; <span class="ident">timestamp</span>,
+        <span class="self">self</span>.timestamp = <span class="kw">match </span><span class="self">self</span>.expiration {
+            Expiration::Never =&gt; u32::MAX,
+            Expiration::Timeout(timeout) =&gt; (time / <span class="number">1000</span>) <span class="kw">as </span>u32 + timeout,
+            Expiration::Timestamp(timestamp) =&gt; timestamp,
         };
-        <span class="self">self</span>.<span class="ident">timestamp</span> <span class="op">!</span><span class="op">=</span> <span class="ident">old_timestamp</span>
+        <span class="self">self</span>.timestamp != old_timestamp
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Symbol</span> {
-    <span class="doccomment">/// Short name, e.g. USDT, DAI, etc.</span>
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
+<span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>Symbol {
+    <span class="doccomment">/// Short name, e.g. USDT, DAI, etc.
+    </span><span class="kw">pub </span>name: String,
 
-    <span class="doccomment">/// Full name</span>
-    <span class="kw">pub</span> <span class="ident">full_name</span>: <span class="ident">String</span>,
+    <span class="doccomment">/// Full name
+    </span><span class="kw">pub </span>full_name: String,
 
-    <span class="doccomment">/// Fixed decimals count</span>
-    <span class="kw">pub</span> <span class="ident">decimals</span>: <span class="ident">u8</span>,
+    <span class="doccomment">/// Fixed decimals count
+    </span><span class="kw">pub </span>decimals: u8,
 
-    <span class="doccomment">/// Address of the root token contract</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">root_token_contract</span>: <span class="ident">MsgAddressInt</span>,
+    <span class="doccomment">/// Address of the root token contract
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>root_token_contract: MsgAddressInt,
 }
 
 <span class="macro">define_string_enum!</span>(
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TokenWalletVersion</span> {
-        <span class="doccomment">/// Third iteration of token wallets, but with fixed bugs</span>
-        <span class="doccomment">/// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/tree/74905260499d79cf7cb0d89a6eb572176fc1fcd5)</span>
-        <span class="ident">OldTip3v4</span>,
-        <span class="doccomment">/// Latest iteration with completely new standard</span>
-        <span class="doccomment">/// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/tree/9168190f218fd05a64269f5f24295c69c4840d94)</span>
-        <span class="ident">Tip3</span>,
+    <span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+    </span><span class="kw">pub enum </span>TokenWalletVersion {
+        <span class="doccomment">/// Third iteration of token wallets, but with fixed bugs
+        /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/tree/74905260499d79cf7cb0d89a6eb572176fc1fcd5)
+        </span>OldTip3v4,
+        <span class="doccomment">/// Latest iteration with completely new standard
+        /// [implementation](https://github.com/broxus/ton-eth-bridge-token-contracts/tree/9168190f218fd05a64269f5f24295c69c4840d94)
+        </span>Tip3,
     }
 );
 
 <span class="macro">define_string_enum!</span>(
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">NftVersion</span> {
-        <span class="doccomment">/// First iteration of NFT</span>
-        <span class="doccomment">/// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/1.md)</span>
-        <span class="ident">Tip4_1</span>,
-        <span class="doccomment">/// Second iteration of NFT</span>
-        <span class="doccomment">/// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/2.md)</span>
-        <span class="ident">Tip4_2</span>,
-        <span class="doccomment">/// Latest iteration of NFT</span>
-        <span class="doccomment">/// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/3.md)</span>
-        <span class="ident">Tip4_3</span>,
+    <span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+    </span><span class="kw">pub enum </span>NftVersion {
+        <span class="doccomment">/// First iteration of NFT
+        /// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/1.md)
+        </span>Tip4_1,
+        <span class="doccomment">/// Second iteration of NFT
+        /// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/2.md)
+        </span>Tip4_2,
+        <span class="doccomment">/// Latest iteration of NFT
+        /// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/3.md)
+        </span>Tip4_3,
     }
 );
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokenWalletDetails</span> {
-    <span class="doccomment">/// Linked root token contract address</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">root_address</span>: <span class="ident">MsgAddressInt</span>,
+<span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>TokenWalletDetails {
+    <span class="doccomment">/// Linked root token contract address
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>root_address: MsgAddressInt,
 
-    <span class="doccomment">/// Owner wallet address</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">owner_address</span>: <span class="ident">MsgAddressInt</span>,
+    <span class="doccomment">/// Owner wallet address
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>owner_address: MsgAddressInt,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">balance</span>: <span class="ident">BigUint</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>balance: BigUint,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RootTokenContractDetails</span> {
-    <span class="doccomment">/// Token ecosystem version</span>
-    <span class="kw">pub</span> <span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>,
-    <span class="doccomment">/// Full currency name</span>
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// Short currency name</span>
-    <span class="kw">pub</span> <span class="ident">symbol</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// Decimals</span>
-    <span class="kw">pub</span> <span class="ident">decimals</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// Root owner contract address. Used as proxy address in Tip3v1</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">owner_address</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">total_supply</span>: <span class="ident">BigUint</span>,
+<span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>RootTokenContractDetails {
+    <span class="doccomment">/// Token ecosystem version
+    </span><span class="kw">pub </span>version: TokenWalletVersion,
+    <span class="doccomment">/// Full currency name
+    </span><span class="kw">pub </span>name: String,
+    <span class="doccomment">/// Short currency name
+    </span><span class="kw">pub </span>symbol: String,
+    <span class="doccomment">/// Decimals
+    </span><span class="kw">pub </span>decimals: u8,
+    <span class="doccomment">/// Root owner contract address. Used as proxy address in Tip3v1
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>owner_address: MsgAddressInt,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>total_supply: BigUint,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Copy</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ContractState</span> {
-    <span class="doccomment">/// Latest known lt</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">skip</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">last_lt</span>: <span class="ident">u64</span>,
+<span class="attribute">#[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>ContractState {
+    <span class="doccomment">/// Latest known lt
+    </span><span class="attribute">#[serde(skip)]
+    </span><span class="kw">pub </span>last_lt: u64,
 
-    <span class="doccomment">/// Full account balance in nano TON</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">balance</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// At what point was this state obtained</span>
-    <span class="kw">pub</span> <span class="ident">gen_timings</span>: <span class="ident">GenTimings</span>,
-    <span class="doccomment">/// Last transaction id</span>
-    <span class="kw">pub</span> <span class="ident">last_transaction_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LastTransactionId</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Whether the contract is deployed</span>
-    <span class="kw">pub</span> <span class="ident">is_deployed</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Contract code hash</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_optional_uint256&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">code_hash</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Full account balance in nano TON
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>balance: u64,
+    <span class="doccomment">/// At what point was this state obtained
+    </span><span class="kw">pub </span>gen_timings: GenTimings,
+    <span class="doccomment">/// Last transaction id
+    </span><span class="kw">pub </span>last_transaction_id: <span class="prelude-ty">Option</span>&lt;LastTransactionId&gt;,
+    <span class="doccomment">/// Whether the contract is deployed
+    </span><span class="kw">pub </span>is_deployed: bool,
+    <span class="doccomment">/// Contract code hash
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_optional_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>code_hash: <span class="prelude-ty">Option</span>&lt;UInt256&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">ContractState</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">last_lt</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">last_lt</span>
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>ContractState {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="self">self</span>.last_lt == other.last_lt
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">ContractState</span> {}
+<span class="kw">impl </span>Eq <span class="kw">for </span>ContractState {}
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PendingTransaction</span> {
-    <span class="doccomment">/// External message hash</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_uint256&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">message_hash</span>: <span class="ident">UInt256</span>,
-    <span class="doccomment">/// Incoming message source</span>
-    <span class="attribute">#[<span class="ident">serde</span>(
-        <span class="ident">default</span>,
-        <span class="ident">skip_serializing_if</span> <span class="op">=</span> <span class="string">&quot;Option::is_none&quot;</span>,
-        <span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_optional_address&quot;</span>
-    )]</span>
-    <span class="kw">pub</span> <span class="ident">src</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Last known lt at the time the message was sent</span>
-    <span class="kw">pub</span> <span class="ident">latest_lt</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Message broadcast timestamp (adjusted)</span>
-    <span class="kw">pub</span> <span class="ident">created_at</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// Expiration timestamp (adjusted)</span>
-    <span class="kw">pub</span> <span class="ident">expire_at</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>PendingTransaction {
+    <span class="doccomment">/// External message hash
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>message_hash: UInt256,
+    <span class="doccomment">/// Incoming message source
+    </span><span class="attribute">#[serde(
+        default,
+        skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>,
+        with = <span class="string">&quot;serde_optional_address&quot;
+    </span>)]
+    </span><span class="kw">pub </span>src: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
+    <span class="doccomment">/// Last known lt at the time the message was sent
+    </span><span class="kw">pub </span>latest_lt: u64,
+    <span class="doccomment">/// Message broadcast timestamp (adjusted)
+    </span><span class="kw">pub </span>created_at: u32,
+    <span class="doccomment">/// Expiration timestamp (adjusted)
+    </span><span class="kw">pub </span>expire_at: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">PartialEq</span><span class="op">&lt;</span><span class="ident">Transaction</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PendingTransaction</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Transaction</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">expire_at</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">created_at</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">message_hash</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">in_msg</span>.<span class="ident">hash</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">src</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">in_msg</span>.<span class="ident">src</span>
+<span class="kw">impl </span>PartialEq&lt;Transaction&gt; <span class="kw">for </span>PendingTransaction {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>Transaction) -&gt; bool {
+        <span class="self">self</span>.expire_at &lt;= other.created_at
+            &amp;&amp; <span class="self">self</span>.message_hash == other.in_msg.hash
+            &amp;&amp; <span class="self">self</span>.src == other.in_msg.src
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;lowercase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MessageType</span> {
-    <span class="ident">Internal</span>,
-    <span class="ident">External</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>)]
+</span><span class="kw">pub enum </span>MessageType {
+    Internal,
+    External,
 }
 
-<span class="doccomment">/// Transaction with additional data</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransactionWithData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">transaction</span>: <span class="ident">Transaction</span>,
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Transaction with additional data
+</span><span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>TransactionWithData&lt;T&gt; {
+    <span class="kw">pub </span>transaction: Transaction,
+    <span class="kw">pub </span>data: <span class="prelude-ty">Option</span>&lt;T&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransactionsBatchInfo</span> {
-    <span class="doccomment">/// The smallest lt in a group</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">min_lt</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Maximum lt in a group</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">max_lt</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Whether this batch was from the preload request</span>
-    <span class="kw">pub</span> <span class="ident">batch_type</span>: <span class="ident">TransactionsBatchType</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>TransactionsBatchInfo {
+    <span class="doccomment">/// The smallest lt in a group
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>min_lt: u64,
+    <span class="doccomment">/// Maximum lt in a group
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>max_lt: u64,
+    <span class="doccomment">/// Whether this batch was from the preload request
+    </span><span class="kw">pub </span>batch_type: TransactionsBatchType,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;lowercase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransactionsBatchType</span> {
-    <span class="ident">Old</span>,
-    <span class="ident">New</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>)]
+</span><span class="kw">pub enum </span>TransactionsBatchType {
+    Old,
+    New,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Transaction</span> {
-    <span class="doccomment">/// Full transaction id</span>
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">TransactionId</span>,
-    <span class="doccomment">/// Previous transaction id. `None` for last transaction</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;prevTransactionId&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">prev_trans_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TransactionId</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Transaction unix timestamp</span>
-    <span class="kw">pub</span> <span class="ident">created_at</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// Whether transaction execution was unsuccessful</span>
-    <span class="kw">pub</span> <span class="ident">aborted</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Compute phase result code. `None` if compute phase was skipped</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>, <span class="ident">skip_serializing_if</span> <span class="op">=</span> <span class="string">&quot;Option::is_none&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">exit_code</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Action phase result code. `None` if action phase was skipped</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>, <span class="ident">skip_serializing_if</span> <span class="op">=</span> <span class="string">&quot;Option::is_none&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">result_code</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Account status before transaction execution</span>
-    <span class="kw">pub</span> <span class="ident">orig_status</span>: <span class="ident">AccountStatus</span>,
-    <span class="doccomment">/// Account status after transaction execution</span>
-    <span class="kw">pub</span> <span class="ident">end_status</span>: <span class="ident">AccountStatus</span>,
-    <span class="doccomment">/// Sum of fees from all execution stages</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">total_fees</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Incoming message</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;inMessage&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">in_msg</span>: <span class="ident">Message</span>,
-    <span class="doccomment">/// Outgoing messages</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;outMessages&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">out_msgs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>Transaction {
+    <span class="doccomment">/// Full transaction id
+    </span><span class="kw">pub </span>id: TransactionId,
+    <span class="doccomment">/// Previous transaction id. `None` for last transaction
+    </span><span class="attribute">#[serde(rename = <span class="string">&quot;prevTransactionId&quot;</span>)]
+    </span><span class="kw">pub </span>prev_trans_id: <span class="prelude-ty">Option</span>&lt;TransactionId&gt;,
+    <span class="doccomment">/// Transaction unix timestamp
+    </span><span class="kw">pub </span>created_at: u32,
+    <span class="doccomment">/// Whether transaction execution was unsuccessful
+    </span><span class="kw">pub </span>aborted: bool,
+    <span class="doccomment">/// Compute phase result code. `None` if compute phase was skipped
+    </span><span class="attribute">#[serde(default, skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>)]
+    </span><span class="kw">pub </span>exit_code: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+    <span class="doccomment">/// Action phase result code. `None` if action phase was skipped
+    </span><span class="attribute">#[serde(default, skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>)]
+    </span><span class="kw">pub </span>result_code: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+    <span class="doccomment">/// Account status before transaction execution
+    </span><span class="kw">pub </span>orig_status: AccountStatus,
+    <span class="doccomment">/// Account status after transaction execution
+    </span><span class="kw">pub </span>end_status: AccountStatus,
+    <span class="doccomment">/// Sum of fees from all execution stages
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>total_fees: u64,
+    <span class="doccomment">/// Incoming message
+    </span><span class="attribute">#[serde(rename = <span class="string">&quot;inMessage&quot;</span>)]
+    </span><span class="kw">pub </span>in_msg: Message,
+    <span class="doccomment">/// Outgoing messages
+    </span><span class="attribute">#[serde(rename = <span class="string">&quot;outMessages&quot;</span>)]
+    </span><span class="kw">pub </span>out_msgs: Vec&lt;Message&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span>(<span class="ident">UInt256</span>, <span class="ident">ton_block::Transaction</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Transaction</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">TransactionError</span>;
+<span class="kw">impl </span>TryFrom&lt;(UInt256, ton_block::Transaction)&gt; <span class="kw">for </span>Transaction {
+    <span class="kw">type </span>Error = TransactionError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>((<span class="ident">hash</span>, <span class="kw-2">mut</span> <span class="ident">data</span>): (<span class="ident">UInt256</span>, <span class="ident">ton_block::Transaction</span>)) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ton_block::TransactionDescr::Ordinary</span>(<span class="ident">desc</span>) <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">description</span>
-            .<span class="ident">read_struct</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TransactionError::InvalidStructure</span>)<span class="question-mark">?</span>
-        {
-            <span class="ident">desc</span>
-        } <span class="kw">else</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransactionError::Unsupported</span>);
+    <span class="kw">fn </span>try_from((hash, <span class="kw-2">mut </span>data): (UInt256, ton_block::Transaction)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>desc = <span class="kw">if let </span>ton_block::TransactionDescr::Ordinary(desc) = data
+            .description
+            .read_struct()
+            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?
+        </span>{
+            desc
+        } <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(TransactionError::Unsupported);
         };
 
-        <span class="kw">let</span> <span class="ident">total_fees</span> <span class="op">=</span> <span class="ident">compute_total_transaction_fees</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>, <span class="kw-2">&amp;</span><span class="ident">desc</span>) <span class="kw">as</span> <span class="ident">u64</span>;
+        <span class="kw">let </span>total_fees = compute_total_transaction_fees(<span class="kw-2">&amp;</span>data, <span class="kw-2">&amp;</span>desc) <span class="kw">as </span>u64;
 
-        <span class="kw">let</span> <span class="ident">in_msg</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">data</span>.<span class="ident">in_msg</span>.<span class="ident">take</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">message</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">cell</span>().<span class="ident">repr_hash</span>();
-                <span class="ident">message</span>
-                    .<span class="ident">read_struct</span>()
-                    .<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">message</span><span class="op">|</span> <span class="ident">Message::from</span>((<span class="ident">hash</span>, <span class="ident">message</span>)))
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TransactionError::InvalidStructure</span>)<span class="question-mark">?</span>
-            }
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransactionError::Unsupported</span>),
+        <span class="kw">let </span>in_msg = <span class="kw">match </span>data.in_msg.take() {
+            <span class="prelude-val">Some</span>(message) =&gt; {
+                <span class="kw">let </span>hash = message.cell().repr_hash();
+                message
+                    .read_struct()
+                    .map(<span class="kw">move </span>|message| Message::from((hash, message)))
+                    .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?
+            </span>}
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TransactionError::Unsupported),
         };
 
-        <span class="kw">let</span> <span class="ident">exit_code</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">compute_ph</span> {
-            <span class="ident">ton_block::TrComputePhase::Vm</span>(<span class="ident">vm</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">vm</span>.<span class="ident">exit_code</span>),
-            <span class="ident">ton_block::TrComputePhase::Skipped</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">let </span>exit_code = <span class="kw">match </span><span class="kw-2">&amp;</span>desc.compute_ph {
+            ton_block::TrComputePhase::Vm(vm) =&gt; <span class="prelude-val">Some</span>(vm.exit_code),
+            ton_block::TrComputePhase::Skipped(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">result_code</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">action</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">action</span><span class="op">|</span> <span class="ident">action</span>.<span class="ident">result_code</span>);
+        <span class="kw">let </span>result_code = desc.action.map(|action| action.result_code);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out_msgs</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">data</span>.<span class="ident">out_msgs</span>
-            .<span class="ident">iterate_slices</span>(<span class="op">|</span><span class="ident">slice</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">slice</span>.<span class="ident">reference</span>(<span class="number">0</span>).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">cell</span><span class="op">|</span> {
-                    <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">cell</span>.<span class="ident">repr_hash</span>();
-                    <span class="ident">ton_block::Message::construct_from_cell</span>(<span class="ident">cell</span>)
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">message</span><span class="op">|</span> <span class="ident">Message::from</span>((<span class="ident">hash</span>, <span class="ident">message</span>)))
+        <span class="kw">let </span><span class="kw-2">mut </span>out_msgs = Vec::new();
+        data.out_msgs
+            .iterate_slices(|slice| {
+                <span class="kw">if let </span><span class="prelude-val">Ok</span>(message) = slice.reference(<span class="number">0</span>).and_then(|cell| {
+                    <span class="kw">let </span>hash = cell.repr_hash();
+                    ton_block::Message::construct_from_cell(cell)
+                        .map(|message| Message::from((hash, message)))
                 }) {
-                    <span class="ident">out_msgs</span>.<span class="ident">push</span>(<span class="ident">message</span>);
+                    out_msgs.push(message);
                 }
                 <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
             })
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TransactionError::InvalidStructure</span>)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">id</span>: <span class="ident">TransactionId</span> { <span class="ident">lt</span>: <span class="ident">data</span>.<span class="ident">lt</span>, <span class="ident">hash</span> },
-            <span class="ident">prev_trans_id</span>: (<span class="ident">data</span>.<span class="ident">prev_trans_lt</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>).<span class="ident">then_some</span>(<span class="ident">TransactionId</span> {
-                <span class="ident">lt</span>: <span class="ident">data</span>.<span class="ident">prev_trans_lt</span>,
-                <span class="ident">hash</span>: <span class="ident">data</span>.<span class="ident">prev_trans_hash</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            id: TransactionId { lt: data.lt, hash },
+            prev_trans_id: (data.prev_trans_lt != <span class="number">0</span>).then_some(TransactionId {
+                lt: data.prev_trans_lt,
+                hash: data.prev_trans_hash,
             }),
-            <span class="ident">created_at</span>: <span class="ident">data</span>.<span class="ident">now</span>,
-            <span class="ident">aborted</span>: <span class="ident">desc</span>.<span class="ident">aborted</span>,
-            <span class="ident">exit_code</span>,
-            <span class="ident">result_code</span>,
-            <span class="ident">orig_status</span>: <span class="ident">data</span>.<span class="ident">orig_status</span>.<span class="ident">into</span>(),
-            <span class="ident">end_status</span>: <span class="ident">data</span>.<span class="ident">end_status</span>.<span class="ident">into</span>(),
-            <span class="ident">total_fees</span>,
-            <span class="ident">in_msg</span>,
-            <span class="ident">out_msgs</span>,
+            created_at: data.now,
+            aborted: desc.aborted,
+            exit_code,
+            result_code,
+            orig_status: data.orig_status.into(),
+            end_status: data.end_status.into(),
+            total_fees,
+            in_msg,
+            out_msgs,
         })
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransactionError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid transaction structure&quot;</span>)]</span>
-    <span class="ident">InvalidStructure</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unsupported transaction type&quot;</span>)]</span>
-    <span class="ident">Unsupported</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug, Copy, Clone)]
+</span><span class="kw">pub enum </span>TransactionError {
+    <span class="attribute">#[error(<span class="string">&quot;Invalid transaction structure&quot;</span>)]
+    </span>InvalidStructure,
+    <span class="attribute">#[error(<span class="string">&quot;Unsupported transaction type&quot;</span>)]
+    </span>Unsupported,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;lowercase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AccountStatus</span> {
-    <span class="doccomment">/// Account exists and has a positive balance</span>
-    <span class="ident">Uninit</span>,
-    <span class="doccomment">/// Account exists, but is frozen</span>
-    <span class="ident">Frozen</span>,
-    <span class="doccomment">/// Account exists, has a deployed contract code and has a positive balance</span>
-    <span class="ident">Active</span>,
-    <span class="doccomment">/// Account doesn&#39;t exist</span>
-    <span class="ident">Nonexist</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>)]
+</span><span class="kw">pub enum </span>AccountStatus {
+    <span class="doccomment">/// Account exists and has a positive balance
+    </span>Uninit,
+    <span class="doccomment">/// Account exists, but is frozen
+    </span>Frozen,
+    <span class="doccomment">/// Account exists, has a deployed contract code and has a positive balance
+    </span>Active,
+    <span class="doccomment">/// Account doesn&#39;t exist
+    </span>Nonexist,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ton_block::AccountStatus</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AccountStatus</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="ident">ton_block::AccountStatus</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">s</span> {
-            <span class="ident">ton_block::AccountStatus::AccStateUninit</span> =&gt; <span class="ident">AccountStatus::Uninit</span>,
-            <span class="ident">ton_block::AccountStatus::AccStateFrozen</span> =&gt; <span class="ident">AccountStatus::Frozen</span>,
-            <span class="ident">ton_block::AccountStatus::AccStateActive</span> =&gt; <span class="ident">AccountStatus::Active</span>,
-            <span class="ident">ton_block::AccountStatus::AccStateNonexist</span> =&gt; <span class="ident">AccountStatus::Nonexist</span>,
+<span class="kw">impl </span>From&lt;ton_block::AccountStatus&gt; <span class="kw">for </span>AccountStatus {
+    <span class="kw">fn </span>from(s: ton_block::AccountStatus) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>s {
+            ton_block::AccountStatus::AccStateUninit =&gt; AccountStatus::Uninit,
+            ton_block::AccountStatus::AccStateFrozen =&gt; AccountStatus::Frozen,
+            ton_block::AccountStatus::AccStateActive =&gt; AccountStatus::Active,
+            ton_block::AccountStatus::AccStateNonexist =&gt; AccountStatus::Nonexist,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Message</span> {
-    <span class="doccomment">/// Message hash</span>
-    <span class="kw">pub</span> <span class="ident">hash</span>: <span class="ident">UInt256</span>,
+<span class="attribute">#[derive(Debug, Clone, Default)]
+</span><span class="kw">pub struct </span>Message {
+    <span class="doccomment">/// Message hash
+    </span><span class="kw">pub </span>hash: UInt256,
 
-    <span class="doccomment">/// Source message address, `None` for external messages</span>
-    <span class="kw">pub</span> <span class="ident">src</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Source message address, `None` for external messages
+    </span><span class="kw">pub </span>src: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
 
-    <span class="doccomment">/// Destination message address, `None` for outbound messages</span>
-    <span class="kw">pub</span> <span class="ident">dst</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Destination message address, `None` for outbound messages
+    </span><span class="kw">pub </span>dst: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
 
-    <span class="doccomment">/// Message value in nano TON</span>
-    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">u64</span>,
+    <span class="doccomment">/// Message value in nano TON
+    </span><span class="kw">pub </span>value: u64,
 
-    <span class="doccomment">/// Whether this message will be bounced on unsuccessful execution.</span>
-    <span class="kw">pub</span> <span class="ident">bounce</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Whether this message will be bounced on unsuccessful execution.
+    </span><span class="kw">pub </span>bounce: bool,
 
-    <span class="doccomment">/// Whether this message was bounced during unsuccessful execution.</span>
-    <span class="doccomment">/// Only relevant for internal messages</span>
-    <span class="kw">pub</span> <span class="ident">bounced</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Whether this message was bounced during unsuccessful execution.
+    /// Only relevant for internal messages
+    </span><span class="kw">pub </span>bounced: bool,
 
-    <span class="doccomment">/// Message body</span>
-    <span class="kw">pub</span> <span class="ident">body</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessageBody</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Message body
+    </span><span class="kw">pub </span>body: <span class="prelude-ty">Option</span>&lt;MessageBody&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Message</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="ident">std::prelude::v1::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Message {
+    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; std::prelude::v1::Result&lt;<span class="self">Self</span>, D::Error&gt;
+    <span class="kw">where
+        </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">use</span> <span class="ident">serde::de::Error</span>;
+        <span class="kw">use </span>serde::de::Error;
 
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">MessageHelper</span> {
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_uint256&quot;</span>)]</span>
-            <span class="ident">hash</span>: <span class="ident">UInt256</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>, <span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_optional_address&quot;</span>)]</span>
-            <span class="ident">src</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>, <span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_optional_address&quot;</span>)]</span>
-            <span class="ident">dst</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-            <span class="ident">value</span>: <span class="ident">u64</span>,
-            <span class="ident">bounce</span>: <span class="ident">bool</span>,
-            <span class="ident">bounced</span>: <span class="ident">bool</span>,
-            <span class="ident">body</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+        <span class="attribute">#[derive(Deserialize)]
+        #[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+        </span><span class="kw">struct </span>MessageHelper {
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+            </span>hash: UInt256,
+            <span class="attribute">#[serde(default, with = <span class="string">&quot;serde_optional_address&quot;</span>)]
+            </span>src: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
+            <span class="attribute">#[serde(default, with = <span class="string">&quot;serde_optional_address&quot;</span>)]
+            </span>dst: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+            </span>value: u64,
+            bounce: bool,
+            bounced: bool,
+            body: <span class="prelude-ty">Option</span>&lt;String&gt;,
         }
 
-        <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">MessageHelper::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">parsed</span>.<span class="ident">body</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">data</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">base64::decode</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">map_err</span>(<span class="ident">D::Error::custom</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ton_types::deserialize_tree_of_cells</span>(<span class="kw-2">&amp;mut</span> <span class="ident">data</span>.<span class="ident">as_slice</span>())
-                    .<span class="ident">map_err</span>(<span class="ident">D::Error::custom</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">repr_hash</span>();
-                <span class="prelude-val">Some</span>(<span class="ident">MessageBody</span> { <span class="ident">hash</span>, <span class="ident">data</span> })
+        <span class="kw">let </span>parsed = MessageHelper::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="kw">let </span>body = <span class="kw">match </span>parsed.body {
+            <span class="prelude-val">Some</span>(data) =&gt; {
+                <span class="kw">let </span>data = base64::decode(<span class="kw-2">&amp;</span>data).map_err(D::Error::custom)<span class="question-mark">?</span>;
+                <span class="kw">let </span>data = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>data.as_slice())
+                    .map_err(D::Error::custom)<span class="question-mark">?</span>;
+                <span class="kw">let </span>hash = data.repr_hash();
+                <span class="prelude-val">Some</span>(MessageBody { hash, data })
             }
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         };
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">hash</span>: <span class="ident">parsed</span>.<span class="ident">hash</span>,
-            <span class="ident">src</span>: <span class="ident">parsed</span>.<span class="ident">src</span>,
-            <span class="ident">dst</span>: <span class="ident">parsed</span>.<span class="ident">dst</span>,
-            <span class="ident">value</span>: <span class="ident">parsed</span>.<span class="ident">value</span>,
-            <span class="ident">bounce</span>: <span class="ident">parsed</span>.<span class="ident">bounce</span>,
-            <span class="ident">bounced</span>: <span class="ident">parsed</span>.<span class="ident">bounced</span>,
-            <span class="ident">body</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            hash: parsed.hash,
+            src: parsed.src,
+            dst: parsed.dst,
+            value: parsed.value,
+            bounce: parsed.bounce,
+            bounced: parsed.bounced,
+            body,
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">Message</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="ident">std::prelude::v1::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">Serializer</span>,
+<span class="kw">impl </span>Serialize <span class="kw">for </span>Message {
+    <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; std::prelude::v1::Result&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: Serializer,
     {
-        <span class="kw">use</span> <span class="ident">serde::ser::Error</span>;
+        <span class="kw">use </span>serde::ser::Error;
 
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">MessageHelper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_uint256&quot;</span>)]</span>
-            <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">UInt256</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(
-                <span class="ident">skip_serializing_if</span> <span class="op">=</span> <span class="string">&quot;Option::is_none&quot;</span>,
-                <span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_optional_address&quot;</span>
-            )]</span>
-            <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(
-                <span class="ident">skip_serializing_if</span> <span class="op">=</span> <span class="string">&quot;Option::is_none&quot;</span>,
-                <span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_optional_address&quot;</span>
-            )]</span>
-            <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
-            <span class="ident">value</span>: <span class="ident">String</span>,
-            <span class="ident">bounce</span>: <span class="ident">bool</span>,
-            <span class="ident">bounced</span>: <span class="ident">bool</span>,
-            <span class="ident">body</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-            <span class="ident">body_hash</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+        <span class="attribute">#[derive(Serialize)]
+        #[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+        </span><span class="kw">struct </span>MessageHelper&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+            </span>hash: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>UInt256,
+            <span class="attribute">#[serde(
+                skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>,
+                with = <span class="string">&quot;serde_optional_address&quot;
+            </span>)]
+            </span>src: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
+            <span class="attribute">#[serde(
+                skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>,
+                with = <span class="string">&quot;serde_optional_address&quot;
+            </span>)]
+            </span>dst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
+            value: String,
+            bounce: bool,
+            bounced: bool,
+            body: <span class="prelude-ty">Option</span>&lt;String&gt;,
+            body_hash: <span class="prelude-ty">Option</span>&lt;String&gt;,
         }
 
-        <span class="kw">let</span> (<span class="ident">body</span>, <span class="ident">body_hash</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">body</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">body</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ton_types::serialize_toc</span>(<span class="kw-2">&amp;</span><span class="ident">body</span>.<span class="ident">data</span>).<span class="ident">map_err</span>(<span class="ident">S::Error::custom</span>)<span class="question-mark">?</span>;
-                (<span class="prelude-val">Some</span>(<span class="ident">base64::encode</span>(<span class="ident">data</span>)), <span class="prelude-val">Some</span>(<span class="ident">body</span>.<span class="ident">hash</span>.<span class="ident">to_hex_string</span>()))
+        <span class="kw">let </span>(body, body_hash) = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.body {
+            <span class="prelude-val">Some</span>(body) =&gt; {
+                <span class="kw">let </span>data = ton_types::serialize_toc(<span class="kw-2">&amp;</span>body.data).map_err(S::Error::custom)<span class="question-mark">?</span>;
+                (<span class="prelude-val">Some</span>(base64::encode(data)), <span class="prelude-val">Some</span>(body.hash.to_hex_string()))
             }
-            <span class="prelude-val">None</span> =&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+            <span class="prelude-val">None </span>=&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
         };
 
-        <span class="ident">MessageHelper</span> {
-            <span class="ident">hash</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">hash</span>,
-            <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">src</span>,
-            <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dst</span>,
-            <span class="ident">value</span>: <span class="self">self</span>.<span class="ident">value</span>.<span class="ident">to_string</span>(),
-            <span class="ident">bounce</span>: <span class="self">self</span>.<span class="ident">bounce</span>,
-            <span class="ident">bounced</span>: <span class="self">self</span>.<span class="ident">bounced</span>,
-            <span class="ident">body</span>,
-            <span class="ident">body_hash</span>,
+        MessageHelper {
+            hash: <span class="kw-2">&amp;</span><span class="self">self</span>.hash,
+            src: <span class="kw-2">&amp;</span><span class="self">self</span>.src,
+            dst: <span class="kw-2">&amp;</span><span class="self">self</span>.dst,
+            value: <span class="self">self</span>.value.to_string(),
+            bounce: <span class="self">self</span>.bounce,
+            bounced: <span class="self">self</span>.bounced,
+            body,
+            body_hash,
         }
-        .<span class="ident">serialize</span>(<span class="ident">serializer</span>)
+        .serialize(serializer)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span>(<span class="ident">UInt256</span>, <span class="ident">ton_block::Message</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Message</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>((<span class="ident">hash</span>, <span class="ident">s</span>): (<span class="ident">UInt256</span>, <span class="ident">ton_block::Message</span>)) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">s</span>.<span class="ident">body</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">body</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">body</span>.<span class="ident">into_cell</span>();
-            <span class="ident">MessageBody</span> {
-                <span class="ident">hash</span>: <span class="ident">data</span>.<span class="ident">repr_hash</span>(),
-                <span class="ident">data</span>,
+<span class="kw">impl </span>From&lt;(UInt256, ton_block::Message)&gt; <span class="kw">for </span>Message {
+    <span class="kw">fn </span>from((hash, s): (UInt256, ton_block::Message)) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>body = s.body().map(|body| {
+            <span class="kw">let </span>data = body.into_cell();
+            MessageBody {
+                hash: data.repr_hash(),
+                data,
             }
         });
 
-        <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">header</span>() {
-            <span class="ident">ton_block::CommonMsgInfo::IntMsgInfo</span>(<span class="ident">header</span>) =&gt; <span class="ident">Message</span> {
-                <span class="ident">hash</span>,
-                <span class="ident">src</span>: <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">header</span>.<span class="ident">src</span> {
-                    <span class="ident">ton_block::MsgAddressIntOrNone::Some</span>(<span class="ident">addr</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">addr</span>.<span class="ident">clone</span>()),
-                    <span class="ident">ton_block::MsgAddressIntOrNone::None</span> =&gt; <span class="prelude-val">None</span>,
+        <span class="kw">match </span>s.header() {
+            ton_block::CommonMsgInfo::IntMsgInfo(header) =&gt; Message {
+                hash,
+                src: <span class="kw">match </span><span class="kw-2">&amp;</span>header.src {
+                    ton_block::MsgAddressIntOrNone::Some(addr) =&gt; <span class="prelude-val">Some</span>(addr.clone()),
+                    ton_block::MsgAddressIntOrNone::None =&gt; <span class="prelude-val">None</span>,
                 },
-                <span class="ident">dst</span>: <span class="prelude-val">Some</span>(<span class="ident">header</span>.<span class="ident">dst</span>.<span class="ident">clone</span>()),
-                <span class="ident">value</span>: <span class="ident">header</span>.<span class="ident">value</span>.<span class="ident">grams</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u64</span>,
-                <span class="ident">body</span>,
-                <span class="ident">bounce</span>: <span class="ident">header</span>.<span class="ident">bounce</span>,
-                <span class="ident">bounced</span>: <span class="ident">header</span>.<span class="ident">bounced</span>,
+                dst: <span class="prelude-val">Some</span>(header.dst.clone()),
+                value: header.value.grams.<span class="number">0 </span><span class="kw">as </span>u64,
+                body,
+                bounce: header.bounce,
+                bounced: header.bounced,
             },
-            <span class="ident">ton_block::CommonMsgInfo::ExtInMsgInfo</span>(<span class="ident">header</span>) =&gt; <span class="ident">Message</span> {
-                <span class="ident">hash</span>,
-                <span class="ident">src</span>: <span class="prelude-val">None</span>,
-                <span class="ident">dst</span>: <span class="prelude-val">Some</span>(<span class="ident">header</span>.<span class="ident">dst</span>.<span class="ident">clone</span>()),
-                <span class="ident">body</span>,
-                ..<span class="ident">Default::default</span>()
+            ton_block::CommonMsgInfo::ExtInMsgInfo(header) =&gt; Message {
+                hash,
+                src: <span class="prelude-val">None</span>,
+                dst: <span class="prelude-val">Some</span>(header.dst.clone()),
+                body,
+                ..Default::default()
             },
-            <span class="ident">ton_block::CommonMsgInfo::ExtOutMsgInfo</span>(<span class="ident">header</span>) =&gt; <span class="ident">Message</span> {
-                <span class="ident">hash</span>,
-                <span class="ident">src</span>: <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">header</span>.<span class="ident">src</span> {
-                    <span class="ident">ton_block::MsgAddressIntOrNone::Some</span>(<span class="ident">addr</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">addr</span>.<span class="ident">clone</span>()),
-                    <span class="ident">ton_block::MsgAddressIntOrNone::None</span> =&gt; <span class="prelude-val">None</span>,
+            ton_block::CommonMsgInfo::ExtOutMsgInfo(header) =&gt; Message {
+                hash,
+                src: <span class="kw">match </span><span class="kw-2">&amp;</span>header.src {
+                    ton_block::MsgAddressIntOrNone::Some(addr) =&gt; <span class="prelude-val">Some</span>(addr.clone()),
+                    ton_block::MsgAddressIntOrNone::None =&gt; <span class="prelude-val">None</span>,
                 },
-                <span class="ident">body</span>,
-                ..<span class="ident">Default::default</span>()
+                body,
+                ..Default::default()
             },
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MessageBody</span> {
-    <span class="doccomment">/// Hash of body in cell representation</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_uint256&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">hash</span>: <span class="ident">UInt256</span>,
-    <span class="doccomment">/// Base64 encoded message body</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_cell&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">ton_types::Cell</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>MessageBody {
+    <span class="doccomment">/// Hash of body in cell representation
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>hash: UInt256,
+    <span class="doccomment">/// Base64 encoded message body
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="kw">pub </span>data: ton_types::Cell,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MessageBodyError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to serialize data&quot;</span>)]</span>
-    <span class="ident">FailedToSerialize</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to deserialize data&quot;</span>)]</span>
-    <span class="ident">FailedToDeserialize</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug, Copy, Clone)]
+</span><span class="kw">pub enum </span>MessageBodyError {
+    <span class="attribute">#[error(<span class="string">&quot;Failed to serialize data&quot;</span>)]
+    </span>FailedToSerialize,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to deserialize data&quot;</span>)]
+    </span>FailedToDeserialize,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum</span> <span class="ident">AccountSubscriptionError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid message destination&quot;</span>)]</span>
-    <span class="ident">InvalidMessageDestination</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid message type&quot;</span>)]</span>
-    <span class="ident">InvalidMessageType</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>AccountSubscriptionError {
+    <span class="attribute">#[error(<span class="string">&quot;Invalid message destination&quot;</span>)]
+    </span>InvalidMessageDestination,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid message type&quot;</span>)]
+    </span>InvalidMessageType,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MessageFlags</span> {
-    <span class="ident">Normal</span>,
-    <span class="ident">AllBalance</span>,
-    <span class="ident">AllBalanceDeleteNetworkAccount</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+</span><span class="kw">pub enum </span>MessageFlags {
+    Normal,
+    AllBalance,
+    AllBalanceDeleteNetworkAccount,
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MessageFlags</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">MessageFlagsError</span>;
+<span class="kw">impl </span>TryFrom&lt;u8&gt; <span class="kw">for </span>MessageFlags {
+    <span class="kw">type </span>Error = MessageFlagsError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">u8</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="number">3</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">MessageFlags::Normal</span>),
-            <span class="number">128</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">MessageFlags::AllBalance</span>),
-            <span class="number">160</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">MessageFlags::AllBalanceDeleteNetworkAccount</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">MessageFlagsError::UnknownMessageFlags</span>),
+    <span class="kw">fn </span>try_from(value: u8) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">match </span>value {
+            <span class="number">3 </span>=&gt; <span class="prelude-val">Ok</span>(MessageFlags::Normal),
+            <span class="number">128 </span>=&gt; <span class="prelude-val">Ok</span>(MessageFlags::AllBalance),
+            <span class="number">160 </span>=&gt; <span class="prelude-val">Ok</span>(MessageFlags::AllBalanceDeleteNetworkAccount),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(MessageFlagsError::UnknownMessageFlags),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MessageFlags</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u8</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">MessageFlags</span>) -&gt; <span class="ident">u8</span> {
-        <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="ident">MessageFlags::Normal</span> =&gt; <span class="number">3</span>,
-            <span class="ident">MessageFlags::AllBalance</span> =&gt; <span class="number">128</span>,
-            <span class="ident">MessageFlags::AllBalanceDeleteNetworkAccount</span> =&gt; <span class="number">128</span> <span class="op">+</span> <span class="number">32</span>,
+<span class="kw">impl </span>From&lt;MessageFlags&gt; <span class="kw">for </span>u8 {
+    <span class="kw">fn </span>from(value: MessageFlags) -&gt; u8 {
+        <span class="kw">match </span>value {
+            MessageFlags::Normal =&gt; <span class="number">3</span>,
+            MessageFlags::AllBalance =&gt; <span class="number">128</span>,
+            MessageFlags::AllBalanceDeleteNetworkAccount =&gt; <span class="number">128 </span>+ <span class="number">32</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">MessageFlags</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">MessageFlags::Normal</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>MessageFlags {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        MessageFlags::Normal
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MessageFlagsError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unknown message flags combination&quot;</span>)]</span>
-    <span class="ident">UnknownMessageFlags</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug, Copy, Clone)]
+</span><span class="kw">pub enum </span>MessageFlagsError {
+    <span class="attribute">#[error(<span class="string">&quot;Unknown message flags combination&quot;</span>)]
+    </span>UnknownMessageFlags,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_parse_transaction</span>() {
-        <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span>  <span class="ident">ton_block::Transaction::construct_from_base64</span>(<span class="string">&quot;te6ccgECCgEAAmIAA7VxDMDpxVKoQf1ESN4flYWnx79MwznjFCnHv2LMYnj5e/AAAMAPptS0HL7tNWkkUnpwkWevWy0v6QllFeZdkxpKd3jABu53GMiwAADABeYcjBYH/izgADRpb9DoBQQBAhEMgEHGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAJdRbUJwB114ymQlNQVCfa9Moy2h4xlzAjFN0wo4BiqckBQGUwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnIKnXiVk1PWmbnJrrJ8ZuP6tVF8xWwdT4FzwpwwbcybITXW+aJKu2Ai+6iWudx7E+cmmtyYoMFlMnA6RJvjslElAgHgCAYBAd8HAMtoACGYHTiqVQg/qIkbw/KwtPj36ZhnPGKFOPfsWYxPHy9/AC7y/frS28SA7otT/U3XeMKVAioEwv3n4cO+8/UnsFk6VAnHZSQABhRYYAAAGAH02paEwP/FnAVWDH6AAAABKgXyAEAB34gAIZgdOKpVCD+oiRvD8rC0+PfpmGc8YoU49+xZjE8fL34FEnWHwu7iFVw1r2O1eQN6i3g5Ib9nJIGpQqRtpYG36Pjrmo9/vgPWf5ev1vhedfPUgkaxeInhVroDrGaLYfhoEl1JbFYH/i5IAAADOBwJAIJiAF3l+/Wlt4kB3Ran+puu8YUqBFQJhfvPw4d95+pPYLJ0qBOOykgAAAAAAAAAAAAAAAAAAAqsGP0AAAACVAvkAA==&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">Transaction::try_from</span>((<span class="ident">Default::default</span>(), <span class="ident">transaction</span>)).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">parsed</span>.<span class="ident">in_msg</span>.<span class="ident">body</span>.<span class="ident">is_some</span>())
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_parse_transaction() {
+        <span class="kw">let </span>transaction =  ton_block::Transaction::construct_from_base64(<span class="string">&quot;te6ccgECCgEAAmIAA7VxDMDpxVKoQf1ESN4flYWnx79MwznjFCnHv2LMYnj5e/AAAMAPptS0HL7tNWkkUnpwkWevWy0v6QllFeZdkxpKd3jABu53GMiwAADABeYcjBYH/izgADRpb9DoBQQBAhEMgEHGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAJdRbUJwB114ymQlNQVCfa9Moy2h4xlzAjFN0wo4BiqckBQGUwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnIKnXiVk1PWmbnJrrJ8ZuP6tVF8xWwdT4FzwpwwbcybITXW+aJKu2Ai+6iWudx7E+cmmtyYoMFlMnA6RJvjslElAgHgCAYBAd8HAMtoACGYHTiqVQg/qIkbw/KwtPj36ZhnPGKFOPfsWYxPHy9/AC7y/frS28SA7otT/U3XeMKVAioEwv3n4cO+8/UnsFk6VAnHZSQABhRYYAAAGAH02paEwP/FnAVWDH6AAAABKgXyAEAB34gAIZgdOKpVCD+oiRvD8rC0+PfpmGc8YoU49+xZjE8fL34FEnWHwu7iFVw1r2O1eQN6i3g5Ib9nJIGpQqRtpYG36Pjrmo9/vgPWf5ev1vhedfPUgkaxeInhVroDrGaLYfhoEl1JbFYH/i5IAAADOBwJAIJiAF3l+/Wlt4kB3Ran+puu8YUqBFQJhfvPw4d95+pPYLJ0qBOOykgAAAAAAAAAAAAAAAAAAAqsGP0AAAACVAvkAA==&quot;</span>).unwrap();
+        <span class="kw">let </span>parsed = Transaction::try_from((Default::default(), transaction)).unwrap();
+        <span class="macro">assert!</span>(parsed.in_msg.body.is_some())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

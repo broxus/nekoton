@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/token_packer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>token_packer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/token_packer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>token_packer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -252,259 +252,259 @@
 <span id="252">252</span>
 <span id="253">253</span>
 <span id="254">254</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">BTreeMap</span>, <span class="ident">HashMap</span>};
-<span class="kw">use</span> <span class="ident">std::hash::BuildHasher</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::{BTreeMap, HashMap};
+<span class="kw">use </span>std::hash::BuildHasher;
 
-<span class="kw">use</span> <span class="ident">num_bigint</span>::{<span class="ident">BigInt</span>, <span class="ident">BigUint</span>};
-<span class="kw">use</span> <span class="ident">ton_abi</span>::{<span class="ident">MapKeyTokenValue</span>, <span class="ident">Token</span>, <span class="ident">TokenValue</span>};
-<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">MsgAddrStd</span>, <span class="ident">MsgAddress</span>, <span class="ident">MsgAddressInt</span>};
-<span class="kw">use</span> <span class="ident">ton_types</span>::{<span class="ident">BuilderData</span>, <span class="ident">Cell</span>};
+<span class="kw">use </span>num_bigint::{BigInt, BigUint};
+<span class="kw">use </span>ton_abi::{MapKeyTokenValue, Token, TokenValue};
+<span class="kw">use </span>ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
+<span class="kw">use </span>ton_types::{BuilderData, Cell};
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">KnownParamType</span>, <span class="ident">MaybeRef</span>, <span class="ident">StandaloneToken</span>};
+<span class="kw">use super</span>::{KnownParamType, MaybeRef, StandaloneToken};
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PackAbiPlain</span> {
-    <span class="kw">fn</span> <span class="ident">pack</span>(<span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Token</span><span class="op">&gt;</span>;
+<span class="kw">pub trait </span>PackAbiPlain {
+    <span class="kw">fn </span>pack(<span class="self">self</span>) -&gt; Vec&lt;Token&gt;;
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PackAbi</span>: <span class="ident">BuildTokenValue</span> {
-    <span class="kw">fn</span> <span class="ident">pack</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span>;
+<span class="kw">pub trait </span>PackAbi: BuildTokenValue {
+    <span class="kw">fn </span>pack(<span class="self">self</span>) -&gt; TokenValue;
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">BuildTokenValue</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span>;
+<span class="kw">pub trait </span>BuildTokenValue {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue;
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">BuildMapKeyTokenValue</span> {
-    <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span>;
+<span class="kw">pub trait </span>BuildMapKeyTokenValue {
+    <span class="kw">fn </span>map_key_token_value(<span class="self">self</span>) -&gt; MapKeyTokenValue;
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">impl_integer</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">int</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">abi</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bigint</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>:<span class="ident">literal</span>) =&gt; {
-        <span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">int</span> {
-            <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-                <span class="self">self</span>.<span class="ident">map_key_token_value</span>().<span class="ident">into</span>()
+<span class="macro">macro_rules! </span>impl_integer {
+    (<span class="macro-nonterminal">$int</span>:ty, <span class="macro-nonterminal">$abi</span>:ident, <span class="macro-nonterminal">$bigint</span>:ident, <span class="macro-nonterminal">$size</span>:literal) =&gt; {
+        <span class="kw">impl </span>BuildTokenValue <span class="kw">for </span><span class="macro-nonterminal">$int </span>{
+            <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+                <span class="self">self</span>.map_key_token_value().into()
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">BuildMapKeyTokenValue</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">int</span> {
-            <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span> {
-                <span class="ident">MapKeyTokenValue</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">abi</span>(<span class="ident">ton_abi</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">abi</span> {
-                    <span class="ident">number</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">bigint::from</span>(<span class="self">self</span>),
-                    <span class="ident">size</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>,
+        <span class="kw">impl </span>BuildMapKeyTokenValue <span class="kw">for </span><span class="macro-nonterminal">$int </span>{
+            <span class="kw">fn </span>map_key_token_value(<span class="self">self</span>) -&gt; MapKeyTokenValue {
+                MapKeyTokenValue::<span class="macro-nonterminal">$abi</span>(ton_abi::<span class="macro-nonterminal">$abi </span>{
+                    number: <span class="macro-nonterminal">$bigint::from</span>(<span class="self">self</span>),
+                    size: <span class="macro-nonterminal">$size</span>,
                 })
             }
         }
     };
 }
 
-<span class="macro">impl_integer!</span>(<span class="ident">i8</span>, <span class="ident">Int</span>, <span class="ident">BigInt</span>, <span class="number">8</span>);
-<span class="macro">impl_integer!</span>(<span class="ident">u8</span>, <span class="ident">Uint</span>, <span class="ident">BigUint</span>, <span class="number">8</span>);
-<span class="macro">impl_integer!</span>(<span class="ident">i16</span>, <span class="ident">Int</span>, <span class="ident">BigInt</span>, <span class="number">16</span>);
-<span class="macro">impl_integer!</span>(<span class="ident">u16</span>, <span class="ident">Uint</span>, <span class="ident">BigUint</span>, <span class="number">16</span>);
-<span class="macro">impl_integer!</span>(<span class="ident">i32</span>, <span class="ident">Int</span>, <span class="ident">BigInt</span>, <span class="number">32</span>);
-<span class="macro">impl_integer!</span>(<span class="ident">u32</span>, <span class="ident">Uint</span>, <span class="ident">BigUint</span>, <span class="number">32</span>);
-<span class="macro">impl_integer!</span>(<span class="ident">i64</span>, <span class="ident">Int</span>, <span class="ident">BigInt</span>, <span class="number">64</span>);
-<span class="macro">impl_integer!</span>(<span class="ident">u64</span>, <span class="ident">Uint</span>, <span class="ident">BigUint</span>, <span class="number">64</span>);
-<span class="macro">impl_integer!</span>(<span class="ident">i128</span>, <span class="ident">Int</span>, <span class="ident">BigInt</span>, <span class="number">128</span>);
-<span class="macro">impl_integer!</span>(<span class="ident">u128</span>, <span class="ident">Uint</span>, <span class="ident">BigUint</span>, <span class="number">128</span>);
+<span class="macro">impl_integer!</span>(i8, Int, BigInt, <span class="number">8</span>);
+<span class="macro">impl_integer!</span>(u8, Uint, BigUint, <span class="number">8</span>);
+<span class="macro">impl_integer!</span>(i16, Int, BigInt, <span class="number">16</span>);
+<span class="macro">impl_integer!</span>(u16, Uint, BigUint, <span class="number">16</span>);
+<span class="macro">impl_integer!</span>(i32, Int, BigInt, <span class="number">32</span>);
+<span class="macro">impl_integer!</span>(u32, Uint, BigUint, <span class="number">32</span>);
+<span class="macro">impl_integer!</span>(i64, Int, BigInt, <span class="number">64</span>);
+<span class="macro">impl_integer!</span>(u64, Uint, BigUint, <span class="number">64</span>);
+<span class="macro">impl_integer!</span>(i128, Int, BigInt, <span class="number">128</span>);
+<span class="macro">impl_integer!</span>(u128, Uint, BigUint, <span class="number">128</span>);
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">ton_types::UInt256</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="self">self</span>.<span class="ident">map_key_token_value</span>().<span class="ident">into</span>()
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>ton_types::UInt256 {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        <span class="self">self</span>.map_key_token_value().into()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildMapKeyTokenValue</span> <span class="kw">for</span> <span class="ident">ton_types::UInt256</span> {
-    <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span> {
-        <span class="ident">MapKeyTokenValue::Uint</span>(<span class="ident">ton_abi::Uint</span> {
-            <span class="ident">number</span>: <span class="ident">BigUint::from_bytes_be</span>(<span class="self">self</span>.<span class="ident">as_slice</span>()),
-            <span class="ident">size</span>: <span class="number">256</span>,
+<span class="kw">impl </span>BuildMapKeyTokenValue <span class="kw">for </span>ton_types::UInt256 {
+    <span class="kw">fn </span>map_key_token_value(<span class="self">self</span>) -&gt; MapKeyTokenValue {
+        MapKeyTokenValue::Uint(ton_abi::Uint {
+            number: BigUint::from_bytes_be(<span class="self">self</span>.as_slice()),
+            size: <span class="number">256</span>,
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">bool</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::Bool</span>(<span class="self">self</span>)
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>bool {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::Bool(<span class="self">self</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">Cell</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::Cell</span>(<span class="self">self</span>)
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>Cell {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::Cell(<span class="self">self</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">MsgAddressInt</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="self">self</span>.<span class="ident">map_key_token_value</span>().<span class="ident">into</span>()
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>MsgAddressInt {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        <span class="self">self</span>.map_key_token_value().into()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildMapKeyTokenValue</span> <span class="kw">for</span> <span class="ident">MsgAddressInt</span> {
-    <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span> {
-        <span class="ident">MapKeyTokenValue::Address</span>(<span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">MsgAddressInt::AddrStd</span>(<span class="ident">addr</span>) =&gt; <span class="ident">MsgAddress::AddrStd</span>(<span class="ident">addr</span>),
-            <span class="ident">MsgAddressInt::AddrVar</span>(<span class="ident">addr</span>) =&gt; <span class="ident">MsgAddress::AddrVar</span>(<span class="ident">addr</span>),
+<span class="kw">impl </span>BuildMapKeyTokenValue <span class="kw">for </span>MsgAddressInt {
+    <span class="kw">fn </span>map_key_token_value(<span class="self">self</span>) -&gt; MapKeyTokenValue {
+        MapKeyTokenValue::Address(<span class="kw">match </span><span class="self">self </span>{
+            MsgAddressInt::AddrStd(addr) =&gt; MsgAddress::AddrStd(addr),
+            MsgAddressInt::AddrVar(addr) =&gt; MsgAddress::AddrVar(addr),
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">MsgAddrStd</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::Address</span>(<span class="ident">MsgAddress::AddrStd</span>(<span class="self">self</span>))
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>MsgAddrStd {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::Address(MsgAddress::AddrStd(<span class="self">self</span>))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildMapKeyTokenValue</span> <span class="kw">for</span> <span class="ident">MsgAddrStd</span> {
-    <span class="kw">fn</span> <span class="ident">map_key_token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">MapKeyTokenValue</span> {
-        <span class="ident">MapKeyTokenValue::Address</span>(<span class="ident">MsgAddress::AddrStd</span>(<span class="self">self</span>))
+<span class="kw">impl </span>BuildMapKeyTokenValue <span class="kw">for </span>MsgAddrStd {
+    <span class="kw">fn </span>map_key_token_value(<span class="self">self</span>) -&gt; MapKeyTokenValue {
+        MapKeyTokenValue::Address(MsgAddress::AddrStd(<span class="self">self</span>))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">str</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::String</span>(<span class="self">self</span>.<span class="ident">to_string</span>())
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span><span class="kw-2">&amp;</span>str {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::String(<span class="self">self</span>.to_string())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">String</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::String</span>(<span class="self">self</span>)
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>String {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::String(<span class="self">self</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">ton_block::Grams</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::Token</span>(<span class="self">self</span>)
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>ton_block::Grams {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::Token(<span class="self">self</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::Bytes</span>(<span class="self">self</span>)
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>Vec&lt;u8&gt; {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::Bytes(<span class="self">self</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">BuilderData</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::Cell</span>(<span class="self">self</span>.<span class="ident">into</span>())
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>BuilderData {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::Cell(<span class="self">self</span>.into())
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">BuildTokenValue</span> <span class="op">+</span> <span class="ident">KnownParamType</span>,
+<span class="kw">impl</span>&lt;T&gt; BuildTokenValue <span class="kw">for </span><span class="prelude-ty">Option</span>&lt;T&gt;
+<span class="kw">where
+    </span>T: BuildTokenValue + KnownParamType,
 {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::Optional</span>(
-            <span class="ident">T::param_type</span>(),
-            <span class="self">self</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">Box::new</span>(<span class="ident">item</span>.<span class="ident">token_value</span>())),
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::Optional(
+            T::param_type(),
+            <span class="self">self</span>.map(|item| Box::new(item.token_value())),
         )
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">MaybeRef</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">BuildTokenValue</span> <span class="op">+</span> <span class="ident">KnownParamType</span>,
+<span class="kw">impl</span>&lt;T&gt; BuildTokenValue <span class="kw">for </span>MaybeRef&lt;T&gt;
+<span class="kw">where
+    </span>T: BuildTokenValue + KnownParamType,
 {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::Optional</span>(
-            <span class="ident">ton_abi::ParamType::Ref</span>(<span class="ident">Box::new</span>(<span class="ident">T::param_type</span>())),
-            <span class="self">self</span>.<span class="number">0</span>
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">Box::new</span>(<span class="ident">TokenValue::Ref</span>(<span class="ident">Box::new</span>(<span class="ident">item</span>.<span class="ident">token_value</span>())))),
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::Optional(
+            ton_abi::ParamType::Ref(Box::new(T::param_type())),
+            <span class="self">self</span>.<span class="number">0
+                </span>.map(|item| Box::new(TokenValue::Ref(Box::new(item.token_value())))),
         )
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">StandaloneToken</span> <span class="op">+</span> <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildTokenValue</span>,
+<span class="kw">impl</span>&lt;T&gt; BuildTokenValue <span class="kw">for </span>Vec&lt;T&gt;
+<span class="kw">where
+    </span>T: StandaloneToken + KnownParamType + BuildTokenValue,
 {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="ident">TokenValue::Array</span>(
-            <span class="ident">T::param_type</span>(),
-            <span class="self">self</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">BuildTokenValue::token_value</span>).<span class="ident">collect</span>(),
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        TokenValue::Array(
+            T::param_type(),
+            <span class="self">self</span>.into_iter().map(BuildTokenValue::token_value).collect(),
         )
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">K</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildMapKeyTokenValue</span>,
-    <span class="ident">V</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildTokenValue</span>,
+<span class="kw">impl</span>&lt;K, V&gt; BuildTokenValue <span class="kw">for </span>BTreeMap&lt;K, V&gt;
+<span class="kw">where
+    </span>K: KnownParamType + BuildMapKeyTokenValue,
+    V: KnownParamType + BuildTokenValue,
 {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">BTreeMap::new</span>();
-        <span class="kw">for</span> (<span class="ident">k</span>, <span class="ident">v</span>) <span class="kw">in</span> <span class="self">self</span> {
-            <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">k</span>.<span class="ident">map_key_token_value</span>(), <span class="ident">v</span>.<span class="ident">token_value</span>());
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        <span class="kw">let </span><span class="kw-2">mut </span>map = BTreeMap::new();
+        <span class="kw">for </span>(k, v) <span class="kw">in </span><span class="self">self </span>{
+            map.insert(k.map_key_token_value(), v.token_value());
         }
-        <span class="ident">TokenValue::Map</span>(<span class="ident">K::param_type</span>(), <span class="ident">V::param_type</span>(), <span class="ident">map</span>)
+        TokenValue::Map(K::param_type(), V::param_type(), map)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span>, <span class="ident">S</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">K</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildMapKeyTokenValue</span>,
-    <span class="ident">V</span>: <span class="ident">KnownParamType</span> <span class="op">+</span> <span class="ident">BuildTokenValue</span>,
-    <span class="ident">S</span>: <span class="ident">BuildHasher</span>,
+<span class="kw">impl</span>&lt;K, V, S&gt; BuildTokenValue <span class="kw">for </span>HashMap&lt;K, V, S&gt;
+<span class="kw">where
+    </span>K: KnownParamType + BuildMapKeyTokenValue,
+    V: KnownParamType + BuildTokenValue,
+    S: BuildHasher,
 {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">BTreeMap::new</span>();
-        <span class="kw">for</span> (<span class="ident">k</span>, <span class="ident">v</span>) <span class="kw">in</span> <span class="self">self</span> {
-            <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">k</span>.<span class="ident">map_key_token_value</span>(), <span class="ident">v</span>.<span class="ident">token_value</span>());
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        <span class="kw">let </span><span class="kw-2">mut </span>map = BTreeMap::new();
+        <span class="kw">for </span>(k, v) <span class="kw">in </span><span class="self">self </span>{
+            map.insert(k.map_key_token_value(), v.token_value());
         }
-        <span class="ident">TokenValue::Map</span>(<span class="ident">K::param_type</span>(), <span class="ident">V::param_type</span>(), <span class="ident">map</span>)
+        TokenValue::Map(K::param_type(), V::param_type(), map)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="ident">TokenValue</span> {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="self">self</span>
-    }
+<span class="kw">impl </span>BuildTokenValue <span class="kw">for </span>TokenValue {
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        <span class="self">self
+    </span>}
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">BuildTokenValue</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">T</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">BuildTokenValue</span>,
+<span class="kw">impl</span>&lt;T&gt; BuildTokenValue <span class="kw">for </span><span class="kw-2">&amp;</span>T
+<span class="kw">where
+    </span>T: Clone + BuildTokenValue,
 {
-    <span class="kw">fn</span> <span class="ident">token_value</span>(<span class="self">self</span>) -&gt; <span class="ident">TokenValue</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">token_value</span>()
+    <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; TokenValue {
+        <span class="self">self</span>.clone().token_value()
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_maybe_ref_serialization</span>() {
-        <span class="comment">// Some</span>
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">ton_abi::TokenValue::pack_token_values_into_chain</span>(
-            <span class="kw-2">&amp;</span>[<span class="ident">MaybeRef</span>(<span class="prelude-val">Some</span>(<span class="number">123u32</span>)).<span class="ident">token_value</span>()],
-            <span class="ident">Default::default</span>(),
-            <span class="ident">ton_abi::contract::ABI_VERSION_2_2</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_maybe_ref_serialization() {
+        <span class="comment">// Some
+        </span><span class="kw">let </span>value = ton_abi::TokenValue::pack_token_values_into_chain(
+            <span class="kw-2">&amp;</span>[MaybeRef(<span class="prelude-val">Some</span>(<span class="number">123u32</span>)).token_value()],
+            Default::default(),
+            ton_abi::contract::ABI_VERSION_2_2,
         )
-        .<span class="ident">unwrap</span>()
-        .<span class="ident">into_cell</span>()
-        .<span class="ident">unwrap</span>();
+        .unwrap()
+        .into_cell()
+        .unwrap();
 
-        <span class="kw">let</span> <span class="ident">serialized</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">ton_types::serialize_toc</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">unwrap</span>());
-        <span class="macro">assert_eq!</span>(<span class="ident">serialized</span>, <span class="string">&quot;te6ccgEBAgEACgABAcABAAgAAAB7&quot;</span>);
+        <span class="kw">let </span>serialized = base64::encode(ton_types::serialize_toc(<span class="kw-2">&amp;</span>value).unwrap());
+        <span class="macro">assert_eq!</span>(serialized, <span class="string">&quot;te6ccgEBAgEACgABAcABAAgAAAB7&quot;</span>);
 
-        <span class="comment">// None</span>
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">ton_abi::TokenValue::pack_token_values_into_chain</span>(
-            <span class="kw-2">&amp;</span>[<span class="ident">MaybeRef</span>(<span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="ident">::None</span>).<span class="ident">token_value</span>()],
-            <span class="ident">Default::default</span>(),
-            <span class="ident">ton_abi::contract::ABI_VERSION_2_2</span>,
+        <span class="comment">// None
+        </span><span class="kw">let </span>value = ton_abi::TokenValue::pack_token_values_into_chain(
+            <span class="kw-2">&amp;</span>[MaybeRef(<span class="prelude-ty">Option</span>::&lt;u32&gt;::None).token_value()],
+            Default::default(),
+            ton_abi::contract::ABI_VERSION_2_2,
         )
-        .<span class="ident">unwrap</span>()
-        .<span class="ident">into_cell</span>()
-        .<span class="ident">unwrap</span>();
+        .unwrap()
+        .into_cell()
+        .unwrap();
 
-        <span class="kw">let</span> <span class="ident">serialized</span> <span class="op">=</span> <span class="ident">base64::encode</span>(<span class="ident">ton_types::serialize_toc</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">unwrap</span>());
-        <span class="macro">assert_eq!</span>(<span class="ident">serialized</span>, <span class="string">&quot;te6ccgEBAQEAAwAAAUA=&quot;</span>);
+        <span class="kw">let </span>serialized = base64::encode(ton_types::serialize_toc(<span class="kw-2">&amp;</span>value).unwrap());
+        <span class="macro">assert_eq!</span>(serialized, <span class="string">&quot;te6ccgEBAQEAAwAAAUA=&quot;</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/utils.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>utils.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/utils.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>utils.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -463,470 +463,470 @@
 <span id="463">463</span>
 <span id="464">464</span>
 <span id="465">465</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
-<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
-<span class="kw">use</span> <span class="ident">std::pin::Pin</span>;
-<span class="kw">use</span> <span class="ident">std::task</span>::{<span class="ident">Context</span>, <span class="ident">Poll</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
+<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::convert::TryFrom;
+<span class="kw">use </span>std::pin::Pin;
+<span class="kw">use </span>std::task::{Context, Poll};
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">ed25519_dalek::PublicKey</span>;
-<span class="kw">use</span> <span class="ident">futures_util</span>::{<span class="ident">Future</span>, <span class="ident">FutureExt</span>, <span class="ident">Stream</span>};
-<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">MsgAddressInt</span>, <span class="ident">Serializable</span>};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>ed25519_dalek::PublicKey;
+<span class="kw">use </span>futures_util::{Future, FutureExt, Stream};
+<span class="kw">use </span>ton_block::{MsgAddressInt, Serializable};
 
-<span class="kw">use</span> <span class="ident">nekoton_abi</span>::{<span class="ident">GenTimings</span>, <span class="ident">LastTransactionId</span>, <span class="ident">TransactionId</span>};
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::models</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto</span>::{<span class="ident">SignedMessage</span>, <span class="ident">UnsignedMessage</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::models::RawTransaction</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::Transport</span>;
+<span class="kw">use </span><span class="kw">crate</span>::core::models::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::crypto::{SignedMessage, UnsignedMessage};
+<span class="kw">use </span><span class="kw">crate</span>::transport::models::RawTransaction;
+<span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">convert_transactions</span>(
-    <span class="ident">transactions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Transaction</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">DoubleEndedIterator</span> {
-    <span class="ident">transactions</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">transaction</span><span class="op">|</span> <span class="ident">Transaction::try_from</span>((<span class="ident">transaction</span>.<span class="ident">hash</span>, <span class="ident">transaction</span>.<span class="ident">data</span>)).<span class="ident">ok</span>())
+<span class="kw">pub fn </span>convert_transactions(
+    transactions: Vec&lt;RawTransaction&gt;,
+) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Transaction&gt; + DoubleEndedIterator {
+    transactions
+        .into_iter()
+        .filter_map(|transaction| Transaction::try_from((transaction.hash, transaction.data)).ok())
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request_transactions</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-    <span class="ident">transport</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Transport</span>,
-    <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">MsgAddressInt</span>,
-    <span class="ident">from_lt</span>: <span class="ident">u64</span>,
-    <span class="ident">until_lt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-    <span class="ident">initial_count</span>: <span class="ident">u8</span>,
-    <span class="ident">limit</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">Stream</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;a</span> {
-    <span class="kw">let</span> <span class="ident">initial_count</span> <span class="op">=</span> <span class="ident">u8::min</span>(<span class="ident">initial_count</span>, <span class="ident">transport</span>.<span class="ident">info</span>().<span class="ident">max_transactions_per_fetch</span>);
-    <span class="kw">let</span> <span class="ident">fut</span> <span class="op">=</span> <span class="ident">transport</span>.<span class="ident">get_transactions</span>(<span class="ident">address</span>, <span class="ident">from_lt</span>, <span class="ident">initial_count</span>);
+<span class="kw">pub fn </span>request_transactions&lt;<span class="lifetime">&#39;a</span>&gt;(
+    transport: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">dyn </span>Transport,
+    address: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>MsgAddressInt,
+    from_lt: u64,
+    until_lt: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+    initial_count: u8,
+    limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+) -&gt; <span class="kw">impl </span>Stream&lt;Item = <span class="prelude-ty">Result</span>&lt;Vec&lt;RawTransaction&gt;&gt;&gt; + <span class="lifetime">&#39;a </span>{
+    <span class="kw">let </span>initial_count = u8::min(initial_count, transport.info().max_transactions_per_fetch);
+    <span class="kw">let </span>fut = transport.get_transactions(address, from_lt, initial_count);
 
-    <span class="ident">LatestTransactions</span> {
-        <span class="ident">address</span>,
-        <span class="ident">from_lt</span>,
-        <span class="ident">until_lt</span>,
-        <span class="ident">transport</span>,
-        <span class="ident">fut</span>: <span class="prelude-val">Some</span>(<span class="ident">fut</span>),
-        <span class="ident">initial_count</span>,
-        <span class="ident">total_fetched</span>: <span class="number">0</span>,
-        <span class="ident">limit</span>,
+    LatestTransactions {
+        address,
+        from_lt,
+        until_lt,
+        transport,
+        fut: <span class="prelude-val">Some</span>(fut),
+        initial_count,
+        total_fetched: <span class="number">0</span>,
+        limit,
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ParsedBlock</span> {
-    <span class="kw">pub</span> <span class="ident">current_utime</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">ContractState</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NewTransactions</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>ParsedBlock {
+    <span class="kw">pub </span>current_utime: u32,
+    <span class="kw">pub </span>data: <span class="prelude-ty">Option</span>&lt;(ContractState, <span class="prelude-ty">Option</span>&lt;NewTransactions&gt;)&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">ParsedBlock</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">empty</span>(<span class="ident">utime</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">current_utime</span>: <span class="ident">utime</span>,
-            <span class="ident">data</span>: <span class="prelude-val">None</span>,
+<span class="kw">impl </span>ParsedBlock {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>empty(utime: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            current_utime: utime,
+            data: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">with_data</span>(
-        <span class="ident">utime</span>: <span class="ident">u32</span>,
-        <span class="ident">contract_state</span>: <span class="ident">ContractState</span>,
-        <span class="ident">new_transactions</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NewTransactions</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">current_utime</span>: <span class="ident">utime</span>,
-            <span class="ident">data</span>: <span class="prelude-val">Some</span>((<span class="ident">contract_state</span>, <span class="ident">new_transactions</span>)),
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>with_data(
+        utime: u32,
+        contract_state: ContractState,
+        new_transactions: <span class="prelude-ty">Option</span>&lt;NewTransactions&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            current_utime: utime,
+            data: <span class="prelude-val">Some</span>((contract_state, new_transactions)),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_block</span>(
-    <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-    <span class="ident">contract_state</span>: <span class="kw-2">&amp;</span><span class="ident">ContractState</span>,
-    <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Block</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ParsedBlock</span><span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">Deserializable</span>, <span class="ident">HashmapAugType</span>};
-    <span class="kw">use</span> <span class="ident">ton_types::HashmapType</span>;
+<span class="kw">pub fn </span>parse_block(
+    address: <span class="kw-2">&amp;</span>MsgAddressInt,
+    contract_state: <span class="kw-2">&amp;</span>ContractState,
+    block: <span class="kw-2">&amp;</span>ton_block::Block,
+) -&gt; <span class="prelude-ty">Result</span>&lt;ParsedBlock&gt; {
+    <span class="kw">use </span>ton_block::{Deserializable, HashmapAugType};
+    <span class="kw">use </span>ton_types::HashmapType;
 
-    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">block</span>
-        .<span class="ident">info</span>
-        .<span class="ident">read_struct</span>()
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">BlockParsingError::InvalidBlockStructure</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>info = block
+        .info
+        .read_struct()
+        .map_err(|<span class="kw">_</span>| BlockParsingError::InvalidBlockStructure)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">account_block</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">block</span>
-        .<span class="ident">extra</span>
-        .<span class="ident">read_struct</span>()
-        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">extra</span><span class="op">|</span> <span class="ident">extra</span>.<span class="ident">read_account_blocks</span>())
-        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">account_blocks</span><span class="op">|</span> {
-            <span class="ident">account_blocks</span>.<span class="ident">get_with_aug</span>(<span class="kw-2">&amp;</span><span class="ident">ton_types::UInt256::from_be_bytes</span>(
-                <span class="kw-2">&amp;</span><span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">get_bytestring</span>(<span class="number">0</span>),
+    <span class="kw">let </span>account_block = <span class="kw">match </span>block
+        .extra
+        .read_struct()
+        .and_then(|extra| extra.read_account_blocks())
+        .and_then(|account_blocks| {
+            account_blocks.get_with_aug(<span class="kw-2">&amp;</span>ton_types::UInt256::from_be_bytes(
+                <span class="kw-2">&amp;</span>address.address().get_bytestring(<span class="number">0</span>),
             ))
         }) {
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((<span class="ident">extra</span>, <span class="kw">_</span>))) =&gt; <span class="ident">extra</span>,
-        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">ParsedBlock::empty</span>(<span class="ident">info</span>.<span class="ident">gen_utime</span>().<span class="number">0</span>)),
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((extra, <span class="kw">_</span>))) =&gt; extra,
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(ParsedBlock::empty(info.gen_utime().<span class="number">0</span>)),
     };
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">balance</span> <span class="op">=</span> <span class="ident">contract_state</span>.<span class="ident">balance</span> <span class="kw">as</span> <span class="ident">i128</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_transactions</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>balance = contract_state.balance <span class="kw">as </span>i128;
+    <span class="kw">let </span><span class="kw-2">mut </span>new_transactions = Vec::new();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_lt</span> <span class="op">=</span> <span class="ident">contract_state</span>.<span class="ident">last_lt</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">latest_transaction_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TransactionId</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_deployed</span> <span class="op">=</span> <span class="ident">contract_state</span>.<span class="ident">is_deployed</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>last_lt = contract_state.last_lt;
+    <span class="kw">let </span><span class="kw-2">mut </span>latest_transaction_id: <span class="prelude-ty">Option</span>&lt;TransactionId&gt; = <span class="prelude-val">None</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>is_deployed = contract_state.is_deployed;
 
-    <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="ident">account_block</span>.<span class="ident">transactions</span>().<span class="ident">iter</span>() {
-        <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">item</span>.<span class="ident">and_then</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">value</span>)<span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">cell</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">into_cell</span>().<span class="ident">reference</span>(<span class="number">0</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">cell</span>.<span class="ident">repr_hash</span>();
+    <span class="kw">for </span>item <span class="kw">in </span>account_block.transactions().iter() {
+        <span class="kw">let </span>transaction = <span class="kw">match </span>item.and_then(|(<span class="kw">_</span>, value)| {
+            <span class="kw">let </span>cell = value.into_cell().reference(<span class="number">0</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>hash = cell.repr_hash();
 
-            <span class="ident">ton_block::Transaction::construct_from_cell</span>(<span class="ident">cell</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">RawTransaction</span> { <span class="ident">hash</span>, <span class="ident">data</span> })
+            ton_block::Transaction::construct_from_cell(cell)
+                .map(|data| RawTransaction { hash, data })
         }) {
-            <span class="prelude-val">Ok</span>(<span class="ident">transaction</span>) =&gt; <span class="ident">transaction</span>,
+            <span class="prelude-val">Ok</span>(transaction) =&gt; transaction,
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
         };
 
-        <span class="ident">balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">compute_balance_change</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>.<span class="ident">data</span>);
+        balance += compute_balance_change(<span class="kw-2">&amp;</span>transaction.data);
 
-        <span class="ident">is_deployed</span> <span class="op">=</span> <span class="ident">transaction</span>.<span class="ident">data</span>.<span class="ident">end_status</span> <span class="op">==</span> <span class="ident">ton_block::AccountStatus::AccStateActive</span>;
+        is_deployed = transaction.data.end_status == ton_block::AccountStatus::AccStateActive;
 
-        <span class="kw">if</span> <span class="macro">matches!</span>(<span class="kw-2">&amp;</span><span class="ident">latest_transaction_id</span>, <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="kw">if</span> <span class="ident">transaction</span>.<span class="ident">data</span>.<span class="ident">lt</span> <span class="op">&gt;</span> <span class="ident">id</span>.<span class="ident">lt</span>) {
-            <span class="ident">latest_transaction_id</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">TransactionId</span> {
-                <span class="ident">lt</span>: <span class="ident">transaction</span>.<span class="ident">data</span>.<span class="ident">lt</span>,
-                <span class="ident">hash</span>: <span class="ident">transaction</span>.<span class="ident">hash</span>,
+        <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">&amp;</span>latest_transaction_id, <span class="prelude-val">Some</span>(id) <span class="kw">if </span>transaction.data.lt &gt; id.lt) {
+            latest_transaction_id = <span class="prelude-val">Some</span>(TransactionId {
+                lt: transaction.data.lt,
+                hash: transaction.hash,
             })
         }
 
-        <span class="ident">last_lt</span> <span class="op">=</span> <span class="ident">std::cmp::max</span>(<span class="ident">last_lt</span>, <span class="ident">compute_account_lt</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>.<span class="ident">data</span>));
-        <span class="ident">new_transactions</span>.<span class="ident">push</span>(<span class="ident">transaction</span>);
+        last_lt = std::cmp::max(last_lt, compute_account_lt(<span class="kw-2">&amp;</span>transaction.data));
+        new_transactions.push(transaction);
     }
 
-    <span class="kw">let</span> <span class="ident">new_contract_state</span> <span class="op">=</span> <span class="ident">ContractState</span> {
-        <span class="ident">last_lt</span>,
-        <span class="ident">balance</span>: <span class="ident">balance</span> <span class="kw">as</span> <span class="ident">u64</span>,
-        <span class="ident">gen_timings</span>: <span class="ident">GenTimings::Known</span> {
-            <span class="ident">gen_lt</span>: <span class="ident">info</span>.<span class="ident">end_lt</span>(),
-            <span class="ident">gen_utime</span>: <span class="ident">info</span>.<span class="ident">gen_utime</span>().<span class="number">0</span>,
+    <span class="kw">let </span>new_contract_state = ContractState {
+        last_lt,
+        balance: balance <span class="kw">as </span>u64,
+        gen_timings: GenTimings::Known {
+            gen_lt: info.end_lt(),
+            gen_utime: info.gen_utime().<span class="number">0</span>,
         },
-        <span class="ident">last_transaction_id</span>: <span class="ident">latest_transaction_id</span>
-            .<span class="ident">map</span>(<span class="ident">LastTransactionId::Exact</span>)
-            .<span class="ident">or</span>(<span class="ident">contract_state</span>.<span class="ident">last_transaction_id</span>),
-        <span class="ident">is_deployed</span>,
-        <span class="ident">code_hash</span>: <span class="ident">contract_state</span>.<span class="ident">code_hash</span>, <span class="comment">// NOTE: code hash update is not visible</span>
-    };
+        last_transaction_id: latest_transaction_id
+            .map(LastTransactionId::Exact)
+            .or(contract_state.last_transaction_id),
+        is_deployed,
+        code_hash: contract_state.code_hash, <span class="comment">// NOTE: code hash update is not visible
+    </span>};
 
-    <span class="kw">let</span> <span class="ident">new_transactions</span> <span class="op">=</span>
-        <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">first</span>), <span class="prelude-val">Some</span>(<span class="ident">last</span>)) <span class="op">=</span> (<span class="ident">new_transactions</span>.<span class="ident">first</span>(), <span class="ident">new_transactions</span>.<span class="ident">last</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">TransactionsBatchInfo</span> {
-                <span class="ident">min_lt</span>: <span class="ident">first</span>.<span class="ident">data</span>.<span class="ident">lt</span>, <span class="comment">// transactions in block info are in ascending order</span>
-                <span class="ident">max_lt</span>: <span class="ident">last</span>.<span class="ident">data</span>.<span class="ident">lt</span>,
-                <span class="ident">batch_type</span>: <span class="ident">TransactionsBatchType::New</span>,
+    <span class="kw">let </span>new_transactions =
+        <span class="kw">if let </span>(<span class="prelude-val">Some</span>(first), <span class="prelude-val">Some</span>(last)) = (new_transactions.first(), new_transactions.last()) {
+            <span class="prelude-val">Some</span>(TransactionsBatchInfo {
+                min_lt: first.data.lt, <span class="comment">// transactions in block info are in ascending order
+                </span>max_lt: last.data.lt,
+                batch_type: TransactionsBatchType::New,
             })
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">batch_info</span><span class="op">|</span> (<span class="ident">new_transactions</span>, <span class="ident">batch_info</span>));
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
+        .map(|batch_info| (new_transactions, batch_info));
 
-    <span class="prelude-val">Ok</span>(<span class="ident">ParsedBlock::with_data</span>(
-        <span class="ident">info</span>.<span class="ident">gen_utime</span>().<span class="number">0</span>,
-        <span class="ident">new_contract_state</span>,
-        <span class="ident">new_transactions</span>,
+    <span class="prelude-val">Ok</span>(ParsedBlock::with_data(
+        info.gen_utime().<span class="number">0</span>,
+        new_contract_state,
+        new_transactions,
     ))
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BlockParsingError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid block structure&quot;</span>)]</span>
-    <span class="ident">InvalidBlockStructure</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug, Copy, Clone)]
+</span><span class="kw">pub enum </span>BlockParsingError {
+    <span class="attribute">#[error(<span class="string">&quot;Invalid block structure&quot;</span>)]
+    </span>InvalidBlockStructure,
 }
 
-<span class="kw">type</span> <span class="ident">NewTransactions</span> <span class="op">=</span> (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span>, <span class="ident">TransactionsBatchInfo</span>);
+<span class="kw">type </span>NewTransactions = (Vec&lt;RawTransaction&gt;, TransactionsBatchInfo);
 
-<span class="kw">struct</span> <span class="ident">LatestTransactions</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">MsgAddressInt</span>,
-    <span class="ident">from_lt</span>: <span class="ident">u64</span>,
-    <span class="ident">until_lt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
-    <span class="ident">transport</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Transport</span>,
-    <span class="ident">fut</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TransactionsFut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">initial_count</span>: <span class="ident">u8</span>,
-    <span class="ident">total_fetched</span>: <span class="ident">usize</span>,
-    <span class="ident">limit</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>LatestTransactions&lt;<span class="lifetime">&#39;a</span>&gt; {
+    address: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>MsgAddressInt,
+    from_lt: u64,
+    until_lt: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+    transport: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">dyn </span>Transport,
+    fut: <span class="prelude-ty">Option</span>&lt;TransactionsFut&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
+    initial_count: u8,
+    total_fetched: usize,
+    limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
-<span class="kw">type</span> <span class="ident">TransactionsFut</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Pin</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">type </span>TransactionsFut&lt;<span class="lifetime">&#39;a</span>&gt; = Pin&lt;Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;Vec&lt;RawTransaction&gt;&gt;&gt; + Send + <span class="lifetime">&#39;a</span>&gt;&gt;;
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Stream</span> <span class="kw">for</span> <span class="ident">LatestTransactions</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Stream <span class="kw">for </span>LatestTransactions&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Item = <span class="prelude-ty">Result</span>&lt;Vec&lt;RawTransaction&gt;&gt;;
 
-    <span class="kw">fn</span> <span class="ident">poll_next</span>(<span class="kw-2">mut</span> <span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">Poll</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">loop</span> {
-            <span class="comment">// poll `get_transactions` future</span>
-            <span class="kw">let</span> <span class="ident">new_transactions</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">fut</span>.<span class="ident">take</span>() {
-                <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">fut</span>) =&gt; <span class="kw">match</span> <span class="ident">fut</span>.<span class="ident">poll_unpin</span>(<span class="ident">cx</span>) {
-                    <span class="ident">Poll::Ready</span>(<span class="ident">result</span>) =&gt; <span class="ident">result</span>,
-                    <span class="ident">Poll::Pending</span> =&gt; {
-                        <span class="self">self</span>.<span class="ident">fut</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">fut</span>);
-                        <span class="kw">return</span> <span class="ident">Poll::Pending</span>;
+    <span class="kw">fn </span>poll_next(<span class="kw-2">mut </span><span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt;&gt; {
+        <span class="kw">loop </span>{
+            <span class="comment">// poll `get_transactions` future
+            </span><span class="kw">let </span>new_transactions = <span class="kw">match </span><span class="self">self</span>.fut.take() {
+                <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>fut) =&gt; <span class="kw">match </span>fut.poll_unpin(cx) {
+                    Poll::Ready(result) =&gt; result,
+                    Poll::Pending =&gt; {
+                        <span class="self">self</span>.fut = <span class="prelude-val">Some</span>(fut);
+                        <span class="kw">return </span>Poll::Pending;
                     }
                 },
-                <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="prelude-val">None</span>),
+                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">None</span>),
             };
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_transactions</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">new_transactions</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">transactions</span>) =&gt; <span class="ident">transactions</span>,
-                <span class="comment">// return error without resetting future</span>
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(<span class="ident">e</span>))),
+            <span class="kw">let </span><span class="kw-2">mut </span>new_transactions = <span class="kw">match </span>new_transactions {
+                <span class="prelude-val">Ok</span>(transactions) =&gt; transactions,
+                <span class="comment">// return error without resetting future
+                </span><span class="prelude-val">Err</span>(e) =&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(e))),
             };
 
-            <span class="comment">// ensure that transactions are sorted in reverse order (from the latest lt)</span>
-            <span class="ident">new_transactions</span>.<span class="ident">sort_by_key</span>(<span class="op">|</span><span class="ident">tx</span><span class="op">|</span> <span class="ident">std::cmp::Reverse</span>(<span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">lt</span>));
+            <span class="comment">// ensure that transactions are sorted in reverse order (from the latest lt)
+            </span>new_transactions.sort_by_key(|tx| std::cmp::Reverse(tx.data.lt));
 
-            <span class="comment">// get next lt from the unfiltered response to continue</span>
-            <span class="comment">// fetching transactions if filter produced empty array</span>
-            <span class="kw">let</span> <span class="ident">next_lt_from_response</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">new_transactions</span>.<span class="ident">last</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">last</span>) =&gt; <span class="ident">last</span>.<span class="ident">data</span>.<span class="ident">prev_trans_lt</span>,
-                <span class="comment">// early return on empty response</span>
-                <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="prelude-val">None</span>),
+            <span class="comment">// get next lt from the unfiltered response to continue
+            // fetching transactions if filter produced empty array
+            </span><span class="kw">let </span>next_lt_from_response = <span class="kw">match </span>new_transactions.last() {
+                <span class="prelude-val">Some</span>(last) =&gt; last.data.prev_trans_lt,
+                <span class="comment">// early return on empty response
+                </span><span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">None</span>),
             };
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">possibly_has_more</span> <span class="op">=</span> <span class="ident">next_lt_from_response</span> <span class="op">&gt;</span> <span class="number">0</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>possibly_has_more = next_lt_from_response &gt; <span class="number">0</span>;
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">truncated</span> <span class="op">=</span> <span class="bool-val">false</span>;
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">first_tx</span>) <span class="op">=</span> <span class="ident">new_transactions</span>.<span class="ident">first</span>() {
-                <span class="kw">if</span> <span class="ident">first_tx</span>.<span class="ident">data</span>.<span class="ident">lt</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">from_lt</span> {
-                    <span class="comment">// retain only elements in range (until_lt; from_lt]</span>
-                    <span class="comment">// NOTE: `until_lt &lt; from_lt`</span>
-                    <span class="kw">let</span> <span class="ident">until_lt</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">until_lt</span>.<span class="ident">unwrap_or_default</span>();
-                    <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> (<span class="ident">until_lt</span> <span class="op">+</span> <span class="number">1</span>)..<span class="op">=</span><span class="self">self</span>.<span class="ident">from_lt</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>truncated = <span class="bool-val">false</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(first_tx) = new_transactions.first() {
+                <span class="kw">if </span>first_tx.data.lt &gt; <span class="self">self</span>.from_lt {
+                    <span class="comment">// retain only elements in range (until_lt; from_lt]
+                    // NOTE: `until_lt &lt; from_lt`
+                    </span><span class="kw">let </span>until_lt = <span class="self">self</span>.until_lt.unwrap_or_default();
+                    <span class="kw">let </span>range = (until_lt + <span class="number">1</span>)..=<span class="self">self</span>.from_lt;
 
-                    <span class="ident">new_transactions</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> {
-                        <span class="ident">possibly_has_more</span> <span class="op">&amp;=</span> <span class="ident">item</span>.<span class="ident">data</span>.<span class="ident">lt</span> <span class="op">&gt;</span> <span class="ident">until_lt</span>;
-                        <span class="ident">range</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">data</span>.<span class="ident">lt</span>)
+                    new_transactions.retain(|item| {
+                        possibly_has_more &amp;= item.data.lt &gt; until_lt;
+                        range.contains(<span class="kw-2">&amp;</span>item.data.lt)
                     });
-                    <span class="ident">truncated</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                    truncated = <span class="bool-val">true</span>;
                 }
             }
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">truncated</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">until_lt</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">until_lt</span> {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">len</span>) <span class="op">=</span> <span class="ident">new_transactions</span>
-                        .<span class="ident">iter</span>()
-                        .<span class="ident">position</span>(<span class="op">|</span><span class="ident">tx</span><span class="op">|</span> <span class="ident">tx</span>.<span class="ident">data</span>.<span class="ident">lt</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">until_lt</span>)
+            <span class="kw">if </span>!truncated {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(until_lt) = <span class="self">self</span>.until_lt {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(len) = new_transactions
+                        .iter()
+                        .position(|tx| tx.data.lt &lt;= until_lt)
                     {
-                        <span class="ident">new_transactions</span>.<span class="ident">truncate</span>(<span class="ident">len</span>);
-                        <span class="ident">possibly_has_more</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                        new_transactions.truncate(len);
+                        possibly_has_more = <span class="bool-val">false</span>;
                     }
                 }
             }
 
-            <span class="comment">// get batch info</span>
-            <span class="kw">let</span> <span class="ident">last</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">new_transactions</span>.<span class="ident">last</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">last</span>) =&gt; <span class="ident">last</span>,
-                <span class="prelude-val">None</span> <span class="kw">if</span> <span class="ident">possibly_has_more</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">fut</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">transport</span>.<span class="ident">get_transactions</span>(
-                        <span class="self">self</span>.<span class="ident">address</span>,
-                        <span class="ident">next_lt_from_response</span>,
-                        <span class="self">self</span>.<span class="ident">initial_count</span>,
+            <span class="comment">// get batch info
+            </span><span class="kw">let </span>last = <span class="kw">match </span>new_transactions.last() {
+                <span class="prelude-val">Some</span>(last) =&gt; last,
+                <span class="prelude-val">None </span><span class="kw">if </span>possibly_has_more =&gt; {
+                    <span class="self">self</span>.fut = <span class="prelude-val">Some</span>(<span class="self">self</span>.transport.get_transactions(
+                        <span class="self">self</span>.address,
+                        next_lt_from_response,
+                        <span class="self">self</span>.initial_count,
                     ));
                     <span class="kw">continue</span>;
                 }
-                <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="prelude-val">None</span>),
+                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Poll::Ready(<span class="prelude-val">None</span>),
             };
 
-            <span class="comment">// set next batch bound</span>
-            <span class="self">self</span>.<span class="ident">from_lt</span> <span class="op">=</span> <span class="ident">last</span>.<span class="ident">data</span>.<span class="ident">prev_trans_lt</span>;
+            <span class="comment">// set next batch bound
+            </span><span class="self">self</span>.from_lt = last.data.prev_trans_lt;
 
-            <span class="comment">// check if there are no transactions left or all transactions were requested</span>
-            <span class="kw">if</span> <span class="ident">last</span>.<span class="ident">data</span>.<span class="ident">prev_trans_lt</span> <span class="op">==</span> <span class="number">0</span>
-                <span class="op">|</span><span class="op">|</span> <span class="macro">matches!</span>(<span class="self">self</span>.<span class="ident">until_lt</span>, <span class="prelude-val">Some</span>(<span class="ident">until_lt</span>) <span class="kw">if</span> <span class="ident">last</span>.<span class="ident">data</span>.<span class="ident">prev_trans_lt</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">until_lt</span>)
+            <span class="comment">// check if there are no transactions left or all transactions were requested
+            </span><span class="kw">if </span>last.data.prev_trans_lt == <span class="number">0
+                </span>|| <span class="macro">matches!</span>(<span class="self">self</span>.until_lt, <span class="prelude-val">Some</span>(until_lt) <span class="kw">if </span>last.data.prev_trans_lt &lt;= until_lt)
             {
-                <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="ident">new_transactions</span>)));
+                <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(new_transactions)));
             }
 
-            <span class="comment">// update counters</span>
-            <span class="self">self</span>.<span class="ident">total_fetched</span> <span class="op">+</span><span class="op">=</span> <span class="ident">new_transactions</span>.<span class="ident">len</span>();
+            <span class="comment">// update counters
+            </span><span class="self">self</span>.total_fetched += new_transactions.len();
 
-            <span class="kw">let</span> <span class="ident">next_count</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">limit</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">limit</span>) <span class="kw">if</span> <span class="self">self</span>.<span class="ident">total_fetched</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">limit</span> =&gt; {
-                    <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="ident">new_transactions</span>)))
+            <span class="kw">let </span>next_count = <span class="kw">match </span><span class="self">self</span>.limit {
+                <span class="prelude-val">Some</span>(limit) <span class="kw">if </span><span class="self">self</span>.total_fetched &gt;= limit =&gt; {
+                    <span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(new_transactions)))
                 }
-                <span class="prelude-val">Some</span>(<span class="ident">limit</span>) =&gt; <span class="ident">usize::min</span>(
-                    <span class="ident">limit</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">total_fetched</span>,
-                    <span class="self">self</span>.<span class="ident">transport</span>.<span class="ident">info</span>().<span class="ident">max_transactions_per_fetch</span> <span class="kw">as</span> <span class="ident">usize</span>,
-                ) <span class="kw">as</span> <span class="ident">u8</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">transport</span>.<span class="ident">info</span>().<span class="ident">max_transactions_per_fetch</span>,
+                <span class="prelude-val">Some</span>(limit) =&gt; usize::min(
+                    limit - <span class="self">self</span>.total_fetched,
+                    <span class="self">self</span>.transport.info().max_transactions_per_fetch <span class="kw">as </span>usize,
+                ) <span class="kw">as </span>u8,
+                <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.transport.info().max_transactions_per_fetch,
             };
 
-            <span class="comment">// If there are some unprocessed transactions left we should request remaining</span>
-            <span class="self">self</span>.<span class="ident">fut</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">transport</span>.<span class="ident">get_transactions</span>(
-                <span class="self">self</span>.<span class="ident">address</span>,
-                <span class="ident">last</span>.<span class="ident">data</span>.<span class="ident">prev_trans_lt</span>,
-                <span class="ident">next_count</span>,
+            <span class="comment">// If there are some unprocessed transactions left we should request remaining
+            </span><span class="self">self</span>.fut = <span class="prelude-val">Some</span>(<span class="self">self</span>.transport.get_transactions(
+                <span class="self">self</span>.address,
+                last.data.prev_trans_lt,
+                next_count,
             ));
 
-            <span class="comment">// Return result</span>
-            <span class="kw">return</span> <span class="ident">Poll::Ready</span>(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="ident">new_transactions</span>)));
+            <span class="comment">// Return result
+            </span><span class="kw">return </span>Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(new_transactions)));
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MessageContext</span> {
-    <span class="kw">pub</span> <span class="ident">latest_lt</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">created_at</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">expire_at</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone)]
+</span><span class="kw">pub struct </span>MessageContext {
+    <span class="kw">pub </span>latest_lt: u64,
+    <span class="kw">pub </span>created_at: u32,
+    <span class="kw">pub </span>expire_at: u32,
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PendingTransactionsExt</span> {
-    <span class="kw">fn</span> <span class="ident">add_message</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-        <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Message</span>,
-        <span class="ident">ctx</span>: <span class="ident">MessageContext</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PendingTransaction</span><span class="op">&gt;</span>;
+<span class="kw">pub trait </span>PendingTransactionsExt {
+    <span class="kw">fn </span>add_message(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        target: <span class="kw-2">&amp;</span>MsgAddressInt,
+        message: <span class="kw-2">&amp;</span>ton_block::Message,
+        ctx: MessageContext,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PendingTransaction&gt;;
 
-    <span class="kw">fn</span> <span class="ident">cancel</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pending_transaction</span>: <span class="kw-2">&amp;</span><span class="ident">PendingTransaction</span>);
+    <span class="kw">fn </span>cancel(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pending_transaction: <span class="kw-2">&amp;</span>PendingTransaction);
 }
 
-<span class="kw">impl</span> <span class="ident">PendingTransactionsExt</span> <span class="kw">for</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PendingTransaction</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">add_message</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-        <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Message</span>,
-        <span class="ident">ctx</span>: <span class="ident">MessageContext</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PendingTransaction</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">message</span>.<span class="ident">header</span>() {
-            <span class="ident">ton_block::CommonMsgInfo::ExtInMsgInfo</span>(<span class="ident">header</span>) =&gt; {
-                <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">header</span>.<span class="ident">dst</span> <span class="op">==</span> <span class="ident">target</span> {
-                    <span class="prelude-val">None</span>
-                } <span class="kw">else</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AccountSubscriptionError::InvalidMessageDestination</span>.<span class="ident">into</span>());
+<span class="kw">impl </span>PendingTransactionsExt <span class="kw">for </span>Vec&lt;PendingTransaction&gt; {
+    <span class="kw">fn </span>add_message(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        target: <span class="kw-2">&amp;</span>MsgAddressInt,
+        message: <span class="kw-2">&amp;</span>ton_block::Message,
+        ctx: MessageContext,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PendingTransaction&gt; {
+        <span class="kw">let </span>src = <span class="kw">match </span>message.header() {
+            ton_block::CommonMsgInfo::ExtInMsgInfo(header) =&gt; {
+                <span class="kw">if </span><span class="kw-2">&amp;</span>header.dst == target {
+                    <span class="prelude-val">None
+                </span>} <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(AccountSubscriptionError::InvalidMessageDestination.into());
                 }
             }
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AccountSubscriptionError::InvalidMessageType</span>.<span class="ident">into</span>()),
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(AccountSubscriptionError::InvalidMessageType.into()),
         };
 
-        <span class="kw">let</span> <span class="ident">pending_transaction</span> <span class="op">=</span> <span class="ident">PendingTransaction</span> {
-            <span class="ident">message_hash</span>: <span class="ident">message</span>.<span class="ident">serialize</span>()<span class="question-mark">?</span>.<span class="ident">repr_hash</span>(),
-            <span class="ident">src</span>,
-            <span class="ident">latest_lt</span>: <span class="ident">ctx</span>.<span class="ident">latest_lt</span>,
-            <span class="ident">created_at</span>: <span class="ident">ctx</span>.<span class="ident">created_at</span>,
-            <span class="ident">expire_at</span>: <span class="ident">ctx</span>.<span class="ident">expire_at</span>,
+        <span class="kw">let </span>pending_transaction = PendingTransaction {
+            message_hash: message.serialize()<span class="question-mark">?</span>.repr_hash(),
+            src,
+            latest_lt: ctx.latest_lt,
+            created_at: ctx.created_at,
+            expire_at: ctx.expire_at,
         };
 
-        <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">pending_transaction</span>.<span class="ident">clone</span>());
-        <span class="prelude-val">Ok</span>(<span class="ident">pending_transaction</span>)
+        <span class="self">self</span>.push(pending_transaction.clone());
+        <span class="prelude-val">Ok</span>(pending_transaction)
     }
 
-    <span class="kw">fn</span> <span class="ident">cancel</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pending_transaction</span>: <span class="kw-2">&amp;</span><span class="ident">PendingTransaction</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">eq</span>(<span class="ident">pending_transaction</span>)) {
-            <span class="self">self</span>.<span class="ident">remove</span>(<span class="ident">i</span>);
+    <span class="kw">fn </span>cancel(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pending_transaction: <span class="kw-2">&amp;</span>PendingTransaction) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(i) = <span class="self">self</span>.iter().position(|item| item.eq(pending_transaction)) {
+            <span class="self">self</span>.remove(i);
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_labs_unsigned_message</span>(
-    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-    <span class="ident">message</span>: <span class="ident">ton_block::Message</span>,
-    <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-    <span class="ident">function</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">ton_abi::Function</span><span class="op">&gt;</span>,
-    <span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ton_abi::Token</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">UnsignedMessage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">time</span> <span class="op">=</span> <span class="ident">clock</span>.<span class="ident">now_ms_u64</span>();
-    <span class="kw">let</span> (<span class="ident">expire_at</span>, <span class="ident">header</span>) <span class="op">=</span> <span class="ident">default_headers</span>(<span class="ident">time</span>, <span class="ident">expiration</span>, <span class="ident">public_key</span>);
+<span class="kw">pub fn </span>make_labs_unsigned_message(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+    message: ton_block::Message,
+    expiration: Expiration,
+    public_key: <span class="kw-2">&amp;</span>PublicKey,
+    function: Cow&lt;<span class="lifetime">&#39;static</span>, ton_abi::Function&gt;,
+    input: Vec&lt;ton_abi::Token&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>UnsignedMessage&gt;&gt; {
+    <span class="kw">let </span>time = clock.now_ms_u64();
+    <span class="kw">let </span>(expire_at, header) = default_headers(time, expiration, public_key);
 
-    <span class="kw">let</span> (<span class="ident">payload</span>, <span class="ident">hash</span>) <span class="op">=</span>
-        <span class="ident">function</span>.<span class="ident">create_unsigned_call</span>(<span class="kw-2">&amp;</span><span class="ident">header</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="ident">message</span>.<span class="ident">dst</span>())<span class="question-mark">?</span>;
+    <span class="kw">let </span>(payload, hash) =
+        function.create_unsigned_call(<span class="kw-2">&amp;</span>header, <span class="kw-2">&amp;</span>input, <span class="bool-val">false</span>, <span class="bool-val">true</span>, message.dst())<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">Box::new</span>(<span class="ident">LabsUnsignedMessage</span> {
-        <span class="ident">function</span>,
-        <span class="ident">header</span>,
-        <span class="ident">input</span>,
-        <span class="ident">payload</span>,
-        <span class="ident">hash</span>,
-        <span class="ident">expire_at</span>,
-        <span class="ident">message</span>,
+    <span class="prelude-val">Ok</span>(Box::new(LabsUnsignedMessage {
+        function,
+        header,
+        input,
+        payload,
+        hash,
+        expire_at,
+        message,
     }))
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">LabsUnsignedMessage</span> {
-    <span class="ident">function</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">ton_abi::Function</span><span class="op">&gt;</span>,
-    <span class="ident">header</span>: <span class="ident">HeadersMap</span>,
-    <span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ton_abi::Token</span><span class="op">&gt;</span>,
-    <span class="ident">payload</span>: <span class="ident">ton_types::BuilderData</span>,
-    <span class="ident">hash</span>: <span class="ident">ton_types::UInt256</span>,
-    <span class="ident">expire_at</span>: <span class="ident">ExpireAt</span>,
-    <span class="ident">message</span>: <span class="ident">ton_block::Message</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">struct </span>LabsUnsignedMessage {
+    function: Cow&lt;<span class="lifetime">&#39;static</span>, ton_abi::Function&gt;,
+    header: HeadersMap,
+    input: Vec&lt;ton_abi::Token&gt;,
+    payload: ton_types::BuilderData,
+    hash: ton_types::UInt256,
+    expire_at: ExpireAt,
+    message: ton_block::Message,
 }
 
-<span class="kw">impl</span> <span class="ident">UnsignedMessage</span> <span class="kw">for</span> <span class="ident">LabsUnsignedMessage</span> {
-    <span class="kw">fn</span> <span class="ident">refresh_timeout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>) {
-        <span class="kw">let</span> <span class="ident">time</span> <span class="op">=</span> <span class="ident">clock</span>.<span class="ident">now_ms_u64</span>();
+<span class="kw">impl </span>UnsignedMessage <span class="kw">for </span>LabsUnsignedMessage {
+    <span class="kw">fn </span>refresh_timeout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) {
+        <span class="kw">let </span>time = clock.now_ms_u64();
 
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">refresh_from_millis</span>(<span class="ident">time</span>) {
+        <span class="kw">if </span>!<span class="self">self</span>.expire_at.refresh_from_millis(time) {
             <span class="kw">return</span>;
         }
 
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">header</span>.<span class="ident">get_mut</span>(<span class="string">&quot;time&quot;</span>).<span class="ident">trust_me</span>() <span class="op">=</span> <span class="ident">ton_abi::TokenValue::Time</span>(<span class="ident">time</span>);
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">header</span>.<span class="ident">get_mut</span>(<span class="string">&quot;expire&quot;</span>).<span class="ident">trust_me</span>() <span class="op">=</span> <span class="ident">ton_abi::TokenValue::Expire</span>(<span class="self">self</span>.<span class="ident">expire_at</span>());
+        <span class="kw-2">*</span><span class="self">self</span>.header.get_mut(<span class="string">&quot;time&quot;</span>).trust_me() = ton_abi::TokenValue::Time(time);
+        <span class="kw-2">*</span><span class="self">self</span>.header.get_mut(<span class="string">&quot;expire&quot;</span>).trust_me() = ton_abi::TokenValue::Expire(<span class="self">self</span>.expire_at());
 
-        <span class="kw">let</span> (<span class="ident">payload</span>, <span class="ident">hash</span>) <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">function</span>
-            .<span class="ident">create_unsigned_call</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">header</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">input</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="self">self</span>.<span class="ident">message</span>.<span class="ident">dst</span>())
-            .<span class="ident">trust_me</span>();
-        <span class="self">self</span>.<span class="ident">payload</span> <span class="op">=</span> <span class="ident">payload</span>;
-        <span class="self">self</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash</span>;
+        <span class="kw">let </span>(payload, hash) = <span class="self">self
+            </span>.function
+            .create_unsigned_call(<span class="kw-2">&amp;</span><span class="self">self</span>.header, <span class="kw-2">&amp;</span><span class="self">self</span>.input, <span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="self">self</span>.message.dst())
+            .trust_me();
+        <span class="self">self</span>.payload = payload;
+        <span class="self">self</span>.hash = hash;
     }
 
-    <span class="kw">fn</span> <span class="ident">expire_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">timestamp</span>
+    <span class="kw">fn </span>expire_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.expire_at.timestamp
     }
 
-    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">as_slice</span>()
+    <span class="kw">fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="self">self</span>.hash.as_slice()
     }
 
-    <span class="kw">fn</span> <span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signature</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="ident">ed25519_dalek::SIGNATURE_LENGTH</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignedMessage</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">payload</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">ton_abi::Function::fill_sign</span>(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">function</span>.<span class="ident">abi_version</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">signature</span>),
+    <span class="kw">fn </span>sign(<span class="kw-2">&amp;</span><span class="self">self</span>, signature: <span class="kw-2">&amp;</span>[u8; ed25519_dalek::SIGNATURE_LENGTH]) -&gt; <span class="prelude-ty">Result</span>&lt;SignedMessage&gt; {
+        <span class="kw">let </span>payload = <span class="self">self</span>.payload.clone();
+        <span class="kw">let </span>payload = ton_abi::Function::fill_sign(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.function.abi_version,
+            <span class="prelude-val">Some</span>(signature),
             <span class="prelude-val">None</span>,
-            <span class="ident">payload</span>,
+            payload,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">message</span>.<span class="ident">clone</span>();
-        <span class="ident">message</span>.<span class="ident">set_body</span>(<span class="ident">payload</span>.<span class="ident">into</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>message = <span class="self">self</span>.message.clone();
+        message.set_body(payload.into());
 
-        <span class="prelude-val">Ok</span>(<span class="ident">SignedMessage</span> {
-            <span class="ident">message</span>,
-            <span class="ident">expire_at</span>: <span class="self">self</span>.<span class="ident">expire_at</span>(),
+        <span class="prelude-val">Ok</span>(SignedMessage {
+            message,
+            expire_at: <span class="self">self</span>.expire_at(),
         })
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">default_headers</span>(
-    <span class="ident">time</span>: <span class="ident">u64</span>,
-    <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-) -&gt; (<span class="ident">ExpireAt</span>, <span class="ident">HeadersMap</span>) {
-    <span class="kw">let</span> <span class="ident">expire_at</span> <span class="op">=</span> <span class="ident">ExpireAt::new_from_millis</span>(<span class="ident">expiration</span>, <span class="ident">time</span>);
+<span class="kw">pub fn </span>default_headers(
+    time: u64,
+    expiration: Expiration,
+    public_key: <span class="kw-2">&amp;</span>PublicKey,
+) -&gt; (ExpireAt, HeadersMap) {
+    <span class="kw">let </span>expire_at = ExpireAt::new_from_millis(expiration, time);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">HashMap::with_capacity</span>(<span class="number">3</span>);
-    <span class="ident">header</span>.<span class="ident">insert</span>(<span class="string">&quot;time&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">ton_abi::TokenValue::Time</span>(<span class="ident">time</span>));
-    <span class="ident">header</span>.<span class="ident">insert</span>(
-        <span class="string">&quot;expire&quot;</span>.<span class="ident">to_string</span>(),
-        <span class="ident">ton_abi::TokenValue::Expire</span>(<span class="ident">expire_at</span>.<span class="ident">timestamp</span>),
+    <span class="kw">let </span><span class="kw-2">mut </span>header = HashMap::with_capacity(<span class="number">3</span>);
+    header.insert(<span class="string">&quot;time&quot;</span>.to_string(), ton_abi::TokenValue::Time(time));
+    header.insert(
+        <span class="string">&quot;expire&quot;</span>.to_string(),
+        ton_abi::TokenValue::Expire(expire_at.timestamp),
     );
-    <span class="ident">header</span>.<span class="ident">insert</span>(
-        <span class="string">&quot;pubkey&quot;</span>.<span class="ident">to_string</span>(),
-        <span class="ident">ton_abi::TokenValue::PublicKey</span>(<span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">public_key</span>)),
+    header.insert(
+        <span class="string">&quot;pubkey&quot;</span>.to_string(),
+        ton_abi::TokenValue::PublicKey(<span class="prelude-val">Some</span>(<span class="kw-2">*</span>public_key)),
     );
 
-    (<span class="ident">expire_at</span>, <span class="ident">header</span>)
+    (expire_at, header)
 }
 
-<span class="kw">type</span> <span class="ident">HeadersMap</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">ton_abi::TokenValue</span><span class="op">&gt;</span>;
+<span class="kw">type </span>HeadersMap = HashMap&lt;String, ton_abi::TokenValue&gt;;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

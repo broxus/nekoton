@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -851,858 +851,858 @@
 <span id="851">851</span>
 <span id="852">852</span>
 <span id="853">853</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
-<span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
-<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
+<span class="kw">use </span>std::convert::TryFrom;
+<span class="kw">use </span>std::str::FromStr;
+<span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">ed25519_dalek::PublicKey</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">ton_block::MsgAddressInt</span>;
-<span class="kw">use</span> <span class="ident">ton_types</span>::{<span class="ident">SliceData</span>, <span class="ident">UInt256</span>};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>ed25519_dalek::PublicKey;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>ton_block::MsgAddressInt;
+<span class="kw">use </span>ton_types::{SliceData, UInt256};
 
-<span class="kw">use</span> <span class="ident">nekoton_abi</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_abi::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::multisig::MultisigType</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::models</span>::{
-    <span class="ident">ContractState</span>, <span class="ident">Expiration</span>, <span class="ident">MessageFlags</span>, <span class="ident">MultisigPendingTransaction</span>, <span class="ident">PendingTransaction</span>,
-    <span class="ident">Transaction</span>, <span class="ident">TransactionAdditionalInfo</span>, <span class="ident">TransactionWithData</span>, <span class="ident">TransactionsBatchInfo</span>,
+<span class="kw">pub use </span><span class="self">self</span>::multisig::MultisigType;
+<span class="kw">use </span><span class="kw">super</span>::models::{
+    ContractState, Expiration, MessageFlags, MultisigPendingTransaction, PendingTransaction,
+    Transaction, TransactionAdditionalInfo, TransactionWithData, TransactionsBatchInfo,
 };
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">ContractSubscription</span>, <span class="ident">PollingMethod</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::parsing</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::InternalMessage</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto::UnsignedMessage</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::models</span>::{<span class="ident">ExistingContract</span>, <span class="ident">RawContractState</span>, <span class="ident">RawTransaction</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::Transport</span>;
+<span class="kw">use super</span>::{ContractSubscription, PollingMethod};
+<span class="kw">use </span><span class="kw">crate</span>::core::parsing::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::core::InternalMessage;
+<span class="kw">use </span><span class="kw">crate</span>::crypto::UnsignedMessage;
+<span class="kw">use </span><span class="kw">crate</span>::transport::models::{ExistingContract, RawContractState, RawTransaction};
+<span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ever_wallet</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">highload_wallet_v2</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">multisig</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">wallet_v3</span>;
+<span class="kw">pub mod </span>ever_wallet;
+<span class="kw">pub mod </span>highload_wallet_v2;
+<span class="kw">pub mod </span>multisig;
+<span class="kw">pub mod </span>wallet_v3;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_WORKCHAIN</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="kw">pub const </span>DEFAULT_WORKCHAIN: i8 = <span class="number">0</span>;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TonWallet</span> {
-    <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-    <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-    <span class="ident">wallet_type</span>: <span class="ident">WalletType</span>,
-    <span class="ident">contract_subscription</span>: <span class="ident">ContractSubscription</span>,
-    <span class="ident">handler</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span><span class="op">&gt;</span>,
-    <span class="ident">wallet_data</span>: <span class="ident">WalletData</span>,
+<span class="kw">pub struct </span>TonWallet {
+    clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+    public_key: PublicKey,
+    wallet_type: WalletType,
+    contract_subscription: ContractSubscription,
+    handler: Arc&lt;<span class="kw">dyn </span>TonWalletSubscriptionHandler&gt;,
+    wallet_data: WalletData,
 }
 
-<span class="kw">impl</span> <span class="ident">TonWallet</span> {
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">subscribe</span>(
-        <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-        <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-        <span class="ident">workchain</span>: <span class="ident">i8</span>,
-        <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">wallet_type</span>: <span class="ident">WalletType</span>,
-        <span class="ident">handler</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">compute_address</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>, <span class="ident">wallet_type</span>, <span class="ident">workchain</span>);
+<span class="kw">impl </span>TonWallet {
+    <span class="kw">pub async fn </span>subscribe(
+        clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+        transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+        workchain: i8,
+        public_key: PublicKey,
+        wallet_type: WalletType,
+        handler: Arc&lt;<span class="kw">dyn </span>TonWalletSubscriptionHandler&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>address = compute_address(<span class="kw-2">&amp;</span>public_key, wallet_type, workchain);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wallet_data</span> <span class="op">=</span> <span class="ident">WalletData::default</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>wallet_data = WalletData::default();
 
-        <span class="kw">let</span> <span class="ident">contract_subscription</span> <span class="op">=</span> <span class="ident">ContractSubscription::subscribe</span>(
-            <span class="ident">clock</span>.<span class="ident">clone</span>(),
-            <span class="ident">transport</span>,
-            <span class="ident">address</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(
-                <span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">handler</span>.<span class="ident">as_ref</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">public_key</span>,
-                <span class="ident">wallet_type</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">wallet_data</span>,
+        <span class="kw">let </span>contract_subscription = ContractSubscription::subscribe(
+            clock.clone(),
+            transport,
+            address,
+            <span class="kw-2">&amp;mut </span>make_contract_state_handler(
+                clock.as_ref(),
+                handler.as_ref(),
+                <span class="kw-2">&amp;</span>public_key,
+                wallet_type,
+                <span class="kw-2">&amp;mut </span>wallet_data,
             ),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(
-                <span class="ident">handler</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">wallet_type</span>,
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>make_transactions_handler(
+                handler.as_ref(),
+                wallet_type,
             )),
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">clock</span>,
-            <span class="ident">public_key</span>,
-            <span class="ident">wallet_type</span>,
-            <span class="ident">contract_subscription</span>,
-            <span class="ident">handler</span>,
-            <span class="ident">wallet_data</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            clock,
+            public_key,
+            wallet_type,
+            contract_subscription,
+            handler,
+            wallet_data,
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">subscribe_by_address</span>(
-        <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-        <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-        <span class="ident">address</span>: <span class="ident">MsgAddressInt</span>,
-        <span class="ident">handler</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">public_key</span>, <span class="ident">wallet_type</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>).<span class="kw">await</span><span class="question-mark">?</span> {
-            <span class="ident">RawContractState::Exists</span>(<span class="ident">contract</span>) =&gt; <span class="ident">extract_wallet_init_data</span>(<span class="kw-2">&amp;</span><span class="ident">contract</span>)<span class="question-mark">?</span>,
-            <span class="ident">RawContractState::NotExists</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TonWalletError::AccountNotExists</span>.<span class="ident">into</span>()),
+    <span class="kw">pub async fn </span>subscribe_by_address(
+        clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+        transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+        address: MsgAddressInt,
+        handler: Arc&lt;<span class="kw">dyn </span>TonWalletSubscriptionHandler&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>(public_key, wallet_type) = <span class="kw">match </span>transport.get_contract_state(<span class="kw-2">&amp;</span>address).<span class="kw">await</span><span class="question-mark">? </span>{
+            RawContractState::Exists(contract) =&gt; extract_wallet_init_data(<span class="kw-2">&amp;</span>contract)<span class="question-mark">?</span>,
+            RawContractState::NotExists =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TonWalletError::AccountNotExists.into()),
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wallet_data</span> <span class="op">=</span> <span class="ident">WalletData::default</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>wallet_data = WalletData::default();
 
-        <span class="kw">let</span> <span class="ident">contract_subscription</span> <span class="op">=</span> <span class="ident">ContractSubscription::subscribe</span>(
-            <span class="ident">clock</span>.<span class="ident">clone</span>(),
-            <span class="ident">transport</span>,
-            <span class="ident">address</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(
-                <span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">handler</span>.<span class="ident">as_ref</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">public_key</span>,
-                <span class="ident">wallet_type</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">wallet_data</span>,
+        <span class="kw">let </span>contract_subscription = ContractSubscription::subscribe(
+            clock.clone(),
+            transport,
+            address,
+            <span class="kw-2">&amp;mut </span>make_contract_state_handler(
+                clock.as_ref(),
+                handler.as_ref(),
+                <span class="kw-2">&amp;</span>public_key,
+                wallet_type,
+                <span class="kw-2">&amp;mut </span>wallet_data,
             ),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(
-                <span class="ident">handler</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">wallet_type</span>,
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>make_transactions_handler(
+                handler.as_ref(),
+                wallet_type,
             )),
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">clock</span>,
-            <span class="ident">public_key</span>,
-            <span class="ident">wallet_type</span>,
-            <span class="ident">contract_subscription</span>,
-            <span class="ident">handler</span>,
-            <span class="ident">wallet_data</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            clock,
+            public_key,
+            wallet_type,
+            contract_subscription,
+            handler,
+            wallet_data,
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">subscribe_by_existing</span>(
-        <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-        <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-        <span class="ident">existing_wallet</span>: <span class="ident">ExistingWalletInfo</span>,
-        <span class="ident">handler</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wallet_data</span> <span class="op">=</span> <span class="ident">WalletData::default</span>();
+    <span class="kw">pub async fn </span>subscribe_by_existing(
+        clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+        transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+        existing_wallet: ExistingWalletInfo,
+        handler: Arc&lt;<span class="kw">dyn </span>TonWalletSubscriptionHandler&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>wallet_data = WalletData::default();
 
-        <span class="kw">let</span> <span class="ident">contract_subscription</span> <span class="op">=</span> <span class="ident">ContractSubscription::subscribe</span>(
-            <span class="ident">clock</span>.<span class="ident">clone</span>(),
-            <span class="ident">transport</span>,
-            <span class="ident">existing_wallet</span>.<span class="ident">address</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(
-                <span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">handler</span>.<span class="ident">as_ref</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">existing_wallet</span>.<span class="ident">public_key</span>,
-                <span class="ident">existing_wallet</span>.<span class="ident">wallet_type</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">wallet_data</span>,
+        <span class="kw">let </span>contract_subscription = ContractSubscription::subscribe(
+            clock.clone(),
+            transport,
+            existing_wallet.address,
+            <span class="kw-2">&amp;mut </span>make_contract_state_handler(
+                clock.as_ref(),
+                handler.as_ref(),
+                <span class="kw-2">&amp;</span>existing_wallet.public_key,
+                existing_wallet.wallet_type,
+                <span class="kw-2">&amp;mut </span>wallet_data,
             ),
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(
-                <span class="ident">handler</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">existing_wallet</span>.<span class="ident">wallet_type</span>,
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>make_transactions_handler(
+                handler.as_ref(),
+                existing_wallet.wallet_type,
             )),
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">clock</span>,
-            <span class="ident">public_key</span>: <span class="ident">existing_wallet</span>.<span class="ident">public_key</span>,
-            <span class="ident">wallet_type</span>: <span class="ident">existing_wallet</span>.<span class="ident">wallet_type</span>,
-            <span class="ident">contract_subscription</span>,
-            <span class="ident">handler</span>,
-            <span class="ident">wallet_data</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            clock,
+            public_key: existing_wallet.public_key,
+            wallet_type: existing_wallet.wallet_type,
+            contract_subscription,
+            handler,
+            wallet_data,
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contract_subscription</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">ContractSubscription</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">contract_subscription</span>
+    <span class="kw">pub fn </span>contract_subscription(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ContractSubscription {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.contract_subscription
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">workchain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">i8</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">address</span>().<span class="ident">workchain_id</span>() <span class="kw">as</span> <span class="ident">i8</span>
+    <span class="kw">pub fn </span>workchain(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; i8 {
+        <span class="self">self</span>.contract_subscription.address().workchain_id() <span class="kw">as </span>i8
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">address</span>()
+    <span class="kw">pub fn </span>address(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>MsgAddressInt {
+        <span class="self">self</span>.contract_subscription.address()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">public_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">PublicKey</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public_key</span>
+    <span class="kw">pub fn </span>public_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PublicKey {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.public_key
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wallet_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">WalletType</span> {
-        <span class="self">self</span>.<span class="ident">wallet_type</span>
+    <span class="kw">pub fn </span>wallet_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WalletType {
+        <span class="self">self</span>.wallet_type
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">contract_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">ContractState</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">contract_state</span>()
+    <span class="kw">pub fn </span>contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ContractState {
+        <span class="self">self</span>.contract_subscription.contract_state()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pending_transactions</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">PendingTransaction</span>] {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">pending_transactions</span>()
+    <span class="kw">pub fn </span>pending_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[PendingTransaction] {
+        <span class="self">self</span>.contract_subscription.pending_transactions()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">polling_method</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">PollingMethod</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">polling_method</span>()
+    <span class="kw">pub fn </span>polling_method(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PollingMethod {
+        <span class="self">self</span>.contract_subscription.polling_method()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">details</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TonWalletDetails</span> {
-        <span class="self">self</span>.<span class="ident">wallet_data</span>
-            .<span class="ident">details</span>
-            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">wallet_type</span>.<span class="ident">details</span>())
+    <span class="kw">pub fn </span>details(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TonWalletDetails {
+        <span class="self">self</span>.wallet_data
+            .details
+            .unwrap_or_else(|| <span class="self">self</span>.wallet_type.details())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_unconfirmed_transactions</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">MultisigPendingTransaction</span>] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">wallet_data</span>.<span class="ident">unconfirmed_transactions</span>
+    <span class="kw">pub fn </span>get_unconfirmed_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[MultisigPendingTransaction] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.wallet_data.unconfirmed_transactions
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_custodians</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">wallet_data</span>.<span class="ident">custodians</span>
+    <span class="kw">pub fn </span>get_custodians(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Vec&lt;UInt256&gt;&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.wallet_data.custodians
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_deploy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">expiration</span>: <span class="ident">Expiration</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">UnsignedMessage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">wallet_type</span> {
-            <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; <span class="ident">multisig::prepare_deploy</span>(
-                <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public_key</span>,
-                <span class="ident">multisig_type</span>,
-                <span class="self">self</span>.<span class="ident">workchain</span>(),
-                <span class="ident">expiration</span>,
-                <span class="ident">multisig::DeployParams::single_custodian</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public_key</span>),
+    <span class="kw">pub fn </span>prepare_deploy(<span class="kw-2">&amp;</span><span class="self">self</span>, expiration: Expiration) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>UnsignedMessage&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.wallet_type {
+            WalletType::Multisig(multisig_type) =&gt; multisig::prepare_deploy(
+                <span class="self">self</span>.clock.as_ref(),
+                <span class="kw-2">&amp;</span><span class="self">self</span>.public_key,
+                multisig_type,
+                <span class="self">self</span>.workchain(),
+                expiration,
+                multisig::DeployParams::single_custodian(<span class="kw-2">&amp;</span><span class="self">self</span>.public_key),
             ),
-            <span class="ident">WalletType::WalletV3</span> =&gt; <span class="ident">wallet_v3::prepare_deploy</span>(
-                <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public_key</span>,
-                <span class="self">self</span>.<span class="ident">workchain</span>(),
-                <span class="ident">expiration</span>,
+            WalletType::WalletV3 =&gt; wallet_v3::prepare_deploy(
+                <span class="self">self</span>.clock.as_ref(),
+                <span class="kw-2">&amp;</span><span class="self">self</span>.public_key,
+                <span class="self">self</span>.workchain(),
+                expiration,
             ),
-            <span class="ident">WalletType::EverWallet</span> =&gt; <span class="ident">ever_wallet::prepare_deploy</span>(
-                <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public_key</span>,
-                <span class="self">self</span>.<span class="ident">workchain</span>(),
-                <span class="ident">expiration</span>,
+            WalletType::EverWallet =&gt; ever_wallet::prepare_deploy(
+                <span class="self">self</span>.clock.as_ref(),
+                <span class="kw-2">&amp;</span><span class="self">self</span>.public_key,
+                <span class="self">self</span>.workchain(),
+                expiration,
             ),
-            <span class="ident">WalletType::HighloadWalletV2</span> =&gt; <span class="ident">highload_wallet_v2::prepare_deploy</span>(
-                <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public_key</span>,
-                <span class="self">self</span>.<span class="ident">workchain</span>(),
-                <span class="ident">expiration</span>,
+            WalletType::HighloadWalletV2 =&gt; highload_wallet_v2::prepare_deploy(
+                <span class="self">self</span>.clock.as_ref(),
+                <span class="kw-2">&amp;</span><span class="self">self</span>.public_key,
+                <span class="self">self</span>.workchain(),
+                expiration,
             ),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_deploy_with_multiple_owners</span>(
+    <span class="kw">pub fn </span>prepare_deploy_with_multiple_owners(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-        <span class="ident">custodians</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
-        <span class="ident">req_confirms</span>: <span class="ident">u8</span>,
-        <span class="ident">expiration_time</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">UnsignedMessage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">wallet_type</span> {
-            <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; <span class="ident">multisig::prepare_deploy</span>(
-                <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public_key</span>,
-                <span class="ident">multisig_type</span>,
-                <span class="self">self</span>.<span class="ident">workchain</span>(),
-                <span class="ident">expiration</span>,
-                <span class="ident">multisig::DeployParams</span> {
-                    <span class="ident">owners</span>: <span class="ident">custodians</span>,
-                    <span class="ident">req_confirms</span>,
-                    <span class="ident">expiration_time</span>,
+        expiration: Expiration,
+        custodians: <span class="kw-2">&amp;</span>[PublicKey],
+        req_confirms: u8,
+        expiration_time: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>UnsignedMessage&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.wallet_type {
+            WalletType::Multisig(multisig_type) =&gt; multisig::prepare_deploy(
+                <span class="self">self</span>.clock.as_ref(),
+                <span class="kw-2">&amp;</span><span class="self">self</span>.public_key,
+                multisig_type,
+                <span class="self">self</span>.workchain(),
+                expiration,
+                multisig::DeployParams {
+                    owners: custodians,
+                    req_confirms,
+                    expiration_time,
                 },
             ),
-            <span class="comment">// Non-multisig wallets doesn&#39;t support multiple owners</span>
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">TonWalletError::InvalidContractType</span>.<span class="ident">into</span>()),
+            <span class="comment">// Non-multisig wallets doesn&#39;t support multiple owners
+            </span><span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(TonWalletError::InvalidContractType.into()),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_transfer</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">current_state</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
-        <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-        <span class="ident">gift</span>: <span class="ident">Gift</span>,
-        <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransferAction</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">wallet_type</span> {
-            <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; {
-                <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">current_state</span>.<span class="ident">storage</span>.<span class="ident">state</span> {
-                    <span class="ident">ton_block::AccountState::AccountFrozen</span> { .. } =&gt; {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TonWalletError::AccountIsFrozen</span>.<span class="ident">into</span>())
+    <span class="kw">pub fn </span>prepare_transfer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        current_state: <span class="kw-2">&amp;</span>ton_block::AccountStuff,
+        public_key: <span class="kw-2">&amp;</span>PublicKey,
+        gift: Gift,
+        expiration: Expiration,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;TransferAction&gt; {
+        <span class="kw">match </span><span class="self">self</span>.wallet_type {
+            WalletType::Multisig(multisig_type) =&gt; {
+                <span class="kw">match </span><span class="kw-2">&amp;</span>current_state.storage.state {
+                    ton_block::AccountState::AccountFrozen { .. } =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(TonWalletError::AccountIsFrozen.into())
                     }
-                    <span class="ident">ton_block::AccountState::AccountUninit</span> =&gt; {
-                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">TransferAction::DeployFirst</span>)
+                    ton_block::AccountState::AccountUninit =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(TransferAction::DeployFirst)
                     }
-                    <span class="ident">ton_block::AccountState::AccountActive</span> { .. } =&gt; {}
+                    ton_block::AccountState::AccountActive { .. } =&gt; {}
                 };
 
-                <span class="self">self</span>.<span class="ident">wallet_data</span>.<span class="ident">update</span>(
-                    <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public_key</span>,
-                    <span class="self">self</span>.<span class="ident">wallet_type</span>,
-                    <span class="ident">current_state</span>,
-                    <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>(),
+                <span class="self">self</span>.wallet_data.update(
+                    <span class="self">self</span>.clock.as_ref(),
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.public_key,
+                    <span class="self">self</span>.wallet_type,
+                    current_state,
+                    <span class="self">self</span>.handler.as_ref(),
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">has_multiple_owners</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">wallet_data</span>.<span class="ident">custodians</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">custodians</span>) =&gt; <span class="ident">custodians</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TonWalletError::CustodiansNotFound</span>.<span class="ident">into</span>()),
+                <span class="kw">let </span>has_multiple_owners = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.wallet_data.custodians {
+                    <span class="prelude-val">Some</span>(custodians) =&gt; custodians.len() &gt; <span class="number">1</span>,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TonWalletError::CustodiansNotFound.into()),
                 };
 
-                <span class="ident">multisig::prepare_transfer</span>(
-                    <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                    <span class="ident">multisig_type</span>,
-                    <span class="ident">public_key</span>,
-                    <span class="ident">has_multiple_owners</span>,
-                    <span class="self">self</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-                    <span class="ident">gift</span>,
-                    <span class="ident">expiration</span>,
+                multisig::prepare_transfer(
+                    <span class="self">self</span>.clock.as_ref(),
+                    multisig_type,
+                    public_key,
+                    has_multiple_owners,
+                    <span class="self">self</span>.address().clone(),
+                    gift,
+                    expiration,
                 )
             }
-            <span class="ident">WalletType::WalletV3</span> =&gt; <span class="ident">wallet_v3::prepare_transfer</span>(
-                <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">public_key</span>,
-                <span class="ident">current_state</span>,
+            WalletType::WalletV3 =&gt; wallet_v3::prepare_transfer(
+                <span class="self">self</span>.clock.as_ref(),
+                public_key,
+                current_state,
                 <span class="number">0</span>,
-                <span class="macro">vec!</span>[<span class="ident">gift</span>],
-                <span class="ident">expiration</span>,
+                <span class="macro">vec!</span>[gift],
+                expiration,
             ),
-            <span class="ident">WalletType::EverWallet</span> =&gt; <span class="ident">ever_wallet::prepare_transfer</span>(
-                <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">public_key</span>,
-                <span class="ident">current_state</span>,
-                <span class="self">self</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-                <span class="macro">vec!</span>[<span class="ident">gift</span>],
-                <span class="ident">expiration</span>,
+            WalletType::EverWallet =&gt; ever_wallet::prepare_transfer(
+                <span class="self">self</span>.clock.as_ref(),
+                public_key,
+                current_state,
+                <span class="self">self</span>.address().clone(),
+                <span class="macro">vec!</span>[gift],
+                expiration,
             ),
-            <span class="ident">WalletType::HighloadWalletV2</span> =&gt; <span class="ident">highload_wallet_v2::prepare_transfer</span>(
-                <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                <span class="ident">public_key</span>,
-                <span class="ident">current_state</span>,
-                <span class="macro">vec!</span>[<span class="ident">gift</span>],
-                <span class="ident">expiration</span>,
+            WalletType::HighloadWalletV2 =&gt; highload_wallet_v2::prepare_transfer(
+                <span class="self">self</span>.clock.as_ref(),
+                public_key,
+                current_state,
+                <span class="macro">vec!</span>[gift],
+                expiration,
             ),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_confirm_transaction</span>(
+    <span class="kw">pub fn </span>prepare_confirm_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">current_state</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
-        <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-        <span class="ident">transaction_id</span>: <span class="ident">u64</span>,
-        <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">UnsignedMessage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">wallet_type</span> {
-            <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">has_pending_transaction</span> <span class="op">=</span> <span class="ident">multisig::find_pending_transaction</span>(
-                    <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                    <span class="ident">multisig_type</span>,
-                    <span class="ident">Cow::Borrowed</span>(<span class="ident">current_state</span>),
-                    <span class="ident">transaction_id</span>,
+        current_state: <span class="kw-2">&amp;</span>ton_block::AccountStuff,
+        public_key: <span class="kw-2">&amp;</span>PublicKey,
+        transaction_id: u64,
+        expiration: Expiration,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>UnsignedMessage&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.wallet_type {
+            WalletType::Multisig(multisig_type) =&gt; {
+                <span class="kw">let </span>has_pending_transaction = multisig::find_pending_transaction(
+                    <span class="self">self</span>.clock.as_ref(),
+                    multisig_type,
+                    Cow::Borrowed(current_state),
+                    transaction_id,
                 )<span class="question-mark">?</span>;
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">has_pending_transaction</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TonWalletError::PendingTransactionNotFound</span>.<span class="ident">into</span>());
+                <span class="kw">if </span>!has_pending_transaction {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(TonWalletError::PendingTransactionNotFound.into());
                 }
 
-                <span class="ident">multisig::prepare_confirm_transaction</span>(
-                    <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                    <span class="ident">multisig_type</span>,
-                    <span class="ident">public_key</span>,
-                    <span class="self">self</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-                    <span class="ident">transaction_id</span>,
-                    <span class="ident">expiration</span>,
+                multisig::prepare_confirm_transaction(
+                    <span class="self">self</span>.clock.as_ref(),
+                    multisig_type,
+                    public_key,
+                    <span class="self">self</span>.address().clone(),
+                    transaction_id,
+                    expiration,
                 )
             }
-            <span class="comment">// Non-multisig wallets doesn&#39;t support pending transactions</span>
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">TonWalletError::PendingTransactionNotFound</span>.<span class="ident">into</span>()),
+            <span class="comment">// Non-multisig wallets doesn&#39;t support pending transactions
+            </span><span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(TonWalletError::PendingTransactionNotFound.into()),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Message</span>,
-        <span class="ident">expire_at</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PendingTransaction</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">send</span>(<span class="ident">message</span>, <span class="ident">expire_at</span>).<span class="kw">await</span>
-    }
+    <span class="kw">pub async fn </span>send(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        message: <span class="kw-2">&amp;</span>ton_block::Message,
+        expire_at: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PendingTransaction&gt; {
+        <span class="self">self</span>.contract_subscription.send(message, expire_at).<span class="kw">await
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">refresh</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>
-            .<span class="ident">refresh</span>(
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_contract_state_handler</span>(
-                    <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                    <span class="ident">handler</span>,
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">public_key</span>,
-                    <span class="self">self</span>.<span class="ident">wallet_type</span>,
-                    <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">wallet_data</span>,
+    <span class="kw">pub async fn </span>refresh(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>handler = <span class="self">self</span>.handler.as_ref();
+        <span class="self">self</span>.contract_subscription
+            .refresh(
+                <span class="kw-2">&amp;mut </span>make_contract_state_handler(
+                    <span class="self">self</span>.clock.as_ref(),
+                    handler,
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.public_key,
+                    <span class="self">self</span>.wallet_type,
+                    <span class="kw-2">&amp;mut </span><span class="self">self</span>.wallet_data,
                 ),
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>, <span class="self">self</span>.<span class="ident">wallet_type</span>),
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_message_sent_handler</span>(<span class="ident">handler</span>),
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_message_expired_handler</span>(<span class="ident">handler</span>),
+                <span class="kw-2">&amp;mut </span>make_transactions_handler(handler, <span class="self">self</span>.wallet_type),
+                <span class="kw-2">&amp;mut </span>make_message_sent_handler(handler),
+                <span class="kw-2">&amp;mut </span>make_message_expired_handler(handler),
             )
-            .<span class="kw">await</span>
-    }
+            .<span class="kw">await
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle_block</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Block</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// TODO: update wallet data here</span>
+    <span class="kw">pub async fn </span>handle_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, block: <span class="kw-2">&amp;</span>ton_block::Block) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="comment">// TODO: update wallet data here
 
-        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
-        <span class="kw">let</span> <span class="ident">new_account_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">handle_block</span>(
-            <span class="ident">block</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>, <span class="self">self</span>.<span class="ident">wallet_type</span>),
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_message_sent_handler</span>(<span class="ident">handler</span>),
-            <span class="kw-2">&amp;mut</span> <span class="ident">make_message_expired_handler</span>(<span class="ident">handler</span>),
+        </span><span class="kw">let </span>handler = <span class="self">self</span>.handler.as_ref();
+        <span class="kw">let </span>new_account_state = <span class="self">self</span>.contract_subscription.handle_block(
+            block,
+            <span class="kw-2">&amp;mut </span>make_transactions_handler(handler, <span class="self">self</span>.wallet_type),
+            <span class="kw-2">&amp;mut </span>make_message_sent_handler(handler),
+            <span class="kw-2">&amp;mut </span>make_message_expired_handler(handler),
         )<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">account_state</span>) <span class="op">=</span> <span class="ident">new_account_state</span> {
-            <span class="ident">handler</span>.<span class="ident">on_state_changed</span>(<span class="ident">account_state</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(account_state) = new_account_state {
+            handler.on_state_changed(account_state);
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">preload_transactions</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">from_lt</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">as_ref</span>();
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>
-            .<span class="ident">preload_transactions</span>(
-                <span class="ident">from_lt</span>,
-                <span class="kw-2">&amp;mut</span> <span class="ident">make_transactions_handler</span>(<span class="ident">handler</span>, <span class="self">self</span>.<span class="ident">wallet_type</span>),
+    <span class="kw">pub async fn </span>preload_transactions(<span class="kw-2">&amp;mut </span><span class="self">self</span>, from_lt: u64) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>handler = <span class="self">self</span>.handler.as_ref();
+        <span class="self">self</span>.contract_subscription
+            .preload_transactions(
+                from_lt,
+                <span class="kw-2">&amp;mut </span>make_transactions_handler(handler, <span class="self">self</span>.wallet_type),
             )
-            .<span class="kw">await</span>
-    }
+            .<span class="kw">await
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">estimate_fees</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Message</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u128</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">contract_subscription</span>.<span class="ident">estimate_fees</span>(<span class="ident">message</span>).<span class="kw">await</span>
-    }
+    <span class="kw">pub async fn </span>estimate_fees(<span class="kw-2">&amp;mut </span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>ton_block::Message) -&gt; <span class="prelude-ty">Result</span>&lt;u128&gt; {
+        <span class="self">self</span>.contract_subscription.estimate_fees(message).<span class="kw">await
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">WalletData</span> {
-    <span class="ident">custodians</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">unconfirmed_transactions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MultisigPendingTransaction</span><span class="op">&gt;</span>,
-    <span class="ident">details</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TonWalletDetails</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default)]
+</span><span class="kw">struct </span>WalletData {
+    custodians: <span class="prelude-ty">Option</span>&lt;Vec&lt;UInt256&gt;&gt;,
+    unconfirmed_transactions: Vec&lt;MultisigPendingTransaction&gt;,
+    details: <span class="prelude-ty">Option</span>&lt;TonWalletDetails&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">WalletData</span> {
-    <span class="kw">fn</span> <span class="ident">update</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-        <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-        <span class="ident">wallet_type</span>: <span class="ident">WalletType</span>,
-        <span class="ident">account_stuff</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
-        <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// Extract details</span>
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">details</span>.<span class="ident">is_none</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">wallet_type</span>.<span class="ident">details</span>();
+<span class="kw">impl </span>WalletData {
+    <span class="kw">fn </span>update(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+        public_key: <span class="kw-2">&amp;</span>PublicKey,
+        wallet_type: WalletType,
+        account_stuff: <span class="kw-2">&amp;</span>ton_block::AccountStuff,
+        handler: <span class="kw-2">&amp;</span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="comment">// Extract details
+        </span><span class="kw">if </span><span class="self">self</span>.details.is_none() {
+            <span class="kw">let </span><span class="kw-2">mut </span>details = wallet_type.details();
 
-            <span class="comment">// Adjust `expiration_time` from the state for multisig2</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::Multisig2</span>) <span class="op">=</span> <span class="ident">wallet_type</span> {
-                <span class="ident">details</span>.<span class="ident">expiration_time</span> <span class="op">=</span> <span class="ident">multisig::get_expiration_time</span>(
-                    <span class="ident">clock</span>,
-                    <span class="ident">MultisigType::Multisig2</span>,
-                    <span class="ident">Cow::Borrowed</span>(<span class="ident">account_stuff</span>),
-                )<span class="question-mark">?</span>
-                .<span class="ident">try_into</span>()
-                .<span class="ident">unwrap_or</span>(<span class="ident">u32::MAX</span>);
+            <span class="comment">// Adjust `expiration_time` from the state for multisig2
+            </span><span class="kw">if let </span>WalletType::Multisig(MultisigType::Multisig2) = wallet_type {
+                details.expiration_time = multisig::get_expiration_time(
+                    clock,
+                    MultisigType::Multisig2,
+                    Cow::Borrowed(account_stuff),
+                )<span class="question-mark">?
+                </span>.try_into()
+                .unwrap_or(u32::MAX);
             }
 
-            <span class="self">self</span>.<span class="ident">details</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">details</span>);
-            <span class="ident">handler</span>.<span class="ident">on_details_changed</span>(<span class="ident">details</span>);
+            <span class="self">self</span>.details = <span class="prelude-val">Some</span>(details);
+            handler.on_details_changed(details);
         }
 
-        <span class="comment">// Extract custodians</span>
-        <span class="kw">let</span> <span class="ident">multisig_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">wallet_type</span> {
-            <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; <span class="ident">multisig_type</span>,
-            <span class="comment">// Simple path for wallets with single custodian</span>
-            <span class="kw">_</span> =&gt; {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">custodians</span>.<span class="ident">is_none</span>() {
-                    <span class="kw">let</span> <span class="ident">custodians</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">custodians</span>.<span class="ident">insert</span>(<span class="macro">vec!</span>[<span class="ident">public_key</span>.<span class="ident">to_bytes</span>().<span class="ident">into</span>()]);
-                    <span class="ident">handler</span>.<span class="ident">on_custodians_changed</span>(<span class="ident">custodians</span>);
+        <span class="comment">// Extract custodians
+        </span><span class="kw">let </span>multisig_type = <span class="kw">match </span>wallet_type {
+            WalletType::Multisig(multisig_type) =&gt; multisig_type,
+            <span class="comment">// Simple path for wallets with single custodian
+            </span><span class="kw">_ </span>=&gt; {
+                <span class="kw">if </span><span class="self">self</span>.custodians.is_none() {
+                    <span class="kw">let </span>custodians = <span class="self">self</span>.custodians.insert(<span class="macro">vec!</span>[public_key.to_bytes().into()]);
+                    handler.on_custodians_changed(custodians);
                 }
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
         };
 
-        <span class="comment">// Extract custodians</span>
-        <span class="kw">let</span> <span class="ident">custodians</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">custodians</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">custodians</span>) =&gt; <span class="ident">custodians</span>,
-            <span class="prelude-val">None</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">custodians</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">custodians</span>.<span class="ident">insert</span>(<span class="ident">multisig::get_custodians</span>(
-                    <span class="ident">clock</span>,
-                    <span class="ident">multisig_type</span>,
-                    <span class="ident">Cow::Borrowed</span>(<span class="ident">account_stuff</span>),
+        <span class="comment">// Extract custodians
+        </span><span class="kw">let </span>custodians = <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.custodians {
+            <span class="prelude-val">Some</span>(custodians) =&gt; custodians,
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">let </span>custodians = <span class="self">self</span>.custodians.insert(multisig::get_custodians(
+                    clock,
+                    multisig_type,
+                    Cow::Borrowed(account_stuff),
                 )<span class="question-mark">?</span>);
-                <span class="ident">handler</span>.<span class="ident">on_custodians_changed</span>(<span class="ident">custodians</span>);
-                <span class="ident">custodians</span>
+                handler.on_custodians_changed(custodians);
+                custodians
             }
         };
 
-        <span class="comment">// Skip pending transactions extraction for single custodian</span>
-        <span class="kw">if</span> <span class="ident">custodians</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+        <span class="comment">// Skip pending transactions extraction for single custodian
+        </span><span class="kw">if </span>custodians.len() &lt; <span class="number">2 </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="comment">// Extract pending transactions</span>
-        <span class="kw">let</span> <span class="ident">pending_transactions</span> <span class="op">=</span> <span class="ident">multisig::get_pending_transactions</span>(
-            <span class="ident">clock</span>,
-            <span class="ident">multisig_type</span>,
-            <span class="ident">Cow::Borrowed</span>(<span class="ident">account_stuff</span>),
-            <span class="ident">custodians</span>,
+        <span class="comment">// Extract pending transactions
+        </span><span class="kw">let </span>pending_transactions = multisig::get_pending_transactions(
+            clock,
+            multisig_type,
+            Cow::Borrowed(account_stuff),
+            custodians,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">unconfirmed_transactions</span> <span class="op">!</span><span class="op">=</span> <span class="ident">pending_transactions</span> {
-            <span class="self">self</span>.<span class="ident">unconfirmed_transactions</span> <span class="op">=</span> <span class="ident">pending_transactions</span>;
-            <span class="ident">handler</span>.<span class="ident">on_unconfirmed_transactions_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">unconfirmed_transactions</span>);
+        <span class="kw">if </span><span class="self">self</span>.unconfirmed_transactions != pending_transactions {
+            <span class="self">self</span>.unconfirmed_transactions = pending_transactions;
+            handler.on_unconfirmed_transactions_changed(<span class="kw-2">&amp;</span><span class="self">self</span>.unconfirmed_transactions);
         }
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extract_wallet_init_data</span>(<span class="ident">contract</span>: <span class="kw-2">&amp;</span><span class="ident">ExistingContract</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">PublicKey</span>, <span class="ident">WalletType</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> (<span class="ident">code</span>, <span class="ident">data</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">contract</span>.<span class="ident">account</span>.<span class="ident">storage</span>.<span class="ident">state</span> {
-        <span class="ident">ton_block::AccountState::AccountActive</span> {
-            <span class="ident">state_init</span>:
-                <span class="ident">ton_block::StateInit</span> {
-                    <span class="ident">code</span>: <span class="prelude-val">Some</span>(<span class="ident">code</span>),
-                    <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>),
+<span class="kw">pub fn </span>extract_wallet_init_data(contract: <span class="kw-2">&amp;</span>ExistingContract) -&gt; <span class="prelude-ty">Result</span>&lt;(PublicKey, WalletType)&gt; {
+    <span class="kw">let </span>(code, data) = <span class="kw">match </span><span class="kw-2">&amp;</span>contract.account.storage.state {
+        ton_block::AccountState::AccountActive {
+            state_init:
+                ton_block::StateInit {
+                    code: <span class="prelude-val">Some</span>(code),
+                    data: <span class="prelude-val">Some</span>(data),
                     ..
                 },
             ..
-        } =&gt; (<span class="ident">code</span>, <span class="ident">data</span>),
-        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TonWalletError::AccountNotExists</span>.<span class="ident">into</span>()),
+        } =&gt; (code, data),
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TonWalletError::AccountNotExists.into()),
     };
 
-    <span class="kw">let</span> <span class="ident">code_hash</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">repr_hash</span>();
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">multisig_type</span>) <span class="op">=</span> <span class="ident">multisig::guess_multisig_type</span>(<span class="kw-2">&amp;</span><span class="ident">code_hash</span>) {
-        <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">extract_public_key</span>(<span class="kw-2">&amp;</span><span class="ident">contract</span>.<span class="ident">account</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">public_key</span>, <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>)))
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">wallet_v3::is_wallet_v3</span>(<span class="kw-2">&amp;</span><span class="ident">code_hash</span>) {
-        <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">PublicKey::from_bytes</span>(<span class="ident">wallet_v3::InitData::try_from</span>(<span class="ident">data</span>)<span class="question-mark">?</span>.<span class="ident">public_key</span>())<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">public_key</span>, <span class="ident">WalletType::WalletV3</span>))
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">ever_wallet::is_ever_wallet</span>(<span class="kw-2">&amp;</span><span class="ident">code_hash</span>) {
-        <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">extract_public_key</span>(<span class="kw-2">&amp;</span><span class="ident">contract</span>.<span class="ident">account</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">public_key</span>, <span class="ident">WalletType::EverWallet</span>))
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">highload_wallet_v2::is_highload_wallet_v2</span>(<span class="kw-2">&amp;</span><span class="ident">code_hash</span>) {
-        <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span>
-            <span class="ident">PublicKey::from_bytes</span>(<span class="ident">highload_wallet_v2::InitData::try_from</span>(<span class="ident">data</span>)<span class="question-mark">?</span>.<span class="ident">public_key</span>())<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>((<span class="ident">public_key</span>, <span class="ident">WalletType::HighloadWalletV2</span>))
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">TonWalletError::InvalidContractType</span>.<span class="ident">into</span>())
+    <span class="kw">let </span>code_hash = code.repr_hash();
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(multisig_type) = multisig::guess_multisig_type(<span class="kw-2">&amp;</span>code_hash) {
+        <span class="kw">let </span>public_key = extract_public_key(<span class="kw-2">&amp;</span>contract.account)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((public_key, WalletType::Multisig(multisig_type)))
+    } <span class="kw">else if </span>wallet_v3::is_wallet_v3(<span class="kw-2">&amp;</span>code_hash) {
+        <span class="kw">let </span>public_key = PublicKey::from_bytes(wallet_v3::InitData::try_from(data)<span class="question-mark">?</span>.public_key())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((public_key, WalletType::WalletV3))
+    } <span class="kw">else if </span>ever_wallet::is_ever_wallet(<span class="kw-2">&amp;</span>code_hash) {
+        <span class="kw">let </span>public_key = extract_public_key(<span class="kw-2">&amp;</span>contract.account)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((public_key, WalletType::EverWallet))
+    } <span class="kw">else if </span>highload_wallet_v2::is_highload_wallet_v2(<span class="kw-2">&amp;</span>code_hash) {
+        <span class="kw">let </span>public_key =
+            PublicKey::from_bytes(highload_wallet_v2::InitData::try_from(data)<span class="question-mark">?</span>.public_key())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>((public_key, WalletType::HighloadWalletV2))
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(TonWalletError::InvalidContractType.into())
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_wallet_custodians</span>(
-    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-    <span class="ident">contract</span>: <span class="kw-2">&amp;</span><span class="ident">ExistingContract</span>,
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-    <span class="ident">wallet_type</span>: <span class="ident">WalletType</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">wallet_type</span> {
-        <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; {
-            <span class="ident">multisig::get_custodians</span>(<span class="ident">clock</span>, <span class="ident">multisig_type</span>, <span class="ident">Cow::Borrowed</span>(<span class="kw-2">&amp;</span><span class="ident">contract</span>.<span class="ident">account</span>))
+<span class="kw">pub fn </span>get_wallet_custodians(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+    contract: <span class="kw-2">&amp;</span>ExistingContract,
+    public_key: <span class="kw-2">&amp;</span>PublicKey,
+    wallet_type: WalletType,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;UInt256&gt;&gt; {
+    <span class="kw">match </span>wallet_type {
+        WalletType::Multisig(multisig_type) =&gt; {
+            multisig::get_custodians(clock, multisig_type, Cow::Borrowed(<span class="kw-2">&amp;</span>contract.account))
         }
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="ident">public_key</span>.<span class="ident">to_bytes</span>().<span class="ident">into</span>()]),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[public_key.to_bytes().into()]),
     }
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">WALLET_TYPES_BY_POPULARITY</span>: [<span class="ident">WalletType</span>; <span class="number">9</span>] <span class="op">=</span> [
-    <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::SafeMultisigWallet</span>),
-    <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::SurfWallet</span>),
-    <span class="ident">WalletType::WalletV3</span>,
-    <span class="ident">WalletType::EverWallet</span>,
-    <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::Multisig2</span>),
-    <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::SetcodeMultisigWallet</span>),
-    <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::SafeMultisigWallet24h</span>),
-    <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::BridgeMultisigWallet</span>),
-    <span class="ident">WalletType::HighloadWalletV2</span>,
+<span class="kw">pub const </span>WALLET_TYPES_BY_POPULARITY: [WalletType; <span class="number">9</span>] = [
+    WalletType::Multisig(MultisigType::SafeMultisigWallet),
+    WalletType::Multisig(MultisigType::SurfWallet),
+    WalletType::WalletV3,
+    WalletType::EverWallet,
+    WalletType::Multisig(MultisigType::Multisig2),
+    WalletType::Multisig(MultisigType::SetcodeMultisigWallet),
+    WalletType::Multisig(MultisigType::SafeMultisigWallet24h),
+    WalletType::Multisig(MultisigType::BridgeMultisigWallet),
+    WalletType::HighloadWalletV2,
 ];
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">find_existing_wallets</span>(
-    <span class="ident">transport</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Transport</span>,
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-    <span class="ident">workchain_id</span>: <span class="ident">i8</span>,
-    <span class="ident">wallet_types</span>: <span class="kw-2">&amp;</span>[<span class="ident">WalletType</span>],
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ExistingWalletInfo</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="ident">futures_util::stream</span>::{<span class="ident">FuturesUnordered</span>, <span class="ident">TryStreamExt</span>};
+<span class="kw">pub async fn </span>find_existing_wallets(
+    transport: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Transport,
+    public_key: <span class="kw-2">&amp;</span>PublicKey,
+    workchain_id: i8,
+    wallet_types: <span class="kw-2">&amp;</span>[WalletType],
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ExistingWalletInfo&gt;&gt; {
+    <span class="kw">use </span>futures_util::stream::{FuturesUnordered, TryStreamExt};
 
-    <span class="ident">wallet_types</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">wallet_type</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">compute_address</span>(<span class="ident">public_key</span>, <span class="ident">wallet_type</span>, <span class="ident">workchain_id</span>);
+    wallet_types
+        .iter()
+        .map(|<span class="kw-2">&amp;</span>wallet_type| <span class="kw">async move </span>{
+            <span class="kw">let </span>address = compute_address(public_key, wallet_type, workchain_id);
 
-            <span class="kw">let</span> <span class="ident">contract_state</span> <span class="op">=</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let </span>contract_state = transport.get_contract_state(<span class="kw-2">&amp;</span>address).<span class="kw">await</span><span class="question-mark">?</span>;
 
-            <span class="prelude-val">Ok</span>(<span class="ident">ExistingWalletInfo</span> {
-                <span class="ident">address</span>,
-                <span class="ident">public_key</span>: <span class="kw-2">*</span><span class="ident">public_key</span>,
-                <span class="ident">wallet_type</span>,
-                <span class="ident">contract_state</span>: <span class="ident">contract_state</span>.<span class="ident">brief</span>(),
+            <span class="prelude-val">Ok</span>(ExistingWalletInfo {
+                address,
+                public_key: <span class="kw-2">*</span>public_key,
+                wallet_type,
+                contract_state: contract_state.brief(),
             })
         })
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">FuturesUnordered</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-        .<span class="ident">try_collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ExistingWalletInfo</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-        .<span class="kw">await</span>
+        .collect::&lt;FuturesUnordered&lt;<span class="kw">_</span>&gt;&gt;()
+        .try_collect::&lt;Vec&lt;ExistingWalletInfo&gt;&gt;()
+        .<span class="kw">await
+</span>}
+
+<span class="attribute">#[derive(Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>ExistingWalletInfo {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>address: MsgAddressInt,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span><span class="kw">pub </span>public_key: PublicKey,
+    <span class="kw">pub </span>wallet_type: WalletType,
+    <span class="kw">pub </span>contract_state: ContractState,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExistingWalletInfo</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-    <span class="kw">pub</span> <span class="ident">wallet_type</span>: <span class="ident">WalletType</span>,
-    <span class="kw">pub</span> <span class="ident">contract_state</span>: <span class="ident">ContractState</span>,
+<span class="kw">pub trait </span>InternalMessageSender {
+    <span class="kw">fn </span>prepare_transfer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        current_state: <span class="kw-2">&amp;</span>ton_block::AccountStuff,
+        public_key: <span class="kw-2">&amp;</span>PublicKey,
+        message: InternalMessage,
+        expiration: Expiration,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;TransferAction&gt;;
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">InternalMessageSender</span> {
-    <span class="kw">fn</span> <span class="ident">prepare_transfer</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">current_state</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
-        <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-        <span class="ident">message</span>: <span class="ident">InternalMessage</span>,
-        <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransferAction</span><span class="op">&gt;</span>;
-}
-
-<span class="kw">impl</span> <span class="ident">InternalMessageSender</span> <span class="kw">for</span> <span class="ident">TonWallet</span> {
-    <span class="kw">fn</span> <span class="ident">prepare_transfer</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">current_state</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
-        <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-        <span class="ident">message</span>: <span class="ident">InternalMessage</span>,
-        <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransferAction</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">message</span>.<span class="ident">source</span>, <span class="prelude-val">Some</span>(<span class="ident">source</span>) <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">source</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">address</span>()) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InternalMessageSenderError::InvalidSender</span>.<span class="ident">into</span>());
+<span class="kw">impl </span>InternalMessageSender <span class="kw">for </span>TonWallet {
+    <span class="kw">fn </span>prepare_transfer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        current_state: <span class="kw-2">&amp;</span>ton_block::AccountStuff,
+        public_key: <span class="kw-2">&amp;</span>PublicKey,
+        message: InternalMessage,
+        expiration: Expiration,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;TransferAction&gt; {
+        <span class="kw">if </span><span class="macro">matches!</span>(message.source, <span class="prelude-val">Some</span>(source) <span class="kw">if </span><span class="kw-2">&amp;</span>source != <span class="self">self</span>.address()) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(InternalMessageSenderError::InvalidSender.into());
         }
 
-        <span class="self">self</span>.<span class="ident">prepare_transfer</span>(
-            <span class="ident">current_state</span>,
-            <span class="ident">public_key</span>,
-            <span class="ident">Gift</span> {
-                <span class="ident">flags</span>: <span class="ident">MessageFlags::default</span>().<span class="ident">into</span>(),
-                <span class="ident">bounce</span>: <span class="ident">message</span>.<span class="ident">bounce</span>,
-                <span class="ident">destination</span>: <span class="ident">message</span>.<span class="ident">destination</span>,
-                <span class="ident">amount</span>: <span class="ident">message</span>.<span class="ident">amount</span>,
-                <span class="ident">body</span>: <span class="prelude-val">Some</span>(<span class="ident">message</span>.<span class="ident">body</span>),
-                <span class="ident">state_init</span>: <span class="prelude-val">None</span>,
+        <span class="self">self</span>.prepare_transfer(
+            current_state,
+            public_key,
+            Gift {
+                flags: MessageFlags::default().into(),
+                bounce: message.bounce,
+                destination: message.destination,
+                amount: message.amount,
+                body: <span class="prelude-val">Some</span>(message.body),
+                state_init: <span class="prelude-val">None</span>,
             },
-            <span class="ident">expiration</span>,
+            expiration,
         )
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">InternalMessageSenderError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid sender&quot;</span>)]</span>
-    <span class="ident">InvalidSender</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>InternalMessageSenderError {
+    <span class="attribute">#[error(<span class="string">&quot;Invalid sender&quot;</span>)]
+    </span>InvalidSender,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">TonWalletError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Account not exists&quot;</span>)]</span>
-    <span class="ident">AccountNotExists</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Account is frozen&quot;</span>)]</span>
-    <span class="ident">AccountIsFrozen</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid contract type&quot;</span>)]</span>
-    <span class="ident">InvalidContractType</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Custodians not found&quot;</span>)]</span>
-    <span class="ident">CustodiansNotFound</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Pending transaction not found&quot;</span>)]</span>
-    <span class="ident">PendingTransactionNotFound</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>TonWalletError {
+    <span class="attribute">#[error(<span class="string">&quot;Account not exists&quot;</span>)]
+    </span>AccountNotExists,
+    <span class="attribute">#[error(<span class="string">&quot;Account is frozen&quot;</span>)]
+    </span>AccountIsFrozen,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid contract type&quot;</span>)]
+    </span>InvalidContractType,
+    <span class="attribute">#[error(<span class="string">&quot;Custodians not found&quot;</span>)]
+    </span>CustodiansNotFound,
+    <span class="attribute">#[error(<span class="string">&quot;Pending transaction not found&quot;</span>)]
+    </span>PendingTransactionNotFound,
 }
 
-<span class="kw">fn</span> <span class="ident">make_contract_state_handler</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Clock</span>,
-    <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span>,
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">PublicKey</span>,
-    <span class="ident">wallet_type</span>: <span class="ident">WalletType</span>,
-    <span class="ident">wallet_data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">WalletData</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">RawContractState</span>) <span class="op">+</span> <span class="lifetime">&#39;a</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="ident">contract_state</span><span class="op">|</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">RawContractState::Exists</span>(<span class="ident">contract_state</span>) <span class="op">=</span> <span class="ident">contract_state</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">wallet_data</span>.<span class="ident">update</span>(
-                <span class="ident">clock</span>,
-                <span class="ident">public_key</span>,
-                <span class="ident">wallet_type</span>,
-                <span class="kw-2">&amp;</span><span class="ident">contract_state</span>.<span class="ident">account</span>,
-                <span class="ident">handler</span>,
+<span class="kw">fn </span>make_contract_state_handler&lt;<span class="lifetime">&#39;a</span>&gt;(
+    clock: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">dyn </span>Clock,
+    handler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
+    public_key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>PublicKey,
+    wallet_type: WalletType,
+    wallet_data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>WalletData,
+) -&gt; <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>RawContractState) + <span class="lifetime">&#39;a </span>{
+    <span class="kw">move </span>|contract_state| {
+        <span class="kw">if let </span>RawContractState::Exists(contract_state) = contract_state {
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = wallet_data.update(
+                clock,
+                public_key,
+                wallet_type,
+                <span class="kw-2">&amp;</span>contract_state.account,
+                handler,
             ) {
                 <span class="macro">log::error!</span>(<span class="string">&quot;{e}&quot;</span>);
             }
         }
-        <span class="ident">handler</span>.<span class="ident">on_state_changed</span>(<span class="ident">contract_state</span>.<span class="ident">brief</span>())
+        handler.on_state_changed(contract_state.brief())
     }
 }
 
-<span class="kw">fn</span> <span class="ident">make_transactions_handler</span>(
-    <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span>,
-    <span class="ident">wallet_type</span>: <span class="ident">WalletType</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span>, <span class="ident">TransactionsBatchInfo</span>) <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="ident">transactions</span>, <span class="ident">batch_info</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">transactions</span> <span class="op">=</span> <span class="ident">transactions</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">filter_map</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">transaction</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">parse_transaction_additional_info</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>.<span class="ident">data</span>, <span class="ident">wallet_type</span>);
-                <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span>
-                    <span class="ident">Transaction::try_from</span>((<span class="ident">transaction</span>.<span class="ident">hash</span>, <span class="ident">transaction</span>.<span class="ident">data</span>)).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-                <span class="prelude-val">Some</span>(<span class="ident">TransactionWithData</span> { <span class="ident">transaction</span>, <span class="ident">data</span> })
+<span class="kw">fn </span>make_transactions_handler(
+    handler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
+    wallet_type: WalletType,
+) -&gt; <span class="kw">impl </span>FnMut(Vec&lt;RawTransaction&gt;, TransactionsBatchInfo) + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">move </span>|transactions, batch_info| {
+        <span class="kw">let </span>transactions = transactions
+            .into_iter()
+            .filter_map(<span class="kw">move </span>|transaction| {
+                <span class="kw">let </span>data = parse_transaction_additional_info(<span class="kw-2">&amp;</span>transaction.data, wallet_type);
+                <span class="kw">let </span>transaction =
+                    Transaction::try_from((transaction.hash, transaction.data)).ok()<span class="question-mark">?</span>;
+                <span class="prelude-val">Some</span>(TransactionWithData { transaction, data })
             })
-            .<span class="ident">collect</span>();
+            .collect();
 
-        <span class="ident">handler</span>.<span class="ident">on_transactions_found</span>(<span class="ident">transactions</span>, <span class="ident">batch_info</span>)
+        handler.on_transactions_found(transactions, batch_info)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">make_message_sent_handler</span>(
-    <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">PendingTransaction</span>, <span class="ident">RawTransaction</span>) <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="ident">pending_transaction</span>, <span class="ident">transaction</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span> <span class="ident">Transaction::try_from</span>((<span class="ident">transaction</span>.<span class="ident">hash</span>, <span class="ident">transaction</span>.<span class="ident">data</span>)).<span class="ident">ok</span>();
-        <span class="ident">handler</span>.<span class="ident">on_message_sent</span>(<span class="ident">pending_transaction</span>, <span class="ident">transaction</span>);
+<span class="kw">fn </span>make_message_sent_handler(
+    handler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
+) -&gt; <span class="kw">impl </span>FnMut(PendingTransaction, RawTransaction) + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">move </span>|pending_transaction, transaction| {
+        <span class="kw">let </span>transaction = Transaction::try_from((transaction.hash, transaction.data)).ok();
+        handler.on_message_sent(pending_transaction, transaction);
     }
 }
 
-<span class="kw">fn</span> <span class="ident">make_message_expired_handler</span>(
-    <span class="ident">handler</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw">dyn</span> <span class="ident">TonWalletSubscriptionHandler</span>,
-) -&gt; <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">PendingTransaction</span>) <span class="op">+</span> <span class="lifetime">&#39;_</span> {
-    <span class="kw">move</span> <span class="op">|</span><span class="ident">pending_transaction</span><span class="op">|</span> <span class="ident">handler</span>.<span class="ident">on_message_expired</span>(<span class="ident">pending_transaction</span>)
+<span class="kw">fn </span>make_message_expired_handler(
+    handler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
+) -&gt; <span class="kw">impl </span>FnMut(PendingTransaction) + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">move </span>|pending_transaction| handler.on_message_expired(pending_transaction)
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TonWalletDetails</span> {
-    <span class="kw">pub</span> <span class="ident">requires_separate_deploy</span>: <span class="ident">bool</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">min_amount</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">max_messages</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">supports_payload</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">supports_state_init</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">supports_multiple_owners</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">expiration_time</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>TonWalletDetails {
+    <span class="kw">pub </span>requires_separate_deploy: bool,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>min_amount: u64,
+    <span class="kw">pub </span>max_messages: usize,
+    <span class="kw">pub </span>supports_payload: bool,
+    <span class="kw">pub </span>supports_state_init: bool,
+    <span class="kw">pub </span>supports_multiple_owners: bool,
+    <span class="kw">pub </span>expiration_time: u32,
 }
 
-<span class="doccomment">/// Message info</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Gift</span> {
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">bounce</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">destination</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="kw">pub</span> <span class="ident">amount</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">body</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SliceData</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">state_init</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ton_block::StateInit</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Message info
+</span><span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>Gift {
+    <span class="kw">pub </span>flags: u8,
+    <span class="kw">pub </span>bounce: bool,
+    <span class="kw">pub </span>destination: MsgAddressInt,
+    <span class="kw">pub </span>amount: u64,
+    <span class="kw">pub </span>body: <span class="prelude-ty">Option</span>&lt;SliceData&gt;,
+    <span class="kw">pub </span>state_init: <span class="prelude-ty">Option</span>&lt;ton_block::StateInit&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransferAction</span> {
-    <span class="ident">DeployFirst</span>,
-    <span class="ident">Sign</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">UnsignedMessage</span><span class="op">&gt;</span>),
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub enum </span>TransferAction {
+    DeployFirst,
+    Sign(Box&lt;<span class="kw">dyn </span>UnsignedMessage&gt;),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WalletType</span> {
-    <span class="ident">Multisig</span>(<span class="ident">MultisigType</span>),
-    <span class="ident">WalletV3</span>,
-    <span class="ident">HighloadWalletV2</span>,
-    <span class="ident">EverWallet</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub enum </span>WalletType {
+    Multisig(MultisigType),
+    WalletV3,
+    HighloadWalletV2,
+    EverWallet,
 }
 
-<span class="kw">impl</span> <span class="ident">WalletType</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">details</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TonWalletDetails</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; <span class="ident">multisig::ton_wallet_details</span>(<span class="kw-2">*</span><span class="ident">multisig_type</span>),
-            <span class="ident"><span class="self">Self</span>::WalletV3</span> =&gt; <span class="ident">wallet_v3::DETAILS</span>,
-            <span class="ident"><span class="self">Self</span>::HighloadWalletV2</span> =&gt; <span class="ident">highload_wallet_v2::DETAILS</span>,
-            <span class="ident"><span class="self">Self</span>::EverWallet</span> =&gt; <span class="ident">ever_wallet::DETAILS</span>,
+<span class="kw">impl </span>WalletType {
+    <span class="kw">pub fn </span>details(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TonWalletDetails {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Multisig(multisig_type) =&gt; multisig::ton_wallet_details(<span class="kw-2">*</span>multisig_type),
+            <span class="self">Self</span>::WalletV3 =&gt; wallet_v3::DETAILS,
+            <span class="self">Self</span>::HighloadWalletV2 =&gt; highload_wallet_v2::DETAILS,
+            <span class="self">Self</span>::EverWallet =&gt; ever_wallet::DETAILS,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">WalletType</span> {
-    <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
+<span class="kw">impl </span>FromStr <span class="kw">for </span>WalletType {
+    <span class="kw">type </span><span class="prelude-val">Err </span>= anyhow::Error;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">s</span> {
-            <span class="string">&quot;WalletV3&quot;</span> =&gt; <span class="ident"><span class="self">Self</span>::WalletV3</span>,
-            <span class="string">&quot;HighloadWalletV2&quot;</span> =&gt; <span class="ident"><span class="self">Self</span>::HighloadWalletV2</span>,
-            <span class="string">&quot;EverWallet&quot;</span> =&gt; <span class="ident"><span class="self">Self</span>::EverWallet</span>,
-            <span class="ident">s</span> =&gt; <span class="ident"><span class="self">Self</span>::Multisig</span>(<span class="ident">MultisigType::from_str</span>(<span class="ident">s</span>)<span class="question-mark">?</span>),
+    <span class="kw">fn </span>from_str(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Err&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>s {
+            <span class="string">&quot;WalletV3&quot; </span>=&gt; <span class="self">Self</span>::WalletV3,
+            <span class="string">&quot;HighloadWalletV2&quot; </span>=&gt; <span class="self">Self</span>::HighloadWalletV2,
+            <span class="string">&quot;EverWallet&quot; </span>=&gt; <span class="self">Self</span>::EverWallet,
+            s =&gt; <span class="self">Self</span>::Multisig(MultisigType::from_str(s)<span class="question-mark">?</span>),
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">std::fmt::Display</span> <span class="kw">for</span> <span class="ident">WalletType</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; <span class="ident">multisig_type</span>.<span class="ident">fmt</span>(<span class="ident">f</span>),
-            <span class="ident"><span class="self">Self</span>::WalletV3</span> =&gt; <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;WalletV3&quot;</span>),
-            <span class="ident"><span class="self">Self</span>::HighloadWalletV2</span> =&gt; <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;HighloadWalletV2&quot;</span>),
-            <span class="ident"><span class="self">Self</span>::EverWallet</span> =&gt; <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;EverWallet&quot;</span>),
+<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>WalletType {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw-2">mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Multisig(multisig_type) =&gt; multisig_type.fmt(f),
+            <span class="self">Self</span>::WalletV3 =&gt; f.write_str(<span class="string">&quot;WalletV3&quot;</span>),
+            <span class="self">Self</span>::HighloadWalletV2 =&gt; f.write_str(<span class="string">&quot;HighloadWalletV2&quot;</span>),
+            <span class="self">Self</span>::EverWallet =&gt; f.write_str(<span class="string">&quot;EverWallet&quot;</span>),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_address</span>(
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-    <span class="ident">wallet_type</span>: <span class="ident">WalletType</span>,
-    <span class="ident">workchain_id</span>: <span class="ident">i8</span>,
-) -&gt; <span class="ident">MsgAddressInt</span> {
-    <span class="kw">match</span> <span class="ident">wallet_type</span> {
-        <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; {
-            <span class="ident">multisig::compute_contract_address</span>(<span class="ident">public_key</span>, <span class="ident">multisig_type</span>, <span class="ident">workchain_id</span>)
+<span class="kw">pub fn </span>compute_address(
+    public_key: <span class="kw-2">&amp;</span>PublicKey,
+    wallet_type: WalletType,
+    workchain_id: i8,
+) -&gt; MsgAddressInt {
+    <span class="kw">match </span>wallet_type {
+        WalletType::Multisig(multisig_type) =&gt; {
+            multisig::compute_contract_address(public_key, multisig_type, workchain_id)
         }
-        <span class="ident">WalletType::WalletV3</span> =&gt; <span class="ident">wallet_v3::compute_contract_address</span>(<span class="ident">public_key</span>, <span class="ident">workchain_id</span>),
-        <span class="ident">WalletType::EverWallet</span> =&gt; <span class="ident">ever_wallet::compute_contract_address</span>(<span class="ident">public_key</span>, <span class="ident">workchain_id</span>),
-        <span class="ident">WalletType::HighloadWalletV2</span> =&gt; {
-            <span class="ident">highload_wallet_v2::compute_contract_address</span>(<span class="ident">public_key</span>, <span class="ident">workchain_id</span>)
+        WalletType::WalletV3 =&gt; wallet_v3::compute_contract_address(public_key, workchain_id),
+        WalletType::EverWallet =&gt; ever_wallet::compute_contract_address(public_key, workchain_id),
+        WalletType::HighloadWalletV2 =&gt; {
+            highload_wallet_v2::compute_contract_address(public_key, workchain_id)
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TonWalletSubscriptionHandler</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="doccomment">/// Called when found transaction which is relative with one of the pending transactions</span>
-    <span class="kw">fn</span> <span class="ident">on_message_sent</span>(
+<span class="kw">pub trait </span>TonWalletSubscriptionHandler: Send + Sync {
+    <span class="doccomment">/// Called when found transaction which is relative with one of the pending transactions
+    </span><span class="kw">fn </span>on_message_sent(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">pending_transaction</span>: <span class="ident">PendingTransaction</span>,
-        <span class="ident">transaction</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Transaction</span><span class="op">&gt;</span>,
+        pending_transaction: PendingTransaction,
+        transaction: <span class="prelude-ty">Option</span>&lt;Transaction&gt;,
     );
 
-    <span class="doccomment">/// Called when no transactions produced for the specific message before some expiration time</span>
-    <span class="kw">fn</span> <span class="ident">on_message_expired</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pending_transaction</span>: <span class="ident">PendingTransaction</span>);
+    <span class="doccomment">/// Called when no transactions produced for the specific message before some expiration time
+    </span><span class="kw">fn </span>on_message_expired(<span class="kw-2">&amp;</span><span class="self">self</span>, pending_transaction: PendingTransaction);
 
-    <span class="doccomment">/// Called every time a new state is detected</span>
-    <span class="kw">fn</span> <span class="ident">on_state_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_state</span>: <span class="ident">ContractState</span>) {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">new_state</span>;
+    <span class="doccomment">/// Called every time a new state is detected
+    </span><span class="kw">fn </span>on_state_changed(<span class="kw-2">&amp;</span><span class="self">self</span>, new_state: ContractState) {
+        <span class="kw">let _ </span>= new_state;
     }
 
-    <span class="doccomment">/// Called every time new transactions are detected.</span>
-    <span class="doccomment">/// - When new block found</span>
-    <span class="doccomment">/// - When manually requesting the latest transactions (can be called several times)</span>
-    <span class="doccomment">/// - When preloading transactions</span>
-    <span class="kw">fn</span> <span class="ident">on_transactions_found</span>(
+    <span class="doccomment">/// Called every time new transactions are detected.
+    /// - When new block found
+    /// - When manually requesting the latest transactions (can be called several times)
+    /// - When preloading transactions
+    </span><span class="kw">fn </span>on_transactions_found(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">transactions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionWithData</span><span class="op">&lt;</span><span class="ident">TransactionAdditionalInfo</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">batch_info</span>: <span class="ident">TransactionsBatchInfo</span>,
+        transactions: Vec&lt;TransactionWithData&lt;TransactionAdditionalInfo&gt;&gt;,
+        batch_info: TransactionsBatchInfo,
     ) {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">transactions</span>;
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">batch_info</span>;
+        <span class="kw">let _ </span>= transactions;
+        <span class="kw">let _ </span>= batch_info;
     }
 
-    <span class="doccomment">/// Called when wallet details changed (e.g. expiration time or required confirms)</span>
-    <span class="kw">fn</span> <span class="ident">on_details_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">details</span>: <span class="ident">TonWalletDetails</span>) {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">details</span>;
+    <span class="doccomment">/// Called when wallet details changed (e.g. expiration time or required confirms)
+    </span><span class="kw">fn </span>on_details_changed(<span class="kw-2">&amp;</span><span class="self">self</span>, details: TonWalletDetails) {
+        <span class="kw">let _ </span>= details;
     }
 
-    <span class="doccomment">/// Called when wallet custodians changed (e.g. on code upgrade or first refresh)</span>
-    <span class="kw">fn</span> <span class="ident">on_custodians_changed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">custodians</span>: <span class="kw-2">&amp;</span>[<span class="ident">UInt256</span>]) {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">custodians</span>;
+    <span class="doccomment">/// Called when wallet custodians changed (e.g. on code upgrade or first refresh)
+    </span><span class="kw">fn </span>on_custodians_changed(<span class="kw-2">&amp;</span><span class="self">self</span>, custodians: <span class="kw-2">&amp;</span>[UInt256]) {
+        <span class="kw">let _ </span>= custodians;
     }
 
-    <span class="doccomment">/// Called when wallet has new pending transactions set</span>
-    <span class="kw">fn</span> <span class="ident">on_unconfirmed_transactions_changed</span>(
+    <span class="doccomment">/// Called when wallet has new pending transactions set
+    </span><span class="kw">fn </span>on_unconfirmed_transactions_changed(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">unconfirmed_transactions</span>: <span class="kw-2">&amp;</span>[<span class="ident">MultisigPendingTransaction</span>],
+        unconfirmed_transactions: <span class="kw-2">&amp;</span>[MultisigPendingTransaction],
     ) {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">unconfirmed_transactions</span>;
+        <span class="kw">let _ </span>= unconfirmed_transactions;
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

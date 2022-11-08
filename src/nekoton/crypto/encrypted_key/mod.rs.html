@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/encrypted_key/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/encrypted_key/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -819,696 +819,696 @@
 <span id="819">819</span>
 <span id="820">820</span>
 <span id="821">821</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-<span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
-<span class="kw">use</span> <span class="ident">std::io::Read</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::convert::TryInto;
+<span class="kw">use </span>std::io::Read;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">chacha20poly1305</span>::{<span class="ident">ChaCha20Poly1305</span>, <span class="ident">Key</span>, <span class="ident">KeyInit</span>, <span class="ident">Nonce</span>};
-<span class="kw">use</span> <span class="ident">ed25519_dalek</span>::{<span class="ident">Keypair</span>, <span class="ident">PublicKey</span>, <span class="ident">SecretKey</span>, <span class="ident">Signer</span>};
-<span class="kw">use</span> <span class="ident">rand::Rng</span>;
-<span class="kw">use</span> <span class="ident">secstr::SecUtf8</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce};
+<span class="kw">use </span>ed25519_dalek::{Keypair, PublicKey, SecretKey, Signer};
+<span class="kw">use </span>rand::Rng;
+<span class="kw">use </span>secstr::SecUtf8;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::mnemonic</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">super</span>::{
-    <span class="ident">default_key_name</span>, <span class="ident">Password</span>, <span class="ident">PasswordCache</span>, <span class="ident">PasswordCacheTransaction</span>, <span class="ident">PubKey</span>, <span class="ident">SharedSecret</span>,
-    <span class="ident">Signer</span> <span class="kw">as</span> <span class="ident">StoreSigner</span>, <span class="ident">SignerContext</span>, <span class="ident">SignerEntry</span>, <span class="ident">SignerStorage</span>,
+<span class="kw">use </span><span class="kw">super</span>::mnemonic::<span class="kw-2">*</span>;
+<span class="kw">use super</span>::{
+    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
+    Signer <span class="kw">as </span>StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncryptedKeySigner</span> {
-    <span class="ident">keys</span>: <span class="ident">KeysMap</span>,
+<span class="attribute">#[derive(Default, Clone, Debug, Eq, PartialEq)]
+</span><span class="kw">pub struct </span>EncryptedKeySigner {
+    keys: KeysMap,
 }
 
-<span class="kw">type</span> <span class="ident">KeysMap</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">PubKey</span>, <span class="ident">EncryptedKey</span><span class="op">&gt;</span>;
+<span class="kw">type </span>KeysMap = HashMap&lt;PubKey, EncryptedKey&gt;;
 
-<span class="kw">impl</span> <span class="ident">EncryptedKeySigner</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::default</span>()
+<span class="kw">impl </span>EncryptedKeySigner {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::default()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">EncryptedKey</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">get</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">key</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">EncryptedKeyError::KeyNotFound</span>.<span class="ident">into</span>()),
+    <span class="kw">fn </span>get_key(<span class="kw-2">&amp;</span><span class="self">self</span>, public_key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>EncryptedKey&gt; {
+        <span class="kw">match </span><span class="self">self</span>.keys.get(public_key.as_bytes()) {
+            <span class="prelude-val">Some</span>(key) =&gt; <span class="prelude-val">Ok</span>(key),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(EncryptedKeyError::KeyNotFound.into()),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_key_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">EncryptedKey</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">get_mut</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">key</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">EncryptedKeyError::KeyNotFound</span>.<span class="ident">into</span>()),
+    <span class="kw">fn </span>get_key_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, public_key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>EncryptedKey&gt; {
+        <span class="kw">match </span><span class="self">self</span>.keys.get_mut(public_key.as_bytes()) {
+            <span class="prelude-val">Some</span>(key) =&gt; <span class="prelude-val">Ok</span>(key),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(EncryptedKeyError::KeyNotFound.into()),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">StoreSigner</span> <span class="kw">for</span> <span class="ident">EncryptedKeySigner</span> {
-    <span class="kw">type</span> <span class="ident">CreateKeyInput</span> <span class="op">=</span> <span class="ident">EncryptedKeyCreateInput</span>;
-    <span class="kw">type</span> <span class="ident">ExportKeyInput</span> <span class="op">=</span> <span class="ident">EncryptedKeyPassword</span>;
-    <span class="kw">type</span> <span class="ident">ExportKeyOutput</span> <span class="op">=</span> <span class="ident">EncryptedKeyExportOutput</span>;
-    <span class="kw">type</span> <span class="ident">GetPublicKeys</span> <span class="op">=</span> <span class="ident">EncryptedKeyGetPublicKeys</span>;
-    <span class="kw">type</span> <span class="ident">UpdateKeyInput</span> <span class="op">=</span> <span class="ident">EncryptedKeyUpdateParams</span>;
-    <span class="kw">type</span> <span class="ident">SignInput</span> <span class="op">=</span> <span class="ident">EncryptedKeyPassword</span>;
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl </span>StoreSigner <span class="kw">for </span>EncryptedKeySigner {
+    <span class="kw">type </span>CreateKeyInput = EncryptedKeyCreateInput;
+    <span class="kw">type </span>ExportKeyInput = EncryptedKeyPassword;
+    <span class="kw">type </span>ExportKeyOutput = EncryptedKeyExportOutput;
+    <span class="kw">type </span>GetPublicKeys = EncryptedKeyGetPublicKeys;
+    <span class="kw">type </span>UpdateKeyInput = EncryptedKeyUpdateParams;
+    <span class="kw">type </span>SignInput = EncryptedKeyPassword;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_key</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::CreateKeyInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">password</span>) <span class="op">=</span> <span class="ident">EncryptedKey::new</span>(
-            <span class="ident">ctx</span>.<span class="ident">password_cache</span>,
-            <span class="ident">input</span>.<span class="ident">password</span>,
-            <span class="ident">input</span>.<span class="ident">mnemonic_type</span>,
-            <span class="ident">input</span>.<span class="ident">phrase</span>,
-            <span class="ident">input</span>.<span class="ident">name</span>,
+    <span class="kw">async fn </span>add_key(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::CreateKeyInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
+        <span class="kw">let </span>(key, password) = EncryptedKey::new(
+            ctx.password_cache,
+            input.password,
+            input.mnemonic_type,
+            input.phrase,
+            input.name,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">key</span>.<span class="ident">public_key</span>();
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">inner</span>.<span class="ident">name</span>.<span class="ident">clone</span>();
-        <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">insert</span>(<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">key</span>);
+        <span class="kw">let </span>public_key = <span class="kw-2">*</span>key.public_key();
+        <span class="kw">let </span>name = key.inner.name.clone();
+        <span class="self">self</span>.keys.insert(public_key.to_bytes(), key);
 
-        <span class="ident">password</span>.<span class="ident">proceed</span>();
+        password.proceed();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">SignerEntry</span> {
-            <span class="ident">name</span>,
-            <span class="ident">public_key</span>,
-            <span class="ident">master_key</span>: <span class="ident">public_key</span>,
-            <span class="ident">account_id</span>: <span class="ident">input</span>.<span class="ident">mnemonic_type</span>.<span class="ident">account_id</span>(),
+        <span class="prelude-val">Ok</span>(SignerEntry {
+            name,
+            public_key,
+            master_key: public_key,
+            account_id: input.mnemonic_type.account_id(),
         })
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update_key</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::UpdateKeyInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">input</span> {
-            <span class="ident"><span class="self">Self</span>::UpdateKeyInput::Rename</span> { <span class="ident">public_key</span>, <span class="ident">name</span> } =&gt; {
-                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_key_mut</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>)<span class="question-mark">?</span>;
-                <span class="ident">key</span>.<span class="ident">inner</span>.<span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">clone</span>();
-                <span class="prelude-val">Ok</span>(<span class="ident">SignerEntry</span> {
-                    <span class="ident">name</span>,
-                    <span class="ident">public_key</span>,
-                    <span class="ident">master_key</span>: <span class="ident">public_key</span>,
-                    <span class="ident">account_id</span>: <span class="ident">key</span>.<span class="ident">mnemonic_type</span>().<span class="ident">account_id</span>(),
+    <span class="kw">async fn </span>update_key(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::UpdateKeyInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
+        <span class="kw">match </span>input {
+            <span class="self">Self</span>::UpdateKeyInput::Rename { public_key, name } =&gt; {
+                <span class="kw">let </span>key = <span class="self">self</span>.get_key_mut(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?</span>;
+                key.inner.name = name.clone();
+                <span class="prelude-val">Ok</span>(SignerEntry {
+                    name,
+                    public_key,
+                    master_key: public_key,
+                    account_id: key.mnemonic_type().account_id(),
                 })
             }
-            <span class="ident"><span class="self">Self</span>::UpdateKeyInput::ChangePassword</span> {
-                <span class="ident">public_key</span>,
-                <span class="ident">old_password</span>,
-                <span class="ident">new_password</span>,
+            <span class="self">Self</span>::UpdateKeyInput::ChangePassword {
+                public_key,
+                old_password,
+                new_password,
             } =&gt; {
-                <span class="kw">let</span> <span class="ident">old_password</span> <span class="op">=</span> <span class="ident">ctx</span>
-                    .<span class="ident">password_cache</span>
-                    .<span class="ident">process_password</span>(<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">old_password</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">new_password</span> <span class="op">=</span> <span class="ident">ctx</span>
-                    .<span class="ident">password_cache</span>
-                    .<span class="ident">process_password</span>(<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">new_password</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>old_password = ctx
+                    .password_cache
+                    .process_password(public_key.to_bytes(), old_password)<span class="question-mark">?</span>;
+                <span class="kw">let </span>new_password = ctx
+                    .password_cache
+                    .process_password(public_key.to_bytes(), new_password)<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_key_mut</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>)<span class="question-mark">?</span>;
-                <span class="ident">key</span>.<span class="ident">change_password</span>(<span class="ident">old_password</span>.<span class="ident">as_ref</span>(), <span class="ident">new_password</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+                <span class="kw">let </span>key = <span class="self">self</span>.get_key_mut(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?</span>;
+                key.change_password(old_password.as_ref(), new_password.as_ref())<span class="question-mark">?</span>;
 
-                <span class="ident">new_password</span>.<span class="ident">proceed</span>();
+                new_password.proceed();
 
-                <span class="prelude-val">Ok</span>(<span class="ident">SignerEntry</span> {
-                    <span class="ident">name</span>: <span class="ident">key</span>.<span class="ident">inner</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
-                    <span class="ident">public_key</span>,
-                    <span class="ident">master_key</span>: <span class="ident">public_key</span>,
-                    <span class="ident">account_id</span>: <span class="ident">key</span>.<span class="ident">mnemonic_type</span>().<span class="ident">account_id</span>(),
+                <span class="prelude-val">Ok</span>(SignerEntry {
+                    name: key.inner.name.clone(),
+                    public_key,
+                    master_key: public_key,
+                    account_id: key.mnemonic_type().account_id(),
                 })
             }
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">export_key</span>(
+    <span class="kw">async fn </span>export_key(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::ExportKeyInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::ExportKeyOutput</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">public_key</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">ctx</span>
-            .<span class="ident">password_cache</span>
-            .<span class="ident">process_password</span>(<span class="ident">input</span>.<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">input</span>.<span class="ident">password</span>)<span class="question-mark">?</span>;
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::ExportKeyInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::ExportKeyOutput&gt; {
+        <span class="kw">let </span>key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
+        <span class="kw">let </span>password = ctx
+            .password_cache
+            .process_password(input.public_key.to_bytes(), input.password)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">phrase</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">get_mnemonic</span>(<span class="ident">password</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span>phrase = key.get_mnemonic(password.as_ref())<span class="question-mark">?</span>;
 
-        <span class="ident">password</span>.<span class="ident">proceed</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::ExportKeyOutput</span> {
-            <span class="ident">phrase</span>,
-            <span class="ident">mnemonic_type</span>: <span class="ident">key</span>.<span class="ident">mnemonic_type</span>(),
+        password.proceed();
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::ExportKeyOutput {
+            phrase,
+            mnemonic_type: key.mnemonic_type(),
         })
     }
 
-    <span class="doccomment">/// Does nothing useful, only exists for compatibility with other signers</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_public_keys</span>(
+    <span class="doccomment">/// Does nothing useful, only exists for compatibility with other signers
+    </span><span class="kw">async fn </span>get_public_keys(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::GetPublicKeys</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">_key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">public_key</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="ident">input</span>.<span class="ident">public_key</span>])
+        <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::GetPublicKeys,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;PublicKey&gt;&gt; {
+        <span class="kw">let </span>_key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[input.public_key])
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">compute_shared_secrets</span>(
+    <span class="kw">async fn </span>compute_shared_secrets(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">public_keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::SignInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SharedSecret</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">public_key</span>)<span class="question-mark">?</span>;
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        public_keys: <span class="kw-2">&amp;</span>[PublicKey],
+        input: <span class="self">Self</span>::SignInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SharedSecret&gt;&gt; {
+        <span class="kw">let </span>key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">ctx</span>
-            .<span class="ident">password_cache</span>
-            .<span class="ident">process_password</span>(<span class="ident">input</span>.<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">input</span>.<span class="ident">password</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>password = ctx
+            .password_cache
+            .process_password(input.public_key.to_bytes(), input.password)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">shared_keys</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">compute_shared_keys</span>(<span class="ident">public_keys</span>, <span class="ident">password</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span>shared_keys = key.compute_shared_keys(public_keys, password.as_ref())<span class="question-mark">?</span>;
 
-        <span class="ident">password</span>.<span class="ident">proceed</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">shared_keys</span>)
+        password.proceed();
+        <span class="prelude-val">Ok</span>(shared_keys)
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sign</span>(
+    <span class="kw">async fn </span>sign(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::SignInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">64</span>]<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">public_key</span>)<span class="question-mark">?</span>;
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        data: <span class="kw-2">&amp;</span>[u8],
+        input: <span class="self">Self</span>::SignInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; <span class="number">64</span>]&gt; {
+        <span class="kw">let </span>key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">ctx</span>
-            .<span class="ident">password_cache</span>
-            .<span class="ident">process_password</span>(<span class="ident">input</span>.<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">input</span>.<span class="ident">password</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>password = ctx
+            .password_cache
+            .process_password(input.public_key.to_bytes(), input.password)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">signature</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">sign</span>(<span class="ident">data</span>, <span class="ident">password</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span>signature = key.sign(data, password.as_ref())<span class="question-mark">?</span>;
 
-        <span class="ident">password</span>.<span class="ident">proceed</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">signature</span>)
+        password.proceed();
+        <span class="prelude-val">Ok</span>(signature)
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">SignerStorage</span> <span class="kw">for</span> <span class="ident">EncryptedKeySigner</span> {
-    <span class="kw">fn</span> <span class="ident">load_state</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">String</span>)<span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">data</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl </span>SignerStorage <span class="kw">for </span>EncryptedKeySigner {
+    <span class="kw">fn </span>load_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>data = serde_json::from_str::&lt;Vec&lt;(String, String)&gt;&gt;(data)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">keys</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">public_key</span>, <span class="ident">data</span>)<span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">hex::decode</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>)<span class="question-mark">?</span>
-                    .<span class="ident">try_into</span>()
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">EncryptedKeyError::InvalidPublicKey</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">EncryptedKey::from_reader</span>(<span class="kw-2">&amp;mut</span> <span class="ident">std::io::Cursor::new</span>(<span class="ident">data</span>))<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>((<span class="ident">public_key</span>, <span class="ident">data</span>))
+        <span class="self">self</span>.keys = data
+            .into_iter()
+            .map(|(public_key, data)| {
+                <span class="kw">let </span>public_key = hex::decode(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?
+                    </span>.try_into()
+                    .map_err(|<span class="kw">_</span>| EncryptedKeyError::InvalidPublicKey)<span class="question-mark">?</span>;
+                <span class="kw">let </span>data = EncryptedKey::from_reader(<span class="kw-2">&amp;mut </span>std::io::Cursor::new(data))<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>((public_key, data))
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">store_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="kw">use</span> <span class="ident">serde::ser::SerializeSeq</span>;
+    <span class="kw">fn </span>store_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="kw">use </span>serde::ser::SerializeSeq;
 
-        <span class="kw">struct</span> <span class="ident">StoredData</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">KeysMap</span>);
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">StoredDataItem</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>);
+        <span class="kw">struct </span>StoredData&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>KeysMap);
+        <span class="attribute">#[derive(Serialize)]
+        </span><span class="kw">struct </span>StoredDataItem&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str);
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">StoredData</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Serialize <span class="kw">for </span>StoredData&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+            <span class="kw">where
+                </span>S: serde::Serializer,
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_seq</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">len</span>()))<span class="question-mark">?</span>;
-                <span class="kw">for</span> (<span class="ident">public_key</span>, <span class="ident">signer</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>() {
-                    <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">hex::encode</span>(<span class="ident">public_key</span>);
-                    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">signer</span>.<span class="ident">as_json</span>();
-                    <span class="ident">seq</span>.<span class="ident">serialize_element</span>(<span class="kw-2">&amp;</span><span class="ident">StoredDataItem</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>, <span class="kw-2">&amp;</span><span class="ident">signer</span>))<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>seq = serializer.serialize_seq(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.len()))<span class="question-mark">?</span>;
+                <span class="kw">for </span>(public_key, signer) <span class="kw">in </span><span class="self">self</span>.<span class="number">0</span>.iter() {
+                    <span class="kw">let </span>public_key = hex::encode(public_key);
+                    <span class="kw">let </span>signer = signer.as_json();
+                    seq.serialize_element(<span class="kw-2">&amp;</span>StoredDataItem(<span class="kw-2">&amp;</span>public_key, <span class="kw-2">&amp;</span>signer))<span class="question-mark">?</span>;
                 }
-                <span class="ident">seq</span>.<span class="ident">end</span>()
+                seq.end()
             }
         }
 
-        <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">StoredData</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">keys</span>)).<span class="ident">trust_me</span>()
+        serde_json::to_string(<span class="kw-2">&amp;</span>StoredData(<span class="kw-2">&amp;</span><span class="self">self</span>.keys)).trust_me()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_entries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">keys</span>
-            .<span class="ident">values</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="ident">SignerEntry</span> {
-                <span class="ident">name</span>: <span class="ident">key</span>.<span class="ident">inner</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
-                <span class="ident">public_key</span>: <span class="kw-2">*</span><span class="ident">key</span>.<span class="ident">public_key</span>(),
-                <span class="ident">master_key</span>: <span class="kw-2">*</span><span class="ident">key</span>.<span class="ident">public_key</span>(),
-                <span class="ident">account_id</span>: <span class="ident">key</span>.<span class="ident">inner</span>.<span class="ident">mnemonic_type</span>.<span class="ident">account_id</span>(),
+    <span class="kw">fn </span>get_entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;SignerEntry&gt; {
+        <span class="self">self</span>.keys
+            .values()
+            .map(|key| SignerEntry {
+                name: key.inner.name.clone(),
+                public_key: <span class="kw-2">*</span>key.public_key(),
+                master_key: <span class="kw-2">*</span>key.public_key(),
+                account_id: key.inner.mnemonic_type.account_id(),
             })
-            .<span class="ident">collect</span>()
+            .collect()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_key</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">remove</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(<span class="ident">SignerEntry</span> {
-            <span class="ident">name</span>: <span class="ident">entry</span>.<span class="ident">inner</span>.<span class="ident">name</span>,
-            <span class="ident">public_key</span>: <span class="ident">entry</span>.<span class="ident">inner</span>.<span class="ident">pubkey</span>,
-            <span class="ident">master_key</span>: <span class="ident">entry</span>.<span class="ident">inner</span>.<span class="ident">pubkey</span>,
-            <span class="ident">account_id</span>: <span class="ident">entry</span>.<span class="ident">inner</span>.<span class="ident">mnemonic_type</span>.<span class="ident">account_id</span>(),
+    <span class="kw">async fn </span>remove_key(<span class="kw-2">&amp;mut </span><span class="self">self</span>, public_key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="prelude-ty">Option</span>&lt;SignerEntry&gt; {
+        <span class="kw">let </span>entry = <span class="self">self</span>.keys.remove(public_key.as_bytes())<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>(SignerEntry {
+            name: entry.inner.name,
+            public_key: entry.inner.pubkey,
+            master_key: entry.inner.pubkey,
+            account_id: entry.inner.mnemonic_type.account_id(),
         })
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">clear</span>();
+    <span class="kw">async fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.keys.clear();
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncryptedKeyCreateInput</span> {
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">phrase</span>: <span class="ident">SecUtf8</span>,
-    <span class="kw">pub</span> <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType</span>,
-    <span class="kw">pub</span> <span class="ident">password</span>: <span class="ident">Password</span>,
+<span class="attribute">#[derive(Debug, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>EncryptedKeyCreateInput {
+    <span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>phrase: SecUtf8,
+    <span class="kw">pub </span>mnemonic_type: MnemonicType,
+    <span class="kw">pub </span>password: Password,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncryptedKeyPassword</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-    <span class="kw">pub</span> <span class="ident">password</span>: <span class="ident">Password</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>EncryptedKeyPassword {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span><span class="kw">pub </span>public_key: PublicKey,
+    <span class="kw">pub </span>password: Password,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncryptedKeyExportOutput</span> {
-    <span class="kw">pub</span> <span class="ident">phrase</span>: <span class="ident">SecUtf8</span>,
-    <span class="kw">pub</span> <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType</span>,
+<span class="attribute">#[derive(Debug, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>EncryptedKeyExportOutput {
+    <span class="kw">pub </span>phrase: SecUtf8,
+    <span class="kw">pub </span>mnemonic_type: MnemonicType,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncryptedKeyGetPublicKeys</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
+<span class="attribute">#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>EncryptedKeyGetPublicKeys {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span><span class="kw">pub </span>public_key: PublicKey,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">EncryptedKeyUpdateParams</span> {
-    <span class="ident">Rename</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">name</span>: <span class="ident">String</span>,
+<span class="attribute">#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>EncryptedKeyUpdateParams {
+    Rename {
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>public_key: PublicKey,
+        name: String,
     },
-    <span class="ident">ChangePassword</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">old_password</span>: <span class="ident">Password</span>,
-        <span class="ident">new_password</span>: <span class="ident">Password</span>,
+    ChangePassword {
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>public_key: PublicKey,
+        old_password: Password,
+        new_password: Password,
     },
 }
 
-<span class="kw">const</span> <span class="ident">CREDENTIAL_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">32</span>;
+<span class="kw">const </span>CREDENTIAL_LEN: usize = <span class="number">32</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EncryptedKey</span> {
-    <span class="ident">inner</span>: <span class="ident">CryptoData</span>,
+<span class="attribute">#[derive(Clone, Eq, PartialEq)]
+</span><span class="kw">pub struct </span>EncryptedKey {
+    inner: CryptoData,
 }
 
-<span class="kw">impl</span> <span class="ident">EncryptedKey</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">password_cache</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident">PasswordCache</span>,
-        <span class="ident">password</span>: <span class="ident">Password</span>,
-        <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType</span>,
-        <span class="ident">phrase</span>: <span class="ident">SecUtf8</span>,
-        <span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span>, <span class="ident">PasswordCacheTransaction</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">rand::thread_rng</span>();
+<span class="kw">impl </span>EncryptedKey {
+    <span class="kw">pub fn </span>new(
+        password_cache: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>PasswordCache,
+        password: Password,
+        mnemonic_type: MnemonicType,
+        phrase: SecUtf8,
+        name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>, PasswordCacheTransaction&lt;<span class="lifetime">&#39;_</span>&gt;)&gt; {
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>rand::thread_rng();
 
-        <span class="comment">// prepare nonce</span>
-        <span class="kw">let</span> <span class="ident">private_key_nonce</span> <span class="op">=</span> <span class="ident">Nonce::from</span>(<span class="ident">rng</span>.<span class="ident">gen</span>::<span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">NONCE_LENGTH</span>]<span class="op">&gt;</span>());
-        <span class="kw">let</span> <span class="ident">seed_phrase_nonce</span> <span class="op">=</span> <span class="ident">Nonce::from</span>(<span class="ident">rng</span>.<span class="ident">gen</span>::<span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">NONCE_LENGTH</span>]<span class="op">&gt;</span>());
+        <span class="comment">// prepare nonce
+        </span><span class="kw">let </span>private_key_nonce = Nonce::from(rng.gen::&lt;[u8; NONCE_LENGTH]&gt;());
+        <span class="kw">let </span>seed_phrase_nonce = Nonce::from(rng.gen::&lt;[u8; NONCE_LENGTH]&gt;());
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">salt</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="ident">CREDENTIAL_LEN</span>];
-        <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="ident">salt</span>.<span class="ident">as_mut_slice</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>salt = <span class="macro">vec!</span>[<span class="number">0u8</span>; CREDENTIAL_LEN];
+        rng.fill(salt.as_mut_slice());
 
-        <span class="kw">let</span> <span class="ident">phrase</span> <span class="op">=</span> <span class="ident">phrase</span>.<span class="ident">unsecure</span>();
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="ident">derive_from_phrase</span>(<span class="ident">phrase</span>, <span class="ident">mnemonic_type</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>phrase = phrase.unsecure();
+        <span class="kw">let </span>keypair = derive_from_phrase(phrase, mnemonic_type)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">default_key_name</span>(<span class="ident">keypair</span>.<span class="ident">public</span>.<span class="ident">as_bytes</span>()));
+        <span class="kw">let </span>name = name.unwrap_or_else(|| default_key_name(keypair.public.as_bytes()));
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">password_cache</span>.<span class="ident">process_password</span>(<span class="ident">keypair</span>.<span class="ident">public</span>.<span class="ident">to_bytes</span>(), <span class="ident">password</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>password = password_cache.process_password(keypair.public.to_bytes(), password)<span class="question-mark">?</span>;
 
-        <span class="comment">// prepare encryptor</span>
-        <span class="kw">let</span> <span class="ident">encryptor</span> <span class="op">=</span>
-            <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">symmetric_key_from_password</span>(<span class="ident">password</span>.<span class="ident">as_ref</span>(), <span class="kw-2">&amp;</span><span class="ident">salt</span>));
+        <span class="comment">// prepare encryptor
+        </span><span class="kw">let </span>encryptor =
+            ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>symmetric_key_from_password(password.as_ref(), <span class="kw-2">&amp;</span>salt));
 
-        <span class="comment">// encrypt private key</span>
-        <span class="kw">let</span> <span class="ident">pubkey</span> <span class="op">=</span> <span class="ident">keypair</span>.<span class="ident">public</span>;
-        <span class="kw">let</span> <span class="ident">encrypted_private_key</span> <span class="op">=</span>
-            <span class="ident">encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">encryptor</span>, <span class="kw-2">&amp;</span><span class="ident">private_key_nonce</span>, <span class="ident">keypair</span>.<span class="ident">secret</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+        <span class="comment">// encrypt private key
+        </span><span class="kw">let </span>pubkey = keypair.public;
+        <span class="kw">let </span>encrypted_private_key =
+            encrypt(<span class="kw-2">&amp;</span>encryptor, <span class="kw-2">&amp;</span>private_key_nonce, keypair.secret.as_ref())<span class="question-mark">?</span>;
 
-        <span class="comment">// encrypt seed phrase</span>
-        <span class="kw">let</span> <span class="ident">encrypted_seed_phrase</span> <span class="op">=</span> <span class="ident">encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">encryptor</span>, <span class="kw-2">&amp;</span><span class="ident">seed_phrase_nonce</span>, <span class="ident">phrase</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+        <span class="comment">// encrypt seed phrase
+        </span><span class="kw">let </span>encrypted_seed_phrase = encrypt(<span class="kw-2">&amp;</span>encryptor, <span class="kw-2">&amp;</span>seed_phrase_nonce, phrase.as_ref())<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>((
-            <span class="self">Self</span> {
-                <span class="ident">inner</span>: <span class="ident">CryptoData</span> {
-                    <span class="ident">name</span>,
-                    <span class="ident">mnemonic_type</span>,
-                    <span class="ident">pubkey</span>,
-                    <span class="ident">encrypted_private_key</span>,
-                    <span class="ident">private_key_nonce</span>,
-                    <span class="ident">encrypted_seed_phrase</span>,
-                    <span class="ident">seed_phrase_nonce</span>,
-                    <span class="ident">salt</span>,
+            <span class="self">Self </span>{
+                inner: CryptoData {
+                    name,
+                    mnemonic_type,
+                    pubkey,
+                    encrypted_private_key,
+                    private_key_nonce,
+                    encrypted_seed_phrase,
+                    seed_phrase_nonce,
+                    salt,
                 },
             },
-            <span class="ident">password</span>,
+            password,
         ))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mnemonic</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SecUtf8</span>, <span class="ident">EncryptedKeyError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">salt</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">salt</span>;
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">symmetric_key_from_password</span>(<span class="ident">password</span>, <span class="ident">salt</span>);
-        <span class="kw">let</span> <span class="ident">dec</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">password</span>);
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">decrypt_secure</span>(
-            <span class="kw-2">&amp;</span><span class="ident">dec</span>,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">seed_phrase_nonce</span>,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">encrypted_seed_phrase</span>,
+    <span class="kw">pub fn </span>get_mnemonic(<span class="kw-2">&amp;</span><span class="self">self</span>, password: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;SecUtf8, EncryptedKeyError&gt; {
+        <span class="kw">let </span>salt = <span class="kw-2">&amp;</span><span class="self">self</span>.inner.salt;
+        <span class="kw">let </span>password = symmetric_key_from_password(password, salt);
+        <span class="kw">let </span>dec = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>password);
+        <span class="kw">let </span>data = decrypt_secure(
+            <span class="kw-2">&amp;</span>dec,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.inner.seed_phrase_nonce,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.inner.encrypted_seed_phrase,
         )
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">EncryptedKeyError::FailedToDecryptData</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">SecUtf8::from</span>(
-            <span class="ident">String::from_utf8</span>(<span class="ident">data</span>.<span class="ident">unsecure</span>().<span class="ident">to_vec</span>())
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">EncryptedKeyError::FailedToDecryptData</span>)<span class="question-mark">?</span>,
+        .map_err(|<span class="kw">_</span>| EncryptedKeyError::FailedToDecryptData)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(SecUtf8::from(
+            String::from_utf8(data.unsecure().to_vec())
+                .map_err(|<span class="kw">_</span>| EncryptedKeyError::FailedToDecryptData)<span class="question-mark">?</span>,
         ))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_key_pair</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Keypair</span>, <span class="ident">EncryptedKeyError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">symmetric_key_from_password</span>(<span class="ident">password</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">salt</span>);
-        <span class="ident">decrypt_key_pair</span>(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">encrypted_private_key</span>,
-            <span class="kw-2">&amp;</span><span class="ident">password</span>,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">private_key_nonce</span>,
+    <span class="kw">pub fn </span>get_key_pair(<span class="kw-2">&amp;</span><span class="self">self</span>, password: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Keypair, EncryptedKeyError&gt; {
+        <span class="kw">let </span>password = symmetric_key_from_password(password, <span class="kw-2">&amp;</span><span class="self">self</span>.inner.salt);
+        decrypt_key_pair(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.inner.encrypted_private_key,
+            <span class="kw-2">&amp;</span>password,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.inner.private_key_nonce,
         )
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_reader</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">reader</span>: <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Read</span>,
+    <span class="kw">pub fn </span>from_reader&lt;T&gt;(reader: T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt;
+    <span class="kw">where
+        </span>T: Read,
     {
-        <span class="kw">let</span> <span class="ident">crypto_data</span>: <span class="ident">CryptoData</span> <span class="op">=</span> <span class="ident">serde_json::from_reader</span>(<span class="ident">reader</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">EncryptedKey</span> { <span class="ident">inner</span>: <span class="ident">crypto_data</span> })
+        <span class="kw">let </span>crypto_data: CryptoData = serde_json::from_reader(reader)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(EncryptedKey { inner: crypto_data })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">change_password</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">old_password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">new_password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">rand::thread_rng</span>();
+    <span class="kw">pub fn </span>change_password(<span class="kw-2">&amp;mut </span><span class="self">self</span>, old_password: <span class="kw-2">&amp;</span>str, new_password: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>rand::thread_rng();
 
-        <span class="comment">// prepare nonce</span>
-        <span class="kw">let</span> <span class="ident">new_private_key_nonce</span> <span class="op">=</span> <span class="ident">Nonce::from</span>(<span class="ident">rng</span>.<span class="ident">gen</span>::<span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">NONCE_LENGTH</span>]<span class="op">&gt;</span>());
-        <span class="kw">let</span> <span class="ident">new_seed_phrase_nonce</span> <span class="op">=</span> <span class="ident">Nonce::from</span>(<span class="ident">rng</span>.<span class="ident">gen</span>::<span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">NONCE_LENGTH</span>]<span class="op">&gt;</span>());
+        <span class="comment">// prepare nonce
+        </span><span class="kw">let </span>new_private_key_nonce = Nonce::from(rng.gen::&lt;[u8; NONCE_LENGTH]&gt;());
+        <span class="kw">let </span>new_seed_phrase_nonce = Nonce::from(rng.gen::&lt;[u8; NONCE_LENGTH]&gt;());
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_salt</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="ident">CREDENTIAL_LEN</span>];
-        <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="ident">new_salt</span>.<span class="ident">as_mut_slice</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>new_salt = <span class="macro">vec!</span>[<span class="number">0u8</span>; CREDENTIAL_LEN];
+        rng.fill(new_salt.as_mut_slice());
 
-        <span class="comment">// prepare encryptor/decrypter pair</span>
-        <span class="kw">let</span> <span class="ident">old_key</span> <span class="op">=</span> <span class="ident">symmetric_key_from_password</span>(<span class="ident">old_password</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">salt</span>);
-        <span class="kw">let</span> <span class="ident">new_key</span> <span class="op">=</span> <span class="ident">symmetric_key_from_password</span>(<span class="ident">new_password</span>, <span class="kw-2">&amp;</span><span class="ident">new_salt</span>);
+        <span class="comment">// prepare encryptor/decrypter pair
+        </span><span class="kw">let </span>old_key = symmetric_key_from_password(old_password, <span class="kw-2">&amp;</span><span class="self">self</span>.inner.salt);
+        <span class="kw">let </span>new_key = symmetric_key_from_password(new_password, <span class="kw-2">&amp;</span>new_salt);
 
-        <span class="kw">let</span> <span class="ident">decrypter</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">old_key</span>);
-        <span class="kw">let</span> <span class="ident">encryptor</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">new_key</span>);
+        <span class="kw">let </span>decrypter = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>old_key);
+        <span class="kw">let </span>encryptor = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>new_key);
 
-        <span class="comment">// reencrypt key pair</span>
-        <span class="kw">let</span> <span class="ident">new_encrypted_private_key</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">key_pair</span> <span class="op">=</span> <span class="ident">decrypt_key_pair</span>(
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">encrypted_private_key</span>,
-                <span class="kw-2">&amp;</span><span class="ident">old_key</span>,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">private_key_nonce</span>,
+        <span class="comment">// reencrypt key pair
+        </span><span class="kw">let </span>new_encrypted_private_key = {
+            <span class="kw">let </span>key_pair = decrypt_key_pair(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.inner.encrypted_private_key,
+                <span class="kw-2">&amp;</span>old_key,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.inner.private_key_nonce,
             )<span class="question-mark">?</span>;
-            <span class="ident">encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">encryptor</span>, <span class="kw-2">&amp;</span><span class="ident">new_private_key_nonce</span>, <span class="ident">key_pair</span>.<span class="ident">secret</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>
-        };
+            encrypt(<span class="kw-2">&amp;</span>encryptor, <span class="kw-2">&amp;</span>new_private_key_nonce, key_pair.secret.as_ref())<span class="question-mark">?
+        </span>};
 
-        <span class="comment">// reencrypt seed phrase</span>
-        <span class="kw">let</span> <span class="ident">new_encrypted_seed_phrase</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">seed_phrase</span> <span class="op">=</span> <span class="ident">decrypt_secure</span>(
-                <span class="kw-2">&amp;</span><span class="ident">decrypter</span>,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">seed_phrase_nonce</span>,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">encrypted_seed_phrase</span>,
+        <span class="comment">// reencrypt seed phrase
+        </span><span class="kw">let </span>new_encrypted_seed_phrase = {
+            <span class="kw">let </span>seed_phrase = decrypt_secure(
+                <span class="kw-2">&amp;</span>decrypter,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.inner.seed_phrase_nonce,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.inner.encrypted_seed_phrase,
             )<span class="question-mark">?</span>;
-            <span class="ident">encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">encryptor</span>, <span class="kw-2">&amp;</span><span class="ident">new_seed_phrase_nonce</span>, <span class="ident">seed_phrase</span>.<span class="ident">unsecure</span>())<span class="question-mark">?</span>
+            encrypt(<span class="kw-2">&amp;</span>encryptor, <span class="kw-2">&amp;</span>new_seed_phrase_nonce, seed_phrase.unsecure())<span class="question-mark">?
+        </span>};
+
+        <span class="comment">// save new data
+        </span><span class="self">self</span>.inner.salt = new_salt;
+
+        <span class="self">self</span>.inner.encrypted_private_key = new_encrypted_private_key;
+        <span class="self">self</span>.inner.private_key_nonce = new_private_key_nonce;
+
+        <span class="self">self</span>.inner.encrypted_seed_phrase = new_encrypted_seed_phrase;
+        <span class="self">self</span>.inner.seed_phrase_nonce = new_seed_phrase_nonce;
+
+        <span class="comment">// done
+        </span><span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub fn </span>sign(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        data: <span class="kw-2">&amp;</span>[u8],
+        password: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt; {
+        <span class="self">self</span>.inner.sign(data, password)
+    }
+
+    <span class="kw">pub fn </span>compute_shared_keys(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        public_keys: <span class="kw-2">&amp;</span>[PublicKey],
+        password: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SharedSecret&gt;&gt; {
+        <span class="self">self</span>.inner.compute_shared_keys(public_keys, password)
+    }
+
+    <span class="kw">pub fn </span>public_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>PublicKey {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.inner.pubkey
+    }
+
+    <span class="kw">pub fn </span>mnemonic_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MnemonicType {
+        <span class="self">self</span>.inner.mnemonic_type
+    }
+
+    <span class="kw">pub fn </span>as_json(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        serde_json::to_string(<span class="kw-2">&amp;</span><span class="self">self</span>.inner).trust_me()
+    }
+}
+
+<span class="kw">impl </span>std::fmt::Debug <span class="kw">for </span>EncryptedKey {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;{:?}&quot;</span>, <span class="self">self</span>.inner.pubkey)
+    }
+}
+
+<span class="doccomment">///Data, stored on disk in `encrypted_data` filed of config.
+</span><span class="attribute">#[derive(Serialize, Clone, Eq, PartialEq)]
+</span><span class="kw">struct </span>CryptoData {
+    name: String,
+
+    mnemonic_type: MnemonicType,
+
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span>pubkey: PublicKey,
+
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    </span>encrypted_private_key: Vec&lt;u8&gt;,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+    </span>private_key_nonce: Nonce,
+
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    </span>encrypted_seed_phrase: Vec&lt;u8&gt;,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+    </span>seed_phrase_nonce: Nonce,
+
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    </span>salt: Vec&lt;u8&gt;,
+}
+
+<span class="kw">impl </span>CryptoData {
+    <span class="kw">pub fn </span>sign(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        data: <span class="kw-2">&amp;</span>[u8],
+        password: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt; {
+        <span class="kw">let </span>secret = <span class="self">self</span>.decrypt_secret(password)<span class="question-mark">?</span>;
+        <span class="kw">let </span>pair = Keypair {
+            secret,
+            public: <span class="self">self</span>.pubkey,
         };
-
-        <span class="comment">// save new data</span>
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">salt</span> <span class="op">=</span> <span class="ident">new_salt</span>;
-
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">encrypted_private_key</span> <span class="op">=</span> <span class="ident">new_encrypted_private_key</span>;
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">private_key_nonce</span> <span class="op">=</span> <span class="ident">new_private_key_nonce</span>;
-
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">encrypted_seed_phrase</span> <span class="op">=</span> <span class="ident">new_encrypted_seed_phrase</span>;
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">seed_phrase_nonce</span> <span class="op">=</span> <span class="ident">new_seed_phrase_nonce</span>;
-
-        <span class="comment">// done</span>
-        <span class="prelude-val">Ok</span>(())
+        <span class="prelude-val">Ok</span>(pair.sign(data).to_bytes())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(
+    <span class="kw">pub fn </span>compute_shared_keys(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">ed25519_dalek::SIGNATURE_LENGTH</span>]<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">sign</span>(<span class="ident">data</span>, <span class="ident">password</span>)
-    }
+        public_keys: <span class="kw-2">&amp;</span>[PublicKey],
+        password: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SharedSecret&gt;&gt; {
+        <span class="kw">let </span>secret = <span class="self">self</span>.decrypt_secret(password)<span class="question-mark">?</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_shared_keys</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">public_keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
-        <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SharedSecret</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">compute_shared_keys</span>(<span class="ident">public_keys</span>, <span class="ident">password</span>)
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">public_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">PublicKey</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">pubkey</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mnemonic_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">MnemonicType</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">mnemonic_type</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_json</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>).<span class="ident">trust_me</span>()
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">std::fmt::Debug</span> <span class="kw">for</span> <span class="ident">EncryptedKey</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{:?}&quot;</span>, <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">pubkey</span>)
-    }
-}
-
-<span class="doccomment">///Data, stored on disk in `encrypted_data` filed of config.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">CryptoData</span> {
-    <span class="ident">name</span>: <span class="ident">String</span>,
-
-    <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType</span>,
-
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="ident">pubkey</span>: <span class="ident">PublicKey</span>,
-
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span>
-    <span class="ident">encrypted_private_key</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_nonce&quot;</span>)]</span>
-    <span class="ident">private_key_nonce</span>: <span class="ident">Nonce</span>,
-
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span>
-    <span class="ident">encrypted_seed_phrase</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_nonce&quot;</span>)]</span>
-    <span class="ident">seed_phrase_nonce</span>: <span class="ident">Nonce</span>,
-
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span>
-    <span class="ident">salt</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">CryptoData</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sign</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">ed25519_dalek::SIGNATURE_LENGTH</span>]<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">secret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">decrypt_secret</span>(<span class="ident">password</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">pair</span> <span class="op">=</span> <span class="ident">Keypair</span> {
-            <span class="ident">secret</span>,
-            <span class="ident">public</span>: <span class="self">self</span>.<span class="ident">pubkey</span>,
-        };
-        <span class="prelude-val">Ok</span>(<span class="ident">pair</span>.<span class="ident">sign</span>(<span class="ident">data</span>).<span class="ident">to_bytes</span>())
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_shared_keys</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">public_keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
-        <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SharedSecret</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">secret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">decrypt_secret</span>(<span class="ident">password</span>)<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(<span class="ident">public_keys</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">public_key</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">secret</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::x25519::compute_shared</span>(<span class="kw-2">&amp;</span><span class="ident">secret</span>, <span class="ident">public_key</span>);
-                <span class="ident">SharedSecret</span> {
-                    <span class="ident">source_public_key</span>: <span class="self">self</span>.<span class="ident">pubkey</span>,
-                    <span class="ident">recipient_public_key</span>: <span class="kw-2">*</span><span class="ident">public_key</span>,
-                    <span class="ident">secret</span>,
+        <span class="prelude-val">Ok</span>(public_keys
+            .iter()
+            .map(|public_key| {
+                <span class="kw">let </span>secret = <span class="kw">super</span>::x25519::compute_shared(<span class="kw-2">&amp;</span>secret, public_key);
+                SharedSecret {
+                    source_public_key: <span class="self">self</span>.pubkey,
+                    recipient_public_key: <span class="kw-2">*</span>public_key,
+                    secret,
                 }
             })
-            .<span class="ident">collect</span>())
+            .collect())
     }
 
-    <span class="kw">fn</span> <span class="ident">decrypt_secret</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::SecretKey</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">symmetric_key_from_password</span>(<span class="ident">password</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">salt</span>);
-        <span class="kw">let</span> <span class="ident">decrypter</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
+    <span class="kw">fn </span>decrypt_secret(<span class="kw-2">&amp;</span><span class="self">self</span>, password: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;ed25519_dalek::SecretKey&gt; {
+        <span class="kw">let </span>key = symmetric_key_from_password(password, <span class="kw-2">&amp;*</span><span class="self">self</span>.salt);
+        <span class="kw">let </span>decrypter = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>key);
 
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">decrypt_secure</span>(
-            <span class="kw-2">&amp;</span><span class="ident">decrypter</span>,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">private_key_nonce</span>,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">encrypted_private_key</span>,
+        <span class="kw">let </span>bytes = decrypt_secure(
+            <span class="kw-2">&amp;</span>decrypter,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.private_key_nonce,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.encrypted_private_key,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">secret</span> <span class="op">=</span> <span class="ident">SecretKey::from_bytes</span>(<span class="ident">bytes</span>.<span class="ident">unsecure</span>())
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">EncryptedKeyError::InvalidPrivateKey</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>secret = SecretKey::from_bytes(bytes.unsecure())
+            .map_err(|<span class="kw">_</span>| EncryptedKeyError::InvalidPrivateKey)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">secret</span>)
+        <span class="prelude-val">Ok</span>(secret)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CryptoData</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>CryptoData {
+    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">StoredCryptoData</span> {
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>)]</span>
-            <span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-            <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-            <span class="ident">pubkey</span>: <span class="ident">PublicKey</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span>
-            <span class="ident">encrypted_private_key</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_nonce&quot;</span>)]</span>
-            <span class="ident">private_key_nonce</span>: <span class="ident">Nonce</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span>
-            <span class="ident">encrypted_seed_phrase</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_nonce&quot;</span>)]</span>
-            <span class="ident">seed_phrase_nonce</span>: <span class="ident">Nonce</span>,
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span>
-            <span class="ident">salt</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+        <span class="attribute">#[derive(Deserialize)]
+        </span><span class="kw">struct </span>StoredCryptoData {
+            <span class="attribute">#[serde(default)]
+            </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+            mnemonic_type: MnemonicType,
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+            </span>pubkey: PublicKey,
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+            </span>encrypted_private_key: Vec&lt;u8&gt;,
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+            </span>private_key_nonce: Nonce,
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+            </span>encrypted_seed_phrase: Vec&lt;u8&gt;,
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+            </span>seed_phrase_nonce: Nonce,
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+            </span>salt: Vec&lt;u8&gt;,
         }
 
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">StoredCryptoData::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">data</span>.<span class="ident">name</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">name</span>) =&gt; <span class="ident">name</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="ident">default_key_name</span>(<span class="ident">data</span>.<span class="ident">pubkey</span>.<span class="ident">as_bytes</span>()),
+        <span class="kw">let </span>data = StoredCryptoData::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="kw">let </span>name = <span class="kw">match </span>data.name {
+            <span class="prelude-val">Some</span>(name) =&gt; name,
+            <span class="prelude-val">None </span>=&gt; default_key_name(data.pubkey.as_bytes()),
         };
 
-        <span class="prelude-val">Ok</span>(<span class="ident">CryptoData</span> {
-            <span class="ident">name</span>,
-            <span class="ident">mnemonic_type</span>: <span class="ident">data</span>.<span class="ident">mnemonic_type</span>,
-            <span class="ident">pubkey</span>: <span class="ident">data</span>.<span class="ident">pubkey</span>,
-            <span class="ident">encrypted_private_key</span>: <span class="ident">data</span>.<span class="ident">encrypted_private_key</span>,
-            <span class="ident">private_key_nonce</span>: <span class="ident">data</span>.<span class="ident">private_key_nonce</span>,
-            <span class="ident">encrypted_seed_phrase</span>: <span class="ident">data</span>.<span class="ident">encrypted_seed_phrase</span>,
-            <span class="ident">seed_phrase_nonce</span>: <span class="ident">data</span>.<span class="ident">seed_phrase_nonce</span>,
-            <span class="ident">salt</span>: <span class="ident">data</span>.<span class="ident">salt</span>,
+        <span class="prelude-val">Ok</span>(CryptoData {
+            name,
+            mnemonic_type: data.mnemonic_type,
+            pubkey: data.pubkey,
+            encrypted_private_key: data.encrypted_private_key,
+            private_key_nonce: data.private_key_nonce,
+            encrypted_seed_phrase: data.encrypted_seed_phrase,
+            seed_phrase_nonce: data.seed_phrase_nonce,
+            salt: data.salt,
         })
     }
 }
 
-<span class="kw">fn</span> <span class="ident">decrypt_key_pair</span>(
-    <span class="ident">encrypted_key</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">Key</span>,
-    <span class="ident">nonce</span>: <span class="kw-2">&amp;</span><span class="ident">Nonce</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::Keypair</span>, <span class="ident">EncryptedKeyError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">decrypter</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="ident">key</span>);
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">decrypt</span>(<span class="kw-2">&amp;</span><span class="ident">decrypter</span>, <span class="ident">nonce</span>, <span class="ident">encrypted_key</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">secret</span> <span class="op">=</span> <span class="ident">SecretKey::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">EncryptedKeyError::InvalidPrivateKey</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">public</span> <span class="op">=</span> <span class="ident">PublicKey::from</span>(<span class="kw-2">&amp;</span><span class="ident">secret</span>);
-    <span class="prelude-val">Ok</span>(<span class="ident">Keypair</span> { <span class="ident">secret</span>, <span class="ident">public</span> })
+<span class="kw">fn </span>decrypt_key_pair(
+    encrypted_key: <span class="kw-2">&amp;</span>[u8],
+    key: <span class="kw-2">&amp;</span>Key,
+    nonce: <span class="kw-2">&amp;</span>Nonce,
+) -&gt; <span class="prelude-ty">Result</span>&lt;ed25519_dalek::Keypair, EncryptedKeyError&gt; {
+    <span class="kw">let </span>decrypter = ChaCha20Poly1305::new(key);
+    <span class="kw">let </span>bytes = decrypt(<span class="kw-2">&amp;</span>decrypter, nonce, encrypted_key)<span class="question-mark">?</span>;
+    <span class="kw">let </span>secret = SecretKey::from_bytes(<span class="kw-2">&amp;</span>bytes).map_err(|<span class="kw">_</span>| EncryptedKeyError::InvalidPrivateKey)<span class="question-mark">?</span>;
+    <span class="kw">let </span>public = PublicKey::from(<span class="kw-2">&amp;</span>secret);
+    <span class="prelude-val">Ok</span>(Keypair { secret, public })
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">EncryptedKeyError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid private key&quot;</span>)]</span>
-    <span class="ident">InvalidPrivateKey</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to decrypt data&quot;</span>)]</span>
-    <span class="ident">FailedToDecryptData</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to encrypt data&quot;</span>)]</span>
-    <span class="ident">FailedToEncryptData</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Key not found&quot;</span>)]</span>
-    <span class="ident">KeyNotFound</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid public key&quot;</span>)]</span>
-    <span class="ident">InvalidPublicKey</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug, Copy, Clone)]
+</span><span class="kw">pub enum </span>EncryptedKeyError {
+    <span class="attribute">#[error(<span class="string">&quot;Invalid private key&quot;</span>)]
+    </span>InvalidPrivateKey,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to decrypt data&quot;</span>)]
+    </span>FailedToDecryptData,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to encrypt data&quot;</span>)]
+    </span>FailedToEncryptData,
+    <span class="attribute">#[error(<span class="string">&quot;Key not found&quot;</span>)]
+    </span>KeyNotFound,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid public key&quot;</span>)]
+    </span>InvalidPublicKey,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SymmetricCryptoError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">EncryptedKeyError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">a</span>: <span class="ident">SymmetricCryptoError</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">a</span> {
-            <span class="ident">SymmetricCryptoError::FailedToDecryptData</span> =&gt; <span class="ident"><span class="self">Self</span>::FailedToDecryptData</span>,
-            <span class="ident">SymmetricCryptoError::FailedToEncryptData</span> =&gt; <span class="ident"><span class="self">Self</span>::FailedToEncryptData</span>,
+<span class="kw">impl </span>From&lt;SymmetricCryptoError&gt; <span class="kw">for </span>EncryptedKeyError {
+    <span class="kw">fn </span>from(a: SymmetricCryptoError) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>a {
+            SymmetricCryptoError::FailedToDecryptData =&gt; <span class="self">Self</span>::FailedToDecryptData,
+            SymmetricCryptoError::FailedToEncryptData =&gt; <span class="self">Self</span>::FailedToEncryptData,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::time::Duration;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto::PasswordCacheBehavior</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::crypto::PasswordCacheBehavior;
 
-    <span class="kw">const</span> <span class="ident">TEST_PASSWORD</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;123&quot;</span>;
-    <span class="kw">const</span> <span class="ident">TEST_MNEMONIC</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley&quot;</span>;
+    <span class="kw">const </span>TEST_PASSWORD: <span class="kw-2">&amp;</span>str = <span class="string">&quot;123&quot;</span>;
+    <span class="kw">const </span>TEST_MNEMONIC: <span class="kw-2">&amp;</span>str = <span class="string">&quot;canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_init</span>() {
-        <span class="kw">let</span> <span class="ident">cache</span> <span class="op">=</span> <span class="ident">PasswordCache::new</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_init() {
+        <span class="kw">let </span>cache = PasswordCache::new();
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">Password::Explicit</span> {
-            <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="ident">TEST_PASSWORD</span>),
-            <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        <span class="kw">let </span>password = Password::Explicit {
+            password: SecUtf8::from(TEST_PASSWORD),
+            cache_behavior: Default::default(),
         };
-        <span class="ident">EncryptedKey::new</span>(
-            <span class="kw-2">&amp;</span><span class="ident">cache</span>,
-            <span class="ident">password</span>,
-            <span class="ident">MnemonicType::Legacy</span>,
-            <span class="ident">TEST_MNEMONIC</span>.<span class="ident">into</span>(),
-            <span class="prelude-val">Some</span>(<span class="string">&quot;Test&quot;</span>.<span class="ident">to_owned</span>()),
+        EncryptedKey::new(
+            <span class="kw-2">&amp;</span>cache,
+            password,
+            MnemonicType::Legacy,
+            TEST_MNEMONIC.into(),
+            <span class="prelude-val">Some</span>(<span class="string">&quot;Test&quot;</span>.to_owned()),
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_bad_password</span>() {
-        <span class="kw">let</span> <span class="ident">cache</span> <span class="op">=</span> <span class="ident">PasswordCache::new</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_bad_password() {
+        <span class="kw">let </span>cache = PasswordCache::new();
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">Password::Explicit</span> {
-            <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="ident">TEST_PASSWORD</span>),
-            <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        <span class="kw">let </span>password = Password::Explicit {
+            password: SecUtf8::from(TEST_PASSWORD),
+            cache_behavior: Default::default(),
         };
-        <span class="kw">let</span> (<span class="ident">signer</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">EncryptedKey::new</span>(
-            <span class="kw-2">&amp;</span><span class="ident">cache</span>,
-            <span class="ident">password</span>,
-            <span class="ident">MnemonicType::Legacy</span>,
-            <span class="ident">TEST_MNEMONIC</span>.<span class="ident">into</span>(),
-            <span class="prelude-val">Some</span>(<span class="string">&quot;Test&quot;</span>.<span class="ident">to_owned</span>()),
+        <span class="kw">let </span>(signer, <span class="kw">_</span>) = EncryptedKey::new(
+            <span class="kw-2">&amp;</span>cache,
+            password,
+            MnemonicType::Legacy,
+            TEST_MNEMONIC.into(),
+            <span class="prelude-val">Some</span>(<span class="string">&quot;Test&quot;</span>.to_owned()),
         )
-        .<span class="ident">unwrap</span>();
+        .unwrap();
 
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">signer</span>.<span class="ident">as_json</span>().<span class="ident">is_empty</span>());
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">signer</span>.<span class="ident">sign</span>(<span class="string">b&quot;lol&quot;</span>, <span class="string">&quot;lol&quot;</span>);
-        <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
+        <span class="macro">assert!</span>(!signer.as_json().is_empty());
+        <span class="kw">let </span>result = signer.sign(<span class="string">b&quot;lol&quot;</span>, <span class="string">&quot;lol&quot;</span>);
+        <span class="macro">assert!</span>(result.is_err());
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_old</span>() {
-        <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="string">r#&quot;[
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>load_old() {
+        <span class="kw">let </span>json = <span class="string">r#&quot;[
     [
         &quot;122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0&quot;,
         &quot;{\&quot;mnemonic_type\&quot;:{\&quot;Labs\&quot;:1},\&quot;pubkey\&quot;:\&quot;122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0\&quot;,\&quot;encrypted_private_key\&quot;:\&quot;7a714b8e92a9ef54c5da539141817018be4846fcf8a964e833712b39d560f50ec67dbde7c1a695fcb9303ef5c2002c70\&quot;,\&quot;private_key_nonce\&quot;:\&quot;1abc471cb49672d8ada0bed8\&quot;,\&quot;encrypted_seed_phrase\&quot;:\&quot;db7d9e170734990bff07e98758122aeb47d617393e12e761a69f384825b1b7423d991fed2ffa14e34cb31a26ba84e6ff3e688662655f401a6d9dd22b281a2be70ebab5f170ceb9a69c4770433aff5125cd7d35b5e6cc8a5dc0e3458ee9362cb5a3f50ac32be824171118cf802b5322e86a08ad8c9ead4b9f3afe549305107097960807d9c9b440ddc5b1fb8df0a0d97f9697a0c206accccd3d1795b524683bc0d7ac\&quot;,\&quot;seed_phrase_nonce\&quot;:\&quot;63d7a96bd2e8bd824f01a330\&quot;,\&quot;salt\&quot;:\&quot;b3ccb59480f3d4d6d6725b8f70bfaf520476cfa246bb50723f55a14535158358\&quot;}&quot;
@@ -1522,123 +1522,123 @@
         &quot;{\&quot;mnemonic_type\&quot;:{\&quot;Labs\&quot;:0},\&quot;pubkey\&quot;:\&quot;93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190\&quot;,\&quot;encrypted_private_key\&quot;:\&quot;518d6158968995a815f022bf5d0f9ada40c3d779454d54abb7a17e32b5a83a9f6ca57756142515b8fc968f87a1bceef7\&quot;,\&quot;private_key_nonce\&quot;:\&quot;0eaa9fcda666b7715c41b56b\&quot;,\&quot;encrypted_seed_phrase\&quot;:\&quot;f4e394d118230a8acb8af95b126fbf2a62fd764c24be9627f2bc2cb6d2aa48ba6694ecbac7cdf5317f42062acb8bb4645381d2c0ae63dd0ed577001743de96bec8f5968e516e585153d264b0d48132ead1daea9dd0bd68fb49263c3cd92df74a358f1611e92905ac3dc1f1105b743c07a9e2e7cb33344d1e3e3d6cf072a43ecbd771662e03ff61f4613015a2fc0298bbdbe9de87051d2e76ef01edfb25316d0f5131\&quot;,\&quot;seed_phrase_nonce\&quot;:\&quot;6266222cb4fd6bebf2b3b67e\&quot;,\&quot;salt\&quot;:\&quot;d3a0e42f386cbbc332d8d873b3e80ed0cde2ee9c16804f8866c0901493f2b6a5\&quot;}&quot;
     ]
 ]&quot;#</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">EncryptedKeySigner::new</span>();
-        <span class="ident">key</span>.<span class="ident">load_state</span>(<span class="ident">json</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">key</span>.<span class="ident">store_state</span>().<span class="ident">is_empty</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>key = EncryptedKeySigner::new();
+        key.load_state(json).unwrap();
+        <span class="macro">assert!</span>(!key.store_state().is_empty());
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_load</span>() {
-        <span class="kw">let</span> <span class="ident">cache</span> <span class="op">=</span> <span class="ident">PasswordCache::new</span>();
-        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">SignerContext</span> {
-            <span class="ident">password_cache</span>: <span class="kw-2">&amp;</span><span class="ident">cache</span>,
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>store_load() {
+        <span class="kw">let </span>cache = PasswordCache::new();
+        <span class="kw">let </span>ctx = SignerContext {
+            password_cache: <span class="kw-2">&amp;</span>cache,
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">EncryptedKeySigner::new</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>key = EncryptedKeySigner::new();
 
-        <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">key</span>
-            .<span class="ident">add_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">EncryptedKeyCreateInput</span> {
-                    <span class="ident">name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;from giver&quot;</span>.<span class="ident">to_string</span>()),
-                    <span class="ident">phrase</span>: <span class="ident">TEST_MNEMONIC</span>.<span class="ident">into</span>(),
-                    <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType::Labs</span>(<span class="number">0</span>),
-                    <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;supasecret&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">PasswordCacheBehavior::Store</span>(<span class="ident">Duration::from_secs</span>(<span class="number">2</span>)),
+        <span class="kw">let </span>entry = key
+            .add_key(
+                ctx,
+                EncryptedKeyCreateInput {
+                    name: <span class="prelude-val">Some</span>(<span class="string">&quot;from giver&quot;</span>.to_string()),
+                    phrase: TEST_MNEMONIC.into(),
+                    mnemonic_type: MnemonicType::Labs(<span class="number">0</span>),
+                    password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                        cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(<span class="number">2</span>)),
                     },
                 },
             )
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+            .<span class="kw">await
+            </span>.unwrap();
 
-        <span class="ident">key</span>.<span class="ident">export_key</span>(
-            <span class="ident">ctx</span>,
-            <span class="ident">EncryptedKeyPassword</span> {
-                <span class="ident">public_key</span>: <span class="ident">entry</span>.<span class="ident">public_key</span>,
-                <span class="ident">password</span>: <span class="ident">Password::FromCache</span>,
+        key.export_key(
+            ctx,
+            EncryptedKeyPassword {
+                public_key: entry.public_key,
+                password: Password::FromCache,
             },
         )
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap</span>();
+        .<span class="kw">await
+        </span>.unwrap();
 
-        <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">key</span>
-            .<span class="ident">add_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">EncryptedKeyCreateInput</span> {
-                    <span class="ident">name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;new name. same mnemonic&quot;</span>.<span class="ident">to_string</span>()),
-                    <span class="ident">phrase</span>: <span class="ident">TEST_MNEMONIC</span>.<span class="ident">into</span>(),
-                    <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType::Labs</span>(<span class="number">0</span>),
-                    <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;123123123123123123&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">PasswordCacheBehavior::Store</span>(<span class="ident">Duration::from_secs</span>(<span class="number">2</span>)),
+        <span class="kw">let </span>entry = key
+            .add_key(
+                ctx,
+                EncryptedKeyCreateInput {
+                    name: <span class="prelude-val">Some</span>(<span class="string">&quot;new name. same mnemonic&quot;</span>.to_string()),
+                    phrase: TEST_MNEMONIC.into(),
+                    mnemonic_type: MnemonicType::Labs(<span class="number">0</span>),
+                    password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;123123123123123123&quot;</span>),
+                        cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(<span class="number">2</span>)),
                     },
                 },
             )
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+            .<span class="kw">await
+            </span>.unwrap();
 
-        <span class="ident">key</span>.<span class="ident">export_key</span>(
-            <span class="ident">ctx</span>,
-            <span class="ident">EncryptedKeyPassword</span> {
-                <span class="ident">public_key</span>: <span class="ident">entry</span>.<span class="ident">public_key</span>,
-                <span class="ident">password</span>: <span class="ident">Password::FromCache</span>,
+        key.export_key(
+            ctx,
+            EncryptedKeyPassword {
+                public_key: entry.public_key,
+                password: Password::FromCache,
             },
         )
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap</span>();
+        .<span class="kw">await
+        </span>.unwrap();
 
-        <span class="ident">key</span>.<span class="ident">add_key</span>(
-            <span class="ident">ctx</span>,
-            <span class="ident">EncryptedKeyCreateInput</span> {
-                <span class="ident">name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;from giver&quot;</span>.<span class="ident">to_string</span>()),
-                <span class="ident">phrase</span>: <span class="ident">TEST_MNEMONIC</span>.<span class="ident">into</span>(),
-                <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType::Labs</span>(<span class="number">0</span>),
-                <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                    <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;supasecret&quot;</span>),
-                    <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        key.add_key(
+            ctx,
+            EncryptedKeyCreateInput {
+                name: <span class="prelude-val">Some</span>(<span class="string">&quot;from giver&quot;</span>.to_string()),
+                phrase: TEST_MNEMONIC.into(),
+                mnemonic_type: MnemonicType::Labs(<span class="number">0</span>),
+                password: Password::Explicit {
+                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    cache_behavior: Default::default(),
                 },
             },
         )
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap</span>();
+        .<span class="kw">await
+        </span>.unwrap();
 
-        <span class="ident">key</span>.<span class="ident">add_key</span>(
-            <span class="ident">ctx</span>,
-            <span class="ident">EncryptedKeyCreateInput</span> {
-                <span class="ident">name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;all my money 🤑&quot;</span>.<span class="ident">to_string</span>()),
-                <span class="ident">phrase</span>: <span class="ident">TEST_MNEMONIC</span>.<span class="ident">into</span>(),
-                <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType::Labs</span>(<span class="number">1</span>),
-                <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                    <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;supasecret&quot;</span>),
-                    <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        key.add_key(
+            ctx,
+            EncryptedKeyCreateInput {
+                name: <span class="prelude-val">Some</span>(<span class="string">&quot;all my money 🤑&quot;</span>.to_string()),
+                phrase: TEST_MNEMONIC.into(),
+                mnemonic_type: MnemonicType::Labs(<span class="number">1</span>),
+                password: Password::Explicit {
+                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    cache_behavior: Default::default(),
                 },
             },
         )
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap</span>();
+        .<span class="kw">await
+        </span>.unwrap();
 
-        <span class="ident">key</span>.<span class="ident">add_key</span>(
-            <span class="ident">ctx</span>,
-            <span class="ident">EncryptedKeyCreateInput</span> {
-                <span class="ident">name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;史萊克的模因&quot;</span>.<span class="ident">to_string</span>()),
-                <span class="ident">phrase</span>: <span class="ident">TEST_MNEMONIC</span>.<span class="ident">into</span>(),
-                <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType::Labs</span>(<span class="number">2</span>),
-                <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                    <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;supasecret&quot;</span>),
-                    <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        key.add_key(
+            ctx,
+            EncryptedKeyCreateInput {
+                name: <span class="prelude-val">Some</span>(<span class="string">&quot;史萊克的模因&quot;</span>.to_string()),
+                phrase: TEST_MNEMONIC.into(),
+                mnemonic_type: MnemonicType::Labs(<span class="number">2</span>),
+                password: Password::Explicit {
+                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    cache_behavior: Default::default(),
                 },
             },
         )
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap</span>();
+        .<span class="kw">await
+        </span>.unwrap();
 
-        <span class="kw">let</span> <span class="ident">serialized</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">store_state</span>();
+        <span class="kw">let </span>serialized = key.store_state();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loaded</span> <span class="op">=</span> <span class="ident">EncryptedKeySigner::new</span>();
-        <span class="ident">loaded</span>.<span class="ident">load_state</span>(<span class="kw-2">&amp;</span><span class="ident">serialized</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">loaded</span>, <span class="ident">key</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>loaded = EncryptedKeySigner::new();
+        loaded.load_state(<span class="kw-2">&amp;</span>serialized).unwrap();
+        <span class="macro">assert_eq!</span>(loaded, key);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

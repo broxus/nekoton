@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/derived_key/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/derived_key/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -1009,990 +1009,990 @@
 <span id="1009">1009</span>
 <span id="1010">1010</span>
 <span id="1011">1011</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::hash_map</span>::{<span class="self">self</span>, <span class="ident">HashMap</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map::{<span class="self">self</span>, HashMap};
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">chacha20poly1305</span>::{<span class="ident">ChaCha20Poly1305</span>, <span class="ident">KeyInit</span>, <span class="ident">Nonce</span>};
-<span class="kw">use</span> <span class="ident">ed25519_dalek</span>::{<span class="ident">PublicKey</span>, <span class="ident">Signer</span>};
-<span class="kw">use</span> <span class="ident">secstr::SecUtf8</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>, <span class="ident">Serializer</span>};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
+<span class="kw">use </span>ed25519_dalek::{PublicKey, Signer};
+<span class="kw">use </span>secstr::SecUtf8;
+<span class="kw">use </span>serde::{Deserialize, Serialize, Serializer};
 
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::mnemonic</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">super</span>::{
-    <span class="ident">default_key_name</span>, <span class="ident">Password</span>, <span class="ident">PasswordCache</span>, <span class="ident">PasswordCacheTransaction</span>, <span class="ident">PubKey</span>, <span class="ident">SharedSecret</span>,
-    <span class="ident">Signer</span> <span class="kw">as</span> <span class="ident">StoreSigner</span>, <span class="ident">SignerContext</span>, <span class="ident">SignerEntry</span>, <span class="ident">SignerStorage</span>,
+<span class="kw">use </span><span class="kw">super</span>::mnemonic::<span class="kw-2">*</span>;
+<span class="kw">use super</span>::{
+    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
+    Signer <span class="kw">as </span>StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DerivedKeySigner</span> {
-    <span class="ident">master_keys</span>: <span class="ident">HashMap</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">MasterKey</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default, Clone, Debug, Eq, PartialEq)]
+</span><span class="kw">pub struct </span>DerivedKeySigner {
+    master_keys: HashMap&lt;[u8; <span class="number">32</span>], MasterKey&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">DerivedKeySigner</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::default</span>()
+<span class="kw">impl </span>DerivedKeySigner {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::default()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_master_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">master_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">MasterKey</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">get</span>(<span class="ident">master_key</span>.<span class="ident">as_bytes</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">key</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">MasterKeyError::MasterKeyNotFound</span>.<span class="ident">into</span>()),
+    <span class="kw">fn </span>get_master_key(<span class="kw-2">&amp;</span><span class="self">self</span>, master_key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>MasterKey&gt; {
+        <span class="kw">match </span><span class="self">self</span>.master_keys.get(master_key.as_bytes()) {
+            <span class="prelude-val">Some</span>(key) =&gt; <span class="prelude-val">Ok</span>(key),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(MasterKeyError::MasterKeyNotFound.into()),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">use_sign_input</span>(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="self">self</span>,
-        <span class="ident">password_cache</span>: <span class="kw-2">&amp;</span><span class="ident">PasswordCache</span>,
-        <span class="ident">input</span>: <span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">StoreSigner</span><span class="op">&gt;</span><span class="ident">::SignInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::Keypair</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">master_key</span>, <span class="ident">account_id</span>, <span class="ident">password</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span> {
-            <span class="ident">DerivedKeySignParams::ByAccountId</span> {
-                <span class="ident">master_key</span>,
-                <span class="ident">account_id</span>,
-                <span class="ident">password</span>,
-            } =&gt; (<span class="self">self</span>.<span class="ident">get_master_key</span>(<span class="kw-2">&amp;</span><span class="ident">master_key</span>)<span class="question-mark">?</span>, <span class="ident">account_id</span>, <span class="ident">password</span>),
-            <span class="ident">DerivedKeySignParams::ByPublicKey</span> {
-                <span class="ident">master_key</span>,
-                <span class="ident">public_key</span>,
-                <span class="ident">password</span>,
+    <span class="kw">fn </span>use_sign_input(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="self">self</span>,
+        password_cache: <span class="kw-2">&amp;</span>PasswordCache,
+        input: &lt;<span class="self">Self </span><span class="kw">as </span>StoreSigner&gt;::SignInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ed25519_dalek::Keypair&gt; {
+        <span class="kw">let </span>(master_key, account_id, password) = <span class="kw">match </span>input {
+            DerivedKeySignParams::ByAccountId {
+                master_key,
+                account_id,
+                password,
+            } =&gt; (<span class="self">self</span>.get_master_key(<span class="kw-2">&amp;</span>master_key)<span class="question-mark">?</span>, account_id, password),
+            DerivedKeySignParams::ByPublicKey {
+                master_key,
+                public_key,
+                password,
             } =&gt; {
-                <span class="kw">let</span> <span class="ident">master_key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_master_key</span>(<span class="kw-2">&amp;</span><span class="ident">master_key</span>)<span class="question-mark">?</span>;
-                <span class="kw">match</span> <span class="ident">master_key</span>.<span class="ident">accounts_map</span>.<span class="ident">get</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()) {
-                    <span class="prelude-val">Some</span>(<span class="ident">account</span>) =&gt; (<span class="ident">master_key</span>, <span class="ident">account</span>.<span class="ident">account_id</span>, <span class="ident">password</span>),
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MasterKeyError::DerivedKeyNotFound</span>.<span class="ident">into</span>()),
+                <span class="kw">let </span>master_key = <span class="self">self</span>.get_master_key(<span class="kw-2">&amp;</span>master_key)<span class="question-mark">?</span>;
+                <span class="kw">match </span>master_key.accounts_map.get(public_key.as_bytes()) {
+                    <span class="prelude-val">Some</span>(account) =&gt; (master_key, account.account_id, password),
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(MasterKeyError::DerivedKeyNotFound.into()),
                 }
             }
         };
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span>
-            <span class="ident">password_cache</span>.<span class="ident">process_password</span>(<span class="ident">master_key</span>.<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">password</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>password =
+            password_cache.process_password(master_key.public_key.to_bytes(), password)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">decrypter</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">symmetric_key_from_password</span>(
-            <span class="ident">password</span>.<span class="ident">as_ref</span>(),
-            <span class="kw-2">&amp;</span><span class="ident">master_key</span>.<span class="ident">salt</span>,
+        <span class="kw">let </span>decrypter = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>symmetric_key_from_password(
+            password.as_ref(),
+            <span class="kw-2">&amp;</span>master_key.salt,
         ));
 
-        <span class="kw">let</span> <span class="ident">master</span> <span class="op">=</span> <span class="ident">decrypt_secure</span>(
-            <span class="kw-2">&amp;</span><span class="ident">decrypter</span>,
-            <span class="kw-2">&amp;</span><span class="ident">master_key</span>.<span class="ident">entropy_nonce</span>,
-            <span class="kw-2">&amp;</span><span class="ident">master_key</span>.<span class="ident">enc_entropy</span>,
+        <span class="kw">let </span>master = decrypt_secure(
+            <span class="kw-2">&amp;</span>decrypter,
+            <span class="kw-2">&amp;</span>master_key.entropy_nonce,
+            <span class="kw-2">&amp;</span>master_key.enc_entropy,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">derive_from_master</span>(<span class="ident">account_id</span>, <span class="ident">master</span>.<span class="ident">unsecure</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span>signer = derive_from_master(account_id, master.unsecure())<span class="question-mark">?</span>;
 
-        <span class="ident">password</span>.<span class="ident">proceed</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">signer</span>)
+        password.proceed();
+        <span class="prelude-val">Ok</span>(signer)
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">StoreSigner</span> <span class="kw">for</span> <span class="ident">DerivedKeySigner</span> {
-    <span class="kw">type</span> <span class="ident">CreateKeyInput</span> <span class="op">=</span> <span class="ident">DerivedKeyCreateInput</span>;
-    <span class="kw">type</span> <span class="ident">ExportKeyInput</span> <span class="op">=</span> <span class="ident">DerivedKeyExportParams</span>;
-    <span class="kw">type</span> <span class="ident">ExportKeyOutput</span> <span class="op">=</span> <span class="ident">DerivedKeyExportOutput</span>;
-    <span class="kw">type</span> <span class="ident">GetPublicKeys</span> <span class="op">=</span> <span class="ident">DerivedKeyGetPublicKeys</span>;
-    <span class="kw">type</span> <span class="ident">UpdateKeyInput</span> <span class="op">=</span> <span class="ident">DerivedKeyUpdateParams</span>;
-    <span class="kw">type</span> <span class="ident">SignInput</span> <span class="op">=</span> <span class="ident">DerivedKeySignParams</span>;
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl </span>StoreSigner <span class="kw">for </span>DerivedKeySigner {
+    <span class="kw">type </span>CreateKeyInput = DerivedKeyCreateInput;
+    <span class="kw">type </span>ExportKeyInput = DerivedKeyExportParams;
+    <span class="kw">type </span>ExportKeyOutput = DerivedKeyExportOutput;
+    <span class="kw">type </span>GetPublicKeys = DerivedKeyGetPublicKeys;
+    <span class="kw">type </span>UpdateKeyInput = DerivedKeyUpdateParams;
+    <span class="kw">type </span>SignInput = DerivedKeySignParams;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_key</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::CreateKeyInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">input</span> {
-            <span class="ident">DerivedKeyCreateInput::Import</span> {
-                <span class="ident">phrase</span>,
-                <span class="ident">password</span>,
-                <span class="ident">key_name</span>,
+    <span class="kw">async fn </span>add_key(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::CreateKeyInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>input {
+            DerivedKeyCreateInput::Import {
+                phrase,
+                password,
+                key_name,
             } =&gt; {
-                <span class="kw">let</span> (<span class="ident">master_key</span>, <span class="ident">key_name</span>, <span class="ident">password</span>) <span class="op">=</span>
-                    <span class="ident">MasterKey::new</span>(<span class="ident">ctx</span>.<span class="ident">password_cache</span>, <span class="ident">password</span>, <span class="ident">phrase</span>, <span class="ident">key_name</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">master_key</span>.<span class="ident">public_key</span>;
+                <span class="kw">let </span>(master_key, key_name, password) =
+                    MasterKey::new(ctx.password_cache, password, phrase, key_name)<span class="question-mark">?</span>;
+                <span class="kw">let </span>public_key = master_key.public_key;
 
-                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">entry</span>(<span class="ident">public_key</span>.<span class="ident">to_bytes</span>()) {
-                    <span class="ident">hash_map::Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                        <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">master_key</span>);
+                <span class="kw">match </span><span class="self">self</span>.master_keys.entry(public_key.to_bytes()) {
+                    hash_map::Entry::Vacant(entry) =&gt; {
+                        entry.insert(master_key);
                     }
-                    <span class="ident">hash_map::Entry::Occupied</span>(<span class="kw-2">mut</span> <span class="ident">entry</span>) =&gt; {
-                        <span class="kw">let</span> <span class="ident">existing</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">get_mut</span>();
-                        <span class="ident">existing</span>.<span class="ident">salt</span> <span class="op">=</span> <span class="ident">master_key</span>.<span class="ident">salt</span>;
-                        <span class="ident">existing</span>.<span class="ident">enc_entropy</span> <span class="op">=</span> <span class="ident">master_key</span>.<span class="ident">enc_entropy</span>;
-                        <span class="ident">existing</span>.<span class="ident">entropy_nonce</span> <span class="op">=</span> <span class="ident">master_key</span>.<span class="ident">entropy_nonce</span>;
-                        <span class="ident">existing</span>.<span class="ident">enc_phrase</span> <span class="op">=</span> <span class="ident">master_key</span>.<span class="ident">enc_phrase</span>;
-                        <span class="ident">existing</span>.<span class="ident">phrase_nonce</span> <span class="op">=</span> <span class="ident">master_key</span>.<span class="ident">phrase_nonce</span>;
+                    hash_map::Entry::Occupied(<span class="kw-2">mut </span>entry) =&gt; {
+                        <span class="kw">let </span>existing = entry.get_mut();
+                        existing.salt = master_key.salt;
+                        existing.enc_entropy = master_key.enc_entropy;
+                        existing.entropy_nonce = master_key.entropy_nonce;
+                        existing.enc_phrase = master_key.enc_phrase;
+                        existing.phrase_nonce = master_key.phrase_nonce;
 
-                        <span class="kw">match</span> <span class="ident">existing</span>.<span class="ident">accounts_map</span>.<span class="ident">entry</span>(<span class="ident">public_key</span>.<span class="ident">to_bytes</span>()) {
-                            <span class="ident">hash_map::Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                                <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">Account</span> {
-                                    <span class="ident">name</span>: <span class="ident">key_name</span>.<span class="ident">clone</span>(),
-                                    <span class="ident">account_id</span>: <span class="number">0</span>,
+                        <span class="kw">match </span>existing.accounts_map.entry(public_key.to_bytes()) {
+                            hash_map::Entry::Vacant(entry) =&gt; {
+                                entry.insert(Account {
+                                    name: key_name.clone(),
+                                    account_id: <span class="number">0</span>,
                                 });
                             }
-                            <span class="ident">hash_map::Entry::Occupied</span>(<span class="kw-2">mut</span> <span class="ident">entry</span>) =&gt; {
-                                <span class="ident">entry</span>.<span class="ident">get_mut</span>().<span class="ident">name</span> <span class="op">=</span> <span class="ident">key_name</span>.<span class="ident">clone</span>();
+                            hash_map::Entry::Occupied(<span class="kw-2">mut </span>entry) =&gt; {
+                                entry.get_mut().name = key_name.clone();
                             }
                         }
                     }
                 };
 
-                <span class="ident">password</span>.<span class="ident">proceed</span>();
-                <span class="ident">SignerEntry</span> {
-                    <span class="ident">name</span>: <span class="ident">key_name</span>,
-                    <span class="ident">public_key</span>,
-                    <span class="ident">master_key</span>: <span class="ident">public_key</span>,
-                    <span class="ident">account_id</span>: <span class="number">0</span>,
+                password.proceed();
+                SignerEntry {
+                    name: key_name,
+                    public_key,
+                    master_key: public_key,
+                    account_id: <span class="number">0</span>,
                 }
             }
-            <span class="ident">DerivedKeyCreateInput::Derive</span> {
-                <span class="ident">master_key</span>,
-                <span class="ident">account_id</span>,
-                <span class="ident">password</span>,
-                <span class="ident">key_name</span>,
+            DerivedKeyCreateInput::Derive {
+                master_key,
+                account_id,
+                password,
+                key_name,
             } =&gt; {
-                <span class="kw">let</span> <span class="ident">master_key</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">get_mut</span>(<span class="ident">master_key</span>.<span class="ident">as_bytes</span>()) {
-                    <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="ident">key</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MasterKeyError::MasterKeyNotFound</span>.<span class="ident">into</span>()),
+                <span class="kw">let </span>master_key = <span class="kw">match </span><span class="self">self</span>.master_keys.get_mut(master_key.as_bytes()) {
+                    <span class="prelude-val">Some</span>(key) =&gt; key,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(MasterKeyError::MasterKeyNotFound.into()),
                 };
 
-                <span class="kw">let</span> <span class="ident">found</span> <span class="op">=</span> <span class="ident">master_key</span>
-                    .<span class="ident">accounts_map</span>
-                    .<span class="ident">values</span>()
-                    .<span class="ident">any</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">account_id</span> <span class="op">==</span> <span class="ident">account_id</span>);
-                <span class="kw">if</span> <span class="ident">found</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MasterKeyError::DerivedKeyExists</span>.<span class="ident">into</span>());
+                <span class="kw">let </span>found = master_key
+                    .accounts_map
+                    .values()
+                    .any(|x| x.account_id == account_id);
+                <span class="kw">if </span>found {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(MasterKeyError::DerivedKeyExists.into());
                 }
 
-                <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">ctx</span>
-                    .<span class="ident">password_cache</span>
-                    .<span class="ident">process_password</span>(<span class="ident">master_key</span>.<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">password</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>password = ctx
+                    .password_cache
+                    .process_password(master_key.public_key.to_bytes(), password)<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">decrypter</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">symmetric_key_from_password</span>(
-                    <span class="ident">password</span>.<span class="ident">as_ref</span>(),
-                    <span class="kw-2">&amp;</span><span class="ident">master_key</span>.<span class="ident">salt</span>,
+                <span class="kw">let </span>decrypter = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>symmetric_key_from_password(
+                    password.as_ref(),
+                    <span class="kw-2">&amp;</span>master_key.salt,
                 ));
 
-                <span class="kw">let</span> <span class="ident">master</span> <span class="op">=</span> <span class="ident">decrypt_secure</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">decrypter</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">master_key</span>.<span class="ident">entropy_nonce</span>,
-                    <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">master_key</span>.<span class="ident">enc_entropy</span>,
+                <span class="kw">let </span>master = decrypt_secure(
+                    <span class="kw-2">&amp;</span>decrypter,
+                    <span class="kw-2">&amp;</span>master_key.entropy_nonce,
+                    <span class="kw-2">&amp;*</span>master_key.enc_entropy,
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">derive_from_master</span>(<span class="ident">account_id</span>, <span class="ident">master</span>.<span class="ident">unsecure</span>())<span class="question-mark">?</span>.<span class="ident">public</span>;
+                <span class="kw">let </span>public_key = derive_from_master(account_id, master.unsecure())<span class="question-mark">?</span>.public;
 
-                <span class="kw">let</span> <span class="ident">key_name</span> <span class="op">=</span> <span class="ident">key_name</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">default_key_name</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()));
+                <span class="kw">let </span>key_name = key_name.unwrap_or_else(|| default_key_name(public_key.as_bytes()));
 
-                <span class="ident">master_key</span>.<span class="ident">accounts_map</span>.<span class="ident">insert</span>(
-                    <span class="ident">public_key</span>.<span class="ident">to_bytes</span>(),
-                    <span class="ident">Account</span> {
-                        <span class="ident">name</span>: <span class="ident">key_name</span>.<span class="ident">clone</span>(),
-                        <span class="ident">account_id</span>,
+                master_key.accounts_map.insert(
+                    public_key.to_bytes(),
+                    Account {
+                        name: key_name.clone(),
+                        account_id,
                     },
                 );
 
-                <span class="ident">password</span>.<span class="ident">proceed</span>();
-                <span class="ident">SignerEntry</span> {
-                    <span class="ident">name</span>: <span class="ident">key_name</span>,
-                    <span class="ident">public_key</span>,
-                    <span class="ident">master_key</span>: <span class="ident">master_key</span>.<span class="ident">public_key</span>,
-                    <span class="ident">account_id</span>,
+                password.proceed();
+                SignerEntry {
+                    name: key_name,
+                    public_key,
+                    master_key: master_key.public_key,
+                    account_id,
                 }
             }
         })
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update_key</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::UpdateKeyInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">input</span> {
-            <span class="ident"><span class="self">Self</span>::UpdateKeyInput::RenameKey</span> {
-                <span class="ident">master_key</span>,
-                <span class="ident">public_key</span>,
-                <span class="ident">name</span>,
+    <span class="kw">async fn </span>update_key(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::UpdateKeyInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
+        <span class="kw">match </span>input {
+            <span class="self">Self</span>::UpdateKeyInput::RenameKey {
+                master_key,
+                public_key,
+                name,
             } =&gt; {
-                <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">get_mut</span>(<span class="ident">master_key</span>.<span class="ident">as_bytes</span>()) {
-                    <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="ident">key</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MasterKeyError::MasterKeyNotFound</span>.<span class="ident">into</span>()),
+                <span class="kw">let </span>entry = <span class="kw">match </span><span class="self">self</span>.master_keys.get_mut(master_key.as_bytes()) {
+                    <span class="prelude-val">Some</span>(key) =&gt; key,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(MasterKeyError::MasterKeyNotFound.into()),
                 };
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">accounts_map</span>.<span class="ident">get_mut</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()) {
-                    <span class="prelude-val">Some</span>(<span class="ident">entry</span>) =&gt; <span class="ident">entry</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MasterKeyError::DerivedKeyNotFound</span>.<span class="ident">into</span>()),
+                <span class="kw">let </span><span class="kw-2">mut </span>entry = <span class="kw">match </span>entry.accounts_map.get_mut(public_key.as_bytes()) {
+                    <span class="prelude-val">Some</span>(entry) =&gt; entry,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(MasterKeyError::DerivedKeyNotFound.into()),
                 };
 
-                <span class="ident">entry</span>.<span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">clone</span>();
+                entry.name = name.clone();
 
-                <span class="prelude-val">Ok</span>(<span class="ident">SignerEntry</span> {
-                    <span class="ident">name</span>,
-                    <span class="ident">public_key</span>,
-                    <span class="ident">master_key</span>,
-                    <span class="ident">account_id</span>: <span class="ident">entry</span>.<span class="ident">account_id</span>,
+                <span class="prelude-val">Ok</span>(SignerEntry {
+                    name,
+                    public_key,
+                    master_key,
+                    account_id: entry.account_id,
                 })
             }
-            <span class="ident"><span class="self">Self</span>::UpdateKeyInput::ChangePassword</span> {
-                <span class="ident">master_key</span>,
-                <span class="ident">old_password</span>,
-                <span class="ident">new_password</span>,
+            <span class="self">Self</span>::UpdateKeyInput::ChangePassword {
+                master_key,
+                old_password,
+                new_password,
             } =&gt; {
-                <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">get_mut</span>(<span class="ident">master_key</span>.<span class="ident">as_bytes</span>()) {
-                    <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="ident">key</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MasterKeyError::MasterKeyNotFound</span>.<span class="ident">into</span>()),
+                <span class="kw">let </span>entry = <span class="kw">match </span><span class="self">self</span>.master_keys.get_mut(master_key.as_bytes()) {
+                    <span class="prelude-val">Some</span>(key) =&gt; key,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(MasterKeyError::MasterKeyNotFound.into()),
                 };
 
-                <span class="kw">let</span> <span class="ident">old_password</span> <span class="op">=</span> <span class="ident">ctx</span>
-                    .<span class="ident">password_cache</span>
-                    .<span class="ident">process_password</span>(<span class="ident">master_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">old_password</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">new_password</span> <span class="op">=</span> <span class="ident">ctx</span>
-                    .<span class="ident">password_cache</span>
-                    .<span class="ident">process_password</span>(<span class="ident">master_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">new_password</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>old_password = ctx
+                    .password_cache
+                    .process_password(master_key.to_bytes(), old_password)<span class="question-mark">?</span>;
+                <span class="kw">let </span>new_password = ctx
+                    .password_cache
+                    .process_password(master_key.to_bytes(), new_password)<span class="question-mark">?</span>;
 
-                <span class="ident">entry</span>.<span class="ident">change_password</span>(<span class="ident">old_password</span>.<span class="ident">as_ref</span>(), <span class="ident">new_password</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+                entry.change_password(old_password.as_ref(), new_password.as_ref())<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">entry</span>
-                    .<span class="ident">accounts_map</span>
-                    .<span class="ident">get</span>(<span class="ident">master_key</span>.<span class="ident">as_bytes</span>())
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">name</span>.<span class="ident">clone</span>())
-                    .<span class="ident">unwrap_or_default</span>();
+                <span class="kw">let </span>name = entry
+                    .accounts_map
+                    .get(master_key.as_bytes())
+                    .map(|item| item.name.clone())
+                    .unwrap_or_default();
 
-                <span class="ident">new_password</span>.<span class="ident">proceed</span>();
-                <span class="prelude-val">Ok</span>(<span class="ident">SignerEntry</span> {
-                    <span class="ident">name</span>,
-                    <span class="ident">public_key</span>: <span class="ident">entry</span>.<span class="ident">public_key</span>,
-                    <span class="ident">master_key</span>: <span class="ident">entry</span>.<span class="ident">public_key</span>,
-                    <span class="ident">account_id</span>: <span class="number">0</span>,
+                new_password.proceed();
+                <span class="prelude-val">Ok</span>(SignerEntry {
+                    name,
+                    public_key: entry.public_key,
+                    master_key: entry.public_key,
+                    account_id: <span class="number">0</span>,
                 })
             }
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">export_key</span>(
+    <span class="kw">async fn </span>export_key(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::ExportKeyInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::ExportKeyOutput</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">master_key</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">get</span>(<span class="ident">input</span>.<span class="ident">master_key</span>.<span class="ident">as_bytes</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="ident">key</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MasterKeyError::MasterKeyNotFound</span>.<span class="ident">into</span>()),
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::ExportKeyInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::ExportKeyOutput&gt; {
+        <span class="kw">let </span>master_key = <span class="kw">match </span><span class="self">self</span>.master_keys.get(input.master_key.as_bytes()) {
+            <span class="prelude-val">Some</span>(key) =&gt; key,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(MasterKeyError::MasterKeyNotFound.into()),
         };
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">ctx</span>
-            .<span class="ident">password_cache</span>
-            .<span class="ident">process_password</span>(<span class="ident">master_key</span>.<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">input</span>.<span class="ident">password</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>password = ctx
+            .password_cache
+            .process_password(master_key.public_key.to_bytes(), input.password)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">decrypter</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">symmetric_key_from_password</span>(
-            <span class="ident">password</span>.<span class="ident">as_ref</span>(),
-            <span class="kw-2">&amp;</span><span class="ident">master_key</span>.<span class="ident">salt</span>,
+        <span class="kw">let </span>decrypter = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>symmetric_key_from_password(
+            password.as_ref(),
+            <span class="kw-2">&amp;</span>master_key.salt,
         ));
 
-        <span class="kw">let</span> <span class="ident">phrase</span> <span class="op">=</span> <span class="ident">decrypt_secure</span>(
-            <span class="kw-2">&amp;</span><span class="ident">decrypter</span>,
-            <span class="kw-2">&amp;</span><span class="ident">master_key</span>.<span class="ident">phrase_nonce</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">master_key</span>.<span class="ident">enc_phrase</span>,
+        <span class="kw">let </span>phrase = decrypt_secure(
+            <span class="kw-2">&amp;</span>decrypter,
+            <span class="kw-2">&amp;</span>master_key.phrase_nonce,
+            <span class="kw-2">&amp;*</span>master_key.enc_phrase,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">phrase</span> <span class="op">=</span> <span class="ident">SecUtf8::from</span>(<span class="ident">String::from_utf8</span>(<span class="ident">phrase</span>.<span class="ident">unsecure</span>().<span class="ident">to_vec</span>())<span class="question-mark">?</span>);
+        <span class="kw">let </span>phrase = SecUtf8::from(String::from_utf8(phrase.unsecure().to_vec())<span class="question-mark">?</span>);
 
-        <span class="ident">password</span>.<span class="ident">proceed</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::ExportKeyOutput</span> { <span class="ident">phrase</span> })
+        password.proceed();
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::ExportKeyOutput { phrase })
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_public_keys</span>(
+    <span class="kw">async fn </span>get_public_keys(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::GetPublicKeys</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">master_key</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">get</span>(<span class="ident">input</span>.<span class="ident">master_key</span>.<span class="ident">as_bytes</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="ident">key</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MasterKeyError::MasterKeyNotFound</span>.<span class="ident">into</span>()),
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::GetPublicKeys,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;PublicKey&gt;&gt; {
+        <span class="kw">let </span>master_key = <span class="kw">match </span><span class="self">self</span>.master_keys.get(input.master_key.as_bytes()) {
+            <span class="prelude-val">Some</span>(key) =&gt; key,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(MasterKeyError::MasterKeyNotFound.into()),
         };
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">ctx</span>
-            .<span class="ident">password_cache</span>
-            .<span class="ident">process_password</span>(<span class="ident">master_key</span>.<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">input</span>.<span class="ident">password</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>password = ctx
+            .password_cache
+            .process_password(master_key.public_key.to_bytes(), input.password)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">decrypter</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">symmetric_key_from_password</span>(
-            <span class="ident">password</span>.<span class="ident">as_ref</span>(),
-            <span class="kw-2">&amp;</span><span class="ident">master_key</span>.<span class="ident">salt</span>,
+        <span class="kw">let </span>decrypter = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>symmetric_key_from_password(
+            password.as_ref(),
+            <span class="kw-2">&amp;</span>master_key.salt,
         ));
 
-        <span class="kw">let</span> <span class="ident">master</span> <span class="op">=</span> <span class="ident">decrypt_secure</span>(
-            <span class="kw-2">&amp;</span><span class="ident">decrypter</span>,
-            <span class="kw-2">&amp;</span><span class="ident">master_key</span>.<span class="ident">entropy_nonce</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">master_key</span>.<span class="ident">enc_entropy</span>,
+        <span class="kw">let </span>master = decrypt_secure(
+            <span class="kw-2">&amp;</span>decrypter,
+            <span class="kw-2">&amp;</span>master_key.entropy_nonce,
+            <span class="kw-2">&amp;*</span>master_key.enc_entropy,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">public_keys</span> <span class="op">=</span> (<span class="ident">input</span>.<span class="ident">offset</span>..<span class="ident">input</span>.<span class="ident">offset</span>.<span class="ident">saturating_add</span>(<span class="ident">input</span>.<span class="ident">limit</span>))
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">account_id</span><span class="op">|</span> {
-                <span class="ident">derive_from_master</span>(<span class="ident">account_id</span>, <span class="ident">master</span>.<span class="ident">unsecure</span>()).<span class="ident">map</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="ident">key</span>.<span class="ident">public</span>)
+        <span class="kw">let </span>public_keys = (input.offset..input.offset.saturating_add(input.limit))
+            .map(|account_id| {
+                derive_from_master(account_id, master.unsecure()).map(|key| key.public)
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;PublicKey&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="ident">password</span>.<span class="ident">proceed</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">public_keys</span>)
+        password.proceed();
+        <span class="prelude-val">Ok</span>(public_keys)
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">compute_shared_secrets</span>(
+    <span class="kw">async fn </span>compute_shared_secrets(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">public_keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::SignInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SharedSecret</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">use_sign_input</span>(<span class="ident">ctx</span>.<span class="ident">password_cache</span>, <span class="ident">input</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">public_keys</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">public_key</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">secret</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::x25519::compute_shared</span>(<span class="kw-2">&amp;</span><span class="ident">keypair</span>.<span class="ident">secret</span>, <span class="ident">public_key</span>);
-                <span class="ident">SharedSecret</span> {
-                    <span class="ident">source_public_key</span>: <span class="ident">keypair</span>.<span class="ident">public</span>,
-                    <span class="ident">recipient_public_key</span>: <span class="kw-2">*</span><span class="ident">public_key</span>,
-                    <span class="ident">secret</span>,
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        public_keys: <span class="kw-2">&amp;</span>[PublicKey],
+        input: <span class="self">Self</span>::SignInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SharedSecret&gt;&gt; {
+        <span class="kw">let </span>keypair = <span class="self">self</span>.use_sign_input(ctx.password_cache, input)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(public_keys
+            .iter()
+            .map(|public_key| {
+                <span class="kw">let </span>secret = <span class="kw">super</span>::x25519::compute_shared(<span class="kw-2">&amp;</span>keypair.secret, public_key);
+                SharedSecret {
+                    source_public_key: keypair.public,
+                    recipient_public_key: <span class="kw-2">*</span>public_key,
+                    secret,
                 }
             })
-            .<span class="ident">collect</span>())
+            .collect())
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sign</span>(
+    <span class="kw">async fn </span>sign(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ctx</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::SignInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">64</span>]<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">keypair</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">use_sign_input</span>(<span class="ident">ctx</span>.<span class="ident">password_cache</span>, <span class="ident">input</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">keypair</span>.<span class="ident">sign</span>(<span class="ident">data</span>).<span class="ident">to_bytes</span>())
+        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        data: <span class="kw-2">&amp;</span>[u8],
+        input: <span class="self">Self</span>::SignInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; <span class="number">64</span>]&gt; {
+        <span class="kw">let </span>keypair = <span class="self">self</span>.use_sign_input(ctx.password_cache, input)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(keypair.sign(data).to_bytes())
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">SignerStorage</span> <span class="kw">for</span> <span class="ident">DerivedKeySigner</span> {
-    <span class="kw">fn</span> <span class="ident">load_state</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">ParsedDerivedKeySigner</span> {
-            <span class="ident">master_keys</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">MasterKey</span><span class="op">&gt;</span>,
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl </span>SignerStorage <span class="kw">for </span>DerivedKeySigner {
+    <span class="kw">fn </span>load_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="attribute">#[derive(Deserialize)]
+        </span><span class="kw">struct </span>ParsedDerivedKeySigner {
+            master_keys: HashMap&lt;String, MasterKey&gt;,
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">state</span>) <span class="op">=</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">ParsedDerivedKeySigner</span><span class="op">&gt;</span>(<span class="ident">data</span>) {
-            <span class="self">self</span>.<span class="ident">master_keys</span> <span class="op">=</span> <span class="ident">state</span>
-                .<span class="ident">master_keys</span>
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">public_key</span>, <span class="ident">master_key</span>)<span class="op">|</span> {
-                    <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">hex::decode</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">PublicKey::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>)<span class="question-mark">?</span>;
-                    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span><span class="ident">::Ok</span>((<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">master_key</span>))
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(state) = serde_json::from_str::&lt;ParsedDerivedKeySigner&gt;(data) {
+            <span class="self">self</span>.master_keys = state
+                .master_keys
+                .into_iter()
+                .map(|(public_key, master_key)| {
+                    <span class="kw">let </span>public_key = hex::decode(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>public_key = PublicKey::from_bytes(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?</span>;
+                    <span class="prelude-ty">Result</span>::&lt;<span class="kw">_</span>, anyhow::Error&gt;::Ok((public_key.to_bytes(), master_key))
                 })
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">master_keys</span> <span class="op">=</span> <span class="ident">HashMap::with_capacity</span>(<span class="number">1</span>);
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">master_key</span>) <span class="op">=</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MasterKey</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">data</span>)<span class="question-mark">?</span> {
-                <span class="ident">master_keys</span>.<span class="ident">insert</span>(<span class="ident">master_key</span>.<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">master_key</span>);
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>master_keys = HashMap::with_capacity(<span class="number">1</span>);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(master_key) = serde_json::from_str::&lt;<span class="prelude-ty">Option</span>&lt;MasterKey&gt;&gt;(data)<span class="question-mark">? </span>{
+                master_keys.insert(master_key.public_key.to_bytes(), master_key);
             }
-            <span class="self">self</span>.<span class="ident">master_keys</span> <span class="op">=</span> <span class="ident">master_keys</span>;
+            <span class="self">self</span>.master_keys = master_keys;
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">store_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="kw">struct</span> <span class="ident">StoredMasterKeys</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashMap</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">MasterKey</span><span class="op">&gt;</span>);
+    <span class="kw">fn </span>store_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="kw">struct </span>StoredMasterKeys&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;[u8; <span class="number">32</span>], MasterKey&gt;);
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">StoredMasterKeys</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">S</span>: <span class="ident">Serializer</span>,
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Serialize <span class="kw">for </span>StoredMasterKeys&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+            <span class="kw">where
+                </span>S: Serializer,
             {
-                <span class="kw">use</span> <span class="ident">serde::ser::SerializeMap</span>;
+                <span class="kw">use </span>serde::ser::SerializeMap;
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_map</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">len</span>()))<span class="question-mark">?</span>;
-                <span class="kw">for</span> (<span class="ident">public_key</span>, <span class="ident">master_key</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>() {
-                    <span class="ident">map</span>.<span class="ident">serialize_entry</span>(<span class="kw-2">&amp;</span><span class="ident">hex::encode</span>(<span class="ident">public_key</span>), <span class="ident">master_key</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>map = serializer.serialize_map(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.len()))<span class="question-mark">?</span>;
+                <span class="kw">for </span>(public_key, master_key) <span class="kw">in </span><span class="self">self</span>.<span class="number">0</span>.iter() {
+                    map.serialize_entry(<span class="kw-2">&amp;</span>hex::encode(public_key), master_key)<span class="question-mark">?</span>;
                 }
 
-                <span class="ident">map</span>.<span class="ident">end</span>()
+                map.end()
             }
         }
 
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">StoredDerivedKeySigner</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="ident">master_keys</span>: <span class="ident">StoredMasterKeys</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+        <span class="attribute">#[derive(Serialize)]
+        </span><span class="kw">struct </span>StoredDerivedKeySigner&lt;<span class="lifetime">&#39;a</span>&gt; {
+            master_keys: StoredMasterKeys&lt;<span class="lifetime">&#39;a</span>&gt;,
         }
 
-        <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">StoredDerivedKeySigner</span> {
-            <span class="ident">master_keys</span>: <span class="ident">StoredMasterKeys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">master_keys</span>),
+        serde_json::to_string(<span class="kw-2">&amp;</span>StoredDerivedKeySigner {
+            master_keys: StoredMasterKeys(<span class="kw-2">&amp;</span><span class="self">self</span>.master_keys),
         })
-        .<span class="ident">trust_me</span>()
+        .trust_me()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_entries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">master_keys</span>
-            .<span class="ident">values</span>()
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">MasterKey</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">master_key</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">public_key</span>;
-                <span class="ident">key</span>.<span class="ident">accounts_map</span>
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span>(<span class="ident">public_key</span>, <span class="ident">account_id</span>)<span class="op">|</span> <span class="ident">SignerEntry</span> {
-                        <span class="ident">name</span>: <span class="ident">account_id</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
-                        <span class="ident">public_key</span>: <span class="ident">PublicKey::from_bytes</span>(<span class="ident">public_key</span>).<span class="ident">trust_me</span>(),
-                        <span class="ident">master_key</span>,
-                        <span class="ident">account_id</span>: <span class="ident">account_id</span>.<span class="ident">account_id</span>,
+    <span class="kw">fn </span>get_entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;SignerEntry&gt; {
+        <span class="self">self</span>.master_keys
+            .values()
+            .flat_map(|key: <span class="kw-2">&amp;</span>MasterKey| {
+                <span class="kw">let </span>master_key = key.public_key;
+                key.accounts_map
+                    .iter()
+                    .map(<span class="kw">move </span>|(public_key, account_id)| SignerEntry {
+                        name: account_id.name.clone(),
+                        public_key: PublicKey::from_bytes(public_key).trust_me(),
+                        master_key,
+                        account_id: account_id.account_id,
                     })
             })
-            .<span class="ident">collect</span>()
+            .collect()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_key</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="kw">for</span> <span class="ident">master_key</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">values_mut</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">account</span>) <span class="op">=</span> <span class="ident">master_key</span>.<span class="ident">accounts_map</span>.<span class="ident">remove</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()) {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">SignerEntry</span> {
-                    <span class="ident">name</span>: <span class="ident">account</span>.<span class="ident">name</span>,
-                    <span class="ident">public_key</span>: <span class="kw-2">*</span><span class="ident">public_key</span>,
-                    <span class="ident">master_key</span>: <span class="ident">master_key</span>.<span class="ident">public_key</span>,
-                    <span class="ident">account_id</span>: <span class="ident">account</span>.<span class="ident">account_id</span>,
+    <span class="kw">async fn </span>remove_key(<span class="kw-2">&amp;mut </span><span class="self">self</span>, public_key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="prelude-ty">Option</span>&lt;SignerEntry&gt; {
+        <span class="kw">for </span>master_key <span class="kw">in </span><span class="self">self</span>.master_keys.values_mut() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(account) = master_key.accounts_map.remove(public_key.as_bytes()) {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(SignerEntry {
+                    name: account.name,
+                    public_key: <span class="kw-2">*</span>public_key,
+                    master_key: master_key.public_key,
+                    account_id: account.account_id,
                 });
             }
         }
 
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">master_key</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">values_mut</span>() {
-            <span class="ident">master_key</span>.<span class="ident">accounts_map</span>.<span class="ident">clear</span>();
+    <span class="kw">async fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>master_key <span class="kw">in </span><span class="self">self</span>.master_keys.values_mut() {
+            master_key.accounts_map.clear();
         }
-        <span class="self">self</span>.<span class="ident">master_keys</span>.<span class="ident">clear</span>();
+        <span class="self">self</span>.master_keys.clear();
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">MasterKey</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
+<span class="attribute">#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
+</span><span class="kw">struct </span>MasterKey {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span>public_key: PublicKey,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span>
-    <span class="ident">salt</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    </span>salt: Vec&lt;u8&gt;,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span>
-    <span class="ident">enc_entropy</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    </span>enc_entropy: Vec&lt;u8&gt;,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_nonce&quot;</span>)]</span>
-    <span class="ident">entropy_nonce</span>: <span class="ident">Nonce</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+    </span>entropy_nonce: Nonce,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span>
-    <span class="ident">enc_phrase</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    </span>enc_phrase: Vec&lt;u8&gt;,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_nonce&quot;</span>)]</span>
-    <span class="ident">phrase_nonce</span>: <span class="ident">Nonce</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+    </span>phrase_nonce: Nonce,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_accounts_map&quot;</span>)]</span>
-    <span class="ident">accounts_map</span>: <span class="ident">AccountsMap</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_accounts_map&quot;</span>)]
+    </span>accounts_map: AccountsMap,
 }
 
-<span class="kw">impl</span> <span class="ident">MasterKey</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">password_cache</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident">PasswordCache</span>,
-        <span class="ident">password</span>: <span class="ident">Password</span>,
-        <span class="ident">phrase</span>: <span class="ident">SecUtf8</span>,
-        <span class="ident">key_name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span>, <span class="ident">String</span>, <span class="ident">PasswordCacheTransaction</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">use</span> <span class="ident">zeroize::Zeroize</span>;
+<span class="kw">impl </span>MasterKey {
+    <span class="kw">fn </span>new(
+        password_cache: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>PasswordCache,
+        password: Password,
+        phrase: SecUtf8,
+        key_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>, String, PasswordCacheTransaction&lt;<span class="lifetime">&#39;_</span>&gt;)&gt; {
+        <span class="kw">use </span>zeroize::Zeroize;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">phrase</span> <span class="op">=</span> <span class="ident">phrase</span>.<span class="ident">unsecure</span>().<span class="ident">to_string</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>phrase = phrase.unsecure().to_string();
 
-        <span class="comment">// SECURITY: private key will be zeroized here</span>
-        <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">derive_from_phrase</span>(<span class="kw-2">&amp;</span><span class="ident">phrase</span>, <span class="ident">MnemonicType::Labs</span>(<span class="number">0</span>))<span class="question-mark">?</span>.<span class="ident">public</span>;
+        <span class="comment">// SECURITY: private key will be zeroized here
+        </span><span class="kw">let </span>public_key = derive_from_phrase(<span class="kw-2">&amp;</span>phrase, MnemonicType::Labs(<span class="number">0</span>))<span class="question-mark">?</span>.public;
 
-        <span class="kw">let</span> <span class="ident">key_name</span> <span class="op">=</span> <span class="ident">key_name</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">default_key_name</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()));
+        <span class="kw">let </span>key_name = key_name.unwrap_or_else(|| default_key_name(public_key.as_bytes()));
 
-        <span class="kw">let</span> <span class="ident">password</span> <span class="op">=</span> <span class="ident">password_cache</span>.<span class="ident">process_password</span>(<span class="ident">public_key</span>.<span class="ident">to_bytes</span>(), <span class="ident">password</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>password = password_cache.process_password(public_key.to_bytes(), password)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entropy</span> <span class="op">=</span> <span class="ident">labs::derive_master_key</span>(<span class="kw-2">&amp;</span><span class="ident">phrase</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">EncryptedPart</span> {
-            <span class="ident">salt</span>,
-            <span class="ident">enc_entropy</span>,
-            <span class="ident">entropy_nonce</span>,
-            <span class="ident">enc_phrase</span>,
-            <span class="ident">phrase_nonce</span>,
-        } <span class="op">=</span> <span class="ident">compute_encrypted_part</span>(<span class="kw-2">&amp;</span><span class="ident">entropy</span>, <span class="ident">phrase</span>.<span class="ident">as_bytes</span>(), <span class="ident">password</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>entropy = labs::derive_master_key(<span class="kw-2">&amp;</span>phrase)<span class="question-mark">?</span>;
+        <span class="kw">let </span>EncryptedPart {
+            salt,
+            enc_entropy,
+            entropy_nonce,
+            enc_phrase,
+            phrase_nonce,
+        } = compute_encrypted_part(<span class="kw-2">&amp;</span>entropy, phrase.as_bytes(), password.as_ref())<span class="question-mark">?</span>;
 
-        <span class="ident">phrase</span>.<span class="ident">zeroize</span>();
-        <span class="ident">entropy</span>.<span class="ident">zeroize</span>();
+        phrase.zeroize();
+        entropy.zeroize();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accounts_map</span> <span class="op">=</span> <span class="ident">AccountsMap::new</span>();
-        <span class="ident">accounts_map</span>.<span class="ident">insert</span>(
-            <span class="ident">public_key</span>.<span class="ident">to_bytes</span>(),
-            <span class="ident">Account</span> {
-                <span class="ident">name</span>: <span class="ident">key_name</span>.<span class="ident">clone</span>(),
-                <span class="ident">account_id</span>: <span class="number">0</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>accounts_map = AccountsMap::new();
+        accounts_map.insert(
+            public_key.to_bytes(),
+            Account {
+                name: key_name.clone(),
+                account_id: <span class="number">0</span>,
             },
         );
 
         <span class="prelude-val">Ok</span>((
-            <span class="self">Self</span> {
-                <span class="ident">public_key</span>,
-                <span class="ident">salt</span>,
-                <span class="ident">enc_entropy</span>,
-                <span class="ident">entropy_nonce</span>,
-                <span class="ident">enc_phrase</span>,
-                <span class="ident">phrase_nonce</span>,
-                <span class="ident">accounts_map</span>,
+            <span class="self">Self </span>{
+                public_key,
+                salt,
+                enc_entropy,
+                entropy_nonce,
+                enc_phrase,
+                phrase_nonce,
+                accounts_map,
             },
-            <span class="ident">key_name</span>,
-            <span class="ident">password</span>,
+            key_name,
+            password,
         ))
     }
 
-    <span class="kw">fn</span> <span class="ident">change_password</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">old_password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">new_password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">decrypter</span> <span class="op">=</span>
-            <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">symmetric_key_from_password</span>(<span class="ident">old_password</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">salt</span>));
+    <span class="kw">fn </span>change_password(<span class="kw-2">&amp;mut </span><span class="self">self</span>, old_password: <span class="kw-2">&amp;</span>str, new_password: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>decrypter =
+            ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>symmetric_key_from_password(old_password, <span class="kw-2">&amp;</span><span class="self">self</span>.salt));
 
-        <span class="kw">let</span> <span class="ident">entropy</span> <span class="op">=</span> <span class="ident">decrypt_secure</span>(<span class="kw-2">&amp;</span><span class="ident">decrypter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entropy_nonce</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">enc_entropy</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">phrase</span> <span class="op">=</span> <span class="ident">decrypt_secure</span>(<span class="kw-2">&amp;</span><span class="ident">decrypter</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">phrase_nonce</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">enc_phrase</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>entropy = decrypt_secure(<span class="kw-2">&amp;</span>decrypter, <span class="kw-2">&amp;</span><span class="self">self</span>.entropy_nonce, <span class="kw-2">&amp;</span><span class="self">self</span>.enc_entropy)<span class="question-mark">?</span>;
+        <span class="kw">let </span>phrase = decrypt_secure(<span class="kw-2">&amp;</span>decrypter, <span class="kw-2">&amp;</span><span class="self">self</span>.phrase_nonce, <span class="kw-2">&amp;</span><span class="self">self</span>.enc_phrase)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">encrypted_part</span> <span class="op">=</span>
-            <span class="ident">compute_encrypted_part</span>(<span class="ident">entropy</span>.<span class="ident">unsecure</span>(), <span class="ident">phrase</span>.<span class="ident">unsecure</span>(), <span class="ident">new_password</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">salt</span> <span class="op">=</span> <span class="ident">encrypted_part</span>.<span class="ident">salt</span>;
-        <span class="self">self</span>.<span class="ident">enc_entropy</span> <span class="op">=</span> <span class="ident">encrypted_part</span>.<span class="ident">enc_entropy</span>;
-        <span class="self">self</span>.<span class="ident">entropy_nonce</span> <span class="op">=</span> <span class="ident">encrypted_part</span>.<span class="ident">entropy_nonce</span>;
-        <span class="self">self</span>.<span class="ident">enc_phrase</span> <span class="op">=</span> <span class="ident">encrypted_part</span>.<span class="ident">enc_phrase</span>;
-        <span class="self">self</span>.<span class="ident">phrase_nonce</span> <span class="op">=</span> <span class="ident">encrypted_part</span>.<span class="ident">phrase_nonce</span>;
+        <span class="kw">let </span>encrypted_part =
+            compute_encrypted_part(entropy.unsecure(), phrase.unsecure(), new_password)<span class="question-mark">?</span>;
+        <span class="self">self</span>.salt = encrypted_part.salt;
+        <span class="self">self</span>.enc_entropy = encrypted_part.enc_entropy;
+        <span class="self">self</span>.entropy_nonce = encrypted_part.entropy_nonce;
+        <span class="self">self</span>.enc_phrase = encrypted_part.enc_phrase;
+        <span class="self">self</span>.phrase_nonce = encrypted_part.phrase_nonce;
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">fn</span> <span class="ident">compute_encrypted_part</span>(<span class="ident">entropy</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">phrase</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">EncryptedPart</span><span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="ident">rand::Rng</span>;
+<span class="kw">fn </span>compute_encrypted_part(entropy: <span class="kw-2">&amp;</span>[u8], phrase: <span class="kw-2">&amp;</span>[u8], password: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;EncryptedPart&gt; {
+    <span class="kw">use </span>rand::Rng;
 
-    <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">rand::thread_rng</span>();
+    <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>rand::thread_rng();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">salt</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="number">32</span>];
-    <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="ident">salt</span>.<span class="ident">as_mut_slice</span>());
+    <span class="kw">let </span><span class="kw-2">mut </span>salt = <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="number">32</span>];
+    rng.fill(salt.as_mut_slice());
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entropy_nonce</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="ident">NONCE_LENGTH</span>];
-    <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">entropy_nonce</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>entropy_nonce = [<span class="number">0u8</span>; NONCE_LENGTH];
+    rng.fill(<span class="kw-2">&amp;mut </span>entropy_nonce);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">phrase_nonce</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="ident">NONCE_LENGTH</span>];
-    <span class="ident">rng</span>.<span class="ident">fill</span>(<span class="kw-2">&amp;mut</span> <span class="ident">phrase_nonce</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>phrase_nonce = [<span class="number">0u8</span>; NONCE_LENGTH];
+    rng.fill(<span class="kw-2">&amp;mut </span>phrase_nonce);
 
-    <span class="kw">let</span> <span class="ident">entropy_nonce</span> <span class="op">=</span> <span class="ident">Nonce::from</span>(<span class="ident">entropy_nonce</span>);
-    <span class="kw">let</span> <span class="ident">phrase_nonce</span> <span class="op">=</span> <span class="ident">Nonce::from</span>(<span class="ident">phrase_nonce</span>);
+    <span class="kw">let </span>entropy_nonce = Nonce::from(entropy_nonce);
+    <span class="kw">let </span>phrase_nonce = Nonce::from(phrase_nonce);
 
-    <span class="kw">let</span> <span class="ident">encryptor</span> <span class="op">=</span> <span class="ident">ChaCha20Poly1305::new</span>(<span class="kw-2">&amp;</span><span class="ident">symmetric_key_from_password</span>(<span class="ident">password</span>, <span class="kw-2">&amp;</span><span class="ident">salt</span>));
-    <span class="kw">let</span> <span class="ident">enc_entropy</span> <span class="op">=</span> <span class="ident">encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">encryptor</span>, <span class="kw-2">&amp;</span><span class="ident">entropy_nonce</span>, <span class="ident">entropy</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">enc_phrase</span> <span class="op">=</span> <span class="ident">encrypt</span>(<span class="kw-2">&amp;</span><span class="ident">encryptor</span>, <span class="kw-2">&amp;</span><span class="ident">phrase_nonce</span>, <span class="ident">phrase</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>encryptor = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>symmetric_key_from_password(password, <span class="kw-2">&amp;</span>salt));
+    <span class="kw">let </span>enc_entropy = encrypt(<span class="kw-2">&amp;</span>encryptor, <span class="kw-2">&amp;</span>entropy_nonce, entropy)<span class="question-mark">?</span>;
+    <span class="kw">let </span>enc_phrase = encrypt(<span class="kw-2">&amp;</span>encryptor, <span class="kw-2">&amp;</span>phrase_nonce, phrase)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">EncryptedPart</span> {
-        <span class="ident">salt</span>,
-        <span class="ident">enc_entropy</span>,
-        <span class="ident">entropy_nonce</span>,
-        <span class="ident">enc_phrase</span>,
-        <span class="ident">phrase_nonce</span>,
+    <span class="prelude-val">Ok</span>(EncryptedPart {
+        salt,
+        enc_entropy,
+        entropy_nonce,
+        enc_phrase,
+        phrase_nonce,
     })
 }
 
-<span class="kw">struct</span> <span class="ident">EncryptedPart</span> {
-    <span class="ident">salt</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">enc_entropy</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">entropy_nonce</span>: <span class="ident">Nonce</span>,
-    <span class="ident">enc_phrase</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">phrase_nonce</span>: <span class="ident">Nonce</span>,
+<span class="kw">struct </span>EncryptedPart {
+    salt: Vec&lt;u8&gt;,
+    enc_entropy: Vec&lt;u8&gt;,
+    entropy_nonce: Nonce,
+    enc_phrase: Vec&lt;u8&gt;,
+    phrase_nonce: Nonce,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Account</span> {
-    <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="ident">account_id</span>: <span class="ident">u16</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+</span><span class="kw">struct </span>Account {
+    name: String,
+    account_id: u16,
 }
 
-<span class="kw">type</span> <span class="ident">AccountsMap</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">PubKey</span>, <span class="ident">Account</span><span class="op">&gt;</span>;
+<span class="kw">type </span>AccountsMap = HashMap&lt;PubKey, Account&gt;;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DerivedKeySignParams</span> {
-    <span class="ident">ByAccountId</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">master_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">account_id</span>: <span class="ident">u16</span>,
-        <span class="ident">password</span>: <span class="ident">Password</span>,
+<span class="attribute">#[derive(Clone, Serialize, Deserialize, Debug)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>DerivedKeySignParams {
+    ByAccountId {
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>master_key: PublicKey,
+        account_id: u16,
+        password: Password,
     },
-    <span class="ident">ByPublicKey</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">master_key</span>: <span class="ident">PublicKey</span>,
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">password</span>: <span class="ident">Password</span>,
-    },
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DerivedKeyExportParams</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">master_key</span>: <span class="ident">PublicKey</span>,
-    <span class="kw">pub</span> <span class="ident">password</span>: <span class="ident">Password</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DerivedKeyExportOutput</span> {
-    <span class="kw">pub</span> <span class="ident">phrase</span>: <span class="ident">SecUtf8</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DerivedKeyGetPublicKeys</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">master_key</span>: <span class="ident">PublicKey</span>,
-    <span class="kw">pub</span> <span class="ident">password</span>: <span class="ident">Password</span>,
-    <span class="kw">pub</span> <span class="ident">limit</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">u16</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DerivedKeyUpdateParams</span> {
-    <span class="ident">RenameKey</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">master_key</span>: <span class="ident">PublicKey</span>,
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">name</span>: <span class="ident">String</span>,
-    },
-    <span class="ident">ChangePassword</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">master_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">old_password</span>: <span class="ident">Password</span>,
-        <span class="ident">new_password</span>: <span class="ident">Password</span>,
+    ByPublicKey {
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>master_key: PublicKey,
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>public_key: PublicKey,
+        password: Password,
     },
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DerivedKeyCreateInput</span> {
-    <span class="ident">Import</span> {
-        <span class="ident">key_name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">phrase</span>: <span class="ident">SecUtf8</span>,
-        <span class="ident">password</span>: <span class="ident">Password</span>,
+<span class="attribute">#[derive(Serialize, Deserialize, Debug)]
+</span><span class="kw">pub struct </span>DerivedKeyExportParams {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span><span class="kw">pub </span>master_key: PublicKey,
+    <span class="kw">pub </span>password: Password,
+}
+
+<span class="attribute">#[derive(Serialize, Deserialize, Debug)]
+</span><span class="kw">pub struct </span>DerivedKeyExportOutput {
+    <span class="kw">pub </span>phrase: SecUtf8,
+}
+
+<span class="attribute">#[derive(Serialize, Deserialize, Debug)]
+</span><span class="kw">pub struct </span>DerivedKeyGetPublicKeys {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span><span class="kw">pub </span>master_key: PublicKey,
+    <span class="kw">pub </span>password: Password,
+    <span class="kw">pub </span>limit: u16,
+    <span class="kw">pub </span>offset: u16,
+}
+
+<span class="attribute">#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>DerivedKeyUpdateParams {
+    RenameKey {
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>master_key: PublicKey,
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>public_key: PublicKey,
+        name: String,
     },
-    <span class="ident">Derive</span> {
-        <span class="ident">key_name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">master_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">account_id</span>: <span class="ident">u16</span>,
-        <span class="ident">password</span>: <span class="ident">Password</span>,
+    ChangePassword {
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>master_key: PublicKey,
+        old_password: Password,
+        new_password: Password,
     },
 }
 
-<span class="kw">mod</span> <span class="ident">serde_accounts_map</span> {
-    <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
-    <span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
+<span class="attribute">#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>DerivedKeyCreateInput {
+    Import {
+        key_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+        phrase: SecUtf8,
+        password: Password,
+    },
+    Derive {
+        key_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>master_key: PublicKey,
+        account_id: u16,
+        password: Password,
+    },
+}
 
-    <span class="kw">use</span> <span class="ident">serde::de::Error</span>;
-    <span class="kw">use</span> <span class="ident">serde::ser::SerializeMap</span>;
-    <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">mod </span>serde_accounts_map {
+    <span class="kw">use </span>std::collections::HashMap;
+    <span class="kw">use </span>std::convert::TryInto;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>serde::de::Error;
+    <span class="kw">use </span>serde::ser::SerializeMap;
+    <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">AccountsMap</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>AccountsMap, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">StoredItem</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
-            <span class="ident">account_id</span>: <span class="ident">u16</span>,
+        <span class="attribute">#[derive(Serialize)]
+        </span><span class="kw">struct </span>StoredItem&lt;<span class="lifetime">&#39;a</span>&gt; {
+            name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+            account_id: u16,
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_map</span>(<span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">len</span>()))<span class="question-mark">?</span>;
-        <span class="kw">for</span> (<span class="ident">pubkey</span>, <span class="ident">account</span>) <span class="kw">in</span> <span class="ident">data</span>.<span class="ident">iter</span>() {
-            <span class="ident">map</span>.<span class="ident">serialize_entry</span>(
-                <span class="kw-2">&amp;</span><span class="ident">hex::encode</span>(<span class="ident">pubkey</span>),
-                <span class="kw-2">&amp;</span><span class="ident">StoredItem</span> {
-                    <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">name</span>,
-                    <span class="ident">account_id</span>: <span class="ident">account</span>.<span class="ident">account_id</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>map = serializer.serialize_map(<span class="prelude-val">Some</span>(data.len()))<span class="question-mark">?</span>;
+        <span class="kw">for </span>(pubkey, account) <span class="kw">in </span>data.iter() {
+            map.serialize_entry(
+                <span class="kw-2">&amp;</span>hex::encode(pubkey),
+                <span class="kw-2">&amp;</span>StoredItem {
+                    name: <span class="kw-2">&amp;</span>account.name,
+                    account_id: account.account_id,
                 },
             )<span class="question-mark">?</span>;
         }
 
-        <span class="ident">map</span>.<span class="ident">end</span>()
+        map.end()
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AccountsMap</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;AccountsMap, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">StoredItem</span> {
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>)]</span>
-            <span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-            <span class="ident">account_id</span>: <span class="ident">u16</span>,
+        <span class="attribute">#[derive(Deserialize)]
+        </span><span class="kw">struct </span>StoredItem {
+            <span class="attribute">#[serde(default)]
+            </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+            account_id: u16,
         }
 
-        <span class="kw">let</span> <span class="ident">stored_data</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">StoredItem</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="ident">stored_data</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">public_key</span>, <span class="ident">StoredItem</span> { <span class="ident">name</span>, <span class="ident">account_id</span> })<span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">hex::decode</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>)
-                    .<span class="ident">map_err</span>(<span class="ident">D::Error::custom</span>)
-                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">public_key</span><span class="op">|</span> {
-                        <span class="ident">public_key</span>
-                            .<span class="ident">try_into</span>()
-                            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">D::Error::custom</span>(<span class="string">&quot;Invalid public key&quot;</span>))
+        <span class="kw">let </span>stored_data = HashMap::&lt;String, StoredItem&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
+        stored_data
+            .into_iter()
+            .map(|(public_key, StoredItem { name, account_id })| {
+                <span class="kw">let </span>public_key = hex::decode(<span class="kw-2">&amp;</span>public_key)
+                    .map_err(D::Error::custom)
+                    .and_then(|public_key| {
+                        public_key
+                            .try_into()
+                            .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid public key&quot;</span>))
                     })<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">default_key_name</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>));
-                <span class="prelude-val">Ok</span>((<span class="ident">public_key</span>, <span class="ident">Account</span> { <span class="ident">name</span>, <span class="ident">account_id</span> }))
+                <span class="kw">let </span>name = name.unwrap_or_else(|| default_key_name(<span class="kw-2">&amp;</span>public_key));
+                <span class="prelude-val">Ok</span>((public_key, Account { name, account_id }))
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()
     }
 }
 
-<span class="kw">fn</span> <span class="ident">derive_from_master</span>(<span class="ident">id</span>: <span class="ident">u16</span>, <span class="ident">master</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::Keypair</span><span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="ident">tiny_hderive::bip32</span>;
+<span class="kw">fn </span>derive_from_master(id: u16, master: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;ed25519_dalek::Keypair&gt; {
+    <span class="kw">use </span>tiny_hderive::bip32;
 
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;m/44&#39;/396&#39;/0&#39;/0/{}&quot;</span>, <span class="ident">id</span>);
-    <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">bip32::ExtendedPrivKey::derive</span>(<span class="ident">master</span>, <span class="ident">path</span>.<span class="ident">as_str</span>())
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">MasterKeyError::DerivationError</span>)<span class="question-mark">?</span>
-        .<span class="ident">secret</span>();
+    <span class="kw">let </span>path = <span class="macro">format!</span>(<span class="string">&quot;m/44&#39;/396&#39;/0&#39;/0/{}&quot;</span>, id);
+    <span class="kw">let </span>key = bip32::ExtendedPrivKey::derive(master, path.as_str())
+        .map_err(|<span class="kw">_</span>| MasterKeyError::DerivationError)<span class="question-mark">?
+        </span>.secret();
 
-    <span class="kw">let</span> <span class="ident">secret</span> <span class="op">=</span>
-        <span class="ident">ed25519_dalek::SecretKey::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">MasterKeyError::DerivationError</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">public</span> <span class="op">=</span> <span class="ident">ed25519_dalek::PublicKey::from</span>(<span class="kw-2">&amp;</span><span class="ident">secret</span>);
-    <span class="prelude-val">Ok</span>(<span class="ident">ed25519_dalek::Keypair</span> { <span class="ident">secret</span>, <span class="ident">public</span> })
+    <span class="kw">let </span>secret =
+        ed25519_dalek::SecretKey::from_bytes(<span class="kw-2">&amp;</span>key).map_err(|<span class="kw">_</span>| MasterKeyError::DerivationError)<span class="question-mark">?</span>;
+    <span class="kw">let </span>public = ed25519_dalek::PublicKey::from(<span class="kw-2">&amp;</span>secret);
+    <span class="prelude-val">Ok</span>(ed25519_dalek::Keypair { secret, public })
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
-<span class="kw">enum</span> <span class="ident">MasterKeyError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Master key not found&quot;</span>)]</span>
-    <span class="ident">MasterKeyNotFound</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Derived key not found&quot;</span>)]</span>
-    <span class="ident">DerivedKeyNotFound</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to derive account from master key&quot;</span>)]</span>
-    <span class="ident">DerivationError</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Derived key already exists&quot;</span>)]</span>
-    <span class="ident">DerivedKeyExists</span>,
+<span class="attribute">#[derive(Debug, thiserror::Error)]
+</span><span class="kw">enum </span>MasterKeyError {
+    <span class="attribute">#[error(<span class="string">&quot;Master key not found&quot;</span>)]
+    </span>MasterKeyNotFound,
+    <span class="attribute">#[error(<span class="string">&quot;Derived key not found&quot;</span>)]
+    </span>DerivedKeyNotFound,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to derive account from master key&quot;</span>)]
+    </span>DerivationError,
+    <span class="attribute">#[error(<span class="string">&quot;Derived key already exists&quot;</span>)]
+    </span>DerivedKeyExists,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::time::Duration;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto::PasswordCacheBehavior</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::crypto::PasswordCacheBehavior;
 
-    <span class="kw">const</span> <span class="ident">TEST_PHRASE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+    <span class="kw">const </span>TEST_PHRASE: <span class="kw-2">&amp;</span>str =
         <span class="string">&quot;pioneer fever hazard scan install wise reform corn bubble leisure amazing note&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_creation</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">DerivedKeySigner::new</span>();
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>test_creation() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>signer = DerivedKeySigner::new();
 
-        <span class="kw">let</span> <span class="ident">cache</span> <span class="op">=</span> <span class="ident">PasswordCache::new</span>();
-        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">SignerContext</span> {
-            <span class="ident">password_cache</span>: <span class="kw-2">&amp;</span><span class="ident">cache</span>,
+        <span class="kw">let </span>cache = PasswordCache::new();
+        <span class="kw">let </span>ctx = SignerContext {
+            password_cache: <span class="kw-2">&amp;</span>cache,
         };
 
-        <span class="comment">// First import</span>
-        <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">signer</span>
-            .<span class="ident">add_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">DerivedKeyCreateInput::Import</span> {
-                    <span class="ident">key_name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;Key&quot;</span>.<span class="ident">to_owned</span>()),
-                    <span class="ident">phrase</span>: <span class="ident">SecUtf8::from</span>(<span class="ident">TEST_PHRASE</span>),
-                    <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;123&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">PasswordCacheBehavior::Store</span>(<span class="ident">Duration::from_secs</span>(<span class="number">1</span>)),
+        <span class="comment">// First import
+        </span><span class="kw">let </span>entry = signer
+            .add_key(
+                ctx,
+                DerivedKeyCreateInput::Import {
+                    key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;Key&quot;</span>.to_owned()),
+                    phrase: SecUtf8::from(TEST_PHRASE),
+                    password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;123&quot;</span>),
+                        cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(<span class="number">1</span>)),
                     },
                 },
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">signer</span>.<span class="ident">master_keys</span>.<span class="ident">is_empty</span>());
+        <span class="macro">assert!</span>(!signer.master_keys.is_empty());
 
-        <span class="ident">signer</span>
-            .<span class="ident">export_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">DerivedKeyExportParams</span> {
-                    <span class="ident">master_key</span>: <span class="ident">entry</span>.<span class="ident">master_key</span>,
-                    <span class="ident">password</span>: <span class="ident">Password::FromCache</span>,
+        signer
+            .export_key(
+                ctx,
+                DerivedKeyExportParams {
+                    master_key: entry.master_key,
+                    password: Password::FromCache,
                 },
             )
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+            .<span class="kw">await
+            </span>.unwrap();
 
-        <span class="comment">// Second import with same seed</span>
-        <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">signer</span>
-            .<span class="ident">add_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">DerivedKeyCreateInput::Import</span> {
-                    <span class="ident">key_name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;Key 2&quot;</span>.<span class="ident">to_owned</span>()),
-                    <span class="ident">phrase</span>: <span class="ident">SecUtf8::from</span>(<span class="ident">TEST_PHRASE</span>),
-                    <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;321&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">PasswordCacheBehavior::Remove</span>,
+        <span class="comment">// Second import with same seed
+        </span><span class="kw">let </span>entry = signer
+            .add_key(
+                ctx,
+                DerivedKeyCreateInput::Import {
+                    key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;Key 2&quot;</span>.to_owned()),
+                    phrase: SecUtf8::from(TEST_PHRASE),
+                    password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;321&quot;</span>),
+                        cache_behavior: PasswordCacheBehavior::Remove,
                     },
                 },
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">signer</span>.<span class="ident">master_keys</span>.<span class="ident">is_empty</span>());
+        <span class="macro">assert!</span>(!signer.master_keys.is_empty());
 
-        <span class="ident">signer</span>
-            .<span class="ident">export_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">DerivedKeyExportParams</span> {
-                    <span class="ident">master_key</span>: <span class="ident">entry</span>.<span class="ident">master_key</span>,
-                    <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;321&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">PasswordCacheBehavior::Store</span>(<span class="ident">Duration::from_secs</span>(<span class="number">1</span>)),
+        signer
+            .export_key(
+                ctx,
+                DerivedKeyExportParams {
+                    master_key: entry.master_key,
+                    password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;321&quot;</span>),
+                        cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(<span class="number">1</span>)),
                     },
                 },
             )
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
+            .<span class="kw">await
+            </span>.unwrap();
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_change_password</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">DerivedKeySigner::new</span>();
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>test_change_password() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>signer = DerivedKeySigner::new();
 
-        <span class="kw">let</span> <span class="ident">cache</span> <span class="op">=</span> <span class="ident">PasswordCache::new</span>();
-        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">SignerContext</span> {
-            <span class="ident">password_cache</span>: <span class="kw-2">&amp;</span><span class="ident">cache</span>,
+        <span class="kw">let </span>cache = PasswordCache::new();
+        <span class="kw">let </span>ctx = SignerContext {
+            password_cache: <span class="kw-2">&amp;</span>cache,
         };
 
-        <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">signer</span>
-            .<span class="ident">add_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">DerivedKeyCreateInput::Import</span> {
-                    <span class="ident">key_name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;Key&quot;</span>.<span class="ident">to_owned</span>()),
-                    <span class="ident">phrase</span>: <span class="ident">SecUtf8::from</span>(<span class="ident">TEST_PHRASE</span>),
-                    <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;123&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        <span class="kw">let </span>entry = signer
+            .add_key(
+                ctx,
+                DerivedKeyCreateInput::Import {
+                    key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;Key&quot;</span>.to_owned()),
+                    phrase: SecUtf8::from(TEST_PHRASE),
+                    password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;123&quot;</span>),
+                        cache_behavior: Default::default(),
                     },
                 },
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="ident">signer</span>
-            .<span class="ident">update_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">DerivedKeyUpdateParams::ChangePassword</span> {
-                    <span class="ident">master_key</span>: <span class="ident">entry</span>.<span class="ident">master_key</span>,
-                    <span class="ident">old_password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;123&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        signer
+            .update_key(
+                ctx,
+                DerivedKeyUpdateParams::ChangePassword {
+                    master_key: entry.master_key,
+                    old_password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;123&quot;</span>),
+                        cache_behavior: Default::default(),
                     },
-                    <span class="ident">new_password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;321&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+                    new_password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;321&quot;</span>),
+                        cache_behavior: Default::default(),
                     },
                 },
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="macro">assert!</span>(<span class="ident">signer</span>
-            .<span class="ident">update_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">DerivedKeyUpdateParams::ChangePassword</span> {
-                    <span class="ident">master_key</span>: <span class="ident">entry</span>.<span class="ident">master_key</span>,
-                    <span class="ident">old_password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;totally different&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        <span class="macro">assert!</span>(signer
+            .update_key(
+                ctx,
+                DerivedKeyUpdateParams::ChangePassword {
+                    master_key: entry.master_key,
+                    old_password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;totally different&quot;</span>),
+                        cache_behavior: Default::default(),
                     },
-                    <span class="ident">new_password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;321&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+                    new_password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;321&quot;</span>),
+                        cache_behavior: Default::default(),
                     },
                 }
             )
-            .<span class="kw">await</span>
-            .<span class="ident">is_err</span>());
+            .<span class="kw">await
+            </span>.is_err());
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">migrate_accounts_map</span>() {
-        <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>migrate_accounts_map() {
+        <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Debug</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Wr</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;super::serde_accounts_map&quot;</span>)]</span> <span class="ident">AccountsMap</span>);
+        <span class="attribute">#[derive(Serialize, Deserialize, Debug)]
+        </span><span class="kw">struct </span>Wr(<span class="attribute">#[serde(with = <span class="string">&quot;super::serde_accounts_map&quot;</span>)] </span>AccountsMap);
 
-        <span class="kw">let</span> <span class="ident">map_str</span> <span class="op">=</span> <span class="string">r#&quot;{&quot;3030303030303030303030303030303030303030303030303030303030303030&quot;:{&quot;account_id&quot;:0},&quot;3030303030303030303030303030303030303030303030303030303030303031&quot;:{&quot;account_id&quot;:1}}&quot;#</span>;
-        <span class="kw">let</span> <span class="ident">wr</span>: <span class="ident">Wr</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="ident">map_str</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>map_str = <span class="string">r#&quot;{&quot;3030303030303030303030303030303030303030303030303030303030303030&quot;:{&quot;account_id&quot;:0},&quot;3030303030303030303030303030303030303030303030303030303030303031&quot;:{&quot;account_id&quot;:1}}&quot;#</span>;
+        <span class="kw">let </span>wr: Wr = serde_json::from_str(map_str).unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">wr</span>.<span class="number">0</span>[<span class="string">b&quot;00000000000000000000000000000000&quot;</span>].<span class="ident">name</span>,
-            <span class="string">&quot;3030...3030&quot;</span>
-        );
-        <span class="kw">let</span> <span class="ident">map_str</span> <span class="op">=</span> <span class="string">r#&quot;{&quot;3030303030303030303030303030303030303030303030303030303030303030&quot;:{&quot;account_id&quot;:0, &quot;name&quot;:&quot;lil&quot;},&quot;3030303030303030303030303030303030303030303030303030303030303031&quot;:{&quot;account_id&quot;:1}}&quot;#</span>;
-        <span class="kw">let</span> <span class="ident">wr</span>: <span class="ident">Wr</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="ident">map_str</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">wr</span>.<span class="number">0</span>[<span class="string">b&quot;00000000000000000000000000000000&quot;</span>].<span class="ident">name</span>, <span class="string">&quot;lil&quot;</span>);
+            wr.<span class="number">0</span>[<span class="string">b&quot;00000000000000000000000000000000&quot;</span>].name,
+            <span class="string">&quot;3030...3030&quot;
+        </span>);
+        <span class="kw">let </span>map_str = <span class="string">r#&quot;{&quot;3030303030303030303030303030303030303030303030303030303030303030&quot;:{&quot;account_id&quot;:0, &quot;name&quot;:&quot;lil&quot;},&quot;3030303030303030303030303030303030303030303030303030303030303031&quot;:{&quot;account_id&quot;:1}}&quot;#</span>;
+        <span class="kw">let </span>wr: Wr = serde_json::from_str(map_str).unwrap();
+        <span class="macro">assert_eq!</span>(wr.<span class="number">0</span>[<span class="string">b&quot;00000000000000000000000000000000&quot;</span>].name, <span class="string">&quot;lil&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_load</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">DerivedKeySigner::new</span>();
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>store_load() {
+        <span class="kw">let </span><span class="kw-2">mut </span>key = DerivedKeySigner::new();
 
-        <span class="kw">let</span> <span class="ident">cache</span> <span class="op">=</span> <span class="ident">PasswordCache::new</span>();
-        <span class="kw">let</span> <span class="ident">ctx</span> <span class="op">=</span> <span class="ident">SignerContext</span> {
-            <span class="ident">password_cache</span>: <span class="kw-2">&amp;</span><span class="ident">cache</span>,
+        <span class="kw">let </span>cache = PasswordCache::new();
+        <span class="kw">let </span>ctx = SignerContext {
+            password_cache: <span class="kw-2">&amp;</span>cache,
         };
 
-        <span class="kw">let</span> <span class="ident">master</span> <span class="op">=</span> <span class="ident">key</span>
-            .<span class="ident">add_key</span>(
-                <span class="ident">ctx</span>,
-                <span class="ident">DerivedKeyCreateInput::Import</span> {
-                    <span class="ident">key_name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;from giver&quot;</span>.<span class="ident">into</span>()),
-                    <span class="ident">phrase</span>: <span class="ident">TEST_PHRASE</span>.<span class="ident">into</span>(),
-                    <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                        <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;supasecret&quot;</span>),
-                        <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        <span class="kw">let </span>master = key
+            .add_key(
+                ctx,
+                DerivedKeyCreateInput::Import {
+                    key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;from giver&quot;</span>.into()),
+                    phrase: TEST_PHRASE.into(),
+                    password: Password::Explicit {
+                        password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                        cache_behavior: Default::default(),
                     },
                 },
             )
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">master_key</span>;
-        <span class="ident">key</span>.<span class="ident">add_key</span>(
-            <span class="ident">ctx</span>,
-            <span class="ident">DerivedKeyCreateInput::Derive</span> {
-                <span class="ident">key_name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;all my money 🤑&quot;</span>.<span class="ident">into</span>()),
-                <span class="ident">master_key</span>: <span class="ident">master</span>,
-                <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                    <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;supasecret&quot;</span>),
-                    <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+            .<span class="kw">await
+            </span>.unwrap()
+            .master_key;
+        key.add_key(
+            ctx,
+            DerivedKeyCreateInput::Derive {
+                key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;all my money 🤑&quot;</span>.into()),
+                master_key: master,
+                password: Password::Explicit {
+                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    cache_behavior: Default::default(),
                 },
-                <span class="ident">account_id</span>: <span class="number">1</span>,
+                account_id: <span class="number">1</span>,
             },
         )
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap</span>();
-        <span class="ident">key</span>.<span class="ident">add_key</span>(
-            <span class="ident">ctx</span>,
-            <span class="ident">DerivedKeyCreateInput::Derive</span> {
-                <span class="ident">key_name</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;史萊克的模因.&quot;</span>.<span class="ident">into</span>()),
-                <span class="ident">master_key</span>: <span class="ident">master</span>,
-                <span class="ident">password</span>: <span class="ident">Password::Explicit</span> {
-                    <span class="ident">password</span>: <span class="ident">SecUtf8::from</span>(<span class="string">&quot;supasecret&quot;</span>),
-                    <span class="ident">cache_behavior</span>: <span class="ident">Default::default</span>(),
+        .<span class="kw">await
+        </span>.unwrap();
+        key.add_key(
+            ctx,
+            DerivedKeyCreateInput::Derive {
+                key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;史萊克的模因.&quot;</span>.into()),
+                master_key: master,
+                password: Password::Explicit {
+                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    cache_behavior: Default::default(),
                 },
-                <span class="ident">account_id</span>: <span class="number">2</span>,
+                account_id: <span class="number">2</span>,
             },
         )
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">serialized</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">store_state</span>();
+        .<span class="kw">await
+        </span>.unwrap();
+        <span class="kw">let </span>serialized = key.store_state();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loaded</span> <span class="op">=</span> <span class="ident">DerivedKeySigner::new</span>();
-        <span class="ident">loaded</span>.<span class="ident">load_state</span>(<span class="kw-2">&amp;</span><span class="ident">serialized</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">loaded</span>, <span class="ident">key</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>loaded = DerivedKeySigner::new();
+        loaded.load_state(<span class="kw-2">&amp;</span>serialized).unwrap();
+        <span class="macro">assert_eq!</span>(loaded, key);
     }
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_old</span>() {
-        <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="string">r#&quot;{
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>load_old() {
+        <span class="kw">let </span>json = <span class="string">r#&quot;{
     &quot;master_keys&quot;: {
         &quot;4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89&quot;: {
             &quot;public_key&quot;: &quot;4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89&quot;,
@@ -2016,9 +2016,9 @@
         }
     }
 }&quot;#</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">loaded</span> <span class="op">=</span> <span class="ident">DerivedKeySigner::new</span>();
-        <span class="ident">loaded</span>.<span class="ident">load_state</span>(<span class="ident">json</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>loaded = DerivedKeySigner::new();
+        loaded.load_state(json).unwrap();
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

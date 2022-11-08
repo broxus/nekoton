@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/message_builder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>message_builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/message_builder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>message_builder.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -38,45 +38,45 @@
 <span id="38">38</span>
 <span id="39">39</span>
 <span id="40">40</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">ton_abi</span>::{<span class="ident">Function</span>, <span class="ident">Token</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>ton_abi::{Function, Token};
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BuildTokenValue</span>, <span class="ident">PackAbiPlain</span>};
+<span class="kw">use super</span>::{BuildTokenValue, PackAbiPlain};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MessageBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Function</span>,
-    <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Token</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>MessageBuilder&lt;<span class="lifetime">&#39;a</span>&gt; {
+    function: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Function,
+    inputs: Vec&lt;Token&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">MessageBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ton_abi::Function</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">function</span>.<span class="ident">inputs</span>.<span class="ident">len</span>());
-        <span class="self">Self</span> {
-            <span class="ident">function</span>,
-            <span class="ident">inputs</span>: <span class="ident">input</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; MessageBuilder&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">pub fn </span>new(function: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ton_abi::Function) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>input = Vec::with_capacity(function.inputs.len());
+        <span class="self">Self </span>{
+            function,
+            inputs: input,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arg</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">A</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">A</span>: <span class="ident">BuildTokenValue</span>,
+    <span class="kw">pub fn </span>arg&lt;A&gt;(<span class="kw-2">mut </span><span class="self">self</span>, value: A) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>A: BuildTokenValue,
     {
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">function</span>.<span class="ident">inputs</span>[<span class="self">self</span>.<span class="ident">inputs</span>.<span class="ident">len</span>()].<span class="ident">name</span>;
-        <span class="self">self</span>.<span class="ident">inputs</span>.<span class="ident">push</span>(<span class="ident">Token::new</span>(<span class="ident">name</span>, <span class="ident">value</span>.<span class="ident">token_value</span>()));
-        <span class="self">self</span>
-    }
+        <span class="kw">let </span>name = <span class="kw-2">&amp;</span><span class="self">self</span>.function.inputs[<span class="self">self</span>.inputs.len()].name;
+        <span class="self">self</span>.inputs.push(Token::new(name, value.token_value()));
+        <span class="self">self
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">args</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">values</span>: <span class="ident">A</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">A</span>: <span class="ident">PackAbiPlain</span>,
+    <span class="kw">pub fn </span>args&lt;A&gt;(<span class="kw-2">mut </span><span class="self">self</span>, values: A) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>A: PackAbiPlain,
     {
-        <span class="self">self</span>.<span class="ident">inputs</span>.<span class="ident">extend</span>(<span class="ident">values</span>.<span class="ident">pack</span>());
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.inputs.extend(values.pack());
+        <span class="self">self
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Function</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Token</span><span class="op">&gt;</span>) {
-        (<span class="self">self</span>.<span class="ident">function</span>, <span class="self">self</span>.<span class="ident">inputs</span>)
+    <span class="kw">pub fn </span>build(<span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Function, Vec&lt;Token&gt;) {
+        (<span class="self">self</span>.function, <span class="self">self</span>.inputs)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

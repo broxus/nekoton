@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/ledger_key/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/ledger_key/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -307,314 +307,314 @@
 <span id="307">307</span>
 <span id="308">308</span>
 <span id="309">309</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::hash_map</span>::{<span class="self">self</span>, <span class="ident">HashMap</span>};
-<span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
-<span class="kw">use</span> <span class="ident">std::io::Read</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map::{<span class="self">self</span>, HashMap};
+<span class="kw">use </span>std::convert::TryInto;
+<span class="kw">use </span>std::io::Read;
+<span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">ed25519_dalek::PublicKey</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>ed25519_dalek::PublicKey;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::{
-    <span class="ident">default_key_name</span>, <span class="ident">SharedSecret</span>, <span class="ident">Signer</span> <span class="kw">as</span> <span class="ident">StoreSigner</span>, <span class="ident">SignerContext</span>, <span class="ident">SignerEntry</span>,
-    <span class="ident">SignerStorage</span>,
+<span class="kw">use super</span>::{
+    default_key_name, SharedSecret, Signer <span class="kw">as </span>StoreSigner, SignerContext, SignerEntry,
+    SignerStorage,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::external</span>::{<span class="ident">LedgerConnection</span>, <span class="ident">LedgerSignatureContext</span>};
+<span class="kw">use </span><span class="kw">crate</span>::external::{LedgerConnection, LedgerSignatureContext};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LedgerKeySigner</span> {
-    <span class="ident">keys</span>: <span class="ident">KeysMap</span>,
-    <span class="ident">connection</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">LedgerConnection</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>LedgerKeySigner {
+    keys: KeysMap,
+    connection: Arc&lt;<span class="kw">dyn </span>LedgerConnection&gt;,
 }
 
-<span class="kw">type</span> <span class="ident">KeysMap</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">ed25519_dalek::PUBLIC_KEY_LENGTH</span>], <span class="ident">LedgerKey</span><span class="op">&gt;</span>;
+<span class="kw">type </span>KeysMap = HashMap&lt;[u8; ed25519_dalek::PUBLIC_KEY_LENGTH], LedgerKey&gt;;
 
-<span class="kw">impl</span> <span class="ident">LedgerKeySigner</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">connection</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">LedgerConnection</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">keys</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">connection</span>,
+<span class="kw">impl </span>LedgerKeySigner {
+    <span class="kw">pub fn </span>new(connection: Arc&lt;<span class="kw">dyn </span>LedgerConnection&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            keys: Default::default(),
+            connection,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">LedgerKey</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">get</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">key</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">LedgerKeyError::KeyNotFound</span>.<span class="ident">into</span>()),
+    <span class="kw">fn </span>get_key(<span class="kw-2">&amp;</span><span class="self">self</span>, public_key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>LedgerKey&gt; {
+        <span class="kw">match </span><span class="self">self</span>.keys.get(public_key.as_bytes()) {
+            <span class="prelude-val">Some</span>(key) =&gt; <span class="prelude-val">Ok</span>(key),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(LedgerKeyError::KeyNotFound.into()),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_key_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">LedgerKey</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">get_mut</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()) {
-            <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">key</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">LedgerKeyError::KeyNotFound</span>.<span class="ident">into</span>()),
+    <span class="kw">fn </span>get_key_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, public_key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>LedgerKey&gt; {
+        <span class="kw">match </span><span class="self">self</span>.keys.get_mut(public_key.as_bytes()) {
+            <span class="prelude-val">Some</span>(key) =&gt; <span class="prelude-val">Ok</span>(key),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(LedgerKeyError::KeyNotFound.into()),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">StoreSigner</span> <span class="kw">for</span> <span class="ident">LedgerKeySigner</span> {
-    <span class="kw">type</span> <span class="ident">CreateKeyInput</span> <span class="op">=</span> <span class="ident">LedgerKeyCreateInput</span>;
-    <span class="kw">type</span> <span class="ident">ExportKeyInput</span> <span class="op">=</span> ();
-    <span class="kw">type</span> <span class="ident">ExportKeyOutput</span> <span class="op">=</span> ();
-    <span class="kw">type</span> <span class="ident">GetPublicKeys</span> <span class="op">=</span> <span class="ident">LedgerKeyGetPublicKeys</span>;
-    <span class="kw">type</span> <span class="ident">UpdateKeyInput</span> <span class="op">=</span> <span class="ident">LedgerUpdateKeyInput</span>;
-    <span class="kw">type</span> <span class="ident">SignInput</span> <span class="op">=</span> <span class="ident">LedgerSignInput</span>;
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl </span>StoreSigner <span class="kw">for </span>LedgerKeySigner {
+    <span class="kw">type </span>CreateKeyInput = LedgerKeyCreateInput;
+    <span class="kw">type </span>ExportKeyInput = ();
+    <span class="kw">type </span>ExportKeyOutput = ();
+    <span class="kw">type </span>GetPublicKeys = LedgerKeyGetPublicKeys;
+    <span class="kw">type </span>UpdateKeyInput = LedgerUpdateKeyInput;
+    <span class="kw">type </span>SignInput = LedgerSignInput;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_key</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::CreateKeyInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">master_key</span> <span class="op">=</span> <span class="ident">PublicKey::from_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">connection</span>.<span class="ident">get_public_key</span>(<span class="number">0</span>).<span class="kw">await</span><span class="question-mark">?</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">pubkey_bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">connection</span>.<span class="ident">get_public_key</span>(<span class="ident">input</span>.<span class="ident">account_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">PublicKey::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">pubkey_bytes</span>)<span class="question-mark">?</span>;
+    <span class="kw">async fn </span>add_key(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::CreateKeyInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
+        <span class="kw">let </span>master_key = PublicKey::from_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>.connection.get_public_key(<span class="number">0</span>).<span class="kw">await</span><span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>pubkey_bytes = <span class="self">self</span>.connection.get_public_key(input.account_id).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>public_key = PublicKey::from_bytes(<span class="kw-2">&amp;</span>pubkey_bytes)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">input</span>
-            .<span class="ident">name</span>
-            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">default_key_name</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>()));
+        <span class="kw">let </span>name = input
+            .name
+            .unwrap_or_else(|| default_key_name(public_key.as_bytes()));
 
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">LedgerKey::new</span>(<span class="ident">name</span>, <span class="ident">input</span>.<span class="ident">account_id</span>, <span class="ident">public_key</span>, <span class="ident">master_key</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">key</span>.<span class="ident">name</span>.<span class="ident">clone</span>();
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">entry</span>(<span class="ident">public_key</span>.<span class="ident">to_bytes</span>()) {
-            <span class="ident">hash_map::Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">key</span>);
-                <span class="prelude-val">Ok</span>(<span class="ident">SignerEntry</span> {
-                    <span class="ident">name</span>,
-                    <span class="ident">public_key</span>,
-                    <span class="ident">master_key</span>,
-                    <span class="ident">account_id</span>: <span class="ident">input</span>.<span class="ident">account_id</span>,
+        <span class="kw">let </span>key = LedgerKey::new(name, input.account_id, public_key, master_key)<span class="question-mark">?</span>;
+        <span class="kw">let </span>name = key.name.clone();
+        <span class="kw">match </span><span class="self">self</span>.keys.entry(public_key.to_bytes()) {
+            hash_map::Entry::Vacant(entry) =&gt; {
+                entry.insert(key);
+                <span class="prelude-val">Ok</span>(SignerEntry {
+                    name,
+                    public_key,
+                    master_key,
+                    account_id: input.account_id,
                 })
             }
-            <span class="ident">hash_map::Entry::Occupied</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">LedgerKeyError::KeyAlreadyExists</span>.<span class="ident">into</span>()),
+            hash_map::Entry::Occupied(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(LedgerKeyError::KeyAlreadyExists.into()),
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">update_key</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::UpdateKeyInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">input</span> {
-            <span class="ident"><span class="self">Self</span>::UpdateKeyInput::Rename</span> { <span class="ident">public_key</span>, <span class="ident">name</span> } =&gt; {
-                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_key_mut</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>)<span class="question-mark">?</span>;
-                <span class="ident">key</span>.<span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">clone</span>();
-                <span class="prelude-val">Ok</span>(<span class="ident">SignerEntry</span> {
-                    <span class="ident">name</span>,
-                    <span class="ident">public_key</span>,
-                    <span class="ident">master_key</span>: <span class="ident">key</span>.<span class="ident">master_key</span>,
-                    <span class="ident">account_id</span>: <span class="ident">key</span>.<span class="ident">account_id</span>,
+    <span class="kw">async fn </span>update_key(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::UpdateKeyInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
+        <span class="kw">match </span>input {
+            <span class="self">Self</span>::UpdateKeyInput::Rename { public_key, name } =&gt; {
+                <span class="kw">let </span>key = <span class="self">self</span>.get_key_mut(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?</span>;
+                key.name = name.clone();
+                <span class="prelude-val">Ok</span>(SignerEntry {
+                    name,
+                    public_key,
+                    master_key: key.master_key,
+                    account_id: key.account_id,
                 })
             }
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">export_key</span>(
+    <span class="kw">async fn </span>export_key(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">_input</span>: <span class="ident"><span class="self">Self</span>::ExportKeyInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::ExportKeyOutput</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">LedgerKeyError::MethodNotSupported</span>.<span class="ident">into</span>())
+        <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        _input: <span class="self">Self</span>::ExportKeyInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::ExportKeyOutput&gt; {
+        <span class="prelude-val">Err</span>(LedgerKeyError::MethodNotSupported.into())
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_public_keys</span>(
+    <span class="kw">async fn </span>get_public_keys(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::GetPublicKeys</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PublicKey</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">input</span>.<span class="ident">limit</span> <span class="kw">as</span> <span class="ident">usize</span>);
-        <span class="kw">for</span> <span class="ident">account_id</span> <span class="kw">in</span> <span class="ident">input</span>.<span class="ident">offset</span>..<span class="ident">input</span>.<span class="ident">offset</span>.<span class="ident">saturating_add</span>(<span class="ident">input</span>.<span class="ident">limit</span>) {
-            <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">PublicKey::from_bytes</span>(
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">connection</span>.<span class="ident">get_public_key</span>(<span class="ident">account_id</span>).<span class="kw">await</span><span class="question-mark">?</span>,
+        <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        input: <span class="self">Self</span>::GetPublicKeys,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;PublicKey&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::with_capacity(input.limit <span class="kw">as </span>usize);
+        <span class="kw">for </span>account_id <span class="kw">in </span>input.offset..input.offset.saturating_add(input.limit) {
+            result.push(PublicKey::from_bytes(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.connection.get_public_key(account_id).<span class="kw">await</span><span class="question-mark">?</span>,
             )<span class="question-mark">?</span>);
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
+        <span class="prelude-val">Ok</span>(result)
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">compute_shared_secrets</span>(
+    <span class="kw">async fn </span>compute_shared_secrets(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span>[<span class="ident">PublicKey</span>],
-        <span class="kw">_</span>: <span class="ident"><span class="self">Self</span>::SignInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SharedSecret</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">LedgerKeyError::MethodNotSupported</span>.<span class="ident">into</span>())
+        <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        <span class="kw">_</span>: <span class="kw-2">&amp;</span>[PublicKey],
+        <span class="kw">_</span>: <span class="self">Self</span>::SignInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SharedSecret&gt;&gt; {
+        <span class="prelude-val">Err</span>(LedgerKeyError::MethodNotSupported.into())
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sign</span>(
+    <span class="kw">async fn </span>sign(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw">_</span>: <span class="ident">SignerContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-        <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">input</span>: <span class="ident"><span class="self">Self</span>::SignInput</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">ed25519_dalek::SIGNATURE_LENGTH</span>]<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">public_key</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">signature</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">connection</span>
-            .<span class="ident">sign</span>(<span class="ident">key</span>.<span class="ident">account_id</span>, <span class="ident">data</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">context</span>)
+        <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        data: <span class="kw-2">&amp;</span>[u8],
+        input: <span class="self">Self</span>::SignInput,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt; {
+        <span class="kw">let </span>key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
+        <span class="kw">let </span>signature = <span class="self">self
+            </span>.connection
+            .sign(key.account_id, data, <span class="kw-2">&amp;</span>input.context)
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">signature</span>)
+        <span class="prelude-val">Ok</span>(signature)
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">SignerStorage</span> <span class="kw">for</span> <span class="ident">LedgerKeySigner</span> {
-    <span class="kw">fn</span> <span class="ident">load_state</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">String</span>)<span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">data</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[async_trait]
+</span><span class="kw">impl </span>SignerStorage <span class="kw">for </span>LedgerKeySigner {
+    <span class="kw">fn </span>load_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>data = serde_json::from_str::&lt;Vec&lt;(String, String)&gt;&gt;(data)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">keys</span> <span class="op">=</span> <span class="ident">data</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">public_key</span>, <span class="ident">data</span>)<span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">hex::decode</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>)<span class="question-mark">?</span>
-                    .<span class="ident">try_into</span>()
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">LedgerKeyError::InvalidPublicKey</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">LedgerKey::from_reader</span>(<span class="kw-2">&amp;mut</span> <span class="ident">std::io::Cursor::new</span>(<span class="ident">data</span>))<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>((<span class="ident">public_key</span>, <span class="ident">data</span>))
+        <span class="self">self</span>.keys = data
+            .into_iter()
+            .map(|(public_key, data)| {
+                <span class="kw">let </span>public_key = hex::decode(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?
+                    </span>.try_into()
+                    .map_err(|<span class="kw">_</span>| LedgerKeyError::InvalidPublicKey)<span class="question-mark">?</span>;
+                <span class="kw">let </span>data = LedgerKey::from_reader(<span class="kw-2">&amp;mut </span>std::io::Cursor::new(data))<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>((public_key, data))
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">store_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="kw">use</span> <span class="ident">serde::ser::SerializeSeq</span>;
+    <span class="kw">fn </span>store_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="kw">use </span>serde::ser::SerializeSeq;
 
-        <span class="kw">struct</span> <span class="ident">StoredData</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">KeysMap</span>);
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">StoredDataItem</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>);
+        <span class="kw">struct </span>StoredData&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>KeysMap);
+        <span class="attribute">#[derive(Serialize)]
+        </span><span class="kw">struct </span>StoredDataItem&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str);
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">StoredData</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Serialize <span class="kw">for </span>StoredData&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+            <span class="kw">where
+                </span>S: serde::Serializer,
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_seq</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">len</span>()))<span class="question-mark">?</span>;
-                <span class="kw">for</span> (<span class="ident">public_key</span>, <span class="ident">signer</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>() {
-                    <span class="kw">let</span> <span class="ident">public_key</span> <span class="op">=</span> <span class="ident">hex::encode</span>(<span class="ident">public_key</span>);
-                    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">signer</span>.<span class="ident">as_json</span>();
-                    <span class="ident">seq</span>.<span class="ident">serialize_element</span>(<span class="kw-2">&amp;</span><span class="ident">StoredDataItem</span>(<span class="kw-2">&amp;</span><span class="ident">public_key</span>, <span class="kw-2">&amp;</span><span class="ident">signer</span>))<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>seq = serializer.serialize_seq(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.len()))<span class="question-mark">?</span>;
+                <span class="kw">for </span>(public_key, signer) <span class="kw">in </span><span class="self">self</span>.<span class="number">0</span>.iter() {
+                    <span class="kw">let </span>public_key = hex::encode(public_key);
+                    <span class="kw">let </span>signer = signer.as_json();
+                    seq.serialize_element(<span class="kw-2">&amp;</span>StoredDataItem(<span class="kw-2">&amp;</span>public_key, <span class="kw-2">&amp;</span>signer))<span class="question-mark">?</span>;
                 }
-                <span class="ident">seq</span>.<span class="ident">end</span>()
+                seq.end()
             }
         }
 
-        <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">StoredData</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">keys</span>)).<span class="ident">trust_me</span>()
+        serde_json::to_string(<span class="kw-2">&amp;</span>StoredData(<span class="kw-2">&amp;</span><span class="self">self</span>.keys)).trust_me()
     }
 
-    <span class="kw">fn</span> <span class="ident">get_entries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">keys</span>
-            .<span class="ident">values</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">key</span><span class="op">|</span> <span class="ident">SignerEntry</span> {
-                <span class="ident">name</span>: <span class="ident">key</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
-                <span class="ident">public_key</span>: <span class="ident">key</span>.<span class="ident">public_key</span>,
-                <span class="ident">master_key</span>: <span class="ident">key</span>.<span class="ident">master_key</span>,
-                <span class="ident">account_id</span>: <span class="ident">key</span>.<span class="ident">account_id</span>,
+    <span class="kw">fn </span>get_entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;SignerEntry&gt; {
+        <span class="self">self</span>.keys
+            .values()
+            .map(|key| SignerEntry {
+                name: key.name.clone(),
+                public_key: key.public_key,
+                master_key: key.master_key,
+                account_id: key.account_id,
             })
-            .<span class="ident">collect</span>()
+            .collect()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_key</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SignerEntry</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">remove</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
-        <span class="prelude-val">Some</span>(<span class="ident">SignerEntry</span> {
-            <span class="ident">name</span>: <span class="ident">key</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
-            <span class="ident">public_key</span>: <span class="ident">key</span>.<span class="ident">public_key</span>,
-            <span class="ident">master_key</span>: <span class="ident">key</span>.<span class="ident">master_key</span>,
-            <span class="ident">account_id</span>: <span class="ident">key</span>.<span class="ident">account_id</span>,
+    <span class="kw">async fn </span>remove_key(<span class="kw-2">&amp;mut </span><span class="self">self</span>, public_key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="prelude-ty">Option</span>&lt;SignerEntry&gt; {
+        <span class="kw">let </span>key = <span class="self">self</span>.keys.remove(public_key.as_bytes())<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>(SignerEntry {
+            name: key.name.clone(),
+            public_key: key.public_key,
+            master_key: key.master_key,
+            account_id: key.account_id,
         })
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">keys</span>.<span class="ident">clear</span>();
+    <span class="kw">async fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.keys.clear();
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LedgerKeyCreateInput</span> {
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">account_id</span>: <span class="ident">u16</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>LedgerKeyCreateInput {
+    <span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>account_id: u16,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LedgerKeyGetPublicKeys</span> {
-    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">limit</span>: <span class="ident">u16</span>,
+<span class="attribute">#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>LedgerKeyGetPublicKeys {
+    <span class="kw">pub </span>offset: u16,
+    <span class="kw">pub </span>limit: u16,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;snake_case&quot;</span>, <span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">LedgerUpdateKeyInput</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-    <span class="ident">Rename</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-        <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">name</span>: <span class="ident">String</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+</span><span class="kw">pub enum </span>LedgerUpdateKeyInput {
+    <span class="attribute">#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+    </span>Rename {
+        <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        </span>public_key: PublicKey,
+        name: String,
     },
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LedgerSignInput</span> {
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">context</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LedgerSignatureContext</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>LedgerSignInput {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span><span class="kw">pub </span>public_key: PublicKey,
+    <span class="attribute">#[serde(default)]
+    </span><span class="kw">pub </span>context: <span class="prelude-ty">Option</span>&lt;LedgerSignatureContext&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LedgerKey</span> {
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>LedgerKey {
+    <span class="kw">pub </span>name: String,
 
-    <span class="kw">pub</span> <span class="ident">account_id</span>: <span class="ident">u16</span>,
+    <span class="kw">pub </span>account_id: u16,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span><span class="kw">pub </span>public_key: PublicKey,
 
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_public_key&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">master_key</span>: <span class="ident">PublicKey</span>,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    </span><span class="kw">pub </span>master_key: PublicKey,
 }
 
-<span class="kw">impl</span> <span class="ident">LedgerKey</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">name</span>: <span class="ident">String</span>,
-        <span class="ident">account_id</span>: <span class="ident">u16</span>,
-        <span class="ident">public_key</span>: <span class="ident">PublicKey</span>,
-        <span class="ident">master_key</span>: <span class="ident">PublicKey</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">name</span>,
-            <span class="ident">account_id</span>,
-            <span class="ident">public_key</span>,
-            <span class="ident">master_key</span>,
+<span class="kw">impl </span>LedgerKey {
+    <span class="kw">pub fn </span>new(
+        name: String,
+        account_id: u16,
+        public_key: PublicKey,
+        master_key: PublicKey,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            name,
+            account_id,
+            public_key,
+            master_key,
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_reader</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">reader</span>: <span class="ident">T</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Read</span>,
+    <span class="kw">pub fn </span>from_reader&lt;T&gt;(reader: T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt;
+    <span class="kw">where
+        </span>T: Read,
     {
-        <span class="kw">let</span> <span class="ident">key</span>: <span class="self">Self</span> <span class="op">=</span> <span class="ident">serde_json::from_reader</span>(<span class="ident">reader</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">key</span>)
+        <span class="kw">let </span>key: <span class="self">Self </span>= serde_json::from_reader(reader)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(key)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_json</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>).<span class="ident">trust_me</span>()
+    <span class="kw">pub fn </span>as_json(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        serde_json::to_string(<span class="kw-2">&amp;</span><span class="self">self</span>).trust_me()
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">LedgerKeyError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Key already exists&quot;</span>)]</span>
-    <span class="ident">KeyAlreadyExists</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Key not found&quot;</span>)]</span>
-    <span class="ident">KeyNotFound</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid public key&quot;</span>)]</span>
-    <span class="ident">InvalidPublicKey</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Method not supported&quot;</span>)]</span>
-    <span class="ident">MethodNotSupported</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug, Copy, Clone)]
+</span><span class="kw">pub enum </span>LedgerKeyError {
+    <span class="attribute">#[error(<span class="string">&quot;Key already exists&quot;</span>)]
+    </span>KeyAlreadyExists,
+    <span class="attribute">#[error(<span class="string">&quot;Key not found&quot;</span>)]
+    </span>KeyNotFound,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid public key&quot;</span>)]
+    </span>InvalidPublicKey,
+    <span class="attribute">#[error(<span class="string">&quot;Method not supported&quot;</span>)]
+    </span>MethodNotSupported,
 }
 
-<span class="kw">mod</span> <span class="ident">test</span> {}
+<span class="kw">mod </span>test {}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

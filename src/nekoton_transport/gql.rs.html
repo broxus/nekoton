@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-transport/src/gql.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_transport/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_transport/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_transport/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-transport/src/gql.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gql.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_transport/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_transport/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_transport/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -320,327 +320,327 @@
 <span id="320">320</span>
 <span id="321">321</span>
 <span id="322">322</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
-<span class="kw">use</span> <span class="ident">std::sync::atomic</span>::{<span class="ident">AtomicU64</span>, <span class="ident">Ordering</span>};
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
-<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryInto;
+<span class="kw">use </span>std::sync::atomic::{AtomicU64, Ordering};
+<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">use</span> <span class="ident">futures_util::stream::FuturesUnordered</span>;
-<span class="kw">use</span> <span class="ident">futures_util::StreamExt</span>;
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">reqwest::Url</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">tokio::sync::futures::Notified</span>;
-<span class="kw">use</span> <span class="ident">tokio::sync::Notify</span>;
+<span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span>futures_util::stream::FuturesUnordered;
+<span class="kw">use </span>futures_util::StreamExt;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
+<span class="kw">use </span>reqwest::Url;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>tokio::sync::futures::Notified;
+<span class="kw">use </span>tokio::sync::Notify;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GqlNetworkSettings</span> {
-    <span class="doccomment">/// Path to graphql api endpoints, e.g. `https://main.ton.dev`</span>
-    <span class="kw">pub</span> <span class="ident">endpoints</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Frequency of sync latency detection. Default: `60000`</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_duration_ms&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">latency_detection_interval</span>: <span class="ident">Duration</span>,
-    <span class="doccomment">/// Maximum value for the endpoint&#39;s blockchain data sync latency. Default: `60000`</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_duration_ms&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">max_latency</span>: <span class="ident">Duration</span>,
-    <span class="doccomment">/// Maximum amount of retries during endpoint selection</span>
-    <span class="kw">pub</span> <span class="ident">endpoint_selection_retry_count</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// Gql node type</span>
-    <span class="kw">pub</span> <span class="ident">local</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>GqlNetworkSettings {
+    <span class="doccomment">/// Path to graphql api endpoints, e.g. `https://main.ton.dev`
+    </span><span class="kw">pub </span>endpoints: Vec&lt;String&gt;,
+    <span class="doccomment">/// Frequency of sync latency detection. Default: `60000`
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_duration_ms&quot;</span>)]
+    </span><span class="kw">pub </span>latency_detection_interval: Duration,
+    <span class="doccomment">/// Maximum value for the endpoint&#39;s blockchain data sync latency. Default: `60000`
+    </span><span class="attribute">#[serde(with = <span class="string">&quot;serde_duration_ms&quot;</span>)]
+    </span><span class="kw">pub </span>max_latency: Duration,
+    <span class="doccomment">/// Maximum amount of retries during endpoint selection
+    </span><span class="kw">pub </span>endpoint_selection_retry_count: usize,
+    <span class="doccomment">/// Gql node type
+    </span><span class="kw">pub </span>local: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">GqlNetworkSettings</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">endpoints</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">latency_detection_interval</span>: <span class="ident">Duration::from_secs</span>(<span class="number">60</span>),
-            <span class="ident">max_latency</span>: <span class="ident">Duration::from_secs</span>(<span class="number">60</span>),
-            <span class="ident">endpoint_selection_retry_count</span>: <span class="number">5</span>,
-            <span class="ident">local</span>: <span class="bool-val">false</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>GqlNetworkSettings {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            endpoints: Vec::new(),
+            latency_detection_interval: Duration::from_secs(<span class="number">60</span>),
+            max_latency: Duration::from_secs(<span class="number">60</span>),
+            endpoint_selection_retry_count: <span class="number">5</span>,
+            local: <span class="bool-val">false</span>,
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GqlClient</span> {
-    <span class="ident">client</span>: <span class="ident">reqwest::Client</span>,
-    <span class="ident">endpoints</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Endpoint</span><span class="op">&gt;</span>,
-    <span class="ident">latency_detection_interval</span>: <span class="ident">u64</span>,
-    <span class="ident">max_latency</span>: <span class="ident">u32</span>,
-    <span class="ident">endpoint_selection_retry_count</span>: <span class="ident">usize</span>,
-    <span class="ident">local</span>: <span class="ident">bool</span>,
-    <span class="ident">flags</span>: <span class="ident">AtomicU64</span>,
-    <span class="ident">notify</span>: <span class="ident">Notify</span>,
+<span class="kw">pub struct </span>GqlClient {
+    client: reqwest::Client,
+    endpoints: Vec&lt;Endpoint&gt;,
+    latency_detection_interval: u64,
+    max_latency: u32,
+    endpoint_selection_retry_count: usize,
+    local: bool,
+    flags: AtomicU64,
+    notify: Notify,
 }
 
-<span class="kw">impl</span> <span class="ident">GqlClient</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">settings</span>: <span class="ident">GqlNetworkSettings</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">endpoints</span> <span class="op">=</span> <span class="ident">settings</span>
-            .<span class="ident">endpoints</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">endpoint</span><span class="op">|</span> {
-                <span class="ident">Endpoint::new</span>(<span class="kw-2">&amp;</span><span class="ident">endpoint</span>)
-                    .<span class="ident">with_context</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;failed to parse endpoint: {}&quot;</span>, <span class="ident">endpoint</span>))
+<span class="kw">impl </span>GqlClient {
+    <span class="kw">pub fn </span>new(settings: GqlNetworkSettings) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;&gt; {
+        <span class="kw">let </span>endpoints = settings
+            .endpoints
+            .into_iter()
+            .map(|endpoint| {
+                Endpoint::new(<span class="kw-2">&amp;</span>endpoint)
+                    .with_context(|| <span class="macro">format!</span>(<span class="string">&quot;failed to parse endpoint: {}&quot;</span>, endpoint))
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">endpoints</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GqlClientError::NoEndpointsSpecified</span>.<span class="ident">into</span>());
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="kw">if </span>endpoints.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(GqlClientError::NoEndpointsSpecified.into());
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">headers</span> <span class="op">=</span> <span class="ident">reqwest::header::HeaderMap::new</span>();
-        <span class="ident">headers</span>.<span class="ident">insert</span>(
-            <span class="ident">reqwest::header::CONTENT_TYPE</span>,
-            <span class="ident">reqwest::header::HeaderValue::from_static</span>(<span class="string">&quot;application/json&quot;</span>),
+        <span class="kw">let </span><span class="kw-2">mut </span>headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::CONTENT_TYPE,
+            reqwest::header::HeaderValue::from_static(<span class="string">&quot;application/json&quot;</span>),
         );
 
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">reqwest::ClientBuilder::new</span>()
-            .<span class="ident">default_headers</span>(<span class="ident">headers</span>)
-            .<span class="ident">build</span>()
-            .<span class="ident">context</span>(<span class="string">&quot;failed to build http client&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>client = reqwest::ClientBuilder::new()
+            .default_headers(headers)
+            .build()
+            .context(<span class="string">&quot;failed to build http client&quot;</span>)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Arc::new</span>(<span class="self">Self</span> {
-            <span class="ident">client</span>,
-            <span class="ident">endpoints</span>,
-            <span class="ident">latency_detection_interval</span>: <span class="ident">settings</span>.<span class="ident">latency_detection_interval</span>.<span class="ident">as_secs</span>(),
-            <span class="ident">max_latency</span>: <span class="ident">settings</span>.<span class="ident">max_latency</span>.<span class="ident">as_millis</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">endpoint_selection_retry_count</span>: <span class="ident">settings</span>.<span class="ident">endpoint_selection_retry_count</span>,
-            <span class="ident">local</span>: <span class="ident">settings</span>.<span class="ident">local</span>,
-            <span class="ident">flags</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">notify</span>: <span class="ident">Default::default</span>(),
+        <span class="prelude-val">Ok</span>(Arc::new(<span class="self">Self </span>{
+            client,
+            endpoints,
+            latency_detection_interval: settings.latency_detection_interval.as_secs(),
+            max_latency: settings.max_latency.as_millis() <span class="kw">as </span>u32,
+            endpoint_selection_retry_count: settings.endpoint_selection_retry_count,
+            local: settings.local,
+            flags: Default::default(),
+            notify: Default::default(),
         }))
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">select_querying_endpoint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident">Endpoint</span><span class="op">&gt;</span> {
-        <span class="comment">// Low 4 bytes which are used as endpoint index</span>
-        <span class="kw">const</span> <span class="ident">INDEX_MASK</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x0000_0000_ffff_ffff</span>;
+    <span class="kw">async fn </span>select_querying_endpoint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>Endpoint&gt; {
+        <span class="comment">// Low 4 bytes which are used as endpoint index
+        </span><span class="kw">const </span>INDEX_MASK: u64 = <span class="number">0x0000_0000_ffff_ffff</span>;
 
-        <span class="kw">const</span> <span class="ident">INTERMEDIATE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x0000_0000_ffff_fffe</span>;
-        <span class="kw">const</span> <span class="ident">IN_PROCESS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x0000_0000_ffff_ffff</span>;
+        <span class="kw">const </span>INTERMEDIATE: u64 = <span class="number">0x0000_0000_ffff_fffe</span>;
+        <span class="kw">const </span>IN_PROCESS: u64 = <span class="number">0x0000_0000_ffff_ffff</span>;
 
-        <span class="kw">struct</span> <span class="ident">Guard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="ident">client</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">GqlClient</span>,
-            <span class="ident">result</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+        <span class="kw">struct </span>Guard&lt;<span class="lifetime">&#39;a</span>&gt; {
+            client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>GqlClient,
+            result: <span class="prelude-ty">Option</span>&lt;u64&gt;,
         }
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Guard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">client</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">GqlClient</span>) -&gt; <span class="self">Self</span> {
-                <span class="self">Self</span> {
-                    <span class="ident">client</span>,
-                    <span class="ident">result</span>: <span class="prelude-val">None</span>,
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Guard&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">fn </span>new(client: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>GqlClient) -&gt; <span class="self">Self </span>{
+                <span class="self">Self </span>{
+                    client,
+                    result: <span class="prelude-val">None</span>,
                 }
             }
 
-            <span class="kw">fn</span> <span class="ident">set_result</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) {
-                <span class="self">self</span>.<span class="ident">result</span> <span class="op">=</span> <span class="prelude-val">Some</span>((<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&amp;</span> <span class="ident">INDEX_MASK</span>);
+            <span class="kw">fn </span>set_result(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) {
+                <span class="self">self</span>.result = <span class="prelude-val">Some</span>((index <span class="kw">as </span>u64) &amp; INDEX_MASK);
             }
         }
 
-        <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Guard</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-                <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">result</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">result</span>) =&gt; {
-                        <span class="kw">let</span> <span class="ident">detection_time</span> <span class="op">=</span> <span class="ident">now_sec_u64</span>() <span class="op">+</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">latency_detection_interval</span>;
-                        (<span class="ident">detection_time</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>) <span class="op">|</span> <span class="ident">result</span>
+        <span class="kw">impl </span>Drop <span class="kw">for </span>Guard&lt;<span class="lifetime">&#39;_</span>&gt; {
+            <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+                <span class="kw">let </span>state = <span class="kw">match </span><span class="self">self</span>.result {
+                    <span class="prelude-val">Some</span>(result) =&gt; {
+                        <span class="kw">let </span>detection_time = now_sec_u64() + <span class="self">self</span>.client.latency_detection_interval;
+                        (detection_time &lt;&lt; <span class="number">32</span>) | result
                     }
-                    <span class="prelude-val">None</span> =&gt; <span class="number">0</span>,
+                    <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
                 };
 
-                <span class="comment">// Lock the loop</span>
-                <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">flags</span>.<span class="ident">store</span>(<span class="ident">INTERMEDIATE</span>, <span class="ident">Ordering::Release</span>);
-                <span class="comment">// Notify all `notify_fut`</span>
-                <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">notify</span>.<span class="ident">notify_waiters</span>();
-                <span class="comment">// Update state</span>
-                <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">flags</span>.<span class="ident">store</span>(<span class="ident">state</span>, <span class="ident">Ordering::Release</span>);
+                <span class="comment">// Lock the loop
+                </span><span class="self">self</span>.client.flags.store(INTERMEDIATE, Ordering::Release);
+                <span class="comment">// Notify all `notify_fut`
+                </span><span class="self">self</span>.client.notify.notify_waiters();
+                <span class="comment">// Update state
+                </span><span class="self">self</span>.client.flags.store(state, Ordering::Release);
             }
         }
 
-        <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">now_sec_u64</span>();
+        <span class="kw">let </span>now = now_sec_u64();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">notify_fut</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Notified</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">loop</span> {
-            <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">flags</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
-            <span class="kw">match</span> <span class="ident">state</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span> {
-                <span class="comment">// Not detecting yet</span>
-                <span class="ident">detection_time</span> <span class="kw">if</span> <span class="ident">now</span> <span class="op">&lt;</span> <span class="ident">detection_time</span> =&gt; {
-                    <span class="kw">break</span> <span class="self">self</span>
-                        .<span class="ident">endpoints</span>
-                        .<span class="ident">get</span>((<span class="ident">state</span> <span class="op">&amp;</span> <span class="ident">INDEX_MASK</span>) <span class="kw">as</span> <span class="ident">usize</span>)
-                        .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">GqlClientError::EndpointNotFound</span>.<span class="ident">into</span>())
+        <span class="kw">let </span><span class="kw-2">mut </span>notify_fut: <span class="prelude-ty">Option</span>&lt;Notified&lt;<span class="lifetime">&#39;_</span>&gt;&gt; = <span class="prelude-val">None</span>;
+        <span class="kw">loop </span>{
+            <span class="kw">let </span>state = <span class="self">self</span>.flags.load(Ordering::Acquire);
+            <span class="kw">match </span>state &gt;&gt; <span class="number">32 </span>{
+                <span class="comment">// Not detecting yet
+                </span>detection_time <span class="kw">if </span>now &lt; detection_time =&gt; {
+                    <span class="kw">break </span><span class="self">self
+                        </span>.endpoints
+                        .get((state &amp; INDEX_MASK) <span class="kw">as </span>usize)
+                        .ok_or_else(|| GqlClientError::EndpointNotFound.into())
                 }
 
-                <span class="comment">// Waiting flags change</span>
-                <span class="ident">INTERMEDIATE</span> =&gt; <span class="kw">continue</span>,
+                <span class="comment">// Waiting flags change
+                </span>INTERMEDIATE =&gt; <span class="kw">continue</span>,
 
-                <span class="comment">// Already searching endpoint</span>
-                <span class="ident">IN_PROCESS</span> =&gt; <span class="kw">match</span> <span class="ident">notify_fut</span>.<span class="ident">take</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">notify_fut</span>) =&gt; <span class="ident">notify_fut</span>.<span class="kw">await</span>,
-                    <span class="prelude-val">None</span> =&gt; <span class="ident">notify_fut</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">notify</span>.<span class="ident">notified</span>()),
+                <span class="comment">// Already searching endpoint
+                </span>IN_PROCESS =&gt; <span class="kw">match </span>notify_fut.take() {
+                    <span class="prelude-val">Some</span>(notify_fut) =&gt; notify_fut.<span class="kw">await</span>,
+                    <span class="prelude-val">None </span>=&gt; notify_fut = <span class="prelude-val">Some</span>(<span class="self">self</span>.notify.notified()),
                 },
 
-                <span class="kw">_</span> =&gt; {
-                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">flags</span>.<span class="ident">compare_exchange</span>(
-                        <span class="ident">state</span>,
-                        <span class="ident">IN_PROCESS</span>,
-                        <span class="ident">Ordering::Release</span>,
-                        <span class="ident">Ordering::Relaxed</span>,
+                <span class="kw">_ </span>=&gt; {
+                    <span class="kw">match </span><span class="self">self</span>.flags.compare_exchange(
+                        state,
+                        IN_PROCESS,
+                        Ordering::Release,
+                        Ordering::Relaxed,
                     ) {
-                        <span class="comment">// Start searching best endpoint</span>
-                        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
-                            <span class="comment">// This guard will reset the state back in case of error</span>
-                            <span class="comment">// or unlock other waiters on success</span>
-                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">Guard::new</span>(<span class="self">self</span>);
+                        <span class="comment">// Start searching best endpoint
+                        </span><span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
+                            <span class="comment">// This guard will reset the state back in case of error
+                            // or unlock other waiters on success
+                            </span><span class="kw">let </span><span class="kw-2">mut </span>guard = Guard::new(<span class="self">self</span>);
 
-                            <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">endpoint</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_best_endpoint</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-                            <span class="ident">guard</span>.<span class="ident">set_result</span>(<span class="ident">index</span>);
+                            <span class="kw">let </span>(index, endpoint) = <span class="self">self</span>.find_best_endpoint().<span class="kw">await</span><span class="question-mark">?</span>;
+                            guard.set_result(index);
 
-                            <span class="kw">break</span> <span class="prelude-val">Ok</span>(<span class="ident">endpoint</span>);
+                            <span class="kw">break </span><span class="prelude-val">Ok</span>(endpoint);
                         }
-                        <span class="comment">// State has already been changed</span>
-                        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
+                        <span class="comment">// State has already been changed
+                        </span><span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
                     }
                 }
             }
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">find_best_endpoint</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident">Endpoint</span>)<span class="op">&gt;</span> {
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">1</span>..<span class="op">=</span><span class="self">self</span>.<span class="ident">endpoint_selection_retry_count</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">requests</span> <span class="op">=</span> <span class="ident">FuturesUnordered::new</span>();
+    <span class="kw">async fn </span>find_best_endpoint(<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(usize, <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>Endpoint)&gt; {
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..=<span class="self">self</span>.endpoint_selection_retry_count {
+            <span class="kw">let </span><span class="kw-2">mut </span>requests = FuturesUnordered::new();
 
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">endpoint</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">endpoints</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="ident">requests</span>.<span class="ident">push</span>(<span class="kw">async</span> <span class="kw">move</span> { (<span class="ident">i</span>, <span class="ident">endpoint</span>, <span class="self">self</span>.<span class="ident">check_latency</span>(<span class="ident">endpoint</span>).<span class="kw">await</span>) });
+            <span class="kw">for </span>(i, endpoint) <span class="kw">in </span><span class="self">self</span>.endpoints.iter().enumerate() {
+                requests.push(<span class="kw">async move </span>{ (i, endpoint, <span class="self">self</span>.check_latency(endpoint).<span class="kw">await</span>) });
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_latency</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-            <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">endpoint</span>, <span class="ident">response</span>)) <span class="op">=</span> <span class="ident">requests</span>.<span class="ident">next</span>().<span class="kw">await</span> {
-                <span class="kw">match</span> <span class="ident">response</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">latency</span>) <span class="kw">if</span> <span class="ident">latency</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">max_latency</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>((<span class="ident">i</span>, <span class="ident">endpoint</span>)),
-                    <span class="prelude-val">Ok</span>(<span class="ident">latency</span>) =&gt; {
-                        <span class="kw">if</span> <span class="macro">matches!</span>(<span class="kw-2">&amp;</span><span class="ident">last_latency</span>, <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="kw">_</span>, <span class="prelude-val">Some</span>(<span class="ident">l</span>))) <span class="kw">if</span> <span class="ident">latency</span> <span class="op">&lt;</span> <span class="kw-2">*</span><span class="ident">l</span>) {
-                            <span class="ident">last_latency</span> <span class="op">=</span> <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">endpoint</span>, <span class="prelude-val">Some</span>(<span class="ident">latency</span>)))
+            <span class="kw">let </span><span class="kw-2">mut </span>last_latency = <span class="prelude-val">None</span>;
+            <span class="kw">while let </span><span class="prelude-val">Some</span>((i, endpoint, response)) = requests.next().<span class="kw">await </span>{
+                <span class="kw">match </span>response {
+                    <span class="prelude-val">Ok</span>(latency) <span class="kw">if </span>latency &lt;= <span class="self">self</span>.max_latency =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>((i, endpoint)),
+                    <span class="prelude-val">Ok</span>(latency) =&gt; {
+                        <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">&amp;</span>last_latency, <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="kw">_</span>, <span class="prelude-val">Some</span>(l))) <span class="kw">if </span>latency &lt; <span class="kw-2">*</span>l) {
+                            last_latency = <span class="prelude-val">Some</span>((i, endpoint, <span class="prelude-val">Some</span>(latency)))
                         }
                     }
-                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                        <span class="macro">log::debug!</span>(<span class="string">&quot;GQL endpoint selection error: {:?}&quot;</span>, <span class="ident">e</span>);
+                    <span class="prelude-val">Err</span>(e) =&gt; {
+                        <span class="macro">log::debug!</span>(<span class="string">&quot;GQL endpoint selection error: {:?}&quot;</span>, e);
                     }
                 }
             }
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">endpoint</span>, <span class="kw">_</span>)) <span class="op">=</span> <span class="ident">last_latency</span> {
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>((<span class="ident">i</span>, <span class="ident">endpoint</span>));
+            <span class="kw">if let </span><span class="prelude-val">Some</span>((i, endpoint, <span class="kw">_</span>)) = last_latency {
+                <span class="kw">return </span><span class="prelude-val">Ok</span>((i, endpoint));
             }
 
-            <span class="kw">let</span> <span class="ident">interval</span> <span class="op">=</span> <span class="ident">std::cmp::min</span>(<span class="ident">i</span> <span class="op">*</span> <span class="number">100</span>, <span class="number">5000</span>);
-            <span class="ident">tokio::time::sleep</span>(<span class="ident">Duration::from_millis</span>(<span class="ident">interval</span> <span class="kw">as</span> <span class="ident">u64</span>)).<span class="kw">await</span>;
+            <span class="kw">let </span>interval = std::cmp::min(i * <span class="number">100</span>, <span class="number">5000</span>);
+            tokio::time::sleep(Duration::from_millis(interval <span class="kw">as </span>u64)).<span class="kw">await</span>;
         }
 
-        <span class="prelude-val">Err</span>(<span class="ident">GqlClientError::NoEndpointFound</span>.<span class="ident">into</span>())
+        <span class="prelude-val">Err</span>(GqlClientError::NoEndpointFound.into())
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">check_latency</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">endpoint</span>: <span class="kw-2">&amp;</span><span class="ident">Endpoint</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">GqlResponse</span> {
-            <span class="ident">data</span>: <span class="ident">GqlResponseData</span>,
+    <span class="kw">async fn </span>check_latency(<span class="kw-2">&amp;</span><span class="self">self</span>, endpoint: <span class="kw-2">&amp;</span>Endpoint) -&gt; <span class="prelude-ty">Result</span>&lt;u32&gt; {
+        <span class="attribute">#[derive(Deserialize)]
+        </span><span class="kw">struct </span>GqlResponse {
+            data: GqlResponseData,
         }
 
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">GqlResponseData</span> {
-            <span class="ident">info</span>: <span class="ident">GqlResponseInfo</span>,
+        <span class="attribute">#[derive(Deserialize)]
+        </span><span class="kw">struct </span>GqlResponseData {
+            info: GqlResponseInfo,
         }
 
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">GqlResponseInfo</span> {
-            <span class="ident">latency</span>: <span class="ident">u32</span>,
+        <span class="attribute">#[derive(Deserialize)]
+        </span><span class="kw">struct </span>GqlResponseInfo {
+            latency: u32,
         }
 
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">client</span>.<span class="ident">get</span>(<span class="ident">endpoint</span>.<span class="ident">status</span>.<span class="ident">clone</span>()).<span class="ident">send</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">response</span>: <span class="ident">GqlResponse</span> <span class="op">=</span> <span class="ident">response</span>.<span class="ident">json</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">response</span>.<span class="ident">data</span>.<span class="ident">info</span>.<span class="ident">latency</span>)
+        <span class="kw">let </span>response = <span class="self">self</span>.client.get(endpoint.status.clone()).send().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>response: GqlResponse = response.json().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(response.data.info.latency)
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait::async_trait</span>]</span>
-<span class="kw">impl</span> <span class="ident">nekoton::external::GqlConnection</span> <span class="kw">for</span> <span class="ident">GqlClient</span> {
-    <span class="kw">fn</span> <span class="ident">is_local</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">local</span>
+<span class="attribute">#[async_trait::async_trait]
+</span><span class="kw">impl </span>nekoton::external::GqlConnection <span class="kw">for </span>GqlClient {
+    <span class="kw">fn </span>is_local(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.local
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">post</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">req</span>: <span class="ident">nekoton::external::GqlRequest</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">endpoint</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">select_querying_endpoint</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">client</span>
-            .<span class="ident">post</span>(<span class="ident">endpoint</span>.<span class="ident">gql</span>.<span class="ident">clone</span>())
-            .<span class="ident">body</span>(<span class="ident">req</span>.<span class="ident">data</span>)
-            .<span class="ident">send</span>()
+    <span class="kw">async fn </span>post(<span class="kw-2">&amp;</span><span class="self">self</span>, req: nekoton::external::GqlRequest) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+        <span class="kw">let </span>endpoint = <span class="self">self</span>.select_querying_endpoint().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>response = <span class="self">self
+            </span>.client
+            .post(endpoint.gql.clone())
+            .body(req.data)
+            .send()
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">response</span>.<span class="ident">text</span>().<span class="kw">await</span><span class="question-mark">?</span>)
+        <span class="prelude-val">Ok</span>(response.text().<span class="kw">await</span><span class="question-mark">?</span>)
     }
 }
 
-<span class="kw">struct</span> <span class="ident">Endpoint</span> {
-    <span class="ident">gql</span>: <span class="ident">Url</span>,
-    <span class="ident">status</span>: <span class="ident">Url</span>,
+<span class="kw">struct </span>Endpoint {
+    gql: Url,
+    status: Url,
 }
 
-<span class="kw">impl</span> <span class="ident">Endpoint</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">url</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gql</span> <span class="op">=</span> <span class="ident">expand_address</span>(<span class="ident">url</span>);
-        <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{}?query=%7Binfo%7Bversion%20time%20latency%7D%7D&quot;</span>, <span class="ident">gql</span>);
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">gql</span>: <span class="ident">gql</span>.<span class="ident">as_str</span>().<span class="ident">try_into</span>()<span class="question-mark">?</span>,
-            <span class="ident">status</span>: <span class="ident">status</span>.<span class="ident">as_str</span>().<span class="ident">try_into</span>()<span class="question-mark">?</span>,
+<span class="kw">impl </span>Endpoint {
+    <span class="kw">fn </span>new(url: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>gql = expand_address(url);
+        <span class="kw">let </span>status = <span class="macro">format!</span>(<span class="string">&quot;{}?query=%7Binfo%7Bversion%20time%20latency%7D%7D&quot;</span>, gql);
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            gql: gql.as_str().try_into()<span class="question-mark">?</span>,
+            status: status.as_str().try_into()<span class="question-mark">?</span>,
         })
     }
 }
 
-<span class="kw">fn</span> <span class="ident">expand_address</span>(<span class="ident">base_url</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">String</span> {
-    <span class="kw">match</span> <span class="ident">base_url</span>.<span class="ident">trim_end_matches</span>(<span class="string">&#39;/&#39;</span>) {
-        <span class="ident">url</span> <span class="kw">if</span> <span class="ident">base_url</span>.<span class="ident">starts_with</span>(<span class="string">&quot;http://&quot;</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">base_url</span>.<span class="ident">starts_with</span>(<span class="string">&quot;https://&quot;</span>) =&gt; {
-            <span class="macro">format!</span>(<span class="string">&quot;{}/graphql&quot;</span>, <span class="ident">url</span>)
+<span class="kw">fn </span>expand_address(base_url: <span class="kw-2">&amp;</span>str) -&gt; String {
+    <span class="kw">match </span>base_url.trim_end_matches(<span class="string">&#39;/&#39;</span>) {
+        url <span class="kw">if </span>base_url.starts_with(<span class="string">&quot;http://&quot;</span>) || base_url.starts_with(<span class="string">&quot;https://&quot;</span>) =&gt; {
+            <span class="macro">format!</span>(<span class="string">&quot;{}/graphql&quot;</span>, url)
         }
-        <span class="ident">url</span> @ (<span class="string">&quot;localhost&quot;</span> <span class="op">|</span> <span class="string">&quot;127.0.0.1&quot;</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;http://{}/graphql&quot;</span>, <span class="ident">url</span>),
-        <span class="ident">url</span> =&gt; <span class="macro">format!</span>(<span class="string">&quot;https://{}/graphql&quot;</span>, <span class="ident">url</span>),
+        url @ (<span class="string">&quot;localhost&quot; </span>| <span class="string">&quot;127.0.0.1&quot;</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;http://{}/graphql&quot;</span>, url),
+        url =&gt; <span class="macro">format!</span>(<span class="string">&quot;https://{}/graphql&quot;</span>, url),
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">GqlClientError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;no endpoints specified&quot;</span>)]</span>
-    <span class="ident">NoEndpointsSpecified</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;no valid GQL endpoint found&quot;</span>)]</span>
-    <span class="ident">NoEndpointFound</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;endpoint not found&quot;</span>)]</span>
-    <span class="ident">EndpointNotFound</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>GqlClientError {
+    <span class="attribute">#[error(<span class="string">&quot;no endpoints specified&quot;</span>)]
+    </span>NoEndpointsSpecified,
+    <span class="attribute">#[error(<span class="string">&quot;no valid GQL endpoint found&quot;</span>)]
+    </span>NoEndpointFound,
+    <span class="attribute">#[error(<span class="string">&quot;endpoint not found&quot;</span>)]
+    </span>EndpointNotFound,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">nekoton::external</span>::{<span class="ident">GqlConnection</span>, <span class="ident">GqlRequest</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>nekoton::external::{GqlConnection, GqlRequest};
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">gql_client_works</span>() {
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">GqlClient::new</span>(<span class="ident">GqlNetworkSettings</span> {
-            <span class="ident">endpoints</span>: <span class="macro">vec!</span>[<span class="string">&quot;mainnet.evercloud.dev/57a5b802e303424fb0078f612a4fbe35&quot;</span>.<span class="ident">to_string</span>()],
-            <span class="ident">latency_detection_interval</span>: <span class="ident">Duration::from_secs</span>(<span class="number">1</span>),
-            ..<span class="ident">Default::default</span>()
+    <span class="attribute">#[tokio::test]
+    </span><span class="kw">async fn </span>gql_client_works() {
+        <span class="kw">let </span>client = GqlClient::new(GqlNetworkSettings {
+            endpoints: <span class="macro">vec!</span>[<span class="string">&quot;mainnet.evercloud.dev/57a5b802e303424fb0078f612a4fbe35&quot;</span>.to_string()],
+            latency_detection_interval: Duration::from_secs(<span class="number">1</span>),
+            ..Default::default()
         })
-        .<span class="ident">unwrap</span>();
+        .unwrap();
 
-        <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">r#&quot;{
+        <span class="kw">const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">r#&quot;{
             &quot;query&quot;: &quot;query { accounts { id } }&quot;
         }&quot;#</span>;
 
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">client</span>
-            .<span class="ident">post</span>(<span class="ident">GqlRequest</span> {
-                <span class="ident">data</span>: <span class="ident">QUERY</span>.<span class="ident">to_string</span>(),
-                <span class="ident">long_query</span>: <span class="bool-val">false</span>,
+        <span class="kw">let </span>response = client
+            .post(GqlRequest {
+                data: QUERY.to_string(),
+                long_query: <span class="bool-val">false</span>,
             })
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
-        <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">response</span>);
+            .<span class="kw">await
+            </span>.unwrap();
+        <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, response);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_transport" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_transport" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

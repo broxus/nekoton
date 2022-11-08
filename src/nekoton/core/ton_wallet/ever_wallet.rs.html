@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/ever_wallet.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ever_wallet.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/ever_wallet.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ever_wallet.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -189,196 +189,196 @@
 <span id="189">189</span>
 <span id="190">190</span>
 <span id="191">191</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">ed25519_dalek::PublicKey</span>;
-<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
-<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">GetRepresentationHash</span>, <span class="ident">MsgAddressInt</span>, <span class="ident">Serializable</span>};
-<span class="kw">use</span> <span class="ident">ton_types</span>::{<span class="ident">BuilderData</span>, <span class="ident">IBitstring</span>, <span class="ident">UInt256</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>ed25519_dalek::PublicKey;
+<span class="kw">use </span>std::borrow::Cow;
+<span class="kw">use </span>ton_block::{GetRepresentationHash, MsgAddressInt, Serializable};
+<span class="kw">use </span>ton_types::{BuilderData, IBitstring, UInt256};
 
-<span class="kw">use</span> <span class="ident">nekoton_abi</span>::{<span class="ident">BigUint128</span>, <span class="ident">BuildTokenValue</span>, <span class="ident">MessageBuilder</span>};
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_abi::{BigUint128, BuildTokenValue, MessageBuilder};
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Gift</span>, <span class="ident">TonWalletDetails</span>, <span class="ident">TransferAction</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::models::Expiration</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::utils::make_labs_unsigned_message</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto::UnsignedMessage</span>;
+<span class="kw">use super</span>::{Gift, TonWalletDetails, TransferAction};
+<span class="kw">use </span><span class="kw">crate</span>::core::models::Expiration;
+<span class="kw">use </span><span class="kw">crate</span>::core::utils::make_labs_unsigned_message;
+<span class="kw">use </span><span class="kw">crate</span>::crypto::UnsignedMessage;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_deploy</span>(
-    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-    <span class="ident">workchain</span>: <span class="ident">i8</span>,
-    <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">UnsignedMessage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">state_init</span> <span class="op">=</span> <span class="ident">make_state_init</span>(<span class="ident">public_key</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">state_init</span>.<span class="ident">hash</span>()<span class="question-mark">?</span>;
+<span class="kw">pub fn </span>prepare_deploy(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+    public_key: <span class="kw-2">&amp;</span>PublicKey,
+    workchain: i8,
+    expiration: Expiration,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>UnsignedMessage&gt;&gt; {
+    <span class="kw">let </span>state_init = make_state_init(public_key)<span class="question-mark">?</span>;
+    <span class="kw">let </span>hash = state_init.hash()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">MsgAddressInt::AddrStd</span>(<span class="ident">ton_block::MsgAddrStd::with_address</span>(
+    <span class="kw">let </span>dst = MsgAddressInt::AddrStd(ton_block::MsgAddrStd::with_address(
         <span class="prelude-val">None</span>,
-        <span class="ident">workchain</span>,
-        <span class="ident">hash</span>.<span class="ident">into</span>(),
+        workchain,
+        hash.into(),
     ));
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span>
-        <span class="ident">ton_block::Message::with_ext_in_header</span>(<span class="ident">ton_block::ExternalInboundMessageHeader</span> {
-            <span class="ident">dst</span>,
-            ..<span class="ident">Default::default</span>()
+    <span class="kw">let </span><span class="kw-2">mut </span>message =
+        ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+            dst,
+            ..Default::default()
         });
-    <span class="ident">message</span>.<span class="ident">set_state_init</span>(<span class="ident">state_init</span>);
+    message.set_state_init(state_init);
 
-    <span class="kw">let</span> (<span class="ident">function</span>, <span class="ident">input</span>) <span class="op">=</span>
-        <span class="ident">MessageBuilder::new</span>(<span class="ident">nekoton_contracts::wallets::ever_wallet::send_transaction_raw_0</span>())
-            .<span class="ident">build</span>();
+    <span class="kw">let </span>(function, input) =
+        MessageBuilder::new(nekoton_contracts::wallets::ever_wallet::send_transaction_raw_0())
+            .build();
 
-    <span class="ident">make_labs_unsigned_message</span>(
-        <span class="ident">clock</span>,
-        <span class="ident">message</span>,
-        <span class="ident">expiration</span>,
-        <span class="ident">public_key</span>,
-        <span class="ident">Cow::Borrowed</span>(<span class="ident">function</span>),
-        <span class="ident">input</span>,
+    make_labs_unsigned_message(
+        clock,
+        message,
+        expiration,
+        public_key,
+        Cow::Borrowed(function),
+        input,
     )
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_transfer</span>(
-    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-    <span class="ident">current_state</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
-    <span class="ident">address</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="ident">gifts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Gift</span><span class="op">&gt;</span>,
-    <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransferAction</span><span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="ident">nekoton_contracts::wallets::ever_wallet</span>;
+<span class="kw">pub fn </span>prepare_transfer(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+    public_key: <span class="kw-2">&amp;</span>PublicKey,
+    current_state: <span class="kw-2">&amp;</span>ton_block::AccountStuff,
+    address: MsgAddressInt,
+    gifts: Vec&lt;Gift&gt;,
+    expiration: Expiration,
+) -&gt; <span class="prelude-ty">Result</span>&lt;TransferAction&gt; {
+    <span class="kw">use </span>nekoton_contracts::wallets::ever_wallet;
 
-    <span class="kw">if</span> <span class="ident">gifts</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">MAX_MESSAGES</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">EverWalletError::TooManyGifts</span>.<span class="ident">into</span>());
+    <span class="kw">if </span>gifts.len() &gt; MAX_MESSAGES {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(EverWalletError::TooManyGifts.into());
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span>
-        <span class="ident">ton_block::Message::with_ext_in_header</span>(<span class="ident">ton_block::ExternalInboundMessageHeader</span> {
-            <span class="ident">dst</span>: <span class="ident">address</span>,
-            ..<span class="ident">Default::default</span>()
+    <span class="kw">let </span><span class="kw-2">mut </span>message =
+        ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+            dst: address,
+            ..Default::default()
         });
 
-    <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">current_state</span>.<span class="ident">storage</span>.<span class="ident">state</span> {
-        <span class="ident">ton_block::AccountState::AccountActive</span> { .. } =&gt; {}
-        <span class="ident">ton_block::AccountState::AccountFrozen</span> { .. } =&gt; {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">EverWalletError::AccountIsFrozen</span>.<span class="ident">into</span>())
+    <span class="kw">match </span><span class="kw-2">&amp;</span>current_state.storage.state {
+        ton_block::AccountState::AccountActive { .. } =&gt; {}
+        ton_block::AccountState::AccountFrozen { .. } =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(EverWalletError::AccountIsFrozen.into())
         }
-        <span class="ident">ton_block::AccountState::AccountUninit</span> =&gt; {
-            <span class="ident">message</span>.<span class="ident">set_state_init</span>(<span class="ident">make_state_init</span>(<span class="ident">public_key</span>)<span class="question-mark">?</span>);
+        ton_block::AccountState::AccountUninit =&gt; {
+            message.set_state_init(make_state_init(public_key)<span class="question-mark">?</span>);
         }
     };
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">gifts</span> <span class="op">=</span> <span class="ident">gifts</span>.<span class="ident">into_iter</span>();
-    <span class="kw">let</span> (<span class="ident">function</span>, <span class="ident">input</span>) <span class="op">=</span> <span class="kw">match</span> (<span class="ident">gifts</span>.<span class="ident">len</span>(), <span class="ident">gifts</span>.<span class="ident">next</span>()) {
-        (<span class="number">1</span>, <span class="prelude-val">Some</span>(<span class="ident">gift</span>)) <span class="kw">if</span> <span class="ident">gift</span>.<span class="ident">state_init</span>.<span class="ident">is_none</span>() =&gt; {
-            <span class="ident">MessageBuilder::new</span>(<span class="ident">ever_wallet::send_transaction</span>())
-                .<span class="ident">arg</span>(<span class="ident">gift</span>.<span class="ident">destination</span>)
-                .<span class="ident">arg</span>(<span class="ident">BigUint128</span>(<span class="ident">gift</span>.<span class="ident">amount</span>.<span class="ident">into</span>()))
-                .<span class="ident">arg</span>(<span class="ident">gift</span>.<span class="ident">bounce</span>)
-                .<span class="ident">arg</span>(<span class="ident">gift</span>.<span class="ident">flags</span>)
-                .<span class="ident">arg</span>(<span class="ident">gift</span>.<span class="ident">body</span>.<span class="ident">unwrap_or_default</span>().<span class="ident">into_cell</span>())
-                .<span class="ident">build</span>()
+    <span class="kw">let </span><span class="kw-2">mut </span>gifts = gifts.into_iter();
+    <span class="kw">let </span>(function, input) = <span class="kw">match </span>(gifts.len(), gifts.next()) {
+        (<span class="number">1</span>, <span class="prelude-val">Some</span>(gift)) <span class="kw">if </span>gift.state_init.is_none() =&gt; {
+            MessageBuilder::new(ever_wallet::send_transaction())
+                .arg(gift.destination)
+                .arg(BigUint128(gift.amount.into()))
+                .arg(gift.bounce)
+                .arg(gift.flags)
+                .arg(gift.body.unwrap_or_default().into_cell())
+                .build()
         }
-        (<span class="ident">len</span>, <span class="ident">gift</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">function</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">len</span> {
-                <span class="number">0</span> =&gt; <span class="ident">ever_wallet::send_transaction_raw_0</span>(),
-                <span class="number">1</span> =&gt; <span class="ident">ever_wallet::send_transaction_raw_1</span>(),
-                <span class="number">2</span> =&gt; <span class="ident">ever_wallet::send_transaction_raw_2</span>(),
-                <span class="number">3</span> =&gt; <span class="ident">ever_wallet::send_transaction_raw_3</span>(),
-                <span class="kw">_</span> =&gt; <span class="ident">ever_wallet::send_transaction_raw_4</span>(),
+        (len, gift) =&gt; {
+            <span class="kw">let </span>function = <span class="kw">match </span>len {
+                <span class="number">0 </span>=&gt; ever_wallet::send_transaction_raw_0(),
+                <span class="number">1 </span>=&gt; ever_wallet::send_transaction_raw_1(),
+                <span class="number">2 </span>=&gt; ever_wallet::send_transaction_raw_2(),
+                <span class="number">3 </span>=&gt; ever_wallet::send_transaction_raw_3(),
+                <span class="kw">_ </span>=&gt; ever_wallet::send_transaction_raw_4(),
             };
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">len</span> <span class="op">*</span> <span class="number">2</span>);
-            <span class="kw">for</span> <span class="ident">gift</span> <span class="kw">in</span> <span class="ident">gift</span>.<span class="ident">into_iter</span>().<span class="ident">chain</span>(<span class="ident">gifts</span>) {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">internal_message</span> <span class="op">=</span>
-                    <span class="ident">ton_block::Message::with_int_header</span>(<span class="ident">ton_block::InternalMessageHeader</span> {
-                        <span class="ident">ihr_disabled</span>: <span class="bool-val">true</span>,
-                        <span class="ident">bounce</span>: <span class="ident">gift</span>.<span class="ident">bounce</span>,
-                        <span class="ident">dst</span>: <span class="ident">gift</span>.<span class="ident">destination</span>,
-                        <span class="ident">value</span>: <span class="ident">gift</span>.<span class="ident">amount</span>.<span class="ident">into</span>(),
-                        ..<span class="ident">Default::default</span>()
+            <span class="kw">let </span><span class="kw-2">mut </span>tokens = Vec::with_capacity(len * <span class="number">2</span>);
+            <span class="kw">for </span>gift <span class="kw">in </span>gift.into_iter().chain(gifts) {
+                <span class="kw">let </span><span class="kw-2">mut </span>internal_message =
+                    ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
+                        ihr_disabled: <span class="bool-val">true</span>,
+                        bounce: gift.bounce,
+                        dst: gift.destination,
+                        value: gift.amount.into(),
+                        ..Default::default()
                     });
 
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">body</span>) <span class="op">=</span> <span class="ident">gift</span>.<span class="ident">body</span> {
-                    <span class="ident">internal_message</span>.<span class="ident">set_body</span>(<span class="ident">body</span>);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(body) = gift.body {
+                    internal_message.set_body(body);
                 }
 
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">state_init</span>) <span class="op">=</span> <span class="ident">gift</span>.<span class="ident">state_init</span> {
-                    <span class="ident">internal_message</span>.<span class="ident">set_state_init</span>(<span class="ident">state_init</span>);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(state_init) = gift.state_init {
+                    internal_message.set_state_init(state_init);
                 }
 
-                <span class="ident">tokens</span>.<span class="ident">push</span>(<span class="ident">ton_abi::Token::new</span>(<span class="string">&quot;flags&quot;</span>, <span class="ident">gift</span>.<span class="ident">flags</span>.<span class="ident">token_value</span>()));
-                <span class="ident">tokens</span>.<span class="ident">push</span>(<span class="ident">ton_abi::Token::new</span>(
+                tokens.push(ton_abi::Token::new(<span class="string">&quot;flags&quot;</span>, gift.flags.token_value()));
+                tokens.push(ton_abi::Token::new(
                     <span class="string">&quot;message&quot;</span>,
-                    <span class="ident">internal_message</span>.<span class="ident">serialize</span>()<span class="question-mark">?</span>.<span class="ident">token_value</span>(),
+                    internal_message.serialize()<span class="question-mark">?</span>.token_value(),
                 ));
             }
 
-            (<span class="ident">function</span>, <span class="ident">tokens</span>)
+            (function, tokens)
         }
     };
 
-    <span class="prelude-val">Ok</span>(<span class="ident">TransferAction::Sign</span>(<span class="ident">make_labs_unsigned_message</span>(
-        <span class="ident">clock</span>,
-        <span class="ident">message</span>,
-        <span class="ident">expiration</span>,
-        <span class="ident">public_key</span>,
-        <span class="ident">Cow::Borrowed</span>(<span class="ident">function</span>),
-        <span class="ident">input</span>,
+    <span class="prelude-val">Ok</span>(TransferAction::Sign(make_labs_unsigned_message(
+        clock,
+        message,
+        expiration,
+        public_key,
+        Cow::Borrowed(function),
+        input,
     )<span class="question-mark">?</span>))
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CODE_HASH</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="kw">pub const </span>CODE_HASH: [u8; <span class="number">32</span>] = [
     <span class="number">0x3b</span>, <span class="number">0xa6</span>, <span class="number">0x52</span>, <span class="number">0x8a</span>, <span class="number">0xb2</span>, <span class="number">0x69</span>, <span class="number">0x4c</span>, <span class="number">0x11</span>, <span class="number">0x81</span>, <span class="number">0x80</span>, <span class="number">0xaa</span>, <span class="number">0x3b</span>, <span class="number">0xd1</span>, <span class="number">0x0d</span>, <span class="number">0xd1</span>, <span class="number">0x9f</span>,
     <span class="number">0xf4</span>, <span class="number">0x00</span>, <span class="number">0xb9</span>, <span class="number">0x09</span>, <span class="number">0xab</span>, <span class="number">0x4d</span>, <span class="number">0xcf</span>, <span class="number">0x58</span>, <span class="number">0xfc</span>, <span class="number">0x69</span>, <span class="number">0x92</span>, <span class="number">0x5b</span>, <span class="number">0x2c</span>, <span class="number">0x7b</span>, <span class="number">0x12</span>, <span class="number">0xa6</span>,
 ];
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_ever_wallet</span>(<span class="ident">code_hash</span>: <span class="kw-2">&amp;</span><span class="ident">UInt256</span>) -&gt; <span class="ident">bool</span> {
-    <span class="ident">code_hash</span>.<span class="ident">as_slice</span>() <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">CODE_HASH</span>
+<span class="kw">pub fn </span>is_ever_wallet(code_hash: <span class="kw-2">&amp;</span>UInt256) -&gt; bool {
+    code_hash.as_slice() == <span class="kw-2">&amp;</span>CODE_HASH
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_contract_address</span>(<span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>, <span class="ident">workchain_id</span>: <span class="ident">i8</span>) -&gt; <span class="ident">MsgAddressInt</span> {
-    <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">make_state_init</span>(<span class="ident">public_key</span>)
-        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">state</span><span class="op">|</span> <span class="ident">state</span>.<span class="ident">hash</span>())
-        .<span class="ident">trust_me</span>();
-    <span class="ident">MsgAddressInt::AddrStd</span>(<span class="ident">ton_block::MsgAddrStd::with_address</span>(
+<span class="kw">pub fn </span>compute_contract_address(public_key: <span class="kw-2">&amp;</span>PublicKey, workchain_id: i8) -&gt; MsgAddressInt {
+    <span class="kw">let </span>hash = make_state_init(public_key)
+        .and_then(|state| state.hash())
+        .trust_me();
+    MsgAddressInt::AddrStd(ton_block::MsgAddrStd::with_address(
         <span class="prelude-val">None</span>,
-        <span class="ident">workchain_id</span>,
-        <span class="ident">hash</span>.<span class="ident">into</span>(),
+        workchain_id,
+        hash.into(),
     ))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_state_init</span>(<span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_block::StateInit</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">BuilderData::new</span>();
-    <span class="ident">data</span>.<span class="ident">append_raw</span>(<span class="ident">public_key</span>.<span class="ident">as_bytes</span>(), <span class="number">256</span>)<span class="question-mark">?</span>.<span class="ident">append_u64</span>(<span class="number">0</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">into_cell</span>()<span class="question-mark">?</span>;
+<span class="kw">pub fn </span>make_state_init(public_key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="prelude-ty">Result</span>&lt;ton_block::StateInit&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>data = BuilderData::new();
+    data.append_raw(public_key.as_bytes(), <span class="number">256</span>)<span class="question-mark">?</span>.append_u64(<span class="number">0</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>data = data.into_cell()<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">ton_block::StateInit</span> {
-        <span class="ident">code</span>: <span class="prelude-val">Some</span>(<span class="ident">nekoton_contracts::wallets::code::ever_wallet</span>()),
-        <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="ident">data</span>),
-        ..<span class="ident">Default::default</span>()
+    <span class="prelude-val">Ok</span>(ton_block::StateInit {
+        code: <span class="prelude-val">Some</span>(nekoton_contracts::wallets::code::ever_wallet()),
+        data: <span class="prelude-val">Some</span>(data),
+        ..Default::default()
     })
 }
 
-<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">DETAILS</span>: <span class="ident">TonWalletDetails</span> <span class="op">=</span> <span class="ident">TonWalletDetails</span> {
-    <span class="ident">requires_separate_deploy</span>: <span class="bool-val">false</span>,
-    <span class="ident">min_amount</span>: <span class="number">1</span>, <span class="comment">// 0.000000001 EVER</span>
-    <span class="ident">max_messages</span>: <span class="ident">MAX_MESSAGES</span>,
-    <span class="ident">supports_payload</span>: <span class="bool-val">true</span>,
-    <span class="ident">supports_state_init</span>: <span class="bool-val">true</span>,
-    <span class="ident">supports_multiple_owners</span>: <span class="bool-val">false</span>,
-    <span class="ident">expiration_time</span>: <span class="number">0</span>,
+<span class="kw">pub static </span>DETAILS: TonWalletDetails = TonWalletDetails {
+    requires_separate_deploy: <span class="bool-val">false</span>,
+    min_amount: <span class="number">1</span>, <span class="comment">// 0.000000001 EVER
+    </span>max_messages: MAX_MESSAGES,
+    supports_payload: <span class="bool-val">true</span>,
+    supports_state_init: <span class="bool-val">true</span>,
+    supports_multiple_owners: <span class="bool-val">false</span>,
+    expiration_time: <span class="number">0</span>,
 };
 
-<span class="kw">const</span> <span class="ident">MAX_MESSAGES</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="kw">const </span>MAX_MESSAGES: usize = <span class="number">4</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">EverWalletError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Account is frozen&quot;</span>)]</span>
-    <span class="ident">AccountIsFrozen</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Too many outgoing messages&quot;</span>)]</span>
-    <span class="ident">TooManyGifts</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>EverWalletError {
+    <span class="attribute">#[error(<span class="string">&quot;Account is frozen&quot;</span>)]
+    </span>AccountIsFrozen,
+    <span class="attribute">#[error(<span class="string">&quot;Too many outgoing messages&quot;</span>)]
+    </span>TooManyGifts,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

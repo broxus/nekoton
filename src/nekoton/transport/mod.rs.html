@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -62,69 +62,69 @@
 <span id="62">62</span>
 <span id="63">63</span>
 <span id="64">64</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">async_trait::async_trait</span>;
-<span class="kw">use</span> <span class="ident">nekoton_utils::Clock</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">ton_block::MsgAddressInt</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>nekoton_utils::Clock;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>ton_block::MsgAddressInt;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::models::ReliableBehavior</span>;
+<span class="kw">use </span><span class="kw">crate</span>::core::models::ReliableBehavior;
 
-<span class="kw">use</span> <span class="ident"><span class="self">self</span>::models</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="self">self</span>::models::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gql_transport&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">gql</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;jrpc_transport&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">jrpc</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;gql_transport&quot;</span>)]
+</span><span class="kw">pub mod </span>gql;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;jrpc_transport&quot;</span>)]
+</span><span class="kw">pub mod </span>jrpc;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">models</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gql_transport&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;jrpc_transport&quot;</span>,))]</span>
-<span class="kw">mod</span> <span class="ident">utils</span>;
+<span class="kw">pub mod </span>models;
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;gql_transport&quot;</span>, feature = <span class="string">&quot;jrpc_transport&quot;</span>,))]
+</span><span class="kw">mod </span>utils;
 
-<span class="attribute">#[<span class="ident">async_trait</span>]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Transport</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="kw">fn</span> <span class="ident">info</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TransportInfo</span>;
+<span class="attribute">#[async_trait]
+</span><span class="kw">pub trait </span>Transport: Send + Sync {
+    <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TransportInfo;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Message</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="kw">async fn </span>send_message(<span class="kw-2">&amp;</span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>ton_block::Message) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RawContractState</span><span class="op">&gt;</span>;
+    <span class="kw">async fn </span>get_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>, address: <span class="kw-2">&amp;</span>MsgAddressInt) -&gt; <span class="prelude-ty">Result</span>&lt;RawContractState&gt;;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_accounts_by_code_hash</span>(
+    <span class="kw">async fn </span>get_accounts_by_code_hash(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">code_hash</span>: <span class="kw-2">&amp;</span><span class="ident">ton_types::UInt256</span>,
-        <span class="ident">limit</span>: <span class="ident">u8</span>,
-        <span class="ident">continuation</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        code_hash: <span class="kw-2">&amp;</span>ton_types::UInt256,
+        limit: u8,
+        continuation: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;MsgAddressInt&gt;&gt;;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_transactions</span>(
+    <span class="kw">async fn </span>get_transactions(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-        <span class="ident">from_lt</span>: <span class="ident">u64</span>,
-        <span class="ident">count</span>: <span class="ident">u8</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        address: <span class="kw-2">&amp;</span>MsgAddressInt,
+        from_lt: u64,
+        count: u8,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;RawTransaction&gt;&gt;;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_transaction</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">ton_types::UInt256</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+    <span class="kw">async fn </span>get_transaction(<span class="kw-2">&amp;</span><span class="self">self</span>, id: <span class="kw-2">&amp;</span>ton_types::UInt256) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;RawTransaction&gt;&gt;;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_dst_transaction</span>(
+    <span class="kw">async fn </span>get_dst_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">message_hash</span>: <span class="kw-2">&amp;</span><span class="ident">ton_types::UInt256</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RawTransaction</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        message_hash: <span class="kw-2">&amp;</span>ton_types::UInt256,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;RawTransaction&gt;&gt;;
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_latest_key_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_block::Block</span><span class="op">&gt;</span>;
+    <span class="kw">async fn </span>get_latest_key_block(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ton_block::Block&gt;;
 
-    <span class="comment">// NOTE: clock is used for caching here</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_blockchain_config</span>(
+    <span class="comment">// NOTE: clock is used for caching here
+    </span><span class="kw">async fn </span>get_blockchain_config(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-        <span class="ident">force</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_executor::BlockchainConfig</span><span class="op">&gt;</span>;
+        clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+        force: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ton_executor::BlockchainConfig&gt;;
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransportInfo</span> {
-    <span class="kw">pub</span> <span class="ident">max_transactions_per_fetch</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">reliable_behavior</span>: <span class="ident">ReliableBehavior</span>,
-    <span class="kw">pub</span> <span class="ident">has_key_blocks</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>TransportInfo {
+    <span class="kw">pub </span>max_transactions_per_fetch: u8,
+    <span class="kw">pub </span>reliable_behavior: ReliableBehavior,
+    <span class="kw">pub </span>has_key_blocks: bool,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/tokens_json.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tokens_json.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/tokens_json.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tokens_json.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -456,463 +456,463 @@
 <span id="456">456</span>
 <span id="457">457</span>
 <span id="458">458</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::BTreeMap</span>;
-<span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
-<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
+<span class="kw">use </span>std::convert::TryInto;
+<span class="kw">use </span>std::str::FromStr;
 
-<span class="kw">use</span> <span class="ident">num_bigint</span>::{<span class="ident">BigInt</span>, <span class="ident">BigUint</span>};
-<span class="kw">use</span> <span class="ident">num_traits::Num</span>;
+<span class="kw">use </span>num_bigint::{BigInt, BigUint};
+<span class="kw">use </span>num_traits::Num;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_abi_tokens</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;</span>[<span class="ident">ton_abi::Token</span>]) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span><span class="ident">serde_json::Value</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">object</span> <span class="op">=</span> <span class="ident">serde_json::Map::with_capacity</span>(<span class="ident">tokens</span>.<span class="ident">len</span>());
-    <span class="kw">for</span> <span class="ident">token</span> <span class="kw">in</span> <span class="ident">tokens</span> {
-        <span class="ident">object</span>.<span class="ident">insert</span>(<span class="ident">token</span>.<span class="ident">name</span>.<span class="ident">clone</span>(), <span class="ident">make_abi_token_value</span>(<span class="kw-2">&amp;</span><span class="ident">token</span>.<span class="ident">value</span>)<span class="question-mark">?</span>);
+<span class="kw">pub fn </span>make_abi_tokens(tokens: <span class="kw-2">&amp;</span>[ton_abi::Token]) -&gt; anyhow::Result&lt;serde_json::Value&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>object = serde_json::Map::with_capacity(tokens.len());
+    <span class="kw">for </span>token <span class="kw">in </span>tokens {
+        object.insert(token.name.clone(), make_abi_token_value(<span class="kw-2">&amp;</span>token.value)<span class="question-mark">?</span>);
     }
-    <span class="prelude-val">Ok</span>(<span class="ident">serde_json::Value::Object</span>(<span class="ident">object</span>))
+    <span class="prelude-val">Ok</span>(serde_json::Value::Object(object))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_abi_token_value</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">ton_abi::TokenValue</span>) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span><span class="ident">serde_json::Value</span><span class="op">&gt;</span> {
-    <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">value</span> {
-        <span class="ident">ton_abi::TokenValue::Uint</span>(<span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>.<span class="ident">number</span>.<span class="ident">to_string</span>()),
-        <span class="ident">ton_abi::TokenValue::Int</span>(<span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>.<span class="ident">number</span>.<span class="ident">to_string</span>()),
-        <span class="ident">ton_abi::TokenValue::VarInt</span>(<span class="kw">_</span>, <span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>.<span class="ident">to_string</span>()),
-        <span class="ident">ton_abi::TokenValue::VarUint</span>(<span class="kw">_</span>, <span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>.<span class="ident">to_string</span>()),
-        <span class="ident">ton_abi::TokenValue::Bool</span>(<span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::Bool</span>(<span class="kw-2">*</span><span class="ident">value</span>),
-        <span class="ident">ton_abi::TokenValue::Tuple</span>(<span class="ident">tokens</span>) =&gt; <span class="ident">make_abi_tokens</span>(<span class="ident">tokens</span>)<span class="question-mark">?</span>,
-        <span class="ident">ton_abi::TokenValue::Array</span>(<span class="kw">_</span>, <span class="ident">values</span>) <span class="op">|</span> <span class="ident">ton_abi::TokenValue::FixedArray</span>(<span class="kw">_</span>, <span class="ident">values</span>) =&gt; {
-            <span class="ident">serde_json::Value::Array</span>(
-                <span class="ident">values</span>
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="ident">make_abi_token_value</span>)
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>,
+<span class="kw">pub fn </span>make_abi_token_value(value: <span class="kw-2">&amp;</span>ton_abi::TokenValue) -&gt; anyhow::Result&lt;serde_json::Value&gt; {
+    <span class="prelude-val">Ok</span>(<span class="kw">match </span>value {
+        ton_abi::TokenValue::Uint(value) =&gt; serde_json::Value::String(value.number.to_string()),
+        ton_abi::TokenValue::Int(value) =&gt; serde_json::Value::String(value.number.to_string()),
+        ton_abi::TokenValue::VarInt(<span class="kw">_</span>, value) =&gt; serde_json::Value::String(value.to_string()),
+        ton_abi::TokenValue::VarUint(<span class="kw">_</span>, value) =&gt; serde_json::Value::String(value.to_string()),
+        ton_abi::TokenValue::Bool(value) =&gt; serde_json::Value::Bool(<span class="kw-2">*</span>value),
+        ton_abi::TokenValue::Tuple(tokens) =&gt; make_abi_tokens(tokens)<span class="question-mark">?</span>,
+        ton_abi::TokenValue::Array(<span class="kw">_</span>, values) | ton_abi::TokenValue::FixedArray(<span class="kw">_</span>, values) =&gt; {
+            serde_json::Value::Array(
+                values
+                    .iter()
+                    .map(make_abi_token_value)
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
             )
         }
-        <span class="ident">ton_abi::TokenValue::Cell</span>(<span class="ident">value</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">ton_types::serialize_toc</span>(<span class="ident">value</span>)<span class="question-mark">?</span>;
-            <span class="ident">serde_json::Value::String</span>(<span class="ident">base64::encode</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>))
+        ton_abi::TokenValue::Cell(value) =&gt; {
+            <span class="kw">let </span>data = ton_types::serialize_toc(value)<span class="question-mark">?</span>;
+            serde_json::Value::String(base64::encode(<span class="kw-2">&amp;</span>data))
         }
-        <span class="ident">ton_abi::TokenValue::Map</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">values</span>) =&gt; <span class="ident">serde_json::Value::Array</span>(
-            <span class="ident">values</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">key</span>, <span class="ident">value</span>)<span class="op">|</span> {
-                    <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="ident">serde_json::Value</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span><span class="ident">::Ok</span>(<span class="ident">serde_json::Value::Array</span>(<span class="macro">vec!</span>[
-                        <span class="ident">serde_json::Value::String</span>(<span class="ident">key</span>.<span class="ident">to_string</span>()),
-                        <span class="ident">make_abi_token_value</span>(<span class="ident">value</span>)<span class="question-mark">?</span>,
+        ton_abi::TokenValue::Map(<span class="kw">_</span>, <span class="kw">_</span>, values) =&gt; serde_json::Value::Array(
+            values
+                .iter()
+                .map(|(key, value)| {
+                    <span class="prelude-ty">Result</span>::&lt;serde_json::Value, anyhow::Error&gt;::Ok(serde_json::Value::Array(<span class="macro">vec!</span>[
+                        serde_json::Value::String(key.to_string()),
+                        make_abi_token_value(value)<span class="question-mark">?</span>,
                     ]))
                 })
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>,
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
         ),
-        <span class="ident">ton_abi::TokenValue::Address</span>(<span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>.<span class="ident">to_string</span>()),
-        <span class="ident">ton_abi::TokenValue::Bytes</span>(<span class="ident">value</span>) <span class="op">|</span> <span class="ident">ton_abi::TokenValue::FixedBytes</span>(<span class="ident">value</span>) =&gt; {
-            <span class="ident">serde_json::Value::String</span>(<span class="ident">base64::encode</span>(<span class="ident">value</span>))
+        ton_abi::TokenValue::Address(value) =&gt; serde_json::Value::String(value.to_string()),
+        ton_abi::TokenValue::Bytes(value) | ton_abi::TokenValue::FixedBytes(value) =&gt; {
+            serde_json::Value::String(base64::encode(value))
         }
-        <span class="ident">ton_abi::TokenValue::String</span>(<span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>.<span class="ident">clone</span>()),
-        <span class="ident">ton_abi::TokenValue::Token</span>(<span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>.<span class="number">0</span>.<span class="ident">to_string</span>()),
-        <span class="ident">ton_abi::TokenValue::Time</span>(<span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>.<span class="ident">to_string</span>()),
-        <span class="kw-2">&amp;</span><span class="ident">ton_abi::TokenValue::Expire</span>(<span class="ident">value</span>) =&gt; <span class="ident">serde_json::Value::Number</span>(<span class="ident">value</span>.<span class="ident">into</span>()),
-        <span class="ident">ton_abi::TokenValue::PublicKey</span>(<span class="ident">value</span>) =&gt; <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">key</span>) =&gt; <span class="ident">serde_json::Value::String</span>(<span class="ident">hex::encode</span>(<span class="ident">key</span>.<span class="ident">as_bytes</span>())),
-            <span class="prelude-val">None</span> =&gt; <span class="ident">serde_json::Value::Null</span>,
+        ton_abi::TokenValue::String(value) =&gt; serde_json::Value::String(value.clone()),
+        ton_abi::TokenValue::Token(value) =&gt; serde_json::Value::String(value.<span class="number">0</span>.to_string()),
+        ton_abi::TokenValue::Time(value) =&gt; serde_json::Value::String(value.to_string()),
+        <span class="kw-2">&amp;</span>ton_abi::TokenValue::Expire(value) =&gt; serde_json::Value::Number(value.into()),
+        ton_abi::TokenValue::PublicKey(value) =&gt; <span class="kw">match </span>value {
+            <span class="prelude-val">Some</span>(key) =&gt; serde_json::Value::String(hex::encode(key.as_bytes())),
+            <span class="prelude-val">None </span>=&gt; serde_json::Value::Null,
         },
-        <span class="ident">ton_abi::TokenValue::Optional</span>(<span class="kw">_</span>, <span class="ident">value</span>) =&gt; <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">make_abi_token_value</span>(<span class="ident">value</span>)<span class="question-mark">?</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="ident">serde_json::Value::Null</span>,
+        ton_abi::TokenValue::Optional(<span class="kw">_</span>, value) =&gt; <span class="kw">match </span>value {
+            <span class="prelude-val">Some</span>(value) =&gt; make_abi_token_value(value)<span class="question-mark">?</span>,
+            <span class="prelude-val">None </span>=&gt; serde_json::Value::Null,
         },
-        <span class="ident">ton_abi::TokenValue::Ref</span>(<span class="ident">value</span>) =&gt; <span class="ident">make_abi_token_value</span>(<span class="ident">value</span>)<span class="question-mark">?</span>,
+        ton_abi::TokenValue::Ref(value) =&gt; make_abi_token_value(value)<span class="question-mark">?</span>,
     })
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_abi_tokens</span>(
-    <span class="ident">params</span>: <span class="kw-2">&amp;</span>[<span class="ident">ton_abi::Param</span>],
-    <span class="ident">tokens</span>: <span class="ident">serde_json::Value</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ton_abi::Token</span><span class="op">&gt;</span>, <span class="ident">TokensJsonError</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">params</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Vec::new</span>());
+<span class="kw">pub fn </span>parse_abi_tokens(
+    params: <span class="kw-2">&amp;</span>[ton_abi::Param],
+    tokens: serde_json::Value,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ton_abi::Token&gt;, TokensJsonError&gt; {
+    <span class="kw">if </span>params.is_empty() {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tokens</span> {
-        <span class="ident">serde_json::Value::Object</span>(<span class="ident">tokens</span>) =&gt; <span class="ident">tokens</span>,
-        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::ObjectExpected</span>),
+    <span class="kw">let </span><span class="kw-2">mut </span>tokens = <span class="kw">match </span>tokens {
+        serde_json::Value::Object(tokens) =&gt; tokens,
+        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::ObjectExpected),
     };
-    <span class="kw">if</span> <span class="ident">tokens</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">params</span>.<span class="ident">len</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::ParameterCountMismatch</span>);
+    <span class="kw">if </span>tokens.len() != params.len() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::ParameterCountMismatch);
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">tokens</span>.<span class="ident">len</span>());
-    <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="ident">params</span> {
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">tokens</span>
-            .<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">param</span>.<span class="ident">name</span>)
-            .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">TokensJsonError::ParameterNotFound</span>(<span class="ident">param</span>.<span class="ident">name</span>.<span class="ident">clone</span>()))<span class="question-mark">?</span>;
-        <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">parse_abi_token</span>(<span class="ident">param</span>, <span class="ident">value</span>)<span class="question-mark">?</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::with_capacity(tokens.len());
+    <span class="kw">for </span>param <span class="kw">in </span>params {
+        <span class="kw">let </span>value = tokens
+            .remove(<span class="kw-2">&amp;</span>param.name)
+            .ok_or_else(|| TokensJsonError::ParameterNotFound(param.name.clone()))<span class="question-mark">?</span>;
+        result.push(parse_abi_token(param, value)<span class="question-mark">?</span>);
     }
 
-    <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
+    <span class="prelude-val">Ok</span>(result)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_abi_token</span>(
-    <span class="ident">param</span>: <span class="kw-2">&amp;</span><span class="ident">ton_abi::Param</span>,
-    <span class="ident">token</span>: <span class="ident">serde_json::Value</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_abi::Token</span>, <span class="ident">TokensJsonError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">parse_abi_token_value</span>(<span class="kw-2">&amp;</span><span class="ident">param</span>.<span class="ident">kind</span>, <span class="ident">token</span>)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(<span class="ident">ton_abi::Token</span> {
-        <span class="ident">name</span>: <span class="ident">param</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
-        <span class="ident">value</span>,
+<span class="kw">pub fn </span>parse_abi_token(
+    param: <span class="kw-2">&amp;</span>ton_abi::Param,
+    token: serde_json::Value,
+) -&gt; <span class="prelude-ty">Result</span>&lt;ton_abi::Token, TokensJsonError&gt; {
+    <span class="kw">let </span>value = parse_abi_token_value(<span class="kw-2">&amp;</span>param.kind, token)<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(ton_abi::Token {
+        name: param.name.clone(),
+        value,
     })
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_abi_token_value</span>(
-    <span class="ident">param</span>: <span class="kw-2">&amp;</span><span class="ident">ton_abi::ParamType</span>,
-    <span class="ident">value</span>: <span class="ident">serde_json::Value</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_abi::TokenValue</span>, <span class="ident">TokensJsonError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">param</span> {
-        <span class="kw-2">&amp;</span><span class="ident">ton_abi::ParamType::Uint</span>(<span class="ident">size</span>) <span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">ton_abi::ParamType::VarUint</span>(<span class="ident">size</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">number</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">strip_prefix</span>(<span class="string">&quot;0x&quot;</span>) {
-                    <span class="ident">BigUint::from_str_radix</span>(<span class="ident">value</span>, <span class="number">16</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">BigUint::from_str</span>(<span class="ident">value</span>)
+<span class="kw">pub fn </span>parse_abi_token_value(
+    param: <span class="kw-2">&amp;</span>ton_abi::ParamType,
+    value: serde_json::Value,
+) -&gt; <span class="prelude-ty">Result</span>&lt;ton_abi::TokenValue, TokensJsonError&gt; {
+    <span class="kw">let </span>value = <span class="kw">match </span>param {
+        <span class="kw-2">&amp;</span>ton_abi::ParamType::Uint(size) | <span class="kw-2">&amp;</span>ton_abi::ParamType::VarUint(size) =&gt; {
+            <span class="kw">let </span>number = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.strip_prefix(<span class="string">&quot;0x&quot;</span>) {
+                    BigUint::from_str_radix(value, <span class="number">16</span>)
+                } <span class="kw">else </span>{
+                    BigUint::from_str(value)
                 }
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidNumber</span>(<span class="ident">value</span>.<span class="ident">to_string</span>()))
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_f64</span>() {
-                <span class="comment">// Check if there is a conversion error</span>
-                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::float_cmp</span>)]</span>
-                <span class="kw">if</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">!</span><span class="op">=</span> <span class="ident">value</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::IntegerValueExpected</span>(<span class="ident">value</span>));
+                .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidNumber(value.to_string()))
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(value) = value.as_f64() {
+                <span class="comment">// Check if there is a conversion error
+                </span><span class="attribute">#[allow(clippy::float_cmp)]
+                </span><span class="kw">if </span>value <span class="kw">as </span>u64 <span class="kw">as </span>f64 != value {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::IntegerValueExpected(value));
                 }
 
-                <span class="kw">if</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0.0</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">BigUint::from</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="ident">u64</span>))
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::UnsignedValueExpected</span>(<span class="ident">value</span>))
+                <span class="kw">if </span>value &gt;= <span class="number">0.0 </span>{
+                    <span class="prelude-val">Ok</span>(BigUint::from(value <span class="kw">as </span>u64))
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Err</span>(TokensJsonError::UnsignedValueExpected(value))
                 }
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::NumberExpected</span>)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::NumberExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="kw">match</span> <span class="ident">param</span> {
-                <span class="ident">ton_abi::ParamType::Uint</span>(<span class="kw">_</span>) =&gt; {
-                    <span class="ident">ton_abi::TokenValue::Uint</span>(<span class="ident">ton_abi::Uint</span> { <span class="ident">number</span>, <span class="ident">size</span> })
+            <span class="kw">match </span>param {
+                ton_abi::ParamType::Uint(<span class="kw">_</span>) =&gt; {
+                    ton_abi::TokenValue::Uint(ton_abi::Uint { number, size })
                 }
-                <span class="kw">_</span> =&gt; <span class="ident">ton_abi::TokenValue::VarUint</span>(<span class="ident">size</span>, <span class="ident">number</span>),
+                <span class="kw">_ </span>=&gt; ton_abi::TokenValue::VarUint(size, number),
             }
         }
-        <span class="kw-2">&amp;</span><span class="ident">ton_abi::ParamType::Int</span>(<span class="ident">size</span>) <span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">ton_abi::ParamType::VarInt</span>(<span class="ident">size</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">number</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">strip_prefix</span>(<span class="string">&quot;0x&quot;</span>) {
-                    <span class="ident">BigInt::from_str_radix</span>(<span class="ident">value</span>, <span class="number">16</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">BigInt::from_str</span>(<span class="ident">value</span>)
+        <span class="kw-2">&amp;</span>ton_abi::ParamType::Int(size) | <span class="kw-2">&amp;</span>ton_abi::ParamType::VarInt(size) =&gt; {
+            <span class="kw">let </span>number = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.strip_prefix(<span class="string">&quot;0x&quot;</span>) {
+                    BigInt::from_str_radix(value, <span class="number">16</span>)
+                } <span class="kw">else </span>{
+                    BigInt::from_str(value)
                 }
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidNumber</span>(<span class="ident">value</span>.<span class="ident">to_string</span>()))
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_f64</span>() {
-                <span class="comment">// Check if there is a conversion error</span>
-                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::float_cmp</span>)]</span>
-                <span class="kw">if</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="kw">as</span> <span class="ident">f64</span> <span class="op">!</span><span class="op">=</span> <span class="ident">value</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::IntegerValueExpected</span>(<span class="ident">value</span>));
+                .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidNumber(value.to_string()))
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(value) = value.as_f64() {
+                <span class="comment">// Check if there is a conversion error
+                </span><span class="attribute">#[allow(clippy::float_cmp)]
+                </span><span class="kw">if </span>value <span class="kw">as </span>i64 <span class="kw">as </span>f64 != value {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::IntegerValueExpected(value));
                 }
 
-                <span class="prelude-val">Ok</span>(<span class="ident">BigInt::from</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="ident">i64</span>))
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::NumberExpected</span>)
+                <span class="prelude-val">Ok</span>(BigInt::from(value <span class="kw">as </span>i64))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::NumberExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="kw">match</span> <span class="ident">param</span> {
-                <span class="ident">ton_abi::ParamType::Int</span>(<span class="kw">_</span>) =&gt; {
-                    <span class="ident">ton_abi::TokenValue::Int</span>(<span class="ident">ton_abi::Int</span> { <span class="ident">number</span>, <span class="ident">size</span> })
+            <span class="kw">match </span>param {
+                ton_abi::ParamType::Int(<span class="kw">_</span>) =&gt; {
+                    ton_abi::TokenValue::Int(ton_abi::Int { number, size })
                 }
-                <span class="kw">_</span> =&gt; <span class="ident">ton_abi::TokenValue::VarInt</span>(<span class="ident">size</span>, <span class="ident">number</span>),
+                <span class="kw">_ </span>=&gt; ton_abi::TokenValue::VarInt(size, number),
             }
         }
-        <span class="ident">ton_abi::ParamType::Bool</span> =&gt; <span class="ident">value</span>
-            .<span class="ident">as_bool</span>()
-            .<span class="ident">map</span>(<span class="ident">ton_abi::TokenValue::Bool</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">TokensJsonError::BoolExpected</span>)<span class="question-mark">?</span>,
-        <span class="ident">ton_abi::ParamType::Tuple</span>(<span class="ident">params</span>) =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">value</span> {
-                <span class="ident">serde_json::Value::Object</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::ObjectExpected</span>),
+        ton_abi::ParamType::Bool =&gt; value
+            .as_bool()
+            .map(ton_abi::TokenValue::Bool)
+            .ok_or(TokensJsonError::BoolExpected)<span class="question-mark">?</span>,
+        ton_abi::ParamType::Tuple(params) =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>value {
+                serde_json::Value::Object(value) =&gt; value,
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::ObjectExpected),
             };
-            <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">params</span>.<span class="ident">len</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::ParameterCountMismatch</span>);
+            <span class="kw">if </span>value.len() != params.len() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::ParameterCountMismatch);
             }
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">params</span>.<span class="ident">len</span>());
-            <span class="kw">for</span> <span class="ident">param</span> <span class="kw">in</span> <span class="ident">params</span> {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>
-                    .<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">param</span>.<span class="ident">name</span>)
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">TokensJsonError::ParameterNotFound</span>(<span class="ident">param</span>.<span class="ident">name</span>.<span class="ident">clone</span>()))<span class="question-mark">?</span>;
-                <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">parse_abi_token</span>(<span class="ident">param</span>, <span class="ident">value</span>)<span class="question-mark">?</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>result = Vec::with_capacity(params.len());
+            <span class="kw">for </span>param <span class="kw">in </span>params {
+                <span class="kw">let </span>value = value
+                    .remove(<span class="kw-2">&amp;</span>param.name)
+                    .ok_or_else(|| TokensJsonError::ParameterNotFound(param.name.clone()))<span class="question-mark">?</span>;
+                result.push(parse_abi_token(param, value)<span class="question-mark">?</span>);
             }
 
-            <span class="ident">ton_abi::TokenValue::Tuple</span>(<span class="ident">result</span>)
+            ton_abi::TokenValue::Tuple(result)
         }
-        <span class="ident">ton_abi::ParamType::Array</span>(<span class="ident">param</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">value</span> {
-                <span class="ident">serde_json::Value::Array</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::ArrayExpected</span>),
+        ton_abi::ParamType::Array(param) =&gt; {
+            <span class="kw">let </span>value = <span class="kw">match </span>value {
+                serde_json::Value::Array(value) =&gt; value,
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::ArrayExpected),
             };
 
-            <span class="ident">ton_abi::TokenValue::Array</span>(
-                <span class="kw-2">*</span><span class="ident">param</span>.<span class="ident">clone</span>(),
-                <span class="ident">value</span>
-                    .<span class="ident">into_iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">parse_abi_token_value</span>(<span class="ident">param</span>.<span class="ident">as_ref</span>(), <span class="ident">value</span>))
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>,
+            ton_abi::TokenValue::Array(
+                <span class="kw-2">*</span>param.clone(),
+                value
+                    .into_iter()
+                    .map(|value| parse_abi_token_value(param.as_ref(), value))
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
             )
         }
-        <span class="ident">ton_abi::ParamType::FixedArray</span>(<span class="ident">param</span>, <span class="ident">size</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">value</span> {
-                <span class="ident">serde_json::Value::Array</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::ArrayExpected</span>),
+        ton_abi::ParamType::FixedArray(param, size) =&gt; {
+            <span class="kw">let </span>value = <span class="kw">match </span>value {
+                serde_json::Value::Array(value) =&gt; value,
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::ArrayExpected),
             };
-            <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">size</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::InvalidArrayLength</span>(<span class="ident">value</span>.<span class="ident">len</span>()));
+            <span class="kw">if </span>value.len() != <span class="kw-2">*</span>size {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::InvalidArrayLength(value.len()));
             }
 
-            <span class="ident">ton_abi::TokenValue::FixedArray</span>(
-                <span class="kw-2">*</span><span class="ident">param</span>.<span class="ident">clone</span>(),
-                <span class="ident">value</span>
-                    .<span class="ident">into_iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="ident">parse_abi_token_value</span>(<span class="ident">param</span>.<span class="ident">as_ref</span>(), <span class="ident">value</span>))
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>,
+            ton_abi::TokenValue::FixedArray(
+                <span class="kw-2">*</span>param.clone(),
+                value
+                    .into_iter()
+                    .map(|value| parse_abi_token_value(param.as_ref(), value))
+                    .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>,
             )
         }
-        <span class="ident">ton_abi::ParamType::Cell</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">is_empty</span>() {
-                    <span class="prelude-val">Ok</span>(<span class="ident">ton_types::Cell::default</span>())
-                } <span class="kw">else</span> {
-                    <span class="ident">base64::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidCell</span>)
-                        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> {
-                            <span class="ident">ton_types::deserialize_tree_of_cells</span>(<span class="kw-2">&amp;mut</span> <span class="ident">value</span>.<span class="ident">as_slice</span>())
-                                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidCell</span>)
+        ton_abi::ParamType::Cell =&gt; {
+            <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                <span class="kw">if </span>value.is_empty() {
+                    <span class="prelude-val">Ok</span>(ton_types::Cell::default())
+                } <span class="kw">else </span>{
+                    base64::decode(<span class="kw-2">&amp;</span>value)
+                        .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidCell)
+                        .and_then(|value| {
+                            ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>value.as_slice())
+                                .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidCell)
                         })
                 }
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">is_null</span>() {
-                <span class="prelude-val">Ok</span>(<span class="ident">ton_types::Cell::default</span>())
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::StringExpected</span>)
+            } <span class="kw">else if </span>value.is_null() {
+                <span class="prelude-val">Ok</span>(ton_types::Cell::default())
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::StringExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="ident">ton_abi::TokenValue::Cell</span>(<span class="ident">value</span>)
+            ton_abi::TokenValue::Cell(value)
         }
-        <span class="ident">ton_abi::ParamType::Map</span>(<span class="ident">param_key</span>, <span class="ident">param_value</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">value</span> {
-                <span class="ident">serde_json::Value::Array</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::ArrayExpected</span>),
+        ton_abi::ParamType::Map(param_key, param_value) =&gt; {
+            <span class="kw">let </span>value = <span class="kw">match </span>value {
+                serde_json::Value::Array(value) =&gt; value,
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::ArrayExpected),
             };
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">BTreeMap::new</span>();
+            <span class="kw">let </span><span class="kw-2">mut </span>result = BTreeMap::new();
 
-            <span class="kw">for</span> <span class="ident">value</span> <span class="kw">in</span> <span class="ident">value</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">value</span> {
-                    <span class="ident">serde_json::Value::Array</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">into_iter</span>(),
-                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::MapItemExpected</span>),
+            <span class="kw">for </span>value <span class="kw">in </span>value {
+                <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>value {
+                    serde_json::Value::Array(value) =&gt; value.into_iter(),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::MapItemExpected),
                 };
-                <span class="kw">let</span> (<span class="ident">key</span>, <span class="ident">value</span>) <span class="op">=</span> <span class="kw">match</span> (<span class="ident">value</span>.<span class="ident">next</span>(), <span class="ident">value</span>.<span class="ident">next</span>()) {
-                    (<span class="prelude-val">Some</span>(<span class="ident">key</span>), <span class="prelude-val">Some</span>(<span class="ident">value</span>)) =&gt; (<span class="ident">key</span>, <span class="ident">value</span>),
-                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::MapItemExpected</span>),
+                <span class="kw">let </span>(key, value) = <span class="kw">match </span>(value.next(), value.next()) {
+                    (<span class="prelude-val">Some</span>(key), <span class="prelude-val">Some</span>(value)) =&gt; (key, value),
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::MapItemExpected),
                 };
 
-                <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">parse_abi_token_value</span>(<span class="ident">param_key</span>.<span class="ident">as_ref</span>(), <span class="ident">key</span>)<span class="question-mark">?</span>
-                    .<span class="ident">try_into</span>()
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidMappingKey</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">parse_abi_token_value</span>(<span class="ident">param_value</span>.<span class="ident">as_ref</span>(), <span class="ident">value</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>key = parse_abi_token_value(param_key.as_ref(), key)<span class="question-mark">?
+                    </span>.try_into()
+                    .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidMappingKey)<span class="question-mark">?</span>;
+                <span class="kw">let </span>value = parse_abi_token_value(param_value.as_ref(), value)<span class="question-mark">?</span>;
 
-                <span class="ident">result</span>.<span class="ident">insert</span>(<span class="ident">key</span>, <span class="ident">value</span>);
+                result.insert(key, value);
             }
 
-            <span class="ident">ton_abi::TokenValue::Map</span>(<span class="kw-2">*</span><span class="ident">param_key</span>.<span class="ident">clone</span>(), <span class="kw-2">*</span><span class="ident">param_value</span>.<span class="ident">clone</span>(), <span class="ident">result</span>)
+            ton_abi::TokenValue::Map(<span class="kw-2">*</span>param_key.clone(), <span class="kw-2">*</span>param_value.clone(), result)
         }
-        <span class="ident">ton_abi::ParamType::Address</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="ident">ton_block::MsgAddressInt::from_str</span>(<span class="ident">value</span>)
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidAddress</span>)
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::StringExpected</span>)
+        ton_abi::ParamType::Address =&gt; {
+            <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                ton_block::MsgAddressInt::from_str(value)
+                    .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidAddress)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::StringExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="ident">ton_abi::TokenValue::Address</span>(<span class="kw">match</span> <span class="ident">value</span> {
-                <span class="ident">ton_block::MsgAddressInt::AddrStd</span>(<span class="ident">value</span>) =&gt; <span class="ident">ton_block::MsgAddress::AddrStd</span>(<span class="ident">value</span>),
-                <span class="ident">ton_block::MsgAddressInt::AddrVar</span>(<span class="ident">value</span>) =&gt; <span class="ident">ton_block::MsgAddress::AddrVar</span>(<span class="ident">value</span>),
+            ton_abi::TokenValue::Address(<span class="kw">match </span>value {
+                ton_block::MsgAddressInt::AddrStd(value) =&gt; ton_block::MsgAddress::AddrStd(value),
+                ton_block::MsgAddressInt::AddrVar(value) =&gt; ton_block::MsgAddress::AddrVar(value),
             })
         }
-        <span class="ident">ton_abi::ParamType::Bytes</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">is_empty</span>() {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Vec::new</span>())
-                } <span class="kw">else</span> {
-                    <span class="ident">base64::decode</span>(<span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidBytes</span>)
+        ton_abi::ParamType::Bytes =&gt; {
+            <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                <span class="kw">if </span>value.is_empty() {
+                    <span class="prelude-val">Ok</span>(Vec::new())
+                } <span class="kw">else </span>{
+                    base64::decode(value).map_err(|<span class="kw">_</span>| TokensJsonError::InvalidBytes)
                 }
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::StringExpected</span>)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::StringExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="ident">ton_abi::TokenValue::Bytes</span>(<span class="ident">value</span>)
+            ton_abi::TokenValue::Bytes(value)
         }
-        <span class="ident">ton_abi::ParamType::String</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">value</span> {
-                <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::StringExpected</span>),
+        ton_abi::ParamType::String =&gt; {
+            <span class="kw">let </span>value = <span class="kw">match </span>value {
+                serde_json::Value::String(value) =&gt; value,
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::StringExpected),
             };
-            <span class="ident">ton_abi::TokenValue::String</span>(<span class="ident">value</span>)
+            ton_abi::TokenValue::String(value)
         }
-        <span class="kw-2">&amp;</span><span class="ident">ton_abi::ParamType::FixedBytes</span>(<span class="ident">size</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="ident">base64::decode</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidBytes</span>)
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::StringExpected</span>)
+        <span class="kw-2">&amp;</span>ton_abi::ParamType::FixedBytes(size) =&gt; {
+            <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                base64::decode(<span class="kw-2">&amp;</span>value).map_err(|<span class="kw">_</span>| TokensJsonError::InvalidBytes)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::StringExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">size</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::InvalidBytesLength</span>(<span class="ident">value</span>.<span class="ident">len</span>()));
+            <span class="kw">if </span>value.len() != size {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(TokensJsonError::InvalidBytesLength(value.len()));
             }
 
-            <span class="ident">ton_abi::TokenValue::FixedBytes</span>(<span class="ident">value</span>)
+            ton_abi::TokenValue::FixedBytes(value)
         }
-        <span class="ident">ton_abi::ParamType::Token</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">strip_prefix</span>(<span class="string">&quot;0x&quot;</span>) {
-                    <span class="ident">u128::from_str_radix</span>(<span class="ident">value</span>, <span class="number">16</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">u128::from_str</span>(<span class="ident">value</span>)
+        ton_abi::ParamType::Token =&gt; {
+            <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.strip_prefix(<span class="string">&quot;0x&quot;</span>) {
+                    u128::from_str_radix(value, <span class="number">16</span>)
+                } <span class="kw">else </span>{
+                    u128::from_str(value)
                 }
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidNumber</span>(<span class="ident">value</span>.<span class="ident">to_string</span>()))
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_f64</span>() {
-                <span class="kw">if</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0.0</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="ident">u128</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::UnsignedValueExpected</span>(<span class="ident">value</span>))
+                .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidNumber(value.to_string()))
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(value) = value.as_f64() {
+                <span class="kw">if </span>value &gt;= <span class="number">0.0 </span>{
+                    <span class="prelude-val">Ok</span>(value <span class="kw">as </span>u128)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Err</span>(TokensJsonError::UnsignedValueExpected(value))
                 }
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::NumberExpected</span>)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::NumberExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="ident">ton_abi::TokenValue::Token</span>(<span class="ident">ton_block::Grams</span>(<span class="ident">value</span>))
+            ton_abi::TokenValue::Token(ton_block::Grams(value))
         }
-        <span class="ident">ton_abi::ParamType::Time</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">strip_prefix</span>(<span class="string">&quot;0x&quot;</span>) {
-                    <span class="ident">u64::from_str_radix</span>(<span class="ident">value</span>, <span class="number">16</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">u64::from_str</span>(<span class="ident">value</span>)
+        ton_abi::ParamType::Time =&gt; {
+            <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.strip_prefix(<span class="string">&quot;0x&quot;</span>) {
+                    u64::from_str_radix(value, <span class="number">16</span>)
+                } <span class="kw">else </span>{
+                    u64::from_str(value)
                 }
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidNumber</span>(<span class="ident">value</span>.<span class="ident">to_string</span>()))
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_f64</span>() {
-                <span class="kw">if</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0.0</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="ident">u64</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::UnsignedValueExpected</span>(<span class="ident">value</span>))
+                .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidNumber(value.to_string()))
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(value) = value.as_f64() {
+                <span class="kw">if </span>value &gt;= <span class="number">0.0 </span>{
+                    <span class="prelude-val">Ok</span>(value <span class="kw">as </span>u64)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Err</span>(TokensJsonError::UnsignedValueExpected(value))
                 }
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::NumberExpected</span>)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::NumberExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="ident">ton_abi::TokenValue::Time</span>(<span class="ident">value</span>)
+            ton_abi::TokenValue::Time(value)
         }
-        <span class="ident">ton_abi::ParamType::Expire</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_f64</span>() {
-                <span class="kw">if</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0.0</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="ident">u32</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::UnsignedValueExpected</span>(<span class="ident">value</span>))
+        ton_abi::ParamType::Expire =&gt; {
+            <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_f64() {
+                <span class="kw">if </span>value &gt;= <span class="number">0.0 </span>{
+                    <span class="prelude-val">Ok</span>(value <span class="kw">as </span>u32)
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">Err</span>(TokensJsonError::UnsignedValueExpected(value))
                 }
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">strip_prefix</span>(<span class="string">&quot;0x&quot;</span>) {
-                    <span class="ident">u32::from_str_radix</span>(<span class="ident">value</span>, <span class="number">16</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">u32::from_str</span>(<span class="ident">value</span>)
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.strip_prefix(<span class="string">&quot;0x&quot;</span>) {
+                    u32::from_str_radix(value, <span class="number">16</span>)
+                } <span class="kw">else </span>{
+                    u32::from_str(value)
                 }
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidNumber</span>(<span class="ident">value</span>.<span class="ident">to_string</span>()))
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::NumberExpected</span>)
+                .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidNumber(value.to_string()))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::NumberExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="ident">ton_abi::TokenValue::Expire</span>(<span class="ident">value</span>)
+            ton_abi::TokenValue::Expire(value)
         }
-        <span class="ident">ton_abi::ParamType::PublicKey</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">as_str</span>() {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">trim</span>();
-                <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">is_empty</span>() {
+        ton_abi::ParamType::PublicKey =&gt; {
+            <span class="kw">let </span>value = <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value.as_str() {
+                <span class="kw">let </span>value = value.trim();
+                <span class="kw">if </span>value.is_empty() {
                     <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">hex::decode</span>(<span class="ident">value</span>.<span class="ident">strip_prefix</span>(<span class="string">&quot;0x&quot;</span>).<span class="ident">unwrap_or</span>(<span class="ident">value</span>))
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidPublicKey</span>)
-                        .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> {
-                            <span class="ident">ed25519_dalek::PublicKey::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)
-                                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TokensJsonError::InvalidPublicKey</span>)
+                } <span class="kw">else </span>{
+                    hex::decode(value.strip_prefix(<span class="string">&quot;0x&quot;</span>).unwrap_or(value))
+                        .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidPublicKey)
+                        .and_then(|value| {
+                            ed25519_dalek::PublicKey::from_bytes(<span class="kw-2">&amp;</span>value)
+                                .map_err(|<span class="kw">_</span>| TokensJsonError::InvalidPublicKey)
                         })
-                        .<span class="ident">map</span>(<span class="prelude-val">Some</span>)
+                        .map(<span class="prelude-val">Some</span>)
                 }
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">TokensJsonError::StringExpected</span>)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(TokensJsonError::StringExpected)
             }<span class="question-mark">?</span>;
 
-            <span class="ident">ton_abi::TokenValue::PublicKey</span>(<span class="ident">value</span>)
+            ton_abi::TokenValue::PublicKey(value)
         }
-        <span class="ident">ton_abi::ParamType::Optional</span>(<span class="ident">param</span>) =&gt; <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="ident">serde_json::Value::Null</span> =&gt; <span class="ident">ton_abi::TokenValue::Optional</span>(<span class="kw-2">*</span><span class="ident">param</span>.<span class="ident">clone</span>(), <span class="prelude-val">None</span>),
-            <span class="ident">value</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">parse_abi_token_value</span>(<span class="ident">param</span>, <span class="ident">value</span>)<span class="question-mark">?</span>);
-                <span class="ident">ton_abi::TokenValue::Optional</span>(<span class="kw-2">*</span><span class="ident">param</span>.<span class="ident">clone</span>(), <span class="prelude-val">Some</span>(<span class="ident">value</span>))
+        ton_abi::ParamType::Optional(param) =&gt; <span class="kw">match </span>value {
+            serde_json::Value::Null =&gt; ton_abi::TokenValue::Optional(<span class="kw-2">*</span>param.clone(), <span class="prelude-val">None</span>),
+            value =&gt; {
+                <span class="kw">let </span>value = Box::new(parse_abi_token_value(param, value)<span class="question-mark">?</span>);
+                ton_abi::TokenValue::Optional(<span class="kw-2">*</span>param.clone(), <span class="prelude-val">Some</span>(value))
             }
         },
-        <span class="ident">ton_abi::ParamType::Ref</span>(<span class="ident">param</span>) =&gt; {
-            <span class="ident">ton_abi::TokenValue::Ref</span>(<span class="ident">Box::new</span>(<span class="ident">parse_abi_token_value</span>(<span class="ident">param</span>, <span class="ident">value</span>)<span class="question-mark">?</span>))
+        ton_abi::ParamType::Ref(param) =&gt; {
+            ton_abi::TokenValue::Ref(Box::new(parse_abi_token_value(param, value)<span class="question-mark">?</span>))
         }
     };
 
-    <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
+    <span class="prelude-val">Ok</span>(value)
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TokensJsonError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Parameter count mismatch&quot;</span>)]</span>
-    <span class="ident">ParameterCountMismatch</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Object expected&quot;</span>)]</span>
-    <span class="ident">ObjectExpected</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Array expected&quot;</span>)]</span>
-    <span class="ident">ArrayExpected</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Parameter not found: {}&quot;</span>, .<span class="number">0</span>)]</span>
-    <span class="ident">ParameterNotFound</span>(<span class="ident">String</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid number: {}&quot;</span>, .<span class="number">0</span>)]</span>
-    <span class="ident">InvalidNumber</span>(<span class="ident">String</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expected integer value: {}&quot;</span>, .<span class="number">0</span>)]</span>
-    <span class="ident">IntegerValueExpected</span>(<span class="ident">f64</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expected unsigned value: {}&quot;</span>, .<span class="number">0</span>)]</span>
-    <span class="ident">UnsignedValueExpected</span>(<span class="ident">f64</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expected integer as string or number&quot;</span>)]</span>
-    <span class="ident">NumberExpected</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expected boolean&quot;</span>)]</span>
-    <span class="ident">BoolExpected</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid array length: {}&quot;</span>, .<span class="number">0</span>)]</span>
-    <span class="ident">InvalidArrayLength</span>(<span class="ident">usize</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid cell&quot;</span>)]</span>
-    <span class="ident">InvalidCell</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expected string&quot;</span>)]</span>
-    <span class="ident">StringExpected</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expected map item as array of key and value&quot;</span>)]</span>
-    <span class="ident">MapItemExpected</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid mapping key&quot;</span>)]</span>
-    <span class="ident">InvalidMappingKey</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid address&quot;</span>)]</span>
-    <span class="ident">InvalidAddress</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid bytes&quot;</span>)]</span>
-    <span class="ident">InvalidBytes</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid bytes length&quot;</span>)]</span>
-    <span class="ident">InvalidBytesLength</span>(<span class="ident">usize</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid public key&quot;</span>)]</span>
-    <span class="ident">InvalidPublicKey</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">pub enum </span>TokensJsonError {
+    <span class="attribute">#[error(<span class="string">&quot;Parameter count mismatch&quot;</span>)]
+    </span>ParameterCountMismatch,
+    <span class="attribute">#[error(<span class="string">&quot;Object expected&quot;</span>)]
+    </span>ObjectExpected,
+    <span class="attribute">#[error(<span class="string">&quot;Array expected&quot;</span>)]
+    </span>ArrayExpected,
+    <span class="attribute">#[error(<span class="string">&quot;Parameter not found: {}&quot;</span>, .<span class="number">0</span>)]
+    </span>ParameterNotFound(String),
+    <span class="attribute">#[error(<span class="string">&quot;Invalid number: {}&quot;</span>, .<span class="number">0</span>)]
+    </span>InvalidNumber(String),
+    <span class="attribute">#[error(<span class="string">&quot;Expected integer value: {}&quot;</span>, .<span class="number">0</span>)]
+    </span>IntegerValueExpected(f64),
+    <span class="attribute">#[error(<span class="string">&quot;Expected unsigned value: {}&quot;</span>, .<span class="number">0</span>)]
+    </span>UnsignedValueExpected(f64),
+    <span class="attribute">#[error(<span class="string">&quot;Expected integer as string or number&quot;</span>)]
+    </span>NumberExpected,
+    <span class="attribute">#[error(<span class="string">&quot;Expected boolean&quot;</span>)]
+    </span>BoolExpected,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid array length: {}&quot;</span>, .<span class="number">0</span>)]
+    </span>InvalidArrayLength(usize),
+    <span class="attribute">#[error(<span class="string">&quot;Invalid cell&quot;</span>)]
+    </span>InvalidCell,
+    <span class="attribute">#[error(<span class="string">&quot;Expected string&quot;</span>)]
+    </span>StringExpected,
+    <span class="attribute">#[error(<span class="string">&quot;Expected map item as array of key and value&quot;</span>)]
+    </span>MapItemExpected,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid mapping key&quot;</span>)]
+    </span>InvalidMappingKey,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid address&quot;</span>)]
+    </span>InvalidAddress,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid bytes&quot;</span>)]
+    </span>InvalidBytes,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid bytes length&quot;</span>)]
+    </span>InvalidBytesLength(usize),
+    <span class="attribute">#[error(<span class="string">&quot;Invalid public key&quot;</span>)]
+    </span>InvalidPublicKey,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

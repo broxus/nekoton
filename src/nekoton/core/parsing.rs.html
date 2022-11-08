@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/parsing.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parsing.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/parsing.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parsing.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -913,609 +913,609 @@
 <span id="913">913</span>
 <span id="914">914</span>
 <span id="915">915</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">num_bigint::BigUint</span>;
-<span class="kw">use</span> <span class="ident">once_cell::race::OnceBox</span>;
-<span class="kw">use</span> <span class="ident">ton_block::MsgAddressInt</span>;
-<span class="kw">use</span> <span class="ident">ton_types::UInt256</span>;
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>num_bigint::BigUint;
+<span class="kw">use </span>once_cell::race::OnceBox;
+<span class="kw">use </span>ton_block::MsgAddressInt;
+<span class="kw">use </span>ton_types::UInt256;
 
-<span class="kw">use</span> <span class="ident">nekoton_abi</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">nekoton_contracts::tip4_1::nft_contract</span>;
-<span class="kw">use</span> <span class="ident">nekoton_contracts</span>::{<span class="ident">old_tip3</span>, <span class="ident">tip3_1</span>};
+<span class="kw">use </span>nekoton_abi::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_contracts::tip4_1::nft_contract;
+<span class="kw">use </span>nekoton_contracts::{old_tip3, tip3_1};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::models</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::ton_wallet</span>::{<span class="ident">MultisigType</span>, <span class="ident">WalletType</span>};
+<span class="kw">use </span><span class="kw">crate</span>::core::models::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::core::ton_wallet::{MultisigType, WalletType};
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InputMessage</span>(<span class="kw">pub</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ton_abi::Token</span><span class="op">&gt;</span>);
+<span class="kw">pub struct </span>InputMessage(<span class="kw">pub </span>Vec&lt;ton_abi::Token&gt;);
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ContractCall</span> {
-    <span class="kw">pub</span> <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ton_abi::Token</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ton_abi::Token</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>ContractCall {
+    <span class="kw">pub </span>inputs: Vec&lt;ton_abi::Token&gt;,
+    <span class="kw">pub </span>outputs: Vec&lt;ton_abi::Token&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_payload</span>(<span class="ident">payload</span>: <span class="ident">ton_types::SliceData</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">KnownPayload</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">function_id</span> <span class="op">=</span> <span class="ident">read_function_id</span>(<span class="kw-2">&amp;</span><span class="ident">payload</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="ident">parse_comment_payload</span>(<span class="ident">payload</span>).<span class="ident">map</span>(<span class="ident">KnownPayload::Comment</span>);
+<span class="kw">pub fn </span>parse_payload(payload: ton_types::SliceData) -&gt; <span class="prelude-ty">Option</span>&lt;KnownPayload&gt; {
+    <span class="kw">let </span>function_id = read_function_id(<span class="kw-2">&amp;</span>payload).ok()<span class="question-mark">?</span>;
+    <span class="kw">if </span>function_id == <span class="number">0 </span>{
+        <span class="kw">return </span>parse_comment_payload(payload).map(KnownPayload::Comment);
     }
 
-    <span class="kw">for</span> <span class="ident">version</span> <span class="kw">in</span> [<span class="ident">TokenWalletVersion::OldTip3v4</span>, <span class="ident">TokenWalletVersion::Tip3</span>] {
-        <span class="kw">let</span> <span class="ident">functions</span> <span class="op">=</span> <span class="ident">TokenWalletFunctions::for_version</span>(<span class="ident">version</span>);
+    <span class="kw">for </span>version <span class="kw">in </span>[TokenWalletVersion::OldTip3v4, TokenWalletVersion::Tip3] {
+        <span class="kw">let </span>functions = TokenWalletFunctions::for_version(version);
 
-        <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">transfer_to_wallet</span>.<span class="ident">input_id</span> {
-            <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>
-                .<span class="ident">transfer_to_wallet</span>
-                .<span class="ident">decode_input</span>(<span class="ident">payload</span>, <span class="bool-val">true</span>)
-                .<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        <span class="kw">if </span>function_id == functions.transfer_to_wallet.input_id {
+            <span class="kw">let </span>inputs = functions
+                .transfer_to_wallet
+                .decode_input(payload, <span class="bool-val">true</span>)
+                .ok()<span class="question-mark">?</span>;
 
-            <span class="kw">return</span> <span class="ident">TokenOutgoingTransfer::try_from</span>((
-                <span class="ident">InputMessage</span>(<span class="ident">inputs</span>),
-                <span class="ident">TransferType::ByTokenWalletAddress</span>,
-                <span class="ident">version</span>,
+            <span class="kw">return </span>TokenOutgoingTransfer::try_from((
+                InputMessage(inputs),
+                TransferType::ByTokenWalletAddress,
+                version,
             ))
-            .<span class="ident">map</span>(<span class="ident">KnownPayload::TokenOutgoingTransfer</span>)
-            .<span class="ident">ok</span>();
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">transfer</span>.<span class="ident">input_id</span> {
-            <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">transfer</span>.<span class="ident">decode_input</span>(<span class="ident">payload</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+            .map(KnownPayload::TokenOutgoingTransfer)
+            .ok();
+        } <span class="kw">else if </span>function_id == functions.transfer.input_id {
+            <span class="kw">let </span>inputs = functions.transfer.decode_input(payload, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-            <span class="kw">return</span> <span class="ident">TokenOutgoingTransfer::try_from</span>((
-                <span class="ident">InputMessage</span>(<span class="ident">inputs</span>),
-                <span class="ident">TransferType::ByOwnerWalletAddress</span>,
-                <span class="ident">version</span>,
+            <span class="kw">return </span>TokenOutgoingTransfer::try_from((
+                InputMessage(inputs),
+                TransferType::ByOwnerWalletAddress,
+                version,
             ))
-            .<span class="ident">map</span>(<span class="ident">KnownPayload::TokenOutgoingTransfer</span>)
-            .<span class="ident">ok</span>();
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">burn</span>.<span class="ident">input_id</span> {
-            <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">burn</span>.<span class="ident">decode_input</span>(<span class="ident">payload</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+            .map(KnownPayload::TokenOutgoingTransfer)
+            .ok();
+        } <span class="kw">else if </span>function_id == functions.burn.input_id {
+            <span class="kw">let </span>inputs = functions.burn.decode_input(payload, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-            <span class="kw">return</span> <span class="ident">TokenSwapBack::try_from</span>((<span class="ident">InputMessage</span>(<span class="ident">inputs</span>), <span class="ident">version</span>))
-                .<span class="ident">map</span>(<span class="ident">KnownPayload::TokenSwapBack</span>)
-                .<span class="ident">ok</span>();
+            <span class="kw">return </span>TokenSwapBack::try_from((InputMessage(inputs), version))
+                .map(KnownPayload::TokenSwapBack)
+                .ok();
         }
     }
 
-    <span class="prelude-val">None</span>
-}
+    <span class="prelude-val">None
+</span>}
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_transaction_additional_info</span>(
-    <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Transaction</span>,
-    <span class="ident">wallet_type</span>: <span class="ident">WalletType</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TransactionAdditionalInfo</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">in_msg</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">in_msg</span>.<span class="ident">as_ref</span>()<span class="question-mark">?</span>.<span class="ident">read_struct</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
+<span class="kw">pub fn </span>parse_transaction_additional_info(
+    tx: <span class="kw-2">&amp;</span>ton_block::Transaction,
+    wallet_type: WalletType,
+) -&gt; <span class="prelude-ty">Option</span>&lt;TransactionAdditionalInfo&gt; {
+    <span class="kw">let </span>in_msg = tx.in_msg.as_ref()<span class="question-mark">?</span>.read_struct().ok()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">int_header</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">in_msg</span>.<span class="ident">header</span>() {
-        <span class="ident">ton_block::CommonMsgInfo::ExtInMsgInfo</span>(<span class="kw">_</span>) =&gt; {
-            <span class="kw">let</span> (<span class="ident">recipient</span>, <span class="ident">known_payload</span>, <span class="ident">method</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">wallet_type</span> {
-                <span class="ident">WalletType::WalletV3</span> <span class="op">|</span> <span class="ident">WalletType::HighloadWalletV2</span> <span class="op">|</span> <span class="ident">WalletType::EverWallet</span> =&gt; {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">out_msg</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-                    <span class="ident">tx</span>.<span class="ident">out_msgs</span>
-                        .<span class="ident">iterate</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> {
-                            <span class="ident">out_msg</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">item</span>.<span class="number">0</span>);
+    <span class="kw">let </span>int_header = <span class="kw">match </span>in_msg.header() {
+        ton_block::CommonMsgInfo::ExtInMsgInfo(<span class="kw">_</span>) =&gt; {
+            <span class="kw">let </span>(recipient, known_payload, method) = <span class="kw">match </span>wallet_type {
+                WalletType::WalletV3 | WalletType::HighloadWalletV2 | WalletType::EverWallet =&gt; {
+                    <span class="kw">let </span><span class="kw-2">mut </span>out_msg = <span class="prelude-val">None</span>;
+                    tx.out_msgs
+                        .iterate(|item| {
+                            out_msg = <span class="prelude-val">Some</span>(item.<span class="number">0</span>);
                             <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>)
                         })
-                        .<span class="ident">ok</span>()<span class="question-mark">?</span>;
+                        .ok()<span class="question-mark">?</span>;
 
-                    <span class="kw">let</span> <span class="ident">out_msg</span> <span class="op">=</span> <span class="ident">out_msg</span><span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">recipient</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">out_msg</span>.<span class="ident">header</span>() {
-                        <span class="ident">ton_block::CommonMsgInfo::IntMsgInfo</span>(<span class="ident">header</span>) =&gt; <span class="kw-2">&amp;</span><span class="ident">header</span>.<span class="ident">dst</span>,
-                        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+                    <span class="kw">let </span>out_msg = out_msg<span class="question-mark">?</span>;
+                    <span class="kw">let </span>recipient = <span class="kw">match </span>out_msg.header() {
+                        ton_block::CommonMsgInfo::IntMsgInfo(header) =&gt; <span class="kw-2">&amp;</span>header.dst,
+                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
                     };
 
-                    <span class="kw">let</span> <span class="ident">known_payload</span> <span class="op">=</span> <span class="ident">out_msg</span>.<span class="ident">body</span>().<span class="ident">and_then</span>(<span class="ident">parse_payload</span>);
+                    <span class="kw">let </span>known_payload = out_msg.body().and_then(parse_payload);
 
                     (
-                        <span class="prelude-val">Some</span>(<span class="ident">recipient</span>.<span class="ident">clone</span>()),
-                        <span class="ident">known_payload</span>,
-                        <span class="ident">WalletInteractionMethod::WalletV3Transfer</span>,
+                        <span class="prelude-val">Some</span>(recipient.clone()),
+                        known_payload,
+                        WalletInteractionMethod::WalletV3Transfer,
                     )
                 }
-                <span class="ident">WalletType::Multisig</span>(<span class="ident">multisig_type</span>) =&gt; {
-                    <span class="kw">let</span> <span class="ident">method</span> <span class="op">=</span> <span class="ident">parse_multisig_transaction_impl</span>(<span class="ident">multisig_type</span>, <span class="ident">in_msg</span>, <span class="ident">tx</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> (<span class="ident">recipient</span>, <span class="ident">known_payload</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">method</span> {
-                        <span class="ident">MultisigTransaction::Submit</span>(<span class="ident">MultisigSubmitTransaction</span> {
-                            <span class="ident">payload</span>,
-                            <span class="ident">dest</span>,
+                WalletType::Multisig(multisig_type) =&gt; {
+                    <span class="kw">let </span>method = parse_multisig_transaction_impl(multisig_type, in_msg, tx)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>(recipient, known_payload) = <span class="kw">match </span><span class="kw-2">&amp;</span>method {
+                        MultisigTransaction::Submit(MultisigSubmitTransaction {
+                            payload,
+                            dest,
                             ..
                         })
-                        <span class="op">|</span> <span class="ident">MultisigTransaction::Send</span>(<span class="ident">MultisigSendTransaction</span> {
-                            <span class="ident">payload</span>,
-                            <span class="ident">dest</span>,
+                        | MultisigTransaction::Send(MultisigSendTransaction {
+                            payload,
+                            dest,
                             ..
-                        }) =&gt; (<span class="prelude-val">Some</span>(<span class="ident">dest</span>.<span class="ident">clone</span>()), <span class="ident">parse_payload</span>(<span class="ident">payload</span>.<span class="ident">clone</span>().<span class="ident">into</span>())),
-                        <span class="ident">MultisigTransaction::Confirm</span>(<span class="kw">_</span>) =&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+                        }) =&gt; (<span class="prelude-val">Some</span>(dest.clone()), parse_payload(payload.clone().into())),
+                        MultisigTransaction::Confirm(<span class="kw">_</span>) =&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
                     };
 
                     (
-                        <span class="ident">recipient</span>,
-                        <span class="ident">known_payload</span>,
-                        <span class="ident">WalletInteractionMethod::Multisig</span>(<span class="ident">Box::new</span>(<span class="ident">method</span>)),
+                        recipient,
+                        known_payload,
+                        WalletInteractionMethod::Multisig(Box::new(method)),
                     )
                 }
             };
 
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">TransactionAdditionalInfo::WalletInteraction</span>(
-                <span class="ident">WalletInteractionInfo</span> {
-                    <span class="ident">recipient</span>,
-                    <span class="ident">known_payload</span>,
-                    <span class="ident">method</span>,
+            <span class="kw">return </span><span class="prelude-val">Some</span>(TransactionAdditionalInfo::WalletInteraction(
+                WalletInteractionInfo {
+                    recipient,
+                    known_payload,
+                    method,
                 },
             ));
         }
-        <span class="ident">ton_block::CommonMsgInfo::IntMsgInfo</span>(<span class="ident">header</span>) =&gt; <span class="ident">header</span>,
-        <span class="ident">ton_block::CommonMsgInfo::ExtOutMsgInfo</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+        ton_block::CommonMsgInfo::IntMsgInfo(header) =&gt; header,
+        ton_block::CommonMsgInfo::ExtOutMsgInfo(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
     };
 
-    <span class="kw">let</span> <span class="ident">depool_notifications</span> <span class="op">=</span> <span class="ident">DePoolParticipantFunctions::instance</span>();
-    <span class="kw">let</span> <span class="ident">token_notifications</span> <span class="op">=</span> <span class="ident">WalletNotificationFunctions::instance</span>();
+    <span class="kw">let </span>depool_notifications = DePoolParticipantFunctions::instance();
+    <span class="kw">let </span>token_notifications = WalletNotificationFunctions::instance();
 
-    <span class="kw">if</span> <span class="ident">int_header</span>.<span class="ident">bounced</span> {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">if </span>int_header.bounced {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">in_msg</span>.<span class="ident">body</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">function_id</span> <span class="op">=</span> <span class="ident">read_function_id</span>(<span class="kw-2">&amp;</span><span class="ident">body</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+    <span class="kw">let </span>body = in_msg.body()<span class="question-mark">?</span>;
+    <span class="kw">let </span>function_id = read_function_id(<span class="kw-2">&amp;</span>body).ok()<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="ident">parse_comment_payload</span>(<span class="ident">body</span>).<span class="ident">map</span>(<span class="ident">TransactionAdditionalInfo::Comment</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">depool_notifications</span>.<span class="ident">on_round_complete</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">depool_notifications</span>
-            .<span class="ident">on_round_complete</span>
-            .<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>)
-            .<span class="ident">ok</span>()<span class="question-mark">?</span>;
+    <span class="kw">if </span>function_id == <span class="number">0 </span>{
+        parse_comment_payload(body).map(TransactionAdditionalInfo::Comment)
+    } <span class="kw">else if </span>function_id == depool_notifications.on_round_complete.input_id {
+        <span class="kw">let </span>inputs = depool_notifications
+            .on_round_complete
+            .decode_input(body, <span class="bool-val">true</span>)
+            .ok()<span class="question-mark">?</span>;
 
-        <span class="ident">DePoolOnRoundCompleteNotification::try_from</span>(<span class="ident">InputMessage</span>(<span class="ident">inputs</span>))
-            .<span class="ident">map</span>(<span class="ident">TransactionAdditionalInfo::DePoolOnRoundComplete</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">depool_notifications</span>.<span class="ident">receive_answer</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">depool_notifications</span>
-            .<span class="ident">receive_answer</span>
-            .<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>)
-            .<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        DePoolOnRoundCompleteNotification::try_from(InputMessage(inputs))
+            .map(TransactionAdditionalInfo::DePoolOnRoundComplete)
+            .ok()
+    } <span class="kw">else if </span>function_id == depool_notifications.receive_answer.input_id {
+        <span class="kw">let </span>inputs = depool_notifications
+            .receive_answer
+            .decode_input(body, <span class="bool-val">true</span>)
+            .ok()<span class="question-mark">?</span>;
 
-        <span class="ident">DePoolReceiveAnswerNotification::try_from</span>(<span class="ident">InputMessage</span>(<span class="ident">inputs</span>))
-            .<span class="ident">map</span>(<span class="ident">TransactionAdditionalInfo::DePoolReceiveAnswer</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">token_notifications</span>.<span class="ident">notify_wallet_deployed</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">token_notifications</span>
-            .<span class="ident">notify_wallet_deployed</span>
-            .<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>)
-            .<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        DePoolReceiveAnswerNotification::try_from(InputMessage(inputs))
+            .map(TransactionAdditionalInfo::DePoolReceiveAnswer)
+            .ok()
+    } <span class="kw">else if </span>function_id == token_notifications.notify_wallet_deployed.input_id {
+        <span class="kw">let </span>inputs = token_notifications
+            .notify_wallet_deployed
+            .decode_input(body, <span class="bool-val">true</span>)
+            .ok()<span class="question-mark">?</span>;
 
-        <span class="ident">TokenWalletDeployedNotification::try_from</span>(<span class="ident">InputMessage</span>(<span class="ident">inputs</span>))
-            .<span class="ident">map</span>(<span class="ident">TransactionAdditionalInfo::TokenWalletDeployed</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+        TokenWalletDeployedNotification::try_from(InputMessage(inputs))
+            .map(TransactionAdditionalInfo::TokenWalletDeployed)
+            .ok()
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">struct</span> <span class="ident">DePoolParticipantFunctions</span> {
-    <span class="ident">on_round_complete</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="ident">receive_answer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
+<span class="kw">struct </span>DePoolParticipantFunctions {
+    on_round_complete: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    receive_answer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
 }
 
-<span class="kw">impl</span> <span class="ident">DePoolParticipantFunctions</span> {
-    <span class="kw">fn</span> <span class="ident">instance</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="self">Self</span> {
-        <span class="kw">use</span> <span class="ident">nekoton_contracts::wallets::notifications</span>;
+<span class="kw">impl </span>DePoolParticipantFunctions {
+    <span class="kw">fn </span>instance() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">Self </span>{
+        <span class="kw">use </span>nekoton_contracts::wallets::notifications;
 
-        <span class="kw">static</span> <span class="ident">IDS</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span><span class="ident">DePoolParticipantFunctions</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
-        <span class="ident">IDS</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">Box::new</span>(<span class="ident">DePoolParticipantFunctions</span> {
-                <span class="ident">on_round_complete</span>: <span class="ident">notifications::depool_on_round_complete</span>(),
-                <span class="ident">receive_answer</span>: <span class="ident">notifications::depool_receive_answer</span>(),
+        <span class="kw">static </span>IDS: OnceBox&lt;DePoolParticipantFunctions&gt; = OnceBox::new();
+        IDS.get_or_init(|| {
+            Box::new(DePoolParticipantFunctions {
+                on_round_complete: notifications::depool_on_round_complete(),
+                receive_answer: notifications::depool_receive_answer(),
             })
         })
     }
 }
 
-<span class="kw">struct</span> <span class="ident">WalletNotificationFunctions</span> {
-    <span class="ident">notify_wallet_deployed</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
+<span class="kw">struct </span>WalletNotificationFunctions {
+    notify_wallet_deployed: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
 }
 
-<span class="kw">impl</span> <span class="ident">WalletNotificationFunctions</span> {
-    <span class="kw">fn</span> <span class="ident">instance</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="self">Self</span> {
-        <span class="kw">use</span> <span class="ident">nekoton_contracts::wallets::notifications</span>;
+<span class="kw">impl </span>WalletNotificationFunctions {
+    <span class="kw">fn </span>instance() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">Self </span>{
+        <span class="kw">use </span>nekoton_contracts::wallets::notifications;
 
-        <span class="kw">static</span> <span class="ident">IDS</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span><span class="ident">WalletNotificationFunctions</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
-        <span class="ident">IDS</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">Box::new</span>(<span class="ident">WalletNotificationFunctions</span> {
-                <span class="ident">notify_wallet_deployed</span>: <span class="ident">notifications::notify_wallet_deployed</span>(),
+        <span class="kw">static </span>IDS: OnceBox&lt;WalletNotificationFunctions&gt; = OnceBox::new();
+        IDS.get_or_init(|| {
+            Box::new(WalletNotificationFunctions {
+                notify_wallet_deployed: notifications::notify_wallet_deployed(),
             })
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">InputMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DePoolOnRoundCompleteNotification</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;InputMessage&gt; <span class="kw">for </span>DePoolOnRoundCompleteNotification {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">InputMessage</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">DePoolOnRoundCompleteNotification</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>try_from(value: InputMessage) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>input: DePoolOnRoundCompleteNotification = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">round_id</span>: <span class="ident">input</span>.<span class="ident">round_id</span>,
-            <span class="ident">reward</span>: <span class="ident">input</span>.<span class="ident">reward</span>,
-            <span class="ident">ordinary_stake</span>: <span class="ident">input</span>.<span class="ident">ordinary_stake</span>,
-            <span class="ident">vesting_stake</span>: <span class="ident">input</span>.<span class="ident">vesting_stake</span>,
-            <span class="ident">lock_stake</span>: <span class="ident">input</span>.<span class="ident">lock_stake</span>,
-            <span class="ident">reinvest</span>: <span class="ident">input</span>.<span class="ident">reinvest</span>,
-            <span class="ident">reason</span>: <span class="ident">input</span>.<span class="ident">reason</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            round_id: input.round_id,
+            reward: input.reward,
+            ordinary_stake: input.ordinary_stake,
+            vesting_stake: input.vesting_stake,
+            lock_stake: input.lock_stake,
+            reinvest: input.reinvest,
+            reason: input.reason,
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">InputMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DePoolReceiveAnswerNotification</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;InputMessage&gt; <span class="kw">for </span>DePoolReceiveAnswerNotification {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">InputMessage</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">DePoolReceiveAnswerNotification</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>try_from(value: InputMessage) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>input: DePoolReceiveAnswerNotification = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">error_code</span>: <span class="ident">input</span>.<span class="ident">error_code</span>,
-            <span class="ident">comment</span>: <span class="ident">input</span>.<span class="ident">comment</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            error_code: input.error_code,
+            comment: input.comment,
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">InputMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TokenWalletDeployedNotification</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;InputMessage&gt; <span class="kw">for </span>TokenWalletDeployedNotification {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">InputMessage</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">TokenWalletDeployedNotification</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>try_from(value: InputMessage) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>input: TokenWalletDeployedNotification = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">root_token_contract</span>: <span class="ident">input</span>.<span class="ident">root_token_contract</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            root_token_contract: input.root_token_contract,
         })
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_multisig_transaction</span>(
-    <span class="ident">multisig_type</span>: <span class="ident">MultisigType</span>,
-    <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Transaction</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MultisigTransaction</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">in_msg</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">in_msg</span>.<span class="ident">as_ref</span>()<span class="question-mark">?</span>.<span class="ident">read_struct</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="op">!</span><span class="macro">matches!</span>(<span class="ident">in_msg</span>.<span class="ident">header</span>(), <span class="ident">ton_block::CommonMsgInfo::ExtInMsgInfo</span>(<span class="kw">_</span>)) {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="kw">pub fn </span>parse_multisig_transaction(
+    multisig_type: MultisigType,
+    tx: <span class="kw-2">&amp;</span>ton_block::Transaction,
+) -&gt; <span class="prelude-ty">Option</span>&lt;MultisigTransaction&gt; {
+    <span class="kw">let </span>in_msg = tx.in_msg.as_ref()<span class="question-mark">?</span>.read_struct().ok()<span class="question-mark">?</span>;
+    <span class="kw">if </span>!<span class="macro">matches!</span>(in_msg.header(), ton_block::CommonMsgInfo::ExtInMsgInfo(<span class="kw">_</span>)) {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
-    <span class="ident">parse_multisig_transaction_impl</span>(<span class="ident">multisig_type</span>, <span class="ident">in_msg</span>, <span class="ident">tx</span>)
+    parse_multisig_transaction_impl(multisig_type, in_msg, tx)
 }
 
-<span class="kw">fn</span> <span class="ident">parse_multisig_transaction_impl</span>(
-    <span class="ident">multisig_type</span>: <span class="ident">MultisigType</span>,
-    <span class="ident">in_msg</span>: <span class="ident">ton_block::Message</span>,
-    <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Transaction</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MultisigTransaction</span><span class="op">&gt;</span> {
-    <span class="kw">const</span> <span class="ident">PUBKEY_OFFSET</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span> <span class="op">+</span> <span class="ident">ed25519_dalek::SIGNATURE_LENGTH</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="number">1</span>;
-    <span class="kw">const</span> <span class="ident">PUBKEY_LENGTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">256</span>;
-    <span class="kw">const</span> <span class="ident">TIME_LENGTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">64</span>;
-    <span class="kw">const</span> <span class="ident">EXPIRE_LENGTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">32</span>;
+<span class="kw">fn </span>parse_multisig_transaction_impl(
+    multisig_type: MultisigType,
+    in_msg: ton_block::Message,
+    tx: <span class="kw-2">&amp;</span>ton_block::Transaction,
+) -&gt; <span class="prelude-ty">Option</span>&lt;MultisigTransaction&gt; {
+    <span class="kw">const </span>PUBKEY_OFFSET: usize = <span class="number">1 </span>+ ed25519_dalek::SIGNATURE_LENGTH * <span class="number">8 </span>+ <span class="number">1</span>;
+    <span class="kw">const </span>PUBKEY_LENGTH: usize = <span class="number">256</span>;
+    <span class="kw">const </span>TIME_LENGTH: usize = <span class="number">64</span>;
+    <span class="kw">const </span>EXPIRE_LENGTH: usize = <span class="number">32</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">in_msg</span>.<span class="ident">body</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">function_id</span> <span class="op">=</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">body</span>.<span class="ident">clone</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>body = in_msg.body()<span class="question-mark">?</span>;
+    <span class="kw">let </span>function_id = {
+        <span class="kw">let </span><span class="kw-2">mut </span>body = body.clone();
 
-        <span class="comment">// Shift body by Maybe(signature), Maybe(pubkey), time and expire</span>
-        <span class="ident">body</span>.<span class="ident">move_by</span>(<span class="ident">PUBKEY_OFFSET</span> <span class="op">+</span> <span class="ident">PUBKEY_LENGTH</span> <span class="op">+</span> <span class="ident">TIME_LENGTH</span> <span class="op">+</span> <span class="ident">EXPIRE_LENGTH</span>)
-            .<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        <span class="comment">// Shift body by Maybe(signature), Maybe(pubkey), time and expire
+        </span>body.move_by(PUBKEY_OFFSET + PUBKEY_LENGTH + TIME_LENGTH + EXPIRE_LENGTH)
+            .ok()<span class="question-mark">?</span>;
 
-        <span class="ident">read_function_id</span>(<span class="kw-2">&amp;</span><span class="ident">body</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>
-    };
+        read_function_id(<span class="kw-2">&amp;</span>body).ok()<span class="question-mark">?
+    </span>};
 
-    <span class="kw">let</span> <span class="ident">functions</span> <span class="op">=</span> <span class="ident">MultisigFunctions::instance</span>(<span class="ident">multisig_type</span>);
+    <span class="kw">let </span>functions = MultisigFunctions::instance(multisig_type);
 
-    <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">send_transaction</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">send_transaction</span>.<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">false</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+    <span class="kw">if </span>function_id == functions.send_transaction.input_id {
+        <span class="kw">let </span>tokens = functions.send_transaction.decode_input(body, <span class="bool-val">false</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">MultisigSendTransaction::try_from</span>(<span class="ident">InputMessage</span>(<span class="ident">tokens</span>))
-            .<span class="ident">map</span>(<span class="ident">MultisigTransaction::Send</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">submit_transaction</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>
-            .<span class="ident">submit_transaction</span>
-            .<span class="ident">decode_input</span>(<span class="ident">body</span>.<span class="ident">clone</span>(), <span class="bool-val">false</span>)
-            .<span class="ident">ok</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">outputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">submit_transaction</span>.<span class="ident">parse</span>(<span class="ident">tx</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        MultisigSendTransaction::try_from(InputMessage(tokens))
+            .map(MultisigTransaction::Send)
+            .ok()
+    } <span class="kw">else if </span>function_id == functions.submit_transaction.input_id {
+        <span class="kw">let </span>inputs = functions
+            .submit_transaction
+            .decode_input(body.clone(), <span class="bool-val">false</span>)
+            .ok()<span class="question-mark">?</span>;
+        <span class="kw">let </span>outputs = functions.submit_transaction.parse(tx).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">body</span>.<span class="ident">move_by</span>(<span class="ident">PUBKEY_OFFSET</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        body.move_by(PUBKEY_OFFSET).ok()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">custodian</span> <span class="op">=</span> <span class="ident">body</span>.<span class="ident">get_next_hash</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
-        <span class="ident">MultisigSubmitTransaction::try_from</span>((<span class="ident">custodian</span>, <span class="ident">ContractCall</span> { <span class="ident">inputs</span>, <span class="ident">outputs</span> }))
-            .<span class="ident">map</span>(<span class="ident">MultisigTransaction::Submit</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">confirm_transaction</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>
-            .<span class="ident">confirm_transaction</span>
-            .<span class="ident">decode_input</span>(<span class="ident">body</span>.<span class="ident">clone</span>(), <span class="bool-val">false</span>)
-            .<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>custodian = body.get_next_hash().ok()<span class="question-mark">?</span>;
+        MultisigSubmitTransaction::try_from((custodian, ContractCall { inputs, outputs }))
+            .map(MultisigTransaction::Submit)
+            .ok()
+    } <span class="kw">else if </span>function_id == functions.confirm_transaction.input_id {
+        <span class="kw">let </span>inputs = functions
+            .confirm_transaction
+            .decode_input(body.clone(), <span class="bool-val">false</span>)
+            .ok()<span class="question-mark">?</span>;
 
-        <span class="ident">body</span>.<span class="ident">move_by</span>(<span class="ident">PUBKEY_OFFSET</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        body.move_by(PUBKEY_OFFSET).ok()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">custodian</span> <span class="op">=</span> <span class="ident">body</span>.<span class="ident">get_next_hash</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
-        <span class="ident">MultisigConfirmTransaction::try_from</span>((<span class="ident">custodian</span>, <span class="ident">InputMessage</span>(<span class="ident">inputs</span>)))
-            .<span class="ident">map</span>(<span class="ident">MultisigTransaction::Confirm</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+        <span class="kw">let </span>custodian = body.get_next_hash().ok()<span class="question-mark">?</span>;
+        MultisigConfirmTransaction::try_from((custodian, InputMessage(inputs)))
+            .map(MultisigTransaction::Confirm)
+            .ok()
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">struct</span> <span class="ident">MultisigFunctions</span> {
-    <span class="ident">send_transaction</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="ident">submit_transaction</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="ident">confirm_transaction</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
+<span class="kw">struct </span>MultisigFunctions {
+    send_transaction: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    submit_transaction: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    confirm_transaction: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
 }
 
-<span class="kw">impl</span> <span class="ident">MultisigFunctions</span> {
-    <span class="kw">fn</span> <span class="ident">instance</span>(<span class="ident">multisig_type</span>: <span class="ident">MultisigType</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="self">Self</span> {
-        <span class="kw">use</span> <span class="ident">nekoton_contracts::wallets</span>::{<span class="ident">multisig</span>, <span class="ident">multisig2</span>};
+<span class="kw">impl </span>MultisigFunctions {
+    <span class="kw">fn </span>instance(multisig_type: MultisigType) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">Self </span>{
+        <span class="kw">use </span>nekoton_contracts::wallets::{multisig, multisig2};
 
-        <span class="kw">static</span> <span class="ident">OLD_FUNCTIONS</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span><span class="ident">MultisigFunctions</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
-        <span class="kw">static</span> <span class="ident">NEW_FUNCTIONS</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span><span class="ident">MultisigFunctions</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
+        <span class="kw">static </span>OLD_FUNCTIONS: OnceBox&lt;MultisigFunctions&gt; = OnceBox::new();
+        <span class="kw">static </span>NEW_FUNCTIONS: OnceBox&lt;MultisigFunctions&gt; = OnceBox::new();
 
-        <span class="kw">match</span> <span class="ident">multisig_type</span> {
-            <span class="ident">MultisigType::Multisig2</span> =&gt; <span class="ident">NEW_FUNCTIONS</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> {
-                <span class="ident">Box::new</span>(<span class="ident">MultisigFunctions</span> {
-                    <span class="ident">send_transaction</span>: <span class="ident">multisig2::send_transaction</span>(),
-                    <span class="ident">submit_transaction</span>: <span class="ident">multisig2::submit_transaction</span>(),
-                    <span class="ident">confirm_transaction</span>: <span class="ident">multisig2::confirm_transaction</span>(),
+        <span class="kw">match </span>multisig_type {
+            MultisigType::Multisig2 =&gt; NEW_FUNCTIONS.get_or_init(|| {
+                Box::new(MultisigFunctions {
+                    send_transaction: multisig2::send_transaction(),
+                    submit_transaction: multisig2::submit_transaction(),
+                    confirm_transaction: multisig2::confirm_transaction(),
                 })
             }),
-            <span class="kw">_</span> =&gt; <span class="ident">OLD_FUNCTIONS</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> {
-                <span class="ident">Box::new</span>(<span class="ident">MultisigFunctions</span> {
-                    <span class="ident">send_transaction</span>: <span class="ident">multisig::send_transaction</span>(),
-                    <span class="ident">submit_transaction</span>: <span class="ident">multisig::submit_transaction</span>(),
-                    <span class="ident">confirm_transaction</span>: <span class="ident">multisig::confirm_transaction</span>(),
+            <span class="kw">_ </span>=&gt; OLD_FUNCTIONS.get_or_init(|| {
+                Box::new(MultisigFunctions {
+                    send_transaction: multisig::send_transaction(),
+                    submit_transaction: multisig::submit_transaction(),
+                    confirm_transaction: multisig::confirm_transaction(),
                 })
             }),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span>(<span class="ident">UInt256</span>, <span class="ident">InputMessage</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MultisigConfirmTransaction</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;(UInt256, InputMessage)&gt; <span class="kw">for </span>MultisigConfirmTransaction {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>((<span class="ident">custodian</span>, <span class="ident">value</span>): (<span class="ident">UInt256</span>, <span class="ident">InputMessage</span>)) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">output</span>: <span class="ident">MultisigConfirmTransaction</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">custodian</span>,
-            <span class="ident">transaction_id</span>: <span class="ident">output</span>.<span class="ident">transaction_id</span>,
+    <span class="kw">fn </span>try_from((custodian, value): (UInt256, InputMessage)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>output: MultisigConfirmTransaction = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            custodian,
+            transaction_id: output.transaction_id,
         })
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">UnpackAbiPlain</span>)]</span>
-<span class="kw">struct</span> <span class="ident">MultisigSubmitTransactionInput</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
-    <span class="ident">dest</span>: <span class="ident">MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint128_number&quot;</span>)]</span>
-    <span class="ident">value</span>: <span class="ident">BigUint</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">bool</span>)]</span>
-    <span class="ident">bounce</span>: <span class="ident">bool</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">bool</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;allBalance&quot;</span>)]</span>
-    <span class="ident">all_balance</span>: <span class="ident">bool</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">cell</span>)]</span>
-    <span class="ident">payload</span>: <span class="ident">ton_types::Cell</span>,
+<span class="attribute">#[derive(UnpackAbiPlain)]
+</span><span class="kw">struct </span>MultisigSubmitTransactionInput {
+    <span class="attribute">#[abi(address)]
+    </span>dest: MsgAddressInt,
+    <span class="attribute">#[abi(with = <span class="string">&quot;uint128_number&quot;</span>)]
+    </span>value: BigUint,
+    <span class="attribute">#[abi(bool)]
+    </span>bounce: bool,
+    <span class="attribute">#[abi(bool, name = <span class="string">&quot;allBalance&quot;</span>)]
+    </span>all_balance: bool,
+    <span class="attribute">#[abi(cell)]
+    </span>payload: ton_types::Cell,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">UnpackAbiPlain</span>)]</span>
-<span class="kw">struct</span> <span class="ident">MultisigSubmitTransactionOutput</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint64</span>, <span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;transId&quot;</span>)]</span>
-    <span class="ident">trans_id</span>: <span class="ident">u64</span>,
+<span class="attribute">#[derive(UnpackAbiPlain)]
+</span><span class="kw">struct </span>MultisigSubmitTransactionOutput {
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;transId&quot;</span>)]
+    </span>trans_id: u64,
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span>(<span class="ident">UInt256</span>, <span class="ident">ContractCall</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MultisigSubmitTransaction</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;(UInt256, ContractCall)&gt; <span class="kw">for </span>MultisigSubmitTransaction {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>((<span class="ident">custodian</span>, <span class="ident">value</span>): (<span class="ident">UInt256</span>, <span class="ident">ContractCall</span>)) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">MultisigSubmitTransactionInput</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">inputs</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">output</span>: <span class="ident">MultisigSubmitTransactionOutput</span> <span class="op">=</span> <span class="ident">value</span>.<span class="ident">outputs</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>try_from((custodian, value): (UInt256, ContractCall)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>input: MultisigSubmitTransactionInput = value.inputs.unpack()<span class="question-mark">?</span>;
+        <span class="kw">let </span>output: MultisigSubmitTransactionOutput = value.outputs.unpack()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">custodian</span>,
-            <span class="ident">dest</span>: <span class="ident">input</span>.<span class="ident">dest</span>,
-            <span class="ident">value</span>: <span class="ident">input</span>.<span class="ident">value</span>,
-            <span class="ident">bounce</span>: <span class="ident">input</span>.<span class="ident">bounce</span>,
-            <span class="ident">all_balance</span>: <span class="ident">input</span>.<span class="ident">all_balance</span>,
-            <span class="ident">payload</span>: <span class="ident">input</span>.<span class="ident">payload</span>,
-            <span class="ident">trans_id</span>: <span class="ident">output</span>.<span class="ident">trans_id</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            custodian,
+            dest: input.dest,
+            value: input.value,
+            bounce: input.bounce,
+            all_balance: input.all_balance,
+            payload: input.payload,
+            trans_id: output.trans_id,
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">InputMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MultisigSendTransaction</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;InputMessage&gt; <span class="kw">for </span>MultisigSendTransaction {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">InputMessage</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">MultisigSendTransaction</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>try_from(value: InputMessage) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>input: MultisigSendTransaction = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">dest</span>: <span class="ident">input</span>.<span class="ident">dest</span>,
-            <span class="ident">value</span>: <span class="ident">input</span>.<span class="ident">value</span>,
-            <span class="ident">bounce</span>: <span class="ident">input</span>.<span class="ident">bounce</span>,
-            <span class="ident">flags</span>: <span class="ident">input</span>.<span class="ident">flags</span>,
-            <span class="ident">payload</span>: <span class="ident">input</span>.<span class="ident">payload</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            dest: input.dest,
+            value: input.value,
+            bounce: input.bounce,
+            flags: input.flags,
+            payload: input.payload,
         })
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_token_transaction</span>(
-    <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Transaction</span>,
-    <span class="ident">description</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::TransactionDescrOrdinary</span>,
-    <span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TokenWalletTransaction</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">description</span>.<span class="ident">aborted</span> {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="kw">pub fn </span>parse_token_transaction(
+    tx: <span class="kw-2">&amp;</span>ton_block::Transaction,
+    description: <span class="kw-2">&amp;</span>ton_block::TransactionDescrOrdinary,
+    version: TokenWalletVersion,
+) -&gt; <span class="prelude-ty">Option</span>&lt;TokenWalletTransaction&gt; {
+    <span class="kw">if </span>description.aborted {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">in_msg</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">in_msg</span>.<span class="ident">as_ref</span>()<span class="question-mark">?</span>.<span class="ident">read_struct</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
+    <span class="kw">let </span>in_msg = tx.in_msg.as_ref()<span class="question-mark">?</span>.read_struct().ok()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">in_msg</span>.<span class="ident">body</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">function_id</span> <span class="op">=</span> <span class="ident">read_function_id</span>(<span class="kw-2">&amp;</span><span class="ident">body</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>body = in_msg.body()<span class="question-mark">?</span>;
+    <span class="kw">let </span>function_id = read_function_id(<span class="kw-2">&amp;</span>body).ok()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">in_msg</span>.<span class="ident">int_header</span>()<span class="question-mark">?</span>;
+    <span class="kw">let </span>header = in_msg.int_header()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">functions</span> <span class="op">=</span> <span class="ident">TokenWalletFunctions::for_version</span>(<span class="ident">version</span>);
+    <span class="kw">let </span>functions = TokenWalletFunctions::for_version(version);
 
-    <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">bounced</span> {
-        <span class="ident">body</span>.<span class="ident">move_by</span>(<span class="number">32</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">function_id</span> <span class="op">=</span> <span class="ident">read_function_id</span>(<span class="kw-2">&amp;</span><span class="ident">body</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-        <span class="ident">body</span>.<span class="ident">move_by</span>(<span class="number">32</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+    <span class="kw">if </span>header.bounced {
+        body.move_by(<span class="number">32</span>).ok()<span class="question-mark">?</span>;
+        <span class="kw">let </span>function_id = read_function_id(<span class="kw-2">&amp;</span>body).ok()<span class="question-mark">?</span>;
+        body.move_by(<span class="number">32</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">accept_transfer</span>.<span class="ident">input_id</span> {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">TokenWalletTransaction::TransferBounced</span>(
-                <span class="ident">body</span>.<span class="ident">get_next_u128</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>.<span class="ident">into</span>(),
+        <span class="kw">if </span>function_id == functions.accept_transfer.input_id {
+            <span class="kw">return </span><span class="prelude-val">Some</span>(TokenWalletTransaction::TransferBounced(
+                body.get_next_u128().ok()<span class="question-mark">?</span>.into(),
             ));
         }
 
-        <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">accept_burn</span>.<span class="ident">input_id</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">TokenWalletTransaction::SwapBackBounced</span>(
-                <span class="ident">body</span>.<span class="ident">get_next_u128</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>.<span class="ident">into</span>(),
+        <span class="kw">if </span>function_id == functions.accept_burn.input_id {
+            <span class="prelude-val">Some</span>(TokenWalletTransaction::SwapBackBounced(
+                body.get_next_u128().ok()<span class="question-mark">?</span>.into(),
             ))
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">accept_mint</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">accept_mint</span>.<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
+    } <span class="kw">else if </span>function_id == functions.accept_mint.input_id {
+        <span class="kw">let </span>inputs = functions.accept_mint.decode_input(body, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">Accept::try_from</span>((<span class="ident">InputMessage</span>(<span class="ident">inputs</span>), <span class="ident">version</span>))
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">Accept</span> { <span class="ident">tokens</span> }<span class="op">|</span> <span class="ident">TokenWalletTransaction::Accept</span>(<span class="ident">tokens</span>))
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">transfer_to_wallet</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">transfer_to_wallet</span>.<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        Accept::try_from((InputMessage(inputs), version))
+            .map(|Accept { tokens }| TokenWalletTransaction::Accept(tokens))
+            .ok()
+    } <span class="kw">else if </span>function_id == functions.transfer_to_wallet.input_id {
+        <span class="kw">let </span>inputs = functions.transfer_to_wallet.decode_input(body, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">TokenOutgoingTransfer::try_from</span>((
-            <span class="ident">InputMessage</span>(<span class="ident">inputs</span>),
-            <span class="ident">TransferType::ByTokenWalletAddress</span>,
-            <span class="ident">version</span>,
+        TokenOutgoingTransfer::try_from((
+            InputMessage(inputs),
+            TransferType::ByTokenWalletAddress,
+            version,
         ))
-        .<span class="ident">map</span>(<span class="ident">TokenWalletTransaction::OutgoingTransfer</span>)
-        .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">transfer</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">transfer</span>.<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        .map(TokenWalletTransaction::OutgoingTransfer)
+        .ok()
+    } <span class="kw">else if </span>function_id == functions.transfer.input_id {
+        <span class="kw">let </span>inputs = functions.transfer.decode_input(body, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">TokenOutgoingTransfer::try_from</span>((
-            <span class="ident">InputMessage</span>(<span class="ident">inputs</span>),
-            <span class="ident">TransferType::ByOwnerWalletAddress</span>,
-            <span class="ident">version</span>,
+        TokenOutgoingTransfer::try_from((
+            InputMessage(inputs),
+            TransferType::ByOwnerWalletAddress,
+            version,
         ))
-        .<span class="ident">map</span>(<span class="ident">TokenWalletTransaction::OutgoingTransfer</span>)
-        .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">accept_transfer</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">accept_transfer</span>.<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        .map(TokenWalletTransaction::OutgoingTransfer)
+        .ok()
+    } <span class="kw">else if </span>function_id == functions.accept_transfer.input_id {
+        <span class="kw">let </span>inputs = functions.accept_transfer.decode_input(body, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">TokenIncomingTransfer::try_from</span>((<span class="ident">InputMessage</span>(<span class="ident">inputs</span>), <span class="ident">version</span>))
-            .<span class="ident">map</span>(<span class="ident">TokenWalletTransaction::IncomingTransfer</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">burn</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">burn</span>.<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        TokenIncomingTransfer::try_from((InputMessage(inputs), version))
+            .map(TokenWalletTransaction::IncomingTransfer)
+            .ok()
+    } <span class="kw">else if </span>function_id == functions.burn.input_id {
+        <span class="kw">let </span>inputs = functions.burn.decode_input(body, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">TokenSwapBack::try_from</span>((<span class="ident">InputMessage</span>(<span class="ident">inputs</span>), <span class="ident">version</span>))
-            .<span class="ident">map</span>(<span class="ident">TokenWalletTransaction::SwapBack</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+        TokenSwapBack::try_from((InputMessage(inputs), version))
+            .map(TokenWalletTransaction::SwapBack)
+            .ok()
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">struct</span> <span class="ident">NftFunctions</span> {
-    <span class="ident">transfer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="ident">change_owner</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="ident">change_manager</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
+<span class="kw">struct </span>NftFunctions {
+    transfer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    change_owner: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    change_manager: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
 }
 
-<span class="kw">impl</span> <span class="ident">NftFunctions</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">instance</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="self">Self</span> {
-        <span class="kw">static</span> <span class="ident">IDS</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span><span class="ident">NftFunctions</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
-        <span class="ident">IDS</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="ident">Box::new</span>(<span class="self">Self</span> {
-                <span class="ident">transfer</span>: <span class="ident">nft_contract::transfer</span>(),
-                <span class="ident">change_owner</span>: <span class="ident">nft_contract::change_owner</span>(),
-                <span class="ident">change_manager</span>: <span class="ident">nft_contract::change_manager</span>(),
+<span class="kw">impl </span>NftFunctions {
+    <span class="kw">pub fn </span>instance() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">Self </span>{
+        <span class="kw">static </span>IDS: OnceBox&lt;NftFunctions&gt; = OnceBox::new();
+        IDS.get_or_init(|| {
+            Box::new(<span class="self">Self </span>{
+                transfer: nft_contract::transfer(),
+                change_owner: nft_contract::change_owner(),
+                change_manager: nft_contract::change_manager(),
             })
         })
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_nft_transaction</span>(
-    <span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::Transaction</span>,
-    <span class="ident">description</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::TransactionDescrOrdinary</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NftTransaction</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">description</span>.<span class="ident">aborted</span> {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="kw">pub fn </span>parse_nft_transaction(
+    tx: <span class="kw-2">&amp;</span>ton_block::Transaction,
+    description: <span class="kw-2">&amp;</span>ton_block::TransactionDescrOrdinary,
+) -&gt; <span class="prelude-ty">Option</span>&lt;NftTransaction&gt; {
+    <span class="kw">if </span>description.aborted {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">in_msg</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">in_msg</span>.<span class="ident">as_ref</span>()<span class="question-mark">?</span>.<span class="ident">read_struct</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
+    <span class="kw">let </span>in_msg = tx.in_msg.as_ref()<span class="question-mark">?</span>.read_struct().ok()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">body</span> <span class="op">=</span> <span class="ident">in_msg</span>.<span class="ident">body</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">function_id</span> <span class="op">=</span> <span class="ident">read_function_id</span>(<span class="kw-2">&amp;</span><span class="ident">body</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+    <span class="kw">let </span>body = in_msg.body()<span class="question-mark">?</span>;
+    <span class="kw">let </span>function_id = read_function_id(<span class="kw-2">&amp;</span>body).ok()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">functions</span> <span class="op">=</span> <span class="ident">NftFunctions::instance</span>();
+    <span class="kw">let </span>functions = NftFunctions::instance();
 
-    <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">transfer</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">transfer</span>.<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+    <span class="kw">if </span>function_id == functions.transfer.input_id {
+        <span class="kw">let </span>inputs = functions.transfer.decode_input(body, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">IncomingNftTransfer::try_from</span>(<span class="ident">InputMessage</span>(<span class="ident">inputs</span>))
-            .<span class="ident">map</span>(<span class="ident">NftTransaction::Transfer</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">change_owner</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">change_owner</span>.<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        IncomingNftTransfer::try_from(InputMessage(inputs))
+            .map(NftTransaction::Transfer)
+            .ok()
+    } <span class="kw">else if </span>function_id == functions.change_owner.input_id {
+        <span class="kw">let </span>inputs = functions.change_owner.decode_input(body, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">IncomingChangeOwner::try_from</span>(<span class="ident">InputMessage</span>(<span class="ident">inputs</span>))
-            .<span class="ident">map</span>(<span class="ident">NftTransaction::ChangeOwner</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">function_id</span> <span class="op">==</span> <span class="ident">functions</span>.<span class="ident">change_manager</span>.<span class="ident">input_id</span> {
-        <span class="kw">let</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">functions</span>.<span class="ident">transfer</span>.<span class="ident">decode_input</span>(<span class="ident">body</span>, <span class="bool-val">true</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        IncomingChangeOwner::try_from(InputMessage(inputs))
+            .map(NftTransaction::ChangeOwner)
+            .ok()
+    } <span class="kw">else if </span>function_id == functions.change_manager.input_id {
+        <span class="kw">let </span>inputs = functions.transfer.decode_input(body, <span class="bool-val">true</span>).ok()<span class="question-mark">?</span>;
 
-        <span class="ident">IncomingChangeManager::try_from</span>(<span class="ident">InputMessage</span>(<span class="ident">inputs</span>))
-            .<span class="ident">map</span>(<span class="ident">NftTransaction::ChangeManager</span>)
-            .<span class="ident">ok</span>()
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
+        IncomingChangeManager::try_from(InputMessage(inputs))
+            .map(NftTransaction::ChangeManager)
+            .ok()
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">struct</span> <span class="ident">TokenWalletFunctions</span> {
-    <span class="comment">// Incoming</span>
-    <span class="ident">accept_mint</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="comment">// Incoming</span>
-    <span class="ident">transfer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="comment">// Incoming</span>
-    <span class="ident">transfer_to_wallet</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="comment">// Incoming</span>
-    <span class="ident">accept_transfer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="comment">// Incoming</span>
-    <span class="ident">burn</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
-    <span class="comment">// Outgoing</span>
-    <span class="ident">accept_burn</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span>,
+<span class="kw">struct </span>TokenWalletFunctions {
+    <span class="comment">// Incoming
+    </span>accept_mint: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    <span class="comment">// Incoming
+    </span>transfer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    <span class="comment">// Incoming
+    </span>transfer_to_wallet: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    <span class="comment">// Incoming
+    </span>accept_transfer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    <span class="comment">// Incoming
+    </span>burn: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    <span class="comment">// Outgoing
+    </span>accept_burn: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
 }
 
-<span class="kw">impl</span> <span class="ident">TokenWalletFunctions</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">for_version</span>(<span class="ident">version</span>: <span class="ident">TokenWalletVersion</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TokenWalletFunctions</span> {
-        <span class="kw">match</span> <span class="ident">version</span> {
-            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; {
-                <span class="kw">static</span> <span class="ident">IDS</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span><span class="ident">TokenWalletFunctions</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
-                <span class="ident">IDS</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> {
-                    <span class="ident">Box::new</span>(<span class="self">Self</span> {
-                        <span class="ident">accept_mint</span>: <span class="ident">old_tip3::token_wallet_contract::accept</span>(),
-                        <span class="ident">transfer</span>: <span class="ident">old_tip3::token_wallet_contract::transfer_to_recipient</span>(),
-                        <span class="ident">transfer_to_wallet</span>: <span class="ident">old_tip3::token_wallet_contract::transfer</span>(),
-                        <span class="ident">accept_transfer</span>: <span class="ident">old_tip3::token_wallet_contract::internal_transfer</span>(),
-                        <span class="ident">burn</span>: <span class="ident">old_tip3::token_wallet_contract::burn_by_owner</span>(),
-                        <span class="ident">accept_burn</span>: <span class="ident">old_tip3::root_token_contract::tokens_burned</span>(),
+<span class="kw">impl </span>TokenWalletFunctions {
+    <span class="kw">pub fn </span>for_version(version: TokenWalletVersion) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>TokenWalletFunctions {
+        <span class="kw">match </span>version {
+            TokenWalletVersion::OldTip3v4 =&gt; {
+                <span class="kw">static </span>IDS: OnceBox&lt;TokenWalletFunctions&gt; = OnceBox::new();
+                IDS.get_or_init(|| {
+                    Box::new(<span class="self">Self </span>{
+                        accept_mint: old_tip3::token_wallet_contract::accept(),
+                        transfer: old_tip3::token_wallet_contract::transfer_to_recipient(),
+                        transfer_to_wallet: old_tip3::token_wallet_contract::transfer(),
+                        accept_transfer: old_tip3::token_wallet_contract::internal_transfer(),
+                        burn: old_tip3::token_wallet_contract::burn_by_owner(),
+                        accept_burn: old_tip3::root_token_contract::tokens_burned(),
                     })
                 })
             }
-            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; {
-                <span class="kw">static</span> <span class="ident">IDS</span>: <span class="ident">OnceBox</span><span class="op">&lt;</span><span class="ident">TokenWalletFunctions</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceBox::new</span>();
-                <span class="ident">IDS</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> {
-                    <span class="ident">Box::new</span>(<span class="self">Self</span> {
-                        <span class="ident">accept_mint</span>: <span class="ident">tip3_1::token_wallet_contract::accept_mint</span>(),
-                        <span class="ident">transfer</span>: <span class="ident">tip3_1::token_wallet_contract::transfer</span>(),
-                        <span class="ident">transfer_to_wallet</span>: <span class="ident">tip3_1::token_wallet_contract::transfer_to_wallet</span>(),
-                        <span class="ident">accept_transfer</span>: <span class="ident">tip3_1::token_wallet_contract::accept_transfer</span>(),
-                        <span class="ident">burn</span>: <span class="ident">tip3_1::token_wallet_contract::burnable::burn</span>(),
-                        <span class="ident">accept_burn</span>: <span class="ident">tip3_1::root_token_contract::accept_burn</span>(),
+            TokenWalletVersion::Tip3 =&gt; {
+                <span class="kw">static </span>IDS: OnceBox&lt;TokenWalletFunctions&gt; = OnceBox::new();
+                IDS.get_or_init(|| {
+                    Box::new(<span class="self">Self </span>{
+                        accept_mint: tip3_1::token_wallet_contract::accept_mint(),
+                        transfer: tip3_1::token_wallet_contract::transfer(),
+                        transfer_to_wallet: tip3_1::token_wallet_contract::transfer_to_wallet(),
+                        accept_transfer: tip3_1::token_wallet_contract::accept_transfer(),
+                        burn: tip3_1::token_wallet_contract::burnable::burn(),
+                        accept_burn: tip3_1::root_token_contract::accept_burn(),
                     })
                 })
             }
@@ -1523,310 +1523,310 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span>(<span class="ident">InputMessage</span>, <span class="ident">TokenWalletVersion</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TokenSwapBack</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;(InputMessage, TokenWalletVersion)&gt; <span class="kw">for </span>TokenSwapBack {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>((<span class="ident">value</span>, <span class="ident">version</span>): (<span class="ident">InputMessage</span>, <span class="ident">TokenWalletVersion</span>)) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">version</span> {
-            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">old_tip3::token_wallet_contract::BurnByOwnerInputs</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>try_from((value, version): (InputMessage, TokenWalletVersion)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>version {
+            TokenWalletVersion::OldTip3v4 =&gt; {
+                <span class="kw">let </span>input: old_tip3::token_wallet_contract::BurnByOwnerInputs = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-                <span class="self">Self</span> {
-                    <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">tokens</span>,
-                    <span class="ident">callback_address</span>: <span class="ident">input</span>.<span class="ident">callback_address</span>,
-                    <span class="ident">callback_payload</span>: <span class="ident">input</span>.<span class="ident">callback_payload</span>,
+                <span class="self">Self </span>{
+                    tokens: input.tokens,
+                    callback_address: input.callback_address,
+                    callback_payload: input.callback_payload,
                 }
             }
-            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">tip3_1::token_wallet_contract::burnable::BurnInputs</span> <span class="op">=</span>
-                    <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+            TokenWalletVersion::Tip3 =&gt; {
+                <span class="kw">let </span>input: tip3_1::token_wallet_contract::burnable::BurnInputs =
+                    value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-                <span class="self">Self</span> {
-                    <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">amount</span>,
-                    <span class="ident">callback_address</span>: <span class="ident">input</span>.<span class="ident">callback_to</span>,
-                    <span class="ident">callback_payload</span>: <span class="ident">input</span>.<span class="ident">payload</span>,
-                }
-            }
-        })
-    }
-}
-
-<span class="kw">struct</span> <span class="ident">Accept</span> {
-    <span class="ident">tokens</span>: <span class="ident">BigUint</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span>(<span class="ident">InputMessage</span>, <span class="ident">TokenWalletVersion</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Accept</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
-
-    <span class="kw">fn</span> <span class="ident">try_from</span>((<span class="ident">value</span>, <span class="ident">version</span>): (<span class="ident">InputMessage</span>, <span class="ident">TokenWalletVersion</span>)) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">version</span> {
-            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">old_tip3::token_wallet_contract::AcceptInputs</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-                <span class="self">Self</span> {
-                    <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">tokens</span>,
-                }
-            }
-            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">tip3_1::token_wallet_contract::AcceptMintInputs</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-                <span class="self">Self</span> {
-                    <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">amount</span>,
+                <span class="self">Self </span>{
+                    tokens: input.amount,
+                    callback_address: input.callback_to,
+                    callback_payload: input.payload,
                 }
             }
         })
     }
 }
 
-<span class="kw">enum</span> <span class="ident">TransferType</span> {
-    <span class="ident">ByOwnerWalletAddress</span>,
-    <span class="ident">ByTokenWalletAddress</span>,
+<span class="kw">struct </span>Accept {
+    tokens: BigUint,
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span>(<span class="ident">InputMessage</span>, <span class="ident">TransferType</span>, <span class="ident">TokenWalletVersion</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TokenOutgoingTransfer</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;(InputMessage, TokenWalletVersion)&gt; <span class="kw">for </span>Accept {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(
-        (<span class="ident">value</span>, <span class="ident">transfer_type</span>, <span class="ident">version</span>): (<span class="ident">InputMessage</span>, <span class="ident">TransferType</span>, <span class="ident">TokenWalletVersion</span>),
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">version</span> {
-            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; {
-                <span class="kw">match</span> <span class="ident">transfer_type</span> {
-                    <span class="comment">// &quot;transferToRecipient&quot;</span>
-                    <span class="ident">TransferType::ByOwnerWalletAddress</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">old_tip3::token_wallet_contract::TransferToRecipientInputs</span> <span class="op">=</span>
-                            <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-                        <span class="self">Self</span> {
-                            <span class="ident">to</span>: <span class="ident">TransferRecipient::OwnerWallet</span>(<span class="ident">input</span>.<span class="ident">recipient_address</span>),
-                            <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">tokens</span>,
-                        }
-                    }
-                    <span class="comment">// &quot;transfer</span>
-                    <span class="ident">TransferType::ByTokenWalletAddress</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">old_tip3::token_wallet_contract::TransferInputs</span> <span class="op">=</span>
-                            <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-                        <span class="self">Self</span> {
-                            <span class="ident">to</span>: <span class="ident">TransferRecipient::TokenWallet</span>(<span class="ident">input</span>.<span class="ident">to</span>),
-                            <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">tokens</span>,
-                        }
-                    }
+    <span class="kw">fn </span>try_from((value, version): (InputMessage, TokenWalletVersion)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>version {
+            TokenWalletVersion::OldTip3v4 =&gt; {
+                <span class="kw">let </span>input: old_tip3::token_wallet_contract::AcceptInputs = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+                <span class="self">Self </span>{
+                    tokens: input.tokens,
                 }
             }
-            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; {
-                <span class="kw">match</span> <span class="ident">transfer_type</span> {
-                    <span class="comment">// &quot;transfer&quot;</span>
-                    <span class="ident">TransferType::ByOwnerWalletAddress</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">tip3_1::token_wallet_contract::TransferInputs</span> <span class="op">=</span>
-                            <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-                        <span class="self">Self</span> {
-                            <span class="ident">to</span>: <span class="ident">TransferRecipient::OwnerWallet</span>(<span class="ident">input</span>.<span class="ident">recipient</span>),
-                            <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">amount</span>,
+            TokenWalletVersion::Tip3 =&gt; {
+                <span class="kw">let </span>input: tip3_1::token_wallet_contract::AcceptMintInputs = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+                <span class="self">Self </span>{
+                    tokens: input.amount,
+                }
+            }
+        })
+    }
+}
+
+<span class="kw">enum </span>TransferType {
+    ByOwnerWalletAddress,
+    ByTokenWalletAddress,
+}
+
+<span class="kw">impl </span>TryFrom&lt;(InputMessage, TransferType, TokenWalletVersion)&gt; <span class="kw">for </span>TokenOutgoingTransfer {
+    <span class="kw">type </span>Error = UnpackerError;
+
+    <span class="kw">fn </span>try_from(
+        (value, transfer_type, version): (InputMessage, TransferType, TokenWalletVersion),
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>version {
+            TokenWalletVersion::OldTip3v4 =&gt; {
+                <span class="kw">match </span>transfer_type {
+                    <span class="comment">// &quot;transferToRecipient&quot;
+                    </span>TransferType::ByOwnerWalletAddress =&gt; {
+                        <span class="kw">let </span>input: old_tip3::token_wallet_contract::TransferToRecipientInputs =
+                            value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+                        <span class="self">Self </span>{
+                            to: TransferRecipient::OwnerWallet(input.recipient_address),
+                            tokens: input.tokens,
                         }
                     }
-                    <span class="comment">// &quot;transferToWallet&quot;</span>
-                    <span class="ident">TransferType::ByTokenWalletAddress</span> =&gt; {
-                        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">tip3_1::token_wallet_contract::TransferToWalletInputs</span> <span class="op">=</span>
-                            <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-                        <span class="self">Self</span> {
-                            <span class="ident">to</span>: <span class="ident">TransferRecipient::TokenWallet</span>(<span class="ident">input</span>.<span class="ident">recipient_token_wallet</span>),
-                            <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">amount</span>,
+                    <span class="comment">// &quot;transfer
+                    </span>TransferType::ByTokenWalletAddress =&gt; {
+                        <span class="kw">let </span>input: old_tip3::token_wallet_contract::TransferInputs =
+                            value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+                        <span class="self">Self </span>{
+                            to: TransferRecipient::TokenWallet(input.to),
+                            tokens: input.tokens,
                         }
                     }
                 }
             }
-        })
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span>(<span class="ident">InputMessage</span>, <span class="ident">TokenWalletVersion</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TokenIncomingTransfer</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
-
-    <span class="kw">fn</span> <span class="ident">try_from</span>((<span class="ident">value</span>, <span class="ident">version</span>): (<span class="ident">InputMessage</span>, <span class="ident">TokenWalletVersion</span>)) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">version</span> {
-            <span class="ident">TokenWalletVersion::OldTip3v4</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">old_tip3::token_wallet_contract::InternalTransferInputs</span> <span class="op">=</span>
-                    <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-
-                <span class="self">Self</span> {
-                    <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">tokens</span>,
-                    <span class="ident">sender_address</span>: <span class="ident">input</span>.<span class="ident">sender_address</span>,
-                }
-            }
-            <span class="ident">TokenWalletVersion::Tip3</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">tip3_1::token_wallet_contract::AcceptTransferInputs</span> <span class="op">=</span>
-                    <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
-
-                <span class="self">Self</span> {
-                    <span class="ident">tokens</span>: <span class="ident">input</span>.<span class="ident">amount</span>,
-                    <span class="ident">sender_address</span>: <span class="ident">input</span>.<span class="ident">sender</span>,
+            TokenWalletVersion::Tip3 =&gt; {
+                <span class="kw">match </span>transfer_type {
+                    <span class="comment">// &quot;transfer&quot;
+                    </span>TransferType::ByOwnerWalletAddress =&gt; {
+                        <span class="kw">let </span>input: tip3_1::token_wallet_contract::TransferInputs =
+                            value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+                        <span class="self">Self </span>{
+                            to: TransferRecipient::OwnerWallet(input.recipient),
+                            tokens: input.amount,
+                        }
+                    }
+                    <span class="comment">// &quot;transferToWallet&quot;
+                    </span>TransferType::ByTokenWalletAddress =&gt; {
+                        <span class="kw">let </span>input: tip3_1::token_wallet_contract::TransferToWalletInputs =
+                            value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+                        <span class="self">Self </span>{
+                            to: TransferRecipient::TokenWallet(input.recipient_token_wallet),
+                            tokens: input.amount,
+                        }
+                    }
                 }
             }
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">InputMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IncomingNftTransfer</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;(InputMessage, TokenWalletVersion)&gt; <span class="kw">for </span>TokenIncomingTransfer {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">InputMessage</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">nft_contract::TransferInputs</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>try_from((value, version): (InputMessage, TokenWalletVersion)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>version {
+            TokenWalletVersion::OldTip3v4 =&gt; {
+                <span class="kw">let </span>input: old_tip3::token_wallet_contract::InternalTransferInputs =
+                    value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">send_gas_to</span>: <span class="ident">input</span>.<span class="ident">send_gas_to</span>,
-            <span class="ident">to</span>: <span class="ident">input</span>.<span class="ident">to</span>,
+                <span class="self">Self </span>{
+                    tokens: input.tokens,
+                    sender_address: input.sender_address,
+                }
+            }
+            TokenWalletVersion::Tip3 =&gt; {
+                <span class="kw">let </span>input: tip3_1::token_wallet_contract::AcceptTransferInputs =
+                    value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+
+                <span class="self">Self </span>{
+                    tokens: input.amount,
+                    sender_address: input.sender,
+                }
+            }
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">InputMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IncomingChangeManager</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;InputMessage&gt; <span class="kw">for </span>IncomingNftTransfer {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">InputMessage</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">nft_contract::ChangeManagerInputs</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>try_from(value: InputMessage) -&gt; std::result::Result&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>input: nft_contract::TransferInputs = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">send_gas_to</span>: <span class="ident">input</span>.<span class="ident">send_gas_to</span>,
-            <span class="ident">new_manager</span>: <span class="ident">input</span>.<span class="ident">new_manager</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            send_gas_to: input.send_gas_to,
+            to: input.to,
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">InputMessage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IncomingChangeOwner</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">UnpackerError</span>;
+<span class="kw">impl </span>TryFrom&lt;InputMessage&gt; <span class="kw">for </span>IncomingChangeManager {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">value</span>: <span class="ident">InputMessage</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">nft_contract::ChangeOwnerInputs</span> <span class="op">=</span> <span class="ident">value</span>.<span class="number">0</span>.<span class="ident">unpack</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>try_from(value: InputMessage) -&gt; std::result::Result&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>input: nft_contract::ChangeManagerInputs = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">send_gas_to</span>: <span class="ident">input</span>.<span class="ident">send_gas_to</span>,
-            <span class="ident">new_owner</span>: <span class="ident">input</span>.<span class="ident">new_owner</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            send_gas_to: input.send_gas_to,
+            new_manager: input.new_manager,
         })
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
+<span class="kw">impl </span>TryFrom&lt;InputMessage&gt; <span class="kw">for </span>IncomingChangeOwner {
+    <span class="kw">type </span>Error = UnpackerError;
 
-    <span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">Deserializable</span>, <span class="ident">Transaction</span>, <span class="ident">TransactionDescrOrdinary</span>};
+    <span class="kw">fn </span>try_from(value: InputMessage) -&gt; std::result::Result&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span>input: nft_contract::ChangeOwnerInputs = value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::ton_wallet::MultisigType</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            send_gas_to: input.send_gas_to,
+            new_owner: input.new_owner,
+        })
+    }
+}
 
-    <span class="kw">fn</span> <span class="ident">parse_transaction</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; (<span class="ident">Transaction</span>, <span class="ident">TransactionDescrOrdinary</span>) {
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Transaction::construct_from_base64</span>(<span class="ident">data</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">description</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">description</span>.<span class="ident">read_struct</span>().<span class="ident">unwrap</span>() {
-            <span class="ident">ton_block::TransactionDescr::Ordinary</span>(<span class="ident">description</span>) =&gt; <span class="ident">description</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(),
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::str::FromStr;
+
+    <span class="kw">use </span>ton_block::{Deserializable, Transaction, TransactionDescrOrdinary};
+
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::core::ton_wallet::MultisigType;
+
+    <span class="kw">fn </span>parse_transaction(data: <span class="kw-2">&amp;</span>str) -&gt; (Transaction, TransactionDescrOrdinary) {
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(data).unwrap();
+        <span class="kw">let </span>description = <span class="kw">match </span>tx.description.read_struct().unwrap() {
+            ton_block::TransactionDescr::Ordinary(description) =&gt; description,
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(),
         };
-        (<span class="ident">tx</span>, <span class="ident">description</span>)
+        (tx, description)
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_transaction_with_comment</span>() {
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Transaction::construct_from_base64</span>(<span class="string">&quot;te6ccgECCAEAAa0AA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAALi67rDsNGkd3DyaHde6qGSNyU7rxIrKKUFCg2XCiOWm8qj/wgcwAAC4uu6w7BYG3S5AABRh6EgIBQQBAhUECQ7msoAYYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzD0JAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnI6oOa5hnaAmb92gCQ5BlaDDjAmDoH5UvSJNuK95TfvcajtZ/eBLgOpVpjmuIPSjgFKd0RzU/MXZ1uRuop7DU5HAQGgBgG5aAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlwAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDuaygABhnMOAAAFxdd1h2EwNulyAAAAABABwAqaSBsb3ZlIG1lbWVzIGFuZCDwn6aA&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_transaction_with_comment() {
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECCAEAAa0AA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAALi67rDsNGkd3DyaHde6qGSNyU7rxIrKKUFCg2XCiOWm8qj/wgcwAAC4uu6w7BYG3S5AABRh6EgIBQQBAhUECQ7msoAYYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzD0JAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnI6oOa5hnaAmb92gCQ5BlaDDjAmDoH5UvSJNuK95TfvcajtZ/eBLgOpVpjmuIPSjgFKd0RzU/MXZ1uRuop7DU5HAQGgBgG5aAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlwAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDuaygABhnMOAAAFxdd1h2EwNulyAAAAABABwAqaSBsb3ZlIG1lbWVzIGFuZCDwn6aA&quot;</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">parse_transaction_additional_info</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">WalletType::WalletV3</span>).<span class="ident">unwrap</span>(),
-            <span class="ident">TransactionAdditionalInfo::Comment</span>(<span class="kw">_</span>)
+            parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
+            TransactionAdditionalInfo::Comment(<span class="kw">_</span>)
         ));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">parse_depool_on_round_complete</span>() {
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Transaction::construct_from_base64</span>(<span class="string">&quot;te6ccgECBgEAATYAA7F6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhcEbrIEikkn05Ku83ZEENvShriMSDo3Wrh+PZVqEZZFR73UDNgAADIW3VTuCYJRG2wABQiKAMCAQALDERIQEkgAIJy0W3rZziZMBhdOhOSsj9f2V3MqUZWvD39kx9ersOjLDlIhSvIB0KaWZELIJ7zw+I+Sy9Ykv6tSJbSpB49hDcHiQEBoAQBq0gBd5fv1pbeJAd0Wp/qbrvGFKgRUCYX7z8OHfefqT2CydMAKkhRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLEBAYduXAAABkLgdvLrMEojabABQBbRE1D9QAAAAAAAAB5AAAAAES7c48AAATFd7ZSmgAAAAAAAAAAAAAAAAAAAACCwA==&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_depool_on_round_complete() {
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECBgEAATYAA7F6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhcEbrIEikkn05Ku83ZEENvShriMSDo3Wrh+PZVqEZZFR73UDNgAADIW3VTuCYJRG2wABQiKAMCAQALDERIQEkgAIJy0W3rZziZMBhdOhOSsj9f2V3MqUZWvD39kx9ersOjLDlIhSvIB0KaWZELIJ7zw+I+Sy9Ykv6tSJbSpB49hDcHiQEBoAQBq0gBd5fv1pbeJAd0Wp/qbrvGFKgRUCYX7z8OHfefqT2CydMAKkhRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLEBAYduXAAABkLgdvLrMEojabABQBbRE1D9QAAAAAAAAB5AAAAAES7c48AAATFd7ZSmgAAAAAAAAAAAAAAAAAAAACCwA==&quot;</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">parse_transaction_additional_info</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">WalletType::WalletV3</span>).<span class="ident">unwrap</span>(),
-            <span class="ident">TransactionAdditionalInfo::DePoolOnRoundComplete</span>(<span class="kw">_</span>)
+            parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
+            TransactionAdditionalInfo::DePoolOnRoundComplete(<span class="kw">_</span>)
         ))
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">parse_depool_receive_answer</span>() {
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Transaction::construct_from_base64</span>(<span class="string">&quot;te6ccgECBwEAAaEAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhnsD1kVwt3ZSvzdkgOgwJsxv58wEM0BQZrsemU6arhBFJ4fxjwAADIZ7A9ZBYJRjLgABRh6EgIBQQBAhUMCQ66Pp4YYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzDxS7AAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIEOMO6fRXte5PGI5jiEUhiDtcNPCIWL5NWNQNOK9Xcl+MnFzrWwqjP3BjSUMj+iqVsHR/XXRK4EG15vN19dQTxAQGgBgDRSAFA+IzRUVgwA2vU75DcYvlAT67YURjbSaU6+j+uLV/oFQAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDro+ngBhRYYAAAGQz2B6yIwSjGXB+ITyIAAAADAAAAAAAAAABA&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_depool_receive_answer() {
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECBwEAAaEAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhnsD1kVwt3ZSvzdkgOgwJsxv58wEM0BQZrsemU6arhBFJ4fxjwAADIZ7A9ZBYJRjLgABRh6EgIBQQBAhUMCQ66Pp4YYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzDxS7AAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIEOMO6fRXte5PGI5jiEUhiDtcNPCIWL5NWNQNOK9Xcl+MnFzrWwqjP3BjSUMj+iqVsHR/XXRK4EG15vN19dQTxAQGgBgDRSAFA+IzRUVgwA2vU75DcYvlAT67YURjbSaU6+j+uLV/oFQAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDro+ngBhRYYAAAGQz2B6yIwSjGXB+ITyIAAAADAAAAAAAAAABA&quot;</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">parse_transaction_additional_info</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">WalletType::WalletV3</span>).<span class="ident">unwrap</span>(),
-            <span class="ident">TransactionAdditionalInfo::DePoolReceiveAnswer</span>(<span class="kw">_</span>)
+            parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
+            TransactionAdditionalInfo::DePoolReceiveAnswer(<span class="kw">_</span>)
         ))
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_parse_wallet_deployment</span>() {
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Transaction::construct_from_base64</span>(<span class="string">&quot;te6ccgECBQEAATAAA7F44lhmAlE+maVfor4IVhRpx85Rp9WiWXdVjnfvK8k4e0AAALc5peDsFNAtcF1BRBGfRP73+ljNPUUc+ir7FmHntIcbeh/ba28gAAC3OZS2ZBYGofQAABQgSAMCAQAVBECIicQJoBh6EgIAgnIIhWuBGHA/f3IsyBPHr57C3d7pcU83NmIoz5CkFu+Hsn742ILtpOsOCyUw6fEN9VwMZzJ8dj6MuR/kKlztR9sKAQGgBAD3aAHILrQNhiymjQB0/Pw/ubdxFv4FXRIQhcVcOMZMH8eJ5wAjiWGYCUT6ZpV+ivghWFGnHzlGn1aJZd1WOd+8ryTh7QicQAYUWGAAABbnNEILiMDUPm4kKd2bwA7tPzMWNNSaXaK1RvRlLdSIlIehh8LvndIgPP8XtYTj2A==&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_parse_wallet_deployment() {
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECBQEAATAAA7F44lhmAlE+maVfor4IVhRpx85Rp9WiWXdVjnfvK8k4e0AAALc5peDsFNAtcF1BRBGfRP73+ljNPUUc+ir7FmHntIcbeh/ba28gAAC3OZS2ZBYGofQAABQgSAMCAQAVBECIicQJoBh6EgIAgnIIhWuBGHA/f3IsyBPHr57C3d7pcU83NmIoz5CkFu+Hsn742ILtpOsOCyUw6fEN9VwMZzJ8dj6MuR/kKlztR9sKAQGgBAD3aAHILrQNhiymjQB0/Pw/ubdxFv4FXRIQhcVcOMZMH8eJ5wAjiWGYCUT6ZpV+ivghWFGnHzlGn1aJZd1WOd+8ryTh7QicQAYUWGAAABbnNEILiMDUPm4kKd2bwA7tPzMWNNSaXaK1RvRlLdSIlIehh8LvndIgPP8XtYTj2A==&quot;</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">parse_transaction_additional_info</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">WalletType::WalletV3</span>).<span class="ident">unwrap</span>(),
-            <span class="ident">TransactionAdditionalInfo::TokenWalletDeployed</span>(<span class="kw">_</span>)
+            parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
+            TransactionAdditionalInfo::TokenWalletDeployed(<span class="kw">_</span>)
         ));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_parse_wallet_v3_transfer</span>() {
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Transaction::construct_from_base64</span>(<span class="string">&quot;te6ccgECCgEAAkgAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAOsYeZvcH4TzG78Qm4432VnPT2nEy4Ms4gzZ+kR9Dc3m2ovCml6wAADqzLEDICYOmNuQADRpPeiIBQQBAhEMggEGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAPgixOHXZ98UI4dij2WkyFV1pxMvMnheV/eiEMi5McOJkBQFgwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnKb5t2GaSGpykknfbY8sbLCoUmDjRnHY8ac6h6aQu56Ln3v5XCybUkA/gfrXRR3FEMh6/ByWbJu6d1D4Gxa7IrOAgHgCAYBAd8HALFIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeXACpIUU0cjZrf+7sFTI6lrXc8XGXyI3A1FeN+lKQC4ozy0O5rKAAGFFhgAAAdYw8ze4TB0xtyQAHfiAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlgOVFdAK7dI4eTxuEFTOhLxRr9wbXDgGzg0hdU9yZ5Fh4kK1kUZwoNhGrMoZQuRfhZC579ikC131c9r3A1GPZdA6XUlsUwdMb1gAABcAHAkAaEIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeWh3NZQAAAAAAAAAAAAAAAAAAA=&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_parse_wallet_v3_transfer() {
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECCgEAAkgAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAOsYeZvcH4TzG78Qm4432VnPT2nEy4Ms4gzZ+kR9Dc3m2ovCml6wAADqzLEDICYOmNuQADRpPeiIBQQBAhEMggEGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAPgixOHXZ98UI4dij2WkyFV1pxMvMnheV/eiEMi5McOJkBQFgwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnKb5t2GaSGpykknfbY8sbLCoUmDjRnHY8ac6h6aQu56Ln3v5XCybUkA/gfrXRR3FEMh6/ByWbJu6d1D4Gxa7IrOAgHgCAYBAd8HALFIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeXACpIUU0cjZrf+7sFTI6lrXc8XGXyI3A1FeN+lKQC4ozy0O5rKAAGFFhgAAAdYw8ze4TB0xtyQAHfiAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlgOVFdAK7dI4eTxuEFTOhLxRr9wbXDgGzg0hdU9yZ5Fh4kK1kUZwoNhGrMoZQuRfhZC579ikC131c9r3A1GPZdA6XUlsUwdMb1gAABcAHAkAaEIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeWh3NZQAAAAAAAAAAAAAAAAAAA=&quot;</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">parse_transaction_additional_info</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">WalletType::WalletV3</span>).<span class="ident">unwrap</span>(),
-            <span class="ident">TransactionAdditionalInfo::WalletInteraction</span>(<span class="ident">WalletInteractionInfo</span> {
-                <span class="ident">recipient</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
-                <span class="ident">known_payload</span>: <span class="prelude-val">None</span>,
-                <span class="ident">method</span>: <span class="ident">WalletInteractionMethod::WalletV3Transfer</span>,
+            parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
+            TransactionAdditionalInfo::WalletInteraction(WalletInteractionInfo {
+                recipient: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
+                known_payload: <span class="prelude-val">None</span>,
+                method: WalletInteractionMethod::WalletV3Transfer,
             })
         ))
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_parse_multisig_submit</span>() {
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Transaction::construct_from_base64</span>(<span class="string">&quot;te6ccgECDAEAAkMAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAEv38uN8H+CfBrFklcU0i9Vs4RZzxi5vtTa9PqJ/LpPctz/rat2wAABIjJ0UsBX2sytAADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAOylU78GhKKYOUuj1Rh3dLpOOzgJUEyoySchhaM60lDREBQDowAnUfXAxOIAAAAAAAAAABtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnJ5QDnTzA46E1KOsPz7QLrshaiw53aaaTNY7TZfFM9uf9wCstMqmz8MmfSmYLSpRuMah9ruqiOVsRPjzhTEdu9aAgHgCAYBAd8HAHXn+7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u4AAAJfv5cb4S+1mVoSY7BZq+1mVo/lxvgwAFFif7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7gwJAeGUlZeW3g4p7fOroeyZUZdj1hWrKWusR/Na6V9uRhKJvV3dgWDQ1/YR5hQfYLaM861DgLJMku/LPDKMt43TyJUH+ToLdTA3yCwRnsc9IMg9JIXlsbI92/1mZ+RrZF1GGY1AAABdLq+AHhfazLsEx2CzYAoBY4AVKmRhQN1a9YbnwdGmdH0KtPv2SINcG4FpEDjh70ON2qAAAAAAAAAAAAAdjv+NHoAUCwAA&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_parse_multisig_submit() {
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECDAEAAkMAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAEv38uN8H+CfBrFklcU0i9Vs4RZzxi5vtTa9PqJ/LpPctz/rat2wAABIjJ0UsBX2sytAADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAOylU78GhKKYOUuj1Rh3dLpOOzgJUEyoySchhaM60lDREBQDowAnUfXAxOIAAAAAAAAAABtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnJ5QDnTzA46E1KOsPz7QLrshaiw53aaaTNY7TZfFM9uf9wCstMqmz8MmfSmYLSpRuMah9ruqiOVsRPjzhTEdu9aAgHgCAYBAd8HAHXn+7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u4AAAJfv5cb4S+1mVoSY7BZq+1mVo/lxvgwAFFif7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7gwJAeGUlZeW3g4p7fOroeyZUZdj1hWrKWusR/Na6V9uRhKJvV3dgWDQ1/YR5hQfYLaM861DgLJMku/LPDKMt43TyJUH+ToLdTA3yCwRnsc9IMg9JIXlsbI92/1mZ+RrZF1GGY1AAABdLq+AHhfazLsEx2CzYAoBY4AVKmRhQN1a9YbnwdGmdH0KtPv2SINcG4FpEDjh70ON2qAAAAAAAAAAAAAdjv+NHoAUCwAA&quot;</span>).unwrap();
 
-        <span class="kw">let</span> <span class="ident">custodian</span> <span class="op">=</span>
-            <span class="ident">UInt256::from_str</span>(<span class="string">&quot;e4e82dd4c0df20b0467b1cf48320f4921796c6c8f76ff5999f91ad9175186635&quot;</span>)
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>custodian =
+            UInt256::from_str(<span class="string">&quot;e4e82dd4c0df20b0467b1cf48320f4921796c6c8f76ff5999f91ad9175186635&quot;</span>)
+                .unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">parse_transaction_additional_info</span>(
-                <span class="kw-2">&amp;</span><span class="ident">tx</span>,
-                <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::SafeMultisigWallet</span>)
+            parse_transaction_additional_info(
+                <span class="kw-2">&amp;</span>tx,
+                WalletType::Multisig(MultisigType::SafeMultisigWallet)
             )
-            .<span class="ident">unwrap</span>(),
-            <span class="ident">TransactionAdditionalInfo::WalletInteraction</span>(<span class="ident">WalletInteractionInfo</span> {
-                <span class="ident">recipient</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
-                <span class="ident">known_payload</span>: <span class="prelude-val">None</span>,
-                <span class="ident">method</span>: <span class="ident">WalletInteractionMethod::Multisig</span>(<span class="ident">data</span>)
-            }) <span class="kw">if</span> <span class="macro">matches!</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">data</span>, <span class="ident">MultisigTransaction::Submit</span>(<span class="ident">submit</span>) <span class="kw">if</span> <span class="ident">submit</span>.<span class="ident">custodian</span> <span class="op">==</span> <span class="ident">custodian</span>)
+            .unwrap(),
+            TransactionAdditionalInfo::WalletInteraction(WalletInteractionInfo {
+                recipient: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
+                known_payload: <span class="prelude-val">None</span>,
+                method: WalletInteractionMethod::Multisig(data)
+            }) <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">&amp;*</span>data, MultisigTransaction::Submit(submit) <span class="kw">if </span>submit.custodian == custodian)
         ));
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_parse_multisig_confirm</span>() {
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">Transaction::construct_from_base64</span>(<span class="string">&quot;te6ccgECCgEAAjAAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAJcbrc/8GSsRcwsaEKUmFwdbT9tmaf3vKqKpeWIR9/9GyMA8r2+gAACXGutDTBYBvSYwADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAI1K3sqU+I63UTJ+xkdHcyrkM2hxcBJu//z7hF+/hEtukBQFcwAnUYtYxOIAAAAAAAAAABSwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnITMJnhiVklA89yLWhQU+4BB1tJ3iPLRRZoWlPVKSkbvYENWnQphG03/JbEJJWwJbdhZCl+oH7UI7ARqCUcU6H/AgHgCAYBAd8HAK9J/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7vACa4ZyAEEjOHCY7aEkcDRTMruTfdNxrg9GyWxKU18Pes2WvMQekAAAAAABLjdbn/hMA3pMZAAUWJ/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7uDAkA8c+cpxQ8FYd2C/XWiibmIX4wPfvHIultapCNOhW5dJ5hl2YD+PHO24RUXdbY669yR8BUfGNuxVTwVkV1K0HA7QByTARuQhGj9eozhRteIImtsExhdcFckfL9FqBq5uNuaoAAAF3bK3Ps2Ab0p4ap0DtYBvF9mf0BgGA=&quot;</span>).<span class="ident">unwrap</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_parse_multisig_confirm() {
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECCgEAAjAAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAJcbrc/8GSsRcwsaEKUmFwdbT9tmaf3vKqKpeWIR9/9GyMA8r2+gAACXGutDTBYBvSYwADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAI1K3sqU+I63UTJ+xkdHcyrkM2hxcBJu//z7hF+/hEtukBQFcwAnUYtYxOIAAAAAAAAAABSwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnITMJnhiVklA89yLWhQU+4BB1tJ3iPLRRZoWlPVKSkbvYENWnQphG03/JbEJJWwJbdhZCl+oH7UI7ARqCUcU6H/AgHgCAYBAd8HAK9J/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7vACa4ZyAEEjOHCY7aEkcDRTMruTfdNxrg9GyWxKU18Pes2WvMQekAAAAAABLjdbn/hMA3pMZAAUWJ/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7uDAkA8c+cpxQ8FYd2C/XWiibmIX4wPfvHIultapCNOhW5dJ5hl2YD+PHO24RUXdbY669yR8BUfGNuxVTwVkV1K0HA7QByTARuQhGj9eozhRteIImtsExhdcFckfL9FqBq5uNuaoAAAF3bK3Ps2Ab0p4ap0DtYBvF9mf0BgGA=&quot;</span>).unwrap();
 
-        <span class="kw">let</span> <span class="ident">custodian</span> <span class="op">=</span>
-            <span class="ident">UInt256::from_str</span>(<span class="string">&quot;c93011b908468fd7a8ce146d788226b6c13185d7057247cbf45a81ab9b8db9aa&quot;</span>)
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>custodian =
+            UInt256::from_str(<span class="string">&quot;c93011b908468fd7a8ce146d788226b6c13185d7057247cbf45a81ab9b8db9aa&quot;</span>)
+                .unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">parse_transaction_additional_info</span>(
-                <span class="kw-2">&amp;</span><span class="ident">tx</span>,
-                <span class="ident">WalletType::Multisig</span>(<span class="ident">MultisigType::SafeMultisigWallet</span>)
+            parse_transaction_additional_info(
+                <span class="kw-2">&amp;</span>tx,
+                WalletType::Multisig(MultisigType::SafeMultisigWallet)
             )
-            .<span class="ident">unwrap</span>(),
-            <span class="ident">TransactionAdditionalInfo::WalletInteraction</span>(<span class="ident">WalletInteractionInfo</span> {
-                <span class="ident">recipient</span>: <span class="prelude-val">None</span>,
-                <span class="ident">known_payload</span>: <span class="prelude-val">None</span>,
-                <span class="ident">method</span>: <span class="ident">WalletInteractionMethod::Multisig</span>(<span class="ident">data</span>)
-            }) <span class="kw">if</span> <span class="macro">matches!</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">data</span>, <span class="ident">MultisigTransaction::Confirm</span>(<span class="ident">confirm</span>) <span class="kw">if</span> <span class="ident">confirm</span>.<span class="ident">custodian</span> <span class="op">==</span> <span class="ident">custodian</span>)
+            .unwrap(),
+            TransactionAdditionalInfo::WalletInteraction(WalletInteractionInfo {
+                recipient: <span class="prelude-val">None</span>,
+                known_payload: <span class="prelude-val">None</span>,
+                method: WalletInteractionMethod::Multisig(data)
+            }) <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">&amp;*</span>data, MultisigTransaction::Confirm(confirm) <span class="kw">if </span>confirm.custodian == custodian)
         ))
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_parse_bounced_tokens_transfer</span>() {
-        <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">description</span>) <span class="op">=</span> <span class="ident">parse_transaction</span>(<span class="string">&quot;te6ccgECCQEAAiEAA7V9jKvgMYxeLukedeW/PRr7QyRzEpkal33nb9KfgpelA3AAAO1mmxCMEy4UbEGiIQKVpE2nzO2Ar32k7H36ni1NMpxrcPorUNuwAADtZo+e3BYO9BHwADRwGMkIBQQBAhcMSgkCmI36GG92AhEDAgBvyYehIEwUWEAAAAAAAAQAAgAAAAKLF5Ge7DorMQ9dbEzZTgWK7Jiugap8s4dRpkiQl7CNEEBQFgwAnkP1TAqiBAAAAAAAAAAAtgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIBZa/nTbAD2Vcr8A6p+uT7XD4tLowmBLZEuIHLxU1zbeHGgHFi5dfeWnrNgtL3FHE6zw6ysjTJJI3LFFDAgPi3AgHgCAYBAd8HALFoAbGVfAYxi8XdI868t+ejX2hkjmJTI1LvvO36U/BS9KBvABgzjiRJUfoXsV99CuD/WnKK4QN5mlferMiVbk0Y3Jc3ECddFmAGFFhgAAAdrNNiEYTB3oI+QAD5WAHF6/YBDYNj7TABzedO3/4+ENpaE0PhwRx5NFYisFNfpQA2Mq+AxjF4u6R515b89GvtDJHMSmRqXfedv0p+Cl6UDdApiN+gBhRYYAAAHazSjHIEwd6CFH////+MaQuBAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAEA=&quot;</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_parse_bounced_tokens_transfer() {
+        <span class="kw">let </span>(tx, description) = parse_transaction(<span class="string">&quot;te6ccgECCQEAAiEAA7V9jKvgMYxeLukedeW/PRr7QyRzEpkal33nb9KfgpelA3AAAO1mmxCMEy4UbEGiIQKVpE2nzO2Ar32k7H36ni1NMpxrcPorUNuwAADtZo+e3BYO9BHwADRwGMkIBQQBAhcMSgkCmI36GG92AhEDAgBvyYehIEwUWEAAAAAAAAQAAgAAAAKLF5Ge7DorMQ9dbEzZTgWK7Jiugap8s4dRpkiQl7CNEEBQFgwAnkP1TAqiBAAAAAAAAAAAtgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIBZa/nTbAD2Vcr8A6p+uT7XD4tLowmBLZEuIHLxU1zbeHGgHFi5dfeWnrNgtL3FHE6zw6ysjTJJI3LFFDAgPi3AgHgCAYBAd8HALFoAbGVfAYxi8XdI868t+ejX2hkjmJTI1LvvO36U/BS9KBvABgzjiRJUfoXsV99CuD/WnKK4QN5mlferMiVbk0Y3Jc3ECddFmAGFFhgAAAdrNNiEYTB3oI+QAD5WAHF6/YBDYNj7TABzedO3/4+ENpaE0PhwRx5NFYisFNfpQA2Mq+AxjF4u6R515b89GvtDJHMSmRqXfedv0p+Cl6UDdApiN+gBhRYYAAAHazSjHIEwd6CFH////+MaQuBAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAEA=&quot;</span>);
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
-            <span class="ident">parse_token_transaction</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="kw-2">&amp;</span><span class="ident">description</span>, <span class="ident">TokenWalletVersion::OldTip3v4</span>).<span class="ident">unwrap</span>(),
-            <span class="ident">TokenWalletTransaction::TransferBounced</span>(<span class="kw">_</span>)
+            parse_token_transaction(<span class="kw-2">&amp;</span>tx, <span class="kw-2">&amp;</span>description, TokenWalletVersion::OldTip3v4).unwrap(),
+            TokenWalletTransaction::TransferBounced(<span class="kw">_</span>)
         ));
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

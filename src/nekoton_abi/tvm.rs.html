@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/tvm.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tvm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/tvm.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>tvm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -176,183 +176,183 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">ton_block</span>::{
-    <span class="ident">AccountStuff</span>, <span class="ident">CommonMsgInfo</span>, <span class="ident">CurrencyCollection</span>, <span class="ident">Deserializable</span>, <span class="ident">Message</span>, <span class="ident">MsgAddressInt</span>,
-    <span class="ident">OutAction</span>, <span class="ident">OutActions</span>, <span class="ident">Serializable</span>,
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>ton_block::{
+    AccountStuff, CommonMsgInfo, CurrencyCollection, Deserializable, Message, MsgAddressInt,
+    OutAction, OutActions, Serializable,
 };
-<span class="kw">use</span> <span class="ident">ton_types::SliceData</span>;
-<span class="kw">use</span> <span class="ident">ton_vm::executor::gas::gas_state::Gas</span>;
-<span class="kw">use</span> <span class="ident">ton_vm::stack::integer::IntegerData</span>;
-<span class="kw">use</span> <span class="ident">ton_vm::stack</span>::{<span class="ident">savelist::SaveList</span>, <span class="ident">Stack</span>, <span class="ident">StackItem</span>};
+<span class="kw">use </span>ton_types::SliceData;
+<span class="kw">use </span>ton_vm::executor::gas::gas_state::Gas;
+<span class="kw">use </span>ton_vm::stack::integer::IntegerData;
+<span class="kw">use </span>ton_vm::stack::{savelist::SaveList, Stack, StackItem};
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">call</span>(
-    <span class="ident">utime</span>: <span class="ident">u32</span>,
-    <span class="ident">lt</span>: <span class="ident">u64</span>,
-    <span class="ident">account</span>: <span class="kw-2">&amp;mut</span> <span class="ident">AccountStuff</span>,
-    <span class="ident">stack</span>: <span class="ident">Stack</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ton_vm::executor::Engine</span>, <span class="ident">i32</span>, <span class="ident">bool</span>), <span class="ident">ExecutionError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="ident">account</span>.<span class="ident">storage</span>.<span class="ident">state</span> {
-        <span class="ident">ton_block::AccountState::AccountActive</span> { <span class="ident">state_init</span>, .. } =&gt; <span class="prelude-val">Ok</span>(<span class="ident">state_init</span>),
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">ExecutionError::AccountIsNotActive</span>),
+<span class="kw">pub fn </span>call(
+    utime: u32,
+    lt: u64,
+    account: <span class="kw-2">&amp;mut </span>AccountStuff,
+    stack: Stack,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(ton_vm::executor::Engine, i32, bool), ExecutionError&gt; {
+    <span class="kw">let </span>state = <span class="kw">match </span><span class="kw-2">&amp;mut </span>account.storage.state {
+        ton_block::AccountState::AccountActive { state_init, .. } =&gt; <span class="prelude-val">Ok</span>(state_init),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(ExecutionError::AccountIsNotActive),
     }<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ctrls</span> <span class="op">=</span> <span class="ident">SaveList::new</span>();
-    <span class="ident">ctrls</span>
-        .<span class="ident">put</span>(
+    <span class="kw">let </span><span class="kw-2">mut </span>ctrls = SaveList::new();
+    ctrls
+        .put(
             <span class="number">4</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">StackItem::Cell</span>(<span class="ident">state</span>.<span class="ident">data</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_default</span>()),
+            <span class="kw-2">&amp;mut </span>StackItem::Cell(state.data.clone().unwrap_or_default()),
         )
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ExecutionError::FailedToPutDataIntoRegisters</span>)<span class="question-mark">?</span>;
+        .map_err(|<span class="kw">_</span>| ExecutionError::FailedToPutDataIntoRegisters)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">gas_limit</span> <span class="op">=</span> <span class="number">1_000_000_000</span>;
-    <span class="kw">let</span> <span class="ident">gas</span> <span class="op">=</span> <span class="ident">Gas::new</span>(<span class="ident">gas_limit</span>, <span class="number">0</span>, <span class="ident">gas_limit</span>, <span class="number">10</span>);
+    <span class="kw">let </span>gas_limit = <span class="number">1_000_000_000</span>;
+    <span class="kw">let </span>gas = Gas::new(gas_limit, <span class="number">0</span>, gas_limit, <span class="number">10</span>);
 
-    <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">code</span>.<span class="ident">clone</span>().<span class="ident">ok_or</span>(<span class="ident">ExecutionError::AccountHasNoCode</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>code = state.code.clone().ok_or(ExecutionError::AccountHasNoCode)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">sci</span> <span class="op">=</span> <span class="ident">build_contract_info</span>(
-        <span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">addr</span>,
-        <span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">storage</span>.<span class="ident">balance</span>,
-        <span class="ident">utime</span>,
-        <span class="ident">lt</span>,
-        <span class="ident">lt</span>,
-        <span class="ident">code</span>.<span class="ident">clone</span>(),
-        <span class="ident">account</span>.<span class="ident">storage</span>.<span class="ident">init_code_hash</span>.<span class="ident">as_ref</span>(),
+    <span class="kw">let </span>sci = build_contract_info(
+        <span class="kw-2">&amp;</span>account.addr,
+        <span class="kw-2">&amp;</span>account.storage.balance,
+        utime,
+        lt,
+        lt,
+        code.clone(),
+        account.storage.init_code_hash.as_ref(),
     );
-    <span class="ident">ctrls</span>
-        .<span class="ident">put</span>(<span class="number">7</span>, <span class="kw-2">&amp;mut</span> <span class="ident">sci</span>.<span class="ident">into_temp_data_item</span>())
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ExecutionError::FailedToPutSciIntoRegisters</span>)<span class="question-mark">?</span>;
+    ctrls
+        .put(<span class="number">7</span>, <span class="kw-2">&amp;mut </span>sci.into_temp_data_item())
+        .map_err(|<span class="kw">_</span>| ExecutionError::FailedToPutSciIntoRegisters)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">engine</span> <span class="op">=</span> <span class="ident">ton_vm::executor::Engine::with_capabilities</span>(
-        (<span class="ident">ton_block::GlobalCapabilities::CapMycode</span> <span class="kw">as</span> <span class="ident">u64</span>)
-            <span class="op">|</span> (<span class="ident">ton_block::GlobalCapabilities::CapInitCodeHash</span> <span class="kw">as</span> <span class="ident">u64</span>),
+    <span class="kw">let </span><span class="kw-2">mut </span>engine = ton_vm::executor::Engine::with_capabilities(
+        (ton_block::GlobalCapabilities::CapMycode <span class="kw">as </span>u64)
+            | (ton_block::GlobalCapabilities::CapInitCodeHash <span class="kw">as </span>u64),
     )
-    .<span class="ident">setup</span>(<span class="ident">SliceData::from</span>(<span class="ident">code</span>), <span class="prelude-val">Some</span>(<span class="ident">ctrls</span>), <span class="prelude-val">Some</span>(<span class="ident">stack</span>), <span class="prelude-val">Some</span>(<span class="ident">gas</span>));
+    .setup(SliceData::from(code), <span class="prelude-val">Some</span>(ctrls), <span class="prelude-val">Some</span>(stack), <span class="prelude-val">Some</span>(gas));
 
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">engine</span>.<span class="ident">execute</span>();
+    <span class="kw">let </span>result = engine.execute();
 
-    <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">result</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">exception</span> <span class="op">=</span> <span class="ident">ton_vm::error::tvm_exception</span>(<span class="ident">err</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ExecutionError::FailedToParseException</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">code</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">code</span>) <span class="op">=</span> <span class="ident">exception</span>.<span class="ident">custom_code</span>() {
-                <span class="ident">code</span>
-            } <span class="kw">else</span> {
-                <span class="op">!</span>(<span class="ident">exception</span>
-                    .<span class="ident">exception_code</span>()
-                    .<span class="ident">unwrap_or</span>(<span class="ident">ton_types::ExceptionCode::UnknownError</span>) <span class="kw">as</span> <span class="ident">i32</span>)
+    <span class="prelude-val">Ok</span>(<span class="kw">match </span>result {
+        <span class="prelude-val">Err</span>(err) =&gt; {
+            <span class="kw">let </span>exception = ton_vm::error::tvm_exception(err)
+                .map_err(|<span class="kw">_</span>| ExecutionError::FailedToParseException)<span class="question-mark">?</span>;
+            <span class="kw">let </span>code = <span class="kw">if let </span><span class="prelude-val">Some</span>(code) = exception.custom_code() {
+                code
+            } <span class="kw">else </span>{
+                !(exception
+                    .exception_code()
+                    .unwrap_or(ton_types::ExceptionCode::UnknownError) <span class="kw">as </span>i32)
             };
 
-            (<span class="ident">engine</span>, <span class="ident">code</span>, <span class="bool-val">false</span>)
+            (engine, code, <span class="bool-val">false</span>)
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">code</span>) =&gt; (<span class="ident">engine</span>, <span class="ident">code</span>, <span class="bool-val">true</span>),
+        <span class="prelude-val">Ok</span>(code) =&gt; (engine, code, <span class="bool-val">true</span>),
     })
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">call_msg</span>(
-    <span class="ident">utime</span>: <span class="ident">u32</span>,
-    <span class="ident">lt</span>: <span class="ident">u64</span>,
-    <span class="ident">account</span>: <span class="kw-2">&amp;mut</span> <span class="ident">AccountStuff</span>,
-    <span class="ident">msg</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ActionPhaseOutput</span>, <span class="ident">ExecutionError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">msg_cell</span> <span class="op">=</span> <span class="ident">msg</span>
-        .<span class="ident">write_to_new_cell</span>()
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ExecutionError::FailedToSerializeMessage</span>)<span class="question-mark">?</span>;
+<span class="kw">pub fn </span>call_msg(
+    utime: u32,
+    lt: u64,
+    account: <span class="kw-2">&amp;mut </span>AccountStuff,
+    msg: <span class="kw-2">&amp;</span>Message,
+) -&gt; <span class="prelude-ty">Result</span>&lt;ActionPhaseOutput, ExecutionError&gt; {
+    <span class="kw">let </span>msg_cell = msg
+        .write_to_new_cell()
+        .map_err(|<span class="kw">_</span>| ExecutionError::FailedToSerializeMessage)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">Stack::new</span>();
-    <span class="kw">let</span> <span class="ident">balance</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">storage</span>.<span class="ident">balance</span>.<span class="ident">grams</span>.<span class="ident">as_u128</span>();
-    <span class="kw">let</span> (<span class="ident">function_selector</span>, <span class="ident">msg_balance</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">msg</span>.<span class="ident">header</span>() {
-        <span class="ident">CommonMsgInfo::IntMsgInfo</span>(<span class="kw">_</span>) =&gt; (
+    <span class="kw">let </span><span class="kw-2">mut </span>stack = Stack::new();
+    <span class="kw">let </span>balance = account.storage.balance.grams.as_u128();
+    <span class="kw">let </span>(function_selector, msg_balance) = <span class="kw">match </span>msg.header() {
+        CommonMsgInfo::IntMsgInfo(<span class="kw">_</span>) =&gt; (
             <span class="macro">ton_vm::int!</span>(<span class="number">0</span>),
-            <span class="ident">num_bigint::BigInt::from</span>(<span class="number">1_000_000_000_000u64</span>), <span class="comment">// 1000 TON</span>
-        ),
-        <span class="ident">CommonMsgInfo::ExtInMsgInfo</span>(<span class="kw">_</span>) =&gt; (<span class="macro">ton_vm::int!</span>(<span class="op">-</span><span class="number">1</span>), <span class="ident">num_bigint::BigInt::default</span>()),
-        <span class="ident">CommonMsgInfo::ExtOutMsgInfo</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExecutionError::InvalidMessageType</span>),
+            num_bigint::BigInt::from(<span class="number">1_000_000_000_000u64</span>), <span class="comment">// 1000 TON
+        </span>),
+        CommonMsgInfo::ExtInMsgInfo(<span class="kw">_</span>) =&gt; (<span class="macro">ton_vm::int!</span>(-<span class="number">1</span>), num_bigint::BigInt::default()),
+        CommonMsgInfo::ExtOutMsgInfo(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExecutionError::InvalidMessageType),
     };
-    <span class="ident">stack</span>
-        .<span class="ident">push</span>(<span class="macro">ton_vm::int!</span>(<span class="ident">balance</span>)) <span class="comment">// token balance of contract</span>
-        .<span class="ident">push</span>(<span class="macro">ton_vm::int!</span>(<span class="ident">msg_balance</span>)) <span class="comment">// token balance of msg</span>
-        .<span class="ident">push</span>(<span class="ident">StackItem::Cell</span>(<span class="ident">msg_cell</span>.<span class="ident">into</span>())) <span class="comment">// message</span>
-        .<span class="ident">push</span>(<span class="ident">StackItem::Slice</span>(<span class="ident">msg</span>.<span class="ident">body</span>().<span class="ident">unwrap_or_default</span>())) <span class="comment">// message body</span>
-        .<span class="ident">push</span>(<span class="ident">function_selector</span>); <span class="comment">// function selector</span>
+    stack
+        .push(<span class="macro">ton_vm::int!</span>(balance)) <span class="comment">// token balance of contract
+        </span>.push(<span class="macro">ton_vm::int!</span>(msg_balance)) <span class="comment">// token balance of msg
+        </span>.push(StackItem::Cell(msg_cell.into())) <span class="comment">// message
+        </span>.push(StackItem::Slice(msg.body().unwrap_or_default())) <span class="comment">// message body
+        </span>.push(function_selector); <span class="comment">// function selector
 
-    <span class="kw">let</span> (<span class="ident">engine</span>, <span class="ident">exit_code</span>, <span class="ident">success</span>) <span class="op">=</span> <span class="ident">call</span>(<span class="ident">utime</span>, <span class="ident">lt</span>, <span class="ident">account</span>, <span class="ident">stack</span>)<span class="question-mark">?</span>;
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">success</span> {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">ActionPhaseOutput</span> {
-            <span class="ident">messages</span>: <span class="prelude-val">None</span>,
-            <span class="ident">exit_code</span>,
+    </span><span class="kw">let </span>(engine, exit_code, success) = call(utime, lt, account, stack)<span class="question-mark">?</span>;
+    <span class="kw">if </span>!success {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(ActionPhaseOutput {
+            messages: <span class="prelude-val">None</span>,
+            exit_code,
         });
     }
 
-    <span class="comment">// process out actions to get out messages</span>
-    <span class="kw">let</span> <span class="ident">actions_cell</span> <span class="op">=</span> <span class="ident">engine</span>
-        .<span class="ident">get_actions</span>()
-        .<span class="ident">as_cell</span>()
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ExecutionError::FailedToRetrieveActions</span>)<span class="question-mark">?</span>
-        .<span class="ident">clone</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">actions</span> <span class="op">=</span> <span class="ident">OutActions::construct_from_cell</span>(<span class="ident">actions_cell</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ExecutionError::FailedToRetrieveActions</span>)<span class="question-mark">?</span>;
+    <span class="comment">// process out actions to get out messages
+    </span><span class="kw">let </span>actions_cell = engine
+        .get_actions()
+        .as_cell()
+        .map_err(|<span class="kw">_</span>| ExecutionError::FailedToRetrieveActions)<span class="question-mark">?
+        </span>.clone();
+    <span class="kw">let </span><span class="kw-2">mut </span>actions = OutActions::construct_from_cell(actions_cell)
+        .map_err(|<span class="kw">_</span>| ExecutionError::FailedToRetrieveActions)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msgs</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-    <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">action</span>) <span class="kw">in</span> <span class="ident">actions</span>.<span class="ident">iter_mut</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">OutAction::SendMsg</span> { <span class="ident">out_msg</span>, .. } <span class="op">=</span> <span class="ident">std::mem::replace</span>(<span class="ident">action</span>, <span class="ident">OutAction::None</span>) {
-            <span class="ident">msgs</span>.<span class="ident">push</span>(<span class="ident">out_msg</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>msgs = Vec::new();
+    <span class="kw">for </span>(<span class="kw">_</span>, action) <span class="kw">in </span>actions.iter_mut().enumerate() {
+        <span class="kw">if let </span>OutAction::SendMsg { out_msg, .. } = std::mem::replace(action, OutAction::None) {
+            msgs.push(out_msg);
         }
     }
 
-    <span class="ident">msgs</span>.<span class="ident">reverse</span>();
-    <span class="prelude-val">Ok</span>(<span class="ident">ActionPhaseOutput</span> {
-        <span class="ident">messages</span>: <span class="prelude-val">Some</span>(<span class="ident">msgs</span>),
-        <span class="ident">exit_code</span>,
+    msgs.reverse();
+    <span class="prelude-val">Ok</span>(ActionPhaseOutput {
+        messages: <span class="prelude-val">Some</span>(msgs),
+        exit_code,
     })
 }
 
-<span class="kw">fn</span> <span class="ident">build_contract_info</span>(
-    <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-    <span class="ident">balance</span>: <span class="kw-2">&amp;</span><span class="ident">CurrencyCollection</span>,
-    <span class="ident">block_unixtime</span>: <span class="ident">u32</span>,
-    <span class="ident">block_lt</span>: <span class="ident">u64</span>,
-    <span class="ident">tr_lt</span>: <span class="ident">u64</span>,
-    <span class="ident">code</span>: <span class="ident">ton_types::Cell</span>,
-    <span class="ident">init_code_hash</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">ton_types::UInt256</span><span class="op">&gt;</span>,
-) -&gt; <span class="ident">ton_vm::SmartContractInfo</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">ton_vm::SmartContractInfo::old_default</span>(<span class="ident">code</span>);
-    <span class="ident">info</span>.<span class="ident">myself</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">serialize</span>().<span class="ident">unwrap_or_default</span>().<span class="ident">into</span>();
-    <span class="ident">info</span>.<span class="ident">block_lt</span> <span class="op">=</span> <span class="ident">block_lt</span>;
-    <span class="ident">info</span>.<span class="ident">trans_lt</span> <span class="op">=</span> <span class="ident">tr_lt</span>;
-    <span class="ident">info</span>.<span class="ident">unix_time</span> <span class="op">=</span> <span class="ident">block_unixtime</span>;
-    <span class="ident">info</span>.<span class="ident">balance</span> <span class="op">=</span> <span class="ident">balance</span>.<span class="ident">clone</span>();
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">hash</span>) <span class="op">=</span> <span class="ident">init_code_hash</span> {
-        <span class="ident">info</span>.<span class="ident">set_init_code_hash</span>(<span class="kw-2">*</span><span class="ident">hash</span>);
+<span class="kw">fn </span>build_contract_info(
+    address: <span class="kw-2">&amp;</span>MsgAddressInt,
+    balance: <span class="kw-2">&amp;</span>CurrencyCollection,
+    block_unixtime: u32,
+    block_lt: u64,
+    tr_lt: u64,
+    code: ton_types::Cell,
+    init_code_hash: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ton_types::UInt256&gt;,
+) -&gt; ton_vm::SmartContractInfo {
+    <span class="kw">let </span><span class="kw-2">mut </span>info = ton_vm::SmartContractInfo::old_default(code);
+    info.myself = address.serialize().unwrap_or_default().into();
+    info.block_lt = block_lt;
+    info.trans_lt = tr_lt;
+    info.unix_time = block_unixtime;
+    info.balance = balance.clone();
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(hash) = init_code_hash {
+        info.set_init_code_hash(<span class="kw-2">*</span>hash);
     }
-    <span class="ident">info</span>
+    info
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ActionPhaseOutput</span> {
-    <span class="kw">pub</span> <span class="ident">messages</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">exit_code</span>: <span class="ident">i32</span>,
+<span class="kw">pub struct </span>ActionPhaseOutput {
+    <span class="kw">pub </span>messages: <span class="prelude-ty">Option</span>&lt;Vec&lt;Message&gt;&gt;,
+    <span class="kw">pub </span>exit_code: i32,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ExecutionError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to serialize message&quot;</span>)]</span>
-    <span class="ident">FailedToSerializeMessage</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid message type&quot;</span>)]</span>
-    <span class="ident">InvalidMessageType</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Account is not active&quot;</span>)]</span>
-    <span class="ident">AccountIsNotActive</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Account has not code&quot;</span>)]</span>
-    <span class="ident">AccountHasNoCode</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to put data into registers&quot;</span>)]</span>
-    <span class="ident">FailedToPutDataIntoRegisters</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to put SCI into registers&quot;</span>)]</span>
-    <span class="ident">FailedToPutSciIntoRegisters</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to parse exception&quot;</span>)]</span>
-    <span class="ident">FailedToParseException</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to retrieve actions&quot;</span>)]</span>
-    <span class="ident">FailedToRetrieveActions</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">pub enum </span>ExecutionError {
+    <span class="attribute">#[error(<span class="string">&quot;Failed to serialize message&quot;</span>)]
+    </span>FailedToSerializeMessage,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid message type&quot;</span>)]
+    </span>InvalidMessageType,
+    <span class="attribute">#[error(<span class="string">&quot;Account is not active&quot;</span>)]
+    </span>AccountIsNotActive,
+    <span class="attribute">#[error(<span class="string">&quot;Account has not code&quot;</span>)]
+    </span>AccountHasNoCode,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to put data into registers&quot;</span>)]
+    </span>FailedToPutDataIntoRegisters,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to put SCI into registers&quot;</span>)]
+    </span>FailedToPutSciIntoRegisters,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to parse exception&quot;</span>)]
+    </span>FailedToParseException,
+    <span class="attribute">#[error(<span class="string">&quot;Failed to retrieve actions&quot;</span>)]
+    </span>FailedToRetrieveActions,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/dens.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>dens.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/dens.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>dens.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -239,246 +239,246 @@
 <span id="239">239</span>
 <span id="240">240</span>
 <span id="241">241</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::hash_map</span>::{<span class="self">self</span>, <span class="ident">HashMap</span>};
-<span class="kw">use</span> <span class="ident">std::num::NonZeroUsize</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map::{<span class="self">self</span>, HashMap};
+<span class="kw">use </span>std::num::NonZeroUsize;
+<span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">lru::LruCache</span>;
-<span class="kw">use</span> <span class="ident">nekoton_contracts::dens</span>;
-<span class="kw">use</span> <span class="ident">nekoton_utils::Clock</span>;
-<span class="kw">use</span> <span class="ident">parking_lot</span>::{<span class="ident">Mutex</span>, <span class="ident">RwLock</span>};
-<span class="kw">use</span> <span class="ident">ton_block::MsgAddressInt</span>;
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>lru::LruCache;
+<span class="kw">use </span>nekoton_contracts::dens;
+<span class="kw">use </span>nekoton_utils::Clock;
+<span class="kw">use </span>parking_lot::{Mutex, RwLock};
+<span class="kw">use </span>ton_block::MsgAddressInt;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::models</span>::{<span class="ident">ExistingContract</span>, <span class="ident">RawContractState</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::Transport</span>;
+<span class="kw">use </span><span class="kw">crate</span>::transport::models::{ExistingContract, RawContractState};
+<span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
 
-<span class="doccomment">/// `DeNS` domains collection</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Dens</span> {
-    <span class="ident">tld</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">DensTld</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">contract_address_cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">LruCache</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">MsgAddressInt</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// `DeNS` domains collection
+</span><span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>Dens {
+    tld: RwLock&lt;HashMap&lt;String, Arc&lt;DensTld&gt;&gt;&gt;,
+    contract_address_cache: <span class="prelude-ty">Option</span>&lt;Mutex&lt;LruCache&lt;String, MsgAddressInt&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Dens</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>, <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>) -&gt; <span class="ident">DensBuilder</span> {
-        <span class="ident">DensBuilder::new</span>(<span class="ident">clock</span>, <span class="ident">transport</span>)
+<span class="kw">impl </span>Dens {
+    <span class="kw">pub fn </span>builder(clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;, transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;) -&gt; DensBuilder {
+        DensBuilder::new(clock, transport)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_tld</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tld</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">DensTld</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">validate_address</span>(<span class="ident">tld</span>.<span class="ident">path</span>()) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DensError::InvalidPath</span>.<span class="ident">into</span>());
+    <span class="kw">pub fn </span>add_tld(<span class="kw-2">&amp;</span><span class="self">self</span>, tld: Arc&lt;DensTld&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if </span>!validate_address(tld.path()) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DensError::InvalidPath.into());
         }
 
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">tld</span>.<span class="ident">write</span>().<span class="ident">entry</span>(<span class="ident">tld</span>.<span class="ident">path</span>.<span class="ident">clone</span>()) {
-            <span class="ident">hash_map::Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">tld</span>);
+        <span class="kw">match </span><span class="self">self</span>.tld.write().entry(tld.path.clone()) {
+            hash_map::Entry::Vacant(entry) =&gt; {
+                entry.insert(tld);
                 <span class="prelude-val">Ok</span>(())
             }
-            <span class="ident">hash_map::Entry::Occupied</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">DensError::DuplicateTld</span>.<span class="ident">into</span>()),
+            hash_map::Entry::Occupied(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(DensError::DuplicateTld.into()),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_tld</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">DensTld</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">tld</span>.<span class="ident">write</span>().<span class="ident">remove</span>(<span class="ident">path</span>)
+    <span class="kw">pub async fn </span>remove_tld(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;DensTld&gt;&gt; {
+        <span class="self">self</span>.tld.write().remove(path)
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">try_resolve_contract_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">validate_address</span>(<span class="ident">path</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DensError::InvalidPath</span>.<span class="ident">into</span>());
+    <span class="kw">pub async fn </span>try_resolve_contract_address(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;&gt; {
+        <span class="kw">if </span>!validate_address(path) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DensError::InvalidPath.into());
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">contract_address_cache</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">contract_address_cache</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span> <span class="ident">contract_address_cache</span>.<span class="ident">lock</span>().<span class="ident">get</span>(<span class="ident">path</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">address</span>.<span class="ident">clone</span>()));
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(contract_address_cache) = <span class="kw-2">&amp;</span><span class="self">self</span>.contract_address_cache {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(address) = contract_address_cache.lock().get(path) {
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(address.clone()));
             }
         }
 
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">find_tld</span>(<span class="ident">path</span>)<span class="question-mark">?</span>
-            .<span class="ident">try_resolve_contract_address</span>(<span class="ident">path</span>)
+        <span class="kw">let </span>address = <span class="self">self
+            </span>.find_tld(path)<span class="question-mark">?
+            </span>.try_resolve_contract_address(path)
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">address</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">contract_address_cache</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">contract_address_cache</span> {
-                <span class="ident">contract_address_cache</span>
-                    .<span class="ident">lock</span>()
-                    .<span class="ident">push</span>(<span class="ident">path</span>.<span class="ident">to_owned</span>(), <span class="ident">address</span>.<span class="ident">clone</span>());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(address) = <span class="kw-2">&amp;</span>address {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(contract_address_cache) = <span class="kw-2">&amp;</span><span class="self">self</span>.contract_address_cache {
+                contract_address_cache
+                    .lock()
+                    .push(path.to_owned(), address.clone());
             }
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">address</span>)
+        <span class="prelude-val">Ok</span>(address)
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">try_resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">record</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResolvedValue</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">validate_address</span>(<span class="ident">path</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DensError::InvalidPath</span>.<span class="ident">into</span>());
+    <span class="kw">pub async fn </span>try_resolve(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, record: u32) -&gt; <span class="prelude-ty">Result</span>&lt;ResolvedValue&gt; {
+        <span class="kw">if </span>!validate_address(path) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DensError::InvalidPath.into());
         }
 
-        <span class="self">self</span>.<span class="ident">find_tld</span>(<span class="ident">path</span>)<span class="question-mark">?</span>.<span class="ident">try_resolve</span>(<span class="ident">path</span>, <span class="ident">record</span>).<span class="kw">await</span>
-    }
+        <span class="self">self</span>.find_tld(path)<span class="question-mark">?</span>.try_resolve(path, record).<span class="kw">await
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset_cache</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">contract_address_cache</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">contract_address_cache</span> {
-            <span class="ident">contract_address_cache</span>.<span class="ident">lock</span>().<span class="ident">clear</span>();
+    <span class="kw">pub fn </span>reset_cache(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(contract_address_cache) = <span class="kw-2">&amp;</span><span class="self">self</span>.contract_address_cache {
+            contract_address_cache.lock().clear();
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">find_tld</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">DensTld</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">path</span>.<span class="ident">rsplit_once</span>(<span class="string">&#39;.&#39;</span>) {
-            <span class="prelude-val">Some</span>((<span class="kw">_</span>, <span class="ident">tld</span>)) =&gt; {
-                <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tld</span>.<span class="ident">read</span>();
-                <span class="kw">let</span> <span class="ident">tld</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">get</span>(<span class="ident">tld</span>).<span class="ident">cloned</span>();
-                <span class="ident">tld</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">DensError::TldNotFound</span>.<span class="ident">into</span>())
+    <span class="kw">fn </span>find_tld(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;DensTld&gt;&gt; {
+        <span class="kw">match </span>path.rsplit_once(<span class="string">&#39;.&#39;</span>) {
+            <span class="prelude-val">Some</span>((<span class="kw">_</span>, tld)) =&gt; {
+                <span class="kw">let </span>state = <span class="self">self</span>.tld.read();
+                <span class="kw">let </span>tld = state.get(tld).cloned();
+                tld.ok_or_else(|| DensError::TldNotFound.into())
             }
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">DensError::InvalidPath</span>.<span class="ident">into</span>()),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(DensError::InvalidPath.into()),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DensBuilder</span> {
-    <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-    <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-    <span class="ident">dens</span>: <span class="ident">Dens</span>,
+<span class="kw">pub struct </span>DensBuilder {
+    clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+    transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+    dens: Dens,
 }
 
-<span class="kw">impl</span> <span class="ident">DensBuilder</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>, <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">clock</span>,
-            <span class="ident">transport</span>,
-            <span class="ident">dens</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl </span>DensBuilder {
+    <span class="kw">pub fn </span>new(clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;, transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            clock,
+            transport,
+            dens: Default::default(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">register</span>(<span class="self">self</span>, <span class="ident">tld_address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">tld</span> <span class="op">=</span> <span class="ident">DensTld::new</span>(<span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">transport</span>.<span class="ident">clone</span>(), <span class="ident">tld_address</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">dens</span>.<span class="ident">add_tld</span>(<span class="ident">Arc::new</span>(<span class="ident">tld</span>))<span class="question-mark">?</span>;
+    <span class="kw">pub async fn </span>register(<span class="self">self</span>, tld_address: <span class="kw-2">&amp;</span>MsgAddressInt) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>tld = DensTld::new(<span class="self">self</span>.clock.clone(), <span class="self">self</span>.transport.clone(), tld_address).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="self">self</span>.dens.add_tld(Arc::new(tld))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_contract_address_cache</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">capacity</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">dens</span>.<span class="ident">contract_address_cache</span> <span class="op">=</span> <span class="ident">NonZeroUsize::new</span>(<span class="ident">capacity</span>)
-            .<span class="ident">map</span>(<span class="ident">LruCache::new</span>)
-            .<span class="ident">map</span>(<span class="ident">Mutex::new</span>);
-        <span class="self">self</span>
-    }
+    <span class="kw">pub fn </span>with_contract_address_cache(<span class="kw-2">mut </span><span class="self">self</span>, capacity: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.dens.contract_address_cache = NonZeroUsize::new(capacity)
+            .map(LruCache::new)
+            .map(Mutex::new);
+        <span class="self">self
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; <span class="ident">Dens</span> {
-        <span class="self">self</span>.<span class="ident">dens</span>
+    <span class="kw">pub fn </span>build(<span class="self">self</span>) -&gt; Dens {
+        <span class="self">self</span>.dens
     }
 }
 
-<span class="doccomment">/// `DeNS` Top Level Domain</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DensTld</span> {
-    <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-    <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-    <span class="ident">path</span>: <span class="ident">String</span>,
-    <span class="ident">state</span>: <span class="ident">ExistingContract</span>,
+<span class="doccomment">/// `DeNS` Top Level Domain
+</span><span class="kw">pub struct </span>DensTld {
+    clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+    transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+    path: String,
+    state: ExistingContract,
 }
 
-<span class="kw">impl</span> <span class="ident">DensTld</span> {
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-        <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-        <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="ident">address</span>).<span class="kw">await</span><span class="question-mark">?</span> {
-            <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) =&gt; <span class="ident">state</span>,
-            <span class="ident">RawContractState::NotExists</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DensError::InvalidTldContract</span>.<span class="ident">into</span>()),
+<span class="kw">impl </span>DensTld {
+    <span class="kw">pub async fn </span>new(
+        clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+        transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+        address: <span class="kw-2">&amp;</span>MsgAddressInt,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>state = <span class="kw">match </span>transport.get_contract_state(address).<span class="kw">await</span><span class="question-mark">? </span>{
+            RawContractState::Exists(state) =&gt; state,
+            RawContractState::NotExists =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(DensError::InvalidTldContract.into()),
         };
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">dens::RootContract</span>(<span class="ident">state</span>.<span class="ident">as_context</span>(<span class="ident">clock</span>.<span class="ident">as_ref</span>())).<span class="ident">get_path</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>path = dens::RootContract(state.as_context(clock.as_ref())).get_path()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">clock</span>,
-            <span class="ident">transport</span>,
-            <span class="ident">path</span>,
-            <span class="ident">state</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            clock,
+            transport,
+            path,
+            state,
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">path</span>
+    <span class="kw">pub fn </span>path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.path
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">try_resolve_contract_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_domain_state</span>(<span class="ident">path</span>).<span class="kw">await</span><span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">domain</span>) =&gt; <span class="ident">dens::DomainContract</span>(<span class="ident">domain</span>.<span class="ident">as_context</span>(<span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>()))
-                .<span class="ident">query</span>::<span class="op">&lt;</span><span class="ident">dens::TargetAddressRecord</span><span class="op">&gt;</span>(),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+    <span class="kw">pub async fn </span>try_resolve_contract_address(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.get_domain_state(path).<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="prelude-val">Some</span>(domain) =&gt; dens::DomainContract(domain.as_context(<span class="self">self</span>.clock.as_ref()))
+                .query::&lt;dens::TargetAddressRecord&gt;(),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">try_resolve_adnl_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ton_types::UInt256</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_domain_state</span>(<span class="ident">path</span>).<span class="kw">await</span><span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">domain</span>) =&gt; <span class="ident">dens::DomainContract</span>(<span class="ident">domain</span>.<span class="ident">as_context</span>(<span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>()))
-                .<span class="ident">query</span>::<span class="op">&lt;</span><span class="ident">dens::AdnlAddressRecord</span><span class="op">&gt;</span>(),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+    <span class="kw">pub async fn </span>try_resolve_adnl_address(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ton_types::UInt256&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.get_domain_state(path).<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="prelude-val">Some</span>(domain) =&gt; dens::DomainContract(domain.as_context(<span class="self">self</span>.clock.as_ref()))
+                .query::&lt;dens::AdnlAddressRecord&gt;(),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">try_resolve</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">record</span>: <span class="ident">u32</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResolvedValue</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_domain_state</span>(<span class="ident">path</span>).<span class="kw">await</span><span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">domain</span>) =&gt; <span class="kw">match</span> <span class="ident">dens::DomainContract</span>(<span class="ident">domain</span>.<span class="ident">as_context</span>(<span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>()))
-                .<span class="ident">query_raw</span>(<span class="ident">record</span>)<span class="question-mark">?</span>
-            {
-                <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ResolvedValue::Found</span>(<span class="ident">value</span>)),
-                <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ResolvedValue::RecordNotFound</span>),
+    <span class="kw">pub async fn </span>try_resolve(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str, record: u32) -&gt; <span class="prelude-ty">Result</span>&lt;ResolvedValue&gt; {
+        <span class="kw">match </span><span class="self">self</span>.get_domain_state(path).<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="prelude-val">Some</span>(domain) =&gt; <span class="kw">match </span>dens::DomainContract(domain.as_context(<span class="self">self</span>.clock.as_ref()))
+                .query_raw(record)<span class="question-mark">?
+            </span>{
+                <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Ok</span>(ResolvedValue::Found(value)),
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(ResolvedValue::RecordNotFound),
             },
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">ResolvedValue::DomainNotFound</span>),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(ResolvedValue::DomainNotFound),
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_domain_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExistingContract</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span>
-            <span class="ident">dens::RootContract</span>(<span class="self">self</span>.<span class="ident">state</span>.<span class="ident">as_context</span>(<span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>())).<span class="ident">resolve</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>
-            .<span class="ident">transport</span>
-            .<span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>
-            .<span class="ident">into_contract</span>())
+    <span class="kw">async fn </span>get_domain_state(<span class="kw-2">&amp;</span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ExistingContract&gt;&gt; {
+        <span class="kw">let </span>address =
+            dens::RootContract(<span class="self">self</span>.state.as_context(<span class="self">self</span>.clock.as_ref())).resolve(path)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">self
+            </span>.transport
+            .get_contract_state(<span class="kw-2">&amp;</span>address)
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.into_contract())
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_address</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segment_start</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">segment_end</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">for</span> (<span class="ident">pos</span>, <span class="ident">byte</span>) <span class="kw">in</span> <span class="ident">path</span>.<span class="ident">as_bytes</span>().<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">byte</span> {
-            <span class="string">b&#39;.&#39;</span> =&gt; {
-                <span class="kw">if</span> <span class="ident">segment_start</span> <span class="op">==</span> <span class="ident">segment_end</span> {
-                    <span class="kw">return</span> <span class="bool-val">false</span>;
+<span class="kw">pub fn </span>validate_address(path: <span class="kw-2">&amp;</span>str) -&gt; bool {
+    <span class="kw">let </span><span class="kw-2">mut </span>segment_start = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>segment_end = <span class="number">0</span>;
+    <span class="kw">for </span>(pos, byte) <span class="kw">in </span>path.as_bytes().iter().enumerate() {
+        <span class="kw">match </span><span class="kw-2">*</span>byte {
+            <span class="string">b&#39;.&#39; </span>=&gt; {
+                <span class="kw">if </span>segment_start == segment_end {
+                    <span class="kw">return </span><span class="bool-val">false</span>;
                 }
-                <span class="ident">segment_start</span> <span class="op">=</span> <span class="ident">pos</span> <span class="op">+</span> <span class="number">1</span>;
-                <span class="ident">segment_end</span> <span class="op">=</span> <span class="ident">segment_start</span>;
+                segment_start = pos + <span class="number">1</span>;
+                segment_end = segment_start;
                 <span class="kw">continue</span>;
             }
-            <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span> <span class="op">|</span> <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;z&#39;</span> <span class="op">|</span> <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;Z&#39;</span> <span class="op">|</span> <span class="string">b&#39;-&#39;</span> =&gt; {
-                <span class="ident">segment_end</span> <span class="op">=</span> <span class="ident">pos</span> <span class="op">+</span> <span class="number">1</span>;
+            <span class="string">b&#39;0&#39;</span>..=<span class="string">b&#39;9&#39; </span>| <span class="string">b&#39;a&#39;</span>..=<span class="string">b&#39;z&#39; </span>| <span class="string">b&#39;A&#39;</span>..=<span class="string">b&#39;Z&#39; </span>| <span class="string">b&#39;-&#39; </span>=&gt; {
+                segment_end = pos + <span class="number">1</span>;
             }
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="bool-val">false</span>,
         }
     }
-    <span class="ident">segment_start</span> <span class="op">!</span><span class="op">=</span> <span class="ident">segment_end</span>
+    segment_start != segment_end
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ResolvedValue</span> {
-    <span class="ident">Found</span>(<span class="ident">ton_types::Cell</span>),
-    <span class="ident">RecordNotFound</span>,
-    <span class="ident">DomainNotFound</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub enum </span>ResolvedValue {
+    Found(ton_types::Cell),
+    RecordNotFound,
+    DomainNotFound,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">DensError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid TLD contract&quot;</span>)]</span>
-    <span class="ident">InvalidTldContract</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Duplicate TLD&quot;</span>)]</span>
-    <span class="ident">DuplicateTld</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;TLD not found&quot;</span>)]</span>
-    <span class="ident">TldNotFound</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid path&quot;</span>)]</span>
-    <span class="ident">InvalidPath</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>DensError {
+    <span class="attribute">#[error(<span class="string">&quot;Invalid TLD contract&quot;</span>)]
+    </span>InvalidTldContract,
+    <span class="attribute">#[error(<span class="string">&quot;Duplicate TLD&quot;</span>)]
+    </span>DuplicateTld,
+    <span class="attribute">#[error(<span class="string">&quot;TLD not found&quot;</span>)]
+    </span>TldNotFound,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid path&quot;</span>)]
+    </span>InvalidPath,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

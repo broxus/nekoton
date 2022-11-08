@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/utils.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>utils.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/utils.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>utils.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -143,150 +143,150 @@
 <span id="143">143</span>
 <span id="144">144</span>
 <span id="145">145</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">tokio::sync::Mutex</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>tokio::sync::Mutex;
 
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Transport</span>;
+<span class="kw">use </span><span class="kw">super</span>::Transport;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ConfigCache</span> {
-    <span class="ident">state</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ConfigCacheState</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>ConfigCache {
+    state: Mutex&lt;<span class="prelude-ty">Option</span>&lt;ConfigCacheState&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">ConfigCache</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">use_default_config</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">state</span>: <span class="ident">Mutex::new</span>(<span class="kw">if</span> <span class="ident">use_default_config</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">ConfigCacheState</span> {
-                    <span class="ident">config</span>: <span class="ident">ton_executor::BlockchainConfig::default</span>(),
-                    <span class="ident">last_key_block_seqno</span>: <span class="number">0</span>,
-                    <span class="ident">phase</span>: <span class="ident">ConfigCachePhase::WainingNextValidatorsSet</span> { <span class="ident">deadline</span>: <span class="ident">u32::MAX</span> },
+<span class="kw">impl </span>ConfigCache {
+    <span class="kw">pub fn </span>new(use_default_config: bool) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            state: Mutex::new(<span class="kw">if </span>use_default_config {
+                <span class="prelude-val">Some</span>(ConfigCacheState {
+                    config: ton_executor::BlockchainConfig::default(),
+                    last_key_block_seqno: <span class="number">0</span>,
+                    phase: ConfigCachePhase::WainingNextValidatorsSet { deadline: u32::MAX },
                 })
-            } <span class="kw">else</span> {
-                <span class="prelude-val">None</span>
-            }),
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>}),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_blockchain_config</span>(
+    <span class="kw">pub async fn </span>get_blockchain_config(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">transport</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Transport</span>,
-        <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-        <span class="ident">force</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_executor::BlockchainConfig</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cache</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
+        transport: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Transport,
+        clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+        force: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ton_executor::BlockchainConfig&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>cache = <span class="self">self</span>.state.lock().<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">clock</span>.<span class="ident">now_sec_u64</span>() <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">let </span>now = clock.now_sec_u64() <span class="kw">as </span>u32;
 
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">cache</span> {
-            <span class="prelude-val">None</span> =&gt; {
-                <span class="kw">let</span> (<span class="ident">config</span>, <span class="ident">key_block_seqno</span>) <span class="op">=</span> <span class="ident">fetch_config</span>(<span class="ident">transport</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">phase</span> <span class="op">=</span> <span class="ident">compute_next_phase</span>(<span class="ident">now</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>, <span class="prelude-val">None</span>, <span class="ident">key_block_seqno</span>)<span class="question-mark">?</span>;
-                <span class="kw-2">*</span><span class="ident">cache</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">ConfigCacheState</span> {
-                    <span class="ident">config</span>: <span class="ident">config</span>.<span class="ident">clone</span>(),
-                    <span class="ident">last_key_block_seqno</span>: <span class="ident">key_block_seqno</span>,
-                    <span class="ident">phase</span>,
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="kw-2">&amp;*</span>cache {
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">let </span>(config, key_block_seqno) = fetch_config(transport).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>phase = compute_next_phase(now, <span class="kw-2">&amp;</span>config, <span class="prelude-val">None</span>, key_block_seqno)<span class="question-mark">?</span>;
+                <span class="kw-2">*</span>cache = <span class="prelude-val">Some</span>(ConfigCacheState {
+                    config: config.clone(),
+                    last_key_block_seqno: key_block_seqno,
+                    phase,
                 });
-                <span class="ident">config</span>
+                config
             }
-            <span class="prelude-val">Some</span>(<span class="ident">a</span>) <span class="kw">if</span> <span class="ident">force</span> <span class="op">|</span><span class="op">|</span> <span class="ident">cache_expired</span>(<span class="ident">now</span>, <span class="ident">a</span>.<span class="ident">phase</span>) =&gt; {
-                <span class="kw">let</span> (<span class="ident">config</span>, <span class="ident">key_block_seqno</span>) <span class="op">=</span> <span class="ident">fetch_config</span>(<span class="ident">transport</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">phase</span> <span class="op">=</span> <span class="ident">compute_next_phase</span>(
-                    <span class="ident">now</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">config</span>,
-                    <span class="prelude-val">Some</span>(<span class="ident">a</span>.<span class="ident">last_key_block_seqno</span>),
-                    <span class="ident">key_block_seqno</span>,
+            <span class="prelude-val">Some</span>(a) <span class="kw">if </span>force || cache_expired(now, a.phase) =&gt; {
+                <span class="kw">let </span>(config, key_block_seqno) = fetch_config(transport).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>phase = compute_next_phase(
+                    now,
+                    <span class="kw-2">&amp;</span>config,
+                    <span class="prelude-val">Some</span>(a.last_key_block_seqno),
+                    key_block_seqno,
                 )<span class="question-mark">?</span>;
-                <span class="kw-2">*</span><span class="ident">cache</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">ConfigCacheState</span> {
-                    <span class="ident">config</span>: <span class="ident">config</span>.<span class="ident">clone</span>(),
-                    <span class="ident">last_key_block_seqno</span>: <span class="ident">key_block_seqno</span>,
-                    <span class="ident">phase</span>,
+                <span class="kw-2">*</span>cache = <span class="prelude-val">Some</span>(ConfigCacheState {
+                    config: config.clone(),
+                    last_key_block_seqno: key_block_seqno,
+                    phase,
                 });
-                <span class="ident">config</span>
+                config
             }
-            <span class="prelude-val">Some</span>(<span class="ident">a</span>) =&gt; <span class="ident">a</span>.<span class="ident">config</span>.<span class="ident">clone</span>(),
+            <span class="prelude-val">Some</span>(a) =&gt; a.config.clone(),
         })
     }
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">fetch_config</span>(<span class="ident">transport</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Transport</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">ton_executor::BlockchainConfig</span>, <span class="ident">u32</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">block</span> <span class="op">=</span> <span class="ident">transport</span>.<span class="ident">get_latest_key_block</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+<span class="kw">async fn </span>fetch_config(transport: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Transport) -&gt; <span class="prelude-ty">Result</span>&lt;(ton_executor::BlockchainConfig, u32)&gt; {
+    <span class="kw">let </span>block = transport.get_latest_key_block().<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">info</span>.<span class="ident">read_struct</span>()<span class="question-mark">?</span>;
+    <span class="kw">let </span>info = block.info.read_struct()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">extra</span> <span class="op">=</span> <span class="ident">block</span>
-        .<span class="ident">read_extra</span>()
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">QueryConfigError::InvalidBlock</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>extra = block
+        .read_extra()
+        .map_err(|<span class="kw">_</span>| QueryConfigError::InvalidBlock)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">master</span> <span class="op">=</span> <span class="ident">extra</span>
-        .<span class="ident">read_custom</span>()
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">QueryConfigError::InvalidBlock</span>)<span class="question-mark">?</span>
-        .<span class="ident">ok_or</span>(<span class="ident">QueryConfigError::InvalidBlock</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>master = extra
+        .read_custom()
+        .map_err(|<span class="kw">_</span>| QueryConfigError::InvalidBlock)<span class="question-mark">?
+        </span>.ok_or(QueryConfigError::InvalidBlock)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">params</span> <span class="op">=</span> <span class="ident">master</span>
-        .<span class="ident">config</span>()
-        .<span class="ident">ok_or</span>(<span class="ident">QueryConfigError::InvalidBlock</span>)<span class="question-mark">?</span>
-        .<span class="ident">clone</span>();
+    <span class="kw">let </span>params = master
+        .config()
+        .ok_or(QueryConfigError::InvalidBlock)<span class="question-mark">?
+        </span>.clone();
 
-    <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">ton_executor::BlockchainConfig::with_config</span>(<span class="ident">params</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">QueryConfigError::InvalidConfig</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>config = ton_executor::BlockchainConfig::with_config(params)
+        .map_err(|<span class="kw">_</span>| QueryConfigError::InvalidConfig)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>((<span class="ident">config</span>, <span class="ident">info</span>.<span class="ident">seq_no</span>()))
+    <span class="prelude-val">Ok</span>((config, info.seq_no()))
 }
 
-<span class="kw">fn</span> <span class="ident">compute_next_phase</span>(
-    <span class="ident">now</span>: <span class="ident">u32</span>,
-    <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident">ton_executor::BlockchainConfig</span>,
-    <span class="ident">last_key_block_seqno</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="ident">fetched_key_block_seqno</span>: <span class="ident">u32</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ConfigCachePhase</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="macro">matches!</span>(<span class="ident">last_key_block_seqno</span>, <span class="prelude-val">Some</span>(<span class="ident">seqno</span>) <span class="kw">if</span> <span class="ident">fetched_key_block_seqno</span> <span class="op">==</span> <span class="ident">seqno</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">ConfigCachePhase::WaitingKeyBlock</span>);
+<span class="kw">fn </span>compute_next_phase(
+    now: u32,
+    config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
+    last_key_block_seqno: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+    fetched_key_block_seqno: u32,
+) -&gt; <span class="prelude-ty">Result</span>&lt;ConfigCachePhase&gt; {
+    <span class="kw">if </span><span class="macro">matches!</span>(last_key_block_seqno, <span class="prelude-val">Some</span>(seqno) <span class="kw">if </span>fetched_key_block_seqno == seqno) {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(ConfigCachePhase::WaitingKeyBlock);
     }
 
-    <span class="kw">let</span> <span class="ident">elector_params</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">raw_config</span>().<span class="ident">elector_params</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">current_vset</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">raw_config</span>().<span class="ident">validator_set</span>()<span class="question-mark">?</span>;
+    <span class="kw">let </span>elector_params = config.raw_config().elector_params()<span class="question-mark">?</span>;
+    <span class="kw">let </span>current_vset = config.raw_config().validator_set()<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">elections_end</span> <span class="op">=</span> <span class="ident">current_vset</span>.<span class="ident">utime_until</span>() <span class="op">-</span> <span class="ident">elector_params</span>.<span class="ident">elections_end_before</span>;
-    <span class="kw">if</span> <span class="ident">now</span> <span class="op">&lt;</span> <span class="ident">elections_end</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">ConfigCachePhase::WaitingElectionsEnd</span> {
-            <span class="ident">deadline</span>: <span class="ident">elections_end</span>,
+    <span class="kw">let </span>elections_end = current_vset.utime_until() - elector_params.elections_end_before;
+    <span class="kw">if </span>now &lt; elections_end {
+        <span class="prelude-val">Ok</span>(ConfigCachePhase::WaitingElectionsEnd {
+            deadline: elections_end,
         })
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">ConfigCachePhase::WainingNextValidatorsSet</span> {
-            <span class="ident">deadline</span>: <span class="ident">current_vset</span>.<span class="ident">utime_until</span>(),
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Ok</span>(ConfigCachePhase::WainingNextValidatorsSet {
+            deadline: current_vset.utime_until(),
         })
     }
 }
 
-<span class="kw">fn</span> <span class="ident">cache_expired</span>(<span class="ident">now</span>: <span class="ident">u32</span>, <span class="ident">phase</span>: <span class="ident">ConfigCachePhase</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">match</span> <span class="ident">phase</span> {
-        <span class="ident">ConfigCachePhase::WaitingKeyBlock</span> =&gt; <span class="bool-val">true</span>,
-        <span class="ident">ConfigCachePhase::WaitingElectionsEnd</span> { <span class="ident">deadline</span> }
-        <span class="op">|</span> <span class="ident">ConfigCachePhase::WainingNextValidatorsSet</span> { <span class="ident">deadline</span> } =&gt; <span class="ident">now</span> <span class="op">&gt;</span> <span class="ident">deadline</span>,
+<span class="kw">fn </span>cache_expired(now: u32, phase: ConfigCachePhase) -&gt; bool {
+    <span class="kw">match </span>phase {
+        ConfigCachePhase::WaitingKeyBlock =&gt; <span class="bool-val">true</span>,
+        ConfigCachePhase::WaitingElectionsEnd { deadline }
+        | ConfigCachePhase::WainingNextValidatorsSet { deadline } =&gt; now &gt; deadline,
     }
 }
 
-<span class="kw">struct</span> <span class="ident">ConfigCacheState</span> {
-    <span class="ident">config</span>: <span class="ident">ton_executor::BlockchainConfig</span>,
-    <span class="ident">last_key_block_seqno</span>: <span class="ident">u32</span>,
-    <span class="ident">phase</span>: <span class="ident">ConfigCachePhase</span>,
+<span class="kw">struct </span>ConfigCacheState {
+    config: ton_executor::BlockchainConfig,
+    last_key_block_seqno: u32,
+    phase: ConfigCachePhase,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">enum</span> <span class="ident">ConfigCachePhase</span> {
-    <span class="ident">WaitingKeyBlock</span>,
-    <span class="ident">WaitingElectionsEnd</span> { <span class="ident">deadline</span>: <span class="ident">u32</span> },
-    <span class="ident">WainingNextValidatorsSet</span> { <span class="ident">deadline</span>: <span class="ident">u32</span> },
+<span class="attribute">#[derive(Copy, Clone)]
+</span><span class="kw">enum </span>ConfigCachePhase {
+    WaitingKeyBlock,
+    WaitingElectionsEnd { deadline: u32 },
+    WainingNextValidatorsSet { deadline: u32 },
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">QueryConfigError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid block&quot;</span>)]</span>
-    <span class="ident">InvalidBlock</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid config&quot;</span>)]</span>
-    <span class="ident">InvalidConfig</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>QueryConfigError {
+    <span class="attribute">#[error(<span class="string">&quot;Invalid block&quot;</span>)]
+    </span>InvalidBlock,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid config&quot;</span>)]
+    </span>InvalidConfig,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

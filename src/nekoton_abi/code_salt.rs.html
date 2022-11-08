@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/code_salt.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>code_salt.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/code_salt.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>code_salt.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_abi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_abi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -111,118 +111,118 @@
 <span id="111">111</span>
 <span id="112">112</span>
 <span id="113">113</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">ton_types</span>::{<span class="ident">BuilderData</span>, <span class="ident">Cell</span>, <span class="ident">SliceData</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>ton_types::{BuilderData, Cell, SliceData};
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_code_salt</span>(<span class="ident">code</span>: <span class="ident">Cell</span>, <span class="ident">salt</span>: <span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">code_data</span> <span class="op">=</span> <span class="ident">code</span>
-        .<span class="ident">data</span>()
-        .<span class="ident">strip_suffix</span>(<span class="kw-2">&amp;</span>[<span class="number">0x80</span>])
-        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">code</span>.<span class="ident">data</span>());
-    <span class="kw">match</span> <span class="ident">code_data</span> {
-        <span class="ident">OLD_CPP_SELECTOR_DATA</span> =&gt; <span class="ident">set_old_selector_salt</span>(<span class="ident">code</span>, <span class="ident">salt</span>),
-        <span class="ident">NEW_SELECTOR_DATA</span> =&gt; <span class="ident">set_new_selector_salt</span>(<span class="ident">code</span>, <span class="ident">salt</span>),
-        <span class="ident">MYCODE_SELECTOR_DATA</span> =&gt; <span class="ident">set_mycode_selector_salt</span>(<span class="ident">code</span>, <span class="ident">salt</span>),
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">CodeSaltError::UnsupportedSelector</span>.<span class="ident">into</span>()),
+<span class="kw">pub fn </span>set_code_salt(code: Cell, salt: Cell) -&gt; <span class="prelude-ty">Result</span>&lt;Cell&gt; {
+    <span class="kw">let </span>code_data = code
+        .data()
+        .strip_suffix(<span class="kw-2">&amp;</span>[<span class="number">0x80</span>])
+        .unwrap_or_else(|| code.data());
+    <span class="kw">match </span>code_data {
+        OLD_CPP_SELECTOR_DATA =&gt; set_old_selector_salt(code, salt),
+        NEW_SELECTOR_DATA =&gt; set_new_selector_salt(code, salt),
+        MYCODE_SELECTOR_DATA =&gt; set_mycode_selector_salt(code, salt),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(CodeSaltError::UnsupportedSelector.into()),
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_code_salt</span>(<span class="ident">code</span>: <span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">code_data</span> <span class="op">=</span> <span class="ident">code</span>
-        .<span class="ident">data</span>()
-        .<span class="ident">strip_suffix</span>(<span class="kw-2">&amp;</span>[<span class="number">0x80</span>])
-        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">code</span>.<span class="ident">data</span>());
-    <span class="kw">match</span> <span class="ident">code_data</span> {
-        <span class="ident">OLD_CPP_SELECTOR_DATA</span> =&gt; <span class="ident">get_old_selector_salt</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>),
-        <span class="ident">OLD_SOL_SELECTOR_DATA</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-        <span class="ident">NEW_SELECTOR_DATA</span> =&gt; <span class="ident">get_new_selector_salt</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>),
-        <span class="ident">MYCODE_SELECTOR_DATA</span> =&gt; <span class="ident">get_mycode_selector_salt</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>),
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">CodeSaltError::UnsupportedSelector</span>.<span class="ident">into</span>()),
+<span class="kw">pub fn </span>get_code_salt(code: Cell) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Cell&gt;&gt; {
+    <span class="kw">let </span>code_data = code
+        .data()
+        .strip_suffix(<span class="kw-2">&amp;</span>[<span class="number">0x80</span>])
+        .unwrap_or_else(|| code.data());
+    <span class="kw">match </span>code_data {
+        OLD_CPP_SELECTOR_DATA =&gt; get_old_selector_salt(<span class="kw-2">&amp;</span>code),
+        OLD_SOL_SELECTOR_DATA =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+        NEW_SELECTOR_DATA =&gt; get_new_selector_salt(<span class="kw-2">&amp;</span>code),
+        MYCODE_SELECTOR_DATA =&gt; get_mycode_selector_salt(<span class="kw-2">&amp;</span>code),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(CodeSaltError::UnsupportedSelector.into()),
     }
 }
 
-<span class="kw">fn</span> <span class="ident">set_salt</span>(<span class="ident">code</span>: <span class="ident">Cell</span>, <span class="ident">salt</span>: <span class="ident">Cell</span>, <span class="ident">replace_last_ref</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span>: <span class="ident">BuilderData</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">into</span>();
-    <span class="kw">if</span> <span class="ident">replace_last_ref</span> {
-        <span class="ident">builder</span>.<span class="ident">replace_reference_cell</span>(<span class="ident">builder</span>.<span class="ident">references_used</span>() <span class="op">-</span> <span class="number">1</span>, <span class="ident">salt</span>);
-    } <span class="kw">else</span> {
-        <span class="ident">builder</span>.<span class="ident">checked_append_reference</span>(<span class="ident">salt</span>)<span class="question-mark">?</span>;
+<span class="kw">fn </span>set_salt(code: Cell, salt: Cell, replace_last_ref: bool) -&gt; <span class="prelude-ty">Result</span>&lt;Cell&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>builder: BuilderData = code.into();
+    <span class="kw">if </span>replace_last_ref {
+        builder.replace_reference_cell(builder.references_used() - <span class="number">1</span>, salt);
+    } <span class="kw">else </span>{
+        builder.checked_append_reference(salt)<span class="question-mark">?</span>;
     }
-    <span class="ident">builder</span>.<span class="ident">into_cell</span>()
+    builder.into_cell()
 }
 
-<span class="kw">fn</span> <span class="ident">set_old_selector_salt</span>(<span class="ident">code</span>: <span class="ident">Cell</span>, <span class="ident">salt</span>: <span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">salt_present</span> <span class="op">=</span> <span class="ident">get_old_selector_salt</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>)<span class="question-mark">?</span>.<span class="ident">is_some</span>();
-    <span class="ident">set_salt</span>(<span class="ident">code</span>, <span class="ident">salt</span>, <span class="ident">salt_present</span>)
+<span class="kw">fn </span>set_old_selector_salt(code: Cell, salt: Cell) -&gt; <span class="prelude-ty">Result</span>&lt;Cell&gt; {
+    <span class="kw">let </span>salt_present = get_old_selector_salt(<span class="kw-2">&amp;</span>code)<span class="question-mark">?</span>.is_some();
+    set_salt(code, salt, salt_present)
 }
 
-<span class="kw">fn</span> <span class="ident">get_old_selector_salt</span>(<span class="ident">code</span>: <span class="kw-2">&amp;</span><span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="prelude-val">Ok</span>(<span class="ident">code</span>.<span class="ident">reference</span>(<span class="number">2</span>).<span class="ident">ok</span>())
+<span class="kw">fn </span>get_old_selector_salt(code: <span class="kw-2">&amp;</span>Cell) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Cell&gt;&gt; {
+    <span class="prelude-val">Ok</span>(code.reference(<span class="number">2</span>).ok())
 }
 
-<span class="kw">fn</span> <span class="ident">get_new_selector_salt</span>(<span class="ident">code</span>: <span class="kw-2">&amp;</span><span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">private_selector</span>: <span class="ident">SliceData</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">reference</span>(<span class="number">0</span>)<span class="question-mark">?</span>.<span class="ident">into</span>();
-    <span class="kw">if</span> <span class="ident">private_selector</span>.<span class="ident">get_next_bits</span>(<span class="number">13</span>).<span class="ident">ok</span>() <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="number">0xf4</span>, <span class="number">0xa0</span>]) {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CodeSaltError::InvalidSelector</span>.<span class="ident">into</span>());
+<span class="kw">fn </span>get_new_selector_salt(code: <span class="kw-2">&amp;</span>Cell) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Cell&gt;&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>private_selector: SliceData = code.reference(<span class="number">0</span>)<span class="question-mark">?</span>.into();
+    <span class="kw">if </span>private_selector.get_next_bits(<span class="number">13</span>).ok() != <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="number">0xf4</span>, <span class="number">0xa0</span>]) {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(CodeSaltError::InvalidSelector.into());
     }
-    <span class="ident">private_selector</span>.<span class="ident">get_dictionary_opt</span>();
-    <span class="prelude-val">Ok</span>(<span class="ident">private_selector</span>.<span class="ident">reference_opt</span>(<span class="number">1</span>))
+    private_selector.get_dictionary_opt();
+    <span class="prelude-val">Ok</span>(private_selector.reference_opt(<span class="number">1</span>))
 }
 
-<span class="kw">fn</span> <span class="ident">set_new_selector_salt</span>(<span class="ident">code</span>: <span class="ident">Cell</span>, <span class="ident">salt</span>: <span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">private_selector</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">reference</span>(<span class="number">0</span>)<span class="question-mark">?</span>;
+<span class="kw">fn </span>set_new_selector_salt(code: Cell, salt: Cell) -&gt; <span class="prelude-ty">Result</span>&lt;Cell&gt; {
+    <span class="kw">let </span>private_selector = code.reference(<span class="number">0</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">private_selector</span> <span class="op">=</span> <span class="ident">set_salt</span>(
-        <span class="ident">private_selector</span>,
-        <span class="ident">salt</span>,
-        <span class="ident">get_new_selector_salt</span>(<span class="kw-2">&amp;</span><span class="ident">code</span>)<span class="question-mark">?</span>.<span class="ident">is_some</span>(),
+    <span class="kw">let </span>private_selector = set_salt(
+        private_selector,
+        salt,
+        get_new_selector_salt(<span class="kw-2">&amp;</span>code)<span class="question-mark">?</span>.is_some(),
     )<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span>: <span class="ident">BuilderData</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">into</span>();
-    <span class="ident">builder</span>.<span class="ident">replace_reference_cell</span>(<span class="number">0</span>, <span class="ident">private_selector</span>);
-    <span class="ident">builder</span>.<span class="ident">into_cell</span>()
+    <span class="kw">let </span><span class="kw-2">mut </span>builder: BuilderData = code.into();
+    builder.replace_reference_cell(<span class="number">0</span>, private_selector);
+    builder.into_cell()
 }
 
-<span class="kw">fn</span> <span class="ident">get_mycode_selector_salt</span>(<span class="ident">code</span>: <span class="kw-2">&amp;</span><span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">new_selector</span> <span class="op">=</span> <span class="ident">code</span>
-        .<span class="ident">reference</span>(<span class="number">1</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">CodeSaltError::NewMycodeSelectorNotFound</span>)<span class="question-mark">?</span>;
-    <span class="ident">get_new_selector_salt</span>(<span class="kw-2">&amp;</span><span class="ident">new_selector</span>)
+<span class="kw">fn </span>get_mycode_selector_salt(code: <span class="kw-2">&amp;</span>Cell) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Cell&gt;&gt; {
+    <span class="kw">let </span>new_selector = code
+        .reference(<span class="number">1</span>)
+        .map_err(|<span class="kw">_</span>| CodeSaltError::NewMycodeSelectorNotFound)<span class="question-mark">?</span>;
+    get_new_selector_salt(<span class="kw-2">&amp;</span>new_selector)
 }
 
-<span class="kw">fn</span> <span class="ident">set_mycode_selector_salt</span>(<span class="ident">code</span>: <span class="ident">Cell</span>, <span class="ident">salt</span>: <span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">new_selector</span> <span class="op">=</span> <span class="ident">code</span>
-        .<span class="ident">reference</span>(<span class="number">1</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">CodeSaltError::NewMycodeSelectorNotFound</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">new_selector</span> <span class="op">=</span> <span class="ident">set_new_selector_salt</span>(<span class="ident">new_selector</span>, <span class="ident">salt</span>)<span class="question-mark">?</span>;
+<span class="kw">fn </span>set_mycode_selector_salt(code: Cell, salt: Cell) -&gt; <span class="prelude-ty">Result</span>&lt;Cell&gt; {
+    <span class="kw">let </span>new_selector = code
+        .reference(<span class="number">1</span>)
+        .map_err(|<span class="kw">_</span>| CodeSaltError::NewMycodeSelectorNotFound)<span class="question-mark">?</span>;
+    <span class="kw">let </span>new_selector = set_new_selector_salt(new_selector, salt)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span>: <span class="ident">BuilderData</span> <span class="op">=</span> <span class="ident">code</span>.<span class="ident">into</span>();
-    <span class="ident">builder</span>.<span class="ident">replace_reference_cell</span>(<span class="number">1</span>, <span class="ident">new_selector</span>);
-    <span class="ident">builder</span>.<span class="ident">into_cell</span>()
+    <span class="kw">let </span><span class="kw-2">mut </span>builder: BuilderData = code.into();
+    builder.replace_reference_cell(<span class="number">1</span>, new_selector);
+    builder.into_cell()
 }
 
-<span class="kw">const</span> <span class="ident">OLD_CPP_SELECTOR_DATA</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="kw">const </span>OLD_CPP_SELECTOR_DATA: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[
     <span class="number">0xff</span>, <span class="number">0x00</span>, <span class="number">0x20</span>, <span class="number">0xc1</span>, <span class="number">0x01</span>, <span class="number">0xf4</span>, <span class="number">0xa4</span>, <span class="number">0x20</span>, <span class="number">0x58</span>, <span class="number">0x92</span>, <span class="number">0xf4</span>, <span class="number">0xa0</span>, <span class="number">0xe0</span>, <span class="number">0x5f</span>, <span class="number">0x02</span>, <span class="number">0x8a</span>,
     <span class="number">0x20</span>, <span class="number">0xed</span>, <span class="number">0x53</span>, <span class="number">0xd9</span>,
 ];
-<span class="kw">const</span> <span class="ident">OLD_SOL_SELECTOR_DATA</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="kw">const </span>OLD_SOL_SELECTOR_DATA: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[
     <span class="number">0xff</span>, <span class="number">0x00</span>, <span class="number">0xf4</span>, <span class="number">0xa4</span>, <span class="number">0x20</span>, <span class="number">0x22</span>, <span class="number">0xc0</span>, <span class="number">0x01</span>, <span class="number">0x92</span>, <span class="number">0xf4</span>, <span class="number">0xa0</span>, <span class="number">0xe1</span>, <span class="number">0x8a</span>, <span class="number">0xed</span>, <span class="number">0x53</span>, <span class="number">0x58</span>,
     <span class="number">0x30</span>, <span class="number">0xf4</span>, <span class="number">0xa1</span>,
 ];
-<span class="kw">const</span> <span class="ident">NEW_SELECTOR_DATA</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="kw">const </span>NEW_SELECTOR_DATA: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[
     <span class="number">0x8a</span>, <span class="number">0xed</span>, <span class="number">0x53</span>, <span class="number">0x20</span>, <span class="number">0xe3</span>, <span class="number">0x03</span>, <span class="number">0x20</span>, <span class="number">0xc0</span>, <span class="number">0xff</span>, <span class="number">0xe3</span>, <span class="number">0x02</span>, <span class="number">0x20</span>, <span class="number">0xc0</span>, <span class="number">0xfe</span>, <span class="number">0xe3</span>, <span class="number">0x02</span>,
     <span class="number">0xf2</span>, <span class="number">0x0b</span>,
 ];
-<span class="kw">const</span> <span class="ident">MYCODE_SELECTOR_DATA</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x8A</span>, <span class="number">0xDB</span>, <span class="number">0x35</span>];
+<span class="kw">const </span>MYCODE_SELECTOR_DATA: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x8A</span>, <span class="number">0xDB</span>, <span class="number">0x35</span>];
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">CodeSaltError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unsupported selector&quot;</span>)]</span>
-    <span class="ident">UnsupportedSelector</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid selector&quot;</span>)]</span>
-    <span class="ident">InvalidSelector</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;No new selector in MYCODE selector&quot;</span>)]</span>
-    <span class="ident">NewMycodeSelectorNotFound</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>CodeSaltError {
+    <span class="attribute">#[error(<span class="string">&quot;Unsupported selector&quot;</span>)]
+    </span>UnsupportedSelector,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid selector&quot;</span>)]
+    </span>InvalidSelector,
+    <span class="attribute">#[error(<span class="string">&quot;No new selector in MYCODE selector&quot;</span>)]
+    </span>NewMycodeSelectorNotFound,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_abi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

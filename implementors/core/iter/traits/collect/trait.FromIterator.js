@@ -1,3 +1,3 @@
-(function() {var implementors = {};
-implementors["nekoton_abi"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.64.0/core/iter/traits/collect/trait.FromIterator.html\" title=\"trait core::iter::traits::collect::FromIterator\">FromIterator</a>&lt;Param&gt; for <a class=\"struct\" href=\"nekoton_abi/struct.TupleBuilder.html\" title=\"struct nekoton_abi::TupleBuilder\">TupleBuilder</a>","synthetic":false,"types":["nekoton_abi::function_builder::TupleBuilder"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {var implementors = {
+"nekoton_abi":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.65.0/core/iter/traits/collect/trait.FromIterator.html\" title=\"trait core::iter::traits::collect::FromIterator\">FromIterator</a>&lt;Param&gt; for <a class=\"struct\" href=\"nekoton_abi/struct.TupleBuilder.html\" title=\"struct nekoton_abi::TupleBuilder\">TupleBuilder</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

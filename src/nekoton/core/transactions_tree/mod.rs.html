@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/transactions_tree/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/transactions_tree/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -263,265 +263,265 @@
 <span id="263">263</span>
 <span id="264">264</span>
 <span id="265">265</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">VecDeque</span>};
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::{HashMap, VecDeque};
+<span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use</span> <span class="ident">nekoton_abi::Executor</span>;
-<span class="kw">use</span> <span class="ident">nekoton_utils::Clock</span>;
-<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">Account</span>, <span class="ident">Message</span>, <span class="ident">MsgAddressInt</span>, <span class="ident">Transaction</span>};
+<span class="kw">use </span>nekoton_abi::Executor;
+<span class="kw">use </span>nekoton_utils::Clock;
+<span class="kw">use </span>ton_block::{Account, Message, MsgAddressInt, Transaction};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::Transport</span>;
+<span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransactionsTreeStream</span> {
-    <span class="ident">states</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span>, <span class="ident">StoredAccount</span><span class="op">&gt;</span>,
-    <span class="ident">messages</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
-    <span class="ident">config</span>: <span class="ident">ton_executor::BlockchainConfig</span>,
-    <span class="ident">disable_signature_check</span>: <span class="ident">bool</span>,
-    <span class="ident">unlimited_message_balance</span>: <span class="ident">bool</span>,
-    <span class="ident">unlimited_account_balance</span>: <span class="ident">bool</span>,
-    <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-    <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>TransactionsTreeStream {
+    states: HashMap&lt;MsgAddressInt, StoredAccount&gt;,
+    messages: VecDeque&lt;Message&gt;,
+    config: ton_executor::BlockchainConfig,
+    disable_signature_check: bool,
+    unlimited_message_balance: bool,
+    unlimited_account_balance: bool,
+    transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+    clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">TransactionsTreeStream</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">message</span>: <span class="ident">Message</span>,
-        <span class="ident">config</span>: <span class="ident">ton_executor::BlockchainConfig</span>,
-        <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-        <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">states</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">messages</span>: <span class="ident">VecDeque::from</span>([<span class="ident">message</span>]),
-            <span class="ident">config</span>,
-            <span class="ident">disable_signature_check</span>: <span class="bool-val">false</span>,
-            <span class="ident">unlimited_message_balance</span>: <span class="bool-val">false</span>,
-            <span class="ident">unlimited_account_balance</span>: <span class="bool-val">false</span>,
-            <span class="ident">transport</span>,
-            <span class="ident">clock</span>,
+<span class="kw">impl </span>TransactionsTreeStream {
+    <span class="kw">pub fn </span>new(
+        message: Message,
+        config: ton_executor::BlockchainConfig,
+        transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+        clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            states: Default::default(),
+            messages: VecDeque::from([message]),
+            config,
+            disable_signature_check: <span class="bool-val">false</span>,
+            unlimited_message_balance: <span class="bool-val">false</span>,
+            unlimited_account_balance: <span class="bool-val">false</span>,
+            transport,
+            clock,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">disable_signature_check</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">disable_signature_check</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        <span class="self">self</span>
+    <span class="kw">pub fn </span>disable_signature_check(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.disable_signature_check = <span class="bool-val">true</span>;
+        <span class="self">self
+    </span>}
+
+    <span class="kw">pub fn </span>unlimited_message_balance(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.unlimited_message_balance = <span class="bool-val">true</span>;
+        <span class="self">self
+    </span>}
+
+    <span class="kw">pub fn </span>unlimited_account_balance(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
+        <span class="self">self</span>.unlimited_account_balance = <span class="bool-val">true</span>;
+        <span class="self">self
+    </span>}
+
+    <span class="kw">pub fn </span>message_queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>VecDeque&lt;ton_block::Message&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.messages
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unlimited_message_balance</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">unlimited_message_balance</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unlimited_account_balance</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">unlimited_account_balance</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        <span class="self">self</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">message_queue</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">ton_block::Message</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">messages</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">retain_message_queue</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>)
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">ton_block::Message</span>) -&gt; <span class="ident">bool</span>,
+    <span class="kw">pub fn </span>retain_message_queue&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F)
+    <span class="kw">where
+        </span>F: FnMut(<span class="kw-2">&amp;</span>ton_block::Message) -&gt; bool,
     {
-        <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">retain</span>(<span class="ident">f</span>);
+        <span class="self">self</span>.messages.retain(f);
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">TransactionTreeResult</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Transaction</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">pop_front</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">message</span>) =&gt; <span class="self">self</span>.<span class="ident">step</span>(<span class="ident">message</span>).<span class="kw">await</span>.<span class="ident">map</span>(<span class="prelude-val">Some</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+    <span class="kw">pub async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; TransactionTreeResult&lt;<span class="prelude-ty">Option</span>&lt;Transaction&gt;&gt; {
+        <span class="kw">match </span><span class="self">self</span>.messages.pop_front() {
+            <span class="prelude-val">Some</span>(message) =&gt; <span class="self">self</span>.step(message).<span class="kw">await</span>.map(<span class="prelude-val">Some</span>),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">step</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">message</span>: <span class="ident">Message</span>) -&gt; <span class="ident">TransactionTreeResult</span><span class="op">&lt;</span><span class="ident">Transaction</span><span class="op">&gt;</span> {
-        <span class="kw">const</span> <span class="ident">A_LOT</span>: <span class="ident">u128</span> <span class="op">=</span> <span class="number">1_000_000_000_000_000</span>; <span class="comment">// 1&#39;000&#39;000 ever</span>
+    <span class="kw">async fn </span>step(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>message: Message) -&gt; TransactionTreeResult&lt;Transaction&gt; {
+        <span class="kw">const </span>A_LOT: u128 = <span class="number">1_000_000_000_000_000</span>; <span class="comment">// 1&#39;000&#39;000 ever
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">unlimited_message_balance</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">header</span>) <span class="op">=</span> <span class="ident">message</span>.<span class="ident">int_header_mut</span>() {
-                <span class="ident">header</span>.<span class="ident">value</span>.<span class="ident">grams</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">A_LOT</span>;
+        </span><span class="kw">if </span><span class="self">self</span>.unlimited_message_balance {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(header) = message.int_header_mut() {
+                header.value.grams.<span class="number">0 </span>= A_LOT;
             }
         }
 
-        <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">message</span>.<span class="ident">dst</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">dst</span>) =&gt; <span class="ident">dst</span>,
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransactionTreeError::ExternalOutMessage</span>),
+        <span class="kw">let </span>dst = <span class="kw">match </span>message.dst() {
+            <span class="prelude-val">Some</span>(dst) =&gt; dst,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TransactionTreeError::ExternalOutMessage),
         };
-        <span class="kw">let</span> <span class="ident">StoredAccount</span> {
-            <span class="kw-2">mut</span> <span class="ident">account</span>,
-            <span class="ident">last_transaction_lt</span>,
-            <span class="ident">last_paid</span>,
-        } <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_state</span>(<span class="kw-2">&amp;</span><span class="ident">dst</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>StoredAccount {
+            <span class="kw-2">mut </span>account,
+            last_transaction_lt,
+            last_paid,
+        } = <span class="self">self</span>.get_state(<span class="kw-2">&amp;</span>dst).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">unlimited_account_balance</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Account::Account</span>(<span class="ident">account</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">account</span> {
-                <span class="ident">account</span>.<span class="ident">storage</span>.<span class="ident">balance</span>.<span class="ident">grams</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">A_LOT</span>;
+        <span class="kw">if </span><span class="self">self</span>.unlimited_account_balance {
+            <span class="kw">if let </span>Account::Account(account) = <span class="kw-2">&amp;mut </span>account {
+                account.storage.balance.grams.<span class="number">0 </span>= A_LOT;
             }
         }
 
-        <span class="kw">let</span> <span class="ident">now_ms</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">last_paid</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">last_paid</span>) =&gt; <span class="ident">std::cmp::max</span>(<span class="ident">last_paid</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="number">1000</span>, <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">now_ms_u64</span>()),
-            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">now_ms_u64</span>(),
+        <span class="kw">let </span>now_ms = <span class="kw">match </span>last_paid {
+            <span class="prelude-val">Some</span>(last_paid) =&gt; std::cmp::max(last_paid <span class="kw">as </span>u64 * <span class="number">1000</span>, <span class="self">self</span>.clock.now_ms_u64()),
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.clock.now_ms_u64(),
         };
 
-        <span class="kw">let</span> <span class="ident">utime</span> <span class="op">=</span> (<span class="ident">now_ms</span> <span class="op">/</span> <span class="number">1000</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">let</span> <span class="ident">lt</span> <span class="op">=</span> <span class="ident">last_transaction_lt</span>;
+        <span class="kw">let </span>utime = (now_ms / <span class="number">1000</span>) <span class="kw">as </span>u32;
+        <span class="kw">let </span>lt = last_transaction_lt;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">executor</span> <span class="op">=</span>
-            <span class="ident">Executor::with_params</span>(<span class="self">self</span>.<span class="ident">config</span>.<span class="ident">clone</span>(), <span class="ident">account</span>, <span class="ident">last_transaction_lt</span>, <span class="ident">utime</span>, <span class="ident">lt</span>);
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">disable_signature_check</span> {
-            <span class="ident">executor</span>.<span class="ident">disable_signature_check</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>executor =
+            Executor::with_params(<span class="self">self</span>.config.clone(), account, last_transaction_lt, utime, lt);
+        <span class="kw">if </span><span class="self">self</span>.disable_signature_check {
+            executor.disable_signature_check();
         }
 
-        <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">executor</span>
-            .<span class="ident">run_mut</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>)
-            .<span class="ident">map_err</span>(<span class="ident">TransactionTreeError::ExecutionError</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>tx = executor
+            .run_mut(<span class="kw-2">&amp;</span>message)
+            .map_err(TransactionTreeError::ExecutionError)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">last_transaction_lt</span> <span class="op">=</span> <span class="ident">executor</span>.<span class="ident">last_transaction_lt</span>();
-        <span class="kw">let</span> <span class="ident">last_paid</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">utime</span>);
-        <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">executor</span>.<span class="ident">into_account</span>();
+        <span class="kw">let </span>last_transaction_lt = executor.last_transaction_lt();
+        <span class="kw">let </span>last_paid = <span class="prelude-val">Some</span>(utime);
+        <span class="kw">let </span>account = executor.into_account();
 
-        <span class="self">self</span>.<span class="ident">states</span>.<span class="ident">insert</span>(
-            <span class="ident">dst</span>,
-            <span class="ident">StoredAccount</span> {
-                <span class="ident">account</span>,
-                <span class="ident">last_transaction_lt</span>,
-                <span class="ident">last_paid</span>,
+        <span class="self">self</span>.states.insert(
+            dst,
+            StoredAccount {
+                account,
+                last_transaction_lt,
+                last_paid,
             },
         );
 
-        <span class="ident">tx</span>.<span class="ident">iterate_out_msgs</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
-            <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">is_internal</span>() {
-                <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">push_back</span>(<span class="ident">x</span>);
+        tx.iterate_out_msgs(|x| {
+            <span class="kw">if </span>x.is_internal() {
+                <span class="self">self</span>.messages.push_back(x);
             }
             <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
         })
-        .<span class="ident">map_err</span>(<span class="ident">TransactionTreeError::ExecutionError</span>)<span class="question-mark">?</span>;
+        .map_err(TransactionTreeError::ExecutionError)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">tx</span>)
+        <span class="prelude-val">Ok</span>(tx)
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>) -&gt; <span class="ident">TransactionTreeResult</span><span class="op">&lt;</span><span class="ident">StoredAccount</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">states</span>.<span class="ident">get</span>(<span class="ident">address</span>) {
-            <span class="prelude-val">None</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">transport</span>
-                    .<span class="ident">get_contract_state</span>(<span class="ident">address</span>)
-                    .<span class="kw">await</span>
-                    .<span class="ident">map_err</span>(<span class="ident">TransactionTreeError::TransportError</span>)<span class="question-mark">?</span>
-                    .<span class="ident">into_account</span>();
+    <span class="kw">async fn </span>get_state(<span class="kw-2">&amp;</span><span class="self">self</span>, address: <span class="kw-2">&amp;</span>MsgAddressInt) -&gt; TransactionTreeResult&lt;StoredAccount&gt; {
+        <span class="kw">match </span><span class="self">self</span>.states.get(address) {
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="kw">let </span>account = <span class="self">self
+                    </span>.transport
+                    .get_contract_state(address)
+                    .<span class="kw">await
+                    </span>.map_err(TransactionTreeError::TransportError)<span class="question-mark">?
+                    </span>.into_account();
 
-                <span class="kw">let</span> (<span class="ident">last_transaction_lt</span>, <span class="ident">last_paid</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">account</span> {
-                    <span class="ident">Account::Account</span>(<span class="ident">account</span>) =&gt; (
-                        <span class="ident">account</span>.<span class="ident">storage</span>.<span class="ident">last_trans_lt</span>,
-                        <span class="prelude-val">Some</span>(<span class="ident">account</span>.<span class="ident">storage_stat</span>.<span class="ident">last_paid</span>),
+                <span class="kw">let </span>(last_transaction_lt, last_paid) = <span class="kw">match </span><span class="kw-2">&amp;</span>account {
+                    Account::Account(account) =&gt; (
+                        account.storage.last_trans_lt,
+                        <span class="prelude-val">Some</span>(account.storage_stat.last_paid),
                     ),
-                    <span class="ident">Account::AccountNone</span> =&gt; (<span class="number">0</span>, <span class="prelude-val">None</span>),
+                    Account::AccountNone =&gt; (<span class="number">0</span>, <span class="prelude-val">None</span>),
                 };
 
-                <span class="prelude-val">Ok</span>(<span class="ident">StoredAccount</span> {
-                    <span class="ident">account</span>,
-                    <span class="ident">last_transaction_lt</span>,
-                    <span class="ident">last_paid</span>,
+                <span class="prelude-val">Ok</span>(StoredAccount {
+                    account,
+                    last_transaction_lt,
+                    last_paid,
                 })
             }
-            <span class="prelude-val">Some</span>(<span class="ident">account</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">account</span>.<span class="ident">clone</span>()),
+            <span class="prelude-val">Some</span>(account) =&gt; <span class="prelude-val">Ok</span>(account.clone()),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">StoredAccount</span> {
-    <span class="ident">account</span>: <span class="ident">Account</span>,
-    <span class="ident">last_transaction_lt</span>: <span class="ident">u64</span>,
-    <span class="ident">last_paid</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">struct </span>StoredAccount {
+    account: Account,
+    last_transaction_lt: u64,
+    last_paid: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 }
 
-<span class="kw">type</span> <span class="ident">TransactionTreeResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">TransactionTreeError</span><span class="op">&gt;</span>;
+<span class="kw">type </span>TransactionTreeResult&lt;T&gt; = <span class="prelude-ty">Result</span>&lt;T, TransactionTreeError&gt;;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransactionTreeError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;External out message&quot;</span>)]</span>
-    <span class="ident">ExternalOutMessage</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Transport error: {0}&quot;</span>)]</span>
-    <span class="ident">TransportError</span>(<span class="ident">anyhow::Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Execution error: {0}&quot;</span>)]</span>
-    <span class="ident">ExecutionError</span>(<span class="ident">anyhow::Error</span>),
+<span class="attribute">#[derive(Debug, thiserror::Error)]
+</span><span class="kw">pub enum </span>TransactionTreeError {
+    <span class="attribute">#[error(<span class="string">&quot;External out message&quot;</span>)]
+    </span>ExternalOutMessage,
+    <span class="attribute">#[error(<span class="string">&quot;Transport error: {0}&quot;</span>)]
+    </span>TransportError(anyhow::Error),
+    <span class="attribute">#[error(<span class="string">&quot;Execution error: {0}&quot;</span>)]
+    </span>ExecutionError(anyhow::Error),
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;jrpc_transport&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident">anyhow::Result</span>;
+<span class="attribute">#[cfg(test)]
+#[cfg(feature = <span class="string">&quot;jrpc_transport&quot;</span>)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use </span>anyhow::Result;
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::jrpc::JrpcTransport</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::transport::jrpc::JrpcTransport;
 
-    <span class="kw">use</span> <span class="ident">nekoton_abi::TransactionParser</span>;
-    <span class="kw">use</span> <span class="ident">nekoton_utils</span>::{<span class="ident">ConstClock</span>, <span class="ident">SimpleClock</span>};
+    <span class="kw">use </span>nekoton_abi::TransactionParser;
+    <span class="kw">use </span>nekoton_utils::{ConstClock, SimpleClock};
 
-    <span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">Deserializable</span>, <span class="ident">GetRepresentationHash</span>, <span class="ident">MsgAddrStd</span>};
+    <span class="kw">use </span>ton_block::{Deserializable, GetRepresentationHash, MsgAddrStd};
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="attribute">#[<span class="ident">ignore</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">connection</span> <span class="op">=</span> <span class="ident">reqwest::Client::new</span>();
-        <span class="kw">let</span> <span class="ident">transport</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">JrpcTransport::new</span>(<span class="ident">Arc::new</span>(<span class="ident">connection</span>)));
+    <span class="attribute">#[tokio::test]
+    #[ignore]
+    </span><span class="kw">async fn </span>test() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>connection = reqwest::Client::new();
+        <span class="kw">let </span>transport = Arc::new(JrpcTransport::new(Arc::new(connection)));
 
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="string">&quot;te6ccgECCwEAAiAAAUWIAXu46jwbX3fmTWCR+sOP7NSfC9w6Ieb8ey6yinH94TG6DAEB4cHe2X7ZSGJPEZ8yA3uMskehJrNV78S5dTI7RkmjJAW2amO4V7DBILqXcTRnnbX9dABGRV0t4ouCjVWw6UYUZIR8drjTwv63I+aPTBLtMULU+zuEMSAmO8j5A00qizUXzUAAAGCAkCZIGLReThM7mRsgAgFlgAqvKvl06VY7ioloEDfQPiQRWucy+ulWduWysMlINu80gAAAAAAAAAAAAAAANOYs4BA4AwFraJxXwwAAAAAAAAAAAAAAADuaygCAEdfCW6r8F9gtsIJr8E6H1Ja37Lgfs8pNl/Q6IaXh4oBQBAFDgBe7jqPBtfd+ZNYJH6w4/s1J8L3Doh5vx7LrKKcf3hMbsAUBQ4Acl5cuaS7g+1r0QlJsMoOfX8ZyPtWIG7T55ZRTha2dV7AGA5UEABCKHoVX1z4AAAAAAAAAAAAAAAAF9eEAAAAAAAAAAAAAAAAAAALitIAYb2f1+Ut++m4JYQP7z76p5TDm3cCzftpl9YS+vMELftAJCAcAMgEAEIoehVfXPgAAAAAAAAAAAAAAAAX14QAAMgAAEIoehVfXPgAAAAAAAAAAAAAAAAX14QABYwAAAAAAAAAAAAAAAAABTVaAFKM/M3a62qPfKx2kmmb1rrQ47hELuahao6zMfz+bWfZQCgAgAAAAAAAAAAAAAAAAAAFLzA==&quot;</span>;
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message::construct_from_base64</span>(<span class="ident">message</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>message = <span class="string">&quot;te6ccgECCwEAAiAAAUWIAXu46jwbX3fmTWCR+sOP7NSfC9w6Ieb8ey6yinH94TG6DAEB4cHe2X7ZSGJPEZ8yA3uMskehJrNV78S5dTI7RkmjJAW2amO4V7DBILqXcTRnnbX9dABGRV0t4ouCjVWw6UYUZIR8drjTwv63I+aPTBLtMULU+zuEMSAmO8j5A00qizUXzUAAAGCAkCZIGLReThM7mRsgAgFlgAqvKvl06VY7ioloEDfQPiQRWucy+ulWduWysMlINu80gAAAAAAAAAAAAAAANOYs4BA4AwFraJxXwwAAAAAAAAAAAAAAADuaygCAEdfCW6r8F9gtsIJr8E6H1Ja37Lgfs8pNl/Q6IaXh4oBQBAFDgBe7jqPBtfd+ZNYJH6w4/s1J8L3Doh5vx7LrKKcf3hMbsAUBQ4Acl5cuaS7g+1r0QlJsMoOfX8ZyPtWIG7T55ZRTha2dV7AGA5UEABCKHoVX1z4AAAAAAAAAAAAAAAAF9eEAAAAAAAAAAAAAAAAAAALitIAYb2f1+Ut++m4JYQP7z76p5TDm3cCzftpl9YS+vMELftAJCAcAMgEAEIoehVfXPgAAAAAAAAAAAAAAAAX14QAAMgAAEIoehVfXPgAAAAAAAAAAAAAAAAX14QABYwAAAAAAAAAAAAAAAAABTVaAFKM/M3a62qPfKx2kmmb1rrQ47hELuahao6zMfz+bWfZQCgAgAAAAAAAAAAAAAAAAAAFLzA==&quot;</span>;
+        <span class="kw">let </span>message = Message::construct_from_base64(message)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">transport</span>.<span class="ident">get_blockchain_config</span>(<span class="kw-2">&amp;</span><span class="ident">SimpleClock</span>, <span class="bool-val">true</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>config = transport.get_blockchain_config(<span class="kw-2">&amp;</span>SimpleClock, <span class="bool-val">true</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">time</span> <span class="op">=</span> <span class="number">1657895160</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">TransactionsTreeStream::new</span>(
-            <span class="ident">message</span>,
-            <span class="ident">config</span>,
-            <span class="ident">transport</span>.<span class="ident">clone</span>(),
-            <span class="ident">Arc::new</span>(<span class="ident">ConstClock::from_secs</span>(<span class="ident">time</span>)),
+        <span class="kw">let </span>time = <span class="number">1657895160</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>stream = TransactionsTreeStream::new(
+            message,
+            config,
+            transport.clone(),
+            Arc::new(ConstClock::from_secs(time)),
         );
 
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tx</span>) <span class="op">=</span> <span class="ident">stream</span>.<span class="ident">next</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>() {
-            <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>).<span class="kw">await</span>.<span class="ident">ok</span>();
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(tx) = stream.next().<span class="kw">await</span>.unwrap() {
+            parse(<span class="kw-2">&amp;</span>tx).<span class="kw">await</span>.ok();
 
-            <span class="kw">let</span> <span class="ident">descr</span> <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">read_description</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">is_aborted</span> <span class="op">=</span> <span class="ident">descr</span>.<span class="ident">is_aborted</span>();
-            <span class="kw">let</span> <span class="ident">exit_code</span> <span class="op">=</span> <span class="ident">descr</span>.<span class="ident">compute_phase_ref</span>().<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">c</span> {
-                <span class="ident">ton_block::TrComputePhase::Vm</span>(<span class="ident">c</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">c</span>.<span class="ident">exit_code</span>),
-                <span class="ident">ton_block::TrComputePhase::Skipped</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            <span class="kw">let </span>descr = tx.read_description()<span class="question-mark">?</span>;
+            <span class="kw">let </span>is_aborted = descr.is_aborted();
+            <span class="kw">let </span>exit_code = descr.compute_phase_ref().and_then(|c| <span class="kw">match </span>c {
+                ton_block::TrComputePhase::Vm(c) =&gt; <span class="prelude-val">Some</span>(c.exit_code),
+                ton_block::TrComputePhase::Skipped(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
             });
 
             <span class="macro">println!</span>(
                 <span class="string">&quot;{:x}: aborted={}, exit_code={:?}&quot;</span>,
-                <span class="ident">tx</span>.<span class="ident">hash</span>().<span class="ident">unwrap</span>(),
-                <span class="ident">is_aborted</span>,
-                <span class="ident">exit_code</span>
+                tx.hash().unwrap(),
+                is_aborted,
+                exit_code
             );
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">Transaction</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">MsgAddrStd::with_address</span>(<span class="prelude-val">None</span>, <span class="number">0</span>, <span class="ident">tx</span>.<span class="ident">account_addr</span>.<span class="ident">clone</span>());
-        <span class="kw">let</span> <span class="ident">abi</span> <span class="op">=</span> <span class="ident">reqwest::get</span>(<span class="macro">format!</span>(<span class="string">&quot;https://verify.everscan.io/abi/address/{addr}&quot;</span>))
-            .<span class="kw">await</span><span class="question-mark">?</span>
-            .<span class="ident">text</span>()
+    <span class="kw">async fn </span>parse(tx: <span class="kw-2">&amp;</span>Transaction) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>addr = MsgAddrStd::with_address(<span class="prelude-val">None</span>, <span class="number">0</span>, tx.account_addr.clone());
+        <span class="kw">let </span>abi = reqwest::get(<span class="macro">format!</span>(<span class="string">&quot;https://verify.everscan.io/abi/address/{addr}&quot;</span>))
+            .<span class="kw">await</span><span class="question-mark">?
+            </span>.text()
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">contract</span> <span class="op">=</span> <span class="ident">ton_abi::Contract::load</span>(<span class="kw-2">&amp;</span><span class="ident">abi</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>contract = ton_abi::Contract::load(<span class="kw-2">&amp;</span>abi)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">TransactionParser::builder</span>()
-            .<span class="ident">events_list</span>(<span class="ident">contract</span>.<span class="ident">events</span>.<span class="ident">values</span>().<span class="ident">cloned</span>())
-            .<span class="ident">function_in_list</span>(<span class="ident">contract</span>.<span class="ident">functions</span>.<span class="ident">values</span>().<span class="ident">cloned</span>(), <span class="bool-val">false</span>)
-            .<span class="ident">functions_out_list</span>(<span class="ident">contract</span>.<span class="ident">functions</span>.<span class="ident">values</span>().<span class="ident">cloned</span>(), <span class="bool-val">false</span>)
-            .<span class="ident">build_with_external_in</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>parser = TransactionParser::builder()
+            .events_list(contract.events.values().cloned())
+            .function_in_list(contract.functions.values().cloned(), <span class="bool-val">false</span>)
+            .functions_out_list(contract.functions.values().cloned(), <span class="bool-val">false</span>)
+            .build_with_external_in()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">parsed</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">parse</span>(<span class="ident">tx</span>)<span class="question-mark">?</span>;
-        <span class="kw">for</span> <span class="ident">parsed</span> <span class="kw">in</span> <span class="ident">parsed</span> {
-            <span class="kw">if</span> <span class="ident">parsed</span>.<span class="ident">is_in_message</span> {
-                <span class="macro">println!</span>(<span class="string">&quot;{:x}: {}&quot;</span>, <span class="ident">tx</span>.<span class="ident">hash</span>().<span class="ident">unwrap</span>(), <span class="ident">parsed</span>.<span class="ident">name</span>);
+        <span class="kw">let </span>parsed = parser.parse(tx)<span class="question-mark">?</span>;
+        <span class="kw">for </span>parsed <span class="kw">in </span>parsed {
+            <span class="kw">if </span>parsed.is_in_message {
+                <span class="macro">println!</span>(<span class="string">&quot;{:x}: {}&quot;</span>, tx.hash().unwrap(), parsed.name);
             }
         }
 
@@ -529,4 +529,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

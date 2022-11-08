@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-utils/src/address.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>address.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-utils/src/address.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>address.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -211,218 +211,218 @@
 <span id="211">211</span>
 <span id="212">212</span>
 <span id="213">213</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::str::FromStr;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">base64::URL_SAFE</span>;
-<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">MsgAddrStd</span>, <span class="ident">MsgAddressInt</span>};
-<span class="kw">use</span> <span class="ident">ton_types::AccountId</span>;
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>base64::URL_SAFE;
+<span class="kw">use </span>ton_block::{MsgAddrStd, MsgAddressInt};
+<span class="kw">use </span>ton_types::AccountId;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crc::crc_16</span>;
+<span class="kw">use </span><span class="kw">crate</span>::crc::crc_16;
 
-<span class="doccomment">///Packs std address to base64 format</span>
-<span class="doccomment">/// # Arguments</span>
-<span class="doccomment">/// `base64_url` - encode with url friendly charset or not</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pack_std_smc_addr</span>(
-    <span class="ident">base64_url</span>: <span class="ident">bool</span>,
-    <span class="ident">addr</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-    <span class="ident">bounceable</span>: <span class="ident">bool</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">addr</span> {
-        <span class="ident">MsgAddressInt::AddrStd</span>(<span class="ident">addr</span>) =&gt; <span class="ident">addr</span>,
-        <span class="ident">MsgAddressInt::AddrVar</span>(<span class="kw">_</span>) =&gt; {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AddressConversionError::UnsupportedAddressType</span>.<span class="ident">into</span>())
+<span class="doccomment">///Packs std address to base64 format
+/// # Arguments
+/// `base64_url` - encode with url friendly charset or not
+</span><span class="kw">pub fn </span>pack_std_smc_addr(
+    base64_url: bool,
+    addr: <span class="kw-2">&amp;</span>MsgAddressInt,
+    bounceable: bool,
+) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+    <span class="kw">let </span>addr = <span class="kw">match </span>addr {
+        MsgAddressInt::AddrStd(addr) =&gt; addr,
+        MsgAddressInt::AddrVar(<span class="kw">_</span>) =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AddressConversionError::UnsupportedAddressType.into())
         }
     };
 
-    <span class="kw">let</span> <span class="ident">testnet</span> <span class="op">=</span> <span class="bool-val">false</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> [<span class="number">0u8</span>; <span class="number">36</span>];
-    <span class="ident">buffer</span>[<span class="number">0</span>] <span class="op">=</span> (<span class="number">0x51</span> <span class="op">-</span> (<span class="ident">bounceable</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">*</span> <span class="number">0x40</span> <span class="op">+</span> (<span class="ident">testnet</span> <span class="kw">as</span> <span class="ident">i32</span>) <span class="op">*</span> <span class="number">0x80</span>) <span class="kw">as</span> <span class="ident">u8</span>;
-    <span class="ident">buffer</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">workchain_id</span> <span class="kw">as</span> <span class="ident">u8</span>;
-    <span class="ident">buffer</span>[<span class="number">2</span>..<span class="number">34</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">addr</span>.<span class="ident">address</span>.<span class="ident">storage</span>()[<span class="number">0</span>..<span class="number">32</span>]);
-    <span class="kw">let</span> <span class="ident">crc</span> <span class="op">=</span> <span class="ident">crc_16</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>[..<span class="number">34</span>]);
-    <span class="ident">buffer</span>[<span class="number">34</span>] <span class="op">=</span> (<span class="ident">crc</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>) <span class="kw">as</span> <span class="ident">u8</span>;
-    <span class="ident">buffer</span>[<span class="number">35</span>] <span class="op">=</span> (<span class="ident">crc</span> <span class="op">&amp;</span> <span class="number">0xff</span>) <span class="kw">as</span> <span class="ident">u8</span>;
-    <span class="kw">let</span> <span class="ident">b64_enc</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">base64_url</span> {
-        <span class="ident">base64::encode_config</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>, <span class="ident">URL_SAFE</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">base64::encode</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>)
+    <span class="kw">let </span>testnet = <span class="bool-val">false</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>buffer = [<span class="number">0u8</span>; <span class="number">36</span>];
+    buffer[<span class="number">0</span>] = (<span class="number">0x51 </span>- (bounceable <span class="kw">as </span>i32) * <span class="number">0x40 </span>+ (testnet <span class="kw">as </span>i32) * <span class="number">0x80</span>) <span class="kw">as </span>u8;
+    buffer[<span class="number">1</span>] = addr.workchain_id <span class="kw">as </span>u8;
+    buffer[<span class="number">2</span>..<span class="number">34</span>].copy_from_slice(<span class="kw-2">&amp;</span>addr.address.storage()[<span class="number">0</span>..<span class="number">32</span>]);
+    <span class="kw">let </span>crc = crc_16(<span class="kw-2">&amp;</span>buffer[..<span class="number">34</span>]);
+    buffer[<span class="number">34</span>] = (crc &gt;&gt; <span class="number">8</span>) <span class="kw">as </span>u8;
+    buffer[<span class="number">35</span>] = (crc &amp; <span class="number">0xff</span>) <span class="kw">as </span>u8;
+    <span class="kw">let </span>b64_enc = <span class="kw">if </span>base64_url {
+        base64::encode_config(<span class="kw-2">&amp;</span>buffer, URL_SAFE)
+    } <span class="kw">else </span>{
+        base64::encode(<span class="kw-2">&amp;</span>buffer)
     };
-    <span class="prelude-val">Ok</span>(<span class="ident">b64_enc</span>)
+    <span class="prelude-val">Ok</span>(b64_enc)
 }
 
-<span class="doccomment">///Unpacks base64 encoded address to std address</span>
-<span class="doccomment">/// # Arguments</span>
-<span class="doccomment">/// `base64_url` - encode with url friendly charset or not</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unpack_std_smc_addr</span>(<span class="ident">packed</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">base64_url</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">unpacked</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">base64_url</span> {
-        <span class="ident">base64::decode_config</span>(<span class="ident">packed</span>, <span class="ident">URL_SAFE</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">base64::decode</span>(<span class="ident">packed</span>)
+<span class="doccomment">///Unpacks base64 encoded address to std address
+/// # Arguments
+/// `base64_url` - encode with url friendly charset or not
+</span><span class="kw">pub fn </span>unpack_std_smc_addr(packed: <span class="kw-2">&amp;</span>str, base64_url: bool) -&gt; <span class="prelude-ty">Result</span>&lt;MsgAddressInt&gt; {
+    <span class="kw">let </span>unpacked = <span class="kw">if </span>base64_url {
+        base64::decode_config(packed, URL_SAFE)
+    } <span class="kw">else </span>{
+        base64::decode(packed)
     }
-    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">AddressConversionError::InvalidBase64</span>)<span class="question-mark">?</span>;
+    .map_err(|<span class="kw">_</span>| AddressConversionError::InvalidBase64)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="ident">unpacked</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="number">36</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AddressConversionError::InvalidPackedLength</span>.<span class="ident">into</span>());
-    }
-
-    <span class="kw">let</span> <span class="ident">crc</span> <span class="op">=</span> <span class="ident">crc_16</span>(<span class="kw-2">&amp;</span><span class="ident">unpacked</span>[..<span class="number">34</span>]);
-    <span class="kw">if</span> <span class="ident">unpacked</span>[<span class="number">34</span>] <span class="kw">as</span> <span class="ident">u16</span> <span class="op">!</span><span class="op">=</span> (<span class="ident">crc</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">unpacked</span>[<span class="number">35</span>] <span class="kw">as</span> <span class="ident">u16</span> <span class="op">!</span><span class="op">=</span> (<span class="ident">crc</span> <span class="op">&amp;</span> <span class="number">0xff</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AddressConversionError::InvalidChecksum</span>.<span class="ident">into</span>());
+    <span class="kw">if </span>unpacked.len() != <span class="number">36 </span>{
+        <span class="kw">return </span><span class="prelude-val">Err</span>(AddressConversionError::InvalidPackedLength.into());
     }
 
-    <span class="kw">let</span> <span class="ident">wc</span> <span class="op">=</span> <span class="ident">unpacked</span>[<span class="number">1</span>];
-    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">unpacked</span>[<span class="number">2</span>..<span class="number">34</span>];
-    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">AccountId::from_raw</span>(<span class="ident">address</span>.<span class="ident">to_vec</span>(), <span class="ident">address</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="number">8</span>);
-    <span class="prelude-val">Ok</span>(<span class="ident">MsgAddressInt::AddrStd</span>(<span class="ident">MsgAddrStd</span> {
-        <span class="ident">workchain_id</span>: <span class="ident">wc</span> <span class="kw">as</span> <span class="ident">i8</span>,
-        <span class="ident">anycast</span>: <span class="prelude-val">None</span>,
-        <span class="ident">address</span>,
+    <span class="kw">let </span>crc = crc_16(<span class="kw-2">&amp;</span>unpacked[..<span class="number">34</span>]);
+    <span class="kw">if </span>unpacked[<span class="number">34</span>] <span class="kw">as </span>u16 != (crc &gt;&gt; <span class="number">8</span>) || unpacked[<span class="number">35</span>] <span class="kw">as </span>u16 != (crc &amp; <span class="number">0xff</span>) {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(AddressConversionError::InvalidChecksum.into());
+    }
+
+    <span class="kw">let </span>wc = unpacked[<span class="number">1</span>];
+    <span class="kw">let </span>address = <span class="kw-2">&amp;</span>unpacked[<span class="number">2</span>..<span class="number">34</span>];
+    <span class="kw">let </span>address = AccountId::from_raw(address.to_vec(), address.len() * <span class="number">8</span>);
+    <span class="prelude-val">Ok</span>(MsgAddressInt::AddrStd(MsgAddrStd {
+        workchain_id: wc <span class="kw">as </span>i8,
+        anycast: <span class="prelude-val">None</span>,
+        address,
     }))
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_address</span>(<span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">bool</span> {
-    <span class="ident">MsgAddressInt::from_str</span>(<span class="ident">address</span>).<span class="ident">is_ok</span>()
-        <span class="op">|</span><span class="op">|</span> <span class="ident">unpack_std_smc_addr</span>(<span class="ident">address</span>, <span class="bool-val">false</span>).<span class="ident">is_ok</span>()
-        <span class="op">|</span><span class="op">|</span> <span class="ident">unpack_std_smc_addr</span>(<span class="ident">address</span>, <span class="bool-val">true</span>).<span class="ident">is_ok</span>()
+<span class="kw">pub fn </span>validate_address(address: <span class="kw-2">&amp;</span>str) -&gt; bool {
+    MsgAddressInt::from_str(address).is_ok()
+        || unpack_std_smc_addr(address, <span class="bool-val">false</span>).is_ok()
+        || unpack_std_smc_addr(address, <span class="bool-val">true</span>).is_ok()
 }
 
-<span class="doccomment">/// repacks any `address` to `MsgAddressInt`</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">repack_address</span>(<span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">a</span>) <span class="op">=</span> <span class="ident">MsgAddressInt::from_str</span>(<span class="ident">address</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">a</span>);
+<span class="doccomment">/// repacks any `address` to `MsgAddressInt`
+</span><span class="kw">pub fn </span>repack_address(address: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;MsgAddressInt&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(a) = MsgAddressInt::from_str(address) {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(a);
     }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">a</span>) <span class="op">=</span> <span class="ident">unpack_std_smc_addr</span>(<span class="ident">address</span>, <span class="bool-val">false</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">a</span>);
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(a) = unpack_std_smc_addr(address, <span class="bool-val">false</span>) {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(a);
     }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">a</span>) <span class="op">=</span> <span class="ident">unpack_std_smc_addr</span>(<span class="ident">address</span>, <span class="bool-val">true</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">a</span>);
+    <span class="kw">if let </span><span class="prelude-val">Ok</span>(a) = unpack_std_smc_addr(address, <span class="bool-val">true</span>) {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(a);
     }
-    <span class="prelude-val">Err</span>(<span class="ident">AddressConversionError::InvalidAddress</span>.<span class="ident">into</span>())
+    <span class="prelude-val">Err</span>(AddressConversionError::InvalidAddress.into())
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">AddressConversionError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Unsupported address type&quot;</span>)]</span>
-    <span class="ident">UnsupportedAddressType</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid base64&quot;</span>)]</span>
-    <span class="ident">InvalidBase64</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid packed address length&quot;</span>)]</span>
-    <span class="ident">InvalidPackedLength</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid checksum&quot;</span>)]</span>
-    <span class="ident">InvalidChecksum</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid address&quot;</span>)]</span>
-    <span class="ident">InvalidAddress</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>AddressConversionError {
+    <span class="attribute">#[error(<span class="string">&quot;Unsupported address type&quot;</span>)]
+    </span>UnsupportedAddressType,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid base64&quot;</span>)]
+    </span>InvalidBase64,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid packed address length&quot;</span>)]
+    </span>InvalidPackedLength,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid checksum&quot;</span>)]
+    </span>InvalidChecksum,
+    <span class="attribute">#[error(<span class="string">&quot;Invalid address&quot;</span>)]
+    </span>InvalidAddress,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::str::FromStr;
 
-    <span class="kw">use</span> <span class="ident">ton_block::MsgAddressInt</span>;
+    <span class="kw">use </span>ton_block::MsgAddressInt;
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::address</span>::{<span class="ident">pack_std_smc_addr</span>, <span class="ident">unpack_std_smc_addr</span>};
+    <span class="kw">use </span><span class="kw">crate</span>::address::{pack_std_smc_addr, unpack_std_smc_addr};
 
-    <span class="kw">fn</span> <span class="ident">test_addr</span>() -&gt; <span class="ident">MsgAddressInt</span> {
-        <span class="ident">MsgAddressInt::from_str</span>(
+    <span class="kw">fn </span>test_addr() -&gt; MsgAddressInt {
+        MsgAddressInt::from_str(
             <span class="string">&quot;0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c&quot;</span>,
         )
-        .<span class="ident">unwrap</span>()
+        .unwrap()
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">check_pack_std_smc_addr_non_bounce</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">test_addr</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>check_pack_std_smc_addr_non_bounce() {
+        <span class="kw">let </span>addr = test_addr();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">pack_std_smc_addr</span>(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span><span class="ident">addr</span>, <span class="bool-val">false</span>).<span class="ident">unwrap</span>(),
-            <span class="string">&quot;UQAC4/IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobAEx&quot;</span>
-        );
+            pack_std_smc_addr(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span>addr, <span class="bool-val">false</span>).unwrap(),
+            <span class="string">&quot;UQAC4/IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobAEx&quot;
+        </span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">check_pack_std_smc_addr_url_non_bounce</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">test_addr</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>check_pack_std_smc_addr_url_non_bounce() {
+        <span class="kw">let </span>addr = test_addr();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">pack_std_smc_addr</span>(<span class="bool-val">true</span>, <span class="kw-2">&amp;</span><span class="ident">addr</span>, <span class="bool-val">false</span>).<span class="ident">unwrap</span>(),
-            <span class="string">&quot;UQAC4_IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobAEx&quot;</span>
-        );
+            pack_std_smc_addr(<span class="bool-val">true</span>, <span class="kw-2">&amp;</span>addr, <span class="bool-val">false</span>).unwrap(),
+            <span class="string">&quot;UQAC4_IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobAEx&quot;
+        </span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">check_pack_std_smc_addr_bounce</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">test_addr</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>check_pack_std_smc_addr_bounce() {
+        <span class="kw">let </span>addr = test_addr();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">pack_std_smc_addr</span>(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span><span class="ident">addr</span>, <span class="bool-val">true</span>).<span class="ident">unwrap</span>(),
-            <span class="string">&quot;EQAC4/IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0&quot;</span>
-        );
+            pack_std_smc_addr(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span>addr, <span class="bool-val">true</span>).unwrap(),
+            <span class="string">&quot;EQAC4/IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0&quot;
+        </span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">check_pack_std_smc_addr_url_bounce</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">test_addr</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>check_pack_std_smc_addr_url_bounce() {
+        <span class="kw">let </span>addr = test_addr();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">pack_std_smc_addr</span>(<span class="bool-val">true</span>, <span class="kw-2">&amp;</span><span class="ident">addr</span>, <span class="bool-val">true</span>).<span class="ident">unwrap</span>(),
-            <span class="string">&quot;EQAC4_IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0&quot;</span>
-        );
+            pack_std_smc_addr(<span class="bool-val">true</span>, <span class="kw-2">&amp;</span>addr, <span class="bool-val">true</span>).unwrap(),
+            <span class="string">&quot;EQAC4_IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0&quot;
+        </span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">unpack_no_bounce</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">test_addr</span>();
-        <span class="kw">let</span> <span class="ident">packed</span> <span class="op">=</span> <span class="ident">pack_std_smc_addr</span>(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span><span class="ident">addr</span>, <span class="bool-val">false</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">unpack_std_smc_addr</span>(<span class="kw-2">&amp;</span><span class="ident">packed</span>, <span class="bool-val">false</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">addr</span>, <span class="ident">address</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>unpack_no_bounce() {
+        <span class="kw">let </span>addr = test_addr();
+        <span class="kw">let </span>packed = pack_std_smc_addr(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span>addr, <span class="bool-val">false</span>).unwrap();
+        <span class="kw">let </span>address = unpack_std_smc_addr(<span class="kw-2">&amp;</span>packed, <span class="bool-val">false</span>).unwrap();
+        <span class="macro">assert_eq!</span>(addr, address);
     }
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">unpack_bounce</span>() {
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">test_addr</span>();
-        <span class="kw">let</span> <span class="ident">packed</span> <span class="op">=</span> <span class="ident">pack_std_smc_addr</span>(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span><span class="ident">addr</span>, <span class="bool-val">true</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">unpack_std_smc_addr</span>(<span class="kw-2">&amp;</span><span class="ident">packed</span>, <span class="bool-val">false</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">addr</span>, <span class="ident">address</span>);
-    }
-
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">repack_b64_safe</span>() {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::repack_address</span>(<span class="string">&quot;EQAC4_IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0&quot;</span>)
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">to_string</span>();
-        <span class="macro">assert_eq!</span>(
-            <span class="string">&quot;0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c&quot;</span>,
-            <span class="ident">res</span>
-        )
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>unpack_bounce() {
+        <span class="kw">let </span>addr = test_addr();
+        <span class="kw">let </span>packed = pack_std_smc_addr(<span class="bool-val">false</span>, <span class="kw-2">&amp;</span>addr, <span class="bool-val">true</span>).unwrap();
+        <span class="kw">let </span>address = unpack_std_smc_addr(<span class="kw-2">&amp;</span>packed, <span class="bool-val">false</span>).unwrap();
+        <span class="macro">assert_eq!</span>(addr, address);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">repack_b64</span>() {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::repack_address</span>(<span class="string">&quot;EQAC4/IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0&quot;</span>)
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">to_string</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">pub fn </span>repack_b64_safe() {
+        <span class="kw">let </span>res = <span class="kw">super</span>::repack_address(<span class="string">&quot;EQAC4_IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0&quot;</span>)
+            .unwrap()
+            .to_string();
         <span class="macro">assert_eq!</span>(
             <span class="string">&quot;0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c&quot;</span>,
-            <span class="ident">res</span>
+            res
         )
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">repack_normal</span>() {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::repack_address</span>(
-            <span class="string">&quot;0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c&quot;</span>,
-        )
-        .<span class="ident">unwrap</span>()
-        .<span class="ident">to_string</span>();
+    <span class="attribute">#[test]
+    </span><span class="kw">pub fn </span>repack_b64() {
+        <span class="kw">let </span>res = <span class="kw">super</span>::repack_address(<span class="string">&quot;EQAC4/IoTmioEGuCOrnyQE8zzEP8ytjh3oNb3ZZ4klRobFz0&quot;</span>)
+            .unwrap()
+            .to_string();
         <span class="macro">assert_eq!</span>(
             <span class="string">&quot;0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c&quot;</span>,
-            <span class="ident">res</span>
+            res
         )
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">repack_bad</span>() {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::repack_address</span>(
+    <span class="attribute">#[test]
+    </span><span class="kw">pub fn </span>repack_normal() {
+        <span class="kw">let </span>res = <span class="kw">super</span>::repack_address(
+            <span class="string">&quot;0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c&quot;</span>,
+        )
+        .unwrap()
+        .to_string();
+        <span class="macro">assert_eq!</span>(
+            <span class="string">&quot;0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686c&quot;</span>,
+            res
+        )
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">pub fn </span>repack_bad() {
+        <span class="kw">let </span>res = <span class="kw">super</span>::repack_address(
             <span class="string">&quot;0:02e3f2284e68a8106b823ab9f2404f33cc43fccad8e1de835bdd96789254686ca&quot;</span>,
         );
-        <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">is_err</span>())
+        <span class="macro">assert!</span>(res.is_err())
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

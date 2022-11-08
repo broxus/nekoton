@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/wallet_v3.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>wallet_v3.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/wallet_v3.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>wallet_v3.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -357,364 +357,364 @@
 <span id="357">357</span>
 <span id="358">358</span>
 <span id="359">359</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryFrom</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">ed25519_dalek::PublicKey</span>;
-<span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">MsgAddrStd</span>, <span class="ident">MsgAddressInt</span>, <span class="ident">Serializable</span>};
-<span class="kw">use</span> <span class="ident">ton_types</span>::{<span class="ident">BuilderData</span>, <span class="ident">Cell</span>, <span class="ident">IBitstring</span>, <span class="ident">SliceData</span>, <span class="ident">UInt256</span>};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>ed25519_dalek::PublicKey;
+<span class="kw">use </span>ton_block::{MsgAddrStd, MsgAddressInt, Serializable};
+<span class="kw">use </span>ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Gift</span>, <span class="ident">TonWalletDetails</span>, <span class="ident">TransferAction</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::models</span>::{<span class="ident">Expiration</span>, <span class="ident">ExpireAt</span>, <span class="ident">PendingTransaction</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::crypto</span>::{<span class="ident">SignedMessage</span>, <span class="ident">UnsignedMessage</span>};
+<span class="kw">use super</span>::{Gift, TonWalletDetails, TransferAction};
+<span class="kw">use </span><span class="kw">crate</span>::core::models::{Expiration, ExpireAt, PendingTransaction};
+<span class="kw">use </span><span class="kw">crate</span>::crypto::{SignedMessage, UnsignedMessage};
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_deploy</span>(
-    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-    <span class="ident">workchain</span>: <span class="ident">i8</span>,
-    <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">UnsignedMessage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">init_data</span> <span class="op">=</span> <span class="ident">InitData::from_key</span>(<span class="ident">public_key</span>).<span class="ident">with_wallet_id</span>(<span class="ident">WALLET_ID</span>);
-    <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">compute_contract_address</span>(<span class="ident">public_key</span>, <span class="ident">workchain</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span>
-        <span class="ident">ton_block::Message::with_ext_in_header</span>(<span class="ident">ton_block::ExternalInboundMessageHeader</span> {
-            <span class="ident">dst</span>,
-            ..<span class="ident">Default::default</span>()
+<span class="kw">pub fn </span>prepare_deploy(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+    public_key: <span class="kw-2">&amp;</span>PublicKey,
+    workchain: i8,
+    expiration: Expiration,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>UnsignedMessage&gt;&gt; {
+    <span class="kw">let </span>init_data = InitData::from_key(public_key).with_wallet_id(WALLET_ID);
+    <span class="kw">let </span>dst = compute_contract_address(public_key, workchain);
+    <span class="kw">let </span><span class="kw-2">mut </span>message =
+        ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+            dst,
+            ..Default::default()
         });
 
-    <span class="ident">message</span>.<span class="ident">set_state_init</span>(<span class="ident">init_data</span>.<span class="ident">make_state_init</span>()<span class="question-mark">?</span>);
+    message.set_state_init(init_data.make_state_init()<span class="question-mark">?</span>);
 
-    <span class="kw">let</span> <span class="ident">expire_at</span> <span class="op">=</span> <span class="ident">ExpireAt::new</span>(<span class="ident">clock</span>, <span class="ident">expiration</span>);
-    <span class="kw">let</span> (<span class="ident">hash</span>, <span class="ident">payload</span>) <span class="op">=</span> <span class="ident">init_data</span>.<span class="ident">make_transfer_payload</span>(<span class="prelude-val">None</span>, <span class="ident">expire_at</span>.<span class="ident">timestamp</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>expire_at = ExpireAt::new(clock, expiration);
+    <span class="kw">let </span>(hash, payload) = init_data.make_transfer_payload(<span class="prelude-val">None</span>, expire_at.timestamp)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">Box::new</span>(<span class="ident">UnsignedWalletV3Message</span> {
-        <span class="ident">init_data</span>,
-        <span class="ident">gifts</span>: <span class="ident">Vec::new</span>(),
-        <span class="ident">payload</span>,
-        <span class="ident">message</span>,
-        <span class="ident">expire_at</span>,
-        <span class="ident">hash</span>,
+    <span class="prelude-val">Ok</span>(Box::new(UnsignedWalletV3Message {
+        init_data,
+        gifts: Vec::new(),
+        payload,
+        message,
+        expire_at,
+        hash,
     }))
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">UnsignedWalletV3Deploy</span> {
-    <span class="ident">message</span>: <span class="ident">ton_block::Message</span>,
-    <span class="ident">expire_at</span>: <span class="ident">ExpireAt</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">struct </span>UnsignedWalletV3Deploy {
+    message: ton_block::Message,
+    expire_at: ExpireAt,
 }
 
-<span class="kw">impl</span> <span class="ident">UnsignedMessage</span> <span class="kw">for</span> <span class="ident">UnsignedWalletV3Deploy</span> {
-    <span class="kw">fn</span> <span class="ident">refresh_timeout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>) {
-        <span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">refresh</span>(<span class="ident">clock</span>);
+<span class="kw">impl </span>UnsignedMessage <span class="kw">for </span>UnsignedWalletV3Deploy {
+    <span class="kw">fn </span>refresh_timeout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) {
+        <span class="self">self</span>.expire_at.refresh(clock);
     }
 
-    <span class="kw">fn</span> <span class="ident">expire_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">timestamp</span>
+    <span class="kw">fn </span>expire_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.expire_at.timestamp
     }
 
-    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="comment">// return empty hash, because there is no message body</span>
-        <span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>]
+    <span class="kw">fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="comment">// return empty hash, because there is no message body
+        </span><span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>]
     }
 
-    <span class="kw">fn</span> <span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="ident">ed25519_dalek::SIGNATURE_LENGTH</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignedMessage</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">SignedMessage</span> {
-            <span class="ident">message</span>: <span class="self">self</span>.<span class="ident">message</span>.<span class="ident">clone</span>(),
-            <span class="ident">expire_at</span>: <span class="self">self</span>.<span class="ident">expire_at</span>(),
+    <span class="kw">fn </span>sign(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>[u8; ed25519_dalek::SIGNATURE_LENGTH]) -&gt; <span class="prelude-ty">Result</span>&lt;SignedMessage&gt; {
+        <span class="prelude-val">Ok</span>(SignedMessage {
+            message: <span class="self">self</span>.message.clone(),
+            expire_at: <span class="self">self</span>.expire_at(),
         })
     }
 }
 
-<span class="doccomment">/// Adjusts seqno if there are some recent pending transactions that have not expired</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">estimate_seqno_offset</span>(
-    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-    <span class="ident">current_state</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
-    <span class="ident">pending_transactions</span>: <span class="kw-2">&amp;</span>[<span class="ident">PendingTransaction</span>],
-) -&gt; <span class="ident">u32</span> {
-    <span class="kw">const</span> <span class="ident">SEQNO_ADJUST_INTERVAL</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">30</span>; <span class="comment">// seconds</span>
+<span class="doccomment">/// Adjusts seqno if there are some recent pending transactions that have not expired
+</span><span class="kw">pub fn </span>estimate_seqno_offset(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+    current_state: <span class="kw-2">&amp;</span>ton_block::AccountStuff,
+    pending_transactions: <span class="kw-2">&amp;</span>[PendingTransaction],
+) -&gt; u32 {
+    <span class="kw">const </span>SEQNO_ADJUST_INTERVAL: u32 = <span class="number">30</span>; <span class="comment">// seconds
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">same_lt</span>(<span class="ident">lt_from_pending</span>: <span class="ident">u64</span>, <span class="ident">lt_from_state</span>: <span class="ident">u64</span>) -&gt; <span class="ident">bool</span> {
-        <span class="comment">// NOTE: `pending.latest_lt` can be exact transaction lt, or</span>
-        <span class="comment">// `storage.last_trans_lt` which is a bit greater</span>
-        <span class="kw">const</span> <span class="ident">ALLOWED_LT_DIFF</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1</span> <span class="op">+</span> <span class="ident">MAX_MESSAGES</span> <span class="kw">as</span> <span class="ident">u64</span>;
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>same_lt(lt_from_pending: u64, lt_from_state: u64) -&gt; bool {
+        <span class="comment">// NOTE: `pending.latest_lt` can be exact transaction lt, or
+        // `storage.last_trans_lt` which is a bit greater
+        </span><span class="kw">const </span>ALLOWED_LT_DIFF: u64 = <span class="number">1 </span>+ MAX_MESSAGES <span class="kw">as </span>u64;
 
-        (<span class="ident">lt_from_pending</span>..<span class="op">=</span><span class="ident">lt_from_pending</span> <span class="op">+</span> <span class="ident">ALLOWED_LT_DIFF</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">lt_from_state</span>)
+        (lt_from_pending..=lt_from_pending + ALLOWED_LT_DIFF).contains(<span class="kw-2">&amp;</span>lt_from_state)
     }
 
-    <span class="kw">if</span> <span class="ident">pending_transactions</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">return</span> <span class="number">0</span>;
+    <span class="kw">if </span>pending_transactions.is_empty() {
+        <span class="kw">return </span><span class="number">0</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">clock</span>.<span class="ident">now_sec_u64</span>() <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">latest_lt</span> <span class="op">=</span> <span class="ident">current_state</span>.<span class="ident">storage</span>.<span class="ident">last_trans_lt</span>;
+    <span class="kw">let </span>now = clock.now_sec_u64() <span class="kw">as </span>u32;
+    <span class="kw">let </span>latest_lt = current_state.storage.last_trans_lt;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seqno_offset</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">for</span> <span class="ident">pending</span> <span class="kw">in</span> <span class="ident">pending_transactions</span>.<span class="ident">iter</span>().<span class="ident">rev</span>() {
-        <span class="comment">// Adjust only for sufficiently new pending transactions.</span>
-        <span class="kw">if</span> <span class="ident">now</span> <span class="op">&gt;</span> <span class="ident">pending</span>.<span class="ident">created_at</span> <span class="op">+</span> <span class="ident">SEQNO_ADJUST_INTERVAL</span> {
+    <span class="kw">let </span><span class="kw-2">mut </span>seqno_offset = <span class="number">0</span>;
+    <span class="kw">for </span>pending <span class="kw">in </span>pending_transactions.iter().rev() {
+        <span class="comment">// Adjust only for sufficiently new pending transactions.
+        </span><span class="kw">if </span>now &gt; pending.created_at + SEQNO_ADJUST_INTERVAL {
             <span class="kw">break</span>;
         }
 
-        <span class="comment">// Adjust only if account state hasn&#39;t changed</span>
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">same_lt</span>(<span class="ident">pending</span>.<span class="ident">latest_lt</span>, <span class="ident">latest_lt</span>) {
+        <span class="comment">// Adjust only if account state hasn&#39;t changed
+        </span><span class="kw">if </span>!same_lt(pending.latest_lt, latest_lt) {
             <span class="kw">break</span>;
         }
 
-        <span class="kw">if</span> <span class="ident">now</span> <span class="op">&lt;</span> <span class="ident">pending</span>.<span class="ident">expire_at</span> {
-            <span class="ident">seqno_offset</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">if </span>now &lt; pending.expire_at {
+            seqno_offset += <span class="number">1</span>;
         }
     }
 
-    <span class="ident">seqno_offset</span>
+    seqno_offset
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare_transfer</span>(
-    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-    <span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>,
-    <span class="ident">current_state</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>,
-    <span class="ident">seqno_offset</span>: <span class="ident">u32</span>,
-    <span class="ident">gifts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Gift</span><span class="op">&gt;</span>,
-    <span class="ident">expiration</span>: <span class="ident">Expiration</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransferAction</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">gifts</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">MAX_MESSAGES</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WalletV3Error::TooManyGifts</span>.<span class="ident">into</span>());
+<span class="kw">pub fn </span>prepare_transfer(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+    public_key: <span class="kw-2">&amp;</span>PublicKey,
+    current_state: <span class="kw-2">&amp;</span>ton_block::AccountStuff,
+    seqno_offset: u32,
+    gifts: Vec&lt;Gift&gt;,
+    expiration: Expiration,
+) -&gt; <span class="prelude-ty">Result</span>&lt;TransferAction&gt; {
+    <span class="kw">if </span>gifts.len() &gt; MAX_MESSAGES {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(WalletV3Error::TooManyGifts.into());
     }
 
-    <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">init_data</span>, <span class="ident">with_state_init</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">current_state</span>.<span class="ident">storage</span>.<span class="ident">state</span> {
-        <span class="ident">ton_block::AccountState::AccountActive</span> { <span class="ident">state_init</span>, .. } =&gt; <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">state_init</span>.<span class="ident">data</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">data</span>) =&gt; (<span class="ident">InitData::try_from</span>(<span class="ident">data</span>)<span class="question-mark">?</span>, <span class="bool-val">false</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WalletV3Error::InvalidInitData</span>.<span class="ident">into</span>()),
+    <span class="kw">let </span>(<span class="kw-2">mut </span>init_data, with_state_init) = <span class="kw">match </span><span class="kw-2">&amp;</span>current_state.storage.state {
+        ton_block::AccountState::AccountActive { state_init, .. } =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>state_init.data {
+            <span class="prelude-val">Some</span>(data) =&gt; (InitData::try_from(data)<span class="question-mark">?</span>, <span class="bool-val">false</span>),
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(WalletV3Error::InvalidInitData.into()),
         },
-        <span class="ident">ton_block::AccountState::AccountFrozen</span> { .. } =&gt; {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WalletV3Error::AccountIsFrozen</span>.<span class="ident">into</span>())
+        ton_block::AccountState::AccountFrozen { .. } =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(WalletV3Error::AccountIsFrozen.into())
         }
-        <span class="ident">ton_block::AccountState::AccountUninit</span> =&gt; (
-            <span class="ident">InitData::from_key</span>(<span class="ident">public_key</span>).<span class="ident">with_wallet_id</span>(<span class="ident">WALLET_ID</span>),
+        ton_block::AccountState::AccountUninit =&gt; (
+            InitData::from_key(public_key).with_wallet_id(WALLET_ID),
             <span class="bool-val">true</span>,
         ),
     };
 
-    <span class="ident">init_data</span>.<span class="ident">seqno</span> <span class="op">+</span><span class="op">=</span> <span class="ident">seqno_offset</span>;
+    init_data.seqno += seqno_offset;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span>
-        <span class="ident">ton_block::Message::with_ext_in_header</span>(<span class="ident">ton_block::ExternalInboundMessageHeader</span> {
-            <span class="ident">dst</span>: <span class="ident">current_state</span>.<span class="ident">addr</span>.<span class="ident">clone</span>(),
-            ..<span class="ident">Default::default</span>()
+    <span class="kw">let </span><span class="kw-2">mut </span>message =
+        ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+            dst: current_state.addr.clone(),
+            ..Default::default()
         });
 
-    <span class="kw">if</span> <span class="ident">with_state_init</span> {
-        <span class="ident">message</span>.<span class="ident">set_state_init</span>(<span class="ident">init_data</span>.<span class="ident">make_state_init</span>()<span class="question-mark">?</span>);
+    <span class="kw">if </span>with_state_init {
+        message.set_state_init(init_data.make_state_init()<span class="question-mark">?</span>);
     }
 
-    <span class="kw">let</span> <span class="ident">expire_at</span> <span class="op">=</span> <span class="ident">ExpireAt::new</span>(<span class="ident">clock</span>, <span class="ident">expiration</span>);
-    <span class="kw">let</span> (<span class="ident">hash</span>, <span class="ident">payload</span>) <span class="op">=</span> <span class="ident">init_data</span>.<span class="ident">make_transfer_payload</span>(<span class="ident">gifts</span>.<span class="ident">clone</span>(), <span class="ident">expire_at</span>.<span class="ident">timestamp</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>expire_at = ExpireAt::new(clock, expiration);
+    <span class="kw">let </span>(hash, payload) = init_data.make_transfer_payload(gifts.clone(), expire_at.timestamp)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">TransferAction::Sign</span>(<span class="ident">Box::new</span>(<span class="ident">UnsignedWalletV3Message</span> {
-        <span class="ident">init_data</span>,
-        <span class="ident">gifts</span>,
-        <span class="ident">payload</span>,
-        <span class="ident">hash</span>,
-        <span class="ident">expire_at</span>,
-        <span class="ident">message</span>,
+    <span class="prelude-val">Ok</span>(TransferAction::Sign(Box::new(UnsignedWalletV3Message {
+        init_data,
+        gifts,
+        payload,
+        hash,
+        expire_at,
+        message,
     })))
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">UnsignedWalletV3Message</span> {
-    <span class="ident">init_data</span>: <span class="ident">InitData</span>,
-    <span class="ident">gifts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Gift</span><span class="op">&gt;</span>,
-    <span class="ident">payload</span>: <span class="ident">BuilderData</span>,
-    <span class="ident">hash</span>: <span class="ident">UInt256</span>,
-    <span class="ident">expire_at</span>: <span class="ident">ExpireAt</span>,
-    <span class="ident">message</span>: <span class="ident">ton_block::Message</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">struct </span>UnsignedWalletV3Message {
+    init_data: InitData,
+    gifts: Vec&lt;Gift&gt;,
+    payload: BuilderData,
+    hash: UInt256,
+    expire_at: ExpireAt,
+    message: ton_block::Message,
 }
 
-<span class="kw">impl</span> <span class="ident">UnsignedMessage</span> <span class="kw">for</span> <span class="ident">UnsignedWalletV3Message</span> {
-    <span class="kw">fn</span> <span class="ident">refresh_timeout</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">refresh</span>(<span class="ident">clock</span>) {
+<span class="kw">impl </span>UnsignedMessage <span class="kw">for </span>UnsignedWalletV3Message {
+    <span class="kw">fn </span>refresh_timeout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) {
+        <span class="kw">if </span>!<span class="self">self</span>.expire_at.refresh(clock) {
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let</span> (<span class="ident">hash</span>, <span class="ident">payload</span>) <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">init_data</span>
-            .<span class="ident">make_transfer_payload</span>(<span class="self">self</span>.<span class="ident">gifts</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">expire_at</span>())
-            .<span class="ident">trust_me</span>();
-        <span class="self">self</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash</span>;
-        <span class="self">self</span>.<span class="ident">payload</span> <span class="op">=</span> <span class="ident">payload</span>;
+        <span class="kw">let </span>(hash, payload) = <span class="self">self
+            </span>.init_data
+            .make_transfer_payload(<span class="self">self</span>.gifts.clone(), <span class="self">self</span>.expire_at())
+            .trust_me();
+        <span class="self">self</span>.hash = hash;
+        <span class="self">self</span>.payload = payload;
     }
 
-    <span class="kw">fn</span> <span class="ident">expire_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="self">self</span>.<span class="ident">expire_at</span>.<span class="ident">timestamp</span>
+    <span class="kw">fn </span>expire_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.expire_at.timestamp
     }
 
-    <span class="kw">fn</span> <span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">as_slice</span>()
+    <span class="kw">fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="self">self</span>.hash.as_slice()
     }
 
-    <span class="kw">fn</span> <span class="ident">sign</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signature</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="ident">ed25519_dalek::SIGNATURE_LENGTH</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignedMessage</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">payload</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">payload</span>.<span class="ident">clone</span>();
-        <span class="ident">payload</span>.<span class="ident">prepend_raw</span>(<span class="ident">signature</span>, <span class="ident">signature</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="number">8</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>sign(<span class="kw-2">&amp;</span><span class="self">self</span>, signature: <span class="kw-2">&amp;</span>[u8; ed25519_dalek::SIGNATURE_LENGTH]) -&gt; <span class="prelude-ty">Result</span>&lt;SignedMessage&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>payload = <span class="self">self</span>.payload.clone();
+        payload.prepend_raw(signature, signature.len() * <span class="number">8</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">message</span>.<span class="ident">clone</span>();
-        <span class="ident">message</span>.<span class="ident">set_body</span>(<span class="ident">payload</span>.<span class="ident">into</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>message = <span class="self">self</span>.message.clone();
+        message.set_body(payload.into());
 
-        <span class="prelude-val">Ok</span>(<span class="ident">SignedMessage</span> {
-            <span class="ident">message</span>,
-            <span class="ident">expire_at</span>: <span class="self">self</span>.<span class="ident">expire_at</span>(),
+        <span class="prelude-val">Ok</span>(SignedMessage {
+            message,
+            expire_at: <span class="self">self</span>.expire_at(),
         })
     }
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">CODE_HASH</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [
+<span class="kw">pub const </span>CODE_HASH: [u8; <span class="number">32</span>] = [
     <span class="number">0x84</span>, <span class="number">0xda</span>, <span class="number">0xfa</span>, <span class="number">0x44</span>, <span class="number">0x9f</span>, <span class="number">0x98</span>, <span class="number">0xa6</span>, <span class="number">0x98</span>, <span class="number">0x77</span>, <span class="number">0x89</span>, <span class="number">0xba</span>, <span class="number">0x23</span>, <span class="number">0x23</span>, <span class="number">0x58</span>, <span class="number">0x07</span>, <span class="number">0x2b</span>,
     <span class="number">0xc0</span>, <span class="number">0xf7</span>, <span class="number">0x6d</span>, <span class="number">0xc4</span>, <span class="number">0x52</span>, <span class="number">0x40</span>, <span class="number">0x02</span>, <span class="number">0xa5</span>, <span class="number">0xd0</span>, <span class="number">0x91</span>, <span class="number">0x8b</span>, <span class="number">0x9a</span>, <span class="number">0x75</span>, <span class="number">0xd2</span>, <span class="number">0xd5</span>, <span class="number">0x99</span>,
 ];
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_wallet_v3</span>(<span class="ident">code_hash</span>: <span class="kw-2">&amp;</span><span class="ident">UInt256</span>) -&gt; <span class="ident">bool</span> {
-    <span class="ident">code_hash</span>.<span class="ident">as_slice</span>() <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">CODE_HASH</span>
+<span class="kw">pub fn </span>is_wallet_v3(code_hash: <span class="kw-2">&amp;</span>UInt256) -&gt; bool {
+    code_hash.as_slice() == <span class="kw-2">&amp;</span>CODE_HASH
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_contract_address</span>(<span class="ident">public_key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>, <span class="ident">workchain_id</span>: <span class="ident">i8</span>) -&gt; <span class="ident">MsgAddressInt</span> {
-    <span class="ident">InitData::from_key</span>(<span class="ident">public_key</span>)
-        .<span class="ident">with_wallet_id</span>(<span class="ident">WALLET_ID</span>)
-        .<span class="ident">compute_addr</span>(<span class="ident">workchain_id</span>)
-        .<span class="ident">trust_me</span>()
+<span class="kw">pub fn </span>compute_contract_address(public_key: <span class="kw-2">&amp;</span>PublicKey, workchain_id: i8) -&gt; MsgAddressInt {
+    InitData::from_key(public_key)
+        .with_wallet_id(WALLET_ID)
+        .compute_addr(workchain_id)
+        .trust_me()
 }
 
-<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">DETAILS</span>: <span class="ident">TonWalletDetails</span> <span class="op">=</span> <span class="ident">TonWalletDetails</span> {
-    <span class="ident">requires_separate_deploy</span>: <span class="bool-val">false</span>,
-    <span class="ident">min_amount</span>: <span class="number">1</span>, <span class="comment">// 0.000000001 TON</span>
-    <span class="ident">max_messages</span>: <span class="ident">MAX_MESSAGES</span>,
-    <span class="ident">supports_payload</span>: <span class="bool-val">true</span>,
-    <span class="ident">supports_state_init</span>: <span class="bool-val">true</span>,
-    <span class="ident">supports_multiple_owners</span>: <span class="bool-val">false</span>,
-    <span class="ident">expiration_time</span>: <span class="number">0</span>,
+<span class="kw">pub static </span>DETAILS: TonWalletDetails = TonWalletDetails {
+    requires_separate_deploy: <span class="bool-val">false</span>,
+    min_amount: <span class="number">1</span>, <span class="comment">// 0.000000001 TON
+    </span>max_messages: MAX_MESSAGES,
+    supports_payload: <span class="bool-val">true</span>,
+    supports_state_init: <span class="bool-val">true</span>,
+    supports_multiple_owners: <span class="bool-val">false</span>,
+    expiration_time: <span class="number">0</span>,
 };
 
-<span class="kw">const</span> <span class="ident">MAX_MESSAGES</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="kw">const </span>MAX_MESSAGES: usize = <span class="number">4</span>;
 
-<span class="doccomment">/// `WalletV3` init data</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InitData</span> {
-    <span class="kw">pub</span> <span class="ident">seqno</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">wallet_id</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">public_key</span>: <span class="ident">UInt256</span>,
+<span class="doccomment">/// `WalletV3` init data
+</span><span class="attribute">#[derive(Clone, Copy)]
+</span><span class="kw">pub struct </span>InitData {
+    <span class="kw">pub </span>seqno: u32,
+    <span class="kw">pub </span>wallet_id: u32,
+    <span class="kw">pub </span>public_key: UInt256,
 }
 
-<span class="kw">impl</span> <span class="ident">InitData</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">public_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>] {
-        <span class="self">self</span>.<span class="ident">public_key</span>.<span class="ident">as_slice</span>()
+<span class="kw">impl </span>InitData {
+    <span class="kw">pub fn </span>public_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8; <span class="number">32</span>] {
+        <span class="self">self</span>.public_key.as_slice()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_key</span>(<span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">PublicKey</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">seqno</span>: <span class="number">0</span>,
-            <span class="ident">wallet_id</span>: <span class="number">0</span>,
-            <span class="ident">public_key</span>: <span class="ident">key</span>.<span class="ident">as_bytes</span>().<span class="ident">into</span>(),
+    <span class="kw">pub fn </span>from_key(key: <span class="kw-2">&amp;</span>PublicKey) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            seqno: <span class="number">0</span>,
+            wallet_id: <span class="number">0</span>,
+            public_key: key.as_bytes().into(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_wallet_id</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">wallet_id</span> <span class="op">=</span> <span class="ident">id</span>;
-        <span class="self">self</span>
-    }
+    <span class="kw">pub fn </span>with_wallet_id(<span class="kw-2">mut </span><span class="self">self</span>, id: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.wallet_id = id;
+        <span class="self">self
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_addr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">workchain_id</span>: <span class="ident">i8</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">init_state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">make_state_init</span>()<span class="question-mark">?</span>.<span class="ident">serialize</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">init_state</span>.<span class="ident">repr_hash</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">MsgAddressInt::AddrStd</span>(<span class="ident">MsgAddrStd</span> {
-            <span class="ident">anycast</span>: <span class="prelude-val">None</span>,
-            <span class="ident">workchain_id</span>,
-            <span class="ident">address</span>: <span class="ident">hash</span>.<span class="ident">into</span>(),
+    <span class="kw">pub fn </span>compute_addr(<span class="kw-2">&amp;</span><span class="self">self</span>, workchain_id: i8) -&gt; <span class="prelude-ty">Result</span>&lt;MsgAddressInt&gt; {
+        <span class="kw">let </span>init_state = <span class="self">self</span>.make_state_init()<span class="question-mark">?</span>.serialize()<span class="question-mark">?</span>;
+        <span class="kw">let </span>hash = init_state.repr_hash();
+        <span class="prelude-val">Ok</span>(MsgAddressInt::AddrStd(MsgAddrStd {
+            anycast: <span class="prelude-val">None</span>,
+            workchain_id,
+            address: hash.into(),
         }))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_state_init</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_block::StateInit</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">ton_block::StateInit</span> {
-            <span class="ident">code</span>: <span class="prelude-val">Some</span>(<span class="ident">nekoton_contracts::wallets::code::wallet_v3</span>()),
-            <span class="ident">data</span>: <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">serialize</span>()<span class="question-mark">?</span>),
-            ..<span class="ident">Default::default</span>()
+    <span class="kw">pub fn </span>make_state_init(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ton_block::StateInit&gt; {
+        <span class="prelude-val">Ok</span>(ton_block::StateInit {
+            code: <span class="prelude-val">Some</span>(nekoton_contracts::wallets::code::wallet_v3()),
+            data: <span class="prelude-val">Some</span>(<span class="self">self</span>.serialize()<span class="question-mark">?</span>),
+            ..Default::default()
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">BuilderData::new</span>();
-        <span class="ident">data</span>.<span class="ident">append_u32</span>(<span class="self">self</span>.<span class="ident">seqno</span>)<span class="question-mark">?</span>
-            .<span class="ident">append_u32</span>(<span class="self">self</span>.<span class="ident">wallet_id</span>)<span class="question-mark">?</span>
-            .<span class="ident">append_raw</span>(<span class="self">self</span>.<span class="ident">public_key</span>.<span class="ident">as_slice</span>(), <span class="number">256</span>)<span class="question-mark">?</span>;
-        <span class="ident">data</span>.<span class="ident">into_cell</span>()
+    <span class="kw">pub fn </span>serialize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Cell&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>data = BuilderData::new();
+        data.append_u32(<span class="self">self</span>.seqno)<span class="question-mark">?
+            </span>.append_u32(<span class="self">self</span>.wallet_id)<span class="question-mark">?
+            </span>.append_raw(<span class="self">self</span>.public_key.as_slice(), <span class="number">256</span>)<span class="question-mark">?</span>;
+        data.into_cell()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_transfer_payload</span>(
+    <span class="kw">pub fn </span>make_transfer_payload(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">gifts</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Gift</span><span class="op">&gt;</span>,
-        <span class="ident">expire_at</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">UInt256</span>, <span class="ident">BuilderData</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">BuilderData::new</span>();
+        gifts: <span class="kw">impl </span>IntoIterator&lt;Item = Gift&gt;,
+        expire_at: u32,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(UInt256, BuilderData)&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>payload = BuilderData::new();
 
-        <span class="comment">// insert prefix</span>
-        <span class="ident">payload</span>
-            .<span class="ident">append_u32</span>(<span class="self">self</span>.<span class="ident">wallet_id</span>)<span class="question-mark">?</span>
-            .<span class="ident">append_u32</span>(<span class="ident">expire_at</span>)<span class="question-mark">?</span>
-            .<span class="ident">append_u32</span>(<span class="self">self</span>.<span class="ident">seqno</span>)<span class="question-mark">?</span>;
+        <span class="comment">// insert prefix
+        </span>payload
+            .append_u32(<span class="self">self</span>.wallet_id)<span class="question-mark">?
+            </span>.append_u32(expire_at)<span class="question-mark">?
+            </span>.append_u32(<span class="self">self</span>.seqno)<span class="question-mark">?</span>;
 
-        <span class="comment">// create internal message</span>
-        <span class="kw">for</span> <span class="ident">gift</span> <span class="kw">in</span> <span class="ident">gifts</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">internal_message</span> <span class="op">=</span>
-                <span class="ident">ton_block::Message::with_int_header</span>(<span class="ident">ton_block::InternalMessageHeader</span> {
-                    <span class="ident">ihr_disabled</span>: <span class="bool-val">true</span>,
-                    <span class="ident">bounce</span>: <span class="ident">gift</span>.<span class="ident">bounce</span>,
-                    <span class="ident">dst</span>: <span class="ident">gift</span>.<span class="ident">destination</span>,
-                    <span class="ident">value</span>: <span class="ident">gift</span>.<span class="ident">amount</span>.<span class="ident">into</span>(),
-                    ..<span class="ident">Default::default</span>()
+        <span class="comment">// create internal message
+        </span><span class="kw">for </span>gift <span class="kw">in </span>gifts {
+            <span class="kw">let </span><span class="kw-2">mut </span>internal_message =
+                ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
+                    ihr_disabled: <span class="bool-val">true</span>,
+                    bounce: gift.bounce,
+                    dst: gift.destination,
+                    value: gift.amount.into(),
+                    ..Default::default()
                 });
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">body</span>) <span class="op">=</span> <span class="ident">gift</span>.<span class="ident">body</span> {
-                <span class="ident">internal_message</span>.<span class="ident">set_body</span>(<span class="ident">body</span>);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(body) = gift.body {
+                internal_message.set_body(body);
             }
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">state_init</span>) <span class="op">=</span> <span class="ident">gift</span>.<span class="ident">state_init</span> {
-                <span class="ident">internal_message</span>.<span class="ident">set_state_init</span>(<span class="ident">state_init</span>);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(state_init) = gift.state_init {
+                internal_message.set_state_init(state_init);
             }
 
-            <span class="comment">// append it to the body</span>
-            <span class="ident">payload</span>
-                .<span class="ident">append_u8</span>(<span class="ident">gift</span>.<span class="ident">flags</span>)<span class="question-mark">?</span>
-                .<span class="ident">append_reference_cell</span>(<span class="ident">internal_message</span>.<span class="ident">serialize</span>()<span class="question-mark">?</span>);
+            <span class="comment">// append it to the body
+            </span>payload
+                .append_u8(gift.flags)<span class="question-mark">?
+                </span>.append_reference_cell(internal_message.serialize()<span class="question-mark">?</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">payload</span>.<span class="ident">clone</span>().<span class="ident">into_cell</span>()<span class="question-mark">?</span>.<span class="ident">repr_hash</span>();
+        <span class="kw">let </span>hash = payload.clone().into_cell()<span class="question-mark">?</span>.repr_hash();
 
-        <span class="prelude-val">Ok</span>((<span class="ident">hash</span>, <span class="ident">payload</span>))
+        <span class="prelude-val">Ok</span>((hash, payload))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Cell</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">InitData</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">anyhow::Error</span>;
+<span class="kw">impl </span>TryFrom&lt;<span class="kw-2">&amp;</span>Cell&gt; <span class="kw">for </span>InitData {
+    <span class="kw">type </span>Error = anyhow::Error;
 
-    <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">Cell</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cs</span> <span class="op">=</span> <span class="ident">SliceData::from</span>(<span class="ident">data</span>);
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">seqno</span>: <span class="ident">cs</span>.<span class="ident">get_next_u32</span>()<span class="question-mark">?</span>,
-            <span class="ident">wallet_id</span>: <span class="ident">cs</span>.<span class="ident">get_next_u32</span>()<span class="question-mark">?</span>,
-            <span class="ident">public_key</span>: <span class="ident">UInt256::from_be_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">cs</span>.<span class="ident">get_next_bytes</span>(<span class="number">32</span>)<span class="question-mark">?</span>),
+    <span class="kw">fn </span>try_from(data: <span class="kw-2">&amp;</span>Cell) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>cs = SliceData::from(data);
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            seqno: cs.get_next_u32()<span class="question-mark">?</span>,
+            wallet_id: cs.get_next_u32()<span class="question-mark">?</span>,
+            public_key: UInt256::from_be_bytes(<span class="kw-2">&amp;</span>cs.get_next_bytes(<span class="number">32</span>)<span class="question-mark">?</span>),
         })
     }
 }
 
-<span class="kw">const</span> <span class="ident">WALLET_ID</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x4BA92D8A</span>;
+<span class="kw">const </span>WALLET_ID: u32 = <span class="number">0x4BA92D8A</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">WalletV3Error</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid init data&quot;</span>)]</span>
-    <span class="ident">InvalidInitData</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Account is frozen&quot;</span>)]</span>
-    <span class="ident">AccountIsFrozen</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Too many outgoing messages&quot;</span>)]</span>
-    <span class="ident">TooManyGifts</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug)]
+</span><span class="kw">enum </span>WalletV3Error {
+    <span class="attribute">#[error(<span class="string">&quot;Invalid init data&quot;</span>)]
+    </span>InvalidInitData,
+    <span class="attribute">#[error(<span class="string">&quot;Account is frozen&quot;</span>)]
+    </span>AccountIsFrozen,
+    <span class="attribute">#[error(<span class="string">&quot;Too many outgoing messages&quot;</span>)]
+    </span>TooManyGifts,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-contracts/src/old_tip3/root_token_contract.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>root_token_contract.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton_contracts/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-contracts/src/old_tip3/root_token_contract.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>root_token_contract.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../nekoton_contracts/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../nekoton_contracts/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -128,135 +128,135 @@
 <span id="128">128</span>
 <span id="129">129</span>
 <span id="130">130</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">nekoton_abi::num_bigint::BigUint</span>;
-<span class="kw">use</span> <span class="ident">nekoton_abi</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">ton_abi</span>::{<span class="ident">Param</span>, <span class="ident">ParamType</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>nekoton_abi::num_bigint::BigUint;
+<span class="kw">use </span>nekoton_abi::<span class="kw-2">*</span>;
+<span class="kw">use </span>ton_abi::{Param, ParamType};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::declare_function</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::declare_function;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_version</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_0</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;getVersion&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;answerId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>))],
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;version&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>))],
+<span class="kw">pub fn </span>get_version() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_0,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;getVersion&quot;</span>,
+        inputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;answerId&quot;</span>, ParamType::Uint(<span class="number">32</span>))],
+        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;version&quot;</span>, ParamType::Uint(<span class="number">32</span>))],
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbi</span>, <span class="ident">KnownParamType</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RootTokenContractDetails</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;bytes_as_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;bytes_as_string&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">symbol</span>: <span class="ident">String</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint8</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">decimals</span>: <span class="ident">u8</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">root_public_key</span>: <span class="ident">ton_types::UInt256</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">root_owner_address</span>: <span class="ident">ton_block::MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint128_number&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">total_supply</span>: <span class="ident">BigUint</span>,
+<span class="attribute">#[derive(Debug, Clone, UnpackAbi, KnownParamType)]
+</span><span class="kw">pub struct </span>RootTokenContractDetails {
+    <span class="attribute">#[abi(with = <span class="string">&quot;bytes_as_string&quot;</span>)]
+    </span><span class="kw">pub </span>name: String,
+    <span class="attribute">#[abi(with = <span class="string">&quot;bytes_as_string&quot;</span>)]
+    </span><span class="kw">pub </span>symbol: String,
+    <span class="attribute">#[abi(uint8)]
+    </span><span class="kw">pub </span>decimals: u8,
+    <span class="attribute">#[abi(uint256)]
+    </span><span class="kw">pub </span>root_public_key: ton_types::UInt256,
+    <span class="attribute">#[abi(address)]
+    </span><span class="kw">pub </span>root_owner_address: ton_block::MsgAddressInt,
+    <span class="attribute">#[abi(with = <span class="string">&quot;uint128_number&quot;</span>)]
+    </span><span class="kw">pub </span>total_supply: BigUint,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_details</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_0</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;getDetails&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;answerId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>))],
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;details&quot;</span>, <span class="ident">RootTokenContractDetails::param_type</span>())],
+<span class="kw">pub fn </span>get_details() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_0,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;getDetails&quot;</span>,
+        inputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;answerId&quot;</span>, ParamType::Uint(<span class="number">32</span>))],
+        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;details&quot;</span>, RootTokenContractDetails::param_type())],
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_wallet_address</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_0</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;getWalletAddress&quot;</span>,
-        <span class="ident">inputs</span>: <span class="macro">vec!</span>[
-            <span class="ident">Param::new</span>(<span class="string">&quot;answerId&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">32</span>)),
-            <span class="ident">Param::new</span>(<span class="string">&quot;walletPublicKey&quot;</span>, <span class="ident">ParamType::Uint</span>(<span class="number">256</span>)),
-            <span class="ident">Param::new</span>(<span class="string">&quot;ownerAddress&quot;</span>, <span class="ident">ParamType::Address</span>),
+<span class="kw">pub fn </span>get_wallet_address() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_0,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;getWalletAddress&quot;</span>,
+        inputs: <span class="macro">vec!</span>[
+            Param::new(<span class="string">&quot;answerId&quot;</span>, ParamType::Uint(<span class="number">32</span>)),
+            Param::new(<span class="string">&quot;walletPublicKey&quot;</span>, ParamType::Uint(<span class="number">256</span>)),
+            Param::new(<span class="string">&quot;ownerAddress&quot;</span>, ParamType::Address),
         ],
-        <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">Param::new</span>(<span class="string">&quot;address&quot;</span>, <span class="ident">ParamType::Address</span>)],
+        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;address&quot;</span>, ParamType::Address)],
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbiPlain</span>, <span class="ident">KnownParamTypePlain</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MintInputs</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint128_number&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">tokens</span>: <span class="ident">BigUint</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">to</span>: <span class="ident">ton_block::MsgAddressInt</span>,
+<span class="attribute">#[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
+</span><span class="kw">pub struct </span>MintInputs {
+    <span class="attribute">#[abi(with = <span class="string">&quot;uint128_number&quot;</span>)]
+    </span><span class="kw">pub </span>tokens: BigUint,
+    <span class="attribute">#[abi(address)]
+    </span><span class="kw">pub </span>to: ton_block::MsgAddressInt,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mint</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_0</span>,
-        <span class="ident">name</span>: <span class="string">&quot;mint&quot;</span>,
-        <span class="ident">inputs</span>: <span class="ident">MintInputs::param_type</span>(),
-        <span class="ident">outputs</span>: <span class="ident">Vec::new</span>(),
+<span class="kw">pub fn </span>mint() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_0,
+        name: <span class="string">&quot;mint&quot;</span>,
+        inputs: MintInputs::param_type(),
+        outputs: Vec::new(),
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbiPlain</span>, <span class="ident">KnownParamTypePlain</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TokensBurnedInputs</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;uint128_number&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">tokens</span>: <span class="ident">BigUint</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">sender_public_key</span>: <span class="ident">ton_types::UInt256</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">sender_address</span>: <span class="ident">ton_block::MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">send_gas_to</span>: <span class="ident">ton_block::MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">callback_address</span>: <span class="ident">ton_block::MsgAddressInt</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">cell</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">callback_payload</span>: <span class="ident">ton_types::Cell</span>,
+<span class="attribute">#[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
+</span><span class="kw">pub struct </span>TokensBurnedInputs {
+    <span class="attribute">#[abi(with = <span class="string">&quot;uint128_number&quot;</span>)]
+    </span><span class="kw">pub </span>tokens: BigUint,
+    <span class="attribute">#[abi(uint256)]
+    </span><span class="kw">pub </span>sender_public_key: ton_types::UInt256,
+    <span class="attribute">#[abi(address)]
+    </span><span class="kw">pub </span>sender_address: ton_block::MsgAddressInt,
+    <span class="attribute">#[abi(address)]
+    </span><span class="kw">pub </span>send_gas_to: ton_block::MsgAddressInt,
+    <span class="attribute">#[abi(address)]
+    </span><span class="kw">pub </span>callback_address: ton_block::MsgAddressInt,
+    <span class="attribute">#[abi(cell)]
+    </span><span class="kw">pub </span>callback_payload: ton_types::Cell,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tokens_burned</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_0</span>,
-        <span class="ident">name</span>: <span class="string">&quot;tokensBurned&quot;</span>,
-        <span class="ident">inputs</span>: <span class="ident">TokensBurnedInputs::param_type</span>(),
-        <span class="ident">outputs</span>: <span class="ident">Vec::new</span>(),
+<span class="kw">pub fn </span>tokens_burned() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_0,
+        name: <span class="string">&quot;tokensBurned&quot;</span>,
+        inputs: TokensBurnedInputs::param_type(),
+        outputs: Vec::new(),
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">UnpackAbiPlain</span>, <span class="ident">KnownParamTypePlain</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransferOwnerInputs</span> {
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">uint256</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">root_public_key</span>: <span class="ident">ton_types::UInt256</span>,
-    <span class="attribute">#[<span class="ident">abi</span>(<span class="ident">address</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">root_owner_address</span>: <span class="ident">ton_block::MsgAddressInt</span>,
+<span class="attribute">#[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
+</span><span class="kw">pub struct </span>TransferOwnerInputs {
+    <span class="attribute">#[abi(uint256)]
+    </span><span class="kw">pub </span>root_public_key: ton_types::UInt256,
+    <span class="attribute">#[abi(address)]
+    </span><span class="kw">pub </span>root_owner_address: ton_block::MsgAddressInt,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">transfer_owner</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ton_abi::Function</span> {
-    <span class="macro">declare_function!</span> {
-        <span class="ident">abi</span>: <span class="ident">v2_0</span>,
-        <span class="ident">header</span>: [<span class="ident">pubkey</span>, <span class="ident">time</span>, <span class="ident">expire</span>],
-        <span class="ident">name</span>: <span class="string">&quot;transferOwner&quot;</span>,
-        <span class="ident">inputs</span>: <span class="ident">TransferOwnerInputs::param_type</span>(),
-        <span class="ident">outputs</span>: <span class="ident">Vec::new</span>(),
+<span class="kw">pub fn </span>transfer_owner() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
+    <span class="macro">declare_function! </span>{
+        abi: v2_0,
+        header: [pubkey, time, expire],
+        name: <span class="string">&quot;transferOwner&quot;</span>,
+        inputs: TransferOwnerInputs::param_type(),
+        outputs: Vec::new(),
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">correct_function_ids</span>() {
-        <span class="macro">assert_eq!</span>(<span class="ident">get_version</span>().<span class="ident">input_id</span>, <span class="number">0x2da94d2f</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">get_details</span>().<span class="ident">input_id</span>, <span class="number">0x7ff7a47c</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">get_wallet_address</span>().<span class="ident">input_id</span>, <span class="number">0x069a08f8</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">mint</span>().<span class="ident">input_id</span>, <span class="number">0x723dc4ce</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">tokens_burned</span>().<span class="ident">input_id</span>, <span class="number">0x2e2888aa</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">transfer_owner</span>().<span class="ident">input_id</span>, <span class="number">0x3828261a</span>);
+    <span class="attribute">#[test]
+    </span><span class="kw">pub fn </span>correct_function_ids() {
+        <span class="macro">assert_eq!</span>(get_version().input_id, <span class="number">0x2da94d2f</span>);
+        <span class="macro">assert_eq!</span>(get_details().input_id, <span class="number">0x7ff7a47c</span>);
+        <span class="macro">assert_eq!</span>(get_wallet_address().input_id, <span class="number">0x069a08f8</span>);
+        <span class="macro">assert_eq!</span>(mint().input_id, <span class="number">0x723dc4ce</span>);
+        <span class="macro">assert_eq!</span>(tokens_burned().input_id, <span class="number">0x2e2888aa</span>);
+        <span class="macro">assert_eq!</span>(transfer_owner().input_id, <span class="number">0x3828261a</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton_contracts" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="nekoton_contracts" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

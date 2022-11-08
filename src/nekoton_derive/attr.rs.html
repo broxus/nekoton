@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-derive/src/attr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>attr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_derive/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-derive/src/attr.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>attr.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_derive/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_derive/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -445,452 +445,452 @@
 <span id="445">445</span>
 <span id="446">446</span>
 <span id="447">447</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">proc_macro2</span>::{<span class="ident">Group</span>, <span class="ident">Span</span>, <span class="ident">TokenStream</span>, <span class="ident">TokenTree</span>};
-<span class="kw">use</span> <span class="ident">quote::quote</span>;
-<span class="kw">use</span> <span class="ident">quote::ToTokens</span>;
-<span class="kw">use</span> <span class="ident">syn::Meta</span>::{<span class="ident">List</span>, <span class="ident">NameValue</span>, <span class="ident">Path</span>};
-<span class="kw">use</span> <span class="ident">syn::NestedMeta::Meta</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>proc_macro2::{Group, Span, TokenStream, TokenTree};
+<span class="kw">use </span>quote::quote;
+<span class="kw">use </span>quote::ToTokens;
+<span class="kw">use </span>syn::Meta::{List, NameValue, Path};
+<span class="kw">use </span>syn::NestedMeta::Meta;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::parsing_context</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::symbol</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::parsing_context::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::symbol::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Container</span> {
-    <span class="kw">pub</span> <span class="ident">enum_bool</span>: <span class="ident">bool</span>,
+<span class="kw">pub struct </span>Container {
+    <span class="kw">pub </span>enum_bool: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">Container</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_ast</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">ParsingContext</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">syn::DeriveInput</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enum_bool</span> <span class="op">=</span> <span class="ident">BoolAttr::none</span>(<span class="ident">cx</span>, <span class="ident">ENUM_BOOL</span>);
+<span class="kw">impl </span>Container {
+    <span class="kw">pub fn </span>from_ast(cx: <span class="kw-2">&amp;</span>ParsingContext, input: <span class="kw-2">&amp;</span>syn::DeriveInput) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>enum_bool = BoolAttr::none(cx, ENUM_BOOL);
 
-        <span class="kw">for</span> (<span class="ident">from</span>, <span class="ident">meta_item</span>) <span class="kw">in</span> <span class="ident">input</span>
-            .<span class="ident">attrs</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> <span class="ident">get_meta_items</span>(<span class="ident">cx</span>, <span class="ident">attr</span>))
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">into_iter</span>())
+        <span class="kw">for </span>(from, meta_item) <span class="kw">in </span>input
+            .attrs
+            .iter()
+            .flat_map(|attr| get_meta_items(cx, attr))
+            .flat_map(|item| item.into_iter())
         {
-            <span class="kw">match</span> (<span class="ident">from</span>, <span class="kw-2">&amp;</span><span class="ident">meta_item</span>) {
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">Meta</span>(<span class="ident">Path</span>(<span class="ident">word</span>))) <span class="kw">if</span> <span class="ident">word</span> <span class="op">==</span> <span class="ident">ENUM_BOOL</span> =&gt; <span class="ident">enum_bool</span>.<span class="ident">set_true</span>(<span class="ident">word</span>),
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">token</span>) =&gt; {
-                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">token</span>, <span class="string">&quot;unexpected token&quot;</span>);
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
+            <span class="kw">match </span>(from, <span class="kw-2">&amp;</span>meta_item) {
+                (AttrFrom::Abi, Meta(Path(word))) <span class="kw">if </span>word == ENUM_BOOL =&gt; enum_bool.set_true(word),
+                (AttrFrom::Abi, token) =&gt; {
+                    cx.error_spanned_by(token, <span class="string">&quot;unexpected token&quot;</span>);
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
                 }
             }
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">syn::Data::Struct</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">input</span>.<span class="ident">data</span> {
-            <span class="kw">if</span> <span class="ident">enum_bool</span>.<span class="ident">get</span>() {
-                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">input</span>, <span class="string">&quot;Invalid attribute &#39;boolean&#39; for struct&quot;</span>);
+        <span class="kw">if let </span>syn::Data::Struct(<span class="kw">_</span>) = input.data {
+            <span class="kw">if </span>enum_bool.get() {
+                cx.error_spanned_by(input, <span class="string">&quot;Invalid attribute &#39;boolean&#39; for struct&quot;</span>);
             }
         }
 
-        <span class="prelude-val">Some</span>(<span class="self">Self</span> {
-            <span class="ident">enum_bool</span>: <span class="ident">enum_bool</span>.<span class="ident">get</span>(),
+        <span class="prelude-val">Some</span>(<span class="self">Self </span>{
+            enum_bool: enum_bool.get(),
         })
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Field</span> {
-    <span class="kw">pub</span> <span class="ident">skip</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">type_name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TypeName</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">with</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::Expr</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">pack_with</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::Expr</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">unpack_with</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::Expr</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">param_type_with</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">syn::Expr</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">is_array</span>: <span class="ident">bool</span>,
+<span class="kw">pub struct </span>Field {
+    <span class="kw">pub </span>skip: bool,
+    <span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>type_name: <span class="prelude-ty">Option</span>&lt;TypeName&gt;,
+    <span class="kw">pub </span>with: <span class="prelude-ty">Option</span>&lt;syn::Expr&gt;,
+    <span class="kw">pub </span>pack_with: <span class="prelude-ty">Option</span>&lt;syn::Expr&gt;,
+    <span class="kw">pub </span>unpack_with: <span class="prelude-ty">Option</span>&lt;syn::Expr&gt;,
+    <span class="kw">pub </span>param_type_with: <span class="prelude-ty">Option</span>&lt;syn::Expr&gt;,
+    <span class="kw">pub </span>is_array: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">Field</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_ast</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">ParsingContext</span>, <span class="ident">_index</span>: <span class="ident">usize</span>, <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Field</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">Attr::none</span>(<span class="ident">cx</span>, <span class="ident">NAME</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">type_name</span> <span class="op">=</span> <span class="ident">Attr::none</span>(<span class="ident">cx</span>, <span class="ident">TYPE_NAME</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">with</span> <span class="op">=</span> <span class="ident">Attr::none</span>(<span class="ident">cx</span>, <span class="ident">WITH</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pack_with</span> <span class="op">=</span> <span class="ident">Attr::none</span>(<span class="ident">cx</span>, <span class="ident">PACK_WITH</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unpack_with</span> <span class="op">=</span> <span class="ident">Attr::none</span>(<span class="ident">cx</span>, <span class="ident">UNPACK_WITH</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">param_type_with</span> <span class="op">=</span> <span class="ident">Attr::none</span>(<span class="ident">cx</span>, <span class="ident">PARAM_TYPE_WITH</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_array</span> <span class="op">=</span> <span class="ident">BoolAttr::none</span>(<span class="ident">cx</span>, <span class="ident">ARRAY</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">skip</span> <span class="op">=</span> <span class="ident">BoolAttr::none</span>(<span class="ident">cx</span>, <span class="ident">SKIP</span>);
+<span class="kw">impl </span>Field {
+    <span class="kw">pub fn </span>from_ast(cx: <span class="kw-2">&amp;</span>ParsingContext, _index: usize, input: <span class="kw-2">&amp;</span>syn::Field) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>name = Attr::none(cx, NAME);
+        <span class="kw">let </span><span class="kw-2">mut </span>type_name = Attr::none(cx, TYPE_NAME);
+        <span class="kw">let </span><span class="kw-2">mut </span>with = Attr::none(cx, WITH);
+        <span class="kw">let </span><span class="kw-2">mut </span>pack_with = Attr::none(cx, PACK_WITH);
+        <span class="kw">let </span><span class="kw-2">mut </span>unpack_with = Attr::none(cx, UNPACK_WITH);
+        <span class="kw">let </span><span class="kw-2">mut </span>param_type_with = Attr::none(cx, PARAM_TYPE_WITH);
+        <span class="kw">let </span><span class="kw-2">mut </span>is_array = BoolAttr::none(cx, ARRAY);
+        <span class="kw">let </span><span class="kw-2">mut </span>skip = BoolAttr::none(cx, SKIP);
 
-        <span class="kw">let</span> <span class="ident">has_abi_attr</span> <span class="op">=</span> <span class="ident">has_abi_attr</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">attrs</span>);
+        <span class="kw">let </span>has_abi_attr = has_abi_attr(<span class="kw-2">&amp;</span>input.attrs);
 
-        <span class="kw">for</span> (<span class="ident">from</span>, <span class="ident">meta_item</span>) <span class="kw">in</span> <span class="ident">input</span>
-            .<span class="ident">attrs</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> <span class="ident">get_meta_items</span>(<span class="ident">cx</span>, <span class="ident">attr</span>))
-            .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">item</span><span class="op">|</span> <span class="ident">item</span>.<span class="ident">into_iter</span>())
+        <span class="kw">for </span>(from, meta_item) <span class="kw">in </span>input
+            .attrs
+            .iter()
+            .flat_map(|attr| get_meta_items(cx, attr))
+            .flat_map(|item| item.into_iter())
         {
-            <span class="kw">match</span> (<span class="ident">from</span>, <span class="kw-2">&amp;</span><span class="ident">meta_item</span>) {
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>))) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">NAME</span> =&gt; {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">s</span>) <span class="op">=</span> <span class="ident">get_lit_str</span>(<span class="ident">cx</span>, <span class="ident">NAME</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
-                        <span class="ident">name</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">s</span>.<span class="ident">value</span>());
+            <span class="kw">match </span>(from, <span class="kw-2">&amp;</span>meta_item) {
+                (AttrFrom::Abi, Meta(NameValue(m))) <span class="kw">if </span>m.path == NAME =&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(s) = get_lit_str(cx, NAME, <span class="kw-2">&amp;</span>m.lit) {
+                        name.set(<span class="kw-2">&amp;</span>m.path, s.value());
                     }
                 }
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">Meta</span>(<span class="ident">Path</span>(<span class="ident">word</span>))) <span class="kw">if</span> <span class="ident">word</span> <span class="op">==</span> <span class="ident">ARRAY</span> =&gt; <span class="ident">is_array</span>.<span class="ident">set_true</span>(<span class="ident">word</span>),
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">Meta</span>(<span class="ident">Path</span>(<span class="ident">word</span>))) <span class="kw">if</span> <span class="ident">word</span> <span class="op">==</span> <span class="ident">SKIP</span> =&gt; <span class="ident">skip</span>.<span class="ident">set_true</span>(<span class="ident">word</span>),
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">Meta</span>(<span class="ident">Path</span>(<span class="ident">word</span>))) =&gt; {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">word</span>) <span class="op">=</span> <span class="ident">word</span>.<span class="ident">get_ident</span>() {
-                        <span class="kw">let</span> <span class="ident">pt</span> <span class="op">=</span> <span class="ident">TypeName::from</span>(<span class="kw-2">&amp;</span><span class="ident">word</span>.<span class="ident">to_string</span>());
-                        <span class="kw">if</span> <span class="ident">pt</span> <span class="op">!</span><span class="op">=</span> <span class="ident">TypeName::None</span> {
-                            <span class="ident">type_name</span>.<span class="ident">set</span>(<span class="ident">word</span>, <span class="ident">pt</span>);
-                        } <span class="kw">else</span> {
-                            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">word</span>, <span class="string">&quot;unknown parse type&quot;</span>)
+                (AttrFrom::Abi, Meta(Path(word))) <span class="kw">if </span>word == ARRAY =&gt; is_array.set_true(word),
+                (AttrFrom::Abi, Meta(Path(word))) <span class="kw">if </span>word == SKIP =&gt; skip.set_true(word),
+                (AttrFrom::Abi, Meta(Path(word))) =&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(word) = word.get_ident() {
+                        <span class="kw">let </span>pt = TypeName::from(<span class="kw-2">&amp;</span>word.to_string());
+                        <span class="kw">if </span>pt != TypeName::None {
+                            type_name.set(word, pt);
+                        } <span class="kw">else </span>{
+                            cx.error_spanned_by(word, <span class="string">&quot;unknown parse type&quot;</span>)
                         }
                     }
                 }
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>))) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">WITH</span> =&gt; {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">parse_lit_into_expr</span>(<span class="ident">cx</span>, <span class="ident">WITH</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
-                        <span class="ident">with</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">expr</span>);
+                (AttrFrom::Abi, Meta(NameValue(m))) <span class="kw">if </span>m.path == WITH =&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(expr) = parse_lit_into_expr(cx, WITH, <span class="kw-2">&amp;</span>m.lit) {
+                        with.set(<span class="kw-2">&amp;</span>m.path, expr);
                     }
                 }
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>))) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">PACK_WITH</span> =&gt; {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">parse_lit_into_expr</span>(<span class="ident">cx</span>, <span class="ident">PACK_WITH</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
-                        <span class="ident">pack_with</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">expr</span>);
+                (AttrFrom::Abi, Meta(NameValue(m))) <span class="kw">if </span>m.path == PACK_WITH =&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(expr) = parse_lit_into_expr(cx, PACK_WITH, <span class="kw-2">&amp;</span>m.lit) {
+                        pack_with.set(<span class="kw-2">&amp;</span>m.path, expr);
                     }
                 }
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>))) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">UNPACK_WITH</span> =&gt; {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">parse_lit_into_expr</span>(<span class="ident">cx</span>, <span class="ident">UNPACK_WITH</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
-                        <span class="ident">unpack_with</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">expr</span>);
+                (AttrFrom::Abi, Meta(NameValue(m))) <span class="kw">if </span>m.path == UNPACK_WITH =&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(expr) = parse_lit_into_expr(cx, UNPACK_WITH, <span class="kw-2">&amp;</span>m.lit) {
+                        unpack_with.set(<span class="kw-2">&amp;</span>m.path, expr);
                     }
                 }
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">Meta</span>(<span class="ident">NameValue</span>(<span class="ident">m</span>))) <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">PARAM_TYPE_WITH</span> =&gt; {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">parse_lit_into_expr</span>(<span class="ident">cx</span>, <span class="ident">PARAM_TYPE_WITH</span>, <span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">lit</span>) {
-                        <span class="ident">param_type_with</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">m</span>.<span class="ident">path</span>, <span class="ident">expr</span>);
+                (AttrFrom::Abi, Meta(NameValue(m))) <span class="kw">if </span>m.path == PARAM_TYPE_WITH =&gt; {
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(expr) = parse_lit_into_expr(cx, PARAM_TYPE_WITH, <span class="kw-2">&amp;</span>m.lit) {
+                        param_type_with.set(<span class="kw-2">&amp;</span>m.path, expr);
                     }
                 }
-                (<span class="ident">AttrFrom::Abi</span>, <span class="ident">token</span>) =&gt; {
-                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">token</span>, <span class="string">&quot;unexpected token&quot;</span>);
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
+                (AttrFrom::Abi, token) =&gt; {
+                    cx.error_spanned_by(token, <span class="string">&quot;unexpected token&quot;</span>);
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
                 }
             }
         }
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">has_abi_attr</span> {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                <span class="ident">input</span>,
+        <span class="kw">if </span>!has_abi_attr {
+            cx.error_spanned_by(
+                input,
                 <span class="string">&quot;#[abi] attribute is mandatory. Use #[abi(skip)] to skip the field&quot;</span>,
             );
         }
 
-        <span class="kw">let</span> <span class="ident">skip</span> <span class="op">=</span> <span class="ident">skip</span>.<span class="ident">get</span>();
+        <span class="kw">let </span>skip = skip.get();
 
-        <span class="kw">let</span> <span class="ident">type_name</span> <span class="op">=</span> <span class="ident">type_name</span>.<span class="ident">get</span>();
-        <span class="kw">let</span> <span class="ident">with</span> <span class="op">=</span> <span class="ident">with</span>.<span class="ident">get</span>();
-        <span class="kw">let</span> <span class="ident">pack_with</span> <span class="op">=</span> <span class="ident">pack_with</span>.<span class="ident">get</span>();
-        <span class="kw">let</span> <span class="ident">unpack_with</span> <span class="op">=</span> <span class="ident">unpack_with</span>.<span class="ident">get</span>();
-        <span class="kw">let</span> <span class="ident">param_type_with</span> <span class="op">=</span> <span class="ident">param_type_with</span>.<span class="ident">get</span>();
+        <span class="kw">let </span>type_name = type_name.get();
+        <span class="kw">let </span>with = with.get();
+        <span class="kw">let </span>pack_with = pack_with.get();
+        <span class="kw">let </span>unpack_with = unpack_with.get();
+        <span class="kw">let </span>param_type_with = param_type_with.get();
 
-        <span class="kw">match</span> (
-            <span class="ident">skip</span>,
-            <span class="kw-2">&amp;</span><span class="ident">type_name</span>,
-            <span class="kw-2">&amp;</span><span class="ident">with</span>,
-            <span class="kw-2">&amp;</span><span class="ident">pack_with</span>,
-            <span class="kw-2">&amp;</span><span class="ident">unpack_with</span>,
-            <span class="kw-2">&amp;</span><span class="ident">param_type_with</span>,
+        <span class="kw">match </span>(
+            skip,
+            <span class="kw-2">&amp;</span>type_name,
+            <span class="kw-2">&amp;</span>with,
+            <span class="kw-2">&amp;</span>pack_with,
+            <span class="kw-2">&amp;</span>unpack_with,
+            <span class="kw-2">&amp;</span>param_type_with,
         ) {
-            (<span class="bool-val">true</span>, <span class="ident">tn</span>, <span class="ident">w</span>, <span class="ident">pw</span>, <span class="ident">uw</span>, <span class="ident">ptw</span>) =&gt; {
-                <span class="kw">if</span> <span class="ident">tn</span>.<span class="ident">is_some</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">w</span>.<span class="ident">is_some</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">pw</span>.<span class="ident">is_some</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">uw</span>.<span class="ident">is_some</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">ptw</span>.<span class="ident">is_some</span>() {
-                    <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-                        <span class="ident">input</span>,
+            (<span class="bool-val">true</span>, tn, w, pw, uw, ptw) =&gt; {
+                <span class="kw">if </span>tn.is_some() || w.is_some() || pw.is_some() || uw.is_some() || ptw.is_some() {
+                    cx.error_spanned_by(
+                        input,
                         <span class="string">&quot;#[abi(skip)] attribute can&#39;t be used with other attributes&quot;</span>,
                     )
                 }
             }
             (<span class="kw">_</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
-            <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
-            <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, ..) =&gt; {}
-            <span class="kw">_</span> =&gt; {
-                <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">input</span>, <span class="string">&quot;Only one of attributes (&#39;type&#39;, &#39;with&#39;, &#39;pack_with/unpack_with/param_type_with&#39;) can be selected at time&quot;</span>);
+            | (<span class="kw">_</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
+            | (<span class="kw">_</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, ..) =&gt; {}
+            <span class="kw">_ </span>=&gt; {
+                cx.error_spanned_by(input, <span class="string">&quot;Only one of attributes (&#39;type&#39;, &#39;with&#39;, &#39;pack_with/unpack_with/param_type_with&#39;) can be selected at time&quot;</span>);
             }
         };
 
-        <span class="prelude-val">Some</span>(<span class="self">Self</span> {
-            <span class="ident">skip</span>,
-            <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">get</span>(),
-            <span class="ident">type_name</span>,
-            <span class="ident">with</span>,
-            <span class="ident">pack_with</span>,
-            <span class="ident">unpack_with</span>,
-            <span class="ident">param_type_with</span>,
-            <span class="ident">is_array</span>: <span class="ident">is_array</span>.<span class="ident">get</span>(),
+        <span class="prelude-val">Some</span>(<span class="self">Self </span>{
+            skip,
+            name: name.get(),
+            type_name,
+            with,
+            pack_with,
+            unpack_with,
+            param_type_with,
+            is_array: is_array.get(),
         })
     }
 }
 
-<span class="kw">fn</span> <span class="ident">has_abi_attr</span>(<span class="ident">attrs</span>: <span class="kw-2">&amp;</span>[<span class="ident">syn::Attribute</span>]) -&gt; <span class="ident">bool</span> {
-    <span class="ident">attrs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">attr</span><span class="op">|</span> <span class="ident">attr</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">ABI</span>)
+<span class="kw">fn </span>has_abi_attr(attrs: <span class="kw-2">&amp;</span>[syn::Attribute]) -&gt; bool {
+    attrs.iter().any(|attr| attr.path == ABI)
 }
 
-<span class="kw">fn</span> <span class="ident">parse_lit_into_expr</span>(
-    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">ParsingContext</span>,
-    <span class="ident">attr_name</span>: <span class="ident">Symbol</span>,
-    <span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Lit</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">syn::Expr</span>, ()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">get_lit_str</span>(<span class="ident">cx</span>, <span class="ident">attr_name</span>, <span class="ident">lit</span>)<span class="question-mark">?</span>;
-    <span class="ident">parse_lit_str</span>(<span class="ident">string</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">lit</span>, <span class="macro">format!</span>(<span class="string">&quot;failed to parse expr: {:?}&quot;</span>, <span class="ident">string</span>.<span class="ident">value</span>()))
+<span class="kw">fn </span>parse_lit_into_expr(
+    cx: <span class="kw-2">&amp;</span>ParsingContext,
+    attr_name: Symbol,
+    lit: <span class="kw-2">&amp;</span>syn::Lit,
+) -&gt; <span class="prelude-ty">Result</span>&lt;syn::Expr, ()&gt; {
+    <span class="kw">let </span>string = get_lit_str(cx, attr_name, lit)<span class="question-mark">?</span>;
+    parse_lit_str(string).map_err(|<span class="kw">_</span>| {
+        cx.error_spanned_by(lit, <span class="macro">format!</span>(<span class="string">&quot;failed to parse expr: {:?}&quot;</span>, string.value()))
     })
 }
 
-<span class="kw">fn</span> <span class="ident">parse_lit_str</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">syn::LitStr</span>) -&gt; <span class="ident">syn::parse::Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">syn::parse::Parse</span>,
+<span class="kw">fn </span>parse_lit_str&lt;T&gt;(s: <span class="kw-2">&amp;</span>syn::LitStr) -&gt; syn::parse::Result&lt;T&gt;
+<span class="kw">where
+    </span>T: syn::parse::Parse,
 {
-    <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">spanned_tokens</span>(<span class="ident">s</span>)<span class="question-mark">?</span>;
-    <span class="ident">syn::parse2</span>(<span class="ident">tokens</span>)
+    <span class="kw">let </span>tokens = spanned_tokens(s)<span class="question-mark">?</span>;
+    syn::parse2(tokens)
 }
 
-<span class="kw">fn</span> <span class="ident">spanned_tokens</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">syn::LitStr</span>) -&gt; <span class="ident">syn::parse::Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">syn::parse_str</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>.<span class="ident">value</span>())<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(<span class="ident">respan_token_stream</span>(<span class="ident">stream</span>, <span class="ident">s</span>.<span class="ident">span</span>()))
+<span class="kw">fn </span>spanned_tokens(s: <span class="kw-2">&amp;</span>syn::LitStr) -&gt; syn::parse::Result&lt;TokenStream&gt; {
+    <span class="kw">let </span>stream = syn::parse_str(<span class="kw-2">&amp;</span>s.value())<span class="question-mark">?</span>;
+    <span class="prelude-val">Ok</span>(respan_token_stream(stream, s.span()))
 }
 
-<span class="kw">fn</span> <span class="ident">respan_token_stream</span>(<span class="ident">stream</span>: <span class="ident">TokenStream</span>, <span class="ident">span</span>: <span class="ident">Span</span>) -&gt; <span class="ident">TokenStream</span> {
-    <span class="ident">stream</span>
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">token</span><span class="op">|</span> <span class="ident">respan_token_tree</span>(<span class="ident">token</span>, <span class="ident">span</span>))
-        .<span class="ident">collect</span>()
+<span class="kw">fn </span>respan_token_stream(stream: TokenStream, span: Span) -&gt; TokenStream {
+    stream
+        .into_iter()
+        .map(|token| respan_token_tree(token, span))
+        .collect()
 }
 
-<span class="kw">fn</span> <span class="ident">respan_token_tree</span>(<span class="kw-2">mut</span> <span class="ident">token</span>: <span class="ident">TokenTree</span>, <span class="ident">span</span>: <span class="ident">Span</span>) -&gt; <span class="ident">TokenTree</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TokenTree::Group</span>(<span class="ident">g</span>) <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">token</span> {
-        <span class="kw-2">*</span><span class="ident">g</span> <span class="op">=</span> <span class="ident">Group::new</span>(<span class="ident">g</span>.<span class="ident">delimiter</span>(), <span class="ident">respan_token_stream</span>(<span class="ident">g</span>.<span class="ident">stream</span>(), <span class="ident">span</span>));
+<span class="kw">fn </span>respan_token_tree(<span class="kw-2">mut </span>token: TokenTree, span: Span) -&gt; TokenTree {
+    <span class="kw">if let </span>TokenTree::Group(g) = <span class="kw-2">&amp;mut </span>token {
+        <span class="kw-2">*</span>g = Group::new(g.delimiter(), respan_token_stream(g.stream(), span));
     }
-    <span class="ident">token</span>.<span class="ident">set_span</span>(<span class="ident">span</span>);
-    <span class="ident">token</span>
+    token.set_span(span);
+    token
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-<span class="kw">fn</span> <span class="ident">get_lit_str_simple</span>(<span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Lit</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">syn::LitStr</span>, ()<span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">syn::Lit::Str</span>(<span class="ident">lit</span>) <span class="op">=</span> <span class="ident">lit</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">lit</span>)
-    } <span class="kw">else</span> {
+<span class="attribute">#[allow(dead_code)]
+</span><span class="kw">fn </span>get_lit_str_simple(lit: <span class="kw-2">&amp;</span>syn::Lit) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>syn::LitStr, ()&gt; {
+    <span class="kw">if let </span>syn::Lit::Str(lit) = lit {
+        <span class="prelude-val">Ok</span>(lit)
+    } <span class="kw">else </span>{
         <span class="prelude-val">Err</span>(())
     }
 }
 
-<span class="kw">fn</span> <span class="ident">get_lit_str</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">ParsingContext</span>,
-    <span class="ident">attr_name</span>: <span class="ident">Symbol</span>,
-    <span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">syn::Lit</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">syn::LitStr</span>, ()<span class="op">&gt;</span> {
-    <span class="ident">get_lit_str_special</span>(<span class="ident">cx</span>, <span class="ident">attr_name</span>, <span class="ident">attr_name</span>, <span class="ident">lit</span>)
+<span class="kw">fn </span>get_lit_str&lt;<span class="lifetime">&#39;a</span>&gt;(
+    cx: <span class="kw-2">&amp;</span>ParsingContext,
+    attr_name: Symbol,
+    lit: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>syn::Lit,
+) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>syn::LitStr, ()&gt; {
+    get_lit_str_special(cx, attr_name, attr_name, lit)
 }
 
-<span class="kw">fn</span> <span class="ident">get_lit_str_special</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">ParsingContext</span>,
-    <span class="ident">attr_name</span>: <span class="ident">Symbol</span>,
-    <span class="ident">path_name</span>: <span class="ident">Symbol</span>,
-    <span class="ident">lit</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">syn::Lit</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">syn::LitStr</span>, ()<span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">syn::Lit::Str</span>(<span class="ident">lit</span>) <span class="op">=</span> <span class="ident">lit</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">lit</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(
-            <span class="ident">lit</span>,
+<span class="kw">fn </span>get_lit_str_special&lt;<span class="lifetime">&#39;a</span>&gt;(
+    cx: <span class="kw-2">&amp;</span>ParsingContext,
+    attr_name: Symbol,
+    path_name: Symbol,
+    lit: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>syn::Lit,
+) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>syn::LitStr, ()&gt; {
+    <span class="kw">if let </span>syn::Lit::Str(lit) = lit {
+        <span class="prelude-val">Ok</span>(lit)
+    } <span class="kw">else </span>{
+        cx.error_spanned_by(
+            lit,
             <span class="macro">format!</span>(
                 <span class="string">&quot;expected {} attribute to be a string: `{} = \&quot;...\&quot;`&quot;</span>,
-                <span class="ident">attr_name</span>, <span class="ident">path_name</span>
+                attr_name, path_name
             ),
         );
         <span class="prelude-val">Err</span>(())
     }
 }
 
-<span class="kw">fn</span> <span class="ident">get_meta_items</span>(
-    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="ident">ParsingContext</span>,
-    <span class="ident">attr</span>: <span class="kw-2">&amp;</span><span class="ident">syn::Attribute</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">AttrFrom</span>, <span class="ident">syn::NestedMeta</span>)<span class="op">&gt;</span>, ()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">attr_from</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">attr</span>.<span class="ident">path</span> <span class="op">==</span> <span class="ident">ABI</span> {
-        <span class="ident">AttrFrom::Abi</span>
-    } <span class="kw">else</span> {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Vec::new</span>());
+<span class="kw">fn </span>get_meta_items(
+    cx: <span class="kw-2">&amp;</span>ParsingContext,
+    attr: <span class="kw-2">&amp;</span>syn::Attribute,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;(AttrFrom, syn::NestedMeta)&gt;, ()&gt; {
+    <span class="kw">let </span>attr_from = <span class="kw">if </span>attr.path == ABI {
+        AttrFrom::Abi
+    } <span class="kw">else </span>{
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
     };
 
-    <span class="kw">match</span> <span class="ident">attr</span>.<span class="ident">parse_meta</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">List</span>(<span class="ident">meta</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">meta</span>
-            .<span class="ident">nested</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">meta</span><span class="op">|</span> (<span class="ident">attr_from</span>, <span class="ident">meta</span>))
-            .<span class="ident">collect</span>()),
-        <span class="prelude-val">Ok</span>(<span class="ident">Path</span>(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">Vec::new</span>()),
-        <span class="prelude-val">Ok</span>(<span class="ident">other</span>) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">error_spanned_by</span>(<span class="ident">other</span>, <span class="macro">format!</span>(<span class="string">&quot;expected #[{}(...)]&quot;</span>, <span class="ident">attr_from</span>));
+    <span class="kw">match </span>attr.parse_meta() {
+        <span class="prelude-val">Ok</span>(List(meta)) =&gt; <span class="prelude-val">Ok</span>(meta
+            .nested
+            .into_iter()
+            .map(|meta| (attr_from, meta))
+            .collect()),
+        <span class="prelude-val">Ok</span>(Path(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Ok</span>(Vec::new()),
+        <span class="prelude-val">Ok</span>(other) =&gt; {
+            cx.error_spanned_by(other, <span class="macro">format!</span>(<span class="string">&quot;expected #[{}(...)]&quot;</span>, attr_from));
             <span class="prelude-val">Err</span>(())
         }
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
-            <span class="ident">cx</span>.<span class="ident">syn_error</span>(<span class="ident">err</span>);
+        <span class="prelude-val">Err</span>(err) =&gt; {
+            cx.syn_error(err);
             <span class="prelude-val">Err</span>(())
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">enum</span> <span class="ident">AttrFrom</span> {
-    <span class="ident">Abi</span>,
+<span class="attribute">#[derive(Copy, Clone, Eq, PartialEq)]
+</span><span class="kw">enum </span>AttrFrom {
+    Abi,
 }
 
-<span class="kw">impl</span> <span class="ident">std::fmt::Display</span> <span class="kw">for</span> <span class="ident">AttrFrom</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">AttrFrom::Abi</span> =&gt; <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">ABI</span>.<span class="ident">inner</span>()),
-        }
-    }
-}
-
-<span class="kw">struct</span> <span class="ident">Attr</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;c</span> <span class="ident">ParsingContext</span>,
-    <span class="ident">name</span>: <span class="ident">Symbol</span>,
-    <span class="ident">tokens</span>: <span class="ident">TokenStream</span>,
-    <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Attr</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">none</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;c</span> <span class="ident">ParsingContext</span>, <span class="ident">name</span>: <span class="ident">Symbol</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Attr</span> {
-            <span class="ident">cx</span>,
-            <span class="ident">name</span>,
-            <span class="ident">tokens</span>: <span class="ident">TokenStream::new</span>(),
-            <span class="ident">value</span>: <span class="prelude-val">None</span>,
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">set</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">ToTokens</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">object</span>: <span class="ident">A</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
-        <span class="kw">let</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">object</span>.<span class="ident">into_token_stream</span>();
-
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">value</span>.<span class="ident">is_some</span>() {
-            <span class="self">self</span>.<span class="ident">cx</span>
-                .<span class="ident">error_spanned_by</span>(<span class="ident">tokens</span>, <span class="macro">format!</span>(<span class="string">&quot;duplicate abi attribute `{}`&quot;</span>, <span class="self">self</span>.<span class="ident">name</span>));
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">tokens</span> <span class="op">=</span> <span class="ident">tokens</span>;
-            <span class="self">self</span>.<span class="ident">value</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_opt</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">ToTokens</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">object</span>: <span class="ident">A</span>, <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span> {
-            <span class="self">self</span>.<span class="ident">set</span>(<span class="ident">object</span>, <span class="ident">value</span>);
-        }
-    }
-
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_if_none</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">value</span>.<span class="ident">is_none</span>() {
-            <span class="self">self</span>.<span class="ident">value</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>);
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">get</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">value</span>
-    }
-
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">get_with_tokens</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">TokenStream</span>, <span class="ident">T</span>)<span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">value</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="prelude-val">Some</span>((<span class="self">self</span>.<span class="ident">tokens</span>, <span class="ident">value</span>)),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>AttrFrom {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            AttrFrom::Abi =&gt; f.write_str(ABI.inner()),
         }
     }
 }
 
-<span class="kw">struct</span> <span class="ident">BoolAttr</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span><span class="op">&gt;</span>(<span class="ident">Attr</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span>, ()<span class="op">&gt;</span>);
+<span class="kw">struct </span>Attr&lt;<span class="lifetime">&#39;c</span>, T&gt; {
+    cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;c </span>ParsingContext,
+    name: Symbol,
+    tokens: TokenStream,
+    value: <span class="prelude-ty">Option</span>&lt;T&gt;,
+}
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span><span class="op">&gt;</span> <span class="ident">BoolAttr</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">none</span>(<span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;c</span> <span class="ident">ParsingContext</span>, <span class="ident">name</span>: <span class="ident">Symbol</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">BoolAttr</span>(<span class="ident">Attr::none</span>(<span class="ident">cx</span>, <span class="ident">name</span>))
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;c</span>, T&gt; Attr&lt;<span class="lifetime">&#39;c</span>, T&gt; {
+    <span class="kw">fn </span>none(cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;c </span>ParsingContext, name: Symbol) -&gt; <span class="self">Self </span>{
+        Attr {
+            cx,
+            name,
+            tokens: TokenStream::new(),
+            value: <span class="prelude-val">None</span>,
+        }
     }
 
-    <span class="kw">fn</span> <span class="ident">set_true</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">ToTokens</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">object</span>: <span class="ident">A</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">set</span>(<span class="ident">object</span>, ());
+    <span class="kw">fn </span>set&lt;A: ToTokens&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, object: A, value: T) {
+        <span class="kw">let </span>tokens = object.into_token_stream();
+
+        <span class="kw">if </span><span class="self">self</span>.value.is_some() {
+            <span class="self">self</span>.cx
+                .error_spanned_by(tokens, <span class="macro">format!</span>(<span class="string">&quot;duplicate abi attribute `{}`&quot;</span>, <span class="self">self</span>.name));
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.tokens = tokens;
+            <span class="self">self</span>.value = <span class="prelude-val">Some</span>(value);
+        }
     }
 
-    <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">value</span>.<span class="ident">is_some</span>()
+    <span class="attribute">#[allow(dead_code)]
+    </span><span class="kw">fn </span>set_opt&lt;A: ToTokens&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, object: A, value: <span class="prelude-ty">Option</span>&lt;T&gt;) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value {
+            <span class="self">self</span>.set(object, value);
+        }
+    }
+
+    <span class="attribute">#[allow(dead_code)]
+    </span><span class="kw">fn </span>set_if_none(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T) {
+        <span class="kw">if </span><span class="self">self</span>.value.is_none() {
+            <span class="self">self</span>.value = <span class="prelude-val">Some</span>(value);
+        }
+    }
+
+    <span class="kw">fn </span>get(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
+        <span class="self">self</span>.value
+    }
+
+    <span class="attribute">#[allow(dead_code)]
+    </span><span class="kw">fn </span>get_with_tokens(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;(TokenStream, T)&gt; {
+        <span class="kw">match </span><span class="self">self</span>.value {
+            <span class="prelude-val">Some</span>(value) =&gt; <span class="prelude-val">Some</span>((<span class="self">self</span>.tokens, value)),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
+        }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TypeName</span> {
-    <span class="ident">Int8</span>,
-    <span class="ident">Uint8</span>,
-    <span class="ident">Uint16</span>,
-    <span class="ident">Uint32</span>,
-    <span class="ident">Uint64</span>,
-    <span class="ident">Uint128</span>,
-    <span class="ident">Uint256</span>,
-    <span class="ident">Grams</span>,
-    <span class="ident">Bool</span>,
-    <span class="ident">Cell</span>,
-    <span class="ident">Address</span>,
-    <span class="ident">String</span>,
-    <span class="ident">Bytes</span>,
+<span class="kw">struct </span>BoolAttr&lt;<span class="lifetime">&#39;c</span>&gt;(Attr&lt;<span class="lifetime">&#39;c</span>, ()&gt;);
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;c</span>&gt; BoolAttr&lt;<span class="lifetime">&#39;c</span>&gt; {
+    <span class="kw">fn </span>none(cx: <span class="kw-2">&amp;</span><span class="lifetime">&#39;c </span>ParsingContext, name: Symbol) -&gt; <span class="self">Self </span>{
+        BoolAttr(Attr::none(cx, name))
+    }
+
+    <span class="kw">fn </span>set_true&lt;A: ToTokens&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, object: A) {
+        <span class="self">self</span>.<span class="number">0</span>.set(object, ());
+    }
+
+    <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.<span class="number">0</span>.value.is_some()
+    }
+}
+
+<span class="attribute">#[derive(PartialEq, Eq)]
+</span><span class="kw">pub enum </span>TypeName {
+    Int8,
+    Uint8,
+    Uint16,
+    Uint32,
+    Uint64,
+    Uint128,
+    Uint256,
+    Grams,
+    Bool,
+    Cell,
+    Address,
+    String,
+    Bytes,
     <span class="prelude-val">None</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">TypeName</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">TypeName</span> {
-        <span class="kw">match</span> <span class="ident">input</span> {
-            <span class="string">&quot;int8&quot;</span> =&gt; <span class="ident">TypeName::Int8</span>,
-            <span class="string">&quot;uint8&quot;</span> =&gt; <span class="ident">TypeName::Uint8</span>,
-            <span class="string">&quot;uint16&quot;</span> =&gt; <span class="ident">TypeName::Uint16</span>,
-            <span class="string">&quot;uint32&quot;</span> =&gt; <span class="ident">TypeName::Uint32</span>,
-            <span class="string">&quot;uint64&quot;</span> =&gt; <span class="ident">TypeName::Uint64</span>,
-            <span class="string">&quot;uint128&quot;</span> =&gt; <span class="ident">TypeName::Uint128</span>,
-            <span class="string">&quot;uint256&quot;</span> =&gt; <span class="ident">TypeName::Uint256</span>,
-            <span class="string">&quot;gram&quot;</span> <span class="op">|</span> <span class="string">&quot;grams&quot;</span> <span class="op">|</span> <span class="string">&quot;token&quot;</span> <span class="op">|</span> <span class="string">&quot;tokens&quot;</span> =&gt; <span class="ident">TypeName::Grams</span>,
-            <span class="string">&quot;bool&quot;</span> =&gt; <span class="ident">TypeName::Bool</span>,
-            <span class="string">&quot;cell&quot;</span> =&gt; <span class="ident">TypeName::Cell</span>,
-            <span class="string">&quot;address&quot;</span> =&gt; <span class="ident">TypeName::Address</span>,
-            <span class="string">&quot;string&quot;</span> =&gt; <span class="ident">TypeName::String</span>,
-            <span class="string">&quot;bytes&quot;</span> =&gt; <span class="ident">TypeName::Bytes</span>,
-            <span class="kw">_</span> =&gt; <span class="ident">TypeName::None</span>,
+<span class="kw">impl </span>TypeName {
+    <span class="kw">fn </span>from(input: <span class="kw-2">&amp;</span>str) -&gt; TypeName {
+        <span class="kw">match </span>input {
+            <span class="string">&quot;int8&quot; </span>=&gt; TypeName::Int8,
+            <span class="string">&quot;uint8&quot; </span>=&gt; TypeName::Uint8,
+            <span class="string">&quot;uint16&quot; </span>=&gt; TypeName::Uint16,
+            <span class="string">&quot;uint32&quot; </span>=&gt; TypeName::Uint32,
+            <span class="string">&quot;uint64&quot; </span>=&gt; TypeName::Uint64,
+            <span class="string">&quot;uint128&quot; </span>=&gt; TypeName::Uint128,
+            <span class="string">&quot;uint256&quot; </span>=&gt; TypeName::Uint256,
+            <span class="string">&quot;gram&quot; </span>| <span class="string">&quot;grams&quot; </span>| <span class="string">&quot;token&quot; </span>| <span class="string">&quot;tokens&quot; </span>=&gt; TypeName::Grams,
+            <span class="string">&quot;bool&quot; </span>=&gt; TypeName::Bool,
+            <span class="string">&quot;cell&quot; </span>=&gt; TypeName::Cell,
+            <span class="string">&quot;address&quot; </span>=&gt; TypeName::Address,
+            <span class="string">&quot;string&quot; </span>=&gt; TypeName::String,
+            <span class="string">&quot;bytes&quot; </span>=&gt; TypeName::Bytes,
+            <span class="kw">_ </span>=&gt; TypeName::None,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_param_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">proc_macro2::TokenStream</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">TypeName::Int8</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Int</span>(<span class="number">8</span>)
+    <span class="kw">pub fn </span>get_param_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; proc_macro2::TokenStream {
+        <span class="kw">match </span><span class="self">self </span>{
+            TypeName::Int8 =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Int(<span class="number">8</span>)
             },
-            <span class="ident">TypeName::Uint8</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Uint</span>(<span class="number">8</span>)
+            TypeName::Uint8 =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Uint(<span class="number">8</span>)
             },
-            <span class="ident">TypeName::Uint16</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Uint</span>(<span class="number">16</span>)
+            TypeName::Uint16 =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Uint(<span class="number">16</span>)
             },
-            <span class="ident">TypeName::Uint32</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Uint</span>(<span class="number">32</span>)
+            TypeName::Uint32 =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Uint(<span class="number">32</span>)
             },
-            <span class="ident">TypeName::Uint64</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Uint</span>(<span class="number">64</span>)
+            TypeName::Uint64 =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Uint(<span class="number">64</span>)
             },
-            <span class="ident">TypeName::Uint128</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Uint</span>(<span class="number">128</span>)
+            TypeName::Uint128 =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Uint(<span class="number">128</span>)
             },
-            <span class="ident">TypeName::Uint256</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Uint</span>(<span class="number">256</span>)
+            TypeName::Uint256 =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Uint(<span class="number">256</span>)
             },
-            <span class="ident">TypeName::Grams</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Token</span>
+            TypeName::Grams =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Token
             },
-            <span class="ident">TypeName::Address</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Address</span>
+            TypeName::Address =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Address
             },
-            <span class="ident">TypeName::Cell</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Cell</span>
+            TypeName::Cell =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Cell
             },
-            <span class="ident">TypeName::Bool</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Bool</span>
+            TypeName::Bool =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Bool
             },
-            <span class="ident">TypeName::String</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::String</span>
+            TypeName::String =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::String
             },
-            <span class="ident">TypeName::Bytes</span> =&gt; <span class="macro">quote!</span> {
-                <span class="ident">::ton_abi::ParamType::Bytes</span>
+            TypeName::Bytes =&gt; <span class="macro">quote! </span>{
+                ::ton_abi::ParamType::Bytes
             },
-            <span class="ident">TypeName::None</span> =&gt; <span class="macro">unreachable!</span>(),
+            TypeName::None =&gt; <span class="macro">unreachable!</span>(),
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_derive" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_derive" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/owners_cache/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/owners_cache/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -279,286 +279,286 @@
 <span id="279">279</span>
 <span id="280">280</span>
 <span id="281">281</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections::hash_map</span>::{<span class="self">self</span>, <span class="ident">HashMap</span>};
-<span class="kw">use</span> <span class="ident">std::collections::HashSet</span>;
-<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map::{<span class="self">self</span>, HashMap};
+<span class="kw">use </span>std::collections::HashSet;
+<span class="kw">use </span>std::str::FromStr;
+<span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use</span> <span class="ident">anyhow::Result</span>;
-<span class="kw">use</span> <span class="ident">futures_util::stream</span>::{<span class="ident">FuturesUnordered</span>, <span class="ident">StreamExt</span>};
-<span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
-<span class="kw">use</span> <span class="ident">tokio::sync</span>::{<span class="ident">RwLock</span>, <span class="ident">Semaphore</span>};
-<span class="kw">use</span> <span class="ident">ton_block::MsgAddressInt</span>;
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>futures_util::stream::{FuturesUnordered, StreamExt};
+<span class="kw">use </span>serde::Deserialize;
+<span class="kw">use </span>tokio::sync::{RwLock, Semaphore};
+<span class="kw">use </span>ton_block::MsgAddressInt;
 
-<span class="kw">use</span> <span class="ident">nekoton_utils</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::models::TokenWalletVersion</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::core::token_wallet</span>::{<span class="ident">RootTokenContractState</span>, <span class="ident">TokenWalletContractState</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::external::Storage</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::models</span>::{<span class="ident">ExistingContract</span>, <span class="ident">RawContractState</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::transport::Transport</span>;
+<span class="kw">use </span><span class="kw">super</span>::models::TokenWalletVersion;
+<span class="kw">use </span><span class="kw">crate</span>::core::token_wallet::{RootTokenContractState, TokenWalletContractState};
+<span class="kw">use </span><span class="kw">crate</span>::external::Storage;
+<span class="kw">use </span><span class="kw">crate</span>::transport::models::{ExistingContract, RawContractState};
+<span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">OWNERS_CACHE_STORAGE_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;__core__owners_cache&quot;</span>;
+<span class="kw">pub const </span>OWNERS_CACHE_STORAGE_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;__core__owners_cache&quot;</span>;
 
-<span class="doccomment">/// Stores a map to resolve owner&#39;s wallet address from token wallet address</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OwnersCache</span> {
-    <span class="ident">key</span>: <span class="ident">String</span>,
-    <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-    <span class="ident">storage</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Storage</span><span class="op">&gt;</span>,
-    <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-    <span class="ident">owners</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span>, <span class="ident">MsgAddressInt</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">token_contract_states</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span>, (<span class="ident">ExistingContract</span>, <span class="ident">TokenWalletVersion</span>)<span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">resolver_semaphore</span>: <span class="ident">Semaphore</span>,
+<span class="doccomment">/// Stores a map to resolve owner&#39;s wallet address from token wallet address
+</span><span class="kw">pub struct </span>OwnersCache {
+    key: String,
+    clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+    storage: Arc&lt;<span class="kw">dyn </span>Storage&gt;,
+    transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+    owners: RwLock&lt;HashMap&lt;MsgAddressInt, MsgAddressInt&gt;&gt;,
+    token_contract_states: RwLock&lt;HashMap&lt;MsgAddressInt, (ExistingContract, TokenWalletVersion)&gt;&gt;,
+    resolver_semaphore: Semaphore,
 }
 
-<span class="kw">impl</span> <span class="ident">OwnersCache</span> {
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load</span>(
-        <span class="ident">network_group</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-        <span class="ident">storage</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Storage</span><span class="op">&gt;</span>,
-        <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-        <span class="ident">concurrent_resolvers</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">transparent</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">OwnersMap</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OwnersMapItem</span><span class="op">&gt;</span>);
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">OwnersMapItem</span>(<span class="ident">String</span>, <span class="ident">String</span>);
+<span class="kw">impl </span>OwnersCache {
+    <span class="kw">pub async fn </span>load(
+        network_group: <span class="kw-2">&amp;</span>str,
+        clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+        storage: Arc&lt;<span class="kw">dyn </span>Storage&gt;,
+        transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+        concurrent_resolvers: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+        <span class="attribute">#[derive(Deserialize)]
+        #[serde(transparent)]
+        </span><span class="kw">struct </span>OwnersMap(Vec&lt;OwnersMapItem&gt;);
+        <span class="attribute">#[derive(Deserialize)]
+        </span><span class="kw">struct </span>OwnersMapItem(String, String);
 
-        <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">make_key</span>(<span class="ident">network_group</span>);
+        <span class="kw">let </span>key = make_key(network_group);
 
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">storage</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="kw">await</span><span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">data</span>) =&gt; <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">OwnersMap</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>)<span class="question-mark">?</span>.<span class="number">0</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="ident">Default::default</span>(),
+        <span class="kw">let </span>data = <span class="kw">match </span>storage.get(<span class="kw-2">&amp;</span>key).<span class="kw">await</span><span class="question-mark">? </span>{
+            <span class="prelude-val">Some</span>(data) =&gt; serde_json::from_str::&lt;OwnersMap&gt;(<span class="kw-2">&amp;</span>data)<span class="question-mark">?</span>.<span class="number">0</span>,
+            <span class="prelude-val">None </span>=&gt; Default::default(),
         }
-        .<span class="ident">into_iter</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">OwnersMapItem</span>(<span class="ident">token_wallet</span>, <span class="ident">owner_wallet</span>)<span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">token_wallet</span> <span class="op">=</span> <span class="ident">MsgAddressInt::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">token_wallet</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">owner_wallet</span> <span class="op">=</span> <span class="ident">MsgAddressInt::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">owner_wallet</span>)<span class="question-mark">?</span>;
-            <span class="prelude-ty">Result</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">anyhow::Error</span><span class="op">&gt;</span><span class="ident">::Ok</span>((<span class="ident">token_wallet</span>, <span class="ident">owner_wallet</span>))
+        .into_iter()
+        .map(|OwnersMapItem(token_wallet, owner_wallet)| {
+            <span class="kw">let </span>token_wallet = MsgAddressInt::from_str(<span class="kw-2">&amp;</span>token_wallet)<span class="question-mark">?</span>;
+            <span class="kw">let </span>owner_wallet = MsgAddressInt::from_str(<span class="kw-2">&amp;</span>owner_wallet)<span class="question-mark">?</span>;
+            <span class="prelude-ty">Result</span>::&lt;<span class="kw">_</span>, anyhow::Error&gt;::Ok((token_wallet, owner_wallet))
         })
-        .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()<span class="question-mark">?</span>;
+        .collect::&lt;<span class="prelude-ty">Result</span>&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">key</span>,
-            <span class="ident">clock</span>,
-            <span class="ident">storage</span>,
-            <span class="ident">transport</span>,
-            <span class="ident">owners</span>: <span class="ident">RwLock::new</span>(<span class="ident">data</span>),
-            <span class="ident">token_contract_states</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">resolver_semaphore</span>: <span class="ident">Semaphore::new</span>(<span class="ident">concurrent_resolvers</span>),
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            key,
+            clock,
+            storage,
+            transport,
+            owners: RwLock::new(data),
+            token_contract_states: Default::default(),
+            resolver_semaphore: Semaphore::new(concurrent_resolvers),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_unchecked</span>(
-        <span class="ident">network_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">clock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Clock</span><span class="op">&gt;</span>,
-        <span class="ident">storage</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Storage</span><span class="op">&gt;</span>,
-        <span class="ident">transport</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Transport</span><span class="op">&gt;</span>,
-        <span class="ident">concurrent_resolvers</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::load</span>(
-            <span class="ident">network_name</span>,
-            <span class="ident">clock</span>.<span class="ident">clone</span>(),
-            <span class="ident">storage</span>.<span class="ident">clone</span>(),
-            <span class="ident">transport</span>.<span class="ident">clone</span>(),
-            <span class="ident">concurrent_resolvers</span>,
+    <span class="kw">pub async fn </span>load_unchecked(
+        network_name: <span class="kw-2">&amp;</span>str,
+        clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
+        storage: Arc&lt;<span class="kw">dyn </span>Storage&gt;,
+        transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
+        concurrent_resolvers: usize,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::load(
+            network_name,
+            clock.clone(),
+            storage.clone(),
+            transport.clone(),
+            concurrent_resolvers,
         )
-        .<span class="kw">await</span>
-        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="self">Self</span> {
-            <span class="ident">key</span>: <span class="ident">make_key</span>(<span class="ident">network_name</span>),
-            <span class="ident">clock</span>,
-            <span class="ident">storage</span>,
-            <span class="ident">transport</span>,
-            <span class="ident">owners</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">token_contract_states</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">resolver_semaphore</span>: <span class="ident">Semaphore::new</span>(<span class="ident">concurrent_resolvers</span>),
+        .<span class="kw">await
+        </span>.unwrap_or_else(|<span class="kw">_</span>| <span class="self">Self </span>{
+            key: make_key(network_name),
+            clock,
+            storage,
+            transport,
+            owners: Default::default(),
+            token_contract_states: Default::default(),
+            resolver_semaphore: Semaphore::new(concurrent_resolvers),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">check_recipient_wallet</span>(
+    <span class="kw">pub async fn </span>check_recipient_wallet(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">root_token_contract</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-        <span class="ident">owner_wallet</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RecipientWallet</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token_contract_states</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">token_contract_states</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-        <span class="kw">match</span> <span class="ident">token_contract_states</span>.<span class="ident">entry</span>(<span class="ident">root_token_contract</span>.<span class="ident">clone</span>()) {
-            <span class="ident">hash_map::Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="ident">check_token_wallet</span>(
-                    <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                    <span class="self">self</span>.<span class="ident">transport</span>.<span class="ident">as_ref</span>(),
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">owners</span>,
-                    <span class="ident">entry</span>.<span class="ident">get</span>(),
-                    <span class="ident">owner_wallet</span>,
+        root_token_contract: <span class="kw-2">&amp;</span>MsgAddressInt,
+        owner_wallet: <span class="kw-2">&amp;</span>MsgAddressInt,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;RecipientWallet&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>token_contract_states = <span class="self">self</span>.token_contract_states.write().<span class="kw">await</span>;
+        <span class="kw">match </span>token_contract_states.entry(root_token_contract.clone()) {
+            hash_map::Entry::Occupied(entry) =&gt; {
+                check_token_wallet(
+                    <span class="self">self</span>.clock.as_ref(),
+                    <span class="self">self</span>.transport.as_ref(),
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.owners,
+                    entry.get(),
+                    owner_wallet,
                 )
-                .<span class="kw">await</span>
-            }
-            <span class="ident">hash_map::Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>
-                    .<span class="ident">transport</span>
-                    .<span class="ident">get_contract_state</span>(<span class="ident">root_token_contract</span>)
-                    .<span class="kw">await</span><span class="question-mark">?</span>
-                {
-                    <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) =&gt; <span class="ident">state</span>,
-                    <span class="ident">RawContractState::NotExists</span> =&gt; {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">OwnersCacheError::InvalidRootTokenContract</span>.<span class="ident">into</span>())
+                .<span class="kw">await
+            </span>}
+            hash_map::Entry::Vacant(entry) =&gt; {
+                <span class="kw">let </span>state = <span class="kw">match </span><span class="self">self
+                    </span>.transport
+                    .get_contract_state(root_token_contract)
+                    .<span class="kw">await</span><span class="question-mark">?
+                </span>{
+                    RawContractState::Exists(state) =&gt; state,
+                    RawContractState::NotExists =&gt; {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(OwnersCacheError::InvalidRootTokenContract.into())
                     }
                 };
 
-                <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">RootTokenContractState</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>)
-                    .<span class="ident">guess_details</span>(<span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>
-                    .<span class="ident">version</span>;
+                <span class="kw">let </span>version = RootTokenContractState(<span class="kw-2">&amp;</span>state)
+                    .guess_details(<span class="self">self</span>.clock.as_ref())<span class="question-mark">?
+                    </span>.version;
 
-                <span class="ident">check_token_wallet</span>(
-                    <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>(),
-                    <span class="self">self</span>.<span class="ident">transport</span>.<span class="ident">as_ref</span>(),
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">owners</span>,
-                    <span class="ident">entry</span>.<span class="ident">insert</span>((<span class="ident">state</span>, <span class="ident">version</span>)),
-                    <span class="ident">owner_wallet</span>,
+                check_token_wallet(
+                    <span class="self">self</span>.clock.as_ref(),
+                    <span class="self">self</span>.transport.as_ref(),
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.owners,
+                    entry.insert((state, version)),
+                    owner_wallet,
                 )
-                .<span class="kw">await</span>
-            }
+                .<span class="kw">await
+            </span>}
         }
     }
 
-    <span class="doccomment">/// Returns map with token wallet as key and its owner as value.</span>
-    <span class="doccomment">/// Populates the cache during the search</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">resolve_owners</span>(
+    <span class="doccomment">/// Returns map with token wallet as key and its owner as value.
+    /// Populates the cache during the search
+    </span><span class="kw">pub async fn </span>resolve_owners(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">token_wallets</span>: <span class="kw-2">&amp;</span>[<span class="ident">MsgAddressInt</span>],
-    ) -&gt; <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span>, <span class="ident">MsgAddressInt</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">semaphore</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">resolver_semaphore</span>;
-        <span class="kw">let</span> <span class="ident">clock</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clock</span>.<span class="ident">as_ref</span>();
-        <span class="kw">let</span> <span class="ident">transport</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">transport</span>.<span class="ident">as_ref</span>();
-        <span class="kw">let</span> <span class="ident">owners</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">owners</span>;
+        token_wallets: <span class="kw-2">&amp;</span>[MsgAddressInt],
+    ) -&gt; HashMap&lt;MsgAddressInt, MsgAddressInt&gt; {
+        <span class="kw">let </span>semaphore = <span class="kw-2">&amp;</span><span class="self">self</span>.resolver_semaphore;
+        <span class="kw">let </span>clock = <span class="self">self</span>.clock.as_ref();
+        <span class="kw">let </span>transport = <span class="self">self</span>.transport.as_ref();
+        <span class="kw">let </span>owners = <span class="kw-2">&amp;</span><span class="self">self</span>.owners;
 
-        <span class="kw">let</span> <span class="ident">token_wallets</span> <span class="op">=</span> <span class="ident">token_wallets</span>.<span class="ident">iter</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="kw">let </span>token_wallets = token_wallets.iter().collect::&lt;HashSet&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="ident">token_wallets</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">token_wallet</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">owner</span>) <span class="op">=</span> <span class="ident">owners</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">get</span>(<span class="ident">token_wallet</span>) {
-                    <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">token_wallet</span>.<span class="ident">clone</span>(), <span class="ident">owner</span>.<span class="ident">clone</span>()));
+        token_wallets
+            .into_iter()
+            .map(|token_wallet| <span class="kw">async move </span>{
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(owner) = owners.read().<span class="kw">await</span>.get(token_wallet) {
+                    <span class="kw">return </span><span class="prelude-val">Some</span>((token_wallet.clone(), owner.clone()));
                 }
 
-                <span class="kw">let</span> <span class="ident">contract_state</span> <span class="op">=</span> {
-                    <span class="kw">let</span> <span class="ident">_permit</span> <span class="op">=</span> <span class="ident">semaphore</span>.<span class="ident">acquire</span>().<span class="kw">await</span>.<span class="ident">ok</span>()<span class="question-mark">?</span>;
-                    <span class="kw">match</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="ident">token_wallet</span>).<span class="kw">await</span>.<span class="ident">ok</span>()<span class="question-mark">?</span> {
-                        <span class="ident">RawContractState::Exists</span>(<span class="ident">state</span>) =&gt; <span class="ident">state</span>,
-                        <span class="ident">RawContractState::NotExists</span> =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
+                <span class="kw">let </span>contract_state = {
+                    <span class="kw">let </span>_permit = semaphore.acquire().<span class="kw">await</span>.ok()<span class="question-mark">?</span>;
+                    <span class="kw">match </span>transport.get_contract_state(token_wallet).<span class="kw">await</span>.ok()<span class="question-mark">? </span>{
+                        RawContractState::Exists(state) =&gt; state,
+                        RawContractState::NotExists =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
                     }
                 };
 
-                <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">TokenWalletContractState</span>(<span class="kw-2">&amp;</span><span class="ident">contract_state</span>);
-                <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">get_version</span>(<span class="ident">clock</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">details</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">get_details</span>(<span class="ident">clock</span>, <span class="ident">version</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+                <span class="kw">let </span>state = TokenWalletContractState(<span class="kw-2">&amp;</span>contract_state);
+                <span class="kw">let </span>version = state.get_version(clock).ok()<span class="question-mark">?</span>;
+                <span class="kw">let </span>details = state.get_details(clock, version).ok()<span class="question-mark">?</span>;
 
-                <span class="ident">owners</span>
-                    .<span class="ident">write</span>()
-                    .<span class="kw">await</span>
-                    .<span class="ident">insert</span>(<span class="ident">token_wallet</span>.<span class="ident">clone</span>(), <span class="ident">details</span>.<span class="ident">owner_address</span>.<span class="ident">clone</span>());
+                owners
+                    .write()
+                    .<span class="kw">await
+                    </span>.insert(token_wallet.clone(), details.owner_address.clone());
 
-                <span class="prelude-val">Some</span>((<span class="ident">token_wallet</span>.<span class="ident">clone</span>(), <span class="ident">details</span>.<span class="ident">owner_address</span>))
+                <span class="prelude-val">Some</span>((token_wallet.clone(), details.owner_address))
             })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">FuturesUnordered</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-            .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">value</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> { <span class="ident">value</span> })
-            .<span class="ident">collect</span>()
-            .<span class="kw">await</span>
+            .collect::&lt;FuturesUnordered&lt;<span class="kw">_</span>&gt;&gt;()
+            .filter_map(|value| <span class="kw">async move </span>{ value })
+            .collect()
+            .<span class="kw">await
+    </span>}
+
+    <span class="kw">pub async fn </span>get_owner(<span class="kw-2">&amp;</span><span class="self">self</span>, token_wallet: <span class="kw-2">&amp;</span>MsgAddressInt) -&gt; <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt; {
+        <span class="self">self</span>.owners.read().<span class="kw">await</span>.get(token_wallet).cloned()
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_owner</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">token_wallet</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">owners</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">get</span>(<span class="ident">token_wallet</span>).<span class="ident">cloned</span>()
+    <span class="kw">pub async fn </span>add_entry(<span class="kw-2">&amp;</span><span class="self">self</span>, token_wallet: MsgAddressInt, owner_wallet: MsgAddressInt) {
+        <span class="kw">let </span><span class="kw-2">mut </span>owners = <span class="self">self</span>.owners.write().<span class="kw">await</span>;
+        owners.insert(token_wallet, owner_wallet);
+        <span class="self">self</span>.save(<span class="kw-2">&amp;</span>owners);
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_entry</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">token_wallet</span>: <span class="ident">MsgAddressInt</span>, <span class="ident">owner_wallet</span>: <span class="ident">MsgAddressInt</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">owners</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">owners</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-        <span class="ident">owners</span>.<span class="ident">insert</span>(<span class="ident">token_wallet</span>, <span class="ident">owner_wallet</span>);
-        <span class="self">self</span>.<span class="ident">save</span>(<span class="kw-2">&amp;</span><span class="ident">owners</span>);
-    }
-
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_owners_list</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_owners</span>: <span class="ident">I</span>)
-    <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">MsgAddressInt</span>, <span class="ident">MsgAddressInt</span>)<span class="op">&gt;</span>,
+    <span class="kw">pub async fn </span>add_owners_list&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, new_owners: I)
+    <span class="kw">where
+        </span>I: Iterator&lt;Item = (MsgAddressInt, MsgAddressInt)&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">owners</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">owners</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-        <span class="ident">owners</span>.<span class="ident">extend</span>(<span class="ident">new_owners</span>);
-        <span class="self">self</span>.<span class="ident">save</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">owners</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>owners = <span class="self">self</span>.owners.write().<span class="kw">await</span>;
+        owners.extend(new_owners);
+        <span class="self">self</span>.save(<span class="kw-2">&amp;*</span>owners);
     }
 
-    <span class="kw">fn</span> <span class="ident">save</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">owners</span>: <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span>, <span class="ident">MsgAddressInt</span><span class="op">&gt;</span>) {
-        <span class="kw">struct</span> <span class="ident">OwnersMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span>, <span class="ident">MsgAddressInt</span><span class="op">&gt;</span>);
-        <span class="kw">struct</span> <span class="ident">OwnersMapItem</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">MsgAddressInt</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">MsgAddressInt</span>);
+    <span class="kw">fn </span>save(<span class="kw-2">&amp;</span><span class="self">self</span>, owners: <span class="kw-2">&amp;</span>HashMap&lt;MsgAddressInt, MsgAddressInt&gt;) {
+        <span class="kw">struct </span>OwnersMap&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;MsgAddressInt, MsgAddressInt&gt;);
+        <span class="kw">struct </span>OwnersMapItem&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>MsgAddressInt, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>MsgAddressInt);
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">serde::Serialize</span> <span class="kw">for</span> <span class="ident">OwnersMapItem</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; serde::Serialize <span class="kw">for </span>OwnersMapItem&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+            <span class="kw">where
+                </span>S: serde::Serializer,
             {
-                <span class="kw">use</span> <span class="ident">serde::ser::SerializeTuple</span>;
+                <span class="kw">use </span>serde::ser::SerializeTuple;
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tuple</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_tuple</span>(<span class="number">2</span>)<span class="question-mark">?</span>;
-                <span class="ident">tuple</span>.<span class="ident">serialize_element</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">to_string</span>())<span class="question-mark">?</span>;
-                <span class="ident">tuple</span>.<span class="ident">serialize_element</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>.<span class="ident">to_string</span>())<span class="question-mark">?</span>;
-                <span class="ident">tuple</span>.<span class="ident">end</span>()
+                <span class="kw">let </span><span class="kw-2">mut </span>tuple = serializer.serialize_tuple(<span class="number">2</span>)<span class="question-mark">?</span>;
+                tuple.serialize_element(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.to_string())<span class="question-mark">?</span>;
+                tuple.serialize_element(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>.to_string())<span class="question-mark">?</span>;
+                tuple.end()
             }
         }
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">serde::Serialize</span> <span class="kw">for</span> <span class="ident">OwnersMap</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; serde::Serialize <span class="kw">for </span>OwnersMap&lt;<span class="lifetime">&#39;a</span>&gt; {
+            <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+            <span class="kw">where
+                </span>S: serde::Serializer,
             {
-                <span class="kw">use</span> <span class="ident">serde::ser::SerializeSeq</span>;
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_seq</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">len</span>()))<span class="question-mark">?</span>;
-                <span class="kw">for</span> (<span class="ident">token_wallet</span>, <span class="ident">owner_wallet</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">iter</span>() {
-                    <span class="ident">seq</span>.<span class="ident">serialize_element</span>(<span class="kw-2">&amp;</span><span class="ident">OwnersMapItem</span>(<span class="ident">token_wallet</span>, <span class="ident">owner_wallet</span>))<span class="question-mark">?</span>;
+                <span class="kw">use </span>serde::ser::SerializeSeq;
+                <span class="kw">let </span><span class="kw-2">mut </span>seq = serializer.serialize_seq(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.len()))<span class="question-mark">?</span>;
+                <span class="kw">for </span>(token_wallet, owner_wallet) <span class="kw">in </span><span class="self">self</span>.<span class="number">0</span>.iter() {
+                    seq.serialize_element(<span class="kw-2">&amp;</span>OwnersMapItem(token_wallet, owner_wallet))<span class="question-mark">?</span>;
                 }
-                <span class="ident">seq</span>.<span class="ident">end</span>()
+                seq.end()
             }
         }
 
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">OwnersMap</span>(<span class="ident">owners</span>)).<span class="ident">trust_me</span>();
-        <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">set_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="ident">data</span>);
+        <span class="kw">let </span>data = serde_json::to_string(<span class="kw-2">&amp;</span>OwnersMap(owners)).trust_me();
+        <span class="self">self</span>.storage.set_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.key, <span class="kw-2">&amp;</span>data);
     }
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">check_token_wallet</span>(
-    <span class="ident">clock</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Clock</span>,
-    <span class="ident">transport</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Transport</span>,
-    <span class="ident">owners</span>: <span class="kw-2">&amp;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">OwnersMap</span><span class="op">&gt;</span>,
-    (<span class="ident">state</span>, <span class="ident">version</span>): <span class="kw-2">&amp;</span>(<span class="ident">ExistingContract</span>, <span class="ident">TokenWalletVersion</span>),
-    <span class="ident">owner_wallet</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">RecipientWallet</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">token_wallet</span> <span class="op">=</span>
-        <span class="ident">RootTokenContractState</span>(<span class="ident">state</span>).<span class="ident">get_wallet_address</span>(<span class="ident">clock</span>, <span class="kw-2">*</span><span class="ident">version</span>, <span class="ident">owner_wallet</span>)<span class="question-mark">?</span>;
+<span class="kw">async fn </span>check_token_wallet(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+    transport: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Transport,
+    owners: <span class="kw-2">&amp;</span>RwLock&lt;OwnersMap&gt;,
+    (state, version): <span class="kw-2">&amp;</span>(ExistingContract, TokenWalletVersion),
+    owner_wallet: <span class="kw-2">&amp;</span>MsgAddressInt,
+) -&gt; <span class="prelude-ty">Result</span>&lt;RecipientWallet&gt; {
+    <span class="kw">let </span>token_wallet =
+        RootTokenContractState(state).get_wallet_address(clock, <span class="kw-2">*</span>version, owner_wallet)<span class="question-mark">?</span>;
 
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">owners</span> <span class="op">=</span> <span class="ident">owners</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-        <span class="ident">owners</span>.<span class="ident">insert</span>(<span class="ident">token_wallet</span>.<span class="ident">clone</span>(), <span class="ident">owner_wallet</span>.<span class="ident">clone</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>owners = owners.write().<span class="kw">await</span>;
+        owners.insert(token_wallet.clone(), owner_wallet.clone());
     }
 
-    <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">transport</span>.<span class="ident">get_contract_state</span>(<span class="kw-2">&amp;</span><span class="ident">token_wallet</span>).<span class="kw">await</span><span class="question-mark">?</span> {
-        <span class="ident">RawContractState::NotExists</span> =&gt; <span class="ident">RecipientWallet::NotExists</span>,
-        <span class="ident">RawContractState::Exists</span>(<span class="kw">_</span>) =&gt; <span class="ident">RecipientWallet::Exists</span>(<span class="ident">token_wallet</span>),
+    <span class="prelude-val">Ok</span>(<span class="kw">match </span>transport.get_contract_state(<span class="kw-2">&amp;</span>token_wallet).<span class="kw">await</span><span class="question-mark">? </span>{
+        RawContractState::NotExists =&gt; RecipientWallet::NotExists,
+        RawContractState::Exists(<span class="kw">_</span>) =&gt; RecipientWallet::Exists(token_wallet),
     })
 }
 
-<span class="kw">fn</span> <span class="ident">make_key</span>(<span class="ident">network_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">String</span> {
-    <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">OWNERS_CACHE_STORAGE_KEY</span>, <span class="ident">network_name</span>)
+<span class="kw">fn </span>make_key(network_name: <span class="kw-2">&amp;</span>str) -&gt; String {
+    <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, OWNERS_CACHE_STORAGE_KEY, network_name)
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RecipientWallet</span> {
-    <span class="ident">NotExists</span>,
-    <span class="ident">Exists</span>(<span class="ident">MsgAddressInt</span>),
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub enum </span>RecipientWallet {
+    NotExists,
+    Exists(MsgAddressInt),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror::Error</span>, <span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">OwnersCacheError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid root token contract&quot;</span>)]</span>
-    <span class="ident">InvalidRootTokenContract</span>,
+<span class="attribute">#[derive(thiserror::Error, Debug, Copy, Clone)]
+</span><span class="kw">pub enum </span>OwnersCacheError {
+    <span class="attribute">#[error(<span class="string">&quot;Invalid root token contract&quot;</span>)]
+    </span>InvalidRootTokenContract,
 }
 
-<span class="kw">type</span> <span class="ident">OwnersMap</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span>, <span class="ident">MsgAddressInt</span><span class="op">&gt;</span>;
+<span class="kw">type </span>OwnersMap = HashMap&lt;MsgAddressInt, MsgAddressInt&gt;;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

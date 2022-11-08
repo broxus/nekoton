@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-utils/src/serde_helpers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>serde_helpers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-utils/src/serde_helpers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>serde_helpers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../nekoton_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../nekoton_utils/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../nekoton_utils/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -886,893 +886,893 @@
 <span id="886">886</span>
 <span id="887">887</span>
 <span id="888">888</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std::str::FromStr</span>;
-<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryInto;
+<span class="kw">use </span>std::fmt;
+<span class="kw">use </span>std::str::FromStr;
+<span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use</span> <span class="ident">serde::de</span>::{<span class="ident">Error</span>, <span class="ident">SeqAccess</span>, <span class="ident">Visitor</span>};
-<span class="kw">use</span> <span class="ident">serde::ser::SerializeSeq</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">ton_block::MsgAddressInt</span>;
-<span class="kw">use</span> <span class="ident">ton_types</span>::{<span class="ident">Cell</span>, <span class="ident">SliceData</span>, <span class="ident">UInt256</span>};
+<span class="kw">use </span>serde::de::{Error, SeqAccess, Visitor};
+<span class="kw">use </span>serde::ser::SerializeSeq;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>ton_block::MsgAddressInt;
+<span class="kw">use </span>ton_types::{Cell, SliceData, UInt256};
 
-<span class="kw">struct</span> <span class="ident">StringOrNumber</span>(<span class="ident">u64</span>);
+<span class="kw">struct </span>StringOrNumber(u64);
 
-<span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">StringOrNumber</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+<span class="kw">impl </span>Serialize <span class="kw">for </span>StringOrNumber {
+    <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="number">0</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0x1fffffffffffffu64</span> <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">serializer</span>.<span class="ident">is_human_readable</span>() {
-            <span class="ident">serializer</span>.<span class="ident">serialize_u64</span>(<span class="self">self</span>.<span class="number">0</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">serializer</span>.<span class="ident">serialize_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.<span class="ident">to_string</span>())
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0 </span>&lt;= <span class="number">0x1fffffffffffffu64 </span>|| !serializer.is_human_readable() {
+            serializer.serialize_u64(<span class="self">self</span>.<span class="number">0</span>)
+        } <span class="kw">else </span>{
+            serializer.serialize_str(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.to_string())
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringOrNumber</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>StringOrNumber {
+    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">untagged</span>)]</span>
-        <span class="kw">enum</span> <span class="ident">Value</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-            <span class="ident">String</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>),
-            <span class="ident">Number</span>(<span class="ident">u64</span>),
+        <span class="attribute">#[derive(Deserialize)]
+        #[serde(untagged)]
+        </span><span class="kw">enum </span>Value&lt;<span class="lifetime">&#39;a</span>&gt; {
+            String(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str),
+            Number(u64),
         }
 
-        <span class="kw">match</span> <span class="ident">Value::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span> {
-            <span class="ident">Value::String</span>(<span class="ident">str</span>) =&gt; <span class="ident">u64::from_str</span>(<span class="ident">str</span>)
-                .<span class="ident">map</span>(<span class="self">Self</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">D::Error::custom</span>(<span class="string">&quot;Invalid number&quot;</span>)),
-            <span class="ident">Value::Number</span>(<span class="ident">value</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>(<span class="ident">value</span>)),
+        <span class="kw">match </span>Value::deserialize(deserializer)<span class="question-mark">? </span>{
+            Value::String(str) =&gt; u64::from_str(str)
+                .map(<span class="self">Self</span>)
+                .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid number&quot;</span>)),
+            Value::Number(value) =&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>(value)),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_u64</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_u64 {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">u64</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>u64, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="ident">StringOrNumber</span>(<span class="kw-2">*</span><span class="ident">data</span>).<span class="ident">serialize</span>(<span class="ident">serializer</span>)
+        StringOrNumber(<span class="kw-2">*</span>data).serialize(serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;u64, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="ident">StringOrNumber::deserialize</span>(<span class="ident">deserializer</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">StringOrNumber</span>(<span class="ident">x</span>)<span class="op">|</span> <span class="ident">x</span>)
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_duration_sec</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
-    {
-        <span class="ident">StringOrNumber</span>(<span class="ident">data</span>.<span class="ident">as_secs</span>()).<span class="ident">serialize</span>(<span class="ident">serializer</span>)
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Duration</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-    {
-        <span class="ident">StringOrNumber::deserialize</span>(<span class="ident">deserializer</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">StringOrNumber</span>(<span class="ident">x</span>)<span class="op">|</span> <span class="ident">Duration::from_secs</span>(<span class="ident">x</span>))
+        StringOrNumber::deserialize(deserializer).map(|StringOrNumber(x)| x)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_duration_ms</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_duration_sec {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">Duration</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>Duration, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="ident">StringOrNumber</span>(<span class="ident">data</span>.<span class="ident">as_millis</span>() <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">serialize</span>(<span class="ident">serializer</span>)
+        StringOrNumber(data.as_secs()).serialize(serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Duration</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Duration, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="ident">StringOrNumber::deserialize</span>(<span class="ident">deserializer</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">StringOrNumber</span>(<span class="ident">x</span>)<span class="op">|</span> <span class="ident">Duration::from_millis</span>(<span class="ident">x</span>))
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_base64_array</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
-    {
-        <span class="ident">serde_bytes_base64::serialize</span>(<span class="ident">data</span>, <span class="ident">serializer</span>)
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span>, <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">usize</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">N</span>], <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-    {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">serde_bytes_base64::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="ident">data</span>.<span class="ident">try_into</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">D::Error::custom</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {}&quot;</span>, <span class="ident">N</span>)))
+        StringOrNumber::deserialize(deserializer).map(|StringOrNumber(x)| Duration::from_secs(x))
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_hex_array</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_duration_ms {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>Duration, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="ident">serde_bytes::serialize</span>(<span class="ident">data</span>, <span class="ident">serializer</span>)
+        StringOrNumber(data.as_millis() <span class="kw">as </span>u64).serialize(serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span>, <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">usize</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">N</span>], <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Duration, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">serde_bytes::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="ident">data</span>.<span class="ident">try_into</span>()
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">D::Error::custom</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {}&quot;</span>, <span class="ident">N</span>)))
+        StringOrNumber::deserialize(deserializer).map(|StringOrNumber(x)| Duration::from_millis(x))
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_optional_hex_array</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_base64_array {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sized</span>,
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AsRef&lt;[u8]&gt;, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Wrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]);
+        serde_bytes_base64::serialize(data, serializer)
+    }
 
-        <span class="kw">match</span> <span class="ident">data</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">data</span>) =&gt; <span class="ident">serializer</span>.<span class="ident">serialize_some</span>(<span class="kw-2">&amp;</span><span class="ident">Wrapper</span>(<span class="ident">data</span>.<span class="ident">as_ref</span>())),
-            <span class="prelude-val">None</span> =&gt; <span class="ident">serializer</span>.<span class="ident">serialize_none</span>(),
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D, <span class="kw">const </span>N: usize&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; N], D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+    {
+        <span class="kw">let </span>data = serde_bytes_base64::deserialize(deserializer)<span class="question-mark">?</span>;
+        data.try_into()
+            .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {}&quot;</span>, N)))
+    }
+}
+
+<span class="kw">pub mod </span>serde_hex_array {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AsRef&lt;[u8]&gt;, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+    {
+        serde_bytes::serialize(data, serializer)
+    }
+
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D, <span class="kw">const </span>N: usize&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; N], D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+    {
+        <span class="kw">let </span>data = serde_bytes::deserialize(deserializer)<span class="question-mark">?</span>;
+        data.try_into()
+            .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {}&quot;</span>, N)))
+    }
+}
+
+<span class="kw">pub mod </span>serde_optional_hex_array {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub fn </span>serialize&lt;S, T&gt;(data: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;T&gt;, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>T: AsRef&lt;[u8]&gt; + Sized,
+        S: serde::Serializer,
+    {
+        <span class="attribute">#[derive(Serialize)]
+        </span><span class="kw">struct </span>Wrapper&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)] </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]);
+
+        <span class="kw">match </span>data {
+            <span class="prelude-val">Some</span>(data) =&gt; serializer.serialize_some(<span class="kw-2">&amp;</span>Wrapper(data.as_ref())),
+            <span class="prelude-val">None </span>=&gt; serializer.serialize_none(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span>, <span class="kw">const</span> <span class="ident">N</span>: <span class="ident">usize</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">N</span>]<span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D, <span class="kw">const </span>N: usize&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;[u8; N]&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Wrapper</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes&quot;</span>)]</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>);
+        <span class="attribute">#[derive(Deserialize)]
+        </span><span class="kw">struct </span>Wrapper(<span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)] </span>Vec&lt;u8&gt;);
 
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">Wrapper</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">data</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">data</span>) =&gt; <span class="prelude-val">Some</span>(
-                <span class="ident">data</span>.<span class="number">0</span>
-                    .<span class="ident">try_into</span>()
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::custom</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {}&quot;</span>, <span class="ident">N</span>)))<span class="question-mark">?</span>,
+        <span class="kw">let </span>data = <span class="prelude-ty">Option</span>::&lt;Wrapper&gt;::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>data {
+            <span class="prelude-val">Some</span>(data) =&gt; <span class="prelude-val">Some</span>(
+                data.<span class="number">0
+                    </span>.try_into()
+                    .map_err(|<span class="kw">_</span>| Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {}&quot;</span>, N)))<span class="question-mark">?</span>,
             ),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         })
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_string</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_string {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">fmt::Display</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span><span class="kw">dyn </span>fmt::Display, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="ident">data</span>.<span class="ident">to_string</span>().<span class="ident">serialize</span>(<span class="ident">serializer</span>)
+        data.to_string().serialize(serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-        <span class="ident">T</span>: <span class="ident">FromStr</span>,
-        <span class="ident">T::Err</span>: <span class="ident">std::fmt::Display</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D, T&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;T, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        T: FromStr,
+        T::Err: std::fmt::Display,
     {
-        <span class="ident">String::deserialize</span>(<span class="ident">deserializer</span>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">T::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">map_err</span>(<span class="ident">D::Error::custom</span>))
+        String::deserialize(deserializer)
+            .and_then(|data| T::from_str(<span class="kw-2">&amp;</span>data).map_err(D::Error::custom))
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_optional_string</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_optional_string {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
-        <span class="ident">T</span>: <span class="ident">fmt::Display</span>,
+    <span class="kw">pub fn </span>serialize&lt;S, T&gt;(data: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;T&gt;, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+        T: fmt::Display,
     {
-        <span class="ident">data</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="ident">ToString::to_string</span>).<span class="ident">serialize</span>(<span class="ident">serializer</span>)
+        data.as_ref().map(ToString::to_string).serialize(serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-        <span class="ident">T</span>: <span class="ident">FromStr</span>,
-        <span class="ident">T::Err</span>: <span class="ident">fmt::Display</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D, T&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;T&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        T: FromStr,
+        T::Err: fmt::Display,
     {
-        <span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="ident">deserializer</span>).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> {
-            <span class="ident">data</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">T::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">map_err</span>(<span class="ident">Error::custom</span>))
-                .<span class="ident">transpose</span>()
+        <span class="prelude-ty">Option</span>::&lt;String&gt;::deserialize(deserializer).and_then(|data| {
+            data.map(|data| T::from_str(<span class="kw-2">&amp;</span>data).map_err(Error::custom))
+                .transpose()
         })
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_string_array</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_string_array {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>], <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
-        <span class="ident">T</span>: <span class="ident">fmt::Display</span>,
+    <span class="kw">pub fn </span>serialize&lt;S, T&gt;(data: <span class="kw-2">&amp;</span>[T], serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+        T: fmt::Display,
     {
-        <span class="ident">data</span>.<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="ident">ToString::to_string</span>)
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
-            .<span class="ident">join</span>(<span class="string">&quot;,&quot;</span>)
-            .<span class="ident">serialize</span>(<span class="ident">serializer</span>)
+        data.iter()
+            .map(ToString::to_string)
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+            .join(<span class="string">&quot;,&quot;</span>)
+            .serialize(serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">T</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">FromStr</span>,
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">FromStr</span><span class="op">&gt;</span><span class="ident">::Err</span>: <span class="ident">fmt::Display</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, T, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;T&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>T: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; + FromStr,
+        D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        &lt;T <span class="kw">as </span>FromStr&gt;::Err: fmt::Display,
     {
-        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">String::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">contains</span>(<span class="string">&#39;,&#39;</span>) {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">for</span> <span class="ident">url</span> <span class="kw">in</span> <span class="ident">s</span>.<span class="ident">split</span>(<span class="string">&#39;,&#39;</span>) {
-                <span class="ident">v</span>.<span class="ident">push</span>(<span class="ident">T::from_str</span>(<span class="ident">url</span>).<span class="ident">map_err</span>(<span class="ident">Error::custom</span>)<span class="question-mark">?</span>);
+        <span class="kw">let </span>s = String::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="kw">if </span>s.contains(<span class="string">&#39;,&#39;</span>) {
+            <span class="kw">let </span><span class="kw-2">mut </span>v = Vec::new();
+            <span class="kw">for </span>url <span class="kw">in </span>s.split(<span class="string">&#39;,&#39;</span>) {
+                v.push(T::from_str(url).map_err(Error::custom)<span class="question-mark">?</span>);
             }
-            <span class="prelude-val">Ok</span>(<span class="ident">v</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[<span class="ident">T::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">s</span>).<span class="ident">map_err</span>(<span class="ident">Error::custom</span>)<span class="question-mark">?</span>])
+            <span class="prelude-val">Ok</span>(v)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[T::from_str(<span class="kw-2">&amp;</span>s).map_err(Error::custom)<span class="question-mark">?</span>])
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_uint256</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_uint256 {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">UInt256</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>UInt256, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="ident">serde_hex_array::serialize</span>(<span class="ident">data</span>.<span class="ident">as_slice</span>(), <span class="ident">serializer</span>)
+        serde_hex_array::serialize(data.as_slice(), serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">UInt256</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;UInt256, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">let</span> <span class="ident">data</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> <span class="ident">serde_hex_array::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">UInt256::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>[..]))
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_optional_uint256</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
-    {
-        <span class="ident">serde_optional_hex_array::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">as_ref</span>(), <span class="ident">serializer</span>)
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-    {
-        <span class="kw">let</span> <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_optional_hex_array::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">data</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">UInt256::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>[..])))
+        <span class="kw">let </span>data: [u8; <span class="number">32</span>] = serde_hex_array::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(UInt256::from_slice(<span class="kw-2">&amp;</span>data[..]))
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_vec_uint256</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_optional_uint256 {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">UInt256</span>], <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;UInt256&gt;, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_seq</span>(<span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">len</span>()))<span class="question-mark">?</span>;
-        <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="ident">data</span> {
-            <span class="ident">seq</span>.<span class="ident">serialize_element</span>(<span class="kw-2">&amp;</span><span class="ident">item</span>.<span class="ident">to_hex_string</span>())<span class="question-mark">?</span>;
+        serde_optional_hex_array::serialize(<span class="kw-2">&amp;</span>data.as_ref(), serializer)
+    }
+
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;UInt256&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+    {
+        <span class="kw">let </span>data: <span class="prelude-ty">Option</span>&lt;[u8; <span class="number">32</span>]&gt; = serde_optional_hex_array::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(data.map(|data| UInt256::from_slice(<span class="kw-2">&amp;</span>data[..])))
+    }
+}
+
+<span class="kw">pub mod </span>serde_vec_uint256 {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>[UInt256], serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>seq = serializer.serialize_seq(<span class="prelude-val">Some</span>(data.len()))<span class="question-mark">?</span>;
+        <span class="kw">for </span>item <span class="kw">in </span>data {
+            seq.serialize_element(<span class="kw-2">&amp;</span>item.to_hex_string())<span class="question-mark">?</span>;
         }
-        <span class="ident">seq</span>.<span class="ident">end</span>()
+        seq.end()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;UInt256&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">struct</span> <span class="ident">VecVisitor</span>;
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VecVisitor</span> {
-            <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">UInt256</span><span class="op">&gt;</span>;
-            <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
-                <span class="ident">formatter</span>.<span class="ident">write_str</span>(<span class="string">&quot;vector of UInt256&quot;</span>)
+        <span class="kw">struct </span>VecVisitor;
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>VecVisitor {
+            <span class="kw">type </span>Value = Vec&lt;UInt256&gt;;
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+                formatter.write_str(<span class="string">&quot;vector of UInt256&quot;</span>)
             }
-            <span class="kw">fn</span> <span class="ident">visit_seq</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">visitor</span>: <span class="ident">V</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">V::Error</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">V</span>: <span class="ident">SeqAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+            <span class="kw">fn </span>visit_seq&lt;V&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, V::Error&gt;
+            <span class="kw">where
+                </span>V: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-                <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">elem</span>) <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">next_element</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>()<span class="question-mark">?</span> {
-                    <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="ident">UInt256::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">elem</span>)
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">V::Error::custom</span>(<span class="string">&quot;Invalid uint256&quot;</span>))<span class="question-mark">?</span>;
-                    <span class="ident">vec</span>.<span class="ident">push</span>(<span class="ident">item</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::new();
+                <span class="kw">while let </span><span class="prelude-val">Some</span>(elem) = visitor.next_element::&lt;String&gt;()<span class="question-mark">? </span>{
+                    <span class="kw">let </span>item = UInt256::from_str(<span class="kw-2">&amp;</span>elem)
+                        .map_err(|<span class="kw">_</span>| V::Error::custom(<span class="string">&quot;Invalid uint256&quot;</span>))<span class="question-mark">?</span>;
+                    vec.push(item);
                 }
-                <span class="prelude-val">Ok</span>(<span class="ident">vec</span>)
+                <span class="prelude-val">Ok</span>(vec)
             }
         }
 
-        <span class="ident">deserializer</span>.<span class="ident">deserialize_seq</span>(<span class="ident">VecVisitor</span>)
+        deserializer.deserialize_seq(VecVisitor)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_address</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_address {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">MsgAddressInt</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>MsgAddressInt, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="ident">serializer</span>.<span class="ident">serialize_str</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">to_string</span>())
+        serializer.serialize_str(<span class="kw-2">&amp;</span>data.to_string())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;MsgAddressInt, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">String::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="ident">MsgAddressInt::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">D::Error::custom</span>(<span class="string">&quot;Invalid address&quot;</span>))
+        <span class="kw">let </span>data = String::deserialize(deserializer)<span class="question-mark">?</span>;
+        MsgAddressInt::from_str(<span class="kw-2">&amp;</span>data).map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid address&quot;</span>))
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_optional_address</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_optional_address {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">serde::Serialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">transparent</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Wrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">MsgAddressInt</span>);
+        <span class="attribute">#[derive(serde::Serialize)]
+        #[serde(transparent)]
+        </span><span class="kw">struct </span>Wrapper&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)] </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>MsgAddressInt);
 
-        <span class="kw">match</span> <span class="ident">data</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">data</span>) =&gt; <span class="ident">serializer</span>.<span class="ident">serialize_some</span>(<span class="kw-2">&amp;</span><span class="ident">Wrapper</span>(<span class="ident">data</span>)),
-            <span class="prelude-val">None</span> =&gt; <span class="ident">serializer</span>.<span class="ident">serialize_none</span>(),
+        <span class="kw">match </span>data {
+            <span class="prelude-val">Some</span>(data) =&gt; serializer.serialize_some(<span class="kw-2">&amp;</span>Wrapper(data)),
+            <span class="prelude-val">None </span>=&gt; serializer.serialize_none(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">transparent</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Wrapper</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_address&quot;</span>)]</span> <span class="ident">MsgAddressInt</span>);
+        <span class="attribute">#[derive(serde::Deserialize)]
+        #[serde(transparent)]
+        </span><span class="kw">struct </span>Wrapper(<span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)] </span>MsgAddressInt);
 
-        <span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">Wrapper</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="ident">deserializer</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">wrapper</span><span class="op">|</span> <span class="ident">wrapper</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">data</span>.<span class="number">0</span>))
+        <span class="prelude-ty">Option</span>::&lt;Wrapper&gt;::deserialize(deserializer).map(|wrapper| wrapper.map(|data| data.<span class="number">0</span>))
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_vec_address</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_vec_address {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">MsgAddressInt</span>], <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>[MsgAddressInt], serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_seq</span>(<span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">len</span>()))<span class="question-mark">?</span>;
-        <span class="kw">for</span> <span class="ident">address</span> <span class="kw">in</span> <span class="ident">data</span> {
-            <span class="ident">seq</span>.<span class="ident">serialize_element</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>.<span class="ident">to_string</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>seq = serializer.serialize_seq(<span class="prelude-val">Some</span>(data.len()))<span class="question-mark">?</span>;
+        <span class="kw">for </span>address <span class="kw">in </span>data {
+            seq.serialize_element(<span class="kw-2">&amp;</span>address.to_string())<span class="question-mark">?</span>;
         }
-        <span class="ident">seq</span>.<span class="ident">end</span>()
+        seq.end()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;MsgAddressInt&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">struct</span> <span class="ident">VecVisitor</span>;
+        <span class="kw">struct </span>VecVisitor;
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VecVisitor</span> {
-            <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MsgAddressInt</span><span class="op">&gt;</span>;
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>VecVisitor {
+            <span class="kw">type </span>Value = Vec&lt;MsgAddressInt&gt;;
 
-            <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-                <span class="ident">formatter</span>.<span class="ident">write_str</span>(<span class="string">&quot;vector of addresses&quot;</span>)
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+                formatter.write_str(<span class="string">&quot;vector of addresses&quot;</span>)
             }
 
-            <span class="kw">fn</span> <span class="ident">visit_seq</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">visitor</span>: <span class="ident">V</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">V::Error</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">V</span>: <span class="ident">SeqAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+            <span class="kw">fn </span>visit_seq&lt;V&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, V::Error&gt;
+            <span class="kw">where
+                </span>V: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-                <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">elem</span>) <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">next_element</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>()<span class="question-mark">?</span> {
-                    <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="ident">MsgAddressInt::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">elem</span>)
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">V::Error::custom</span>(<span class="string">&quot;Invalid address&quot;</span>))<span class="question-mark">?</span>;
-                    <span class="ident">vec</span>.<span class="ident">push</span>(<span class="ident">item</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::new();
+                <span class="kw">while let </span><span class="prelude-val">Some</span>(elem) = visitor.next_element::&lt;String&gt;()<span class="question-mark">? </span>{
+                    <span class="kw">let </span>item = MsgAddressInt::from_str(<span class="kw-2">&amp;</span>elem)
+                        .map_err(|<span class="kw">_</span>| V::Error::custom(<span class="string">&quot;Invalid address&quot;</span>))<span class="question-mark">?</span>;
+                    vec.push(item);
                 }
-                <span class="prelude-val">Ok</span>(<span class="ident">vec</span>)
+                <span class="prelude-val">Ok</span>(vec)
             }
         }
 
-        <span class="ident">deserializer</span>.<span class="ident">deserialize_seq</span>(<span class="ident">VecVisitor</span>)
+        deserializer.deserialize_seq(VecVisitor)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_bytes</span> {
-    <span class="kw">use</span> <span class="ident">std::fmt</span>;
+<span class="kw">pub mod </span>serde_bytes {
+    <span class="kw">use </span>std::fmt;
 
-    <span class="kw">use</span> <span class="ident">serde::de::Unexpected</span>;
+    <span class="kw">use </span>serde::de::Unexpected;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AsRef&lt;[u8]&gt;, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="kw">if</span> <span class="ident">serializer</span>.<span class="ident">is_human_readable</span>() {
-            <span class="ident">serializer</span>.<span class="ident">serialize_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">hex::encode</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">as_ref</span>()))
-        } <span class="kw">else</span> {
-            <span class="ident">serializer</span>.<span class="ident">serialize_bytes</span>(<span class="ident">data</span>.<span class="ident">as_ref</span>())
+        <span class="kw">if </span>serializer.is_human_readable() {
+            serializer.serialize_str(<span class="kw-2">&amp;*</span>hex::encode(<span class="kw-2">&amp;</span>data.as_ref()))
+        } <span class="kw">else </span>{
+            serializer.serialize_bytes(data.as_ref())
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">struct</span> <span class="ident">HexVisitor</span>;
+        <span class="kw">struct </span>HexVisitor;
 
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">HexVisitor</span> {
-            <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>;
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>HexVisitor {
+            <span class="kw">type </span>Value = Vec&lt;u8&gt;;
 
-            <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-                <span class="ident">formatter</span>.<span class="ident">write_str</span>(<span class="string">&quot;hex-encoded byte array&quot;</span>)
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+                formatter.write_str(<span class="string">&quot;hex-encoded byte array&quot;</span>)
             }
 
-            <span class="kw">fn</span> <span class="ident">visit_str</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-                <span class="ident">hex::decode</span>(<span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">E::invalid_type</span>(<span class="ident">Unexpected::Str</span>(<span class="ident">value</span>), <span class="kw-2">&amp;</span><span class="self">self</span>))
+            <span class="kw">fn </span>visit_str&lt;E: Error&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt; {
+                hex::decode(value).map_err(|<span class="kw">_</span>| E::invalid_type(Unexpected::Str(value), <span class="kw-2">&amp;</span><span class="self">self</span>))
             }
 
-            <span class="comment">// See the `deserializing_flattened_field` test for an example why this is needed.</span>
-            <span class="kw">fn</span> <span class="ident">visit_bytes</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">value</span>.<span class="ident">to_vec</span>())
-            }
-        }
-
-        <span class="kw">if</span> <span class="ident">deserializer</span>.<span class="ident">is_human_readable</span>() {
-            <span class="ident">deserializer</span>.<span class="ident">deserialize_str</span>(<span class="ident">HexVisitor</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">deserializer</span>.<span class="ident">deserialize_bytes</span>(<span class="ident">BytesVisitor</span>)
-        }
-    }
-}
-
-<span class="kw">struct</span> <span class="ident">BytesVisitor</span>;
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BytesVisitor</span> {
-    <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>;
-
-    <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">formatter</span>.<span class="ident">write_str</span>(<span class="string">&quot;byte array&quot;</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">visit_bytes</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>.<span class="ident">to_vec</span>())
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_bytes_base64</span> {
-    <span class="kw">use</span> <span class="ident">serde::de::Unexpected</span>;
-
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
-    {
-        <span class="kw">if</span> <span class="ident">serializer</span>.<span class="ident">is_human_readable</span>() {
-            <span class="ident">serializer</span>.<span class="ident">serialize_str</span>(<span class="ident">base64::encode</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">as_ref</span>()).<span class="ident">as_str</span>())
-        } <span class="kw">else</span> {
-            <span class="ident">serializer</span>.<span class="ident">serialize_bytes</span>(<span class="ident">data</span>.<span class="ident">as_ref</span>())
-        }
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-    {
-        <span class="kw">struct</span> <span class="ident">Base64Visitor</span>;
-
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Base64Visitor</span> {
-            <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>;
-
-            <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-                <span class="ident">formatter</span>.<span class="ident">write_str</span>(<span class="string">&quot;base64-encoded byte array&quot;</span>)
-            }
-
-            <span class="kw">fn</span> <span class="ident">visit_str</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-                <span class="ident">base64::decode</span>(<span class="ident">value</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">E::invalid_type</span>(<span class="ident">Unexpected::Str</span>(<span class="ident">value</span>), <span class="kw-2">&amp;</span><span class="self">self</span>))
-            }
-
-            <span class="comment">// See the `deserializing_flattened_field` test for an example why this is needed.</span>
-            <span class="kw">fn</span> <span class="ident">visit_bytes</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">value</span>.<span class="ident">to_vec</span>())
+            <span class="comment">// See the `deserializing_flattened_field` test for an example why this is needed.
+            </span><span class="kw">fn </span>visit_bytes&lt;E: Error&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt; {
+                <span class="prelude-val">Ok</span>(value.to_vec())
             }
         }
 
-        <span class="kw">if</span> <span class="ident">deserializer</span>.<span class="ident">is_human_readable</span>() {
-            <span class="ident">deserializer</span>.<span class="ident">deserialize_str</span>(<span class="ident">Base64Visitor</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">deserializer</span>.<span class="ident">deserialize_bytes</span>(<span class="ident">BytesVisitor</span>)
+        <span class="kw">if </span>deserializer.is_human_readable() {
+            deserializer.deserialize_str(HexVisitor)
+        } <span class="kw">else </span>{
+            deserializer.deserialize_bytes(BytesVisitor)
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_bytes_base64_optional</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">struct </span>BytesVisitor;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
-        <span class="ident">T</span>: <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>BytesVisitor {
+    <span class="kw">type </span>Value = Vec&lt;u8&gt;;
+
+    <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        formatter.write_str(<span class="string">&quot;byte array&quot;</span>)
+    }
+
+    <span class="kw">fn </span>visit_bytes&lt;E: Error&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt; {
+        <span class="prelude-val">Ok</span>(value.to_vec())
+    }
+}
+
+<span class="kw">pub mod </span>serde_bytes_base64 {
+    <span class="kw">use </span>serde::de::Unexpected;
+
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AsRef&lt;[u8]&gt;, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">serde::Serialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">transparent</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Wrapper</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes_base64&quot;</span>)]</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]);
-
-        <span class="kw">match</span> <span class="ident">data</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">data</span>) =&gt; <span class="ident">serializer</span>.<span class="ident">serialize_some</span>(<span class="kw-2">&amp;</span><span class="ident">Wrapper</span>(<span class="ident">data</span>.<span class="ident">as_ref</span>())),
-            <span class="prelude-val">None</span> =&gt; <span class="ident">serializer</span>.<span class="ident">serialize_none</span>(),
+        <span class="kw">if </span>serializer.is_human_readable() {
+            serializer.serialize_str(base64::encode(<span class="kw-2">&amp;</span>data.as_ref()).as_str())
+        } <span class="kw">else </span>{
+            serializer.serialize_bytes(data.as_ref())
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>)]</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">transparent</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Wrapper</span>(<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes_base64&quot;</span>)]</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>);
+        <span class="kw">struct </span>Base64Visitor;
 
-        <span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">Wrapper</span><span class="op">&gt;</span><span class="ident">::deserialize</span>(<span class="ident">deserializer</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">wrapper</span><span class="op">|</span> <span class="ident">wrapper</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">data</span><span class="op">|</span> <span class="ident">data</span>.<span class="number">0</span>))
-    }
-}
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Base64Visitor {
+            <span class="kw">type </span>Value = Vec&lt;u8&gt;;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_iter</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">T</span>, <span class="ident">V</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
-        <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">V</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Clone</span>,
-        <span class="ident">V</span>: <span class="ident">serde::Serialize</span>,
-    {
-        <span class="kw">use</span> <span class="ident">serde::ser::SerializeSeq</span>;
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+                formatter.write_str(<span class="string">&quot;base64-encoded byte array&quot;</span>)
+            }
 
-        <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">clone</span>().<span class="ident">into_iter</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_seq</span>(<span class="prelude-val">Some</span>(<span class="ident">iter</span>.<span class="ident">size_hint</span>().<span class="number">0</span>))<span class="question-mark">?</span>;
-        <span class="kw">for</span> <span class="ident">value</span> <span class="kw">in</span> <span class="ident">iter</span> {
-            <span class="ident">seq</span>.<span class="ident">serialize_element</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>)<span class="question-mark">?</span>;
+            <span class="kw">fn </span>visit_str&lt;E: Error&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt; {
+                base64::decode(value).map_err(|<span class="kw">_</span>| E::invalid_type(Unexpected::Str(value), <span class="kw-2">&amp;</span><span class="self">self</span>))
+            }
+
+            <span class="comment">// See the `deserializing_flattened_field` test for an example why this is needed.
+            </span><span class="kw">fn </span>visit_bytes&lt;E: Error&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt; {
+                <span class="prelude-val">Ok</span>(value.to_vec())
+            }
         }
-        <span class="ident">seq</span>.<span class="ident">end</span>()
+
+        <span class="kw">if </span>deserializer.is_human_readable() {
+            deserializer.deserialize_str(Base64Visitor)
+        } <span class="kw">else </span>{
+            deserializer.deserialize_bytes(BytesVisitor)
+        }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_boc</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_bytes_base64_optional {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">SliceData</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S, T&gt;(data: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;T&gt;, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+        T: AsRef&lt;[u8]&gt;,
     {
-        <span class="ident">serde_cell::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">clone</span>().<span class="ident">into_cell</span>(), <span class="ident">serializer</span>)
+        <span class="attribute">#[derive(serde::Serialize)]
+        #[serde(transparent)]
+        </span><span class="kw">struct </span>Wrapper&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes_base64&quot;</span>)] </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]);
+
+        <span class="kw">match </span>data {
+            <span class="prelude-val">Some</span>(data) =&gt; serializer.serialize_some(<span class="kw-2">&amp;</span>Wrapper(data.as_ref())),
+            <span class="prelude-val">None </span>=&gt; serializer.serialize_none(),
+        }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SliceData</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="ident">serde_cell::deserialize</span>(<span class="ident">deserializer</span>).<span class="ident">map</span>(<span class="ident">From::from</span>)
-    }
-}
+        <span class="attribute">#[derive(serde::Deserialize)]
+        #[serde(transparent)]
+        </span><span class="kw">struct </span>Wrapper(<span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes_base64&quot;</span>)] </span>Vec&lt;u8&gt;);
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_cell</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">Cell</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::ser::Serializer</span>,
-    {
-        <span class="kw">use</span> <span class="ident">serde::ser::Error</span>;
-
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">ton_types::serialize_toc</span>(<span class="ident">data</span>).<span class="ident">map_err</span>(<span class="ident">Error::custom</span>)<span class="question-mark">?</span>;
-        <span class="ident">serde_bytes_base64::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>, <span class="ident">serializer</span>)
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Cell</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-    {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">serde_bytes_base64::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">cell</span> <span class="op">=</span>
-            <span class="ident">ton_types::deserialize_tree_of_cells</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>.<span class="ident">as_slice</span>()).<span class="ident">map_err</span>(<span class="ident">Error::custom</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">cell</span>)
+        <span class="prelude-ty">Option</span>::&lt;Wrapper&gt;::deserialize(deserializer).map(|wrapper| wrapper.map(|data| data.<span class="number">0</span>))
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_ton_block</span> {
-    <span class="kw">use</span> <span class="ident">ton_block</span>::{<span class="ident">Deserializable</span>, <span class="ident">Serializable</span>};
-
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Serializable</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+<span class="kw">pub mod </span>serde_iter {
+    <span class="kw">pub fn </span>serialize&lt;S, T, V&gt;(iter: <span class="kw-2">&amp;</span>T, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+        T: IntoIterator&lt;Item = V&gt; + Clone,
+        V: serde::Serialize,
     {
-        <span class="kw">use</span> <span class="ident">serde::ser::Error</span>;
+        <span class="kw">use </span>serde::ser::SerializeSeq;
 
-        <span class="ident">serde_cell::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">serialize</span>().<span class="ident">map_err</span>(<span class="ident">Error::custom</span>)<span class="question-mark">?</span>, <span class="ident">serializer</span>)
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-        <span class="ident">T</span>: <span class="ident">Deserializable</span>,
-    {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">String::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="ident">T::construct_from_base64</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">map_err</span>(<span class="ident">Error::custom</span>)
+        <span class="kw">let </span>iter = iter.clone().into_iter();
+        <span class="kw">let </span><span class="kw-2">mut </span>seq = serializer.serialize_seq(<span class="prelude-val">Some</span>(iter.size_hint().<span class="number">0</span>))<span class="question-mark">?</span>;
+        <span class="kw">for </span>value <span class="kw">in </span>iter {
+            seq.serialize_element(<span class="kw-2">&amp;</span>value)<span class="question-mark">?</span>;
+        }
+        seq.end()
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_account_stuff</span> {
-    <span class="kw">use</span> <span class="ident">ton_block::Deserializable</span>;
+<span class="kw">pub mod </span>serde_boc {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ton_block::AccountStuff</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>SliceData, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="ident">serde_ton_block::serialize</span>(<span class="ident">data</span>, <span class="ident">serializer</span>)
+        serde_cell::serialize(<span class="kw-2">&amp;</span>data.clone().into_cell(), serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ton_block::AccountStuff</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;SliceData, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">use</span> <span class="ident">ton_block::MaybeDeserialize</span>;
+        serde_cell::deserialize(deserializer).map(From::from)
+    }
+}
 
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">String::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">base64::decode</span>(<span class="ident">data</span>).<span class="ident">map_err</span>(<span class="ident">D::Error::custom</span>)<span class="question-mark">?</span>;
-        <span class="ident">ton_types::deserialize_tree_of_cells</span>(<span class="kw-2">&amp;mut</span> <span class="ident">bytes</span>.<span class="ident">as_slice</span>())
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">cell</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">cell</span>.<span class="ident">into</span>();
-                <span class="prelude-val">Ok</span>(<span class="ident">ton_block::AccountStuff</span> {
-                    <span class="ident">addr</span>: <span class="ident">Deserializable::construct_from</span>(<span class="ident">slice</span>)<span class="question-mark">?</span>,
-                    <span class="ident">storage_stat</span>: <span class="ident">Deserializable::construct_from</span>(<span class="ident">slice</span>)<span class="question-mark">?</span>,
-                    <span class="ident">storage</span>: <span class="ident">ton_block::AccountStorage</span> {
-                        <span class="ident">last_trans_lt</span>: <span class="ident">Deserializable::construct_from</span>(<span class="ident">slice</span>)<span class="question-mark">?</span>,
-                        <span class="ident">balance</span>: <span class="ident">Deserializable::construct_from</span>(<span class="ident">slice</span>)<span class="question-mark">?</span>,
-                        <span class="ident">state</span>: <span class="ident">Deserializable::construct_from</span>(<span class="ident">slice</span>)<span class="question-mark">?</span>,
-                        <span class="ident">init_code_hash</span>: <span class="kw">if</span> <span class="ident">slice</span>.<span class="ident">remaining_bits</span>() <span class="op">&gt;</span> <span class="number">0</span> {
-                            <span class="ident">UInt256::read_maybe_from</span>(<span class="ident">slice</span>)<span class="question-mark">?</span>
-                        } <span class="kw">else</span> {
-                            <span class="prelude-val">None</span>
-                        },
+<span class="kw">pub mod </span>serde_cell {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>Cell, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::ser::Serializer,
+    {
+        <span class="kw">use </span>serde::ser::Error;
+
+        <span class="kw">let </span>bytes = ton_types::serialize_toc(data).map_err(Error::custom)<span class="question-mark">?</span>;
+        serde_bytes_base64::serialize(<span class="kw-2">&amp;</span>bytes, serializer)
+    }
+
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Cell, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+    {
+        <span class="kw">let </span>bytes = serde_bytes_base64::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="kw">let </span>cell =
+            ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>bytes.as_slice()).map_err(Error::custom)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(cell)
+    }
+}
+
+<span class="kw">pub mod </span>serde_ton_block {
+    <span class="kw">use </span>ton_block::{Deserializable, Serializable};
+
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Serializable, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+    {
+        <span class="kw">use </span>serde::ser::Error;
+
+        serde_cell::serialize(<span class="kw-2">&amp;</span>data.serialize().map_err(Error::custom)<span class="question-mark">?</span>, serializer)
+    }
+
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D, T&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;T, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        T: Deserializable,
+    {
+        <span class="kw">let </span>data = String::deserialize(deserializer)<span class="question-mark">?</span>;
+        T::construct_from_base64(<span class="kw-2">&amp;</span>data).map_err(Error::custom)
+    }
+}
+
+<span class="kw">pub mod </span>serde_account_stuff {
+    <span class="kw">use </span>ton_block::Deserializable;
+
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>ton_block::AccountStuff, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+    {
+        serde_ton_block::serialize(data, serializer)
+    }
+
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;ton_block::AccountStuff, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+    {
+        <span class="kw">use </span>ton_block::MaybeDeserialize;
+
+        <span class="kw">let </span>data = String::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="kw">let </span>bytes = base64::decode(data).map_err(D::Error::custom)<span class="question-mark">?</span>;
+        ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>bytes.as_slice())
+            .and_then(|cell| {
+                <span class="kw">let </span>slice = <span class="kw-2">&amp;mut </span>cell.into();
+                <span class="prelude-val">Ok</span>(ton_block::AccountStuff {
+                    addr: Deserializable::construct_from(slice)<span class="question-mark">?</span>,
+                    storage_stat: Deserializable::construct_from(slice)<span class="question-mark">?</span>,
+                    storage: ton_block::AccountStorage {
+                        last_trans_lt: Deserializable::construct_from(slice)<span class="question-mark">?</span>,
+                        balance: Deserializable::construct_from(slice)<span class="question-mark">?</span>,
+                        state: Deserializable::construct_from(slice)<span class="question-mark">?</span>,
+                        init_code_hash: <span class="kw">if </span>slice.remaining_bits() &gt; <span class="number">0 </span>{
+                            UInt256::read_maybe_from(slice)<span class="question-mark">?
+                        </span>} <span class="kw">else </span>{
+                            <span class="prelude-val">None
+                        </span>},
                     },
                 })
             })
-            .<span class="ident">map_err</span>(<span class="ident">D::Error::custom</span>)
+            .map_err(D::Error::custom)
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_secret_key</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_secret_key {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ed25519_dalek::SecretKey</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>ed25519_dalek::SecretKey, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="ident">serializer</span>.<span class="ident">serialize_str</span>(<span class="kw-2">&amp;</span><span class="ident">hex::encode</span>(<span class="ident">data</span>.<span class="ident">as_bytes</span>()))
+        serializer.serialize_str(<span class="kw-2">&amp;</span>hex::encode(data.as_bytes()))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::SecretKey</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;ed25519_dalek::SecretKey, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">String::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">hex::decode</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">D::Error::custom</span>(<span class="string">&quot;Invalid SecretKey&quot;</span>))<span class="question-mark">?</span>;
-        <span class="ident">ed25519_dalek::SecretKey::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">D::Error::custom</span>(<span class="string">&quot;Invalid SecretKey&quot;</span>))
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_public_key</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">ed25519_dalek::PublicKey</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
-    {
-        <span class="ident">serializer</span>.<span class="ident">serialize_str</span>(<span class="kw-2">&amp;</span><span class="ident">hex::encode</span>(<span class="ident">data</span>.<span class="ident">as_bytes</span>()))
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::PublicKey</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-    {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">String::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">hex::decode</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::custom</span>(<span class="string">&quot;Invalid PublicKey&quot;</span>))<span class="question-mark">?</span>;
-        <span class="ident">ed25519_dalek::PublicKey::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::custom</span>(<span class="string">&quot;Invalid PublicKey&quot;</span>))
+        <span class="kw">let </span>data = String::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="kw">let </span>bytes = hex::decode(<span class="kw-2">&amp;</span>data).map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid SecretKey&quot;</span>))<span class="question-mark">?</span>;
+        ed25519_dalek::SecretKey::from_bytes(<span class="kw-2">&amp;</span>bytes)
+            .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid SecretKey&quot;</span>))
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_vec_public_key</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>serde_public_key {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">ed25519_dalek::PublicKey</span>], <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>ed25519_dalek::PublicKey, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">seq</span> <span class="op">=</span> <span class="ident">serializer</span>.<span class="ident">serialize_seq</span>(<span class="prelude-val">Some</span>(<span class="ident">data</span>.<span class="ident">len</span>()))<span class="question-mark">?</span>;
-        <span class="kw">for</span> <span class="ident">pubkey</span> <span class="kw">in</span> <span class="ident">data</span> {
-            <span class="ident">seq</span>.<span class="ident">serialize_element</span>(<span class="kw-2">&amp;</span><span class="ident">hex::encode</span>(<span class="ident">pubkey</span>.<span class="ident">as_bytes</span>()))<span class="question-mark">?</span>;
+        serializer.serialize_str(<span class="kw-2">&amp;</span>hex::encode(data.as_bytes()))
+    }
+
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;ed25519_dalek::PublicKey, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+    {
+        <span class="kw">let </span>data = String::deserialize(deserializer)<span class="question-mark">?</span>;
+        <span class="kw">let </span>bytes = hex::decode(<span class="kw-2">&amp;</span>data).map_err(|<span class="kw">_</span>| Error::custom(<span class="string">&quot;Invalid PublicKey&quot;</span>))<span class="question-mark">?</span>;
+        ed25519_dalek::PublicKey::from_bytes(<span class="kw-2">&amp;</span>bytes).map_err(|<span class="kw">_</span>| Error::custom(<span class="string">&quot;Invalid PublicKey&quot;</span>))
+    }
+}
+
+<span class="kw">pub mod </span>serde_vec_public_key {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>[ed25519_dalek::PublicKey], serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>seq = serializer.serialize_seq(<span class="prelude-val">Some</span>(data.len()))<span class="question-mark">?</span>;
+        <span class="kw">for </span>pubkey <span class="kw">in </span>data {
+            seq.serialize_element(<span class="kw-2">&amp;</span>hex::encode(pubkey.as_bytes()))<span class="question-mark">?</span>;
         }
-        <span class="ident">seq</span>.<span class="ident">end</span>()
+        seq.end()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::PublicKey</span><span class="op">&gt;</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;ed25519_dalek::PublicKey&gt;, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="kw">struct</span> <span class="ident">VecVisitor</span>;
-        <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VecVisitor</span> {
-            <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ed25519_dalek::PublicKey</span><span class="op">&gt;</span>;
-            <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
-                <span class="ident">formatter</span>.<span class="ident">write_str</span>(<span class="string">&quot;vector of public keys&quot;</span>)
+        <span class="kw">struct </span>VecVisitor;
+        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>VecVisitor {
+            <span class="kw">type </span>Value = Vec&lt;ed25519_dalek::PublicKey&gt;;
+            <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+                formatter.write_str(<span class="string">&quot;vector of public keys&quot;</span>)
             }
-            <span class="kw">fn</span> <span class="ident">visit_seq</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">visitor</span>: <span class="ident">V</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">V::Error</span><span class="op">&gt;</span>
-            <span class="kw">where</span>
-                <span class="ident">V</span>: <span class="ident">SeqAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+            <span class="kw">fn </span>visit_seq&lt;V&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, V::Error&gt;
+            <span class="kw">where
+                </span>V: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-                <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">elem</span>) <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">next_element</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>()<span class="question-mark">?</span> {
-                    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span>
-                        <span class="ident">hex::decode</span>(<span class="kw-2">&amp;</span><span class="ident">elem</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">V::Error::custom</span>(<span class="string">&quot;Invalid PublicKey&quot;</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">pubkey</span> <span class="op">=</span> <span class="ident">ed25519_dalek::PublicKey::from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::custom</span>(<span class="string">&quot;Invalid PublicKey&quot;</span>))<span class="question-mark">?</span>;
-                    <span class="ident">vec</span>.<span class="ident">push</span>(<span class="ident">pubkey</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>vec = Vec::new();
+                <span class="kw">while let </span><span class="prelude-val">Some</span>(elem) = visitor.next_element::&lt;String&gt;()<span class="question-mark">? </span>{
+                    <span class="kw">let </span>bytes =
+                        hex::decode(<span class="kw-2">&amp;</span>elem).map_err(|<span class="kw">_</span>| V::Error::custom(<span class="string">&quot;Invalid PublicKey&quot;</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>pubkey = ed25519_dalek::PublicKey::from_bytes(<span class="kw-2">&amp;</span>bytes)
+                        .map_err(|<span class="kw">_</span>| Error::custom(<span class="string">&quot;Invalid PublicKey&quot;</span>))<span class="question-mark">?</span>;
+                    vec.push(pubkey);
                 }
-                <span class="prelude-val">Ok</span>(<span class="ident">vec</span>)
+                <span class="prelude-val">Ok</span>(vec)
             }
         }
 
-        <span class="ident">deserializer</span>.<span class="ident">deserialize_seq</span>(<span class="ident">VecVisitor</span>)
+        deserializer.deserialize_seq(VecVisitor)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;encryption&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">serde_nonce</span> {
-    <span class="kw">use</span> <span class="ident">chacha20poly1305::Nonce</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;encryption&quot;</span>)]
+</span><span class="kw">pub mod </span>serde_nonce {
+    <span class="kw">use </span>chacha20poly1305::Nonce;
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::encryption::NONCE_LENGTH</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::encryption::NONCE_LENGTH;
 
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="ident">Nonce</span>, <span class="ident">serializer</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">S</span>: <span class="ident">serde::Serializer</span>,
+    <span class="kw">pub fn </span>serialize&lt;S&gt;(data: <span class="kw-2">&amp;</span>Nonce, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+    <span class="kw">where
+        </span>S: serde::Serializer,
     {
-        <span class="ident">serde_bytes::serialize</span>(<span class="ident">data</span>, <span class="ident">serializer</span>)
+        serde_bytes::serialize(data, serializer)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Nonce</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">D</span>: <span class="ident">serde::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Nonce, D::Error&gt;
+    <span class="kw">where
+        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
-        <span class="ident">serde_bytes::deserialize</span>(<span class="ident">deserializer</span>).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
-            <span class="kw">if</span> <span class="ident">x</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">NONCE_LENGTH</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">serde::de::Error::custom</span>(<span class="macro">format!</span>(
+        serde_bytes::deserialize(deserializer).and_then(|x| {
+            <span class="kw">if </span>x.len() != NONCE_LENGTH {
+                <span class="prelude-val">Err</span>(serde::de::Error::custom(<span class="macro">format!</span>(
                     <span class="string">&quot;Bad nonce len: {}, expected: {}&quot;</span>,
-                    <span class="ident">x</span>.<span class="ident">len</span>(),
-                    <span class="ident">NONCE_LENGTH</span>
+                    x.len(),
+                    NONCE_LENGTH
                 )))
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">Nonce::clone_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">x</span>))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Ok</span>(Nonce::clone_from_slice(<span class="kw-2">&amp;</span>x))
             }
         })
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_hex</span>() {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Test</span> {
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_hex_array&quot;</span>)]</span>
-            <span class="ident">key</span>: [<span class="ident">u8</span>; <span class="number">32</span>],
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_hex() {
+        <span class="attribute">#[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
+        </span><span class="kw">struct </span>Test {
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_hex_array&quot;</span>)]
+            </span>key: [u8; <span class="number">32</span>],
         }
-        <span class="kw">let</span> <span class="ident">test</span> <span class="op">=</span> <span class="ident">Test</span> { <span class="ident">key</span>: [<span class="number">1</span>; <span class="number">32</span>] };
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>test = Test { key: [<span class="number">1</span>; <span class="number">32</span>] };
+        <span class="kw">let </span>data = serde_json::to_string(<span class="kw-2">&amp;</span>test).unwrap();
         <span class="macro">assert_eq!</span>(
-            <span class="ident">data</span>,
-            <span class="string">r#&quot;{&quot;key&quot;:&quot;0101010101010101010101010101010101010101010101010101010101010101&quot;}&quot;#</span>
-        );
-        <span class="macro">assert_eq!</span>(<span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">Test</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">unwrap</span>(), <span class="ident">test</span>);
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">bincode::serialize</span>(<span class="kw-2">&amp;</span><span class="ident">test</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert!</span>(<span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">64</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">bincode::deserialize</span>::<span class="op">&lt;</span><span class="ident">Test</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">unwrap</span>(), <span class="ident">test</span>);
+            data,
+            <span class="string">r#&quot;{&quot;key&quot;:&quot;0101010101010101010101010101010101010101010101010101010101010101&quot;}&quot;#
+        </span>);
+        <span class="macro">assert_eq!</span>(serde_json::from_str::&lt;Test&gt;(<span class="kw-2">&amp;</span>data).unwrap(), test);
+        <span class="kw">let </span>data = bincode::serialize(<span class="kw-2">&amp;</span>test).unwrap();
+        <span class="macro">assert!</span>(data.len() &lt; <span class="number">64</span>);
+        <span class="macro">assert_eq!</span>(bincode::deserialize::&lt;Test&gt;(<span class="kw-2">&amp;</span>data).unwrap(), test);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_optional</span>() {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Test</span> {
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_bytes_base64_optional&quot;</span>)]</span>
-            <span class="ident">key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_optional() {
+        <span class="attribute">#[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
+        </span><span class="kw">struct </span>Test {
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_bytes_base64_optional&quot;</span>)]
+            </span>key: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,
         }
 
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">Test</span> {
-            <span class="ident">key</span>: <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="number">1</span>; <span class="number">32</span>]),
+        <span class="kw">let </span>data = Test {
+            key: <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="number">1</span>; <span class="number">32</span>]),
         };
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let </span>res = serde_json::to_string(<span class="kw-2">&amp;</span>data).unwrap();
         <span class="macro">assert_eq!</span>(
             <span class="string">r#&quot;{&quot;key&quot;:&quot;AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=&quot;}&quot;#</span>,
-            <span class="ident">res</span>
+            res
         );
-        <span class="macro">assert_eq!</span>(<span class="ident">data</span>, <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">res</span>).<span class="ident">unwrap</span>());
+        <span class="macro">assert_eq!</span>(data, serde_json::from_str(<span class="kw-2">&amp;</span>res).unwrap());
 
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">Test</span> { <span class="ident">key</span>: <span class="prelude-val">None</span> };
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="string">r#&quot;{&quot;key&quot;:null}&quot;#</span>, <span class="ident">res</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">data</span>, <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">res</span>).<span class="ident">unwrap</span>())
+        <span class="kw">let </span>data = Test { key: <span class="prelude-val">None </span>};
+        <span class="kw">let </span>res = serde_json::to_string(<span class="kw-2">&amp;</span>data).unwrap();
+        <span class="macro">assert_eq!</span>(<span class="string">r#&quot;{&quot;key&quot;:null}&quot;#</span>, res);
+        <span class="macro">assert_eq!</span>(data, serde_json::from_str(<span class="kw-2">&amp;</span>res).unwrap())
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_optional_hex_array</span>() {
-        <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">Test</span> {
-            <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;serde_optional_hex_array&quot;</span>)]</span>
-            <span class="ident">field</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span>,
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_optional_hex_array() {
+        <span class="attribute">#[derive(Serialize, Deserialize)]
+        </span><span class="kw">struct </span>Test {
+            <span class="attribute">#[serde(with = <span class="string">&quot;serde_optional_hex_array&quot;</span>)]
+            </span>field: <span class="prelude-ty">Option</span>&lt;[u8; <span class="number">32</span>]&gt;,
         }
 
-        <span class="kw">let</span> <span class="ident">target</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span>
-            <span class="ident">hex::decode</span>(<span class="string">&quot;0101010101010101010101010101010101010101010101010101010101010101&quot;</span>)
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">try_into</span>()
-                .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>target: [u8; <span class="number">32</span>] =
+            hex::decode(<span class="string">&quot;0101010101010101010101010101010101010101010101010101010101010101&quot;</span>)
+                .unwrap()
+                .try_into()
+                .unwrap();
 
-        <span class="kw">let</span> <span class="ident">serialized</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">Test</span> {
-            <span class="ident">field</span>: <span class="prelude-val">Some</span>(<span class="ident">target</span>),
+        <span class="kw">let </span>serialized = serde_json::to_string(<span class="kw-2">&amp;</span>Test {
+            field: <span class="prelude-val">Some</span>(target),
         })
-        .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">deserialized</span>: <span class="ident">Test</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">serialized</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">deserialized</span>.<span class="ident">field</span>, <span class="prelude-val">Some</span>(<span class="ident">target</span>));
+        .unwrap();
+        <span class="kw">let </span>deserialized: Test = serde_json::from_str(<span class="kw-2">&amp;</span>serialized).unwrap();
+        <span class="macro">assert_eq!</span>(deserialized.field, <span class="prelude-val">Some</span>(target));
 
-        <span class="kw">let</span> <span class="ident">serialized</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">Test</span> { <span class="ident">field</span>: <span class="prelude-val">None</span> }).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">deserialized</span>: <span class="ident">Test</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">serialized</span>).<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">deserialized</span>.<span class="ident">field</span>, <span class="prelude-val">None</span>);
+        <span class="kw">let </span>serialized = serde_json::to_string(<span class="kw-2">&amp;</span>Test { field: <span class="prelude-val">None </span>}).unwrap();
+        <span class="kw">let </span>deserialized: Test = serde_json::from_str(<span class="kw-2">&amp;</span>serialized).unwrap();
+        <span class="macro">assert_eq!</span>(deserialized.field, <span class="prelude-val">None</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="nekoton_utils" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

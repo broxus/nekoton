@@ -1,3 +1,3 @@
-(function() {var implementors = {};
-implementors["nekoton_abi"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.64.0/core/hash/trait.Hash.html\" title=\"trait core::hash::Hash\">Hash</a> for <a class=\"enum\" href=\"nekoton_abi/transaction_parser/enum.ParsedType.html\" title=\"enum nekoton_abi::transaction_parser::ParsedType\">ParsedType</a>","synthetic":false,"types":["nekoton_abi::transaction_parser::ParsedType"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {var implementors = {
+"nekoton_abi":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.65.0/core/hash/trait.Hash.html\" title=\"trait core::hash::Hash\">Hash</a> for <a class=\"enum\" href=\"nekoton_abi/transaction_parser/enum.ParsedType.html\" title=\"enum nekoton_abi::transaction_parser::ParsedType\">ParsedType</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

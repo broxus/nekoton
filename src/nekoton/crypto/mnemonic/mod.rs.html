@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/mnemonic/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/mnemonic/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -75,82 +75,82 @@
 <span id="75">75</span>
 <span id="76">76</span>
 <span id="77">77</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">anyhow::Error</span>;
-<span class="kw">use</span> <span class="ident">ed25519_dalek::Keypair</span>;
-<span class="kw">use</span> <span class="ident">rand::Rng</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">sha2::Digest</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>anyhow::Error;
+<span class="kw">use </span>ed25519_dalek::Keypair;
+<span class="kw">use </span>rand::Rng;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>sha2::Digest;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">dict</span>;
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod</span> <span class="ident">labs</span>;
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod</span> <span class="ident">legacy</span>;
+<span class="kw">pub mod </span>dict;
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod </span>labs;
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod </span>legacy;
 
-<span class="kw">const</span> <span class="ident">LANGUAGE</span>: <span class="ident">bip39::Language</span> <span class="op">=</span> <span class="ident">bip39::Language::English</span>;
+<span class="kw">const </span>LANGUAGE: bip39::Language = bip39::Language::English;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MnemonicType</span> {
-    <span class="doccomment">/// Phrase with 24 words, used in Crystal Wallet</span>
-    <span class="ident">Legacy</span>,
-    <span class="doccomment">/// Phrase with 12 words, used everywhere else. The additional parameter is used in</span>
-    <span class="doccomment">/// derivation path to create multiple keys from one mnemonic</span>
-    <span class="ident">Labs</span>(<span class="ident">u16</span>),
+<span class="attribute">#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
+</span><span class="kw">pub enum </span>MnemonicType {
+    <span class="doccomment">/// Phrase with 24 words, used in Crystal Wallet
+    </span>Legacy,
+    <span class="doccomment">/// Phrase with 12 words, used everywhere else. The additional parameter is used in
+    /// derivation path to create multiple keys from one mnemonic
+    </span>Labs(u16),
 }
 
-<span class="kw">impl</span> <span class="ident">MnemonicType</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">account_id</span>(<span class="self">self</span>) -&gt; <span class="ident">u16</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Legacy</span> =&gt; <span class="number">0</span>,
-            <span class="ident"><span class="self">Self</span>::Labs</span>(<span class="ident">id</span>) =&gt; <span class="ident">id</span>,
+<span class="kw">impl </span>MnemonicType {
+    <span class="kw">pub fn </span>account_id(<span class="self">self</span>) -&gt; u16 {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Legacy =&gt; <span class="number">0</span>,
+            <span class="self">Self</span>::Labs(id) =&gt; id,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>)]</span>
-<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;camelCase&quot;</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GeneratedKey</span> {
-    <span class="kw">pub</span> <span class="ident">words</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">account_type</span>: <span class="ident">MnemonicType</span>,
+<span class="attribute">#[derive(Debug, Serialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>GeneratedKey {
+    <span class="kw">pub </span>words: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;,
+    <span class="kw">pub </span>account_type: MnemonicType,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">derive_from_phrase</span>(<span class="ident">phrase</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">mnemonic_type</span>: <span class="ident">MnemonicType</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Keypair</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">mnemonic_type</span> {
-        <span class="ident">MnemonicType::Legacy</span> =&gt; <span class="ident">legacy::derive_from_phrase</span>(<span class="ident">phrase</span>),
-        <span class="ident">MnemonicType::Labs</span>(<span class="ident">account_id</span>) =&gt; <span class="ident">labs::derive_from_phrase</span>(<span class="ident">phrase</span>, <span class="ident">account_id</span>),
+<span class="kw">pub fn </span>derive_from_phrase(phrase: <span class="kw-2">&amp;</span>str, mnemonic_type: MnemonicType) -&gt; <span class="prelude-ty">Result</span>&lt;Keypair, Error&gt; {
+    <span class="kw">match </span>mnemonic_type {
+        MnemonicType::Legacy =&gt; legacy::derive_from_phrase(phrase),
+        MnemonicType::Labs(account_id) =&gt; labs::derive_from_phrase(phrase, account_id),
     }
 }
 
-<span class="doccomment">/// Generates mnemonic and keypair.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_key</span>(<span class="ident">account_type</span>: <span class="ident">MnemonicType</span>) -&gt; <span class="ident">GeneratedKey</span> {
-    <span class="kw">use</span> <span class="ident">bip39::util</span>::{<span class="ident">Bits11</span>, <span class="ident">IterExt</span>};
+<span class="doccomment">/// Generates mnemonic and keypair.
+</span><span class="kw">pub fn </span>generate_key(account_type: MnemonicType) -&gt; GeneratedKey {
+    <span class="kw">use </span>bip39::util::{Bits11, IterExt};
 
-    <span class="kw">let</span> <span class="ident">rng</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">rand::thread_rng</span>();
+    <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>rand::thread_rng();
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_words</span>(<span class="ident">entropy</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">wordlist</span> <span class="op">=</span> <span class="ident">LANGUAGE</span>.<span class="ident">wordlist</span>();
+    <span class="kw">pub fn </span>generate_words(entropy: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt; {
+        <span class="kw">let </span>wordlist = LANGUAGE.wordlist();
 
-        <span class="kw">let</span> <span class="ident">checksum_byte</span> <span class="op">=</span> <span class="ident">sha2::Sha256::digest</span>(<span class="ident">entropy</span>)[<span class="number">0</span>];
+        <span class="kw">let </span>checksum_byte = sha2::Sha256::digest(entropy)[<span class="number">0</span>];
 
-        <span class="ident">entropy</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">chain</span>(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">checksum_byte</span>))
-            .<span class="ident">bits</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">bits</span>: <span class="ident">Bits11</span><span class="op">|</span> <span class="ident">wordlist</span>.<span class="ident">get_word</span>(<span class="ident">bits</span>))
-            .<span class="ident">collect</span>()
+        entropy
+            .iter()
+            .chain(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>checksum_byte))
+            .bits()
+            .map(|bits: Bits11| wordlist.get_word(bits))
+            .collect()
     }
 
-    <span class="ident">GeneratedKey</span> {
-        <span class="ident">account_type</span>,
-        <span class="ident">words</span>: <span class="kw">match</span> <span class="ident">account_type</span> {
-            <span class="ident">MnemonicType::Legacy</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">entropy</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen</span>();
-                <span class="ident">generate_words</span>(<span class="kw-2">&amp;</span><span class="ident">entropy</span>)
+    GeneratedKey {
+        account_type,
+        words: <span class="kw">match </span>account_type {
+            MnemonicType::Legacy =&gt; {
+                <span class="kw">let </span>entropy: [u8; <span class="number">32</span>] = rng.gen();
+                generate_words(<span class="kw-2">&amp;</span>entropy)
             }
-            <span class="ident">MnemonicType::Labs</span>(<span class="kw">_</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">entropy</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen</span>();
-                <span class="ident">generate_words</span>(<span class="kw-2">&amp;</span><span class="ident">entropy</span>)
+            MnemonicType::Labs(<span class="kw">_</span>) =&gt; {
+                <span class="kw">let </span>entropy: [u8; <span class="number">16</span>] = rng.gen();
+                generate_words(<span class="kw-2">&amp;</span>entropy)
             }
         },
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

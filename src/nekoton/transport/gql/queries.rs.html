@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/gql/queries.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>queries.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/gql/queries.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>queries.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../nekoton/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../nekoton/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -359,366 +359,366 @@
 <span id="359">359</span>
 <span id="360">360</span>
 <span id="361">361</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">GqlQuery</span> {
-    <span class="kw">type</span> <span class="ident">Variables</span>: <span class="ident">serde::Serialize</span>;
-    <span class="kw">type</span> <span class="ident">ResponseData</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">serde::Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>;
+<span class="kw">pub trait </span>GqlQuery {
+    <span class="kw">type </span>Variables: serde::Serialize;
+    <span class="kw">type </span>ResponseData: <span class="kw">for</span>&lt;<span class="lifetime">&#39;de</span>&gt; serde::Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;;
 
-    <span class="kw">const</span> <span class="ident">LONG_QUERY</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="bool-val">false</span>;
+    <span class="kw">const </span>LONG_QUERY: bool = <span class="bool-val">false</span>;
 
-    <span class="kw">fn</span> <span class="ident">build_query</span>(<span class="ident">variables</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident"><span class="self">Self</span>::Variables</span>) -&gt; <span class="ident">QueryBody</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>;
+    <span class="kw">fn </span>build_query(variables: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="self">Self</span>::Variables) -&gt; QueryBody&lt;<span class="lifetime">&#39;_</span>&gt;;
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryBody</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">variables</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">erased_serde::Serialize</span>,
-    <span class="kw">pub</span> <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+<span class="attribute">#[derive(Serialize)]
+</span><span class="kw">pub struct </span>QueryBody&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">pub </span>variables: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">dyn </span>erased_serde::Serialize,
+    <span class="kw">pub </span>query: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">declare_queries</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">query</span>:<span class="ident">ident</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">query_module</span>:<span class="ident">tt</span> $((<span class="ident">LONG_QUERY</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">long_query</span>:<span class="ident">literal</span>))<span class="question-mark">?</span>),<span class="kw-2">*</span>$(,)<span class="question-mark">?</span>) =&gt; {
-        $(<span class="kw">pub</span> <span class="kw">struct</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">query</span>;
+<span class="macro">macro_rules! </span>declare_queries {
+    ($(<span class="macro-nonterminal">$query</span>:ident =&gt; <span class="macro-nonterminal">$query_module</span>:tt $((LONG_QUERY = <span class="macro-nonterminal">$long_query</span>:literal))<span class="question-mark">?</span>),<span class="kw-2">*</span>$(,)<span class="question-mark">?</span>) =&gt; {
+        $(<span class="kw">pub struct </span><span class="macro-nonterminal">$query</span>;
 
-        <span class="kw">impl</span> <span class="ident">GqlQuery</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">query</span> {
-            <span class="kw">type</span> <span class="ident">Variables</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">query_module::Variables</span>;
-            <span class="kw">type</span> <span class="ident">ResponseData</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">query_module::ResponseData</span>;
+        <span class="kw">impl </span>GqlQuery <span class="kw">for </span><span class="macro-nonterminal">$query </span>{
+            <span class="kw">type </span>Variables = <span class="macro-nonterminal">$query_module::Variables</span>;
+            <span class="kw">type </span>ResponseData = <span class="macro-nonterminal">$query_module::ResponseData</span>;
 
-            $(<span class="kw">const</span> <span class="ident">LONG_QUERY</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">long_query</span>;)<span class="question-mark">?</span>
+            $(<span class="kw">const </span>LONG_QUERY: bool = <span class="macro-nonterminal">$long_query</span>;)<span class="question-mark">?
 
-            <span class="kw">fn</span> <span class="ident">build_query</span>(<span class="ident">variables</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident"><span class="self">Self</span>::Variables</span>) -&gt; <span class="ident">QueryBody</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-                <span class="ident">QueryBody</span> {
-                    <span class="ident">variables</span>,
-                    <span class="ident">query</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">query_module::QUERY</span>,
+            </span><span class="kw">fn </span>build_query(variables: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="self">Self</span>::Variables) -&gt; QueryBody&lt;<span class="lifetime">&#39;_</span>&gt; {
+                QueryBody {
+                    variables,
+                    query: <span class="macro-nonterminal">$query_module::QUERY</span>,
                 }
             }
-        })<span class="op">*</span>
+        })*
     };
 }
 
-<span class="macro">declare_queries!</span> {
-    <span class="ident">QueryBlock</span> =&gt; <span class="ident">query_block</span>,
-    <span class="ident">QueryNextBlock</span> =&gt; <span class="ident">query_next_block</span> (<span class="ident">LONG_QUERY</span> <span class="op">=</span> <span class="bool-val">true</span>),
-    <span class="ident">QueryBlockAfterSplit</span> =&gt; <span class="ident">query_block_after_split</span> (<span class="ident">LONG_QUERY</span> <span class="op">=</span> <span class="bool-val">true</span>),
-    <span class="ident">QueryAccountState</span> =&gt; <span class="ident">query_account_state</span>,
-    <span class="ident">QueryAccountTransactions</span> =&gt; <span class="ident">query_account_transactions</span>,
-    <span class="ident">QueryTransaction</span> =&gt; <span class="ident">query_transaction</span>,
-    <span class="ident">QueryDstTransaction</span> =&gt; <span class="ident">query_dst_transaction</span>,
-    <span class="ident">QueryAccountsByCodeHash</span> =&gt; <span class="ident">query_accounts_by_code_hash</span>,
-    <span class="ident">QueryLatestMasterchainBlock</span> =&gt; <span class="ident">query_latest_masterchain_block</span>,
-    <span class="ident">QueryLatestKeyBlock</span> =&gt; <span class="ident">query_latest_key_block</span>,
-    <span class="ident">QueryNodeSeConditions</span> =&gt; <span class="ident">query_node_se_conditions</span>,
-    <span class="ident">QueryNodeSeLatestBlock</span> =&gt; <span class="ident">query_node_se_latest_block</span>,
-    <span class="ident">MutationSendMessage</span> =&gt; <span class="ident">mutation_send_message</span>,
+<span class="macro">declare_queries! </span>{
+    QueryBlock =&gt; query_block,
+    QueryNextBlock =&gt; query_next_block (LONG_QUERY = <span class="bool-val">true</span>),
+    QueryBlockAfterSplit =&gt; query_block_after_split (LONG_QUERY = <span class="bool-val">true</span>),
+    QueryAccountState =&gt; query_account_state,
+    QueryAccountTransactions =&gt; query_account_transactions,
+    QueryTransaction =&gt; query_transaction,
+    QueryDstTransaction =&gt; query_dst_transaction,
+    QueryAccountsByCodeHash =&gt; query_accounts_by_code_hash,
+    QueryLatestMasterchainBlock =&gt; query_latest_masterchain_block,
+    QueryLatestKeyBlock =&gt; query_latest_key_block,
+    QueryNodeSeConditions =&gt; query_node_se_conditions,
+    QueryNodeSeLatestBlock =&gt; query_node_se_latest_block,
+    MutationSendMessage =&gt; mutation_send_message,
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_block</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>query_block {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($id:String!){blocks(filter:{id:{eq:$id}},limit:1){boc}}&quot;</span>;
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($id:String!){blocks(filter:{id:{eq:$id}},limit:1){boc}}&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="kw">pub </span>id: String,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">blocks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryBlockBlocks</span><span class="op">&gt;</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>blocks: Vec&lt;QueryBlockBlocks&gt;,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryBlockBlocks</span> {
-        <span class="kw">pub</span> <span class="ident">boc</span>: <span class="ident">String</span>,
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_next_block</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($id:String!,$t:Float!){blocks(filter:{prev_ref:{root_hash:{eq:$id}},OR:{prev_alt_ref:{root_hash:{eq:$id}}}},timeout:$t){id gen_utime after_split workchain_id shard}}&quot;</span>;
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;t&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">timeout</span>: <span class="ident">f64</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">blocks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryNextBlockBlocks</span><span class="op">&gt;</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryNextBlockBlocks</span> {
-        <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">after_split</span>: <span class="ident">bool</span>,
-        <span class="kw">pub</span> <span class="ident">workchain_id</span>: <span class="ident">i32</span>,
-        <span class="kw">pub</span> <span class="ident">shard</span>: <span class="ident">String</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryBlockBlocks {
+        <span class="kw">pub </span>boc: String,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_block_after_split</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>query_next_block {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($block_id:String!,$prev_id:String!,$t:Float!){blocks(filter:{prev_ref:{root_hash:{eq:$block_id}},OR:{prev_alt_ref:{root_hash:{eq:$prev_id}}}},timeout:$t){id}}&quot;</span>;
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($id:String!,$t:Float!){blocks(filter:{prev_ref:{root_hash:{eq:$id}},OR:{prev_alt_ref:{root_hash:{eq:$id}}}},timeout:$t){id gen_utime after_split workchain_id shard}}&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="kw">pub</span> <span class="ident">block_id</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">prev_id</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">timeout</span>: <span class="ident">f64</span>,
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="kw">pub </span>id: String,
+        <span class="attribute">#[serde(rename = <span class="string">&quot;t&quot;</span>)]
+        </span><span class="kw">pub </span>timeout: f64,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">blocks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryBlockAfterSplitBlocks</span><span class="op">&gt;</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>blocks: Vec&lt;QueryNextBlockBlocks&gt;,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryBlockAfterSplitBlocks</span> {
-        <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_account_state</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($a:String!){accounts(filter:{id:{eq:$a}},limit:1){boc}}&quot;</span>;
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;a&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">String</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryAccountStateAccounts</span><span class="op">&gt;</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryAccountStateAccounts</span> {
-        <span class="kw">pub</span> <span class="ident">boc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryNextBlockBlocks {
+        <span class="kw">pub </span>id: String,
+        <span class="kw">pub </span>after_split: bool,
+        <span class="kw">pub </span>workchain_id: i32,
+        <span class="kw">pub </span>shard: String,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_account_transactions</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>query_block_after_split {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($a:String!,$lt:String!,$l:Int!){transactions(filter:{account_addr:{eq:$a},lt:{le:$lt}},orderBy:[{path:\&quot;lt\&quot;,direction:DESC}],limit:$l){boc}}&quot;</span>;
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($block_id:String!,$prev_id:String!,$t:Float!){blocks(filter:{prev_ref:{root_hash:{eq:$block_id}},OR:{prev_alt_ref:{root_hash:{eq:$prev_id}}}},timeout:$t){id}}&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;a&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">String</span>,
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;lt&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">last_transaction_lt</span>: <span class="ident">String</span>,
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;l&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">limit</span>: <span class="ident">u8</span>,
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="kw">pub </span>block_id: String,
+        <span class="kw">pub </span>prev_id: String,
+        <span class="kw">pub </span>timeout: f64,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">transactions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryAccountTransactionsTransactions</span><span class="op">&gt;</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>blocks: Vec&lt;QueryBlockAfterSplitBlocks&gt;,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryAccountTransactionsTransactions</span> {
-        <span class="kw">pub</span> <span class="ident">boc</span>: <span class="ident">String</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryBlockAfterSplitBlocks {
+        <span class="kw">pub </span>id: String,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_transaction</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>query_account_state {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($h:String!){transactions(filter:{id:{eq:$h}},limit:1){boc}}&quot;</span>;
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($a:String!){accounts(filter:{id:{eq:$a}},limit:1){boc}}&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;h&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">hash</span>: <span class="ident">String</span>,
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="attribute">#[serde(rename = <span class="string">&quot;a&quot;</span>)]
+        </span><span class="kw">pub </span>address: String,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">transactions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryTransactionTransactions</span><span class="op">&gt;</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>accounts: Vec&lt;QueryAccountStateAccounts&gt;,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryTransactionTransactions</span> {
-        <span class="kw">pub</span> <span class="ident">boc</span>: <span class="ident">String</span>,
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_dst_transaction</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($h:String!){transactions(filter:{in_msg:{eq:$h}},limit:1){boc}}&quot;</span>;
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;h&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">hash</span>: <span class="ident">String</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">transactions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryTransactionTransactions</span><span class="op">&gt;</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryTransactionTransactions</span> {
-        <span class="kw">pub</span> <span class="ident">boc</span>: <span class="ident">String</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryAccountStateAccounts {
+        <span class="kw">pub </span>boc: <span class="prelude-ty">Option</span>&lt;String&gt;,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_accounts_by_code_hash</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>query_account_transactions {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($h:String!,$c:String,$l:Int!){accounts(filter:{code_hash:{eq:$h},id:{gt:$c}},orderBy:[{path:\&quot;id\&quot;,direction:ASC}],limit:$l){id}}&quot;</span>;
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($a:String!,$lt:String!,$l:Int!){transactions(filter:{account_addr:{eq:$a},lt:{le:$lt}},orderBy:[{path:\&quot;lt\&quot;,direction:DESC}],limit:$l){boc}}&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;h&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">code_hash</span>: <span class="ident">String</span>,
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;c&quot;</span>, <span class="ident">skip_serializing_if</span> <span class="op">=</span> <span class="string">&quot;Option::is_none&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">continuation</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;l&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">limit</span>: <span class="ident">u8</span>,
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="attribute">#[serde(rename = <span class="string">&quot;a&quot;</span>)]
+        </span><span class="kw">pub </span>address: String,
+        <span class="attribute">#[serde(rename = <span class="string">&quot;lt&quot;</span>)]
+        </span><span class="kw">pub </span>last_transaction_lt: String,
+        <span class="attribute">#[serde(rename = <span class="string">&quot;l&quot;</span>)]
+        </span><span class="kw">pub </span>limit: u8,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryAccountsByCodeHashAccounts</span><span class="op">&gt;</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>transactions: Vec&lt;QueryAccountTransactionsTransactions&gt;,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryAccountsByCodeHashAccounts</span> {
-        <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_latest_masterchain_block</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query{blocks(filter:{workchain_id:{eq:-1}},orderBy:[{path:\&quot;seq_no\&quot;,direction:DESC}],limit:1){id gen_utime end_lt master{shard_hashes{workchain_id shard descr{root_hash gen_utime end_lt}}}}}&quot;</span>;
-
-    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Variables</span> <span class="op">=</span> ();
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">blocks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryLatestMasterchainBlockBlocks</span><span class="op">&gt;</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryLatestMasterchainBlockBlocks</span> {
-        <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">gen_utime</span>: <span class="ident">f64</span>,
-        <span class="kw">pub</span> <span class="ident">end_lt</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">master</span>: <span class="ident">QueryLatestMasterchainBlockBlocksMaster</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryLatestMasterchainBlockBlocksMaster</span> {
-        <span class="kw">pub</span> <span class="ident">shard_hashes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryLatestMasterchainBlockBlocksMasterShardHashes</span><span class="op">&gt;</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryLatestMasterchainBlockBlocksMasterShardHashes</span> {
-        <span class="kw">pub</span> <span class="ident">workchain_id</span>: <span class="ident">i32</span>,
-        <span class="kw">pub</span> <span class="ident">shard</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">descr</span>: <span class="ident">QueryLatestMasterchainBlockBlocksMasterShardHashesDescr</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryLatestMasterchainBlockBlocksMasterShardHashesDescr</span> {
-        <span class="kw">pub</span> <span class="ident">root_hash</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">gen_utime</span>: <span class="ident">f64</span>,
-        <span class="kw">pub</span> <span class="ident">end_lt</span>: <span class="ident">String</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryAccountTransactionsTransactions {
+        <span class="kw">pub </span>boc: String,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_latest_key_block</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>query_transaction {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query{blocks(filter:{key_block:{eq:true},workchain_id:{eq:-1}},orderBy:[{path:\&quot;seq_no\&quot;,direction:DESC}],limit:1){boc}}&quot;</span>;
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($h:String!){transactions(filter:{id:{eq:$h}},limit:1){boc}}&quot;</span>;
 
-    <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Variables</span> <span class="op">=</span> ();
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">blocks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryLatestKeyBlockBlocks</span><span class="op">&gt;</span>,
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="attribute">#[serde(rename = <span class="string">&quot;h&quot;</span>)]
+        </span><span class="kw">pub </span>hash: String,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryLatestKeyBlockBlocks</span> {
-        <span class="kw">pub</span> <span class="ident">boc</span>: <span class="ident">String</span>,
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_node_se_conditions</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($w:Int!){blocks(filter:{workchain_id:{eq:$w}},orderBy:[{path:\&quot;seq_no\&quot;,direction:DESC}],limit:1){after_merge shard}}&quot;</span>;
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;w&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">workchain</span>: <span class="ident">i32</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>transactions: Vec&lt;QueryTransactionTransactions&gt;,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">blocks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryNodeSeConditionsBlocks</span><span class="op">&gt;</span>,
-    }
-
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryNodeSeConditionsBlocks</span> {
-        <span class="kw">pub</span> <span class="ident">after_merge</span>: <span class="ident">bool</span>,
-        <span class="kw">pub</span> <span class="ident">shard</span>: <span class="ident">String</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryTransactionTransactions {
+        <span class="kw">pub </span>boc: String,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query_node_se_latest_block</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>query_dst_transaction {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;query($w:Int!){blocks(filter:{workchain_id:{eq:$w},shard:{eq:\&quot;8000000000000000\&quot;}},orderBy:[{path:\&quot;seq_no\&quot;,direction:DESC}],limit:1){id end_lt gen_utime}}&quot;</span>;
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($h:String!){transactions(filter:{in_msg:{eq:$h}},limit:1){boc}}&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;w&quot;</span>)]</span>
-        <span class="kw">pub</span> <span class="ident">workchain</span>: <span class="ident">i32</span>,
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="attribute">#[serde(rename = <span class="string">&quot;h&quot;</span>)]
+        </span><span class="kw">pub </span>hash: String,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {
-        <span class="kw">pub</span> <span class="ident">blocks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueryNodeSeLatestBlockBlocks</span><span class="op">&gt;</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>transactions: Vec&lt;QueryTransactionTransactions&gt;,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QueryNodeSeLatestBlockBlocks</span> {
-        <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">end_lt</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">gen_utime</span>: <span class="ident">f64</span>,
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryTransactionTransactions {
+        <span class="kw">pub </span>boc: String,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mutation_send_message</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>query_accounts_by_code_hash {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span>
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($h:String!,$c:String,$l:Int!){accounts(filter:{code_hash:{eq:$h},id:{gt:$c}},orderBy:[{path:\&quot;id\&quot;,direction:ASC}],limit:$l){id}}&quot;</span>;
+
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="attribute">#[serde(rename = <span class="string">&quot;h&quot;</span>)]
+        </span><span class="kw">pub </span>code_hash: String,
+        <span class="attribute">#[serde(rename = <span class="string">&quot;c&quot;</span>)]
+        </span><span class="kw">pub </span>continuation: <span class="prelude-ty">Option</span>&lt;String&gt;,
+        <span class="attribute">#[serde(rename = <span class="string">&quot;l&quot;</span>)]
+        </span><span class="kw">pub </span>limit: u8,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>accounts: Vec&lt;QueryAccountsByCodeHashAccounts&gt;,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryAccountsByCodeHashAccounts {
+        <span class="kw">pub </span>id: String,
+    }
+}
+
+<span class="kw">pub mod </span>query_latest_masterchain_block {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query{blocks(filter:{workchain_id:{eq:-1}},orderBy:[{path:\&quot;seq_no\&quot;,direction:DESC}],limit:1){id gen_utime end_lt master{shard_hashes{workchain_id shard descr{root_hash gen_utime end_lt}}}}}&quot;</span>;
+
+    <span class="kw">pub type </span>Variables = ();
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>blocks: Vec&lt;QueryLatestMasterchainBlockBlocks&gt;,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryLatestMasterchainBlockBlocks {
+        <span class="kw">pub </span>id: String,
+        <span class="kw">pub </span>gen_utime: f64,
+        <span class="kw">pub </span>end_lt: String,
+        <span class="kw">pub </span>master: QueryLatestMasterchainBlockBlocksMaster,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryLatestMasterchainBlockBlocksMaster {
+        <span class="kw">pub </span>shard_hashes: Vec&lt;QueryLatestMasterchainBlockBlocksMasterShardHashes&gt;,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryLatestMasterchainBlockBlocksMasterShardHashes {
+        <span class="kw">pub </span>workchain_id: i32,
+        <span class="kw">pub </span>shard: String,
+        <span class="kw">pub </span>descr: QueryLatestMasterchainBlockBlocksMasterShardHashesDescr,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryLatestMasterchainBlockBlocksMasterShardHashesDescr {
+        <span class="kw">pub </span>root_hash: String,
+        <span class="kw">pub </span>gen_utime: f64,
+        <span class="kw">pub </span>end_lt: String,
+    }
+}
+
+<span class="kw">pub mod </span>query_latest_key_block {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query{blocks(filter:{key_block:{eq:true},workchain_id:{eq:-1}},orderBy:[{path:\&quot;seq_no\&quot;,direction:DESC}],limit:1){boc}}&quot;</span>;
+
+    <span class="kw">pub type </span>Variables = ();
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>blocks: Vec&lt;QueryLatestKeyBlockBlocks&gt;,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryLatestKeyBlockBlocks {
+        <span class="kw">pub </span>boc: String,
+    }
+}
+
+<span class="kw">pub mod </span>query_node_se_conditions {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($w:Int!){blocks(filter:{workchain_id:{eq:$w}},orderBy:[{path:\&quot;seq_no\&quot;,direction:DESC}],limit:1){after_merge shard}}&quot;</span>;
+
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="attribute">#[serde(rename = <span class="string">&quot;w&quot;</span>)]
+        </span><span class="kw">pub </span>workchain: i32,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>blocks: Vec&lt;QueryNodeSeConditionsBlocks&gt;,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryNodeSeConditionsBlocks {
+        <span class="kw">pub </span>after_merge: bool,
+        <span class="kw">pub </span>shard: String,
+    }
+}
+
+<span class="kw">pub mod </span>query_node_se_latest_block {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;query($w:Int!){blocks(filter:{workchain_id:{eq:$w},shard:{eq:\&quot;8000000000000000\&quot;}},orderBy:[{path:\&quot;seq_no\&quot;,direction:DESC}],limit:1){id end_lt gen_utime}}&quot;</span>;
+
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="attribute">#[serde(rename = <span class="string">&quot;w&quot;</span>)]
+        </span><span class="kw">pub </span>workchain: i32,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {
+        <span class="kw">pub </span>blocks: Vec&lt;QueryNodeSeLatestBlockBlocks&gt;,
+    }
+
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>QueryNodeSeLatestBlockBlocks {
+        <span class="kw">pub </span>id: String,
+        <span class="kw">pub </span>end_lt: String,
+        <span class="kw">pub </span>gen_utime: f64,
+    }
+}
+
+<span class="kw">pub mod </span>mutation_send_message {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="kw">pub const </span>QUERY: <span class="kw-2">&amp;</span>str =
         <span class="string">&quot;mutation($id:String!,$boc:String!){postRequests(requests:[{id:$id,body:$boc}])}&quot;</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Variables</span> {
-        <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">String</span>,
-        <span class="kw">pub</span> <span class="ident">boc</span>: <span class="ident">String</span>,
+    <span class="attribute">#[derive(Serialize)]
+    </span><span class="kw">pub struct </span>Variables {
+        <span class="kw">pub </span>id: String,
+        <span class="kw">pub </span>boc: String,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResponseData</span> {}
+    <span class="attribute">#[derive(Deserialize)]
+    </span><span class="kw">pub struct </span>ResponseData {}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="nekoton" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
