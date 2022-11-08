@@ -166,7 +166,7 @@ impl StoreSigner for DerivedKeySigner {
                 let master = decrypt_secure(
                     &decrypter,
                     &master_key.entropy_nonce,
-                    &*master_key.enc_entropy,
+                    &master_key.enc_entropy,
                 )?;
 
                 let public_key = derive_from_master(account_id, master.unsecure())?.public;
@@ -277,11 +277,7 @@ impl StoreSigner for DerivedKeySigner {
             &master_key.salt,
         ));
 
-        let phrase = decrypt_secure(
-            &decrypter,
-            &master_key.phrase_nonce,
-            &*master_key.enc_phrase,
-        )?;
+        let phrase = decrypt_secure(&decrypter, &master_key.phrase_nonce, &master_key.enc_phrase)?;
 
         let phrase = SecUtf8::from(String::from_utf8(phrase.unsecure().to_vec())?);
 
@@ -311,7 +307,7 @@ impl StoreSigner for DerivedKeySigner {
         let master = decrypt_secure(
             &decrypter,
             &master_key.entropy_nonce,
-            &*master_key.enc_entropy,
+            &master_key.enc_entropy,
         )?;
 
         let public_keys = (input.offset..input.offset.saturating_add(input.limit))

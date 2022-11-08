@@ -195,7 +195,7 @@ impl Transport for GqlTransport {
         let boc = base64::encode(
             ton_types::serialize_toc(&cell).map_err(|_| NodeClientError::FailedToSerialize)?,
         );
-        let id = base64::encode(&cell.repr_hash());
+        let id = base64::encode(cell.repr_hash());
 
         let _ = self
             .fetch::<MutationSendMessage>(mutation_send_message::Variables { id, boc })

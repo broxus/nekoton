@@ -201,7 +201,7 @@ impl OwnersCache {
     {
         let mut owners = self.owners.write().await;
         owners.extend(new_owners);
-        self.save(&*owners);
+        self.save(&owners);
     }
 
     fn save(&self, owners: &HashMap<MsgAddressInt, MsgAddressInt>) {

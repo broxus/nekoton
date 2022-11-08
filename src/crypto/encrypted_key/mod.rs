@@ -541,7 +541,7 @@ impl CryptoData {
     }
 
     fn decrypt_secret(&self, password: &str) -> Result<ed25519_dalek::SecretKey> {
-        let key = symmetric_key_from_password(password, &*self.salt);
+        let key = symmetric_key_from_password(password, &self.salt);
         let decrypter = ChaCha20Poly1305::new(&key);
 
         let bytes = decrypt_secure(

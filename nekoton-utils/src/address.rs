@@ -31,9 +31,9 @@ pub fn pack_std_smc_addr(
     buffer[34] = (crc >> 8) as u8;
     buffer[35] = (crc & 0xff) as u8;
     let b64_enc = if base64_url {
-        base64::encode_config(&buffer, URL_SAFE)
+        base64::encode_config(buffer, URL_SAFE)
     } else {
-        base64::encode(&buffer)
+        base64::encode(buffer)
     };
     Ok(b64_enc)
 }

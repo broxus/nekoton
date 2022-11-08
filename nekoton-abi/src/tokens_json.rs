@@ -227,7 +227,7 @@ pub fn parse_abi_token_value(
                 if value.is_empty() {
                     Ok(ton_types::Cell::default())
                 } else {
-                    base64::decode(&value)
+                    base64::decode(value)
                         .map_err(|_| TokensJsonError::InvalidCell)
                         .and_then(|value| {
                             ton_types::deserialize_tree_of_cells(&mut value.as_slice())
@@ -308,7 +308,7 @@ pub fn parse_abi_token_value(
         &ton_abi::ParamType::FixedBytes(size) => {
             let value = if let Some(value) = value.as_str() {
                 let value = value.trim();
-                base64::decode(&value).map_err(|_| TokensJsonError::InvalidBytes)
+                base64::decode(value).map_err(|_| TokensJsonError::InvalidBytes)
             } else {
                 Err(TokensJsonError::StringExpected)
             }?;

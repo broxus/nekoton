@@ -439,7 +439,7 @@ pub mod serde_bytes {
         S: serde::Serializer,
     {
         if serializer.is_human_readable() {
-            serializer.serialize_str(&*hex::encode(&data.as_ref()))
+            serializer.serialize_str(&hex::encode(data.as_ref()))
         } else {
             serializer.serialize_bytes(data.as_ref())
         }
@@ -500,7 +500,7 @@ pub mod serde_bytes_base64 {
         S: serde::Serializer,
     {
         if serializer.is_human_readable() {
-            serializer.serialize_str(base64::encode(&data.as_ref()).as_str())
+            serializer.serialize_str(base64::encode(data.as_ref()).as_str())
         } else {
             serializer.serialize_bytes(data.as_ref())
         }

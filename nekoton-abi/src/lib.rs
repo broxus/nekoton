@@ -224,7 +224,7 @@ pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
 
 /// Creates slice data from base64 encoded boc
 pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
-    let bytes = base64::decode(&cell)?;
+    let bytes = base64::decode(cell)?;
     let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
         .map_err(|_| UnpackerError::InvalidAbi)?;
     Ok(SliceData::from(cell))
@@ -657,7 +657,7 @@ impl<'a> FunctionAbi<'a> {
 
     fn parse(&self, tx: &ton_block::Transaction) -> Result<Vec<Token>> {
         let messages = parse_transaction_messages(tx)?;
-        process_out_messages(&*messages, self.abi)
+        process_out_messages(&messages, self.abi)
     }
 
     fn run_local(
