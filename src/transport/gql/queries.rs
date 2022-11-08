@@ -222,7 +222,7 @@ pub mod query_accounts_by_code_hash {
     pub struct Variables {
         #[serde(rename = "h")]
         pub code_hash: String,
-        #[serde(rename = "c", skip_serializing_if = "Option::is_none")]
+        #[serde(rename = "c")]
         pub continuation: Option<String>,
         #[serde(rename = "l")]
         pub limit: u8,
