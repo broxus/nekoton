@@ -482,7 +482,7 @@
     {
         <span class="kw">let </span><span class="kw-2">mut </span>owners = <span class="self">self</span>.owners.write().<span class="kw">await</span>;
         owners.extend(new_owners);
-        <span class="self">self</span>.save(<span class="kw-2">&amp;*</span>owners);
+        <span class="self">self</span>.save(<span class="kw-2">&amp;</span>owners);
     }
 
     <span class="kw">fn </span>save(<span class="kw-2">&amp;</span><span class="self">self</span>, owners: <span class="kw-2">&amp;</span>HashMap&lt;MsgAddressInt, MsgAddressInt&gt;) {

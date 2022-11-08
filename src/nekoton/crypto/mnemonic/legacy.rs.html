@@ -97,8 +97,8 @@
         <span class="kw">let </span>keypair = derive_from_phrase(<span class="string">&quot;unaware face erupt ceiling frost shiver crumble know party before brisk skirt fence boat powder copy plastic until butter fluid property concert say verify&quot;</span>).unwrap();
         <span class="kw">let </span>expected = <span class="string">&quot;o0kpHL39KRq0KX11zZ0/sCwJL66t+gA4vnfuwBjhAWU=&quot;</span>;
         <span class="kw">let </span>pub_expecteed = <span class="string">&quot;lHW4ZS8QvCHcgR4uChD7QJWU2kf5JRMtUnZ2p1GSZjg=&quot;</span>;
-        <span class="macro">assert_eq!</span>(base64::encode(<span class="kw-2">&amp;</span>keypair.public.as_bytes()), pub_expecteed);
-        <span class="kw">let </span>got = base64::encode(<span class="kw-2">&amp;</span>keypair.secret.as_bytes());
+        <span class="macro">assert_eq!</span>(base64::encode(keypair.public.as_bytes()), pub_expecteed);
+        <span class="kw">let </span>got = base64::encode(keypair.secret.as_bytes());
         <span class="macro">assert_eq!</span>(got, expected);
     }
 }

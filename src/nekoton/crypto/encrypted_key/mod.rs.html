@@ -1362,7 +1362,7 @@
     }
 
     <span class="kw">fn </span>decrypt_secret(<span class="kw-2">&amp;</span><span class="self">self</span>, password: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;ed25519_dalek::SecretKey&gt; {
-        <span class="kw">let </span>key = symmetric_key_from_password(password, <span class="kw-2">&amp;*</span><span class="self">self</span>.salt);
+        <span class="kw">let </span>key = symmetric_key_from_password(password, <span class="kw-2">&amp;</span><span class="self">self</span>.salt);
         <span class="kw">let </span>decrypter = ChaCha20Poly1305::new(<span class="kw-2">&amp;</span>key);
 
         <span class="kw">let </span>bytes = decrypt_secure(

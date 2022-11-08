@@ -244,9 +244,9 @@
     buffer[<span class="number">34</span>] = (crc &gt;&gt; <span class="number">8</span>) <span class="kw">as </span>u8;
     buffer[<span class="number">35</span>] = (crc &amp; <span class="number">0xff</span>) <span class="kw">as </span>u8;
     <span class="kw">let </span>b64_enc = <span class="kw">if </span>base64_url {
-        base64::encode_config(<span class="kw-2">&amp;</span>buffer, URL_SAFE)
+        base64::encode_config(buffer, URL_SAFE)
     } <span class="kw">else </span>{
-        base64::encode(<span class="kw-2">&amp;</span>buffer)
+        base64::encode(buffer)
     };
     <span class="prelude-val">Ok</span>(b64_enc)
 }

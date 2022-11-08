@@ -1327,7 +1327,7 @@
         </span>S: serde::Serializer,
     {
         <span class="kw">if </span>serializer.is_human_readable() {
-            serializer.serialize_str(<span class="kw-2">&amp;*</span>hex::encode(<span class="kw-2">&amp;</span>data.as_ref()))
+            serializer.serialize_str(<span class="kw-2">&amp;</span>hex::encode(data.as_ref()))
         } <span class="kw">else </span>{
             serializer.serialize_bytes(data.as_ref())
         }
@@ -1388,7 +1388,7 @@
         </span>S: serde::Serializer,
     {
         <span class="kw">if </span>serializer.is_human_readable() {
-            serializer.serialize_str(base64::encode(<span class="kw-2">&amp;</span>data.as_ref()).as_str())
+            serializer.serialize_str(base64::encode(data.as_ref()).as_str())
         } <span class="kw">else </span>{
             serializer.serialize_bytes(data.as_ref())
         }

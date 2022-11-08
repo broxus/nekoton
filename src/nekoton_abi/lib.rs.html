@@ -1437,7 +1437,7 @@
 
 <span class="doccomment">/// Creates slice data from base64 encoded boc
 </span><span class="kw">pub fn </span>create_boc_payload(cell: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;SliceData&gt; {
-    <span class="kw">let </span>bytes = base64::decode(<span class="kw-2">&amp;</span>cell)<span class="question-mark">?</span>;
+    <span class="kw">let </span>bytes = base64::decode(cell)<span class="question-mark">?</span>;
     <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>bytes.as_slice())
         .map_err(|<span class="kw">_</span>| UnpackerError::InvalidAbi)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(SliceData::from(cell))
@@ -1870,7 +1870,7 @@
 
     <span class="kw">fn </span>parse(<span class="kw-2">&amp;</span><span class="self">self</span>, tx: <span class="kw-2">&amp;</span>ton_block::Transaction) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Token&gt;&gt; {
         <span class="kw">let </span>messages = parse_transaction_messages(tx)<span class="question-mark">?</span>;
-        process_out_messages(<span class="kw-2">&amp;*</span>messages, <span class="self">self</span>.abi)
+        process_out_messages(<span class="kw-2">&amp;</span>messages, <span class="self">self</span>.abi)
     }
 
     <span class="kw">fn </span>run_local(
