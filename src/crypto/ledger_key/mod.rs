@@ -14,6 +14,7 @@ use super::{
     default_key_name, SharedSecret, Signer as StoreSigner, SignerContext, SignerEntry,
     SignerStorage,
 };
+use crate::core::ton_wallet::WalletType;
 use crate::external::{LedgerConnection, LedgerSignatureContext};
 
 #[derive(Clone)]
@@ -256,7 +257,7 @@ pub enum LedgerUpdateKeyInput {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LedgerSignInput {
-    pub wallet: u16,
+    wallet: WalletType,
     #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
     #[serde(default)]
