@@ -142,10 +142,19 @@ impl StoreSigner for LedgerKeySigner {
         input: Self::SignInput,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let key = self.get_key(&input.public_key)?;
-        let signature = self
-            .connection
-            .sign(key.account_id, data, &input.context)
-            .await?;
+        let signature = match input.context {
+            None => {
+                self.connection
+                    .sign(key.account_id, input.wallet, data)
+                    .await?
+            }
+            Some(context) => {
+                self.connection
+                    .sign_transaction(key.account_id, input.wallet, data, &context)
+                    .await?
+            }
+        };
+
         Ok(signature)
     }
 }
@@ -247,6 +256,7 @@ pub enum LedgerUpdateKeyInput {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LedgerSignInput {
+    pub wallet: u16,
     #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
     #[serde(default)]

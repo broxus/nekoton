@@ -1,7 +1,5 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use nekoton_utils::*;
-use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 
 #[async_trait]
@@ -54,10 +52,6 @@ pub trait JrpcConnection: Send + Sync {
 pub struct LedgerSignatureContext {
     pub decimals: u8,
     pub asset: String,
-    #[serde(with = "serde_string")]
-    pub amount: BigUint,
-    #[serde(with = "serde_address")]
-    pub address: ton_block::MsgAddressInt,
 }
 
 #[async_trait]
@@ -70,7 +64,15 @@ pub trait LedgerConnection: Send + Sync {
     async fn sign(
         &self,
         account: u16,
+        wallet: u16,
         message: &[u8],
-        context: &Option<LedgerSignatureContext>,
+    ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
+
+    async fn sign_transaction(
+        &self,
+        account: u16,
+        wallet: u16,
+        message: &[u8],
+        context: &LedgerSignatureContext,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
 }
