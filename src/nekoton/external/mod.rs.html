@@ -76,9 +76,13 @@
 <span id="76">76</span>
 <span id="77">77</span>
 <span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
+
+<span class="kw">use </span><span class="kw">crate</span>::core::ton_wallet::WalletType;
 
 <span class="attribute">#[async_trait]
 </span><span class="kw">pub trait </span>Storage: Sync + Send {
@@ -142,14 +146,14 @@
     <span class="kw">async fn </span>sign(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         account: u16,
-        wallet: u16,
+        wallet: WalletType,
         message: <span class="kw-2">&amp;</span>[u8],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt;;
 
     <span class="kw">async fn </span>sign_transaction(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         account: u16,
-        wallet: u16,
+        wallet: WalletType,
         message: <span class="kw-2">&amp;</span>[u8],
         context: <span class="kw-2">&amp;</span>LedgerSignatureContext,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt;;
