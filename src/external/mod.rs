@@ -2,8 +2,6 @@ use anyhow::Result;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-use crate::core::ton_wallet::WalletType;
-
 #[async_trait]
 pub trait Storage: Sync + Send {
     /// Retrieve data from storage
@@ -66,14 +64,14 @@ pub trait LedgerConnection: Send + Sync {
     async fn sign(
         &self,
         account: u16,
-        wallet: WalletType,
+        wallet: u16,
         message: &[u8],
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
 
     async fn sign_transaction(
         &self,
         account: u16,
-        wallet: WalletType,
+        wallet: u16,
         message: &[u8],
         context: &LedgerSignatureContext,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;

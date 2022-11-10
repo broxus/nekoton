@@ -776,6 +776,26 @@ impl FromStr for WalletType {
     }
 }
 
+impl TryInto<u16> for WalletType {
+    type Error = anyhow::Error;
+
+    fn try_into(self) -> Result<u16, Self::Error> {
+        let res = match self {
+            WalletType::WalletV3 => 0,
+            WalletType::EverWallet => 1,
+            WalletType::Multisig(MultisigType::SafeMultisigWallet) => 2,
+            WalletType::Multisig(MultisigType::SafeMultisigWallet24h) => 3,
+            WalletType::Multisig(MultisigType::SetcodeMultisigWallet) => 4,
+            WalletType::Multisig(MultisigType::BridgeMultisigWallet) => 5,
+            WalletType::Multisig(MultisigType::SurfWallet) => 6,
+            WalletType::Multisig(MultisigType::Multisig2) => 7,
+            _ => anyhow::bail!("Unimplemented wallet type"),
+        };
+
+        Ok(res)
+    }
+}
+
 impl std::fmt::Display for WalletType {
     fn fmt(&self, f: &'_ mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

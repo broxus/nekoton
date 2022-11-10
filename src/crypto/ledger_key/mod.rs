@@ -146,12 +146,12 @@ impl StoreSigner for LedgerKeySigner {
         let signature = match input.context {
             None => {
                 self.connection
-                    .sign(key.account_id, input.wallet, data)
+                    .sign(key.account_id, input.wallet.try_into()?, data)
                     .await?
             }
             Some(context) => {
                 self.connection
-                    .sign_transaction(key.account_id, input.wallet, data, &context)
+                    .sign_transaction(key.account_id, input.wallet.try_into()?, data, &context)
                     .await?
             }
         };
