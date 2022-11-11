@@ -317,6 +317,7 @@
 <span id="317">317</span>
 <span id="318">318</span>
 <span id="319">319</span>
+<span id="320">320</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map::{<span class="self">self</span>, HashMap};
 <span class="kw">use </span>std::convert::TryInto;
 <span class="kw">use </span>std::io::Read;
@@ -333,6 +334,7 @@
     default_key_name, SharedSecret, Signer <span class="kw">as </span>StoreSigner, SignerContext, SignerEntry,
     SignerStorage,
 };
+<span class="kw">use </span><span class="kw">crate</span>::core::ton_wallet::WalletType;
 <span class="kw">use </span><span class="kw">crate</span>::external::{LedgerConnection, LedgerSignatureContext};
 
 <span class="attribute">#[derive(Clone)]
@@ -464,12 +466,12 @@
         <span class="kw">let </span>signature = <span class="kw">match </span>input.context {
             <span class="prelude-val">None </span>=&gt; {
                 <span class="self">self</span>.connection
-                    .sign(key.account_id, input.wallet, data)
+                    .sign(key.account_id, input.wallet.try_into()<span class="question-mark">?</span>, data)
                     .<span class="kw">await</span><span class="question-mark">?
             </span>}
             <span class="prelude-val">Some</span>(context) =&gt; {
                 <span class="self">self</span>.connection
-                    .sign_transaction(key.account_id, input.wallet, data, <span class="kw-2">&amp;</span>context)
+                    .sign_transaction(key.account_id, input.wallet.try_into()<span class="question-mark">?</span>, data, <span class="kw-2">&amp;</span>context)
                     .<span class="kw">await</span><span class="question-mark">?
             </span>}
         };
@@ -575,7 +577,7 @@
 <span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
 </span><span class="kw">pub struct </span>LedgerSignInput {
-    <span class="kw">pub </span>wallet: u16,
+    <span class="kw">pub </span>wallet: WalletType,
     <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
     </span><span class="kw">pub </span>public_key: PublicKey,
     <span class="attribute">#[serde(default)]
