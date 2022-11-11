@@ -257,7 +257,7 @@ pub enum LedgerUpdateKeyInput {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LedgerSignInput {
-    wallet: WalletType,
+    pub wallet: WalletType,
     #[serde(with = "serde_public_key")]
     pub public_key: PublicKey,
     #[serde(default)]
