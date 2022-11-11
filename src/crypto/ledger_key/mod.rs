@@ -144,11 +144,7 @@ impl StoreSigner for LedgerKeySigner {
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let key = self.get_key(&input.public_key)?;
         let signature = match input.context {
-            None => {
-                self.connection
-                    .sign(key.account_id, input.wallet.try_into()?, data)
-                    .await?
-            }
+            None => self.connection.sign(key.account_id, data).await?,
             Some(context) => {
                 self.connection
                     .sign_transaction(key.account_id, input.wallet.try_into()?, data, &context)
