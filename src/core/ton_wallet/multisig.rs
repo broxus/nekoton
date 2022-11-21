@@ -284,6 +284,7 @@ pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
             | MultisigType::SetcodeMultisigWallet24h
             | MultisigType::BridgeMultisigWallet => 86400,
         },
+        required_confirmations: None,
     }
 }
 
@@ -325,21 +326,25 @@ fn run_local(
     tokens.ok_or_else(|| MultisigError::NonZeroResultCode(result_code).into())
 }
 
-pub fn get_expiration_time(
+#[derive(Copy, Clone, UnpackAbiPlain)]
+pub struct MultisigParamsPrefix {
+    #[abi(uint8, name = "maxQueuedTransactions")]
+    pub max_queued_transactions: u8,
+    #[abi(uint8, name = "maxCustodianCount")]
+    pub max_custodian_count: u8,
+    #[abi(uint64, name = "expirationTime")]
+    pub expiration_time: u64,
+    #[abi(uint128, name = "minValue")]
+    pub min_value: u128,
+    #[abi(uint8, name = "requiredTxnConfirms")]
+    pub required_confirms: u8,
+}
+
+pub fn get_params(
     clock: &dyn Clock,
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
-) -> Result<u64> {
-    #[derive(Copy, Clone, UnpackAbiPlain)]
-    pub struct SetCodeMultisigParamsPrefix {
-        #[abi(uint8, name = "maxQueuedTransactions")]
-        pub _max_queued_transactions: u8,
-        #[abi(uint8, name = "maxCustodianCount")]
-        pub _max_custodian_count: u8,
-        #[abi(uint64, name = "expirationTime")]
-        pub expiration_time: u64,
-    }
-
+) -> Result<MultisigParamsPrefix> {
     let function = match multisig_type {
         MultisigType::Multisig2 => nekoton_contracts::wallets::multisig2::get_parameters(),
         MultisigType::SafeMultisigWallet
@@ -354,9 +359,9 @@ pub fn get_expiration_time(
         }
     };
 
-    let output: SetCodeMultisigParamsPrefix =
+    let output: MultisigParamsPrefix =
         run_local(clock, function, account_stuff.into_owned())?.unpack()?;
-    Ok(output.expiration_time)
+    Ok(output)
 }
 
 pub fn get_custodians(

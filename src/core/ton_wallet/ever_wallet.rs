@@ -178,6 +178,7 @@ pub static DETAILS: TonWalletDetails = TonWalletDetails {
     supports_state_init: true,
     supports_multiple_owners: false,
     expiration_time: 0,
+    required_confirmations: None,
 };
 
 const MAX_MESSAGES: usize = 4;

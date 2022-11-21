@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::convert::TryFrom;
+use std::num::NonZeroU8;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -440,15 +441,12 @@ impl WalletData {
         if self.details.is_none() {
             let mut details = wallet_type.details();
 
-            // Adjust `expiration_time` from the state for multisig2
-            if let WalletType::Multisig(MultisigType::Multisig2) = wallet_type {
-                details.expiration_time = multisig::get_expiration_time(
-                    clock,
-                    MultisigType::Multisig2,
-                    Cow::Borrowed(account_stuff),
-                )?
-                .try_into()
-                .unwrap_or(u32::MAX);
+            if let WalletType::Multisig(multisig_type) = wallet_type {
+                let params =
+                    multisig::get_params(clock, multisig_type, Cow::Borrowed(account_stuff))?;
+                details.expiration_time = params.expiration_time.try_into().unwrap_or(u32::MAX);
+                details.required_confirmations =
+                    NonZeroU8::new(std::cmp::max(params.required_confirms, 1));
             }
 
             self.details = Some(details);
@@ -725,6 +723,7 @@ pub struct TonWalletDetails {
     pub supports_state_init: bool,
     pub supports_multiple_owners: bool,
     pub expiration_time: u32,
+    pub required_confirmations: Option<NonZeroU8>,
 }
 
 /// Message info
