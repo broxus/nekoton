@@ -505,6 +505,11 @@
 <span id="505">505</span>
 <span id="506">506</span>
 <span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::convert::TryFrom;
 
@@ -791,6 +796,7 @@
             | MultisigType::SetcodeMultisigWallet24h
             | MultisigType::BridgeMultisigWallet =&gt; <span class="number">86400</span>,
         },
+        required_confirmations: <span class="prelude-val">None</span>,
     }
 }
 
@@ -832,21 +838,25 @@
     tokens.ok_or_else(|| MultisigError::NonZeroResultCode(result_code).into())
 }
 
-<span class="kw">pub fn </span>get_expiration_time(
+<span class="attribute">#[derive(Copy, Clone, UnpackAbiPlain)]
+</span><span class="kw">pub struct </span>MultisigParamsPrefix {
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;maxQueuedTransactions&quot;</span>)]
+    </span><span class="kw">pub </span>max_queued_transactions: u8,
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;maxCustodianCount&quot;</span>)]
+    </span><span class="kw">pub </span>max_custodian_count: u8,
+    <span class="attribute">#[abi(uint64, name = <span class="string">&quot;expirationTime&quot;</span>)]
+    </span><span class="kw">pub </span>expiration_time: u64,
+    <span class="attribute">#[abi(uint128, name = <span class="string">&quot;minValue&quot;</span>)]
+    </span><span class="kw">pub </span>min_value: u128,
+    <span class="attribute">#[abi(uint8, name = <span class="string">&quot;requiredTxnConfirms&quot;</span>)]
+    </span><span class="kw">pub </span>required_confirms: u8,
+}
+
+<span class="kw">pub fn </span>get_params(
     clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
     multisig_type: MultisigType,
     account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;u64&gt; {
-    <span class="attribute">#[derive(Copy, Clone, UnpackAbiPlain)]
-    </span><span class="kw">pub struct </span>SetCodeMultisigParamsPrefix {
-        <span class="attribute">#[abi(uint8, name = <span class="string">&quot;maxQueuedTransactions&quot;</span>)]
-        </span><span class="kw">pub </span>_max_queued_transactions: u8,
-        <span class="attribute">#[abi(uint8, name = <span class="string">&quot;maxCustodianCount&quot;</span>)]
-        </span><span class="kw">pub </span>_max_custodian_count: u8,
-        <span class="attribute">#[abi(uint64, name = <span class="string">&quot;expirationTime&quot;</span>)]
-        </span><span class="kw">pub </span>expiration_time: u64,
-    }
-
+) -&gt; <span class="prelude-ty">Result</span>&lt;MultisigParamsPrefix&gt; {
     <span class="kw">let </span>function = <span class="kw">match </span>multisig_type {
         MultisigType::Multisig2 =&gt; nekoton_contracts::wallets::multisig2::get_parameters(),
         MultisigType::SafeMultisigWallet
@@ -861,9 +871,9 @@
         }
     };
 
-    <span class="kw">let </span>output: SetCodeMultisigParamsPrefix =
+    <span class="kw">let </span>output: MultisigParamsPrefix =
         run_local(clock, function, account_stuff.into_owned())<span class="question-mark">?</span>.unpack()<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(output.expiration_time)
+    <span class="prelude-val">Ok</span>(output)
 }
 
 <span class="kw">pub fn </span>get_custodians(

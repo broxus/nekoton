@@ -357,6 +357,7 @@
 <span id="357">357</span>
 <span id="358">358</span>
 <span id="359">359</span>
+<span id="360">360</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -592,6 +593,7 @@
     supports_state_init: <span class="bool-val">true</span>,
     supports_multiple_owners: <span class="bool-val">false</span>,
     expiration_time: <span class="number">0</span>,
+    required_confirmations: <span class="prelude-val">None</span>,
 };
 
 <span class="kw">const </span>MAX_MESSAGES: usize = <span class="number">4</span>;

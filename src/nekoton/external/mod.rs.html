@@ -74,9 +74,10 @@
 <span id="74">74</span>
 <span id="75">75</span>
 <span id="76">76</span>
-<span id="77">77</span>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
+<span class="kw">use </span>num_bigint::BigUint;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="attribute">#[async_trait]
@@ -129,6 +130,10 @@
 </span><span class="kw">pub struct </span>LedgerSignatureContext {
     <span class="kw">pub </span>decimals: u8,
     <span class="kw">pub </span>asset: String,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>amount: BigUint,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="kw">pub </span>address: ton_block::MsgAddressInt,
 }
 
 <span class="attribute">#[async_trait]
@@ -142,14 +147,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         account: u16,
         message: <span class="kw-2">&amp;</span>[u8],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt;;
-
-    <span class="kw">async fn </span>sign_transaction(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        account: u16,
-        wallet: u16,
-        message: <span class="kw-2">&amp;</span>[u8],
-        context: <span class="kw-2">&amp;</span>LedgerSignatureContext,
+        context: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;LedgerSignatureContext&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt;;
 }
 </code></pre></div>
