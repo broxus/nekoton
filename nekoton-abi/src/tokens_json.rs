@@ -31,7 +31,7 @@ pub fn make_abi_token_value(value: &ton_abi::TokenValue) -> anyhow::Result<serde
         }
         ton_abi::TokenValue::Cell(value) => {
             let data = ton_types::serialize_toc(value)?;
-            serde_json::Value::String(base64::encode(&data))
+            serde_json::Value::String(base64::encode(data))
         }
         ton_abi::TokenValue::Map(_, _, values) => serde_json::Value::Array(
             values

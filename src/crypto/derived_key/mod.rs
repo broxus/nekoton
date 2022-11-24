@@ -364,7 +364,7 @@ impl SignerStorage for DerivedKeySigner {
                 .master_keys
                 .into_iter()
                 .map(|(public_key, master_key)| {
-                    let public_key = hex::decode(&public_key)?;
+                    let public_key = hex::decode(public_key)?;
                     let public_key = PublicKey::from_bytes(&public_key)?;
                     Result::<_, anyhow::Error>::Ok((public_key.to_bytes(), master_key))
                 })
@@ -716,13 +716,14 @@ mod serde_accounts_map {
         stored_data
             .into_iter()
             .map(|(public_key, StoredItem { name, account_id })| {
-                let public_key = hex::decode(&public_key)
-                    .map_err(D::Error::custom)
-                    .and_then(|public_key| {
-                        public_key
-                            .try_into()
-                            .map_err(|_| D::Error::custom("Invalid public key"))
-                    })?;
+                let public_key =
+                    hex::decode(public_key)
+                        .map_err(D::Error::custom)
+                        .and_then(|public_key| {
+                            public_key
+                                .try_into()
+                                .map_err(|_| D::Error::custom("Invalid public key"))
+                        })?;
                 let name = name.unwrap_or_else(|| default_key_name(&public_key));
                 Ok((public_key, Account { name, account_id }))
             })

@@ -709,7 +709,7 @@ pub mod serde_secret_key {
         D: serde::Deserializer<'de>,
     {
         let data = String::deserialize(deserializer)?;
-        let bytes = hex::decode(&data).map_err(|_| D::Error::custom("Invalid SecretKey"))?;
+        let bytes = hex::decode(data).map_err(|_| D::Error::custom("Invalid SecretKey"))?;
         ed25519_dalek::SecretKey::from_bytes(&bytes)
             .map_err(|_| D::Error::custom("Invalid SecretKey"))
     }
@@ -730,7 +730,7 @@ pub mod serde_public_key {
         D: serde::Deserializer<'de>,
     {
         let data = String::deserialize(deserializer)?;
-        let bytes = hex::decode(&data).map_err(|_| Error::custom("Invalid PublicKey"))?;
+        let bytes = hex::decode(data).map_err(|_| Error::custom("Invalid PublicKey"))?;
         ed25519_dalek::PublicKey::from_bytes(&bytes).map_err(|_| Error::custom("Invalid PublicKey"))
     }
 }

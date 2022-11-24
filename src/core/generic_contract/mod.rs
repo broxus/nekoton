@@ -34,13 +34,21 @@ impl GenericContract {
                 false => None,
             };
 
+            // Manual map is used here due to unsoundness
+            // See issue: https://github.com/rust-lang/rust/issues/84305
             #[allow(trivial_casts)]
+            #[allow(clippy::manual_map)]
+            let on_transactions_found = match &mut on_transactions_found {
+                Some(handler) => Some(handler as _),
+                None => None,
+            };
+
             ContractSubscription::subscribe(
                 clock,
                 transport,
                 address,
                 &mut make_contract_state_handler(handler),
-                on_transactions_found.as_mut().map(|handler| handler as _),
+                on_transactions_found,
             )
             .await?
         };

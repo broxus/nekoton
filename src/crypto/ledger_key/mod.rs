@@ -158,7 +158,7 @@ impl SignerStorage for LedgerKeySigner {
         self.keys = data
             .into_iter()
             .map(|(public_key, data)| {
-                let public_key = hex::decode(&public_key)?
+                let public_key = hex::decode(public_key)?
                     .try_into()
                     .map_err(|_| LedgerKeyError::InvalidPublicKey)?;
                 let data = LedgerKey::from_reader(&mut std::io::Cursor::new(data))?;
