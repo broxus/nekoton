@@ -206,8 +206,11 @@ pub enum TokenWalletTransaction {
     IncomingTransfer(TokenIncomingTransfer),
     OutgoingTransfer(TokenOutgoingTransfer),
     SwapBack(TokenSwapBack),
+    #[serde(with = "serde_string")]
     Accept(BigUint),
+    #[serde(with = "serde_string")]
     TransferBounced(BigUint),
+    #[serde(with = "serde_string")]
     SwapBackBounced(BigUint),
 }
 

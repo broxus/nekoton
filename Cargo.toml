@@ -4,7 +4,7 @@ version = "0.11.0"
 authors = [
     "Alexey Pashinov <pashinov93@gmail.com>",
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
-    "Ivan Kalinin <i.kalinin@dexpa.io>"
+    "Ivan Kalinin <i.kalinin@dexpa.io>",
 ]
 rust-version = "1.62.0"
 edition = "2021"
@@ -15,7 +15,7 @@ members = [
     "nekoton-contracts",
     "nekoton-derive",
     "nekoton-transport",
-    "nekoton-utils"
+    "nekoton-utils",
 ]
 
 [dependencies]
@@ -33,7 +33,7 @@ hex = "0.4"
 hmac = "0.11.0"
 log = "0.4"
 lru = "0.8.0"
-num-bigint = { version = "0.4", features = ["serde"] }
+num-bigint = "0.4"
 once_cell = "1.12.0"
 parking_lot = "0.12.0"
 pbkdf2 = "0.9.0"
@@ -68,7 +68,13 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 [features]
 default = ["gql_transport"]
 integration_test = []
-web = ["nekoton-contracts/web", "nekoton-abi/web", "nekoton-utils/web", "getrandom/wasm-bindgen", "ton_abi/web"]
+web = [
+    "nekoton-contracts/web",
+    "nekoton-abi/web",
+    "nekoton-utils/web",
+    "getrandom/wasm-bindgen",
+    "ton_abi/web",
+]
 gql_transport = ["dep:erased-serde"]
 jrpc_transport = ["dep:tiny-jsonrpc"]
 
