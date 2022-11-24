@@ -489,7 +489,7 @@
         }
         ton_abi::TokenValue::Cell(value) =&gt; {
             <span class="kw">let </span>data = ton_types::serialize_toc(value)<span class="question-mark">?</span>;
-            serde_json::Value::String(base64::encode(<span class="kw-2">&amp;</span>data))
+            serde_json::Value::String(base64::encode(data))
         }
         ton_abi::TokenValue::Map(<span class="kw">_</span>, <span class="kw">_</span>, values) =&gt; serde_json::Value::Array(
             values

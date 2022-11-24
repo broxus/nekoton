@@ -1597,7 +1597,7 @@
         </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
         <span class="kw">let </span>data = String::deserialize(deserializer)<span class="question-mark">?</span>;
-        <span class="kw">let </span>bytes = hex::decode(<span class="kw-2">&amp;</span>data).map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid SecretKey&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>bytes = hex::decode(data).map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid SecretKey&quot;</span>))<span class="question-mark">?</span>;
         ed25519_dalek::SecretKey::from_bytes(<span class="kw-2">&amp;</span>bytes)
             .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid SecretKey&quot;</span>))
     }
@@ -1618,7 +1618,7 @@
         </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
         <span class="kw">let </span>data = String::deserialize(deserializer)<span class="question-mark">?</span>;
-        <span class="kw">let </span>bytes = hex::decode(<span class="kw-2">&amp;</span>data).map_err(|<span class="kw">_</span>| Error::custom(<span class="string">&quot;Invalid PublicKey&quot;</span>))<span class="question-mark">?</span>;
+        <span class="kw">let </span>bytes = hex::decode(data).map_err(|<span class="kw">_</span>| Error::custom(<span class="string">&quot;Invalid PublicKey&quot;</span>))<span class="question-mark">?</span>;
         ed25519_dalek::PublicKey::from_bytes(<span class="kw-2">&amp;</span>bytes).map_err(|<span class="kw">_</span>| Error::custom(<span class="string">&quot;Invalid PublicKey&quot;</span>))
     }
 }

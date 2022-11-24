@@ -1642,7 +1642,7 @@
         <span class="kw">let </span>parsed = MessageHelper::deserialize(deserializer)<span class="question-mark">?</span>;
         <span class="kw">let </span>body = <span class="kw">match </span>parsed.body {
             <span class="prelude-val">Some</span>(data) =&gt; {
-                <span class="kw">let </span>data = base64::decode(<span class="kw-2">&amp;</span>data).map_err(D::Error::custom)<span class="question-mark">?</span>;
+                <span class="kw">let </span>data = base64::decode(data).map_err(D::Error::custom)<span class="question-mark">?</span>;
                 <span class="kw">let </span>data = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>data.as_slice())
                     .map_err(D::Error::custom)<span class="question-mark">?</span>;
                 <span class="kw">let </span>hash = data.repr_hash();

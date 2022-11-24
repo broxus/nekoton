@@ -1019,7 +1019,7 @@
         <span class="self">self</span>.keys = data
             .into_iter()
             .map(|(public_key, data)| {
-                <span class="kw">let </span>public_key = hex::decode(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?
+                <span class="kw">let </span>public_key = hex::decode(public_key)<span class="question-mark">?
                     </span>.try_into()
                     .map_err(|<span class="kw">_</span>| EncryptedKeyError::InvalidPublicKey)<span class="question-mark">?</span>;
                 <span class="kw">let </span>data = EncryptedKey::from_reader(<span class="kw-2">&amp;mut </span>std::io::Cursor::new(data))<span class="question-mark">?</span>;

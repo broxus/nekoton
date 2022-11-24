@@ -1005,6 +1005,7 @@
 <span id="1005">1005</span>
 <span id="1006">1006</span>
 <span id="1007">1007</span>
+<span id="1008">1008</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map::{<span class="self">self</span>, HashMap};
 
 <span class="kw">use </span>anyhow::Result;
@@ -1371,7 +1372,7 @@
                 .master_keys
                 .into_iter()
                 .map(|(public_key, master_key)| {
-                    <span class="kw">let </span>public_key = hex::decode(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>public_key = hex::decode(public_key)<span class="question-mark">?</span>;
                     <span class="kw">let </span>public_key = PublicKey::from_bytes(<span class="kw-2">&amp;</span>public_key)<span class="question-mark">?</span>;
                     <span class="prelude-ty">Result</span>::&lt;<span class="kw">_</span>, anyhow::Error&gt;::Ok((public_key.to_bytes(), master_key))
                 })
@@ -1723,13 +1724,14 @@
         stored_data
             .into_iter()
             .map(|(public_key, StoredItem { name, account_id })| {
-                <span class="kw">let </span>public_key = hex::decode(<span class="kw-2">&amp;</span>public_key)
-                    .map_err(D::Error::custom)
-                    .and_then(|public_key| {
-                        public_key
-                            .try_into()
-                            .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid public key&quot;</span>))
-                    })<span class="question-mark">?</span>;
+                <span class="kw">let </span>public_key =
+                    hex::decode(public_key)
+                        .map_err(D::Error::custom)
+                        .and_then(|public_key| {
+                            public_key
+                                .try_into()
+                                .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid public key&quot;</span>))
+                        })<span class="question-mark">?</span>;
                 <span class="kw">let </span>name = name.unwrap_or_else(|| default_key_name(<span class="kw-2">&amp;</span>public_key));
                 <span class="prelude-val">Ok</span>((public_key, Account { name, account_id }))
             })

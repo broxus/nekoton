@@ -762,7 +762,7 @@
         </span>.transactions
         .into_iter()
         .map(|transaction| {
-            <span class="kw">let </span>bytes = base64::decode(<span class="kw-2">&amp;</span>transaction.boc)<span class="question-mark">?</span>;
+            <span class="kw">let </span>bytes = base64::decode(transaction.boc)<span class="question-mark">?</span>;
             <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>bytes.as_slice())
                 .map_err(|<span class="kw">_</span>| NodeClientError::InvalidTransaction)<span class="question-mark">?</span>;
             <span class="kw">let </span>hash = cell.repr_hash();
@@ -783,7 +783,7 @@
         </span>.transactions
         .into_iter()
         .map(|transaction| {
-            <span class="kw">let </span>bytes = base64::decode(<span class="kw-2">&amp;</span>transaction.boc)<span class="question-mark">?</span>;
+            <span class="kw">let </span>bytes = base64::decode(transaction.boc)<span class="question-mark">?</span>;
             <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>bytes.as_slice())
                 .map_err(|<span class="kw">_</span>| NodeClientError::InvalidTransaction)<span class="question-mark">?</span>;
             <span class="kw">let </span>hash = cell.repr_hash();
@@ -808,7 +808,7 @@
         </span>.transactions
         .into_iter()
         .map(|transaction| {
-            <span class="kw">let </span>bytes = base64::decode(<span class="kw-2">&amp;</span>transaction.boc)<span class="question-mark">?</span>;
+            <span class="kw">let </span>bytes = base64::decode(transaction.boc)<span class="question-mark">?</span>;
             <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>bytes.as_slice())
                 .map_err(|<span class="kw">_</span>| NodeClientError::InvalidTransaction)<span class="question-mark">?</span>;
             <span class="kw">let </span>hash = cell.repr_hash();
