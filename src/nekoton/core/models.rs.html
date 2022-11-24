@@ -917,6 +917,9 @@
 <span id="917">917</span>
 <span id="918">918</span>
 <span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -1125,9 +1128,12 @@
     IncomingTransfer(TokenIncomingTransfer),
     OutgoingTransfer(TokenOutgoingTransfer),
     SwapBack(TokenSwapBack),
-    Accept(BigUint),
-    TransferBounced(BigUint),
-    SwapBackBounced(BigUint),
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span>Accept(BigUint),
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span>TransferBounced(BigUint),
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span>SwapBackBounced(BigUint),
 }
 
 <span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize)]
