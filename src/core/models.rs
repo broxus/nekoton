@@ -200,6 +200,29 @@ pub struct MultisigPendingTransaction {
     pub bounce: bool,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct MultisigPendingUpdate {
+    #[serde(with = "serde_string")]
+    pub id: u64,
+
+    #[serde(with = "serde_vec_uint256")]
+    pub confirmations: Vec<UInt256>,
+
+    pub signs_required: u8,
+    pub signs_received: u8,
+
+    #[serde(with = "serde_uint256")]
+    pub creator: UInt256,
+
+    pub index: u8,
+
+    #[serde(with = "serde_uint256")]
+    pub new_code_hash: ton_types::UInt256,
+    #[serde(with = "serde_vec_uint256")]
+    pub new_custodians: Vec<ton_types::UInt256>,
+    pub new_req_confirms: u8,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum TokenWalletTransaction {

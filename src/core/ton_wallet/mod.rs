@@ -362,6 +362,97 @@ impl TonWallet {
         }
     }
 
+    pub fn prepare_code_update(
+        &self,
+        public_key: &PublicKey,
+        new_code_hash: &[u8; 32],
+        expiration: Expiration,
+    ) -> Result<Box<dyn UnsignedMessage>> {
+        match self.wallet_type {
+            WalletType::Multisig(multisig_type) if multisig_type.is_multisig2() => {
+                multisig::prepare_code_update(
+                    self.clock.as_ref(),
+                    multisig_type,
+                    public_key,
+                    self.address().clone(),
+                    new_code_hash,
+                    expiration,
+                )
+            }
+            _ => Err(TonWalletError::UpdateNotSupported.into()),
+        }
+    }
+
+    pub fn prepare_confirm_update(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
+        update_id: u64,
+        expiration: Expiration,
+    ) -> Result<Box<dyn UnsignedMessage>> {
+        match self.wallet_type {
+            WalletType::Multisig(multisig_type) => {
+                let pending_update = multisig::find_pending_update(
+                    self.clock.as_ref(),
+                    multisig_type,
+                    Cow::Borrowed(current_state),
+                    update_id,
+                )?;
+                if pending_update.is_none() {
+                    return Err(TonWalletError::PendingUpdateNotFound.into());
+                }
+
+                multisig::prepare_confirm_update(
+                    self.clock.as_ref(),
+                    multisig_type,
+                    public_key,
+                    self.address().clone(),
+                    update_id,
+                    expiration,
+                )
+            }
+            _ => Err(TonWalletError::PendingUpdateNotFound.into()),
+        }
+    }
+
+    pub fn prepare_execute_code_update(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
+        update_id: u64,
+        new_code: ton_types::Cell,
+        expiration: Expiration,
+    ) -> Result<Box<dyn UnsignedMessage>> {
+        match self.wallet_type {
+            WalletType::Multisig(multisig_type) => {
+                let update = match multisig::find_pending_update(
+                    self.clock.as_ref(),
+                    multisig_type,
+                    Cow::Borrowed(current_state),
+                    update_id,
+                )? {
+                    Some(update) => update,
+                    None => return Err(TonWalletError::PendingUpdateNotFound.into()),
+                };
+
+                if !matches!(update.new_code_hash, Some(hash) if new_code.repr_hash() == hash) {
+                    return Err(TonWalletError::UpdatedDataMismatch.into());
+                }
+
+                multisig::prepare_execute_update(
+                    self.clock.as_ref(),
+                    multisig_type,
+                    public_key,
+                    self.address().clone(),
+                    update_id,
+                    Some(new_code),
+                    expiration,
+                )
+            }
+            _ => Err(TonWalletError::PendingUpdateNotFound.into()),
+        }
+    }
+
     pub async fn send(
         &mut self,
         message: &ton_block::Message,
@@ -655,6 +746,12 @@ enum TonWalletError {
     CustodiansNotFound,
     #[error("Pending transaction not found")]
     PendingTransactionNotFound,
+    #[error("Update not supported")]
+    UpdateNotSupported,
+    #[error("Pending update not found")]
+    PendingUpdateNotFound,
+    #[error("Updated data mismatch")]
+    UpdatedDataMismatch,
 }
 
 fn make_contract_state_handler<'a>(
@@ -723,6 +820,7 @@ pub struct TonWalletDetails {
     pub supports_payload: bool,
     pub supports_state_init: bool,
     pub supports_multiple_owners: bool,
+    pub supports_code_update: bool,
     pub expiration_time: u32,
     pub required_confirmations: Option<NonZeroU8>,
 }
@@ -759,6 +857,15 @@ impl WalletType {
             Self::WalletV3 => wallet_v3::DETAILS,
             Self::HighloadWalletV2 => highload_wallet_v2::DETAILS,
             Self::EverWallet => ever_wallet::DETAILS,
+        }
+    }
+
+    pub fn possible_updates(&self) -> &'static [Self] {
+        const MULTISIG2_UPDATES: &[WalletType] = &[WalletType::Multisig(MultisigType::Multisig2_1)];
+
+        match self {
+            Self::Multisig(MultisigType::Multisig2) => MULTISIG2_UPDATES,
+            _ => &[],
         }
     }
 }
