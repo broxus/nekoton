@@ -17,6 +17,7 @@ declare_tvc! {
     setcode_multisig_wallet_24h => "./SetcodeMultisigWallet24h.tvc" (SETCODE_MULTISIG_WALLET24H_CODE),
     bridge_multisig_wallet => "./BridgeMultisigWallet.tvc" (BRIDGE_MULTISIG_WALLET_CODE),
     multisig2 => "./Multisig2.tvc" (MULTISIG2_CODE),
+    multisig2_1 => "./Multisig2_1.tvc" (MULTISIG2_1_CODE),
     surf_wallet => "./Surf.tvc" (SURF_WALLET_CODE),
     wallet_v3 => "./wallet_v3_code.boc" (WALLET_V3_CODE),
     highload_wallet_v2 => "./highload_wallet_v2_code.boc" (HIGHLOAD_WALLET_V2_CODE),

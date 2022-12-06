@@ -339,7 +339,7 @@ impl MultisigFunctions {
         static NEW_FUNCTIONS: OnceBox<MultisigFunctions> = OnceBox::new();
 
         match multisig_type {
-            MultisigType::Multisig2 => NEW_FUNCTIONS.get_or_init(|| {
+            ty if ty.is_multisig2() => NEW_FUNCTIONS.get_or_init(|| {
                 Box::new(MultisigFunctions {
                     send_transaction: multisig2::send_transaction(),
                     submit_transaction: multisig2::submit_transaction(),

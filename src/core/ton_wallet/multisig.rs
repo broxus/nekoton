@@ -62,7 +62,7 @@ pub fn prepare_deploy(
         .map(|public_key| UInt256::from(public_key.as_bytes()))
         .collect::<Vec<UInt256>>();
 
-    let is_new_multisig = multisig_type == MultisigType::Multisig2;
+    let is_new_multisig = multisig_type.is_multisig2();
     let function = if is_new_multisig {
         nekoton_contracts::wallets::multisig2::constructor()
     } else if params.expiration_time.is_none() {
@@ -104,7 +104,7 @@ pub fn prepare_confirm_transaction(
         ..Default::default()
     });
 
-    let function = if multisig_type == MultisigType::Multisig2 {
+    let function = if multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::confirm_transaction()
     } else {
         nekoton_contracts::wallets::multisig::confirm_transaction()
@@ -135,7 +135,7 @@ pub fn prepare_transfer(
         ..Default::default()
     });
 
-    let is_new_multisig = multisig_type == MultisigType::Multisig2;
+    let is_new_multisig = multisig_type.is_multisig2();
 
     let (function, input) = if has_multiple_owners || is_new_multisig && gift.state_init.is_some() {
         let all_balance = match MessageFlags::try_from(gift.flags) {
@@ -203,8 +203,15 @@ define_string_enum!(
         BridgeMultisigWallet,
         SurfWallet,
         Multisig2,
+        Multisig2_1,
     }
 );
+
+impl MultisigType {
+    pub fn is_multisig2(self) -> bool {
+        matches!(self, Self::Multisig2 | Self::Multisig2_1)
+    }
+}
 
 const SAFE_MULTISIG_WALLET_HASH: [u8; 32] = [
     0x80, 0xd6, 0xc4, 0x7c, 0x4a, 0x25, 0x54, 0x3c, 0x9b, 0x39, 0x7b, 0x71, 0x71, 0x6f, 0x3f, 0xae,
@@ -234,6 +241,10 @@ const MULTISIG2_HASH: [u8; 32] = [
     0x29, 0xb2, 0x47, 0x76, 0xb3, 0xdf, 0x6a, 0x05, 0xc5, 0xa1, 0xb8, 0xd8, 0xfd, 0x75, 0xcb, 0x72,
     0xa1, 0xd3, 0x3c, 0x0a, 0x44, 0x38, 0x53, 0x32, 0xa8, 0xbf, 0xc2, 0x72, 0x7f, 0xb6, 0x65, 0x90,
 ];
+const MULTISIG2_1_HASH: [u8; 32] = [
+    0xd6, 0x6d, 0x19, 0x87, 0x66, 0xab, 0xdb, 0xe1, 0x25, 0x3f, 0x34, 0x15, 0x82, 0x6c, 0x94, 0x6c,
+    0x37, 0x1f, 0x51, 0x12, 0x55, 0x24, 0x08, 0x62, 0x5a, 0xeb, 0x0b, 0x31, 0xe0, 0xef, 0x2d, 0xf3,
+];
 
 pub fn guess_multisig_type(code_hash: &UInt256) -> Option<MultisigType> {
     match *code_hash.as_slice() {
@@ -244,6 +255,7 @@ pub fn guess_multisig_type(code_hash: &UInt256) -> Option<MultisigType> {
         SETCODE_MULTISIG_WALLET_24H_HASH => Some(MultisigType::SetcodeMultisigWallet24h),
         SURF_WALLET_HASH => Some(MultisigType::SurfWallet),
         MULTISIG2_HASH => Some(MultisigType::Multisig2),
+        MULTISIG2_1_HASH => Some(MultisigType::Multisig2_1),
         _ => None,
     }
 }
@@ -266,19 +278,20 @@ pub fn compute_contract_address(
 pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
     TonWalletDetails {
         requires_separate_deploy: true,
-        min_amount: if multisig_type == MultisigType::Multisig2 {
+        min_amount: if multisig_type.is_multisig2() {
             0
         } else {
             1000000 // 0.001 EVER
         },
         max_messages: 1,
         supports_payload: true,
-        supports_state_init: multisig_type == MultisigType::Multisig2,
+        supports_state_init: multisig_type.is_multisig2(),
         supports_multiple_owners: true,
         expiration_time: match multisig_type {
             MultisigType::SafeMultisigWallet
             | MultisigType::SetcodeMultisigWallet
-            | MultisigType::Multisig2 => 3600,
+            | MultisigType::Multisig2
+            | MultisigType::Multisig2_1 => 3600,
             MultisigType::SurfWallet => 3601,
             MultisigType::SafeMultisigWallet24h
             | MultisigType::SetcodeMultisigWallet24h
@@ -299,6 +312,7 @@ fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> to
         MultisigType::BridgeMultisigWallet => wallets::code::bridge_multisig_wallet(),
         MultisigType::SurfWallet => wallets::code::surf_wallet(),
         MultisigType::Multisig2 => wallets::code::multisig2(),
+        MultisigType::Multisig2_1 => wallets::code::multisig2_1(),
     }
     .into();
 
@@ -346,7 +360,9 @@ pub fn get_params(
     account_stuff: Cow<'_, ton_block::AccountStuff>,
 ) -> Result<MultisigParamsPrefix> {
     let function = match multisig_type {
-        MultisigType::Multisig2 => nekoton_contracts::wallets::multisig2::get_parameters(),
+        MultisigType::Multisig2 | MultisigType::Multisig2_1 => {
+            nekoton_contracts::wallets::multisig2::get_parameters()
+        }
         MultisigType::SafeMultisigWallet
         | MultisigType::SafeMultisigWallet24h
         | MultisigType::BridgeMultisigWallet => {
@@ -369,7 +385,7 @@ pub fn get_custodians(
     multisig_type: MultisigType,
     account_stuff: Cow<'_, ton_block::AccountStuff>,
 ) -> Result<Vec<UInt256>> {
-    let function = if multisig_type == MultisigType::Multisig2 {
+    let function = if multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::get_custodians()
     } else {
         nekoton_contracts::wallets::multisig::get_custodians()
@@ -406,7 +422,7 @@ pub fn find_pending_transaction(
         pub id: u64,
     }
 
-    let function = if multisig_type == MultisigType::Multisig2 {
+    let function = if multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::get_transactions()
     } else {
         nekoton_contracts::wallets::multisig::get_transactions()
@@ -434,7 +450,7 @@ pub fn get_pending_transactions(
     account_stuff: Cow<'_, ton_block::AccountStuff>,
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingTransaction>> {
-    let function = if multisig_type == MultisigType::Multisig2 {
+    let function = if multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::get_transactions()
     } else {
         nekoton_contracts::wallets::multisig::get_transactions()
