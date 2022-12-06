@@ -510,6 +510,22 @@
 <span id="510">510</span>
 <span id="511">511</span>
 <span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::convert::TryFrom;
 
@@ -574,7 +590,7 @@
         .map(|public_key| UInt256::from(public_key.as_bytes()))
         .collect::&lt;Vec&lt;UInt256&gt;&gt;();
 
-    <span class="kw">let </span>is_new_multisig = multisig_type == MultisigType::Multisig2;
+    <span class="kw">let </span>is_new_multisig = multisig_type.is_multisig2();
     <span class="kw">let </span>function = <span class="kw">if </span>is_new_multisig {
         nekoton_contracts::wallets::multisig2::constructor()
     } <span class="kw">else if </span>params.expiration_time.is_none() {
@@ -616,7 +632,7 @@
         ..Default::default()
     });
 
-    <span class="kw">let </span>function = <span class="kw">if </span>multisig_type == MultisigType::Multisig2 {
+    <span class="kw">let </span>function = <span class="kw">if </span>multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::confirm_transaction()
     } <span class="kw">else </span>{
         nekoton_contracts::wallets::multisig::confirm_transaction()
@@ -647,7 +663,7 @@
         ..Default::default()
     });
 
-    <span class="kw">let </span>is_new_multisig = multisig_type == MultisigType::Multisig2;
+    <span class="kw">let </span>is_new_multisig = multisig_type.is_multisig2();
 
     <span class="kw">let </span>(function, input) = <span class="kw">if </span>has_multiple_owners || is_new_multisig &amp;&amp; gift.state_init.is_some() {
         <span class="kw">let </span>all_balance = <span class="kw">match </span>MessageFlags::try_from(gift.flags) {
@@ -715,8 +731,15 @@
         BridgeMultisigWallet,
         SurfWallet,
         Multisig2,
+        Multisig2_1,
     }
 );
+
+<span class="kw">impl </span>MultisigType {
+    <span class="kw">pub fn </span>is_multisig2(<span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::Multisig2 | <span class="self">Self</span>::Multisig2_1)
+    }
+}
 
 <span class="kw">const </span>SAFE_MULTISIG_WALLET_HASH: [u8; <span class="number">32</span>] = [
     <span class="number">0x80</span>, <span class="number">0xd6</span>, <span class="number">0xc4</span>, <span class="number">0x7c</span>, <span class="number">0x4a</span>, <span class="number">0x25</span>, <span class="number">0x54</span>, <span class="number">0x3c</span>, <span class="number">0x9b</span>, <span class="number">0x39</span>, <span class="number">0x7b</span>, <span class="number">0x71</span>, <span class="number">0x71</span>, <span class="number">0x6f</span>, <span class="number">0x3f</span>, <span class="number">0xae</span>,
@@ -746,6 +769,10 @@
     <span class="number">0x29</span>, <span class="number">0xb2</span>, <span class="number">0x47</span>, <span class="number">0x76</span>, <span class="number">0xb3</span>, <span class="number">0xdf</span>, <span class="number">0x6a</span>, <span class="number">0x05</span>, <span class="number">0xc5</span>, <span class="number">0xa1</span>, <span class="number">0xb8</span>, <span class="number">0xd8</span>, <span class="number">0xfd</span>, <span class="number">0x75</span>, <span class="number">0xcb</span>, <span class="number">0x72</span>,
     <span class="number">0xa1</span>, <span class="number">0xd3</span>, <span class="number">0x3c</span>, <span class="number">0x0a</span>, <span class="number">0x44</span>, <span class="number">0x38</span>, <span class="number">0x53</span>, <span class="number">0x32</span>, <span class="number">0xa8</span>, <span class="number">0xbf</span>, <span class="number">0xc2</span>, <span class="number">0x72</span>, <span class="number">0x7f</span>, <span class="number">0xb6</span>, <span class="number">0x65</span>, <span class="number">0x90</span>,
 ];
+<span class="kw">const </span>MULTISIG2_1_HASH: [u8; <span class="number">32</span>] = [
+    <span class="number">0xd6</span>, <span class="number">0x6d</span>, <span class="number">0x19</span>, <span class="number">0x87</span>, <span class="number">0x66</span>, <span class="number">0xab</span>, <span class="number">0xdb</span>, <span class="number">0xe1</span>, <span class="number">0x25</span>, <span class="number">0x3f</span>, <span class="number">0x34</span>, <span class="number">0x15</span>, <span class="number">0x82</span>, <span class="number">0x6c</span>, <span class="number">0x94</span>, <span class="number">0x6c</span>,
+    <span class="number">0x37</span>, <span class="number">0x1f</span>, <span class="number">0x51</span>, <span class="number">0x12</span>, <span class="number">0x55</span>, <span class="number">0x24</span>, <span class="number">0x08</span>, <span class="number">0x62</span>, <span class="number">0x5a</span>, <span class="number">0xeb</span>, <span class="number">0x0b</span>, <span class="number">0x31</span>, <span class="number">0xe0</span>, <span class="number">0xef</span>, <span class="number">0x2d</span>, <span class="number">0xf3</span>,
+];
 
 <span class="kw">pub fn </span>guess_multisig_type(code_hash: <span class="kw-2">&amp;</span>UInt256) -&gt; <span class="prelude-ty">Option</span>&lt;MultisigType&gt; {
     <span class="kw">match </span><span class="kw-2">*</span>code_hash.as_slice() {
@@ -756,6 +783,7 @@
         SETCODE_MULTISIG_WALLET_24H_HASH =&gt; <span class="prelude-val">Some</span>(MultisigType::SetcodeMultisigWallet24h),
         SURF_WALLET_HASH =&gt; <span class="prelude-val">Some</span>(MultisigType::SurfWallet),
         MULTISIG2_HASH =&gt; <span class="prelude-val">Some</span>(MultisigType::Multisig2),
+        MULTISIG2_1_HASH =&gt; <span class="prelude-val">Some</span>(MultisigType::Multisig2_1),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
@@ -778,19 +806,20 @@
 <span class="kw">pub fn </span>ton_wallet_details(multisig_type: MultisigType) -&gt; TonWalletDetails {
     TonWalletDetails {
         requires_separate_deploy: <span class="bool-val">true</span>,
-        min_amount: <span class="kw">if </span>multisig_type == MultisigType::Multisig2 {
+        min_amount: <span class="kw">if </span>multisig_type.is_multisig2() {
             <span class="number">0
         </span>} <span class="kw">else </span>{
             <span class="number">1000000 </span><span class="comment">// 0.001 EVER
         </span>},
         max_messages: <span class="number">1</span>,
         supports_payload: <span class="bool-val">true</span>,
-        supports_state_init: multisig_type == MultisigType::Multisig2,
+        supports_state_init: multisig_type.is_multisig2(),
         supports_multiple_owners: <span class="bool-val">true</span>,
         expiration_time: <span class="kw">match </span>multisig_type {
             MultisigType::SafeMultisigWallet
             | MultisigType::SetcodeMultisigWallet
-            | MultisigType::Multisig2 =&gt; <span class="number">3600</span>,
+            | MultisigType::Multisig2
+            | MultisigType::Multisig2_1 =&gt; <span class="number">3600</span>,
             MultisigType::SurfWallet =&gt; <span class="number">3601</span>,
             MultisigType::SafeMultisigWallet24h
             | MultisigType::SetcodeMultisigWallet24h
@@ -811,6 +840,7 @@
         MultisigType::BridgeMultisigWallet =&gt; wallets::code::bridge_multisig_wallet(),
         MultisigType::SurfWallet =&gt; wallets::code::surf_wallet(),
         MultisigType::Multisig2 =&gt; wallets::code::multisig2(),
+        MultisigType::Multisig2_1 =&gt; wallets::code::multisig2_1(),
     }
     .into();
 
@@ -858,7 +888,9 @@
     account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;MultisigParamsPrefix&gt; {
     <span class="kw">let </span>function = <span class="kw">match </span>multisig_type {
-        MultisigType::Multisig2 =&gt; nekoton_contracts::wallets::multisig2::get_parameters(),
+        MultisigType::Multisig2 | MultisigType::Multisig2_1 =&gt; {
+            nekoton_contracts::wallets::multisig2::get_parameters()
+        }
         MultisigType::SafeMultisigWallet
         | MultisigType::SafeMultisigWallet24h
         | MultisigType::BridgeMultisigWallet =&gt; {
@@ -881,7 +913,7 @@
     multisig_type: MultisigType,
     account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;UInt256&gt;&gt; {
-    <span class="kw">let </span>function = <span class="kw">if </span>multisig_type == MultisigType::Multisig2 {
+    <span class="kw">let </span>function = <span class="kw">if </span>multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::get_custodians()
     } <span class="kw">else </span>{
         nekoton_contracts::wallets::multisig::get_custodians()
@@ -918,7 +950,7 @@
         </span><span class="kw">pub </span>id: u64,
     }
 
-    <span class="kw">let </span>function = <span class="kw">if </span>multisig_type == MultisigType::Multisig2 {
+    <span class="kw">let </span>function = <span class="kw">if </span>multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::get_transactions()
     } <span class="kw">else </span>{
         nekoton_contracts::wallets::multisig::get_transactions()
@@ -946,7 +978,7 @@
     account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
     custodians: <span class="kw-2">&amp;</span>[UInt256],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;MultisigPendingTransaction&gt;&gt; {
-    <span class="kw">let </span>function = <span class="kw">if </span>multisig_type == MultisigType::Multisig2 {
+    <span class="kw">let </span>function = <span class="kw">if </span>multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::get_transactions()
     } <span class="kw">else </span>{
         nekoton_contracts::wallets::multisig::get_transactions()

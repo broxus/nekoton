@@ -850,6 +850,7 @@
 <span id="850">850</span>
 <span id="851">851</span>
 <span id="852">852</span>
+<span id="853">853</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::convert::TryFrom;
 <span class="kw">use </span>std::num::NonZeroU8;
@@ -1400,11 +1401,12 @@
     }
 }
 
-<span class="kw">pub const </span>WALLET_TYPES_BY_POPULARITY: [WalletType; <span class="number">9</span>] = [
+<span class="kw">pub const </span>WALLET_TYPES_BY_POPULARITY: [WalletType; <span class="number">10</span>] = [
     WalletType::Multisig(MultisigType::SafeMultisigWallet),
     WalletType::Multisig(MultisigType::SurfWallet),
     WalletType::WalletV3,
     WalletType::EverWallet,
+    WalletType::Multisig(MultisigType::Multisig2_1),
     WalletType::Multisig(MultisigType::Multisig2),
     WalletType::Multisig(MultisigType::SetcodeMultisigWallet),
     WalletType::Multisig(MultisigType::SafeMultisigWallet24h),

@@ -1254,7 +1254,7 @@
         <span class="kw">static </span>NEW_FUNCTIONS: OnceBox&lt;MultisigFunctions&gt; = OnceBox::new();
 
         <span class="kw">match </span>multisig_type {
-            MultisigType::Multisig2 =&gt; NEW_FUNCTIONS.get_or_init(|| {
+            ty <span class="kw">if </span>ty.is_multisig2() =&gt; NEW_FUNCTIONS.get_or_init(|| {
                 Box::new(MultisigFunctions {
                     send_transaction: multisig2::send_transaction(),
                     submit_transaction: multisig2::submit_transaction(),
