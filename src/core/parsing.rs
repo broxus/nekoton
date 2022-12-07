@@ -109,7 +109,7 @@ pub fn parse_transaction_additional_info(
                             dest,
                             ..
                         }) => (Some(dest.clone()), parse_payload(payload.clone().into())),
-                        MultisigTransaction::Confirm(_) => (None, None),
+                        _ => (None, None),
                     };
 
                     (
@@ -276,7 +276,7 @@ fn parse_multisig_transaction_impl(
     const TIME_LENGTH: usize = 64;
     const EXPIRE_LENGTH: usize = 32;
 
-    let mut body = in_msg.body()?;
+    let body = in_msg.body()?;
     let function_id = {
         let mut body = body.clone();
 
@@ -287,39 +287,59 @@ fn parse_multisig_transaction_impl(
         read_function_id(&body).ok()?
     };
 
+    let parse_tx_input = |function: &ton_abi::Function,
+                          mut body: ton_types::SliceData|
+     -> Option<(ton_types::UInt256, InputMessage)> {
+        let inputs = function.decode_input(body.clone(), false).ok()?;
+        body.move_by(PUBKEY_OFFSET).ok()?;
+        let custodian = body.get_next_hash().ok()?;
+        Some((custodian, InputMessage(inputs)))
+    };
+
+    let parse_tx_full = |function: &ton_abi::Function,
+                         body: ton_types::SliceData|
+     -> Option<(ton_types::UInt256, ContractCall)> {
+        let (custodian, InputMessage(inputs)) = parse_tx_input(function, body)?;
+        let outputs = function.parse(tx).ok()?;
+        Some((custodian, ContractCall { inputs, outputs }))
+    };
+
     let functions = MultisigFunctions::instance(multisig_type);
 
     if function_id == functions.send_transaction.input_id {
-        let tokens = functions.send_transaction.decode_input(body, false).ok()?;
-
-        MultisigSendTransaction::try_from(InputMessage(tokens))
+        let inputs = functions.send_transaction.decode_input(body, false).ok()?;
+        MultisigSendTransaction::try_from(InputMessage(inputs))
             .map(MultisigTransaction::Send)
             .ok()
     } else if function_id == functions.submit_transaction.input_id {
-        let inputs = functions
-            .submit_transaction
-            .decode_input(body.clone(), false)
-            .ok()?;
-        let outputs = functions.submit_transaction.parse(tx).ok()?;
-
-        body.move_by(PUBKEY_OFFSET).ok()?;
-
-        let custodian = body.get_next_hash().ok()?;
-        MultisigSubmitTransaction::try_from((custodian, ContractCall { inputs, outputs }))
+        let (custodian, value) = parse_tx_full(functions.submit_transaction, body)?;
+        MultisigSubmitTransaction::try_from((custodian, value))
             .map(MultisigTransaction::Submit)
             .ok()
     } else if function_id == functions.confirm_transaction.input_id {
-        let inputs = functions
-            .confirm_transaction
-            .decode_input(body.clone(), false)
-            .ok()?;
-
-        body.move_by(PUBKEY_OFFSET).ok()?;
-
-        let custodian = body.get_next_hash().ok()?;
-        MultisigConfirmTransaction::try_from((custodian, InputMessage(inputs)))
+        let (custodian, value) = parse_tx_input(functions.confirm_transaction, body)?;
+        MultisigConfirmTransaction::try_from((custodian, value))
             .map(MultisigTransaction::Confirm)
             .ok()
+    } else if let Some(functions) = &functions.update_functions {
+        if function_id == functions.submit_update.input_id {
+            let (custodian, value) = parse_tx_full(functions.submit_update, body)?;
+            MultisigSubmitUpdate::try_from((custodian, value))
+                .map(MultisigTransaction::SubmitUpdate)
+                .ok()
+        } else if function_id == functions.confirm_update.input_id {
+            let (custodian, value) = parse_tx_input(functions.confirm_update, body)?;
+            MultisigConfirmUpdate::try_from((custodian, value))
+                .map(MultisigTransaction::ConfirmUpdate)
+                .ok()
+        } else if function_id == functions.execute_update.input_id {
+            let (custodian, value) = parse_tx_input(functions.execute_update, body)?;
+            MultisigExecuteUpdate::try_from((custodian, value))
+                .map(MultisigTransaction::ExecuteUpdate)
+                .ok()
+        } else {
+            None
+        }
     } else {
         None
     }
@@ -329,6 +349,13 @@ struct MultisigFunctions {
     send_transaction: &'static ton_abi::Function,
     submit_transaction: &'static ton_abi::Function,
     confirm_transaction: &'static ton_abi::Function,
+    update_functions: Option<UpdateFunctions>,
+}
+
+struct UpdateFunctions {
+    submit_update: &'static ton_abi::Function,
+    confirm_update: &'static ton_abi::Function,
+    execute_update: &'static ton_abi::Function,
 }
 
 impl MultisigFunctions {
@@ -344,6 +371,11 @@ impl MultisigFunctions {
                     send_transaction: multisig2::send_transaction(),
                     submit_transaction: multisig2::submit_transaction(),
                     confirm_transaction: multisig2::confirm_transaction(),
+                    update_functions: Some(UpdateFunctions {
+                        submit_update: multisig2::submit_update(),
+                        confirm_update: multisig2::confirm_update(),
+                        execute_update: multisig2::execute_update(),
+                    }),
                 })
             }),
             _ => OLD_FUNCTIONS.get_or_init(|| {
@@ -351,6 +383,7 @@ impl MultisigFunctions {
                     send_transaction: multisig::send_transaction(),
                     submit_transaction: multisig::submit_transaction(),
                     confirm_transaction: multisig::confirm_transaction(),
+                    update_functions: None,
                 })
             }),
         }
@@ -420,6 +453,54 @@ impl TryFrom<InputMessage> for MultisigSendTransaction {
             bounce: input.bounce,
             flags: input.flags,
             payload: input.payload,
+        })
+    }
+}
+
+impl TryFrom<(UInt256, ContractCall)> for MultisigSubmitUpdate {
+    type Error = UnpackerError;
+
+    fn try_from((custodian, value): (UInt256, ContractCall)) -> Result<Self, Self::Error> {
+        use nekoton_contracts::wallets::multisig2;
+
+        let input: multisig2::SubmitUpdateParams = value.inputs.unpack()?;
+        let output: multisig2::SubmitUpdateOutput = value.outputs.unpack()?;
+
+        Ok(Self {
+            custodian,
+            new_code_hash: input.code_hash,
+            new_owners: input.owners.is_some(),
+            new_req_confirms: input.req_confirms.is_some(),
+            new_lifetime: input.lifetime.is_some(),
+            update_id: output.update_id,
+        })
+    }
+}
+
+impl TryFrom<(UInt256, InputMessage)> for MultisigConfirmUpdate {
+    type Error = UnpackerError;
+
+    fn try_from((custodian, input): (UInt256, InputMessage)) -> Result<Self, Self::Error> {
+        use nekoton_contracts::wallets::multisig2;
+
+        let input: multisig2::ConfirmUpdateParams = input.0.unpack()?;
+        Ok(Self {
+            custodian,
+            update_id: input.update_id,
+        })
+    }
+}
+
+impl TryFrom<(UInt256, InputMessage)> for MultisigExecuteUpdate {
+    type Error = UnpackerError;
+
+    fn try_from((custodian, input): (UInt256, InputMessage)) -> Result<Self, Self::Error> {
+        use nekoton_contracts::wallets::multisig2;
+
+        let input: multisig2::ExecuteUpdateParams = input.0.unpack()?;
+        Ok(Self {
+            custodian,
+            update_id: input.update_id,
         })
     }
 }

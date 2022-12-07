@@ -112,6 +112,9 @@ pub enum MultisigTransaction {
     Send(MultisigSendTransaction),
     Submit(MultisigSubmitTransaction),
     Confirm(MultisigConfirmTransaction),
+    SubmitUpdate(MultisigSubmitUpdate),
+    ConfirmUpdate(MultisigConfirmUpdate),
+    ExecuteUpdate(MultisigExecuteUpdate),
 }
 
 #[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize, Copy)]
@@ -168,6 +171,35 @@ pub struct MultisigSendTransaction {
     #[abi(cell)]
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct MultisigSubmitUpdate {
+    #[serde(with = "serde_uint256")]
+    pub custodian: UInt256,
+    #[serde(with = "serde_optional_uint256")]
+    pub new_code_hash: Option<ton_types::UInt256>,
+    pub new_owners: bool,
+    pub new_req_confirms: bool,
+    pub new_lifetime: bool,
+    #[serde(with = "serde_string")]
+    pub update_id: u64,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct MultisigConfirmUpdate {
+    #[serde(with = "serde_uint256")]
+    pub custodian: UInt256,
+    #[serde(with = "serde_string")]
+    pub update_id: u64,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct MultisigExecuteUpdate {
+    #[serde(with = "serde_uint256")]
+    pub custodian: UInt256,
+    #[serde(with = "serde_string")]
+    pub update_id: u64,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

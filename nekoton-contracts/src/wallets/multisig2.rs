@@ -132,13 +132,19 @@ pub struct SubmitUpdateParams {
     pub lifetime: Option<u64>,
 }
 
+#[derive(Debug, Copy, Clone, UnpackAbiPlain, KnownParamTypePlain)]
+pub struct SubmitUpdateOutput {
+    #[abi(uint64)]
+    pub update_id: u64,
+}
+
 pub fn submit_update() -> &'static ton_abi::Function {
     declare_function! {
         abi: v2_3,
         header: [pubkey, time, expire],
         name: "submitUpdate",
         inputs: SubmitUpdateParams::param_type(),
-        outputs: vec![Param::new("updateId", ParamType::Uint(64))]
+        outputs: SubmitUpdateOutput::param_type(),
     }
 }
 
