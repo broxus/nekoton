@@ -235,6 +235,12 @@
 <span id="235">235</span>
 <span id="236">236</span>
 <span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
 </pre><pre class="rust"><code><span class="kw">use </span>nekoton_abi::<span class="kw-2">*</span>;
 <span class="kw">use </span>ton_abi::{Param, ParamType};
 
@@ -369,13 +375,19 @@
     </span><span class="kw">pub </span>lifetime: <span class="prelude-ty">Option</span>&lt;u64&gt;,
 }
 
+<span class="attribute">#[derive(Debug, Copy, Clone, UnpackAbiPlain, KnownParamTypePlain)]
+</span><span class="kw">pub struct </span>SubmitUpdateOutput {
+    <span class="attribute">#[abi(uint64)]
+    </span><span class="kw">pub </span>update_id: u64,
+}
+
 <span class="kw">pub fn </span>submit_update() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
     <span class="macro">declare_function! </span>{
         abi: v2_3,
         header: [pubkey, time, expire],
         name: <span class="string">&quot;submitUpdate&quot;</span>,
         inputs: SubmitUpdateParams::param_type(),
-        outputs: <span class="macro">vec!</span>[Param::new(<span class="string">&quot;updateId&quot;</span>, ParamType::Uint(<span class="number">64</span>))]
+        outputs: SubmitUpdateOutput::param_type(),
     }
 }
 

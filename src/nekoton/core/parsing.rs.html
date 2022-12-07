@@ -913,6 +913,87 @@
 <span id="913">913</span>
 <span id="914">914</span>
 <span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
+<span id="995">995</span>
+<span id="996">996</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -1024,7 +1105,7 @@
                             dest,
                             ..
                         }) =&gt; (<span class="prelude-val">Some</span>(dest.clone()), parse_payload(payload.clone().into())),
-                        MultisigTransaction::Confirm(<span class="kw">_</span>) =&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+                        <span class="kw">_ </span>=&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
                     };
 
                     (
@@ -1191,7 +1272,7 @@
     <span class="kw">const </span>TIME_LENGTH: usize = <span class="number">64</span>;
     <span class="kw">const </span>EXPIRE_LENGTH: usize = <span class="number">32</span>;
 
-    <span class="kw">let </span><span class="kw-2">mut </span>body = in_msg.body()<span class="question-mark">?</span>;
+    <span class="kw">let </span>body = in_msg.body()<span class="question-mark">?</span>;
     <span class="kw">let </span>function_id = {
         <span class="kw">let </span><span class="kw-2">mut </span>body = body.clone();
 
@@ -1202,39 +1283,59 @@
         read_function_id(<span class="kw-2">&amp;</span>body).ok()<span class="question-mark">?
     </span>};
 
+    <span class="kw">let </span>parse_tx_input = |function: <span class="kw-2">&amp;</span>ton_abi::Function,
+                          <span class="kw-2">mut </span>body: ton_types::SliceData|
+     -&gt; <span class="prelude-ty">Option</span>&lt;(ton_types::UInt256, InputMessage)&gt; {
+        <span class="kw">let </span>inputs = function.decode_input(body.clone(), <span class="bool-val">false</span>).ok()<span class="question-mark">?</span>;
+        body.move_by(PUBKEY_OFFSET).ok()<span class="question-mark">?</span>;
+        <span class="kw">let </span>custodian = body.get_next_hash().ok()<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>((custodian, InputMessage(inputs)))
+    };
+
+    <span class="kw">let </span>parse_tx_full = |function: <span class="kw-2">&amp;</span>ton_abi::Function,
+                         body: ton_types::SliceData|
+     -&gt; <span class="prelude-ty">Option</span>&lt;(ton_types::UInt256, ContractCall)&gt; {
+        <span class="kw">let </span>(custodian, InputMessage(inputs)) = parse_tx_input(function, body)<span class="question-mark">?</span>;
+        <span class="kw">let </span>outputs = function.parse(tx).ok()<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>((custodian, ContractCall { inputs, outputs }))
+    };
+
     <span class="kw">let </span>functions = MultisigFunctions::instance(multisig_type);
 
     <span class="kw">if </span>function_id == functions.send_transaction.input_id {
-        <span class="kw">let </span>tokens = functions.send_transaction.decode_input(body, <span class="bool-val">false</span>).ok()<span class="question-mark">?</span>;
-
-        MultisigSendTransaction::try_from(InputMessage(tokens))
+        <span class="kw">let </span>inputs = functions.send_transaction.decode_input(body, <span class="bool-val">false</span>).ok()<span class="question-mark">?</span>;
+        MultisigSendTransaction::try_from(InputMessage(inputs))
             .map(MultisigTransaction::Send)
             .ok()
     } <span class="kw">else if </span>function_id == functions.submit_transaction.input_id {
-        <span class="kw">let </span>inputs = functions
-            .submit_transaction
-            .decode_input(body.clone(), <span class="bool-val">false</span>)
-            .ok()<span class="question-mark">?</span>;
-        <span class="kw">let </span>outputs = functions.submit_transaction.parse(tx).ok()<span class="question-mark">?</span>;
-
-        body.move_by(PUBKEY_OFFSET).ok()<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>custodian = body.get_next_hash().ok()<span class="question-mark">?</span>;
-        MultisigSubmitTransaction::try_from((custodian, ContractCall { inputs, outputs }))
+        <span class="kw">let </span>(custodian, value) = parse_tx_full(functions.submit_transaction, body)<span class="question-mark">?</span>;
+        MultisigSubmitTransaction::try_from((custodian, value))
             .map(MultisigTransaction::Submit)
             .ok()
     } <span class="kw">else if </span>function_id == functions.confirm_transaction.input_id {
-        <span class="kw">let </span>inputs = functions
-            .confirm_transaction
-            .decode_input(body.clone(), <span class="bool-val">false</span>)
-            .ok()<span class="question-mark">?</span>;
-
-        body.move_by(PUBKEY_OFFSET).ok()<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>custodian = body.get_next_hash().ok()<span class="question-mark">?</span>;
-        MultisigConfirmTransaction::try_from((custodian, InputMessage(inputs)))
+        <span class="kw">let </span>(custodian, value) = parse_tx_input(functions.confirm_transaction, body)<span class="question-mark">?</span>;
+        MultisigConfirmTransaction::try_from((custodian, value))
             .map(MultisigTransaction::Confirm)
             .ok()
+    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(functions) = <span class="kw-2">&amp;</span>functions.update_functions {
+        <span class="kw">if </span>function_id == functions.submit_update.input_id {
+            <span class="kw">let </span>(custodian, value) = parse_tx_full(functions.submit_update, body)<span class="question-mark">?</span>;
+            MultisigSubmitUpdate::try_from((custodian, value))
+                .map(MultisigTransaction::SubmitUpdate)
+                .ok()
+        } <span class="kw">else if </span>function_id == functions.confirm_update.input_id {
+            <span class="kw">let </span>(custodian, value) = parse_tx_input(functions.confirm_update, body)<span class="question-mark">?</span>;
+            MultisigConfirmUpdate::try_from((custodian, value))
+                .map(MultisigTransaction::ConfirmUpdate)
+                .ok()
+        } <span class="kw">else if </span>function_id == functions.execute_update.input_id {
+            <span class="kw">let </span>(custodian, value) = parse_tx_input(functions.execute_update, body)<span class="question-mark">?</span>;
+            MultisigExecuteUpdate::try_from((custodian, value))
+                .map(MultisigTransaction::ExecuteUpdate)
+                .ok()
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     } <span class="kw">else </span>{
         <span class="prelude-val">None
     </span>}
@@ -1244,6 +1345,13 @@
     send_transaction: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
     submit_transaction: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
     confirm_transaction: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    update_functions: <span class="prelude-ty">Option</span>&lt;UpdateFunctions&gt;,
+}
+
+<span class="kw">struct </span>UpdateFunctions {
+    submit_update: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    confirm_update: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    execute_update: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
 }
 
 <span class="kw">impl </span>MultisigFunctions {
@@ -1259,6 +1367,11 @@
                     send_transaction: multisig2::send_transaction(),
                     submit_transaction: multisig2::submit_transaction(),
                     confirm_transaction: multisig2::confirm_transaction(),
+                    update_functions: <span class="prelude-val">Some</span>(UpdateFunctions {
+                        submit_update: multisig2::submit_update(),
+                        confirm_update: multisig2::confirm_update(),
+                        execute_update: multisig2::execute_update(),
+                    }),
                 })
             }),
             <span class="kw">_ </span>=&gt; OLD_FUNCTIONS.get_or_init(|| {
@@ -1266,6 +1379,7 @@
                     send_transaction: multisig::send_transaction(),
                     submit_transaction: multisig::submit_transaction(),
                     confirm_transaction: multisig::confirm_transaction(),
+                    update_functions: <span class="prelude-val">None</span>,
                 })
             }),
         }
@@ -1335,6 +1449,54 @@
             bounce: input.bounce,
             flags: input.flags,
             payload: input.payload,
+        })
+    }
+}
+
+<span class="kw">impl </span>TryFrom&lt;(UInt256, ContractCall)&gt; <span class="kw">for </span>MultisigSubmitUpdate {
+    <span class="kw">type </span>Error = UnpackerError;
+
+    <span class="kw">fn </span>try_from((custodian, value): (UInt256, ContractCall)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">use </span>nekoton_contracts::wallets::multisig2;
+
+        <span class="kw">let </span>input: multisig2::SubmitUpdateParams = value.inputs.unpack()<span class="question-mark">?</span>;
+        <span class="kw">let </span>output: multisig2::SubmitUpdateOutput = value.outputs.unpack()<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            custodian,
+            new_code_hash: input.code_hash,
+            new_owners: input.owners.is_some(),
+            new_req_confirms: input.req_confirms.is_some(),
+            new_lifetime: input.lifetime.is_some(),
+            update_id: output.update_id,
+        })
+    }
+}
+
+<span class="kw">impl </span>TryFrom&lt;(UInt256, InputMessage)&gt; <span class="kw">for </span>MultisigConfirmUpdate {
+    <span class="kw">type </span>Error = UnpackerError;
+
+    <span class="kw">fn </span>try_from((custodian, input): (UInt256, InputMessage)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">use </span>nekoton_contracts::wallets::multisig2;
+
+        <span class="kw">let </span>input: multisig2::ConfirmUpdateParams = input.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            custodian,
+            update_id: input.update_id,
+        })
+    }
+}
+
+<span class="kw">impl </span>TryFrom&lt;(UInt256, InputMessage)&gt; <span class="kw">for </span>MultisigExecuteUpdate {
+    <span class="kw">type </span>Error = UnpackerError;
+
+    <span class="kw">fn </span>try_from((custodian, input): (UInt256, InputMessage)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+        <span class="kw">use </span>nekoton_contracts::wallets::multisig2;
+
+        <span class="kw">let </span>input: multisig2::ExecuteUpdateParams = input.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            custodian,
+            update_id: input.update_id,
         })
     }
 }
