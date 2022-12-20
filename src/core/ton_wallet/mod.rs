@@ -789,6 +789,7 @@ impl TryInto<u16> for WalletType {
             WalletType::Multisig(MultisigType::BridgeMultisigWallet) => 5,
             WalletType::Multisig(MultisigType::SurfWallet) => 6,
             WalletType::Multisig(MultisigType::Multisig2) => 7,
+            WalletType::Multisig(MultisigType::Multisig2_1) => 8,
             _ => anyhow::bail!("Unimplemented wallet type"),
         };
 
