@@ -347,6 +347,7 @@
 <span id="347">347</span>
 <span id="348">348</span>
 <span id="349">349</span>
+<span id="350">350</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -532,13 +533,14 @@
     <span class="kw">fn </span>sign_with_pruned_payload(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         signature: <span class="kw-2">&amp;</span>[u8; ed25519_dalek::SIGNATURE_LENGTH],
+        prune_after_depth: u16,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SignedMessage&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>payload = <span class="self">self</span>.payload.clone();
         payload.prepend_raw(signature, signature.len() * <span class="number">8</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>body = payload.into_cell()<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>message = <span class="self">self</span>.message.clone();
-        message.set_body(prune_deep_cells(<span class="kw-2">&amp;</span>body, <span class="number">1</span>)<span class="question-mark">?</span>.into());
+        message.set_body(prune_deep_cells(<span class="kw-2">&amp;</span>body, prune_after_depth)<span class="question-mark">?</span>.into());
 
         <span class="prelude-val">Ok</span>(SignedMessage {
             message,
