@@ -370,17 +370,6 @@
 <span id="370">370</span>
 <span id="371">371</span>
 <span id="372">372</span>
-<span id="373">373</span>
-<span id="374">374</span>
-<span id="375">375</span>
-<span id="376">376</span>
-<span id="377">377</span>
-<span id="378">378</span>
-<span id="379">379</span>
-<span id="380">380</span>
-<span id="381">381</span>
-<span id="382">382</span>
-<span id="383">383</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -421,34 +410,6 @@
         expire_at,
         hash,
     }))
-}
-
-<span class="attribute">#[derive(Clone)]
-</span><span class="kw">struct </span>UnsignedWalletV3Deploy {
-    message: ton_block::Message,
-    expire_at: ExpireAt,
-}
-
-<span class="kw">impl </span>UnsignedMessage <span class="kw">for </span>UnsignedWalletV3Deploy {
-    <span class="kw">fn </span>refresh_timeout(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) {
-        <span class="self">self</span>.expire_at.refresh(clock);
-    }
-
-    <span class="kw">fn </span>expire_at(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-        <span class="self">self</span>.expire_at.timestamp
-    }
-
-    <span class="kw">fn </span>hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="comment">// return empty hash, because there is no message body
-        </span><span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">32</span>]
-    }
-
-    <span class="kw">fn </span>sign(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>[u8; ed25519_dalek::SIGNATURE_LENGTH]) -&gt; <span class="prelude-ty">Result</span>&lt;SignedMessage&gt; {
-        <span class="prelude-val">Ok</span>(SignedMessage {
-            message: <span class="self">self</span>.message.clone(),
-            expire_at: <span class="self">self</span>.expire_at(),
-        })
-    }
 }
 
 <span class="kw">pub fn </span>prepare_transfer(
@@ -549,6 +510,23 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>message = <span class="self">self</span>.message.clone();
         message.set_body(payload.into());
+
+        <span class="prelude-val">Ok</span>(SignedMessage {
+            message,
+            expire_at: <span class="self">self</span>.expire_at(),
+        })
+    }
+
+    <span class="kw">fn </span>sign_with_pruned_payload(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        signature: <span class="kw-2">&amp;</span>[u8; ed25519_dalek::SIGNATURE_LENGTH],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignedMessage&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>payload = <span class="self">self</span>.payload.clone();
+        payload.prepend_raw(signature, signature.len() * <span class="number">8</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>body = payload.into_cell()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>message = <span class="self">self</span>.message.clone();
+        message.set_body(prune_deep_cells(<span class="kw-2">&amp;</span>body, <span class="number">2</span>)<span class="question-mark">?</span>.into());
 
         <span class="prelude-val">Ok</span>(SignedMessage {
             message,
