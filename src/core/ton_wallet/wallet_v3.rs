@@ -183,13 +183,14 @@ impl UnsignedMessage for UnsignedWalletV3Message {
     fn sign_with_pruned_payload(
         &self,
         signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH],
+        prune_after_depth: u16,
     ) -> Result<SignedMessage> {
         let mut payload = self.payload.clone();
         payload.prepend_raw(signature, signature.len() * 8)?;
         let body = payload.into_cell()?;
 
         let mut message = self.message.clone();
-        message.set_body(prune_deep_cells(&body, 1)?.into());
+        message.set_body(prune_deep_cells(&body, prune_after_depth)?.into());
 
         Ok(SignedMessage {
             message,

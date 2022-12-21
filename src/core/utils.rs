@@ -443,6 +443,7 @@ impl UnsignedMessage for LabsUnsignedMessage {
     fn sign_with_pruned_payload(
         &self,
         signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH],
+        prune_after_depth: u16,
     ) -> Result<SignedMessage> {
         let payload = self.payload.clone();
         let payload = ton_abi::Function::fill_sign(
@@ -454,7 +455,7 @@ impl UnsignedMessage for LabsUnsignedMessage {
         .into_cell()?;
 
         let mut message = self.message.clone();
-        message.set_body(prune_deep_cells(&payload, 1)?.into());
+        message.set_body(prune_deep_cells(&payload, prune_after_depth)?.into());
 
         Ok(SignedMessage {
             message,
