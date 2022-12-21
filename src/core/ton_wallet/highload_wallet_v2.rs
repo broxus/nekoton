@@ -40,34 +40,6 @@ pub fn prepare_deploy(
     }))
 }
 
-#[derive(Clone)]
-struct UnsignedWalletV3Deploy {
-    message: ton_block::Message,
-    expire_at: ExpireAt,
-}
-
-impl UnsignedMessage for UnsignedWalletV3Deploy {
-    fn refresh_timeout(&mut self, clock: &dyn Clock) {
-        self.expire_at.refresh(clock);
-    }
-
-    fn expire_at(&self) -> u32 {
-        self.expire_at.timestamp
-    }
-
-    fn hash(&self) -> &[u8] {
-        // return empty hash, because there is no message body
-        &[0; 32]
-    }
-
-    fn sign(&self, _: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
-        Ok(SignedMessage {
-            message: self.message.clone(),
-            expire_at: self.expire_at(),
-        })
-    }
-}
-
 pub fn prepare_transfer(
     clock: &dyn Clock,
     public_key: &PublicKey,
@@ -166,6 +138,23 @@ impl UnsignedMessage for UnsignedHighloadWalletV2Message {
 
         let mut message = self.message.clone();
         message.set_body(payload.into());
+
+        Ok(SignedMessage {
+            message,
+            expire_at: self.expire_at(),
+        })
+    }
+
+    fn sign_with_pruned_payload(
+        &self,
+        signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH],
+    ) -> Result<SignedMessage> {
+        let mut payload = self.payload.clone();
+        payload.prepend_raw(signature, signature.len() * 8)?;
+        let body = payload.into_cell()?;
+
+        let mut message = self.message.clone();
+        message.set_body(prune_deep_cells(&body, 2)?.into());
 
         Ok(SignedMessage {
             message,

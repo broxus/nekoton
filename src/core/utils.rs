@@ -439,6 +439,28 @@ impl UnsignedMessage for LabsUnsignedMessage {
             expire_at: self.expire_at(),
         })
     }
+
+    fn sign_with_pruned_payload(
+        &self,
+        signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH],
+    ) -> Result<SignedMessage> {
+        let payload = self.payload.clone();
+        let payload = ton_abi::Function::fill_sign(
+            &self.function.abi_version,
+            Some(signature),
+            None,
+            payload,
+        )?
+        .into_cell()?;
+
+        let mut message = self.message.clone();
+        message.set_body(prune_deep_cells(&payload, 1)?.into());
+
+        Ok(SignedMessage {
+            message,
+            expire_at: self.expire_at(),
+        })
+    }
 }
 
 pub fn default_headers(

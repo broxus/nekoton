@@ -766,7 +766,7 @@ pub mod serde_vec_public_key {
                 let mut vec = Vec::new();
                 while let Some(elem) = visitor.next_element::<String>()? {
                     let bytes =
-                        hex::decode(&elem).map_err(|_| V::Error::custom("Invalid PublicKey"))?;
+                        hex::decode(elem).map_err(|_| V::Error::custom("Invalid PublicKey"))?;
                     let pubkey = ed25519_dalek::PublicKey::from_bytes(&bytes)
                         .map_err(|_| Error::custom("Invalid PublicKey"))?;
                     vec.push(pubkey);

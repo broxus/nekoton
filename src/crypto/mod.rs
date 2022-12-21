@@ -39,6 +39,9 @@ pub trait UnsignedMessage: DynClone + Send + Sync {
     /// # Arguments
     /// `signature` - signature, received from [`UnsignedMessage::hash`]
     fn sign(&self, signature: &Signature) -> Result<SignedMessage>;
+
+    /// Create signed message from prepared inputs, with payloads as pruned branches
+    fn sign_with_pruned_payload(&self, signature: &Signature) -> Result<SignedMessage>;
 }
 
 dyn_clone::clone_trait_object!(UnsignedMessage);
