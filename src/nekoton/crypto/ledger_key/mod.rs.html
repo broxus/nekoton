@@ -307,6 +307,13 @@
 <span id="307">307</span>
 <span id="308">308</span>
 <span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map::{<span class="self">self</span>, HashMap};
 <span class="kw">use </span>std::convert::TryInto;
 <span class="kw">use </span>std::io::Read;
@@ -323,6 +330,7 @@
     default_key_name, SharedSecret, Signer <span class="kw">as </span>StoreSigner, SignerContext, SignerEntry,
     SignerStorage,
 };
+<span class="kw">use </span><span class="kw">crate</span>::core::ton_wallet::WalletType;
 <span class="kw">use </span><span class="kw">crate</span>::external::{LedgerConnection, LedgerSignatureContext};
 
 <span class="attribute">#[derive(Clone)]
@@ -451,10 +459,15 @@
         input: <span class="self">Self</span>::SignInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt; {
         <span class="kw">let </span>key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
-        <span class="kw">let </span>signature = <span class="self">self
-            </span>.connection
-            .sign(key.account_id, data, <span class="kw-2">&amp;</span>input.context)
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>signature = <span class="kw">match </span>input.context {
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.connection.sign(key.account_id, data).<span class="kw">await</span><span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(context) =&gt; {
+                <span class="self">self</span>.connection
+                    .sign_transaction(key.account_id, input.wallet.try_into()<span class="question-mark">?</span>, data, <span class="kw-2">&amp;</span>context)
+                    .<span class="kw">await</span><span class="question-mark">?
+            </span>}
+        };
+
         <span class="prelude-val">Ok</span>(signature)
     }
 }
@@ -556,6 +569,7 @@
 <span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
 </span><span class="kw">pub struct </span>LedgerSignInput {
+    <span class="kw">pub </span>wallet: WalletType,
     <span class="attribute">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
     </span><span class="kw">pub </span>public_key: PublicKey,
     <span class="attribute">#[serde(default)]
