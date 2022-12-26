@@ -63,6 +63,24 @@ pub mod serde_u64 {
     }
 }
 
+pub mod serde_optional_u64 {
+    use super::*;
+
+    pub fn serialize<S>(data: &Option<u64>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        data.map(StringOrNumber).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<u64>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Ok(Option::<StringOrNumber>::deserialize(deserializer)?.map(|StringOrNumber(x)| x))
+    }
+}
+
 pub mod serde_duration_sec {
     use super::*;
 

@@ -432,9 +432,52 @@ type OnTransactionsFound<'a> =
 type OnMessageSent<'a> = &'a mut (dyn FnMut(PendingTransaction, RawTransaction) + Send + Sync);
 type OnMessageExpired<'a> = &'a mut (dyn FnMut(PendingTransaction) + Send + Sync);
 
-#[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct TransactionExecutionOptions {
     pub disable_signature_check: bool,
+    #[serde(with = "serde_optional_u64")]
     pub override_balance: Option<u64>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn executor_params_serialization() {
+        assert_eq!(
+            serde_json::from_str::<TransactionExecutionOptions>("{}").unwrap(),
+            TransactionExecutionOptions::default()
+        );
+
+        assert_eq!(
+            serde_json::from_str::<TransactionExecutionOptions>(
+                r#"{"disableSignatureCheck":true}"#
+            )
+            .unwrap(),
+            TransactionExecutionOptions {
+                disable_signature_check: true,
+                ..Default::default()
+            }
+        );
+
+        assert_eq!(
+            serde_json::from_str::<TransactionExecutionOptions>(r#"{"overrideBalance":123}"#)
+                .unwrap(),
+            TransactionExecutionOptions {
+                override_balance: Some(123),
+                ..Default::default()
+            }
+        );
+
+        assert_eq!(
+            serde_json::from_str::<TransactionExecutionOptions>(r#"{"overrideBalance":"123123"}"#)
+                .unwrap(),
+            TransactionExecutionOptions {
+                override_balance: Some(123123),
+                ..Default::default()
+            }
+        );
+    }
 }
