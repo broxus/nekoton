@@ -6,12 +6,14 @@ use nekoton_utils::*;
 use super::Transport;
 
 pub struct ConfigCache {
+    use_default_config: bool,
     state: Mutex<Option<ConfigCacheState>>,
 }
 
 impl ConfigCache {
     pub fn new(use_default_config: bool) -> Self {
         Self {
+            use_default_config,
             state: Mutex::new(if use_default_config {
                 Some(ConfigCacheState {
                     config: ton_executor::BlockchainConfig::default(),
@@ -45,7 +47,7 @@ impl ConfigCache {
                 });
                 config
             }
-            Some(a) if force || cache_expired(now, a.phase) => {
+            Some(a) if force && !self.use_default_config || cache_expired(now, a.phase) => {
                 let (config, key_block_seqno) = fetch_config(transport).await?;
                 let phase = compute_next_phase(
                     now,
