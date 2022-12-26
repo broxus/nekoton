@@ -143,6 +143,8 @@
 <span id="143">143</span>
 <span id="144">144</span>
 <span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>tokio::sync::Mutex;
 
@@ -151,12 +153,14 @@
 <span class="kw">use </span><span class="kw">super</span>::Transport;
 
 <span class="kw">pub struct </span>ConfigCache {
+    use_default_config: bool,
     state: Mutex&lt;<span class="prelude-ty">Option</span>&lt;ConfigCacheState&gt;&gt;,
 }
 
 <span class="kw">impl </span>ConfigCache {
     <span class="kw">pub fn </span>new(use_default_config: bool) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
+            use_default_config,
             state: Mutex::new(<span class="kw">if </span>use_default_config {
                 <span class="prelude-val">Some</span>(ConfigCacheState {
                     config: ton_executor::BlockchainConfig::default(),
@@ -190,7 +194,7 @@
                 });
                 config
             }
-            <span class="prelude-val">Some</span>(a) <span class="kw">if </span>force || cache_expired(now, a.phase) =&gt; {
+            <span class="prelude-val">Some</span>(a) <span class="kw">if </span>force &amp;&amp; !<span class="self">self</span>.use_default_config || cache_expired(now, a.phase) =&gt; {
                 <span class="kw">let </span>(config, key_block_seqno) = fetch_config(transport).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">let </span>phase = compute_next_phase(
                     now,
