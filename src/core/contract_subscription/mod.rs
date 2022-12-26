@@ -433,7 +433,7 @@ type OnMessageSent<'a> = &'a mut (dyn FnMut(PendingTransaction, RawTransaction) 
 type OnMessageExpired<'a> = &'a mut (dyn FnMut(PendingTransaction) + Send + Sync);
 
 #[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase")]
 pub struct TransactionExecutionOptions {
     pub disable_signature_check: bool,
     pub override_balance: Option<u64>,
