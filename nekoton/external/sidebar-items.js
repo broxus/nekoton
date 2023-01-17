@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["LedgerSignatureContext",""]],"struct":[["GqlRequest",""],["LedgerConfirmationContext",""],["LedgerTransferContext",""]],"trait":[["GqlConnection",""],["LedgerConnection",""],["Storage",""]]};
+window.SIDEBAR_ITEMS = {"struct":[["GqlRequest",""],["LedgerSignatureContext",""]],"trait":[["GqlConnection",""],["LedgerConnection",""],["Storage",""]]};

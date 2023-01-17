@@ -79,30 +79,11 @@
 <span id="79">79</span>
 <span id="80">80</span>
 <span id="81">81</span>
-<span id="82">82</span>
-<span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
-<span id="87">87</span>
-<span id="88">88</span>
-<span id="89">89</span>
-<span id="90">90</span>
-<span id="91">91</span>
-<span id="92">92</span>
-<span id="93">93</span>
-<span id="94">94</span>
-<span id="95">95</span>
-<span id="96">96</span>
-<span id="97">97</span>
-<span id="98">98</span>
-<span id="99">99</span>
-<span id="100">100</span>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-<span class="kw">use </span>nekoton_utils::serde_hex_array;
+<span class="kw">use </span>nekoton_utils::serde_optional_hex_array;
 
 <span class="attribute">#[async_trait]
 </span><span class="kw">pub trait </span>Storage: Sync + Send {
@@ -151,22 +132,11 @@
 }
 
 <span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = <span class="string">&quot;type&quot;</span>, rename_all = <span class="string">&quot;lowercase&quot;</span>)]
-</span><span class="kw">pub enum </span>LedgerSignatureContext {
-    Transfer(LedgerTransferContext),
-    Confirm(LedgerConfirmationContext),
-}
-
-<span class="attribute">#[derive(Debug, Clone, Serialize, Deserialize)]
-</span><span class="kw">pub struct </span>LedgerTransferContext {
+</span><span class="kw">pub struct </span>LedgerSignatureContext {
     <span class="kw">pub </span>decimals: u8,
     <span class="kw">pub </span>asset: String,
-}
-
-<span class="attribute">#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-</span><span class="kw">pub struct </span>LedgerConfirmationContext {
-    <span class="attribute">#[serde(with = <span class="string">&quot;serde_hex_array&quot;</span>)]
-    </span><span class="kw">pub </span>address: [u8; <span class="number">32</span>],
+    <span class="attribute">#[serde(default, with = <span class="string">&quot;serde_optional_hex_array&quot;</span>)]
+    </span><span class="kw">pub </span>address: <span class="prelude-ty">Option</span>&lt;[u8; <span class="number">32</span>]&gt;,
 }
 
 <span class="attribute">#[async_trait]
@@ -187,15 +157,7 @@
         account: u16,
         wallet: u16,
         message: <span class="kw-2">&amp;</span>[u8],
-        context: <span class="kw-2">&amp;</span>LedgerTransferContext,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt;;
-
-    <span class="kw">async fn </span>sign_confirmation(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        account: u16,
-        wallet: u16,
-        message: <span class="kw-2">&amp;</span>[u8],
-        context: <span class="kw-2">&amp;</span>LedgerConfirmationContext,
+        context: <span class="kw-2">&amp;</span>LedgerSignatureContext,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt;;
 }
 </code></pre></div>
