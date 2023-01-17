@@ -2,6 +2,8 @@ use anyhow::Result;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
+use nekoton_utils::serde_hex_array;
+
 #[async_trait]
 pub trait Storage: Sync + Send {
     /// Retrieve data from storage
@@ -49,9 +51,22 @@ pub trait JrpcConnection: Send + Sync {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LedgerSignatureContext {
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum LedgerSignatureContext {
+    Transfer(LedgerTransferContext),
+    Confirm(LedgerConfirmationContext),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LedgerTransferContext {
     pub decimals: u8,
     pub asset: String,
+}
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct LedgerConfirmationContext {
+    #[serde(with = "serde_hex_array")]
+    pub address: [u8; 32],
 }
 
 #[async_trait]
@@ -72,6 +87,14 @@ pub trait LedgerConnection: Send + Sync {
         account: u16,
         wallet: u16,
         message: &[u8],
-        context: &LedgerSignatureContext,
+        context: &LedgerTransferContext,
+    ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
+
+    async fn sign_confirmation(
+        &self,
+        account: u16,
+        wallet: u16,
+        message: &[u8],
+        context: &LedgerConfirmationContext,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
 }

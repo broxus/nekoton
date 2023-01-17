@@ -145,11 +145,18 @@ impl StoreSigner for LedgerKeySigner {
         let key = self.get_key(&input.public_key)?;
         let signature = match input.context {
             None => self.connection.sign(key.account_id, data).await?,
-            Some(context) => {
-                self.connection
-                    .sign_transaction(key.account_id, input.wallet.try_into()?, data, &context)
-                    .await?
-            }
+            Some(context) => match context {
+                LedgerSignatureContext::Transfer(context) => {
+                    self.connection
+                        .sign_transaction(key.account_id, input.wallet.try_into()?, data, &context)
+                        .await?
+                }
+                LedgerSignatureContext::Confirm(context) => {
+                    self.connection
+                        .sign_confirmation(key.account_id, input.wallet.try_into()?, data, &context)
+                        .await?
+                }
+            },
         };
 
         Ok(signature)
