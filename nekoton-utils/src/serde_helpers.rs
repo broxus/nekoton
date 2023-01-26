@@ -352,6 +352,31 @@ pub mod serde_vec_uint256 {
     }
 }
 
+pub mod serde_optional_vec_uint256 {
+    use super::*;
+
+    pub fn serialize<S>(data: &Option<Vec<UInt256>>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        struct Wrapper<'a>(#[serde(with = "serde_vec_uint256")] &'a [UInt256]);
+        match data {
+            Some(data) => serializer.serialize_some(&Wrapper(data)),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Vec<UInt256>>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct Wrapper(#[serde(with = "serde_vec_uint256")] Vec<UInt256>);
+        Ok(Option::<_>::deserialize(deserializer)?.map(|Wrapper(data)| data))
+    }
+}
+
 pub mod serde_address {
     use super::*;
 

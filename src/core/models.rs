@@ -240,7 +240,6 @@ pub struct MultisigPendingUpdate {
     #[serde(with = "serde_vec_uint256")]
     pub confirmations: Vec<UInt256>,
 
-    pub signs_required: u8,
     pub signs_received: u8,
 
     #[serde(with = "serde_uint256")]
@@ -248,11 +247,12 @@ pub struct MultisigPendingUpdate {
 
     pub index: u8,
 
-    #[serde(with = "serde_uint256")]
-    pub new_code_hash: ton_types::UInt256,
-    #[serde(with = "serde_vec_uint256")]
-    pub new_custodians: Vec<ton_types::UInt256>,
-    pub new_req_confirms: u8,
+    #[serde(with = "serde_optional_uint256")]
+    pub new_code_hash: Option<ton_types::UInt256>,
+    #[serde(with = "serde_optional_vec_uint256")]
+    pub new_custodians: Option<Vec<ton_types::UInt256>>,
+    pub new_req_confirms: Option<u8>,
+    pub new_lifetime: Option<u32>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

@@ -15,8 +15,9 @@ use nekoton_utils::*;
 
 pub use self::multisig::MultisigType;
 use super::models::{
-    ContractState, Expiration, MessageFlags, MultisigPendingTransaction, PendingTransaction,
-    Transaction, TransactionAdditionalInfo, TransactionWithData, TransactionsBatchInfo,
+    ContractState, Expiration, MessageFlags, MultisigPendingTransaction, MultisigPendingUpdate,
+    PendingTransaction, Transaction, TransactionAdditionalInfo, TransactionWithData,
+    TransactionsBatchInfo,
 };
 use super::{ContractSubscription, PollingMethod};
 use crate::core::parsing::*;
@@ -199,6 +200,10 @@ impl TonWallet {
 
     pub fn get_unconfirmed_transactions(&self) -> &[MultisigPendingTransaction] {
         &self.wallet_data.unconfirmed_transactions
+    }
+
+    pub fn get_unconfirmed_updates(&self) -> &[MultisigPendingUpdate] {
+        &self.wallet_data.unconfirmed_updates
     }
 
     pub fn get_custodians(&self) -> &Option<Vec<UInt256>> {
@@ -516,6 +521,7 @@ impl TonWallet {
 struct WalletData {
     custodians: Option<Vec<UInt256>>,
     unconfirmed_transactions: Vec<MultisigPendingTransaction>,
+    unconfirmed_updates: Vec<MultisigPendingUpdate>,
     details: Option<TonWalletDetails>,
 }
 
@@ -571,6 +577,19 @@ impl WalletData {
             }
         };
 
+        if multisig_type.is_updatable() {
+            let pending_updates = multisig::get_pending_updates(
+                clock,
+                multisig_type,
+                Cow::Borrowed(account_stuff),
+                custodians,
+            )?;
+            if self.unconfirmed_updates != pending_updates {
+                self.unconfirmed_updates = pending_updates;
+                handler.on_unconfirmed_updates_changed(&self.unconfirmed_updates);
+            }
+        }
+
         // Skip pending transactions extraction for single custodian
         if custodians.len() < 2 {
             return Ok(());
@@ -588,6 +607,7 @@ impl WalletData {
             self.unconfirmed_transactions = pending_transactions;
             handler.on_unconfirmed_transactions_changed(&self.unconfirmed_transactions);
         }
+
         Ok(())
     }
 }
@@ -996,5 +1016,10 @@ pub trait TonWalletSubscriptionHandler: Send + Sync {
         unconfirmed_transactions: &[MultisigPendingTransaction],
     ) {
         let _ = unconfirmed_transactions;
+    }
+
+    /// Called when wallet has new pending updates set
+    fn on_unconfirmed_updates_changed(&self, unconfirmed_updates: &[MultisigPendingUpdate]) {
+        let _ = unconfirmed_updates;
     }
 }

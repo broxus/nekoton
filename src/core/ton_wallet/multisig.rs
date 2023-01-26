@@ -10,7 +10,9 @@ use nekoton_abi::*;
 use nekoton_utils::*;
 
 use super::{Gift, TonWalletDetails, TransferAction};
-use crate::core::models::{Expiration, MessageFlags, MultisigPendingTransaction};
+use crate::core::models::{
+    Expiration, MessageFlags, MultisigPendingTransaction, MultisigPendingUpdate,
+};
 use crate::core::utils::*;
 use crate::crypto::UnsignedMessage;
 
@@ -605,6 +607,32 @@ pub fn get_pending_transactions(
     })
 }
 
+pub fn get_pending_updates(
+    clock: &dyn Clock,
+    multisig_type: MultisigType,
+    account_stuff: Cow<'_, ton_block::AccountStuff>,
+    custodians: &[UInt256],
+) -> Result<Vec<MultisigPendingUpdate>> {
+    if !multisig_type.is_multisig2() {
+        return Ok(Vec::new());
+    }
+
+    let function = nekoton_contracts::wallets::multisig2::get_update_requests();
+    run_local(clock, function, account_stuff.into_owned()).and_then(|tokens| {
+        let array = match tokens.into_unpacker().unpack_next() {
+            Ok(ton_abi::TokenValue::Array(_, tokens)) => tokens,
+            _ => return Err(UnpackerError::InvalidAbi.into()),
+        };
+
+        let updates = array
+            .into_iter()
+            .map(|item| Ok(extend_pending_update(item.unpack()?, custodians)))
+            .collect::<UnpackerResult<Vec<MultisigPendingUpdate>>>()?;
+
+        Ok(updates)
+    })
+}
+
 fn extend_pending_transaction(
     tx: nekoton_contracts::wallets::multisig::MultisigTransaction,
     custodians: &[UInt256],
@@ -628,6 +656,30 @@ fn extend_pending_transaction(
         send_flags: tx.send_flags,
         payload: tx.payload,
         bounce: tx.bounce,
+    }
+}
+
+fn extend_pending_update(
+    tx: nekoton_contracts::wallets::multisig2::UpdateTransaction,
+    custodians: &[UInt256],
+) -> MultisigPendingUpdate {
+    let confirmations = custodians
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| (0b1 << i) & tx.confirmations_mask != 0)
+        .map(|(_, item)| *item)
+        .collect::<Vec<UInt256>>();
+
+    MultisigPendingUpdate {
+        id: tx.id,
+        confirmations,
+        signs_received: tx.signs,
+        creator: tx.creator,
+        index: tx.index,
+        new_code_hash: tx.new_code_hash,
+        new_custodians: tx.new_custodians,
+        new_req_confirms: tx.new_req_confirms,
+        new_lifetime: tx.new_lifetime.map(|time| time as u32),
     }
 }
 
