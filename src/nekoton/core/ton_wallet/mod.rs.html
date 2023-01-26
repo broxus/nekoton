@@ -998,6 +998,31 @@
 <a href="#998" id="998">998</a>
 <a href="#999" id="999">999</a>
 <a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::convert::TryFrom;
 <span class="kw">use </span>std::num::NonZeroU8;
@@ -1015,8 +1040,9 @@
 
 <span class="kw">pub use </span><span class="self">self</span>::multisig::MultisigType;
 <span class="kw">use </span><span class="kw">super</span>::models::{
-    ContractState, Expiration, MessageFlags, MultisigPendingTransaction, PendingTransaction,
-    Transaction, TransactionAdditionalInfo, TransactionWithData, TransactionsBatchInfo,
+    ContractState, Expiration, MessageFlags, MultisigPendingTransaction, MultisigPendingUpdate,
+    PendingTransaction, Transaction, TransactionAdditionalInfo, TransactionWithData,
+    TransactionsBatchInfo,
 };
 <span class="kw">use super</span>::{ContractSubscription, PollingMethod};
 <span class="kw">use </span><span class="kw">crate</span>::core::parsing::<span class="kw-2">*</span>;
@@ -1199,6 +1225,10 @@
 
     <span class="kw">pub fn </span>get_unconfirmed_transactions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[MultisigPendingTransaction] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.wallet_data.unconfirmed_transactions
+    }
+
+    <span class="kw">pub fn </span>get_unconfirmed_updates(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[MultisigPendingUpdate] {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.wallet_data.unconfirmed_updates
     }
 
     <span class="kw">pub fn </span>get_custodians(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Vec&lt;UInt256&gt;&gt; {
@@ -1516,6 +1546,7 @@
 </span><span class="kw">struct </span>WalletData {
     custodians: <span class="prelude-ty">Option</span>&lt;Vec&lt;UInt256&gt;&gt;,
     unconfirmed_transactions: Vec&lt;MultisigPendingTransaction&gt;,
+    unconfirmed_updates: Vec&lt;MultisigPendingUpdate&gt;,
     details: <span class="prelude-ty">Option</span>&lt;TonWalletDetails&gt;,
 }
 
@@ -1571,6 +1602,19 @@
             }
         };
 
+        <span class="kw">if </span>multisig_type.is_updatable() {
+            <span class="kw">let </span>pending_updates = multisig::get_pending_updates(
+                clock,
+                multisig_type,
+                Cow::Borrowed(account_stuff),
+                custodians,
+            )<span class="question-mark">?</span>;
+            <span class="kw">if </span><span class="self">self</span>.unconfirmed_updates != pending_updates {
+                <span class="self">self</span>.unconfirmed_updates = pending_updates;
+                handler.on_unconfirmed_updates_changed(<span class="kw-2">&amp;</span><span class="self">self</span>.unconfirmed_updates);
+            }
+        }
+
         <span class="comment">// Skip pending transactions extraction for single custodian
         </span><span class="kw">if </span>custodians.len() &lt; <span class="number">2 </span>{
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
@@ -1588,6 +1632,7 @@
             <span class="self">self</span>.unconfirmed_transactions = pending_transactions;
             handler.on_unconfirmed_transactions_changed(<span class="kw-2">&amp;</span><span class="self">self</span>.unconfirmed_transactions);
         }
+
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -1996,6 +2041,11 @@
         unconfirmed_transactions: <span class="kw-2">&amp;</span>[MultisigPendingTransaction],
     ) {
         <span class="kw">let _ </span>= unconfirmed_transactions;
+    }
+
+    <span class="doccomment">/// Called when wallet has new pending updates set
+    </span><span class="kw">fn </span>on_unconfirmed_updates_changed(<span class="kw-2">&amp;</span><span class="self">self</span>, unconfirmed_updates: <span class="kw-2">&amp;</span>[MultisigPendingUpdate]) {
+        <span class="kw">let _ </span>= unconfirmed_updates;
     }
 }
 </code></pre></div>

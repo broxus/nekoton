@@ -686,6 +686,58 @@
 <a href="#686" id="686">686</a>
 <a href="#687" id="687">687</a>
 <a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::convert::TryFrom;
 
@@ -698,7 +750,9 @@
 <span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
 <span class="kw">use super</span>::{Gift, TonWalletDetails, TransferAction};
-<span class="kw">use </span><span class="kw">crate</span>::core::models::{Expiration, MessageFlags, MultisigPendingTransaction};
+<span class="kw">use </span><span class="kw">crate</span>::core::models::{
+    Expiration, MessageFlags, MultisigPendingTransaction, MultisigPendingUpdate,
+};
 <span class="kw">use </span><span class="kw">crate</span>::core::utils::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::crypto::UnsignedMessage;
 
@@ -1293,6 +1347,32 @@
     })
 }
 
+<span class="kw">pub fn </span>get_pending_updates(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+    multisig_type: MultisigType,
+    account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
+    custodians: <span class="kw-2">&amp;</span>[UInt256],
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;MultisigPendingUpdate&gt;&gt; {
+    <span class="kw">if </span>!multisig_type.is_multisig2() {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new());
+    }
+
+    <span class="kw">let </span>function = nekoton_contracts::wallets::multisig2::get_update_requests();
+    run_local(clock, function, account_stuff.into_owned()).and_then(|tokens| {
+        <span class="kw">let </span>array = <span class="kw">match </span>tokens.into_unpacker().unpack_next() {
+            <span class="prelude-val">Ok</span>(ton_abi::TokenValue::Array(<span class="kw">_</span>, tokens)) =&gt; tokens,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(UnpackerError::InvalidAbi.into()),
+        };
+
+        <span class="kw">let </span>updates = array
+            .into_iter()
+            .map(|item| <span class="prelude-val">Ok</span>(extend_pending_update(item.unpack()<span class="question-mark">?</span>, custodians)))
+            .collect::&lt;UnpackerResult&lt;Vec&lt;MultisigPendingUpdate&gt;&gt;&gt;()<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(updates)
+    })
+}
+
 <span class="kw">fn </span>extend_pending_transaction(
     tx: nekoton_contracts::wallets::multisig::MultisigTransaction,
     custodians: <span class="kw-2">&amp;</span>[UInt256],
@@ -1316,6 +1396,30 @@
         send_flags: tx.send_flags,
         payload: tx.payload,
         bounce: tx.bounce,
+    }
+}
+
+<span class="kw">fn </span>extend_pending_update(
+    tx: nekoton_contracts::wallets::multisig2::UpdateTransaction,
+    custodians: <span class="kw-2">&amp;</span>[UInt256],
+) -&gt; MultisigPendingUpdate {
+    <span class="kw">let </span>confirmations = custodians
+        .iter()
+        .enumerate()
+        .filter(|(i, <span class="kw">_</span>)| (<span class="number">0b1 </span>&lt;&lt; i) &amp; tx.confirmations_mask != <span class="number">0</span>)
+        .map(|(<span class="kw">_</span>, item)| <span class="kw-2">*</span>item)
+        .collect::&lt;Vec&lt;UInt256&gt;&gt;();
+
+    MultisigPendingUpdate {
+        id: tx.id,
+        confirmations,
+        signs_received: tx.signs,
+        creator: tx.creator,
+        index: tx.index,
+        new_code_hash: tx.new_code_hash,
+        new_custodians: tx.new_custodians,
+        new_req_confirms: tx.new_req_confirms,
+        new_lifetime: tx.new_lifetime.map(|time| time <span class="kw">as </span>u32),
     }
 }
 
