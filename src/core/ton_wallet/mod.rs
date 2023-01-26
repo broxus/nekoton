@@ -868,6 +868,25 @@ impl WalletType {
             _ => &[],
         }
     }
+
+    pub fn code_hash(&self) -> &[u8; 32] {
+        match self {
+            Self::Multisig(multisig_type) => multisig_type.code_hash(),
+            Self::WalletV3 => wallet_v3::CODE_HASH,
+            Self::HighloadWalletV2 => highload_wallet_v2::CODE_HASH,
+            Self::EverWallet => ever_wallet::CODE_HASH,
+        }
+    }
+
+    pub fn code(&self) -> ton_types::Cell {
+        use nekoton_contracts::wallets;
+        match self {
+            Self::Multisig(multisig_type) => multisig_type.code(),
+            Self::WalletV3 => wallets::code::wallet_v3(),
+            Self::HighloadWalletV2 => wallets::code::highload_wallet_v2(),
+            Self::EverWallet => wallets::code::ever_wallet(),
+        }
+    }
 }
 
 impl FromStr for WalletType {

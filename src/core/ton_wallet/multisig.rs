@@ -278,51 +278,86 @@ impl MultisigType {
                 | Self::Multisig2_1
         )
     }
+
+    pub fn state_init(&self) -> ton_block::StateInit {
+        use nekoton_contracts::wallets;
+
+        let mut state_init = match self {
+            MultisigType::SafeMultisigWallet => wallets::code::safe_multisig_wallet(),
+            MultisigType::SafeMultisigWallet24h => wallets::code::safe_multisig_wallet_24h(),
+            MultisigType::SetcodeMultisigWallet => wallets::code::setcode_multisig_wallet(),
+            MultisigType::SetcodeMultisigWallet24h => wallets::code::setcode_multisig_wallet_24h(),
+            MultisigType::BridgeMultisigWallet => wallets::code::bridge_multisig_wallet(),
+            MultisigType::SurfWallet => wallets::code::surf_wallet(),
+            MultisigType::Multisig2 => wallets::code::multisig2(),
+            MultisigType::Multisig2_1 => wallets::code::multisig2_1(),
+        }
+        .into();
+
+        ton_block::StateInit::construct_from(&mut state_init).trust_me()
+    }
+
+    pub fn code_hash(&self) -> &[u8; 32] {
+        match self {
+            Self::SafeMultisigWallet => SAFE_MULTISIG_WALLET_HASH,
+            Self::SafeMultisigWallet24h => SAFE_MULTISIG_WALLET_24H_HASH,
+            Self::SetcodeMultisigWallet => SETCODE_MULTISIG_WALLET_HASH,
+            Self::SetcodeMultisigWallet24h => SETCODE_MULTISIG_WALLET_24H_HASH,
+            Self::BridgeMultisigWallet => BRIDGE_MULTISIG_WALLET_HASH,
+            Self::SurfWallet => SURF_WALLET_HASH,
+            Self::Multisig2 => MULTISIG2_HASH,
+            Self::Multisig2_1 => MULTISIG2_1_HASH,
+        }
+    }
+
+    pub fn code(&self) -> ton_types::Cell {
+        self.state_init().code.trust_me()
+    }
 }
 
-const SAFE_MULTISIG_WALLET_HASH: [u8; 32] = [
+static SAFE_MULTISIG_WALLET_HASH: &[u8; 32] = &[
     0x80, 0xd6, 0xc4, 0x7c, 0x4a, 0x25, 0x54, 0x3c, 0x9b, 0x39, 0x7b, 0x71, 0x71, 0x6f, 0x3f, 0xae,
     0x1e, 0x2c, 0x5d, 0x24, 0x71, 0x74, 0xc5, 0x2e, 0x2c, 0x19, 0xbd, 0x89, 0x64, 0x42, 0xb1, 0x05,
 ];
-const SAFE_MULTISIG_WALLET_24H_HASH: [u8; 32] = [
+static SAFE_MULTISIG_WALLET_24H_HASH: &[u8; 32] = &[
     0x7d, 0x09, 0x96, 0x94, 0x34, 0x06, 0xf7, 0xd6, 0x2a, 0x4f, 0xf2, 0x91, 0xb1, 0x22, 0x8b, 0xf0,
     0x6e, 0xbd, 0x3e, 0x04, 0x8b, 0x58, 0x43, 0x6c, 0x5b, 0x70, 0xfb, 0x77, 0xff, 0x8b, 0x4b, 0xf2,
 ];
-const SETCODE_MULTISIG_WALLET_HASH: [u8; 32] = [
+static SETCODE_MULTISIG_WALLET_HASH: &[u8; 32] = &[
     0xe2, 0xb6, 0x0b, 0x6b, 0x60, 0x2c, 0x10, 0xce, 0xd7, 0xea, 0x8e, 0xde, 0x4b, 0xdf, 0x96, 0x34,
     0x2c, 0x97, 0x57, 0x0a, 0x37, 0x98, 0x06, 0x6f, 0x3f, 0xb5, 0x0a, 0x4b, 0x2b, 0x27, 0xa2, 0x08,
 ];
-const SETCODE_MULTISIG_WALLET_24H_HASH: [u8; 32] = [
+static SETCODE_MULTISIG_WALLET_24H_HASH: &[u8; 32] = &[
     0xa4, 0x91, 0x80, 0x4c, 0xa5, 0x5d, 0xd5, 0xb2, 0x8c, 0xff, 0xdf, 0xf4, 0x8c, 0xb3, 0x41, 0x42,
     0x93, 0x09, 0x99, 0x62, 0x1a, 0x54, 0xac, 0xee, 0x6b, 0xe8, 0x3c, 0x34, 0x20, 0x51, 0xd8, 0x84,
 ];
-const BRIDGE_MULTISIG_WALLET_HASH: [u8; 32] = [
+static BRIDGE_MULTISIG_WALLET_HASH: &[u8; 32] = &[
     0xf3, 0xa0, 0x7a, 0xe8, 0x4f, 0xc3, 0x43, 0x25, 0x9d, 0x7f, 0xa4, 0x84, 0x7b, 0x86, 0x33, 0x5b,
     0x3f, 0xdc, 0xfc, 0x8b, 0x31, 0xf1, 0xba, 0x4b, 0x7a, 0x94, 0x99, 0xd5, 0x53, 0x0f, 0x0b, 0x18,
 ];
-const SURF_WALLET_HASH: [u8; 32] = [
+static SURF_WALLET_HASH: &[u8; 32] = &[
     0x20, 0x7d, 0xc5, 0x60, 0xc5, 0x95, 0x6d, 0xe1, 0xa2, 0xc1, 0x47, 0x93, 0x56, 0xf8, 0xf3, 0xee,
     0x70, 0xa5, 0x97, 0x67, 0xdb, 0x2b, 0xf4, 0x78, 0x8b, 0x1d, 0x61, 0xad, 0x42, 0xcd, 0xad, 0x82,
 ];
-const MULTISIG2_HASH: [u8; 32] = [
+static MULTISIG2_HASH: &[u8; 32] = &[
     0x29, 0xb2, 0x47, 0x76, 0xb3, 0xdf, 0x6a, 0x05, 0xc5, 0xa1, 0xb8, 0xd8, 0xfd, 0x75, 0xcb, 0x72,
     0xa1, 0xd3, 0x3c, 0x0a, 0x44, 0x38, 0x53, 0x32, 0xa8, 0xbf, 0xc2, 0x72, 0x7f, 0xb6, 0x65, 0x90,
 ];
-const MULTISIG2_1_HASH: [u8; 32] = [
+static MULTISIG2_1_HASH: &[u8; 32] = &[
     0xd6, 0x6d, 0x19, 0x87, 0x66, 0xab, 0xdb, 0xe1, 0x25, 0x3f, 0x34, 0x15, 0x82, 0x6c, 0x94, 0x6c,
     0x37, 0x1f, 0x51, 0x12, 0x55, 0x24, 0x08, 0x62, 0x5a, 0xeb, 0x0b, 0x31, 0xe0, 0xef, 0x2d, 0xf3,
 ];
 
 pub fn guess_multisig_type(code_hash: &UInt256) -> Option<MultisigType> {
-    match *code_hash.as_slice() {
-        SAFE_MULTISIG_WALLET_HASH => Some(MultisigType::SafeMultisigWallet),
-        SAFE_MULTISIG_WALLET_24H_HASH => Some(MultisigType::SafeMultisigWallet24h),
-        SETCODE_MULTISIG_WALLET_HASH => Some(MultisigType::SetcodeMultisigWallet),
-        BRIDGE_MULTISIG_WALLET_HASH => Some(MultisigType::BridgeMultisigWallet),
-        SETCODE_MULTISIG_WALLET_24H_HASH => Some(MultisigType::SetcodeMultisigWallet24h),
-        SURF_WALLET_HASH => Some(MultisigType::SurfWallet),
-        MULTISIG2_HASH => Some(MultisigType::Multisig2),
-        MULTISIG2_1_HASH => Some(MultisigType::Multisig2_1),
+    match code_hash.as_slice() {
+        s if s == SAFE_MULTISIG_WALLET_HASH => Some(MultisigType::SafeMultisigWallet),
+        s if s == SAFE_MULTISIG_WALLET_24H_HASH => Some(MultisigType::SafeMultisigWallet24h),
+        s if s == SETCODE_MULTISIG_WALLET_HASH => Some(MultisigType::SetcodeMultisigWallet),
+        s if s == BRIDGE_MULTISIG_WALLET_HASH => Some(MultisigType::BridgeMultisigWallet),
+        s if s == SETCODE_MULTISIG_WALLET_24H_HASH => Some(MultisigType::SetcodeMultisigWallet24h),
+        s if s == SURF_WALLET_HASH => Some(MultisigType::SurfWallet),
+        s if s == MULTISIG2_HASH => Some(MultisigType::Multisig2),
+        s if s == MULTISIG2_1_HASH => Some(MultisigType::Multisig2_1),
         _ => None,
     }
 }
@@ -370,21 +405,7 @@ pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
 }
 
 fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> ton_block::StateInit {
-    use nekoton_contracts::wallets;
-
-    let mut code = match multisig_type {
-        MultisigType::SafeMultisigWallet => wallets::code::safe_multisig_wallet(),
-        MultisigType::SafeMultisigWallet24h => wallets::code::safe_multisig_wallet_24h(),
-        MultisigType::SetcodeMultisigWallet => wallets::code::setcode_multisig_wallet(),
-        MultisigType::SetcodeMultisigWallet24h => wallets::code::setcode_multisig_wallet_24h(),
-        MultisigType::BridgeMultisigWallet => wallets::code::bridge_multisig_wallet(),
-        MultisigType::SurfWallet => wallets::code::surf_wallet(),
-        MultisigType::Multisig2 => wallets::code::multisig2(),
-        MultisigType::Multisig2_1 => wallets::code::multisig2_1(),
-    }
-    .into();
-
-    let mut state_init = ton_block::StateInit::construct_from(&mut code).trust_me();
+    let mut state_init = multisig_type.state_init();
 
     let new_data = ton_abi::Contract::insert_pubkey(
         state_init.data.clone().unwrap_or_default().into(),
