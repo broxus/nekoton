@@ -14,8 +14,9 @@ use nekoton_utils::*;
 
 use super::mnemonic::*;
 use super::{
-    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
-    Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
+    default_key_name, extend_with_signature_id, Password, PasswordCache, PasswordCacheTransaction,
+    PubKey, SharedSecret, SignatureId, Signer as StoreSigner, SignerContext, SignerEntry,
+    SignerStorage,
 };
 
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
@@ -175,6 +176,7 @@ impl StoreSigner for EncryptedKeySigner {
         &self,
         ctx: SignerContext<'_>,
         data: &[u8],
+        signature_id: Option<SignatureId>,
         input: Self::SignInput,
     ) -> Result<[u8; 64]> {
         let key = self.get_key(&input.public_key)?;
@@ -183,7 +185,7 @@ impl StoreSigner for EncryptedKeySigner {
             .password_cache
             .process_password(input.public_key.to_bytes(), input.password)?;
 
-        let signature = key.sign(data, password.as_ref())?;
+        let signature = key.sign(data, signature_id, password.as_ref())?;
 
         password.proceed();
         Ok(signature)
@@ -450,9 +452,10 @@ impl EncryptedKey {
     pub fn sign(
         &self,
         data: &[u8],
+        signature_id: Option<SignatureId>,
         password: &str,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
-        self.inner.sign(data, password)
+        self.inner.sign(data, signature_id, password)
     }
 
     pub fn compute_shared_keys(
@@ -510,6 +513,7 @@ impl CryptoData {
     pub fn sign(
         &self,
         data: &[u8],
+        signature_id: Option<SignatureId>,
         password: &str,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let secret = self.decrypt_secret(password)?;
@@ -517,7 +521,8 @@ impl CryptoData {
             secret,
             public: self.pubkey,
         };
-        Ok(pair.sign(data).to_bytes())
+        let data = extend_with_signature_id(data, signature_id);
+        Ok(pair.sign(&data).to_bytes())
     }
 
     pub fn compute_shared_keys(
@@ -681,7 +686,7 @@ mod tests {
         .unwrap();
 
         assert!(!signer.as_json().is_empty());
-        let result = signer.sign(b"lol", "lol");
+        let result = signer.sign(b"lol", None, "lol");
         assert!(result.is_err());
     }
 

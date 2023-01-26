@@ -11,8 +11,9 @@ use nekoton_utils::*;
 
 use super::mnemonic::*;
 use super::{
-    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
-    Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
+    default_key_name, extend_with_signature_id, Password, PasswordCache, PasswordCacheTransaction,
+    PubKey, SharedSecret, SignatureId, Signer as StoreSigner, SignerContext, SignerEntry,
+    SignerStorage,
 };
 
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
@@ -344,10 +345,12 @@ impl StoreSigner for DerivedKeySigner {
         &self,
         ctx: SignerContext<'_>,
         data: &[u8],
+        signature_id: Option<SignatureId>,
         input: Self::SignInput,
     ) -> Result<[u8; 64]> {
         let keypair = self.use_sign_input(ctx.password_cache, input)?;
-        Ok(keypair.sign(data).to_bytes())
+        let data = extend_with_signature_id(data, signature_id);
+        Ok(keypair.sign(&data).to_bytes())
     }
 }
 

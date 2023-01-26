@@ -68,6 +68,7 @@ pub trait LedgerConnection: Send + Sync {
     async fn sign(
         &self,
         account: u16,
+        signature_id: Option<i32>,
         message: &[u8],
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
 
@@ -75,6 +76,7 @@ pub trait LedgerConnection: Send + Sync {
         &self,
         account: u16,
         wallet: u16,
+        signature_id: Option<i32>,
         message: &[u8],
         context: &LedgerSignatureContext,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;

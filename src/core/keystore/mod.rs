@@ -14,8 +14,8 @@ use tokio::sync::RwLock;
 use nekoton_utils::*;
 
 use crate::crypto::{
-    EncryptedData, EncryptionAlgorithm, PasswordCache, SharedSecret, Signature, Signer,
-    SignerContext, SignerEntry, SignerStorage,
+    EncryptedData, EncryptionAlgorithm, PasswordCache, SharedSecret, Signature, SignatureId,
+    Signer, SignerContext, SignerEntry, SignerStorage,
 };
 use crate::external::Storage;
 
@@ -269,7 +269,12 @@ impl KeyStore {
         }
     }
 
-    pub async fn sign<T>(&self, data: &[u8], input: T::SignInput) -> Result<Signature>
+    pub async fn sign<T>(
+        &self,
+        data: &[u8],
+        signature_id: Option<SignatureId>,
+        input: T::SignInput,
+    ) -> Result<Signature>
     where
         T: Signer,
     {
@@ -278,7 +283,10 @@ impl KeyStore {
         let ctx = SignerContext {
             password_cache: &self.password_cache,
         };
-        state.get_signer_ref::<T>()?.sign(ctx, data, input).await
+        state
+            .get_signer_ref::<T>()?
+            .sign(ctx, data, signature_id, input)
+            .await
     }
 
     pub async fn remove_key(&self, public_key: &PublicKey) -> Result<Option<KeyStoreEntry>> {
