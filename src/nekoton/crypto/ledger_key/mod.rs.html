@@ -314,6 +314,17 @@
 <span id="314">314</span>
 <span id="315">315</span>
 <span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map::{<span class="self">self</span>, HashMap};
 <span class="kw">use </span>std::convert::TryInto;
 <span class="kw">use </span>std::io::Read;
@@ -327,7 +338,7 @@
 <span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
 <span class="kw">use super</span>::{
-    default_key_name, SharedSecret, Signer <span class="kw">as </span>StoreSigner, SignerContext, SignerEntry,
+    default_key_name, SharedSecret, SignatureId, Signer <span class="kw">as </span>StoreSigner, SignerContext, SignerEntry,
     SignerStorage,
 };
 <span class="kw">use </span><span class="kw">crate</span>::core::ton_wallet::WalletType;
@@ -456,14 +467,25 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
         data: <span class="kw-2">&amp;</span>[u8],
+        signature_id: <span class="prelude-ty">Option</span>&lt;SignatureId&gt;,
         input: <span class="self">Self</span>::SignInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; ed25519_dalek::SIGNATURE_LENGTH]&gt; {
         <span class="kw">let </span>key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
         <span class="kw">let </span>signature = <span class="kw">match </span>input.context {
-            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.connection.sign(key.account_id, data).<span class="kw">await</span><span class="question-mark">?</span>,
+            <span class="prelude-val">None </span>=&gt; {
+                <span class="self">self</span>.connection
+                    .sign(key.account_id, signature_id, data)
+                    .<span class="kw">await</span><span class="question-mark">?
+            </span>}
             <span class="prelude-val">Some</span>(context) =&gt; {
                 <span class="self">self</span>.connection
-                    .sign_transaction(key.account_id, input.wallet.try_into()<span class="question-mark">?</span>, data, <span class="kw-2">&amp;</span>context)
+                    .sign_transaction(
+                        key.account_id,
+                        input.wallet.try_into()<span class="question-mark">?</span>,
+                        signature_id,
+                        data,
+                        <span class="kw-2">&amp;</span>context,
+                    )
                     .<span class="kw">await</span><span class="question-mark">?
             </span>}
         };
