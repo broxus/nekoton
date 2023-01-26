@@ -187,6 +187,7 @@ pub static DETAILS: TonWalletDetails = TonWalletDetails {
     supports_payload: true,
     supports_state_init: true,
     supports_multiple_owners: false,
+    supports_code_update: false,
     expiration_time: 0,
     required_confirmations: None,
 };

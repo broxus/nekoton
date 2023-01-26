@@ -112,6 +112,9 @@ pub enum MultisigTransaction {
     Send(MultisigSendTransaction),
     Submit(MultisigSubmitTransaction),
     Confirm(MultisigConfirmTransaction),
+    SubmitUpdate(MultisigSubmitUpdate),
+    ConfirmUpdate(MultisigConfirmUpdate),
+    ExecuteUpdate(MultisigExecuteUpdate),
 }
 
 #[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize, Copy)]
@@ -170,6 +173,35 @@ pub struct MultisigSendTransaction {
     pub payload: ton_types::Cell,
 }
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct MultisigSubmitUpdate {
+    #[serde(with = "serde_uint256")]
+    pub custodian: UInt256,
+    #[serde(with = "serde_optional_uint256")]
+    pub new_code_hash: Option<ton_types::UInt256>,
+    pub new_owners: bool,
+    pub new_req_confirms: bool,
+    pub new_lifetime: bool,
+    #[serde(with = "serde_string")]
+    pub update_id: u64,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct MultisigConfirmUpdate {
+    #[serde(with = "serde_uint256")]
+    pub custodian: UInt256,
+    #[serde(with = "serde_string")]
+    pub update_id: u64,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct MultisigExecuteUpdate {
+    #[serde(with = "serde_uint256")]
+    pub custodian: UInt256,
+    #[serde(with = "serde_string")]
+    pub update_id: u64,
+}
+
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct MultisigPendingTransaction {
     #[serde(with = "serde_string")]
@@ -198,6 +230,29 @@ pub struct MultisigPendingTransaction {
     pub payload: ton_types::Cell,
 
     pub bounce: bool,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct MultisigPendingUpdate {
+    #[serde(with = "serde_string")]
+    pub id: u64,
+
+    #[serde(with = "serde_vec_uint256")]
+    pub confirmations: Vec<UInt256>,
+
+    pub signs_required: u8,
+    pub signs_received: u8,
+
+    #[serde(with = "serde_uint256")]
+    pub creator: UInt256,
+
+    pub index: u8,
+
+    #[serde(with = "serde_uint256")]
+    pub new_code_hash: ton_types::UInt256,
+    #[serde(with = "serde_vec_uint256")]
+    pub new_custodians: Vec<ton_types::UInt256>,
+    pub new_req_confirms: u8,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

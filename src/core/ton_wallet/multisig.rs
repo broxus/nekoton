@@ -99,11 +99,6 @@ pub fn prepare_confirm_transaction(
     transaction_id: u64,
     expiration: Expiration,
 ) -> Result<Box<dyn UnsignedMessage>> {
-    let message = ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
-        dst: address,
-        ..Default::default()
-    });
-
     let function = if multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::confirm_transaction()
     } else {
@@ -111,14 +106,7 @@ pub fn prepare_confirm_transaction(
     };
     let (function, input) = MessageBuilder::new(function).arg(transaction_id).build();
 
-    make_labs_unsigned_message(
-        clock,
-        message,
-        expiration,
-        public_key,
-        Cow::Borrowed(function),
-        input,
-    )
+    make_ext_message(clock, public_key, address, expiration, function, input)
 }
 
 pub fn prepare_transfer(
@@ -130,11 +118,6 @@ pub fn prepare_transfer(
     gift: Gift,
     expiration: Expiration,
 ) -> Result<TransferAction> {
-    let message = ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
-        dst: address,
-        ..Default::default()
-    });
-
     let is_new_multisig = multisig_type.is_multisig2();
 
     let (function, input) = if has_multiple_owners || is_new_multisig && gift.state_init.is_some() {
@@ -183,14 +166,87 @@ pub fn prepare_transfer(
             .build()
     };
 
-    Ok(TransferAction::Sign(make_labs_unsigned_message(
+    make_ext_message(clock, public_key, address, expiration, function, input)
+        .map(TransferAction::Sign)
+}
+
+pub fn prepare_code_update(
+    clock: &dyn Clock,
+    multisig_type: MultisigType,
+    public_key: &PublicKey,
+    address: MsgAddressInt,
+    new_code_hash: &[u8; 32],
+    expiration: Expiration,
+) -> Result<Box<dyn UnsignedMessage>> {
+    use nekoton_contracts::wallets::multisig2;
+
+    if !multisig_type.is_multisig2() {
+        return Err(MultisigError::UnsupportedUpdate.into());
+    }
+
+    make_ext_message(
         clock,
-        message,
-        expiration,
         public_key,
-        Cow::Borrowed(function),
-        input,
-    )?))
+        address,
+        expiration,
+        multisig2::submit_update(),
+        multisig2::SubmitUpdateParams {
+            code_hash: Some(ton_types::UInt256::from(*new_code_hash)),
+            owners: None,
+            req_confirms: None,
+            lifetime: None,
+        }
+        .pack(),
+    )
+}
+
+pub fn prepare_confirm_update(
+    clock: &dyn Clock,
+    multisig_type: MultisigType,
+    public_key: &PublicKey,
+    address: MsgAddressInt,
+    update_id: u64,
+    expiration: Expiration,
+) -> Result<Box<dyn UnsignedMessage>> {
+    use nekoton_contracts::wallets::multisig2;
+
+    if !multisig_type.is_multisig2() {
+        return Err(MultisigError::UnsupportedUpdate.into());
+    }
+
+    make_ext_message(
+        clock,
+        public_key,
+        address,
+        expiration,
+        multisig2::confirm_update(),
+        multisig2::ConfirmUpdateParams { update_id }.pack(),
+    )
+}
+
+pub fn prepare_execute_update(
+    clock: &dyn Clock,
+    multisig_type: MultisigType,
+    public_key: &PublicKey,
+    address: MsgAddressInt,
+    update_id: u64,
+    code: Option<ton_types::Cell>,
+    expiration: Expiration,
+) -> Result<Box<dyn UnsignedMessage>> {
+    use nekoton_contracts::wallets::multisig2;
+
+    if !multisig_type.is_multisig2() {
+        return Err(MultisigError::UnsupportedUpdate.into());
+    }
+
+    make_ext_message(
+        clock,
+        public_key,
+        address,
+        expiration,
+        multisig2::execute_update(),
+        multisig2::ExecuteUpdateParams { update_id, code }.pack(),
+    )
 }
 
 define_string_enum!(
@@ -210,6 +266,17 @@ define_string_enum!(
 impl MultisigType {
     pub fn is_multisig2(self) -> bool {
         matches!(self, Self::Multisig2 | Self::Multisig2_1)
+    }
+
+    pub fn is_updatable(&self) -> bool {
+        matches!(
+            self,
+            Self::SetcodeMultisigWallet
+                | Self::SetcodeMultisigWallet24h
+                | Self::SurfWallet
+                | Self::Multisig2
+                | Self::Multisig2_1
+        )
     }
 }
 
@@ -287,6 +354,7 @@ pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
         supports_payload: true,
         supports_state_init: multisig_type.is_multisig2(),
         supports_multiple_owners: true,
+        supports_code_update: multisig_type.is_updatable(),
         expiration_time: match multisig_type {
             MultisigType::SafeMultisigWallet
             | MultisigType::SetcodeMultisigWallet
@@ -444,6 +512,52 @@ pub fn find_pending_transaction(
     Ok(false)
 }
 
+pub fn find_pending_update(
+    clock: &dyn Clock,
+    multisig_type: MultisigType,
+    account_stuff: Cow<'_, ton_block::AccountStuff>,
+    update_id: u64,
+) -> Result<Option<UpdatedParams>> {
+    use nekoton_contracts::wallets::multisig2;
+
+    if !multisig_type.is_multisig2() {
+        return Ok(None);
+    }
+
+    let tokens = run_local(
+        clock,
+        multisig2::get_update_requests(),
+        account_stuff.into_owned(),
+    )?;
+
+    let array = match tokens.into_unpacker().unpack_next() {
+        Ok(ton_abi::TokenValue::Array(_, tokens)) => tokens,
+        _ => return Err(UnpackerError::InvalidAbi.into()),
+    };
+
+    for item in array {
+        let update: multisig2::UpdateTransaction = item.unpack()?;
+        if update_id == update.id {
+            return Ok(Some(UpdatedParams {
+                new_code_hash: update.new_code_hash,
+                new_custodians: update.new_custodians,
+                new_req_confirms: update.new_req_confirms,
+                new_lifetime: update.new_lifetime,
+            }));
+        }
+    }
+
+    Ok(None)
+}
+
+#[derive(Debug, Clone)]
+pub struct UpdatedParams {
+    pub new_code_hash: Option<ton_types::UInt256>,
+    pub new_custodians: Option<Vec<ton_types::UInt256>>,
+    pub new_req_confirms: Option<u8>,
+    pub new_lifetime: Option<u64>,
+}
+
 pub fn get_pending_transactions(
     clock: &dyn Clock,
     multisig_type: MultisigType,
@@ -496,6 +610,29 @@ fn extend_pending_transaction(
     }
 }
 
+fn make_ext_message(
+    clock: &dyn Clock,
+    public_key: &PublicKey,
+    address: MsgAddressInt,
+    expiration: Expiration,
+    function: &'static ton_abi::Function,
+    input: Vec<ton_abi::Token>,
+) -> Result<Box<dyn UnsignedMessage>> {
+    let message = ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
+        dst: address,
+        ..Default::default()
+    });
+
+    make_labs_unsigned_message(
+        clock,
+        message,
+        expiration,
+        public_key,
+        Cow::Borrowed(function),
+        input,
+    )
+}
+
 const DEFAULT_LIFETIME: u32 = 3600;
 
 #[derive(thiserror::Error, Debug)]
@@ -506,6 +643,8 @@ enum MultisigError {
     UnsupportedFlagsSet,
     #[error("Custom lifetime is not supported for this contract type")]
     CustomExpirationTimeNotSupported,
+    #[error("Update is not supported or not implemented for this contract type")]
+    UnsupportedUpdate,
 }
 
 #[cfg(test)]
