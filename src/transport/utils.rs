@@ -4,6 +4,7 @@ use tokio::sync::Mutex;
 use nekoton_utils::*;
 
 use super::Transport;
+use crate::core::models::NetworkCapabilities;
 
 pub struct ConfigCache {
     use_default_config: bool,
@@ -16,6 +17,10 @@ impl ConfigCache {
             use_default_config,
             state: Mutex::new(if use_default_config {
                 Some(ConfigCacheState {
+                    capabilities: NetworkCapabilities {
+                        global_id: 0,
+                        raw: 0,
+                    },
                     config: ton_executor::BlockchainConfig::default(),
                     last_key_block_seqno: 0,
                     phase: ConfigCachePhase::WainingNextValidatorsSet { deadline: u32::MAX },
@@ -31,24 +36,25 @@ impl ConfigCache {
         transport: &dyn Transport,
         clock: &dyn Clock,
         force: bool,
-    ) -> Result<ton_executor::BlockchainConfig> {
+    ) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig)> {
         let mut cache = self.state.lock().await;
 
         let now = clock.now_sec_u64() as u32;
 
         Ok(match &*cache {
             None => {
-                let (config, key_block_seqno) = fetch_config(transport).await?;
+                let (capabilities, config, key_block_seqno) = fetch_config(transport).await?;
                 let phase = compute_next_phase(now, &config, None, key_block_seqno)?;
                 *cache = Some(ConfigCacheState {
+                    capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
                     phase,
                 });
-                config
+                (capabilities, config)
             }
             Some(a) if force && !self.use_default_config || cache_expired(now, a.phase) => {
-                let (config, key_block_seqno) = fetch_config(transport).await?;
+                let (capabilities, config, key_block_seqno) = fetch_config(transport).await?;
                 let phase = compute_next_phase(
                     now,
                     &config,
@@ -56,21 +62,32 @@ impl ConfigCache {
                     key_block_seqno,
                 )?;
                 *cache = Some(ConfigCacheState {
+                    capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
                     phase,
                 });
-                config
+                (capabilities, config)
             }
-            Some(a) => a.config.clone(),
+            Some(a) => (a.capabilities, a.config.clone()),
         })
     }
 }
 
-async fn fetch_config(transport: &dyn Transport) -> Result<(ton_executor::BlockchainConfig, u32)> {
+async fn fetch_config(
+    transport: &dyn Transport,
+) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig, u32)> {
     let block = transport.get_latest_key_block().await?;
 
     let info = block.info.read_struct()?;
+
+    let capabilities = NetworkCapabilities {
+        global_id: block.global_id,
+        raw: info
+            .gen_software()
+            .map(|version| version.capabilities)
+            .unwrap_or_default(),
+    };
 
     let extra = block
         .read_extra()
@@ -89,7 +106,7 @@ async fn fetch_config(transport: &dyn Transport) -> Result<(ton_executor::Blockc
     let config = ton_executor::BlockchainConfig::with_config(params)
         .map_err(|_| QueryConfigError::InvalidConfig)?;
 
-    Ok((config, info.seq_no()))
+    Ok((capabilities, config, info.seq_no()))
 }
 
 fn compute_next_phase(
@@ -126,6 +143,7 @@ fn cache_expired(now: u32, phase: ConfigCachePhase) -> bool {
 }
 
 struct ConfigCacheState {
+    capabilities: NetworkCapabilities,
     config: ton_executor::BlockchainConfig,
     last_key_block_seqno: u32,
     phase: ConfigCachePhase,

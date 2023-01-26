@@ -10,7 +10,7 @@ use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 use nekoton_abi::{GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
-use crate::core::models::ReliableBehavior;
+use crate::core::models::{NetworkCapabilities, ReliableBehavior};
 use crate::external::{GqlConnection, GqlRequest};
 
 use self::queries::*;
@@ -337,14 +337,24 @@ impl Transport for GqlTransport {
             .map_err(|_| NodeClientError::InvalidBlock.into())
     }
 
+    async fn get_capabilities(&self, clock: &dyn Clock) -> Result<NetworkCapabilities> {
+        let (capabilities, _) = self
+            .config_cache
+            .get_blockchain_config(self, clock, false)
+            .await?;
+        Ok(capabilities)
+    }
+
     async fn get_blockchain_config(
         &self,
         clock: &dyn Clock,
         force: bool,
     ) -> Result<ton_executor::BlockchainConfig> {
-        self.config_cache
+        let (_, config) = self
+            .config_cache
             .get_blockchain_config(self, clock, force)
-            .await
+            .await?;
+        Ok(config)
     }
 }
 

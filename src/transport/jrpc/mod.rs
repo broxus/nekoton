@@ -6,7 +6,7 @@ use ton_block::{Block, Deserializable, MsgAddressInt};
 
 use nekoton_utils::*;
 
-use crate::core::models::ReliableBehavior;
+use crate::core::models::{NetworkCapabilities, ReliableBehavior};
 use crate::external::{self, JrpcConnection};
 
 use super::models::{RawContractState, RawTransaction};
@@ -144,14 +144,24 @@ impl Transport for JrpcTransport {
             .map(|block: GetBlockResponse| block.block)
     }
 
+    async fn get_capabilities(&self, clock: &dyn Clock) -> Result<NetworkCapabilities> {
+        let (capabilities, _) = self
+            .config_cache
+            .get_blockchain_config(self, clock, false)
+            .await?;
+        Ok(capabilities)
+    }
+
     async fn get_blockchain_config(
         &self,
         clock: &dyn Clock,
         force: bool,
     ) -> Result<ton_executor::BlockchainConfig> {
-        self.config_cache
+        let (_, config) = self
+            .config_cache
             .get_blockchain_config(self, clock, force)
-            .await
+            .await?;
+        Ok(config)
     }
 }
 

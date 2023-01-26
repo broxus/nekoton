@@ -4,7 +4,7 @@ use nekoton_utils::Clock;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
-use crate::core::models::ReliableBehavior;
+use crate::core::models::{NetworkCapabilities, ReliableBehavior};
 
 use self::models::*;
 
@@ -47,6 +47,8 @@ pub trait Transport: Send + Sync {
     ) -> Result<Option<RawTransaction>>;
 
     async fn get_latest_key_block(&self) -> Result<ton_block::Block>;
+
+    async fn get_capabilities(&self, clock: &dyn Clock) -> Result<NetworkCapabilities>;
 
     // NOTE: clock is used for caching here
     async fn get_blockchain_config(

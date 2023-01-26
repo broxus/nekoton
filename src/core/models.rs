@@ -311,6 +311,24 @@ define_string_enum!(
 );
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NetworkCapabilities {
+    /// Network global id.
+    pub global_id: i32,
+    /// Raw software capabilities.
+    pub raw: u64,
+}
+
+impl NetworkCapabilities {
+    const CAP_SIGNATURE_WITH_ID: u64 = 0x4000000;
+
+    /// Returns the signature id if `CapSignatureWithId` capability is enabled.
+    pub fn signature_id(&self) -> Option<i32> {
+        (self.raw & Self::CAP_SIGNATURE_WITH_ID != 0).then_some(self.global_id)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "type", content = "data")]
 pub enum Expiration {
     /// Message will never be expired. Not recommended to use
