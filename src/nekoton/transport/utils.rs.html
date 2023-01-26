@@ -145,12 +145,31 @@
 <span id="145">145</span>
 <span id="146">146</span>
 <span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>tokio::sync::Mutex;
 
 <span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">super</span>::Transport;
+<span class="kw">use </span><span class="kw">crate</span>::core::models::NetworkCapabilities;
 
 <span class="kw">pub struct </span>ConfigCache {
     use_default_config: bool,
@@ -163,6 +182,10 @@
             use_default_config,
             state: Mutex::new(<span class="kw">if </span>use_default_config {
                 <span class="prelude-val">Some</span>(ConfigCacheState {
+                    capabilities: NetworkCapabilities {
+                        global_id: <span class="number">0</span>,
+                        raw: <span class="number">0</span>,
+                    },
                     config: ton_executor::BlockchainConfig::default(),
                     last_key_block_seqno: <span class="number">0</span>,
                     phase: ConfigCachePhase::WainingNextValidatorsSet { deadline: u32::MAX },
@@ -178,24 +201,25 @@
         transport: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Transport,
         clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
         force: bool,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ton_executor::BlockchainConfig&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(NetworkCapabilities, ton_executor::BlockchainConfig)&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>cache = <span class="self">self</span>.state.lock().<span class="kw">await</span>;
 
         <span class="kw">let </span>now = clock.now_sec_u64() <span class="kw">as </span>u32;
 
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="kw-2">&amp;*</span>cache {
             <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span>(config, key_block_seqno) = fetch_config(transport).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>(capabilities, config, key_block_seqno) = fetch_config(transport).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">let </span>phase = compute_next_phase(now, <span class="kw-2">&amp;</span>config, <span class="prelude-val">None</span>, key_block_seqno)<span class="question-mark">?</span>;
                 <span class="kw-2">*</span>cache = <span class="prelude-val">Some</span>(ConfigCacheState {
+                    capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
                     phase,
                 });
-                config
+                (capabilities, config)
             }
             <span class="prelude-val">Some</span>(a) <span class="kw">if </span>force &amp;&amp; !<span class="self">self</span>.use_default_config || cache_expired(now, a.phase) =&gt; {
-                <span class="kw">let </span>(config, key_block_seqno) = fetch_config(transport).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>(capabilities, config, key_block_seqno) = fetch_config(transport).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">let </span>phase = compute_next_phase(
                     now,
                     <span class="kw-2">&amp;</span>config,
@@ -203,21 +227,32 @@
                     key_block_seqno,
                 )<span class="question-mark">?</span>;
                 <span class="kw-2">*</span>cache = <span class="prelude-val">Some</span>(ConfigCacheState {
+                    capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
                     phase,
                 });
-                config
+                (capabilities, config)
             }
-            <span class="prelude-val">Some</span>(a) =&gt; a.config.clone(),
+            <span class="prelude-val">Some</span>(a) =&gt; (a.capabilities, a.config.clone()),
         })
     }
 }
 
-<span class="kw">async fn </span>fetch_config(transport: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Transport) -&gt; <span class="prelude-ty">Result</span>&lt;(ton_executor::BlockchainConfig, u32)&gt; {
+<span class="kw">async fn </span>fetch_config(
+    transport: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Transport,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(NetworkCapabilities, ton_executor::BlockchainConfig, u32)&gt; {
     <span class="kw">let </span>block = transport.get_latest_key_block().<span class="kw">await</span><span class="question-mark">?</span>;
 
     <span class="kw">let </span>info = block.info.read_struct()<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>capabilities = NetworkCapabilities {
+        global_id: block.global_id,
+        raw: info
+            .gen_software()
+            .map(|version| version.capabilities)
+            .unwrap_or_default(),
+    };
 
     <span class="kw">let </span>extra = block
         .read_extra()
@@ -236,7 +271,7 @@
     <span class="kw">let </span>config = ton_executor::BlockchainConfig::with_config(params)
         .map_err(|<span class="kw">_</span>| QueryConfigError::InvalidConfig)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>((config, info.seq_no()))
+    <span class="prelude-val">Ok</span>((capabilities, config, info.seq_no()))
 }
 
 <span class="kw">fn </span>compute_next_phase(
@@ -273,6 +308,7 @@
 }
 
 <span class="kw">struct </span>ConfigCacheState {
+    capabilities: NetworkCapabilities,
     config: ton_executor::BlockchainConfig,
     last_key_block_seqno: u32,
     phase: ConfigCachePhase,

@@ -920,6 +920,24 @@
 <span id="920">920</span>
 <span id="921">921</span>
 <span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -1231,6 +1249,24 @@
         </span>BlockWalking,
     }
 );
+
+<span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+</span><span class="kw">pub struct </span>NetworkCapabilities {
+    <span class="doccomment">/// Network global id.
+    </span><span class="kw">pub </span>global_id: i32,
+    <span class="doccomment">/// Raw software capabilities.
+    </span><span class="kw">pub </span>raw: u64,
+}
+
+<span class="kw">impl </span>NetworkCapabilities {
+    <span class="kw">const </span>CAP_SIGNATURE_WITH_ID: u64 = <span class="number">0x4000000</span>;
+
+    <span class="doccomment">/// Returns the signature id if `CapSignatureWithId` capability is enabled.
+    </span><span class="kw">pub fn </span>signature_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i32&gt; {
+        (<span class="self">self</span>.raw &amp; <span class="self">Self</span>::CAP_SIGNATURE_WITH_ID != <span class="number">0</span>).then_some(<span class="self">self</span>.global_id)
+    }
+}
 
 <span class="attribute">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]

@@ -62,13 +62,15 @@
 <span id="62">62</span>
 <span id="63">63</span>
 <span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>nekoton_utils::Clock;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>ton_block::MsgAddressInt;
 
-<span class="kw">use </span><span class="kw">crate</span>::core::models::ReliableBehavior;
+<span class="kw">use </span><span class="kw">crate</span>::core::models::{NetworkCapabilities, ReliableBehavior};
 
 <span class="kw">use </span><span class="self">self</span>::models::<span class="kw-2">*</span>;
 
@@ -111,6 +113,8 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;RawTransaction&gt;&gt;;
 
     <span class="kw">async fn </span>get_latest_key_block(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;ton_block::Block&gt;;
+
+    <span class="kw">async fn </span>get_capabilities(<span class="kw-2">&amp;</span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) -&gt; <span class="prelude-ty">Result</span>&lt;NetworkCapabilities&gt;;
 
     <span class="comment">// NOTE: clock is used for caching here
     </span><span class="kw">async fn </span>get_blockchain_config(
