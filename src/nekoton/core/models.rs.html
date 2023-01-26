@@ -938,6 +938,61 @@
 <span id="938">938</span>
 <span id="939">939</span>
 <span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
+<span id="995">995</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -1052,6 +1107,9 @@
     Send(MultisigSendTransaction),
     Submit(MultisigSubmitTransaction),
     Confirm(MultisigConfirmTransaction),
+    SubmitUpdate(MultisigSubmitUpdate),
+    ConfirmUpdate(MultisigConfirmUpdate),
+    ExecuteUpdate(MultisigExecuteUpdate),
 }
 
 <span class="attribute">#[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize, Copy)]
@@ -1110,6 +1168,35 @@
     </span><span class="kw">pub </span>payload: ton_types::Cell,
 }
 
+<span class="attribute">#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>MultisigSubmitUpdate {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>custodian: UInt256,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_optional_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>new_code_hash: <span class="prelude-ty">Option</span>&lt;ton_types::UInt256&gt;,
+    <span class="kw">pub </span>new_owners: bool,
+    <span class="kw">pub </span>new_req_confirms: bool,
+    <span class="kw">pub </span>new_lifetime: bool,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>update_id: u64,
+}
+
+<span class="attribute">#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>MultisigConfirmUpdate {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>custodian: UInt256,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>update_id: u64,
+}
+
+<span class="attribute">#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>MultisigExecuteUpdate {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>custodian: UInt256,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>update_id: u64,
+}
+
 <span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>MultisigPendingTransaction {
     <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
@@ -1138,6 +1225,29 @@
     </span><span class="kw">pub </span>payload: ton_types::Cell,
 
     <span class="kw">pub </span>bounce: bool,
+}
+
+<span class="attribute">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+</span><span class="kw">pub struct </span>MultisigPendingUpdate {
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="kw">pub </span>id: u64,
+
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_vec_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>confirmations: Vec&lt;UInt256&gt;,
+
+    <span class="kw">pub </span>signs_required: u8,
+    <span class="kw">pub </span>signs_received: u8,
+
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>creator: UInt256,
+
+    <span class="kw">pub </span>index: u8,
+
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>new_code_hash: ton_types::UInt256,
+    <span class="attribute">#[serde(with = <span class="string">&quot;serde_vec_uint256&quot;</span>)]
+    </span><span class="kw">pub </span>new_custodians: Vec&lt;ton_types::UInt256&gt;,
+    <span class="kw">pub </span>new_req_confirms: u8,
 }
 
 <span class="attribute">#[derive(Clone, Debug, Serialize, Deserialize)]
