@@ -737,7 +737,7 @@ mod serde_accounts_map {
 fn derive_from_master(id: u16, master: &[u8]) -> Result<ed25519_dalek::Keypair> {
     use tiny_hderive::bip32;
 
-    let path = format!("m/44'/396'/0'/0/{}", id);
+    let path = format!("m/44'/396'/0'/0/{id}");
     let key = bip32::ExtendedPrivKey::derive(master, path.as_str())
         .map_err(|_| MasterKeyError::DerivationError)?
         .secret();

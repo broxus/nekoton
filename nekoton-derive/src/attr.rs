@@ -240,10 +240,7 @@ fn get_lit_str_special<'a>(
     } else {
         cx.error_spanned_by(
             lit,
-            format!(
-                "expected {} attribute to be a string: `{} = \"...\"`",
-                attr_name, path_name
-            ),
+            format!("expected {attr_name} attribute to be a string: `{path_name} = \"...\"`"),
         );
         Err(())
     }
@@ -267,7 +264,7 @@ fn get_meta_items(
             .collect()),
         Ok(Path(_)) => Ok(Vec::new()),
         Ok(other) => {
-            cx.error_spanned_by(other, format!("expected #[{}(...)]", attr_from));
+            cx.error_spanned_by(other, format!("expected #[{attr_from}(...)]"));
             Err(())
         }
         Err(err) => {

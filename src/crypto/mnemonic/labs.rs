@@ -17,11 +17,9 @@ pub fn derive_from_phrase(phrase: &str, account_id: u16) -> Result<ed25519_dalek
     let hd = bip39::Seed::new(&mnemonic, "");
     let seed_bytes = hd.as_bytes();
 
-    let derived = ExtendedPrivKey::derive(
-        seed_bytes,
-        format!("m/44'/396'/0'/0/{}", account_id).as_str(),
-    )
-    .map_err(|_| anyhow::anyhow!("Invalid derivation path"))?;
+    let derived =
+        ExtendedPrivKey::derive(seed_bytes, format!("m/44'/396'/0'/0/{account_id}").as_str())
+            .map_err(|_| anyhow::anyhow!("Invalid derivation path"))?;
 
     let secret = ed25519_dalek::SecretKey::from_bytes(&derived.secret())?;
     let public = ed25519_dalek::PublicKey::from(&secret);

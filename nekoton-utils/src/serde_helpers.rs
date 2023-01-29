@@ -133,7 +133,7 @@ pub mod serde_base64_array {
     {
         let data = serde_bytes_base64::deserialize(deserializer)?;
         data.try_into()
-            .map_err(|_| D::Error::custom(format!("Invalid array length, expected: {}", N)))
+            .map_err(|_| D::Error::custom(format!("Invalid array length, expected: {N}")))
     }
 }
 
@@ -153,7 +153,7 @@ pub mod serde_hex_array {
     {
         let data = serde_bytes::deserialize(deserializer)?;
         data.try_into()
-            .map_err(|_| D::Error::custom(format!("Invalid array length, expected: {}", N)))
+            .map_err(|_| D::Error::custom(format!("Invalid array length, expected: {N}")))
     }
 }
 
@@ -186,7 +186,7 @@ pub mod serde_optional_hex_array {
             Some(data) => Some(
                 data.0
                     .try_into()
-                    .map_err(|_| Error::custom(format!("Invalid array length, expected: {}", N)))?,
+                    .map_err(|_| Error::custom(format!("Invalid array length, expected: {N}")))?,
             ),
             None => None,
         })

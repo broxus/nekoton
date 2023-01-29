@@ -263,7 +263,7 @@ async fn check_token_wallet(
 }
 
 fn make_key(network_name: &str) -> String {
-    format!("{}{}", OWNERS_CACHE_STORAGE_KEY, network_name)
+    format!("{OWNERS_CACHE_STORAGE_KEY}{network_name}")
 }
 
 #[derive(Debug)]
