@@ -63,8 +63,6 @@
 <a href="#63" id="63">63</a>
 <a href="#64" id="64">64</a>
 <a href="#65" id="65">65</a>
-<a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryInto;
 
 <span class="kw">use </span>anyhow::Result;
@@ -84,11 +82,9 @@
     <span class="kw">let </span>hd = bip39::Seed::new(<span class="kw-2">&amp;</span>mnemonic, <span class="string">&quot;&quot;</span>);
     <span class="kw">let </span>seed_bytes = hd.as_bytes();
 
-    <span class="kw">let </span>derived = ExtendedPrivKey::derive(
-        seed_bytes,
-        <span class="macro">format!</span>(<span class="string">&quot;m/44&#39;/396&#39;/0&#39;/0/{}&quot;</span>, account_id).as_str(),
-    )
-    .map_err(|<span class="kw">_</span>| <span class="macro">anyhow::anyhow!</span>(<span class="string">&quot;Invalid derivation path&quot;</span>))<span class="question-mark">?</span>;
+    <span class="kw">let </span>derived =
+        ExtendedPrivKey::derive(seed_bytes, <span class="macro">format!</span>(<span class="string">&quot;m/44&#39;/396&#39;/0&#39;/0/{account_id}&quot;</span>).as_str())
+            .map_err(|<span class="kw">_</span>| <span class="macro">anyhow::anyhow!</span>(<span class="string">&quot;Invalid derivation path&quot;</span>))<span class="question-mark">?</span>;
 
     <span class="kw">let </span>secret = ed25519_dalek::SecretKey::from_bytes(<span class="kw-2">&amp;</span>derived.secret())<span class="question-mark">?</span>;
     <span class="kw">let </span>public = ed25519_dalek::PublicKey::from(<span class="kw-2">&amp;</span>secret);

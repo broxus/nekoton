@@ -1064,7 +1064,7 @@
     {
         <span class="kw">let </span>data = serde_bytes_base64::deserialize(deserializer)<span class="question-mark">?</span>;
         data.try_into()
-            .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {}&quot;</span>, N)))
+            .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {N}&quot;</span>)))
     }
 }
 
@@ -1084,7 +1084,7 @@
     {
         <span class="kw">let </span>data = serde_bytes::deserialize(deserializer)<span class="question-mark">?</span>;
         data.try_into()
-            .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {}&quot;</span>, N)))
+            .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {N}&quot;</span>)))
     }
 }
 
@@ -1117,7 +1117,7 @@
             <span class="prelude-val">Some</span>(data) =&gt; <span class="prelude-val">Some</span>(
                 data.<span class="number">0
                     </span>.try_into()
-                    .map_err(|<span class="kw">_</span>| Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {}&quot;</span>, N)))<span class="question-mark">?</span>,
+                    .map_err(|<span class="kw">_</span>| Error::custom(<span class="macro">format!</span>(<span class="string">&quot;Invalid array length, expected: {N}&quot;</span>)))<span class="question-mark">?</span>,
             ),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         })

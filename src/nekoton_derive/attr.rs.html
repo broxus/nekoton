@@ -442,9 +442,6 @@
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
 <a href="#444" id="444">444</a>
-<a href="#445" id="445">445</a>
-<a href="#446" id="446">446</a>
-<a href="#447" id="447">447</a>
 </pre><pre class="rust"><code><span class="kw">use </span>proc_macro2::{Group, Span, TokenStream, TokenTree};
 <span class="kw">use </span>quote::quote;
 <span class="kw">use </span>quote::ToTokens;
@@ -687,10 +684,7 @@
     } <span class="kw">else </span>{
         cx.error_spanned_by(
             lit,
-            <span class="macro">format!</span>(
-                <span class="string">&quot;expected {} attribute to be a string: `{} = \&quot;...\&quot;`&quot;</span>,
-                attr_name, path_name
-            ),
+            <span class="macro">format!</span>(<span class="string">&quot;expected {attr_name} attribute to be a string: `{path_name} = \&quot;...\&quot;`&quot;</span>),
         );
         <span class="prelude-val">Err</span>(())
     }
@@ -714,7 +708,7 @@
             .collect()),
         <span class="prelude-val">Ok</span>(Path(<span class="kw">_</span>)) =&gt; <span class="prelude-val">Ok</span>(Vec::new()),
         <span class="prelude-val">Ok</span>(other) =&gt; {
-            cx.error_spanned_by(other, <span class="macro">format!</span>(<span class="string">&quot;expected #[{}(...)]&quot;</span>, attr_from));
+            cx.error_spanned_by(other, <span class="macro">format!</span>(<span class="string">&quot;expected #[{attr_from}(...)]&quot;</span>));
             <span class="prelude-val">Err</span>(())
         }
         <span class="prelude-val">Err</span>(err) =&gt; {

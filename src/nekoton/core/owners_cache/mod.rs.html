@@ -544,7 +544,7 @@
 }
 
 <span class="kw">fn </span>make_key(network_name: <span class="kw-2">&amp;</span>str) -&gt; String {
-    <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, OWNERS_CACHE_STORAGE_KEY, network_name)
+    <span class="macro">format!</span>(<span class="string">&quot;{OWNERS_CACHE_STORAGE_KEY}{network_name}&quot;</span>)
 }
 
 <span class="attr">#[derive(Debug)]
