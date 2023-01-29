@@ -81,14 +81,6 @@ async fn fetch_config(
 
     let info = block.info.read_struct()?;
 
-    let capabilities = NetworkCapabilities {
-        global_id: block.global_id,
-        raw: info
-            .gen_software()
-            .map(|version| version.capabilities)
-            .unwrap_or_default(),
-    };
-
     let extra = block
         .read_extra()
         .map_err(|_| QueryConfigError::InvalidBlock)?;
@@ -105,6 +97,11 @@ async fn fetch_config(
 
     let config = ton_executor::BlockchainConfig::with_config(params)
         .map_err(|_| QueryConfigError::InvalidConfig)?;
+
+    let capabilities = NetworkCapabilities {
+        global_id: block.global_id,
+        raw: config.capabilites(),
+    };
 
     Ok((capabilities, config, info.seq_no()))
 }
