@@ -46,7 +46,10 @@ impl ContractSubscription {
             transactions_synced: false,
         };
 
-        result.transactions_synced = !result.refresh_contract_state(on_contract_state).await?;
+        result.transactions_synced = !result
+            .refresh_contract_state_impl(None, on_contract_state)
+            .await?;
+
         if !result.transactions_synced {
             if let Some(on_transactions_found) = on_transactions_found {
                 // Preload transactions if `on_transactions_found` specified
@@ -269,19 +272,8 @@ impl ContractSubscription {
         &mut self,
         on_contract_state: OnContractState<'_>,
     ) -> Result<bool> {
-        let contract_state = self.transport.get_contract_state(&self.address).await?;
-        let new_contract_state = contract_state.brief();
-
-        match new_contract_state.last_lt.cmp(&self.contract_state.last_lt) {
-            // Notify with new state
-            std::cmp::Ordering::Greater => {
-                on_contract_state(&contract_state);
-                self.contract_state = new_contract_state;
-                self.transactions_synced = false;
-                Ok(true)
-            }
-            _ => Ok(false),
-        }
+        self.refresh_contract_state_impl(Some(self.contract_state.last_lt), on_contract_state)
+            .await
     }
 
     /// # Arguments
@@ -388,6 +380,29 @@ impl ContractSubscription {
         }
 
         Ok(())
+    }
+
+    async fn refresh_contract_state_impl(
+        &mut self,
+        prev_trans_lt: Option<u64>,
+        on_contract_state: OnContractState<'_>,
+    ) -> Result<bool> {
+        let contract_state = self.transport.get_contract_state(&self.address).await?;
+        let new_contract_state = contract_state.brief();
+
+        let updated = if let Some(last_lt) = prev_trans_lt {
+            new_contract_state.last_lt > last_lt
+        } else {
+            true
+        };
+
+        if updated {
+            on_contract_state(&contract_state);
+            self.contract_state = new_contract_state;
+            self.transactions_synced = false;
+        }
+
+        Ok(updated)
     }
 
     /// Searches executed pending transactions and notifies the handler if some were found
