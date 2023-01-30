@@ -1318,7 +1318,7 @@
     <span class="kw">pub </span>new_code_hash: <span class="prelude-ty">Option</span>&lt;ton_types::UInt256&gt;,
     <span class="kw">pub </span>new_custodians: <span class="prelude-ty">Option</span>&lt;Vec&lt;ton_types::UInt256&gt;&gt;,
     <span class="kw">pub </span>new_req_confirms: <span class="prelude-ty">Option</span>&lt;u8&gt;,
-    <span class="kw">pub </span>new_lifetime: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+    <span class="kw">pub </span>new_lifetime: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 }
 
 <span class="kw">pub fn </span>get_pending_transactions(
@@ -1419,7 +1419,7 @@
         new_code_hash: tx.new_code_hash,
         new_custodians: tx.new_custodians,
         new_req_confirms: tx.new_req_confirms,
-        new_lifetime: tx.new_lifetime.map(|time| time <span class="kw">as </span>u32),
+        new_lifetime: tx.new_lifetime,
     }
 }
 
