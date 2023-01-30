@@ -481,6 +481,21 @@
 <a href="#481" id="481">481</a>
 <a href="#482" id="482">482</a>
 <a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>anyhow::Result;
@@ -529,7 +544,10 @@
             transactions_synced: <span class="bool-val">false</span>,
         };
 
-        result.transactions_synced = !result.refresh_contract_state(on_contract_state).<span class="kw">await</span><span class="question-mark">?</span>;
+        result.transactions_synced = !result
+            .refresh_contract_state_impl(<span class="prelude-val">None</span>, on_contract_state)
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
         <span class="kw">if </span>!result.transactions_synced {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(on_transactions_found) = on_transactions_found {
                 <span class="comment">// Preload transactions if `on_transactions_found` specified
@@ -752,20 +770,9 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         on_contract_state: OnContractState&lt;<span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
-        <span class="kw">let </span>contract_state = <span class="self">self</span>.transport.get_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>.address).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let </span>new_contract_state = contract_state.brief();
-
-        <span class="kw">match </span>new_contract_state.last_lt.cmp(<span class="kw-2">&amp;</span><span class="self">self</span>.contract_state.last_lt) {
-            <span class="comment">// Notify with new state
-            </span>std::cmp::Ordering::Greater =&gt; {
-                on_contract_state(<span class="kw-2">&amp;</span>contract_state);
-                <span class="self">self</span>.contract_state = new_contract_state;
-                <span class="self">self</span>.transactions_synced = <span class="bool-val">false</span>;
-                <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-            }
-            <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-        }
-    }
+        <span class="self">self</span>.refresh_contract_state_impl(<span class="prelude-val">Some</span>(<span class="self">self</span>.contract_state.last_lt), on_contract_state)
+            .<span class="kw">await
+    </span>}
 
     <span class="doccomment">/// # Arguments
     ///
@@ -871,6 +878,29 @@
         }
 
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">async fn </span>refresh_contract_state_impl(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        prev_trans_lt: <span class="prelude-ty">Option</span>&lt;u64&gt;,
+        on_contract_state: OnContractState&lt;<span class="lifetime">&#39;_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
+        <span class="kw">let </span>contract_state = <span class="self">self</span>.transport.get_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>.address).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>new_contract_state = contract_state.brief();
+
+        <span class="kw">let </span>updated = <span class="kw">if let </span><span class="prelude-val">Some</span>(last_lt) = prev_trans_lt {
+            new_contract_state.last_lt &gt; last_lt
+        } <span class="kw">else </span>{
+            <span class="bool-val">true
+        </span>};
+
+        <span class="kw">if </span>updated {
+            on_contract_state(<span class="kw-2">&amp;</span>contract_state);
+            <span class="self">self</span>.contract_state = new_contract_state;
+            <span class="self">self</span>.transactions_synced = <span class="bool-val">false</span>;
+        }
+
+        <span class="prelude-val">Ok</span>(updated)
     }
 
     <span class="doccomment">/// Searches executed pending transactions and notifies the handler if some were found
