@@ -543,15 +543,13 @@ pub fn find_pending_update(
 ) -> Result<Option<UpdatedParams>> {
     use nekoton_contracts::wallets::multisig2;
 
-    if !multisig_type.is_multisig2() {
-        return Ok(None);
-    }
+    let (function, is_new) = match multisig_type {
+        MultisigType::Multisig2 => (multisig2::v2_0::get_update_requests(), false),
+        MultisigType::Multisig2_1 => (multisig2::v2_1::get_update_requests(), true),
+        _ => return Ok(None),
+    };
 
-    let tokens = run_local(
-        clock,
-        multisig2::get_update_requests(),
-        account_stuff.into_owned(),
-    )?;
+    let tokens = run_local(clock, function, account_stuff.into_owned())?;
 
     let array = match tokens.into_unpacker().unpack_next() {
         Ok(ton_abi::TokenValue::Array(_, tokens)) => tokens,
@@ -559,14 +557,26 @@ pub fn find_pending_update(
     };
 
     for item in array {
-        let update: multisig2::UpdateTransaction = item.unpack()?;
-        if update_id == update.id {
-            return Ok(Some(UpdatedParams {
-                new_code_hash: update.new_code_hash,
-                new_custodians: update.new_custodians,
-                new_req_confirms: update.new_req_confirms,
-                new_lifetime: update.new_lifetime,
-            }));
+        if is_new {
+            let update: multisig2::v2_1::UpdateTransaction = item.unpack()?;
+            if update_id == update.id {
+                return Ok(Some(UpdatedParams {
+                    new_code_hash: update.new_code_hash,
+                    new_custodians: update.new_custodians,
+                    new_req_confirms: update.new_req_confirms,
+                    new_lifetime: update.new_lifetime,
+                }));
+            }
+        } else {
+            let update: multisig2::v2_0::UpdateTransaction = item.unpack()?;
+            if update_id == update.id {
+                return Ok(Some(UpdatedParams {
+                    new_code_hash: update.new_code_hash,
+                    new_custodians: update.new_custodians,
+                    new_req_confirms: update.new_req_confirms,
+                    new_lifetime: update.new_lifetime.map(|x| x as u32),
+                }));
+            }
         }
     }
 
@@ -578,7 +588,7 @@ pub struct UpdatedParams {
     pub new_code_hash: Option<ton_types::UInt256>,
     pub new_custodians: Option<Vec<ton_types::UInt256>>,
     pub new_req_confirms: Option<u8>,
-    pub new_lifetime: Option<u64>,
+    pub new_lifetime: Option<u32>,
 }
 
 pub fn get_pending_transactions(
@@ -613,11 +623,14 @@ pub fn get_pending_updates(
     account_stuff: Cow<'_, ton_block::AccountStuff>,
     custodians: &[UInt256],
 ) -> Result<Vec<MultisigPendingUpdate>> {
-    if !multisig_type.is_multisig2() {
-        return Ok(Vec::new());
-    }
+    use nekoton_contracts::wallets::multisig2;
 
-    let function = nekoton_contracts::wallets::multisig2::get_update_requests();
+    let (function, is_new) = match multisig_type {
+        MultisigType::Multisig2 => (multisig2::v2_0::get_update_requests(), false),
+        MultisigType::Multisig2_1 => (multisig2::v2_1::get_update_requests(), true),
+        _ => return Ok(Vec::new()),
+    };
+
     run_local(clock, function, account_stuff.into_owned()).and_then(|tokens| {
         let array = match tokens.into_unpacker().unpack_next() {
             Ok(ton_abi::TokenValue::Array(_, tokens)) => tokens,
@@ -626,7 +639,13 @@ pub fn get_pending_updates(
 
         let updates = array
             .into_iter()
-            .map(|item| Ok(extend_pending_update(item.unpack()?, custodians)))
+            .map(|item| {
+                Ok(if is_new {
+                    extend_pending_update_v2_1(item.unpack()?, custodians)
+                } else {
+                    extend_pending_update_v2_0(item.unpack()?, custodians)
+                })
+            })
             .collect::<UnpackerResult<Vec<MultisigPendingUpdate>>>()?;
 
         Ok(updates)
@@ -659,8 +678,9 @@ fn extend_pending_transaction(
     }
 }
 
-fn extend_pending_update(
-    tx: nekoton_contracts::wallets::multisig2::UpdateTransaction,
+// TEMP:
+fn extend_pending_update_v2_0(
+    tx: nekoton_contracts::wallets::multisig2::v2_0::UpdateTransaction,
     custodians: &[UInt256],
 ) -> MultisigPendingUpdate {
     let confirmations = custodians
@@ -679,7 +699,31 @@ fn extend_pending_update(
         new_code_hash: tx.new_code_hash,
         new_custodians: tx.new_custodians,
         new_req_confirms: tx.new_req_confirms,
-        new_lifetime: tx.new_lifetime.map(|time| time as u32),
+        new_lifetime: tx.new_lifetime.map(|x| x as u32),
+    }
+}
+
+fn extend_pending_update_v2_1(
+    tx: nekoton_contracts::wallets::multisig2::v2_1::UpdateTransaction,
+    custodians: &[UInt256],
+) -> MultisigPendingUpdate {
+    let confirmations = custodians
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| (0b1 << i) & tx.confirmations_mask != 0)
+        .map(|(_, item)| *item)
+        .collect::<Vec<UInt256>>();
+
+    MultisigPendingUpdate {
+        id: tx.id,
+        confirmations,
+        signs_received: tx.signs,
+        creator: tx.creator,
+        index: tx.index,
+        new_code_hash: tx.new_code_hash,
+        new_custodians: tx.new_custodians,
+        new_req_confirms: tx.new_req_confirms,
+        new_lifetime: tx.new_lifetime,
     }
 }
 

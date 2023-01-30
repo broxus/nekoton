@@ -182,40 +182,6 @@ pub fn execute_update() -> &'static ton_abi::Function {
     }
 }
 
-#[derive(Debug, Clone, UnpackAbi, KnownParamType)]
-pub struct UpdateTransaction {
-    #[abi(uint64)]
-    pub id: u64,
-    #[abi(uint8)]
-    pub index: u8,
-    #[abi(uint8)]
-    pub signs: u8,
-    #[abi(uint32)]
-    pub confirmations_mask: u32,
-    #[abi(uint256)]
-    pub creator: ton_types::UInt256,
-    #[abi]
-    pub new_code_hash: Option<ton_types::UInt256>,
-    #[abi]
-    pub new_custodians: Option<Vec<ton_types::UInt256>>,
-    #[abi]
-    pub new_req_confirms: Option<u8>,
-    #[abi]
-    pub new_lifetime: Option<u64>,
-}
-
-pub fn get_update_requests() -> &'static ton_abi::Function {
-    declare_function! {
-        abi: v2_3,
-        header: [pubkey, time, expire],
-        name: "getUpdateRequests",
-        inputs: Vec::new(),
-        outputs: vec![
-            Param::new("updates", ParamType::Array(Box::new(UpdateTransaction::param_type())))
-        ],
-    }
-}
-
 #[derive(Debug, Clone, Copy, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct SetCodeMultisigParams {
     #[abi(uint8, name = "maxQueuedTransactions")]
@@ -239,5 +205,81 @@ pub fn get_parameters() -> &'static ton_abi::Function {
         name: "getParameters",
         inputs: Vec::new(),
         outputs: SetCodeMultisigParams::param_type(),
+    }
+}
+
+pub mod v2_0 {
+    use super::*;
+
+    #[derive(Debug, Clone, UnpackAbi, KnownParamType)]
+    pub struct UpdateTransaction {
+        #[abi(uint64)]
+        pub id: u64,
+        #[abi(uint8)]
+        pub index: u8,
+        #[abi(uint8)]
+        pub signs: u8,
+        #[abi(uint32)]
+        pub confirmations_mask: u32,
+        #[abi(uint256)]
+        pub creator: ton_types::UInt256,
+        #[abi]
+        pub new_code_hash: Option<ton_types::UInt256>,
+        #[abi]
+        pub new_custodians: Option<Vec<ton_types::UInt256>>,
+        #[abi]
+        pub new_req_confirms: Option<u8>,
+        #[abi]
+        pub new_lifetime: Option<u64>,
+    }
+
+    pub fn get_update_requests() -> &'static ton_abi::Function {
+        declare_function! {
+            abi: v2_3,
+            header: [pubkey, time, expire],
+            name: "getUpdateRequests",
+            inputs: Vec::new(),
+            outputs: vec![
+                Param::new("updates", ParamType::Array(Box::new(UpdateTransaction::param_type())))
+            ],
+        }
+    }
+}
+
+pub mod v2_1 {
+    use super::*;
+
+    #[derive(Debug, Clone, UnpackAbi, KnownParamType)]
+    pub struct UpdateTransaction {
+        #[abi(uint64)]
+        pub id: u64,
+        #[abi(uint8)]
+        pub index: u8,
+        #[abi(uint8)]
+        pub signs: u8,
+        #[abi(uint32)]
+        pub confirmations_mask: u32,
+        #[abi(uint256)]
+        pub creator: ton_types::UInt256,
+        #[abi]
+        pub new_code_hash: Option<ton_types::UInt256>,
+        #[abi]
+        pub new_custodians: Option<Vec<ton_types::UInt256>>,
+        #[abi]
+        pub new_req_confirms: Option<u8>,
+        #[abi]
+        pub new_lifetime: Option<u32>,
+    }
+
+    pub fn get_update_requests() -> &'static ton_abi::Function {
+        declare_function! {
+            abi: v2_3,
+            header: [pubkey, time, expire],
+            name: "getUpdateRequests",
+            inputs: Vec::new(),
+            outputs: vec![
+                Param::new("updates", ParamType::Array(Box::new(UpdateTransaction::param_type())))
+            ],
+        }
     }
 }
