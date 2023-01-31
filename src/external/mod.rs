@@ -51,9 +51,12 @@ pub trait JrpcConnection: Send + Sync {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LedgerSignatureContext {
     pub decimals: u8,
     pub asset: String,
+    #[serde(default)]
+    pub workchain_id: Option<i8>,
     #[serde(default, with = "serde_optional_hex_array")]
     pub address: Option<[u8; 32]>,
 }
