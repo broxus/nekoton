@@ -6,7 +6,7 @@
             <img alt="GitHub" src="https://img.shields.io/github/license/broxus/nekoton" />
         </a>
         <a href="https://github.com/broxus/nekoton/actions?query=workflow%3Amaster">
-            <img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/broxus/nekoton/master" />
+            <img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/broxus/nekoton/master.yml?branch=master" />
         </a>
          <a href="https://broxus.github.io/nekoton/nekoton/">
             <img alt="Docs" src="https://img.shields.io/badge/docs-latest-brightgreen" />

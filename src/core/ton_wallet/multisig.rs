@@ -543,9 +543,9 @@ pub fn find_pending_update(
 ) -> Result<Option<UpdatedParams>> {
     use nekoton_contracts::wallets::multisig2;
 
-    let (function, is_new) = match multisig_type {
-        MultisigType::Multisig2 => (multisig2::v2_0::get_update_requests(), false),
-        MultisigType::Multisig2_1 => (multisig2::v2_1::get_update_requests(), true),
+    let function = match multisig_type {
+        MultisigType::Multisig2 => multisig2::v2_0::get_update_requests(),
+        MultisigType::Multisig2_1 => multisig2::v2_1::get_update_requests(),
         _ => return Ok(None),
     };
 
@@ -557,26 +557,14 @@ pub fn find_pending_update(
     };
 
     for item in array {
-        if is_new {
-            let update: multisig2::v2_1::UpdateTransaction = item.unpack()?;
-            if update_id == update.id {
-                return Ok(Some(UpdatedParams {
-                    new_code_hash: update.new_code_hash,
-                    new_custodians: update.new_custodians,
-                    new_req_confirms: update.new_req_confirms,
-                    new_lifetime: update.new_lifetime,
-                }));
-            }
-        } else {
-            let update: multisig2::v2_0::UpdateTransaction = item.unpack()?;
-            if update_id == update.id {
-                return Ok(Some(UpdatedParams {
-                    new_code_hash: update.new_code_hash,
-                    new_custodians: update.new_custodians,
-                    new_req_confirms: update.new_req_confirms,
-                    new_lifetime: update.new_lifetime.map(|x| x as u32),
-                }));
-            }
+        let update: multisig2::UpdateTransaction = item.unpack()?;
+        if update_id == update.id {
+            return Ok(Some(UpdatedParams {
+                new_code_hash: update.new_code_hash,
+                new_custodians: update.new_custodians,
+                new_req_confirms: update.new_req_confirms,
+                new_lifetime: update.new_lifetime,
+            }));
         }
     }
 
@@ -625,9 +613,9 @@ pub fn get_pending_updates(
 ) -> Result<Vec<MultisigPendingUpdate>> {
     use nekoton_contracts::wallets::multisig2;
 
-    let (function, is_new) = match multisig_type {
-        MultisigType::Multisig2 => (multisig2::v2_0::get_update_requests(), false),
-        MultisigType::Multisig2_1 => (multisig2::v2_1::get_update_requests(), true),
+    let function = match multisig_type {
+        MultisigType::Multisig2 => multisig2::v2_0::get_update_requests(),
+        MultisigType::Multisig2_1 => multisig2::v2_1::get_update_requests(),
         _ => return Ok(Vec::new()),
     };
 
@@ -639,13 +627,7 @@ pub fn get_pending_updates(
 
         let updates = array
             .into_iter()
-            .map(|item| {
-                Ok(if is_new {
-                    extend_pending_update_v2_1(item.unpack()?, custodians)
-                } else {
-                    extend_pending_update_v2_0(item.unpack()?, custodians)
-                })
-            })
+            .map(|item| Ok(extend_pending_update(item.unpack()?, custodians)))
             .collect::<UnpackerResult<Vec<MultisigPendingUpdate>>>()?;
 
         Ok(updates)
@@ -678,33 +660,8 @@ fn extend_pending_transaction(
     }
 }
 
-// TEMP:
-fn extend_pending_update_v2_0(
-    tx: nekoton_contracts::wallets::multisig2::v2_0::UpdateTransaction,
-    custodians: &[UInt256],
-) -> MultisigPendingUpdate {
-    let confirmations = custodians
-        .iter()
-        .enumerate()
-        .filter(|(i, _)| (0b1 << i) & tx.confirmations_mask != 0)
-        .map(|(_, item)| *item)
-        .collect::<Vec<UInt256>>();
-
-    MultisigPendingUpdate {
-        id: tx.id,
-        confirmations,
-        signs_received: tx.signs,
-        creator: tx.creator,
-        index: tx.index,
-        new_code_hash: tx.new_code_hash,
-        new_custodians: tx.new_custodians,
-        new_req_confirms: tx.new_req_confirms,
-        new_lifetime: tx.new_lifetime.map(|x| x as u32),
-    }
-}
-
-fn extend_pending_update_v2_1(
-    tx: nekoton_contracts::wallets::multisig2::v2_1::UpdateTransaction,
+fn extend_pending_update(
+    tx: nekoton_contracts::wallets::multisig2::UpdateTransaction,
     custodians: &[UInt256],
 ) -> MultisigPendingUpdate {
     let confirmations = custodians
