@@ -81,6 +81,8 @@
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
 <a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -137,6 +139,8 @@
 </span><span class="kw">pub struct </span>LedgerSignatureContext {
     <span class="kw">pub </span>decimals: u8,
     <span class="kw">pub </span>asset: String,
+    <span class="attr">#[serde(default)]
+    </span><span class="kw">pub </span>workchain_id: <span class="prelude-ty">Option</span>&lt;i8&gt;,
     <span class="attr">#[serde(default, with = <span class="string">&quot;serde_optional_hex_array&quot;</span>)]
     </span><span class="kw">pub </span>address: <span class="prelude-ty">Option</span>&lt;[u8; <span class="number">32</span>]&gt;,
 }
