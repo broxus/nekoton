@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["get_update_requests",""]],"struct":[["UpdateTransaction",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["get_update_requests",""]]};

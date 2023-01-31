@@ -283,6 +283,24 @@
 <a href="#283" id="283">283</a>
 <a href="#284" id="284">284</a>
 <a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
 </pre><pre class="rust"><code><span class="kw">use </span>nekoton_abi::<span class="kw-2">*</span>;
 <span class="kw">use </span>ton_abi::{Param, ParamType};
 
@@ -493,30 +511,58 @@
     }
 }
 
+<span class="attr">#[derive(Debug, Clone, UnpackAbi, KnownParamType)]
+</span><span class="kw">pub struct </span>UpdateTransaction {
+    <span class="attr">#[abi(uint64)]
+    </span><span class="kw">pub </span>id: u64,
+    <span class="attr">#[abi(uint8)]
+    </span><span class="kw">pub </span>index: u8,
+    <span class="attr">#[abi(uint8)]
+    </span><span class="kw">pub </span>signs: u8,
+    <span class="attr">#[abi(uint32)]
+    </span><span class="kw">pub </span>confirmations_mask: u32,
+    <span class="attr">#[abi(uint256)]
+    </span><span class="kw">pub </span>creator: ton_types::UInt256,
+    <span class="attr">#[abi]
+    </span><span class="kw">pub </span>new_code_hash: <span class="prelude-ty">Option</span>&lt;ton_types::UInt256&gt;,
+    <span class="attr">#[abi]
+    </span><span class="kw">pub </span>new_custodians: <span class="prelude-ty">Option</span>&lt;Vec&lt;ton_types::UInt256&gt;&gt;,
+    <span class="attr">#[abi]
+    </span><span class="kw">pub </span>new_req_confirms: <span class="prelude-ty">Option</span>&lt;u8&gt;,
+    <span class="attr">#[abi(with = <span class="string">&quot;updated_lifetime&quot;</span>)]
+    </span><span class="kw">pub </span>new_lifetime: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+}
+
+<span class="kw">mod </span>updated_lifetime {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>num_traits::cast::ToPrimitive;
+
+    <span class="kw">pub fn </span>unpack(value: <span class="kw-2">&amp;</span>ton_abi::TokenValue) -&gt; UnpackerResult&lt;<span class="prelude-ty">Option</span>&lt;u32&gt;&gt; {
+        <span class="kw">let </span>value = <span class="kw">match </span>value {
+            ton_abi::TokenValue::Optional(<span class="kw">_</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            ton_abi::TokenValue::Optional(<span class="kw">_</span>, <span class="prelude-val">Some</span>(value)) =&gt; value,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(UnpackerError::InvalidAbi),
+        };
+
+        <span class="kw">match </span>value.as_ref() {
+            ton_abi::TokenValue::Uint(ton_abi::Uint { number, size: <span class="number">32 </span>}) =&gt; {
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(number.to_u32().ok_or(UnpackerError::InvalidAbi)<span class="question-mark">?</span>))
+            }
+            ton_abi::TokenValue::Uint(ton_abi::Uint { number, size: <span class="number">64 </span>}) =&gt; {
+                <span class="kw">let </span>lifetime = number.to_u64().ok_or(UnpackerError::InvalidAbi)<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(lifetime <span class="kw">as </span>u32))
+            }
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(UnpackerError::InvalidAbi),
+        }
+    }
+
+    <span class="kw">pub fn </span>param_type() -&gt; ParamType {
+        <span class="prelude-ty">Option</span>::&lt;u32&gt;::param_type()
+    }
+}
+
 <span class="kw">pub mod </span>v2_0 {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-
-    <span class="attr">#[derive(Debug, Clone, UnpackAbi, KnownParamType)]
-    </span><span class="kw">pub struct </span>UpdateTransaction {
-        <span class="attr">#[abi(uint64)]
-        </span><span class="kw">pub </span>id: u64,
-        <span class="attr">#[abi(uint8)]
-        </span><span class="kw">pub </span>index: u8,
-        <span class="attr">#[abi(uint8)]
-        </span><span class="kw">pub </span>signs: u8,
-        <span class="attr">#[abi(uint32)]
-        </span><span class="kw">pub </span>confirmations_mask: u32,
-        <span class="attr">#[abi(uint256)]
-        </span><span class="kw">pub </span>creator: ton_types::UInt256,
-        <span class="attr">#[abi]
-        </span><span class="kw">pub </span>new_code_hash: <span class="prelude-ty">Option</span>&lt;ton_types::UInt256&gt;,
-        <span class="attr">#[abi]
-        </span><span class="kw">pub </span>new_custodians: <span class="prelude-ty">Option</span>&lt;Vec&lt;ton_types::UInt256&gt;&gt;,
-        <span class="attr">#[abi]
-        </span><span class="kw">pub </span>new_req_confirms: <span class="prelude-ty">Option</span>&lt;u8&gt;,
-        <span class="attr">#[abi]
-        </span><span class="kw">pub </span>new_lifetime: <span class="prelude-ty">Option</span>&lt;u64&gt;,
-    }
 
     <span class="kw">pub fn </span>get_update_requests() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
         <span class="macro">declare_function! </span>{
@@ -524,37 +570,27 @@
             header: [pubkey, time, expire],
             name: <span class="string">&quot;getUpdateRequests&quot;</span>,
             inputs: Vec::new(),
-            outputs: <span class="macro">vec!</span>[
-                Param::new(<span class="string">&quot;updates&quot;</span>, ParamType::Array(Box::new(UpdateTransaction::param_type())))
-            ],
+            outputs: {
+                <span class="kw">let </span><span class="kw-2">mut </span>param_types = UpdateTransaction::param_type();
+                <span class="kw">if let </span>ton_abi::ParamType::Tuple(params) = <span class="kw-2">&amp;mut </span>param_types {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(ton_abi::Param {
+                        kind: ton_abi::ParamType::Optional(param),
+                        ..
+                    }) = params.last_mut() {
+                        <span class="kw">if let </span>ton_abi::ParamType::Uint(size) = param.as_mut() {
+                            <span class="kw-2">*</span>size = <span class="number">64</span>;
+                        }
+                    }
+                }
+
+                <span class="macro">vec!</span>[Param::new(<span class="string">&quot;updates&quot;</span>, ParamType::Array(Box::new(param_types)))]
+            },
         }
     }
 }
 
 <span class="kw">pub mod </span>v2_1 {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-
-    <span class="attr">#[derive(Debug, Clone, UnpackAbi, KnownParamType)]
-    </span><span class="kw">pub struct </span>UpdateTransaction {
-        <span class="attr">#[abi(uint64)]
-        </span><span class="kw">pub </span>id: u64,
-        <span class="attr">#[abi(uint8)]
-        </span><span class="kw">pub </span>index: u8,
-        <span class="attr">#[abi(uint8)]
-        </span><span class="kw">pub </span>signs: u8,
-        <span class="attr">#[abi(uint32)]
-        </span><span class="kw">pub </span>confirmations_mask: u32,
-        <span class="attr">#[abi(uint256)]
-        </span><span class="kw">pub </span>creator: ton_types::UInt256,
-        <span class="attr">#[abi]
-        </span><span class="kw">pub </span>new_code_hash: <span class="prelude-ty">Option</span>&lt;ton_types::UInt256&gt;,
-        <span class="attr">#[abi]
-        </span><span class="kw">pub </span>new_custodians: <span class="prelude-ty">Option</span>&lt;Vec&lt;ton_types::UInt256&gt;&gt;,
-        <span class="attr">#[abi]
-        </span><span class="kw">pub </span>new_req_confirms: <span class="prelude-ty">Option</span>&lt;u8&gt;,
-        <span class="attr">#[abi]
-        </span><span class="kw">pub </span>new_lifetime: <span class="prelude-ty">Option</span>&lt;u32&gt;,
-    }
 
     <span class="kw">pub fn </span>get_update_requests() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function {
         <span class="macro">declare_function! </span>{

@@ -739,49 +739,6 @@
 <a href="#739" id="739">739</a>
 <a href="#740" id="740">740</a>
 <a href="#741" id="741">741</a>
-<a href="#742" id="742">742</a>
-<a href="#743" id="743">743</a>
-<a href="#744" id="744">744</a>
-<a href="#745" id="745">745</a>
-<a href="#746" id="746">746</a>
-<a href="#747" id="747">747</a>
-<a href="#748" id="748">748</a>
-<a href="#749" id="749">749</a>
-<a href="#750" id="750">750</a>
-<a href="#751" id="751">751</a>
-<a href="#752" id="752">752</a>
-<a href="#753" id="753">753</a>
-<a href="#754" id="754">754</a>
-<a href="#755" id="755">755</a>
-<a href="#756" id="756">756</a>
-<a href="#757" id="757">757</a>
-<a href="#758" id="758">758</a>
-<a href="#759" id="759">759</a>
-<a href="#760" id="760">760</a>
-<a href="#761" id="761">761</a>
-<a href="#762" id="762">762</a>
-<a href="#763" id="763">763</a>
-<a href="#764" id="764">764</a>
-<a href="#765" id="765">765</a>
-<a href="#766" id="766">766</a>
-<a href="#767" id="767">767</a>
-<a href="#768" id="768">768</a>
-<a href="#769" id="769">769</a>
-<a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::convert::TryFrom;
 
@@ -1327,9 +1284,9 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;UpdatedParams&gt;&gt; {
     <span class="kw">use </span>nekoton_contracts::wallets::multisig2;
 
-    <span class="kw">let </span>(function, is_new) = <span class="kw">match </span>multisig_type {
-        MultisigType::Multisig2 =&gt; (multisig2::v2_0::get_update_requests(), <span class="bool-val">false</span>),
-        MultisigType::Multisig2_1 =&gt; (multisig2::v2_1::get_update_requests(), <span class="bool-val">true</span>),
+    <span class="kw">let </span>function = <span class="kw">match </span>multisig_type {
+        MultisigType::Multisig2 =&gt; multisig2::v2_0::get_update_requests(),
+        MultisigType::Multisig2_1 =&gt; multisig2::v2_1::get_update_requests(),
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
     };
 
@@ -1341,26 +1298,14 @@
     };
 
     <span class="kw">for </span>item <span class="kw">in </span>array {
-        <span class="kw">if </span>is_new {
-            <span class="kw">let </span>update: multisig2::v2_1::UpdateTransaction = item.unpack()<span class="question-mark">?</span>;
-            <span class="kw">if </span>update_id == update.id {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(UpdatedParams {
-                    new_code_hash: update.new_code_hash,
-                    new_custodians: update.new_custodians,
-                    new_req_confirms: update.new_req_confirms,
-                    new_lifetime: update.new_lifetime,
-                }));
-            }
-        } <span class="kw">else </span>{
-            <span class="kw">let </span>update: multisig2::v2_0::UpdateTransaction = item.unpack()<span class="question-mark">?</span>;
-            <span class="kw">if </span>update_id == update.id {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(UpdatedParams {
-                    new_code_hash: update.new_code_hash,
-                    new_custodians: update.new_custodians,
-                    new_req_confirms: update.new_req_confirms,
-                    new_lifetime: update.new_lifetime.map(|x| x <span class="kw">as </span>u32),
-                }));
-            }
+        <span class="kw">let </span>update: multisig2::UpdateTransaction = item.unpack()<span class="question-mark">?</span>;
+        <span class="kw">if </span>update_id == update.id {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(UpdatedParams {
+                new_code_hash: update.new_code_hash,
+                new_custodians: update.new_custodians,
+                new_req_confirms: update.new_req_confirms,
+                new_lifetime: update.new_lifetime,
+            }));
         }
     }
 
@@ -1409,9 +1354,9 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;MultisigPendingUpdate&gt;&gt; {
     <span class="kw">use </span>nekoton_contracts::wallets::multisig2;
 
-    <span class="kw">let </span>(function, is_new) = <span class="kw">match </span>multisig_type {
-        MultisigType::Multisig2 =&gt; (multisig2::v2_0::get_update_requests(), <span class="bool-val">false</span>),
-        MultisigType::Multisig2_1 =&gt; (multisig2::v2_1::get_update_requests(), <span class="bool-val">true</span>),
+    <span class="kw">let </span>function = <span class="kw">match </span>multisig_type {
+        MultisigType::Multisig2 =&gt; multisig2::v2_0::get_update_requests(),
+        MultisigType::Multisig2_1 =&gt; multisig2::v2_1::get_update_requests(),
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new()),
     };
 
@@ -1423,13 +1368,7 @@
 
         <span class="kw">let </span>updates = array
             .into_iter()
-            .map(|item| {
-                <span class="prelude-val">Ok</span>(<span class="kw">if </span>is_new {
-                    extend_pending_update_v2_1(item.unpack()<span class="question-mark">?</span>, custodians)
-                } <span class="kw">else </span>{
-                    extend_pending_update_v2_0(item.unpack()<span class="question-mark">?</span>, custodians)
-                })
-            })
+            .map(|item| <span class="prelude-val">Ok</span>(extend_pending_update(item.unpack()<span class="question-mark">?</span>, custodians)))
             .collect::&lt;UnpackerResult&lt;Vec&lt;MultisigPendingUpdate&gt;&gt;&gt;()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(updates)
@@ -1462,33 +1401,8 @@
     }
 }
 
-<span class="comment">// TEMP:
-</span><span class="kw">fn </span>extend_pending_update_v2_0(
-    tx: nekoton_contracts::wallets::multisig2::v2_0::UpdateTransaction,
-    custodians: <span class="kw-2">&amp;</span>[UInt256],
-) -&gt; MultisigPendingUpdate {
-    <span class="kw">let </span>confirmations = custodians
-        .iter()
-        .enumerate()
-        .filter(|(i, <span class="kw">_</span>)| (<span class="number">0b1 </span>&lt;&lt; i) &amp; tx.confirmations_mask != <span class="number">0</span>)
-        .map(|(<span class="kw">_</span>, item)| <span class="kw-2">*</span>item)
-        .collect::&lt;Vec&lt;UInt256&gt;&gt;();
-
-    MultisigPendingUpdate {
-        id: tx.id,
-        confirmations,
-        signs_received: tx.signs,
-        creator: tx.creator,
-        index: tx.index,
-        new_code_hash: tx.new_code_hash,
-        new_custodians: tx.new_custodians,
-        new_req_confirms: tx.new_req_confirms,
-        new_lifetime: tx.new_lifetime.map(|x| x <span class="kw">as </span>u32),
-    }
-}
-
-<span class="kw">fn </span>extend_pending_update_v2_1(
-    tx: nekoton_contracts::wallets::multisig2::v2_1::UpdateTransaction,
+<span class="kw">fn </span>extend_pending_update(
+    tx: nekoton_contracts::wallets::multisig2::UpdateTransaction,
     custodians: <span class="kw-2">&amp;</span>[UInt256],
 ) -&gt; MultisigPendingUpdate {
     <span class="kw">let </span>confirmations = custodians
