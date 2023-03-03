@@ -631,7 +631,7 @@ pub fn parse_nft_transaction(
             .map(NftTransaction::ChangeOwner)
             .ok()
     } else if function_id == functions.change_manager.input_id {
-        let inputs = functions.transfer.decode_input(body, true).ok()?;
+        let inputs = functions.change_manager.decode_input(body, true).ok()?;
 
         IncomingChangeManager::try_from(InputMessage(inputs))
             .map(NftTransaction::ChangeManager)
