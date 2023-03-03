@@ -292,6 +292,9 @@ pub struct TokenOutgoingTransfer {
     pub to: TransferRecipient,
     #[serde(with = "serde_string")]
     pub tokens: BigUint,
+    /// token transfer payload
+    #[serde(with = "serde_cell")]
+    pub payload: ton_types::Cell,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
