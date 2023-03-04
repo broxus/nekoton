@@ -993,6 +993,9 @@
 <a href="#993" id="993">993</a>
 <a href="#994" id="994">994</a>
 <a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -1287,6 +1290,9 @@
     <span class="kw">pub </span>to: TransferRecipient,
     <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
     </span><span class="kw">pub </span>tokens: BigUint,
+    <span class="doccomment">/// token transfer payload
+    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="kw">pub </span>payload: ton_types::Cell,
 }
 
 <span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
