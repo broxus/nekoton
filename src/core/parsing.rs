@@ -876,7 +876,7 @@ impl TryFrom<InputMessage> for IncomingChangeOwner {
 mod tests {
     use std::str::FromStr;
 
-    use ton_block::{Deserializable, Transaction, TransactionDescrOrdinary};
+    use ton_block::{Deserializable, Serializable, Transaction, TransactionDescrOrdinary};
 
     use super::*;
     use crate::core::ton_wallet::MultisigType;
@@ -956,7 +956,22 @@ mod tests {
         println!("description: {description:#?}");
 
         let parsed = parse_token_transaction(&tx, &description, TokenWalletVersion::Tip3);
-        println!("parsed tx: {parsed:#?}");
+
+        assert!(parsed.is_some());
+
+        let parsed = parsed.unwrap();
+        assert!(matches!(
+            parsed,
+            TokenWalletTransaction::OutgoingTransfer(_)
+        ));
+
+        if let TokenWalletTransaction::OutgoingTransfer(tr) = parsed {
+            let tr_bytes = tr.payload.write_to_bytes().unwrap();
+            let base64_payload = base64::encode(tr_bytes);
+            let expected_base64 = "te6ccgEBAwEAkgABAAEBkwAAAAAAAAAAgBC6a8RaXYCopjFDLrHiCy4aSAxDPj6LLCSeIbuNDLL64AAAAAAAAAAG8FtZ07IAAAAAAAAAAAAAAAAAAAO5rKAQAgCA7GWkSZCI1T2M/DXXFBSlRQ3NXStIDB/JTZkdC8H5/+7sZaRJkIjVPYz8NdcUFKVFDc1dK0gMH8lNmR0Lwfn/7g==".to_string();
+            println!("base64_payload {base64_payload:?}",);
+            assert!(base64_payload == expected_base64);
+        };
     }
 
     #[test]
