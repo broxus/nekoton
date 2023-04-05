@@ -163,7 +163,7 @@ impl KeyStore {
         Ok(KeyStoreEntry::from_signer_entry(signer_name, signer_entry))
     }
 
-    pub async fn export_key<T>(&self, input: T::ExportKeyInput) -> Result<T::ExportKeyOutput>
+    pub async fn export_seed<T>(&self, input: T::ExportSeedInput) -> Result<T::ExportSeedOutput>
     where
         T: Signer,
     {
@@ -172,7 +172,25 @@ impl KeyStore {
         let ctx = SignerContext {
             password_cache: &self.password_cache,
         };
-        state.get_signer_ref::<T>()?.export_key(ctx, input).await
+        state.get_signer_ref::<T>()?.export_seed(ctx, input).await
+    }
+
+    pub async fn export_keypair<T>(
+        &self,
+        input: T::ExportKeypairInput,
+    ) -> Result<T::ExportKeypairOutput>
+    where
+        T: Signer,
+    {
+        let state = self.state.read().await;
+
+        let ctx = SignerContext {
+            password_cache: &self.password_cache,
+        };
+        state
+            .get_signer_ref::<T>()?
+            .export_keypair(ctx, input)
+            .await
     }
 
     pub async fn get_public_keys<T>(&self, input: T::GetPublicKeys) -> Result<Vec<PublicKey>>
@@ -573,7 +591,7 @@ pub enum KeyStoreError {
 #[cfg(test)]
 mod tests {
     use crate::crypto::{
-        DerivedKeyCreateInput, DerivedKeySignParams, DerivedKeySigner, EncryptedKeyCreateInput,
+        DerivedKeyCreateInput, DerivedKeyPassword, DerivedKeySigner, EncryptedKeyCreateInput,
         EncryptedKeyPassword, EncryptedKeySigner, MnemonicType, Password, PasswordCacheBehavior,
     };
     use std::collections::HashMap;
@@ -658,7 +676,7 @@ mod tests {
                 TEST_DATA,
                 &[second_key.public_key],
                 EncryptionAlgorithm::ChaCha20Poly1305,
-                DerivedKeySignParams::ByPublicKey {
+                DerivedKeyPassword::ByPublicKey {
                     master_key: first_key.master_key,
                     public_key: first_key.public_key,
                     password: Password::FromCache,

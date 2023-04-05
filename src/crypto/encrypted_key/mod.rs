@@ -49,8 +49,10 @@ impl EncryptedKeySigner {
 #[async_trait]
 impl StoreSigner for EncryptedKeySigner {
     type CreateKeyInput = EncryptedKeyCreateInput;
-    type ExportKeyInput = EncryptedKeyPassword;
-    type ExportKeyOutput = EncryptedKeyExportOutput;
+    type ExportSeedInput = EncryptedKeyPassword;
+    type ExportSeedOutput = EncryptedKeyExportSeedOutput;
+    type ExportKeypairInput = EncryptedKeyPassword;
+    type ExportKeypairOutput = Keypair;
     type GetPublicKeys = EncryptedKeyGetPublicKeys;
     type UpdateKeyInput = EncryptedKeyUpdateParams;
     type SignInput = EncryptedKeyPassword;
@@ -125,11 +127,11 @@ impl StoreSigner for EncryptedKeySigner {
         }
     }
 
-    async fn export_key(
+    async fn export_seed(
         &self,
         ctx: SignerContext<'_>,
-        input: Self::ExportKeyInput,
-    ) -> Result<Self::ExportKeyOutput> {
+        input: Self::ExportSeedInput,
+    ) -> Result<Self::ExportSeedOutput> {
         let key = self.get_key(&input.public_key)?;
         let password = ctx
             .password_cache
@@ -138,10 +140,26 @@ impl StoreSigner for EncryptedKeySigner {
         let phrase = key.get_mnemonic(password.as_ref())?;
 
         password.proceed();
-        Ok(Self::ExportKeyOutput {
+        Ok(Self::ExportSeedOutput {
             phrase,
             mnemonic_type: key.mnemonic_type(),
         })
+    }
+
+    async fn export_keypair(
+        &self,
+        ctx: SignerContext<'_>,
+        input: Self::ExportKeypairInput,
+    ) -> Result<Self::ExportKeypairOutput> {
+        let key = self.get_key(&input.public_key)?;
+        let password = ctx
+            .password_cache
+            .process_password(input.public_key.to_bytes(), input.password)?;
+
+        let keypair = key.get_key_pair(password.as_ref())?;
+
+        password.proceed();
+        Ok(keypair)
     }
 
     /// Does nothing useful, only exists for compatibility with other signers
@@ -279,7 +297,7 @@ pub struct EncryptedKeyPassword {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct EncryptedKeyExportOutput {
+pub struct EncryptedKeyExportSeedOutput {
     pub phrase: SecUtf8,
     pub mnemonic_type: MnemonicType,
 }
@@ -736,7 +754,7 @@ mod tests {
             .await
             .unwrap();
 
-        key.export_key(
+        key.export_seed(
             ctx,
             EncryptedKeyPassword {
                 public_key: entry.public_key,
@@ -762,7 +780,7 @@ mod tests {
             .await
             .unwrap();
 
-        key.export_key(
+        key.export_seed(
             ctx,
             EncryptedKeyPassword {
                 public_key: entry.public_key,

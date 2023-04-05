@@ -3,7 +3,7 @@ use std::collections::hash_map::{self, HashMap};
 use anyhow::Result;
 use async_trait::async_trait;
 use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
-use ed25519_dalek::{PublicKey, Signer};
+use ed25519_dalek::{Keypair, PublicKey, Signer};
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize, Serializer};
 
@@ -36,15 +36,15 @@ impl DerivedKeySigner {
     fn use_sign_input(
         &'_ self,
         password_cache: &PasswordCache,
-        input: <Self as StoreSigner>::SignInput,
-    ) -> Result<ed25519_dalek::Keypair> {
+        input: DerivedKeyPassword,
+    ) -> Result<Keypair> {
         let (master_key, account_id, password) = match input {
-            DerivedKeySignParams::ByAccountId {
+            DerivedKeyPassword::ByAccountId {
                 master_key,
                 account_id,
                 password,
             } => (self.get_master_key(&master_key)?, account_id, password),
-            DerivedKeySignParams::ByPublicKey {
+            DerivedKeyPassword::ByPublicKey {
                 master_key,
                 public_key,
                 password,
@@ -81,11 +81,13 @@ impl DerivedKeySigner {
 #[async_trait]
 impl StoreSigner for DerivedKeySigner {
     type CreateKeyInput = DerivedKeyCreateInput;
-    type ExportKeyInput = DerivedKeyExportParams;
-    type ExportKeyOutput = DerivedKeyExportOutput;
+    type ExportSeedInput = DerivedKeyExportSeedParams;
+    type ExportSeedOutput = DerivedKeyExportSeedOutput;
+    type ExportKeypairInput = DerivedKeyPassword;
+    type ExportKeypairOutput = Keypair;
     type GetPublicKeys = DerivedKeyGetPublicKeys;
     type UpdateKeyInput = DerivedKeyUpdateParams;
-    type SignInput = DerivedKeySignParams;
+    type SignInput = DerivedKeyPassword;
 
     async fn add_key(
         &mut self,
@@ -259,11 +261,11 @@ impl StoreSigner for DerivedKeySigner {
         }
     }
 
-    async fn export_key(
+    async fn export_seed(
         &self,
         ctx: SignerContext<'_>,
-        input: Self::ExportKeyInput,
-    ) -> Result<Self::ExportKeyOutput> {
+        input: Self::ExportSeedInput,
+    ) -> Result<Self::ExportSeedOutput> {
         let master_key = match self.master_keys.get(input.master_key.as_bytes()) {
             Some(key) => key,
             None => return Err(MasterKeyError::MasterKeyNotFound.into()),
@@ -283,7 +285,15 @@ impl StoreSigner for DerivedKeySigner {
         let phrase = SecUtf8::from(String::from_utf8(phrase.unsecure().to_vec())?);
 
         password.proceed();
-        Ok(Self::ExportKeyOutput { phrase })
+        Ok(Self::ExportSeedOutput { phrase })
+    }
+
+    async fn export_keypair(
+        &self,
+        ctx: SignerContext<'_>,
+        input: Self::ExportKeypairInput,
+    ) -> Result<Self::ExportKeypairOutput> {
+        self.use_sign_input(ctx.password_cache, input)
     }
 
     async fn get_public_keys(
@@ -598,7 +608,7 @@ type AccountsMap = HashMap<PubKey, Account>;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
-pub enum DerivedKeySignParams {
+pub enum DerivedKeyPassword {
     ByAccountId {
         #[serde(with = "serde_public_key")]
         master_key: PublicKey,
@@ -615,14 +625,14 @@ pub enum DerivedKeySignParams {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct DerivedKeyExportParams {
+pub struct DerivedKeyExportSeedParams {
     #[serde(with = "serde_public_key")]
     pub master_key: PublicKey,
     pub password: Password,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct DerivedKeyExportOutput {
+pub struct DerivedKeyExportSeedOutput {
     pub phrase: SecUtf8,
 }
 
@@ -797,10 +807,22 @@ mod tests {
         assert!(!signer.master_keys.is_empty());
 
         signer
-            .export_key(
+            .export_seed(
                 ctx,
-                DerivedKeyExportParams {
+                DerivedKeyExportSeedParams {
                     master_key: entry.master_key,
+                    password: Password::FromCache,
+                },
+            )
+            .await
+            .unwrap();
+
+        signer
+            .export_keypair(
+                ctx,
+                DerivedKeyPassword::ByAccountId {
+                    master_key: entry.master_key,
+                    account_id: 0,
                     password: Password::FromCache,
                 },
             )
@@ -825,9 +847,9 @@ mod tests {
         assert!(!signer.master_keys.is_empty());
 
         signer
-            .export_key(
+            .export_seed(
                 ctx,
-                DerivedKeyExportParams {
+                DerivedKeyExportSeedParams {
                     master_key: entry.master_key,
                     password: Password::Explicit {
                         password: SecUtf8::from("321"),

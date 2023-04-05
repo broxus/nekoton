@@ -51,8 +51,10 @@ impl LedgerKeySigner {
 #[async_trait]
 impl StoreSigner for LedgerKeySigner {
     type CreateKeyInput = LedgerKeyCreateInput;
-    type ExportKeyInput = ();
-    type ExportKeyOutput = ();
+    type ExportSeedInput = ();
+    type ExportSeedOutput = ();
+    type ExportKeypairInput = ();
+    type ExportKeypairOutput = ();
     type GetPublicKeys = LedgerKeyGetPublicKeys;
     type UpdateKeyInput = LedgerUpdateKeyInput;
     type SignInput = LedgerSignInput;
@@ -105,11 +107,19 @@ impl StoreSigner for LedgerKeySigner {
         }
     }
 
-    async fn export_key(
+    async fn export_seed(
         &self,
         _: SignerContext<'_>,
-        _input: Self::ExportKeyInput,
-    ) -> Result<Self::ExportKeyOutput> {
+        _input: Self::ExportSeedInput,
+    ) -> Result<Self::ExportSeedOutput> {
+        Err(LedgerKeyError::MethodNotSupported.into())
+    }
+
+    async fn export_keypair(
+        &self,
+        _: SignerContext<'_>,
+        _input: Self::ExportKeypairInput,
+    ) -> Result<Self::ExportKeypairOutput> {
         Err(LedgerKeyError::MethodNotSupported.into())
     }
 

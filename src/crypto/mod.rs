@@ -5,7 +5,6 @@ use async_trait::async_trait;
 use downcast_rs::{impl_downcast, Downcast};
 use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use ton_block::Serializable;
 use zeroize::Zeroizing;
@@ -117,12 +116,14 @@ impl<'de> Deserialize<'de> for SignedMessage {
 
 #[async_trait]
 pub trait Signer: SignerStorage {
-    type CreateKeyInput: Serialize + DeserializeOwned;
-    type ExportKeyInput: Serialize + DeserializeOwned;
-    type ExportKeyOutput: Serialize + DeserializeOwned;
-    type GetPublicKeys: Serialize + DeserializeOwned;
-    type UpdateKeyInput: Serialize + DeserializeOwned;
-    type SignInput: Serialize + DeserializeOwned;
+    type CreateKeyInput;
+    type ExportSeedInput;
+    type ExportSeedOutput;
+    type ExportKeypairInput;
+    type ExportKeypairOutput;
+    type GetPublicKeys;
+    type UpdateKeyInput;
+    type SignInput;
 
     async fn add_key(
         &mut self,
@@ -136,11 +137,17 @@ pub trait Signer: SignerStorage {
         input: Self::UpdateKeyInput,
     ) -> Result<SignerEntry>;
 
-    async fn export_key(
+    async fn export_seed(
         &self,
         ctx: SignerContext<'_>,
-        input: Self::ExportKeyInput,
-    ) -> Result<Self::ExportKeyOutput>;
+        input: Self::ExportSeedInput,
+    ) -> Result<Self::ExportSeedOutput>;
+
+    async fn export_keypair(
+        &self,
+        ctx: SignerContext<'_>,
+        input: Self::ExportKeypairInput,
+    ) -> Result<Self::ExportKeypairOutput>;
 
     async fn get_public_keys(
         &self,

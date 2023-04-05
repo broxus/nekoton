@@ -943,8 +943,9 @@ pub(super) enum AccountSubscriptionError {
     InvalidMessageType,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
 pub enum MessageFlags {
+    #[default]
     Normal,
     AllBalance,
     AllBalanceDeleteNetworkAccount,
@@ -970,12 +971,6 @@ impl From<MessageFlags> for u8 {
             MessageFlags::AllBalance => 128,
             MessageFlags::AllBalanceDeleteNetworkAccount => 128 + 32,
         }
-    }
-}
-
-impl Default for MessageFlags {
-    fn default() -> Self {
-        MessageFlags::Normal
     }
 }
 
