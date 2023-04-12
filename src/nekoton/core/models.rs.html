@@ -991,11 +991,6 @@
 <a href="#991" id="991">991</a>
 <a href="#992" id="992">992</a>
 <a href="#993" id="993">993</a>
-<a href="#994" id="994">994</a>
-<a href="#995" id="995">995</a>
-<a href="#996" id="996">996</a>
-<a href="#997" id="997">997</a>
-<a href="#998" id="998">998</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -1941,9 +1936,10 @@
     </span>InvalidMessageType,
 }
 
-<span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+<span class="attr">#[derive(Default, Debug, Copy, Clone, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>MessageFlags {
-    Normal,
+    <span class="attr">#[default]
+    </span>Normal,
     AllBalance,
     AllBalanceDeleteNetworkAccount,
 }
@@ -1968,12 +1964,6 @@
             MessageFlags::AllBalance =&gt; <span class="number">128</span>,
             MessageFlags::AllBalanceDeleteNetworkAccount =&gt; <span class="number">128 </span>+ <span class="number">32</span>,
         }
-    }
-}
-
-<span class="kw">impl </span>Default <span class="kw">for </span>MessageFlags {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        MessageFlags::Normal
     }
 }
 
