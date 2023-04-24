@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["sid",""]],"struct":[["SidContract",""]]};
+window.SIDEBAR_ITEMS = {"mod":["sid"],"struct":["SidContract"]};

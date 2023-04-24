@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["ParsedType",""]],"struct":[["Extracted",""],["ExtractedOwned",""],["FunctionWithBounceHandler",""],["TransactionParser","Parses transactions with provided extractors"],["TransactionParserBuilder",""],["WrappedFunction",""]],"type":[["BounceHandler",""]]};
+window.SIDEBAR_ITEMS = {"enum":["ParsedType"],"struct":["Extracted","ExtractedOwned","FunctionWithBounceHandler","TransactionParser","TransactionParserBuilder","WrappedFunction"],"type":["BounceHandler"]};

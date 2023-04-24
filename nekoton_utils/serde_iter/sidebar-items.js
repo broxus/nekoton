@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["serialize",""]]};
+window.SIDEBAR_ITEMS = {"fn":["serialize"]};

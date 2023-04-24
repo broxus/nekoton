@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["NodeClientError",""]],"struct":[["GqlTransport",""],["LatestBlock",""]]};
+window.SIDEBAR_ITEMS = {"enum":["NodeClientError"],"struct":["GqlTransport","LatestBlock"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["RawContractState",""]],"struct":[["ExistingContract",""],["RawTransaction",""]]};
+window.SIDEBAR_ITEMS = {"enum":["RawContractState"],"struct":["ExistingContract","RawTransaction"]};

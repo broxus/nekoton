@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["collection_contract",""],["nft_contract",""]],"struct":[["CollectionContract",""],["NftContract",""]]};
+window.SIDEBAR_ITEMS = {"mod":["collection_contract","nft_contract"],"struct":["CollectionContract","NftContract"]};

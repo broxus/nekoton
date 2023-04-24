@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["send_transaction",""],["send_transaction_raw_0",""],["send_transaction_raw_1",""],["send_transaction_raw_2",""],["send_transaction_raw_3",""],["send_transaction_raw_4",""]]};
+window.SIDEBAR_ITEMS = {"fn":["send_transaction","send_transaction_raw_0","send_transaction_raw_1","send_transaction_raw_2","send_transaction_raw_3","send_transaction_raw_4"]};

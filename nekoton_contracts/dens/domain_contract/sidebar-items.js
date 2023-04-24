@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["get_path","Returns full domain path"],["query","Returns optional certificate record"]]};
+window.SIDEBAR_ITEMS = {"fn":["get_path","query"]};

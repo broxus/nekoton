@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["confirm_transaction",""],["constructor",""],["get_custodians",""],["get_transactions",""],["send_transaction",""],["submit_transaction",""]],"mod":[["safe_multisig",""],["set_code_multisig",""]],"struct":[["MultisigCustodian",""],["MultisigTransaction",""]]};
+window.SIDEBAR_ITEMS = {"fn":["confirm_transaction","constructor","get_custodians","get_transactions","send_transaction","submit_transaction"],"mod":["safe_multisig","set_code_multisig"],"struct":["MultisigCustodian","MultisigTransaction"]};

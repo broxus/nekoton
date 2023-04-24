@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["compute_contract_address",""],["is_ever_wallet",""],["make_state_init",""],["prepare_deploy",""],["prepare_transfer",""]],"static":[["CODE_HASH",""],["DETAILS",""]]};
+window.SIDEBAR_ITEMS = {"fn":["compute_contract_address","is_ever_wallet","make_state_init","prepare_deploy","prepare_transfer"],"static":["CODE_HASH","DETAILS"]};

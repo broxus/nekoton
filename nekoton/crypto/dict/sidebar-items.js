@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["get_hints",""]]};
+window.SIDEBAR_ITEMS = {"fn":["get_hints"]};

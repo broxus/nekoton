@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["get_parameters",""]],"struct":[["SetCodeMultisigParams",""]]};
+window.SIDEBAR_ITEMS = {"fn":["get_parameters"],"struct":["SetCodeMultisigParams"]};

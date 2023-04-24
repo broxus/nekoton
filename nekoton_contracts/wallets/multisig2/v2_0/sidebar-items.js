@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["get_update_requests",""]]};
+window.SIDEBAR_ITEMS = {"fn":["get_update_requests"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["get_details",""],["get_version",""],["get_wallet_address",""],["mint",""],["tokens_burned",""],["transfer_owner",""]],"struct":[["MintInputs",""],["RootTokenContractDetails",""],["TokensBurnedInputs",""],["TransferOwnerInputs",""]]};
+window.SIDEBAR_ITEMS = {"fn":["get_details","get_version","get_wallet_address","mint","tokens_burned","transfer_owner"],"struct":["MintInputs","RootTokenContractDetails","TokensBurnedInputs","TransferOwnerInputs"]};

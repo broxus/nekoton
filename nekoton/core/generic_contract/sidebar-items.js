@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["GenericContract",""]],"trait":[["GenericContractSubscriptionHandler",""]]};
+window.SIDEBAR_ITEMS = {"struct":["GenericContract"],"trait":["GenericContractSubscriptionHandler"]};

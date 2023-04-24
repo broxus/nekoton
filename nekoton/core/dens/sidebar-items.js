@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["ResolvedValue",""]],"fn":[["validate_address",""]],"struct":[["Dens","`DeNS` domains collection"],["DensBuilder",""],["DensTld","`DeNS` Top Level Domain"]]};
+window.SIDEBAR_ITEMS = {"enum":["ResolvedValue"],"fn":["validate_address"],"struct":["Dens","DensBuilder","DensTld"]};

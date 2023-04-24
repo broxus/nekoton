@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["metadata_contract",""]],"struct":[["MetadataContract",""]]};
+window.SIDEBAR_ITEMS = {"mod":["metadata_contract"],"struct":["MetadataContract"]};

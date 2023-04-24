@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["gql",""]]};
+window.SIDEBAR_ITEMS = {"mod":["gql"]};

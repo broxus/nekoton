@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["GqlClient",""],["GqlNetworkSettings",""]]};
+window.SIDEBAR_ITEMS = {"struct":["GqlClient","GqlNetworkSettings"]};

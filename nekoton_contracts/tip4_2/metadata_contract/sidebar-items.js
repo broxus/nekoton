@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["INTERFACE_ID",""]],"fn":[["get_json","Get NFT metadata in JSON format"]]};
+window.SIDEBAR_ITEMS = {"constant":["INTERFACE_ID"],"fn":["get_json"]};

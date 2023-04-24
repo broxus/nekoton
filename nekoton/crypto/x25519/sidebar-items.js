@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["compute_shared",""]]};
+window.SIDEBAR_ITEMS = {"fn":["compute_shared"]};

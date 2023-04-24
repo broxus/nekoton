@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["code",""],["ever_wallet",""],["multisig",""],["multisig2",""],["notifications",""]]};
+window.SIDEBAR_ITEMS = {"mod":["code","ever_wallet","multisig","multisig2","notifications"]};
