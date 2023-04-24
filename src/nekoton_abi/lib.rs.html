@@ -1228,6 +1228,9 @@
 <a href="#1228" id="1228">1228</a>
 <a href="#1229" id="1229">1229</a>
 <a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
 </pre><pre class="rust"><code><span class="attr">#![warn(
     missing_copy_implementations,
     macro_use_extern_crate,
@@ -2180,6 +2183,7 @@
             block_unixtime: <span class="self">self</span>.block_utime,
             block_lt: <span class="self">self</span>.block_lt,
             last_tr_lt: <span class="self">self</span>.last_transaction_lt,
+            behavior_modifiers: <span class="prelude-val">Some</span>(executor.behavior_modifiers()),
             ..Default::default()
         };
 
@@ -2197,6 +2201,7 @@
             block_unixtime: <span class="self">self</span>.block_utime,
             block_lt: <span class="self">self</span>.block_lt,
             last_tr_lt: <span class="self">self</span>.last_transaction_lt.clone(),
+            behavior_modifiers: <span class="prelude-val">Some</span>(executor.behavior_modifiers()),
             ..Default::default()
         };
 
@@ -2212,6 +2217,7 @@
             block_unixtime: <span class="self">self</span>.block_utime,
             block_lt: <span class="self">self</span>.block_lt,
             last_tr_lt: <span class="self">self</span>.last_transaction_lt.clone(),
+            behavior_modifiers: <span class="prelude-val">Some</span>(executor.behavior_modifiers()),
             ..Default::default()
         };
 
