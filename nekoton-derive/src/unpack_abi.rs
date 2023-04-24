@@ -324,8 +324,8 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         }
         TypeName::Grams => {
             quote! {
-                ::ton_abi::TokenValue::Token(::ton_block::Grams(value)) => {
-                    ::std::convert::TryFrom::try_from(value)
+                ::ton_abi::TokenValue::Token(grams) => {
+                    ::std::convert::TryFrom::try_from(grams.as_u128())
                     .map_err(|_| ::nekoton_abi::UnpackerError::InvalidAbi)?
                 }
             }

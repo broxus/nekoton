@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use anyhow::Result;
+use nekoton_utils::TrustMe;
 use ton_block::{
     AccountStuff, CommonMsgInfo, CurrencyCollection, Deserializable, Message, MsgAddressInt,
     OutAction, OutActions, Serializable,
@@ -51,7 +50,12 @@ pub fn call(
         (ton_block::GlobalCapabilities::CapMycode as u64)
             | (ton_block::GlobalCapabilities::CapInitCodeHash as u64),
     )
-    .setup(SliceData::from(code), Some(ctrls), Some(stack), Some(gas));
+    .setup(
+        SliceData::load_cell(code).map_err(|_| ExecutionError::FailedToPutDataIntoRegisters)?,
+        Some(ctrls),
+        Some(stack),
+        Some(gas),
+    );
 
     let result = engine.execute();
 
@@ -81,6 +85,7 @@ pub fn call_msg(
 ) -> Result<ActionPhaseOutput, ExecutionError> {
     let msg_cell = msg
         .write_to_new_cell()
+        .and_then(ton_types::BuilderData::into_cell)
         .map_err(|_| ExecutionError::FailedToSerializeMessage)?;
 
     let mut stack = Stack::new();
@@ -96,7 +101,7 @@ pub fn call_msg(
     stack
         .push(ton_vm::int!(balance)) // token balance of contract
         .push(ton_vm::int!(msg_balance)) // token balance of msg
-        .push(StackItem::Cell(msg_cell.into())) // message
+        .push(StackItem::Cell(msg_cell)) // message
         .push(StackItem::Slice(msg.body().unwrap_or_default())) // message body
         .push(function_selector); // function selector
 
@@ -141,7 +146,7 @@ fn build_contract_info(
     init_code_hash: Option<&ton_types::UInt256>,
 ) -> ton_vm::SmartContractInfo {
     let mut info = ton_vm::SmartContractInfo::old_default(code);
-    info.myself = address.serialize().unwrap_or_default().into();
+    info.myself = SliceData::load_cell(address.serialize().unwrap_or_default()).trust_me();
     info.block_lt = block_lt;
     info.trans_lt = tr_lt;
     info.unix_time = block_unixtime;

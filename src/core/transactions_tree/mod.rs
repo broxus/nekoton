@@ -71,11 +71,11 @@ impl TransactionsTreeStream {
     }
 
     async fn step(&mut self, mut message: Message) -> TransactionTreeResult<Transaction> {
-        const A_LOT: u128 = 1_000_000_000_000_000; // 1'000'000 ever
+        const A_LOT: u64 = 1_000_000_000_000_000; // 1'000'000 ever
 
         if self.unlimited_message_balance {
             if let Some(header) = message.int_header_mut() {
-                header.value.grams.0 = A_LOT;
+                header.value.grams = ton_block::Grams::from(A_LOT);
             }
         }
 
@@ -91,7 +91,7 @@ impl TransactionsTreeStream {
 
         if self.unlimited_account_balance {
             if let Account::Account(account) = &mut account {
-                account.storage.balance.grams.0 = A_LOT;
+                account.storage.balance.grams = ton_block::Grams::from(A_LOT);
             }
         }
 

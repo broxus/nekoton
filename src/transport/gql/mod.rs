@@ -189,8 +189,8 @@ impl Transport for GqlTransport {
     async fn send_message(&self, message: &Message) -> Result<()> {
         let cell = message
             .write_to_new_cell()
-            .map_err(|_| NodeClientError::FailedToSerialize)?
-            .into();
+            .and_then(ton_types::BuilderData::into_cell)
+            .map_err(|_| NodeClientError::FailedToSerialize)?;
 
         let boc = base64::encode(
             ton_types::serialize_toc(&cell).map_err(|_| NodeClientError::FailedToSerialize)?,

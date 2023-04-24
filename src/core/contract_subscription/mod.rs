@@ -234,7 +234,7 @@ impl ContractSubscription {
             if let ton_block::TransactionDescr::Ordinary(descr) = transaction.read_description()? {
                 compute_total_transaction_fees(&transaction, &descr)
             } else {
-                transaction.total_fees.grams.0
+                transaction.total_fees.grams.as_u128()
             },
         )
     }

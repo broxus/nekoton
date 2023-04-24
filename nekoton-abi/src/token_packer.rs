@@ -134,7 +134,7 @@ impl BuildTokenValue for Vec<u8> {
 
 impl BuildTokenValue for BuilderData {
     fn token_value(self) -> TokenValue {
-        TokenValue::Cell(self.into())
+        TokenValue::Cell(self.into_cell().unwrap())
     }
 }
 

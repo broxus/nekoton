@@ -48,7 +48,7 @@ fn get_old_selector_salt(code: &Cell) -> Result<Option<Cell>> {
 }
 
 fn get_new_selector_salt(code: &Cell) -> Result<Option<Cell>> {
-    let mut private_selector: SliceData = code.reference(0)?.into();
+    let mut private_selector: SliceData = code.reference(0).and_then(SliceData::load_cell)?;
     if private_selector.get_next_bits(13).ok() != Some(vec![0xf4, 0xa0]) {
         return Err(CodeSaltError::InvalidSelector.into());
     }

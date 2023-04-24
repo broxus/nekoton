@@ -137,7 +137,7 @@ impl UnsignedMessage for UnsignedHighloadWalletV2Message {
         payload.prepend_raw(signature, signature.len() * 8)?;
 
         let mut message = self.message.clone();
-        message.set_body(payload.into());
+        message.set_body(ton_types::SliceData::load_builder(payload)?);
 
         Ok(SignedMessage {
             message,
@@ -155,7 +155,7 @@ impl UnsignedMessage for UnsignedHighloadWalletV2Message {
         let body = payload.into_cell()?;
 
         let mut message = self.message.clone();
-        message.set_body(prune_deep_cells(&body, prune_after_depth)?.into());
+        message.set_body(prune_deep_cells(&body, prune_after_depth)?);
 
         Ok(SignedMessage {
             message,
@@ -287,11 +287,14 @@ impl InitData {
 
             let mut item = BuilderData::new();
             item.append_u8(gift.flags)?
-                .append_reference_cell(internal_message.serialize()?);
+                .checked_append_reference(internal_message.serialize()?)?;
 
-            let key = (i as u16).write_to_new_cell().unwrap().into();
+            let key = (i as u16)
+                .serialize()
+                .and_then(SliceData::load_cell)
+                .trust_me();
 
-            messages.set(key, &item.into())?;
+            messages.set_builder(key, &item)?;
         }
 
         let messages = messages.serialize()?;
@@ -315,7 +318,7 @@ impl TryFrom<&Cell> for InitData {
     type Error = anyhow::Error;
 
     fn try_from(data: &Cell) -> Result<Self, Self::Error> {
-        let mut cs = SliceData::from(data);
+        let mut cs = SliceData::load_cell_ref(data)?;
 
         Ok(Self {
             wallet_id: cs.get_next_u32()?,

@@ -111,7 +111,7 @@ fn main() {
 
     assert_eq!(data.data_bytes, Vec::from("Test"));
 
-    assert_eq!(data.grams.0, 111);
+    assert_eq!(data.grams.as_u128(), 111);
     assert_eq!(data.grams_u64, 123);
     assert_eq!(data.grams_u128, 32);
     assert_eq!(data.string, "asd".to_string());

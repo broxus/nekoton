@@ -10,7 +10,7 @@ pub fn is_empty_cell(code_hash: &UInt256) -> bool {
     code_hash.as_slice() == &EMPTY_CELL_HASH
 }
 
-pub fn prune_deep_cells(cell: &Cell, after_depth: u16) -> Result<Cell> {
+pub fn prune_deep_cells(cell: &Cell, after_depth: u16) -> Result<ton_types::SliceData> {
     fn prune_depp_cells_impl(cell: &Cell, after_depth: u16, depth: u16) -> Result<Cell> {
         if depth > after_depth {
             return make_pruned_branch_cell(cell, 0);
@@ -24,7 +24,7 @@ pub fn prune_deep_cells(cell: &Cell, after_depth: u16) -> Result<Cell> {
         let mut builder = BuilderData::new();
         for i in 0..ref_count {
             let cell = prune_depp_cells_impl(&cell.reference(i)?, after_depth, depth + 1)?;
-            builder.append_reference_cell(cell);
+            builder.checked_append_reference(cell)?;
         }
 
         builder.append_raw(cell.data(), cell.bit_length())?;
@@ -32,10 +32,10 @@ pub fn prune_deep_cells(cell: &Cell, after_depth: u16) -> Result<Cell> {
     }
 
     if cell.repr_depth() <= after_depth {
-        return Ok(cell.clone());
+        return ton_types::SliceData::load_cell_ref(cell);
     }
 
-    prune_depp_cells_impl(cell, after_depth, 0)
+    prune_depp_cells_impl(cell, after_depth, 0).and_then(ton_types::SliceData::load_cell)
 }
 
 pub fn make_pruned_branch_cell(cell: &Cell, merkle_depth: u8) -> Result<Cell> {

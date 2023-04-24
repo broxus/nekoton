@@ -227,7 +227,9 @@ impl Nft {
             .arg(callbacks)
             .build();
 
-        let body = function.encode_internal_input(&input)?.into();
+        let body = function
+            .encode_internal_input(&input)
+            .and_then(ton_types::SliceData::load_builder)?;
 
         Ok(InternalMessage {
             source: Some(self.owner.clone()),
@@ -251,7 +253,9 @@ impl Nft {
             .arg(callbacks)
             .build();
 
-        let body = function.encode_internal_input(&input)?.into();
+        let body = function
+            .encode_internal_input(&input)
+            .and_then(ton_types::SliceData::load_builder)?;
 
         Ok(InternalMessage {
             source: Some(self.owner.clone()),
@@ -275,7 +279,9 @@ impl Nft {
             .arg(callbacks)
             .build();
 
-        let body = function.encode_internal_input(&input)?.into();
+        let body = function
+            .encode_internal_input(&input)
+            .and_then(ton_types::SliceData::load_builder)?;
 
         Ok(InternalMessage {
             source: Some(self.owner.clone()),
@@ -470,7 +476,7 @@ impl<'a> CollectionContractState<'a> {
         let mut nft = BuilderData::new();
         nft.append_raw(NFT_STAMP, 24)?;
 
-        builder.append_reference_cell(nft.into_cell()?);
+        builder.checked_append_reference(nft.into_cell()?)?;
 
         let salt = builder.into_cell()?;
 

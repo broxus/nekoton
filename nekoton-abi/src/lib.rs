@@ -199,7 +199,7 @@ pub fn create_comment_payload(comment: &str) -> Result<SliceData> {
         Vec::new(),
         &ton_abi::contract::ABI_VERSION_2_0,
     )
-    .map(SliceData::from)
+    .and_then(SliceData::load_builder)
 }
 
 pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
@@ -212,7 +212,6 @@ pub fn parse_comment_payload(mut payload: SliceData) -> Option<String> {
     let mut data = Vec::new();
     loop {
         data.extend_from_slice(cell.data());
-        data.pop();
         cell = match cell.reference(0) {
             Ok(cell) => cell.clone(),
             Err(_) => break,
@@ -227,7 +226,7 @@ pub fn create_boc_payload(cell: &str) -> Result<SliceData> {
     let bytes = base64::decode(cell)?;
     let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
         .map_err(|_| UnpackerError::InvalidAbi)?;
-    Ok(SliceData::from(cell))
+    SliceData::load_cell(cell)
 }
 
 pub fn pack_into_cell(
@@ -273,7 +272,7 @@ pub fn extract_public_key(
         _ => return Err(ExtractionError::AccountIsNotActive),
     };
     let mut data: SliceData = match &state_init.data {
-        Some(data) => data.into(),
+        Some(data) => SliceData::load_cell_ref(data).map_err(|_| ExtractionError::CellUnderflow)?,
         None => return Err(ExtractionError::AccountDataNotFound),
     };
     let data = data
@@ -290,7 +289,10 @@ pub fn get_state_init_hash(
     init_data: Vec<Token>,
 ) -> Result<UInt256> {
     state_init.data = if let Some(data) = state_init.data.take() {
-        Some(insert_state_init_data(contract, data.into(), public_key, init_data)?.into_cell())
+        Some(
+            insert_state_init_data(contract, SliceData::load_cell(data)?, public_key, init_data)?
+                .into_cell(),
+        )
     } else {
         None
     };
@@ -318,7 +320,7 @@ pub fn insert_state_init_data(
 
     if let Some(public_key) = public_key {
         map.set_builder(
-            0u64.write_to_new_cell().trust_me().into(),
+            0u64.serialize().and_then(SliceData::load_cell).trust_me(),
             ton_types::BuilderData::new()
                 .append_raw(public_key.as_bytes(), 256)
                 .trust_me(),
@@ -339,12 +341,15 @@ pub fn insert_state_init_data(
                 return Err(InitDataError::TokenParamTypeMismatch.into());
             }
 
+            let key = param.key.serialize();
+            let key = key.and_then(SliceData::load_cell).trust_me();
+
             let builder = token.pack_into_chain(&contract.abi_version)?;
-            map.set_builder(param.key.write_to_new_cell().trust_me().into(), &builder)?;
+            map.set_builder(key, &builder)?;
         }
     }
 
-    map.write_to_new_cell().map(From::from)
+    map.write_to_new_cell().and_then(SliceData::load_builder)
 }
 
 pub fn decode_input<'a>(
@@ -542,7 +547,10 @@ pub fn code_to_tvc(code: ton_types::Cell) -> Result<ton_block::StateInit> {
     let value = ton_types::BuilderData::with_raw(pubkey_vec, pubkey_len).unwrap_or_default();
 
     let mut init_data = ton_types::HashmapE::with_bit_len(ton_abi::Contract::DATA_MAP_KEYLEN);
-    init_data.set(0u64.write_to_new_cell().unwrap().into(), &value.into())?;
+    init_data.set_builder(
+        0u64.serialize().and_then(SliceData::load_cell).unwrap(),
+        &value,
+    )?;
 
     let data = init_data
         .write_to_new_cell()
@@ -641,7 +649,7 @@ impl FunctionExt for Function {
         mut account_stuff: AccountStuff,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
-        account_stuff.storage.balance.grams.0 = 100_000_000_000_000; // 100 000 TON
+        account_stuff.storage.balance.grams = ton_block::Grams::from(100_000_000_000_000u64); // 100 000 TON
         FunctionAbi::new(self).run_local_responsible(clock, &mut account_stuff, input)
     }
 }
@@ -678,7 +686,11 @@ impl<'a> FunctionAbi<'a> {
             gen_lt,
         } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
 
-        msg.set_body(self.abi.encode_run_local_input(now_ms, input)?.into());
+        msg.set_body(
+            self.abi
+                .encode_run_local_input(now_ms, input)
+                .and_then(SliceData::load_builder)?,
+        );
 
         let tvm::ActionPhaseOutput {
             messages,
@@ -720,7 +732,11 @@ impl<'a> FunctionAbi<'a> {
             gen_utime, gen_lt, ..
         } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
 
-        msg.set_body(function.encode_internal_input(input)?.into());
+        msg.set_body(
+            function
+                .encode_internal_input(input)
+                .and_then(SliceData::load_builder)?,
+        );
 
         let tvm::ActionPhaseOutput {
             messages,
@@ -1172,9 +1188,9 @@ mod tests {
             Token::new("first", TokenValue::Uint(Uint::new(12345, 256))),
             Token::new("second", TokenValue::Uint(Uint::new(1337, 64))),
         ];
-        let cell = pack_into_cell(&tokens, DEFAULT_ABI_VERSION).unwrap();
-
-        let data: SliceData = cell.into();
+        let data = pack_into_cell(&tokens, DEFAULT_ABI_VERSION)
+            .and_then(SliceData::load_cell)
+            .unwrap();
 
         let partial_params = &[Param::new("first", ParamType::Uint(256))];
 
@@ -1191,7 +1207,8 @@ mod tests {
 
     #[test]
     fn unpack_header() {
-        let body = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEArAAB4by5SH0Glx7Jnb0imtClvhC4I0DPaT+/su49hM5DQH+xHrEtD9U2dQOJpD2J598bWtYTC4m1Ylxh6MSg9//WKgdEWH2fKWA3SuZNZZ7BBCeDpiGAfwIlOFF981WU06BclcAAAF7d/kbVGEk26dM7mRsgAQFlgBOzHFkFNmE1fX9Dpui0xVFiNtBGdDa6IIntwTxwGs9y4AAAAAAAAAAAAAAAB3NZQAA4AgAA").unwrap().as_slice()).unwrap().into();
+        let body = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEArAAB4by5SH0Glx7Jnb0imtClvhC4I0DPaT+/su49hM5DQH+xHrEtD9U2dQOJpD2J598bWtYTC4m1Ylxh6MSg9//WKgdEWH2fKWA3SuZNZZ7BBCeDpiGAfwIlOFF981WU06BclcAAAF7d/kbVGEk26dM7mRsgAQFlgBOzHFkFNmE1fX9Dpui0xVFiNtBGdDa6IIntwTxwGs9y4AAAAAAAAAAAAAAAB3NZQAA4AgAA").unwrap().as_slice()).unwrap();
+        let body = ton_types::SliceData::load_cell(body).unwrap();
 
         let ((pubkey, time, expire), remaining_body) =
             unpack_headers::<(PubkeyHeader, TimeHeader, ExpireHeader)>(&body).unwrap();

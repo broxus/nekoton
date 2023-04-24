@@ -99,7 +99,7 @@ pub fn parse_block(
             ))
         }) {
         Ok(Some((extra, _))) => extra,
-        _ => return Ok(ParsedBlock::empty(info.gen_utime().0)),
+        _ => return Ok(ParsedBlock::empty(info.gen_utime().as_u32())),
     };
 
     let mut balance = contract_state.balance as i128;
@@ -141,7 +141,7 @@ pub fn parse_block(
         balance: balance as u64,
         gen_timings: GenTimings::Known {
             gen_lt: info.end_lt(),
-            gen_utime: info.gen_utime().0,
+            gen_utime: info.gen_utime().as_u32(),
         },
         last_transaction_id: latest_transaction_id
             .map(LastTransactionId::Exact)
@@ -163,7 +163,7 @@ pub fn parse_block(
         .map(|batch_info| (new_transactions, batch_info));
 
     Ok(ParsedBlock::with_data(
-        info.gen_utime().0,
+        info.gen_utime().as_u32(),
         new_contract_state,
         new_transactions,
     ))
@@ -429,10 +429,11 @@ impl UnsignedMessage for LabsUnsignedMessage {
             Some(signature),
             None,
             payload,
-        )?;
+        )
+        .and_then(ton_types::SliceData::load_builder)?;
 
         let mut message = self.message.clone();
-        message.set_body(payload.into());
+        message.set_body(payload);
 
         Ok(SignedMessage {
             message,
@@ -455,7 +456,7 @@ impl UnsignedMessage for LabsUnsignedMessage {
         .into_cell()?;
 
         let mut message = self.message.clone();
-        message.set_body(prune_deep_cells(&payload, prune_after_depth)?.into());
+        message.set_body(prune_deep_cells(&payload, prune_after_depth)?);
 
         Ok(SignedMessage {
             message,

@@ -892,7 +892,7 @@ impl From<(UInt256, ton_block::Message)> for Message {
                     ton_block::MsgAddressIntOrNone::None => None,
                 },
                 dst: Some(header.dst.clone()),
-                value: header.value.grams.0 as u64,
+                value: header.value.grams.as_u128() as u64,
                 body,
                 bounce: header.bounce,
                 bounced: header.bounced,

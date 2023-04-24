@@ -49,7 +49,7 @@ pub fn make_abi_token_value(value: &ton_abi::TokenValue) -> anyhow::Result<serde
             serde_json::Value::String(base64::encode(value))
         }
         ton_abi::TokenValue::String(value) => serde_json::Value::String(value.clone()),
-        ton_abi::TokenValue::Token(value) => serde_json::Value::String(value.0.to_string()),
+        ton_abi::TokenValue::Token(value) => serde_json::Value::String(value.as_u128().to_string()),
         ton_abi::TokenValue::Time(value) => serde_json::Value::String(value.to_string()),
         &ton_abi::TokenValue::Expire(value) => serde_json::Value::Number(value.into()),
         ton_abi::TokenValue::PublicKey(value) => match value {
@@ -338,7 +338,9 @@ pub fn parse_abi_token_value(
                 Err(TokensJsonError::NumberExpected)
             }?;
 
-            ton_abi::TokenValue::Token(ton_block::Grams(value))
+            ton_abi::TokenValue::Token(
+                ton_block::Grams::new(value).map_err(|_| TokensJsonError::IntegerOverflow)?,
+            )
         }
         ton_abi::ParamType::Time => {
             let value = if let Some(value) = value.as_str() {
@@ -455,4 +457,6 @@ pub enum TokensJsonError {
     InvalidBytesLength(usize),
     #[error("Invalid public key")]
     InvalidPublicKey,
+    #[error("Integer overflow")]
+    IntegerOverflow,
 }

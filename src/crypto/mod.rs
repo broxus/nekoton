@@ -79,8 +79,8 @@ impl Serialize for SignedMessage {
         let cell: ton_types::Cell = self
             .message
             .write_to_new_cell()
-            .map_err(Error::custom)?
-            .into();
+            .and_then(ton_types::BuilderData::into_cell)
+            .map_err(Error::custom)?;
 
         SignedMessageHelper {
             hash: cell.repr_hash(),

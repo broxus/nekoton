@@ -162,12 +162,12 @@ impl TokenWallet {
             }
         };
 
-        let mut attached_amount = 0;
+        let mut attached_amount: u128 = 0;
 
         // Simulate source transaction
         let source_tx = tree.next().await?.ok_or(TokenWalletError::NoSourceTx)?;
         check_exit_code(&source_tx, TokenWalletError::SourceTxFailed)?;
-        attached_amount += source_tx.total_fees.grams.0 * FEE_MULTIPLIER;
+        attached_amount += source_tx.total_fees.grams.as_u128() * FEE_MULTIPLIER;
 
         if source_tx.outmsg_cnt == 0 {
             return Err(TokenWalletError::NoDestTx.into());
@@ -184,7 +184,7 @@ impl TokenWallet {
         // Simulate destination transaction
         let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
         check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
-        attached_amount += dest_tx.total_fees.grams.0 * FEE_MULTIPLIER;
+        attached_amount += dest_tx.total_fees.grams.as_u128() * FEE_MULTIPLIER;
 
         // Done
         Ok(attached_amount as u64)
@@ -247,7 +247,9 @@ impl TokenWallet {
             }
         };
 
-        let body = function.encode_internal_input(&input)?.into();
+        let body = function
+            .encode_internal_input(&input)
+            .and_then(ton_types::SliceData::load_builder)?;
 
         Ok(InternalMessage {
             source: Some(self.owner.clone()),

@@ -200,7 +200,7 @@ fn decode_raw_transaction(boc: &str) -> Result<RawTransaction> {
     let bytes = base64::decode(boc)?;
     let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())?;
     let hash = cell.repr_hash();
-    let data = ton_block::Transaction::construct_from(&mut cell.into())?;
+    let data = ton_block::Transaction::construct_from_cell(cell)?;
     Ok(RawTransaction { hash, data })
 }
 

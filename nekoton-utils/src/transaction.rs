@@ -12,13 +12,13 @@ pub fn compute_balance_change(transaction: &ton_block::Transaction) -> i128 {
         .and_then(|data| data.read_struct().ok())
     {
         if let ton_block::CommonMsgInfo::IntMsgInfo(header) = in_msg.header() {
-            diff += header.value.grams.0 as i128;
+            diff += header.value.grams.as_u128() as i128;
         }
     }
 
     let _ = transaction.out_msgs.iterate(|out_msg| {
         if let ton_block::CommonMsgInfo::IntMsgInfo(header) = out_msg.0.header() {
-            diff -= header.value.grams.0 as i128;
+            diff -= header.value.grams.as_u128() as i128;
         }
         Ok(true)
     });
@@ -37,17 +37,17 @@ pub fn compute_total_transaction_fees(
     transaction: &ton_block::Transaction,
     description: &ton_block::TransactionDescrOrdinary,
 ) -> u128 {
-    let mut total_fees = transaction.total_fees.grams.0;
+    let mut total_fees = transaction.total_fees.grams.as_u128();
     if let Some(phase) = &description.action {
         total_fees += phase
             .total_fwd_fees
             .as_ref()
-            .map(|grams| grams.0)
+            .map(|grams| grams.as_u128())
             .unwrap_or_default();
         total_fees -= phase
             .total_action_fees
             .as_ref()
-            .map(|grams| grams.0)
+            .map(|grams| grams.as_u128())
             .unwrap_or_default();
     };
     total_fees

@@ -284,7 +284,7 @@ impl MultisigType {
     pub fn state_init(&self) -> ton_block::StateInit {
         use nekoton_contracts::wallets;
 
-        let mut state_init = match self {
+        let state_init = match self {
             MultisigType::SafeMultisigWallet => wallets::code::safe_multisig_wallet(),
             MultisigType::SafeMultisigWallet24h => wallets::code::safe_multisig_wallet_24h(),
             MultisigType::SetcodeMultisigWallet => wallets::code::setcode_multisig_wallet(),
@@ -293,8 +293,8 @@ impl MultisigType {
             MultisigType::SurfWallet => wallets::code::surf_wallet(),
             MultisigType::Multisig2 => wallets::code::multisig2(),
             MultisigType::Multisig2_1 => wallets::code::multisig2_1(),
-        }
-        .into();
+        };
+        let mut state_init = ton_types::SliceData::load_cell(state_init).trust_me();
 
         ton_block::StateInit::construct_from(&mut state_init).trust_me()
     }
@@ -410,7 +410,7 @@ fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> to
     let mut state_init = multisig_type.state_init();
 
     let new_data = ton_abi::Contract::insert_pubkey(
-        state_init.data.clone().unwrap_or_default().into(),
+        ton_types::SliceData::load_cell(state_init.data.clone().unwrap_or_default()).trust_me(),
         public_key.as_bytes(),
     )
     .trust_me();

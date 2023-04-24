@@ -108,7 +108,10 @@ pub fn parse_transaction_additional_info(
                             payload,
                             dest,
                             ..
-                        }) => (Some(dest.clone()), parse_payload(payload.clone().into())),
+                        }) => (
+                            Some(dest.clone()),
+                            parse_payload(ton_types::SliceData::load_cell_ref(payload).ok()?),
+                        ),
                         _ => (None, None),
                     };
 

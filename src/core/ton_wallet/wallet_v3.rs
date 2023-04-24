@@ -172,7 +172,7 @@ impl UnsignedMessage for UnsignedWalletV3Message {
         payload.prepend_raw(signature, signature.len() * 8)?;
 
         let mut message = self.message.clone();
-        message.set_body(payload.into());
+        message.set_body(SliceData::load_builder(payload)?);
 
         Ok(SignedMessage {
             message,
@@ -190,7 +190,7 @@ impl UnsignedMessage for UnsignedWalletV3Message {
         let body = payload.into_cell()?;
 
         let mut message = self.message.clone();
-        message.set_body(prune_deep_cells(&body, prune_after_depth)?.into());
+        message.set_body(prune_deep_cells(&body, prune_after_depth)?);
 
         Ok(SignedMessage {
             message,
@@ -316,7 +316,7 @@ impl InitData {
             // append it to the body
             payload
                 .append_u8(gift.flags)?
-                .append_reference_cell(internal_message.serialize()?);
+                .checked_append_reference(internal_message.serialize()?)?;
         }
 
         let hash = payload.clone().into_cell()?.repr_hash();
@@ -329,7 +329,7 @@ impl TryFrom<&Cell> for InitData {
     type Error = anyhow::Error;
 
     fn try_from(data: &Cell) -> Result<Self, Self::Error> {
-        let mut cs = SliceData::from(data);
+        let mut cs = SliceData::load_cell_ref(data)?;
         Ok(Self {
             seqno: cs.get_next_u32()?,
             wallet_id: cs.get_next_u32()?,

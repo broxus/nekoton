@@ -642,7 +642,8 @@ pub mod serde_boc {
     where
         D: serde::Deserializer<'de>,
     {
-        serde_cell::deserialize(deserializer).map(From::from)
+        let cell = serde_cell::deserialize(deserializer)?;
+        SliceData::load_cell(cell).map_err(D::Error::custom)
     }
 }
 
@@ -717,7 +718,7 @@ pub mod serde_account_stuff {
         let bytes = base64::decode(data).map_err(D::Error::custom)?;
         ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
             .and_then(|cell| {
-                let slice = &mut cell.into();
+                let slice = &mut ton_types::SliceData::load_cell(cell)?;
                 Ok(ton_block::AccountStuff {
                     addr: Deserializable::construct_from(slice)?,
                     storage_stat: Deserializable::construct_from(slice)?,
