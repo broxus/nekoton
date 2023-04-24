@@ -950,6 +950,7 @@ impl Executor {
             block_unixtime: self.block_utime,
             block_lt: self.block_lt,
             last_tr_lt: self.last_transaction_lt,
+            behavior_modifiers: Some(executor.behavior_modifiers()),
             ..Default::default()
         };
 
@@ -967,6 +968,7 @@ impl Executor {
             block_unixtime: self.block_utime,
             block_lt: self.block_lt,
             last_tr_lt: self.last_transaction_lt.clone(),
+            behavior_modifiers: Some(executor.behavior_modifiers()),
             ..Default::default()
         };
 
@@ -982,6 +984,7 @@ impl Executor {
             block_unixtime: self.block_utime,
             block_lt: self.block_lt,
             last_tr_lt: self.last_transaction_lt.clone(),
+            behavior_modifiers: Some(executor.behavior_modifiers()),
             ..Default::default()
         };
 
