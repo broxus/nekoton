@@ -1238,6 +1238,7 @@
 <a href="#1238" id="1238">1238</a>
 <a href="#1239" id="1239">1239</a>
 <a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
 </pre><pre class="rust"><code><span class="attr">#![warn(
     missing_copy_implementations,
     macro_use_extern_crate,
@@ -1326,6 +1327,7 @@
 <span class="kw">pub use </span><span class="self">self</span>::token_packer::<span class="kw-2">*</span>;
 <span class="kw">pub use </span><span class="self">self</span>::token_unpacker::<span class="kw-2">*</span>;
 <span class="kw">pub use </span><span class="self">self</span>::tokens_json::<span class="kw-2">*</span>;
+<span class="kw">pub use </span><span class="self">self</span>::tvm::BriefBlockchainConfig;
 <span class="kw">pub use </span>transaction_parser::TransactionParser;
 
 <span class="kw">mod </span>abi_helpers;
@@ -1837,7 +1839,7 @@
             account_stuff,
             input,
             <span class="bool-val">false</span>,
-            default_blockchain_config(),
+            <span class="kw-2">&amp;</span>BriefBlockchainConfig::default(),
         )
     }
 
@@ -1852,7 +1854,7 @@
             account_stuff,
             input,
             <span class="bool-val">true</span>,
-            default_blockchain_config(),
+            <span class="kw-2">&amp;</span>BriefBlockchainConfig::default(),
         )
     }
 
@@ -1862,7 +1864,7 @@
         account_stuff: AccountStuff,
         input: <span class="kw-2">&amp;</span>[Token],
         responsible: bool,
-        config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
+        config: <span class="kw-2">&amp;</span>BriefBlockchainConfig,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt;;
 }
 
@@ -1880,7 +1882,7 @@
         account_stuff: AccountStuff,
         input: <span class="kw-2">&amp;</span>[Token],
         responsible: bool,
-        config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
+        config: <span class="kw-2">&amp;</span>BriefBlockchainConfig,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
         T::run_local_ext(<span class="self">self</span>, clock, account_stuff, input, responsible, config)
     }
@@ -1898,7 +1900,7 @@
         <span class="kw-2">mut </span>account_stuff: AccountStuff,
         input: <span class="kw-2">&amp;</span>[Token],
         responsible: bool,
-        config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
+        config: <span class="kw-2">&amp;</span>BriefBlockchainConfig,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
         FunctionAbi::new(<span class="self">self</span>).run_local(clock, <span class="kw-2">&amp;mut </span>account_stuff, input, responsible, config)
     }
@@ -1924,7 +1926,7 @@
         account_stuff: <span class="kw-2">&amp;mut </span>AccountStuff,
         input: <span class="kw-2">&amp;</span>[Token],
         responsible: bool,
-        config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
+        config: <span class="kw-2">&amp;</span>BriefBlockchainConfig,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
         <span class="kw">let </span>function = <span class="self">self</span>.abi;
 
