@@ -95,7 +95,7 @@ async fn fetch_config(
         .ok_or(QueryConfigError::InvalidBlock)?
         .clone();
 
-    let config = ton_executor::BlockchainConfig::with_config(params)
+    let config = ton_executor::BlockchainConfig::with_config(params, block.global_id)
         .map_err(|_| QueryConfigError::InvalidConfig)?;
 
     let capabilities = NetworkCapabilities {

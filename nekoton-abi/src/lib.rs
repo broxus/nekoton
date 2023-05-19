@@ -591,13 +591,38 @@ pub trait FunctionExt {
         clock: &dyn Clock,
         account_stuff: AccountStuff,
         input: &[Token],
-    ) -> Result<ExecutionOutput>;
+    ) -> Result<ExecutionOutput> {
+        self.run_local_ext(
+            clock,
+            account_stuff,
+            input,
+            false,
+            default_blockchain_config(),
+        )
+    }
 
     fn run_local_responsible(
         &self,
         clock: &dyn Clock,
         account_stuff: AccountStuff,
         input: &[Token],
+    ) -> Result<ExecutionOutput> {
+        self.run_local_ext(
+            clock,
+            account_stuff,
+            input,
+            true,
+            default_blockchain_config(),
+        )
+    }
+
+    fn run_local_ext(
+        &self,
+        clock: &dyn Clock,
+        account_stuff: AccountStuff,
+        input: &[Token],
+        responsible: bool,
+        config: &ton_executor::BlockchainConfig,
     ) -> Result<ExecutionOutput>;
 }
 
@@ -609,22 +634,15 @@ where
         T::parse(self, tx)
     }
 
-    fn run_local(
+    fn run_local_ext(
         &self,
         clock: &dyn Clock,
         account_stuff: AccountStuff,
         input: &[Token],
+        responsible: bool,
+        config: &ton_executor::BlockchainConfig,
     ) -> Result<ExecutionOutput> {
-        T::run_local(self, clock, account_stuff, input)
-    }
-
-    fn run_local_responsible(
-        &self,
-        clock: &dyn Clock,
-        account_stuff: AccountStuff,
-        input: &[Token],
-    ) -> Result<ExecutionOutput> {
-        T::run_local_responsible(self, clock, account_stuff, input)
+        T::run_local_ext(self, clock, account_stuff, input, responsible, config)
     }
 }
 
@@ -634,23 +652,15 @@ impl FunctionExt for Function {
         abi.parse(tx)
     }
 
-    fn run_local(
+    fn run_local_ext(
         &self,
         clock: &dyn Clock,
         mut account_stuff: AccountStuff,
         input: &[Token],
+        responsible: bool,
+        config: &ton_executor::BlockchainConfig,
     ) -> Result<ExecutionOutput> {
-        FunctionAbi::new(self).run_local(clock, &mut account_stuff, input)
-    }
-
-    fn run_local_responsible(
-        &self,
-        clock: &dyn Clock,
-        mut account_stuff: AccountStuff,
-        input: &[Token],
-    ) -> Result<ExecutionOutput> {
-        account_stuff.storage.balance.grams = ton_block::Grams::from(100_000_000_000_000u64); // 100 000 TON
-        FunctionAbi::new(self).run_local_responsible(clock, &mut account_stuff, input)
+        FunctionAbi::new(self).run_local(clock, &mut account_stuff, input, responsible, config)
     }
 }
 
@@ -673,12 +683,37 @@ impl<'a> FunctionAbi<'a> {
         clock: &dyn Clock,
         account_stuff: &mut AccountStuff,
         input: &[Token],
+        responsible: bool,
+        config: &ton_executor::BlockchainConfig,
     ) -> Result<ExecutionOutput> {
-        let mut msg =
+        let function = self.abi;
+
+        let answer_id = if responsible {
+            account_stuff.storage.balance.grams = ton_block::Grams::from(100_000_000_000_000u64); // 100 000 TON
+
+            match input.first().map(|token| &token.value) {
+                Some(TokenValue::Uint(ton_abi::Uint { number, size: 32 })) => number
+                    .to_u32()
+                    .map(Some)
+                    .ok_or(AbiError::AnswerIdNotFound)?,
+                _ => return Err(AbiError::AnswerIdNotFound.into()),
+            }
+        } else {
+            None
+        };
+
+        let mut msg = if responsible {
+            ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
+                src: ton_block::MsgAddressIntOrNone::Some(account_stuff.addr.clone()),
+                dst: account_stuff.addr.clone(),
+                ..Default::default()
+            })
+        } else {
             ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
                 dst: account_stuff.addr.clone(),
                 ..Default::default()
-            });
+            })
+        };
 
         let BlockStats {
             now_ms,
@@ -686,65 +721,27 @@ impl<'a> FunctionAbi<'a> {
             gen_lt,
         } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
 
-        msg.set_body(
-            self.abi
-                .encode_run_local_input(now_ms, input)
-                .and_then(SliceData::load_builder)?,
-        );
+        if responsible {
+            msg.set_body(
+                function
+                    .encode_internal_input(input)
+                    .and_then(SliceData::load_builder)?,
+            );
+        } else {
+            msg.set_body(
+                self.abi
+                    .encode_run_local_input(now_ms, input)
+                    .and_then(SliceData::load_builder)?,
+            );
+        }
 
         let tvm::ActionPhaseOutput {
             messages,
             exit_code: result_code,
-        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg)?;
+        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg, config)?;
 
-        let tokens = messages
-            .map(|messages| process_out_messages(&messages, self.abi))
-            .transpose()?;
-
-        Ok(ExecutionOutput {
-            tokens,
-            result_code,
-        })
-    }
-
-    fn run_local_responsible(
-        &self,
-        clock: &dyn Clock,
-        account_stuff: &mut AccountStuff,
-        input: &[Token],
-    ) -> Result<ExecutionOutput> {
-        let function = self.abi;
-
-        let answer_id = match input.first().map(|token| &token.value) {
-            Some(TokenValue::Uint(ton_abi::Uint { number, size: 32 })) => {
-                number.to_u32().ok_or(AbiError::AnswerIdNotFound)?
-            }
-            _ => return Err(AbiError::AnswerIdNotFound.into()),
-        };
-
-        let mut msg = ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
-            src: ton_block::MsgAddressIntOrNone::Some(account_stuff.addr.clone()),
-            dst: account_stuff.addr.clone(),
-            ..Default::default()
-        });
-
-        let BlockStats {
-            gen_utime, gen_lt, ..
-        } = get_block_stats(clock, None, account_stuff.storage.last_trans_lt);
-
-        msg.set_body(
-            function
-                .encode_internal_input(input)
-                .and_then(SliceData::load_builder)?,
-        );
-
-        let tvm::ActionPhaseOutput {
-            messages,
-            exit_code: result_code,
-        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg)?;
-
-        let tokens = messages
-            .map(|messages| {
+        let tokens = if let Some(answer_id) = answer_id {
+            messages.map(|messages| {
                 let mut output = None;
 
                 for msg in messages {
@@ -778,10 +775,13 @@ impl<'a> FunctionAbi<'a> {
                 match output {
                     Some(a) => Ok(a),
                     None if !function.has_output() => Ok(Default::default()),
-                    None => Err(AbiError::NoMessagesProduced),
+                    None => Err(AbiError::NoMessagesProduced.into()),
                 }
             })
-            .transpose()?;
+        } else {
+            messages.map(|messages| process_out_messages(&messages, self.abi))
+        }
+        .transpose()?;
 
         Ok(ExecutionOutput {
             tokens,
@@ -1059,6 +1059,13 @@ impl<T> StandaloneToken for Vec<T> {}
 impl<T: StandaloneToken> StandaloneToken for Box<T> {}
 impl<T: StandaloneToken> StandaloneToken for Arc<T> {}
 impl<T: StandaloneToken> StandaloneToken for &T {}
+
+pub fn default_blockchain_config() -> &'static ton_executor::BlockchainConfig {
+    use once_cell::race::OnceBox;
+
+    pub static CONFIG: OnceBox<ton_executor::BlockchainConfig> = OnceBox::new();
+    CONFIG.get_or_init(Box::default)
+}
 
 #[cfg(test)]
 mod tests {

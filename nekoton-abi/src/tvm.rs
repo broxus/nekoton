@@ -14,6 +14,7 @@ pub fn call(
     lt: u64,
     account: &mut AccountStuff,
     stack: Stack,
+    config: &ton_executor::BlockchainConfig,
 ) -> Result<(ton_vm::executor::Engine, i32, bool), ExecutionError> {
     let state = match &mut account.storage.state {
         ton_block::AccountState::AccountActive { state_init, .. } => Ok(state_init),
@@ -46,16 +47,13 @@ pub fn call(
         .put(7, &mut sci.into_temp_data_item())
         .map_err(|_| ExecutionError::FailedToPutSciIntoRegisters)?;
 
-    let mut engine = ton_vm::executor::Engine::with_capabilities(
-        (ton_block::GlobalCapabilities::CapMycode as u64)
-            | (ton_block::GlobalCapabilities::CapInitCodeHash as u64),
-    )
-    .setup(
+    let mut engine = ton_vm::executor::Engine::with_capabilities(config.capabilites()).setup(
         SliceData::load_cell(code).map_err(|_| ExecutionError::FailedToPutDataIntoRegisters)?,
         Some(ctrls),
         Some(stack),
         Some(gas),
     );
+    engine.set_signature_id(config.global_id());
 
     let result = engine.execute();
 
@@ -82,6 +80,7 @@ pub fn call_msg(
     lt: u64,
     account: &mut AccountStuff,
     msg: &Message,
+    config: &ton_executor::BlockchainConfig,
 ) -> Result<ActionPhaseOutput, ExecutionError> {
     let msg_cell = msg
         .write_to_new_cell()
@@ -105,7 +104,7 @@ pub fn call_msg(
         .push(StackItem::Slice(msg.body().unwrap_or_default())) // message body
         .push(function_selector); // function selector
 
-    let (engine, exit_code, success) = call(utime, lt, account, stack)?;
+    let (engine, exit_code, success) = call(utime, lt, account, stack, config)?;
     if !success {
         return Ok(ActionPhaseOutput {
             messages: None,
