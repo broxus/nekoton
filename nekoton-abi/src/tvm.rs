@@ -9,12 +9,43 @@ use ton_vm::executor::gas::gas_state::Gas;
 use ton_vm::stack::integer::IntegerData;
 use ton_vm::stack::{savelist::SaveList, Stack, StackItem};
 
+#[derive(Debug, Copy, Clone)]
+pub struct BriefBlockchainConfig {
+    pub global_id: i32,
+    pub capabilities: u64,
+}
+
+impl Default for BriefBlockchainConfig {
+    fn default() -> Self {
+        Self {
+            global_id: 42,
+            capabilities: 0x52e,
+        }
+    }
+}
+
+impl From<&ton_executor::BlockchainConfig> for BriefBlockchainConfig {
+    fn from(value: &ton_executor::BlockchainConfig) -> Self {
+        Self {
+            global_id: value.global_id(),
+            capabilities: value.capabilites(),
+        }
+    }
+}
+
+impl From<ton_executor::BlockchainConfig> for BriefBlockchainConfig {
+    #[inline]
+    fn from(value: ton_executor::BlockchainConfig) -> Self {
+        Self::from(&value)
+    }
+}
+
 pub fn call(
     utime: u32,
     lt: u64,
     account: &mut AccountStuff,
     stack: Stack,
-    config: &ton_executor::BlockchainConfig,
+    config: &BriefBlockchainConfig,
 ) -> Result<(ton_vm::executor::Engine, i32, bool), ExecutionError> {
     let state = match &mut account.storage.state {
         ton_block::AccountState::AccountActive { state_init, .. } => Ok(state_init),
@@ -47,13 +78,13 @@ pub fn call(
         .put(7, &mut sci.into_temp_data_item())
         .map_err(|_| ExecutionError::FailedToPutSciIntoRegisters)?;
 
-    let mut engine = ton_vm::executor::Engine::with_capabilities(config.capabilites()).setup(
+    let mut engine = ton_vm::executor::Engine::with_capabilities(config.capabilities).setup(
         SliceData::load_cell(code).map_err(|_| ExecutionError::FailedToPutDataIntoRegisters)?,
         Some(ctrls),
         Some(stack),
         Some(gas),
     );
-    engine.set_signature_id(config.global_id());
+    engine.set_signature_id(config.global_id);
 
     let result = engine.execute();
 
@@ -80,7 +111,7 @@ pub fn call_msg(
     lt: u64,
     account: &mut AccountStuff,
     msg: &Message,
-    config: &ton_executor::BlockchainConfig,
+    config: &BriefBlockchainConfig,
 ) -> Result<ActionPhaseOutput, ExecutionError> {
     let msg_cell = msg
         .write_to_new_cell()

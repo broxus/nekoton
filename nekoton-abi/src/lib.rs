@@ -86,6 +86,7 @@ pub use self::models::*;
 pub use self::token_packer::*;
 pub use self::token_unpacker::*;
 pub use self::tokens_json::*;
+pub use self::tvm::BriefBlockchainConfig;
 pub use transaction_parser::TransactionParser;
 
 mod abi_helpers;
@@ -597,7 +598,7 @@ pub trait FunctionExt {
             account_stuff,
             input,
             false,
-            default_blockchain_config(),
+            &BriefBlockchainConfig::default(),
         )
     }
 
@@ -612,7 +613,7 @@ pub trait FunctionExt {
             account_stuff,
             input,
             true,
-            default_blockchain_config(),
+            &BriefBlockchainConfig::default(),
         )
     }
 
@@ -622,7 +623,7 @@ pub trait FunctionExt {
         account_stuff: AccountStuff,
         input: &[Token],
         responsible: bool,
-        config: &ton_executor::BlockchainConfig,
+        config: &BriefBlockchainConfig,
     ) -> Result<ExecutionOutput>;
 }
 
@@ -640,7 +641,7 @@ where
         account_stuff: AccountStuff,
         input: &[Token],
         responsible: bool,
-        config: &ton_executor::BlockchainConfig,
+        config: &BriefBlockchainConfig,
     ) -> Result<ExecutionOutput> {
         T::run_local_ext(self, clock, account_stuff, input, responsible, config)
     }
@@ -658,7 +659,7 @@ impl FunctionExt for Function {
         mut account_stuff: AccountStuff,
         input: &[Token],
         responsible: bool,
-        config: &ton_executor::BlockchainConfig,
+        config: &BriefBlockchainConfig,
     ) -> Result<ExecutionOutput> {
         FunctionAbi::new(self).run_local(clock, &mut account_stuff, input, responsible, config)
     }
@@ -684,7 +685,7 @@ impl<'a> FunctionAbi<'a> {
         account_stuff: &mut AccountStuff,
         input: &[Token],
         responsible: bool,
-        config: &ton_executor::BlockchainConfig,
+        config: &BriefBlockchainConfig,
     ) -> Result<ExecutionOutput> {
         let function = self.abi;
 
