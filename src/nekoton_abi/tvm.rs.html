@@ -180,7 +180,6 @@
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
 </pre><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>nekoton_utils::TrustMe;
 <span class="kw">use </span>ton_block::{
@@ -197,6 +196,7 @@
     lt: u64,
     account: <span class="kw-2">&amp;mut </span>AccountStuff,
     stack: Stack,
+    config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(ton_vm::executor::Engine, i32, bool), ExecutionError&gt; {
     <span class="kw">let </span>state = <span class="kw">match </span><span class="kw-2">&amp;mut </span>account.storage.state {
         ton_block::AccountState::AccountActive { state_init, .. } =&gt; <span class="prelude-val">Ok</span>(state_init),
@@ -229,16 +229,13 @@
         .put(<span class="number">7</span>, <span class="kw-2">&amp;mut </span>sci.into_temp_data_item())
         .map_err(|<span class="kw">_</span>| ExecutionError::FailedToPutSciIntoRegisters)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span><span class="kw-2">mut </span>engine = ton_vm::executor::Engine::with_capabilities(
-        (ton_block::GlobalCapabilities::CapMycode <span class="kw">as </span>u64)
-            | (ton_block::GlobalCapabilities::CapInitCodeHash <span class="kw">as </span>u64),
-    )
-    .setup(
+    <span class="kw">let </span><span class="kw-2">mut </span>engine = ton_vm::executor::Engine::with_capabilities(config.capabilites()).setup(
         SliceData::load_cell(code).map_err(|<span class="kw">_</span>| ExecutionError::FailedToPutDataIntoRegisters)<span class="question-mark">?</span>,
         <span class="prelude-val">Some</span>(ctrls),
         <span class="prelude-val">Some</span>(stack),
         <span class="prelude-val">Some</span>(gas),
     );
+    engine.set_signature_id(config.global_id());
 
     <span class="kw">let </span>result = engine.execute();
 
@@ -265,6 +262,7 @@
     lt: u64,
     account: <span class="kw-2">&amp;mut </span>AccountStuff,
     msg: <span class="kw-2">&amp;</span>Message,
+    config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ActionPhaseOutput, ExecutionError&gt; {
     <span class="kw">let </span>msg_cell = msg
         .write_to_new_cell()
@@ -288,7 +286,7 @@
         </span>.push(StackItem::Slice(msg.body().unwrap_or_default())) <span class="comment">// message body
         </span>.push(function_selector); <span class="comment">// function selector
 
-    </span><span class="kw">let </span>(engine, exit_code, success) = call(utime, lt, account, stack)<span class="question-mark">?</span>;
+    </span><span class="kw">let </span>(engine, exit_code, success) = call(utime, lt, account, stack, config)<span class="question-mark">?</span>;
     <span class="kw">if </span>!success {
         <span class="kw">return </span><span class="prelude-val">Ok</span>(ActionPhaseOutput {
             messages: <span class="prelude-val">None</span>,

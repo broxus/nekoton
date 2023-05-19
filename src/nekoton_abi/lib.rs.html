@@ -1231,6 +1231,13 @@
 <a href="#1231" id="1231">1231</a>
 <a href="#1232" id="1232">1232</a>
 <a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
 </pre><pre class="rust"><code><span class="attr">#![warn(
     missing_copy_implementations,
     macro_use_extern_crate,
@@ -1824,13 +1831,38 @@
         clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
         account_stuff: AccountStuff,
         input: <span class="kw-2">&amp;</span>[Token],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
+        <span class="self">self</span>.run_local_ext(
+            clock,
+            account_stuff,
+            input,
+            <span class="bool-val">false</span>,
+            default_blockchain_config(),
+        )
+    }
 
     <span class="kw">fn </span>run_local_responsible(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
         account_stuff: AccountStuff,
         input: <span class="kw-2">&amp;</span>[Token],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
+        <span class="self">self</span>.run_local_ext(
+            clock,
+            account_stuff,
+            input,
+            <span class="bool-val">true</span>,
+            default_blockchain_config(),
+        )
+    }
+
+    <span class="kw">fn </span>run_local_ext(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
+        account_stuff: AccountStuff,
+        input: <span class="kw-2">&amp;</span>[Token],
+        responsible: bool,
+        config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt;;
 }
 
@@ -1842,22 +1874,15 @@
         T::parse(<span class="self">self</span>, tx)
     }
 
-    <span class="kw">fn </span>run_local(
+    <span class="kw">fn </span>run_local_ext(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
         account_stuff: AccountStuff,
         input: <span class="kw-2">&amp;</span>[Token],
+        responsible: bool,
+        config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
-        T::run_local(<span class="self">self</span>, clock, account_stuff, input)
-    }
-
-    <span class="kw">fn </span>run_local_responsible(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
-        account_stuff: AccountStuff,
-        input: <span class="kw-2">&amp;</span>[Token],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
-        T::run_local_responsible(<span class="self">self</span>, clock, account_stuff, input)
+        T::run_local_ext(<span class="self">self</span>, clock, account_stuff, input, responsible, config)
     }
 }
 
@@ -1867,23 +1892,15 @@
         abi.parse(tx)
     }
 
-    <span class="kw">fn </span>run_local(
+    <span class="kw">fn </span>run_local_ext(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
         <span class="kw-2">mut </span>account_stuff: AccountStuff,
         input: <span class="kw-2">&amp;</span>[Token],
+        responsible: bool,
+        config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
-        FunctionAbi::new(<span class="self">self</span>).run_local(clock, <span class="kw-2">&amp;mut </span>account_stuff, input)
-    }
-
-    <span class="kw">fn </span>run_local_responsible(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
-        <span class="kw-2">mut </span>account_stuff: AccountStuff,
-        input: <span class="kw-2">&amp;</span>[Token],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
-        account_stuff.storage.balance.grams = ton_block::Grams::from(<span class="number">100_000_000_000_000u64</span>); <span class="comment">// 100 000 TON
-        </span>FunctionAbi::new(<span class="self">self</span>).run_local_responsible(clock, <span class="kw-2">&amp;mut </span>account_stuff, input)
+        FunctionAbi::new(<span class="self">self</span>).run_local(clock, <span class="kw-2">&amp;mut </span>account_stuff, input, responsible, config)
     }
 }
 
@@ -1906,12 +1923,37 @@
         clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
         account_stuff: <span class="kw-2">&amp;mut </span>AccountStuff,
         input: <span class="kw-2">&amp;</span>[Token],
+        responsible: bool,
+        config: <span class="kw-2">&amp;</span>ton_executor::BlockchainConfig,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>msg =
+        <span class="kw">let </span>function = <span class="self">self</span>.abi;
+
+        <span class="kw">let </span>answer_id = <span class="kw">if </span>responsible {
+            account_stuff.storage.balance.grams = ton_block::Grams::from(<span class="number">100_000_000_000_000u64</span>); <span class="comment">// 100 000 TON
+
+            </span><span class="kw">match </span>input.first().map(|token| <span class="kw-2">&amp;</span>token.value) {
+                <span class="prelude-val">Some</span>(TokenValue::Uint(ton_abi::Uint { number, size: <span class="number">32 </span>})) =&gt; number
+                    .to_u32()
+                    .map(<span class="prelude-val">Some</span>)
+                    .ok_or(AbiError::AnswerIdNotFound)<span class="question-mark">?</span>,
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(AbiError::AnswerIdNotFound.into()),
+            }
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
+
+        <span class="kw">let </span><span class="kw-2">mut </span>msg = <span class="kw">if </span>responsible {
+            ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
+                src: ton_block::MsgAddressIntOrNone::Some(account_stuff.addr.clone()),
+                dst: account_stuff.addr.clone(),
+                ..Default::default()
+            })
+        } <span class="kw">else </span>{
             ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
                 dst: account_stuff.addr.clone(),
                 ..Default::default()
-            });
+            })
+        };
 
         <span class="kw">let </span>BlockStats {
             now_ms,
@@ -1919,65 +1961,27 @@
             gen_lt,
         } = get_block_stats(clock, <span class="prelude-val">None</span>, account_stuff.storage.last_trans_lt);
 
-        msg.set_body(
-            <span class="self">self</span>.abi
-                .encode_run_local_input(now_ms, input)
-                .and_then(SliceData::load_builder)<span class="question-mark">?</span>,
-        );
+        <span class="kw">if </span>responsible {
+            msg.set_body(
+                function
+                    .encode_internal_input(input)
+                    .and_then(SliceData::load_builder)<span class="question-mark">?</span>,
+            );
+        } <span class="kw">else </span>{
+            msg.set_body(
+                <span class="self">self</span>.abi
+                    .encode_run_local_input(now_ms, input)
+                    .and_then(SliceData::load_builder)<span class="question-mark">?</span>,
+            );
+        }
 
         <span class="kw">let </span>tvm::ActionPhaseOutput {
             messages,
             exit_code: result_code,
-        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, <span class="kw-2">&amp;</span>msg)<span class="question-mark">?</span>;
+        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, <span class="kw-2">&amp;</span>msg, config)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>tokens = messages
-            .map(|messages| process_out_messages(<span class="kw-2">&amp;</span>messages, <span class="self">self</span>.abi))
-            .transpose()<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(ExecutionOutput {
-            tokens,
-            result_code,
-        })
-    }
-
-    <span class="kw">fn </span>run_local_responsible(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
-        account_stuff: <span class="kw-2">&amp;mut </span>AccountStuff,
-        input: <span class="kw-2">&amp;</span>[Token],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
-        <span class="kw">let </span>function = <span class="self">self</span>.abi;
-
-        <span class="kw">let </span>answer_id = <span class="kw">match </span>input.first().map(|token| <span class="kw-2">&amp;</span>token.value) {
-            <span class="prelude-val">Some</span>(TokenValue::Uint(ton_abi::Uint { number, size: <span class="number">32 </span>})) =&gt; {
-                number.to_u32().ok_or(AbiError::AnswerIdNotFound)<span class="question-mark">?
-            </span>}
-            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(AbiError::AnswerIdNotFound.into()),
-        };
-
-        <span class="kw">let </span><span class="kw-2">mut </span>msg = ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
-            src: ton_block::MsgAddressIntOrNone::Some(account_stuff.addr.clone()),
-            dst: account_stuff.addr.clone(),
-            ..Default::default()
-        });
-
-        <span class="kw">let </span>BlockStats {
-            gen_utime, gen_lt, ..
-        } = get_block_stats(clock, <span class="prelude-val">None</span>, account_stuff.storage.last_trans_lt);
-
-        msg.set_body(
-            function
-                .encode_internal_input(input)
-                .and_then(SliceData::load_builder)<span class="question-mark">?</span>,
-        );
-
-        <span class="kw">let </span>tvm::ActionPhaseOutput {
-            messages,
-            exit_code: result_code,
-        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, <span class="kw-2">&amp;</span>msg)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>tokens = messages
-            .map(|messages| {
+        <span class="kw">let </span>tokens = <span class="kw">if let </span><span class="prelude-val">Some</span>(answer_id) = answer_id {
+            messages.map(|messages| {
                 <span class="kw">let </span><span class="kw-2">mut </span>output = <span class="prelude-val">None</span>;
 
                 <span class="kw">for </span>msg <span class="kw">in </span>messages {
@@ -2011,10 +2015,13 @@
                 <span class="kw">match </span>output {
                     <span class="prelude-val">Some</span>(a) =&gt; <span class="prelude-val">Ok</span>(a),
                     <span class="prelude-val">None </span><span class="kw">if </span>!function.has_output() =&gt; <span class="prelude-val">Ok</span>(Default::default()),
-                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(AbiError::NoMessagesProduced),
+                    <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(AbiError::NoMessagesProduced.into()),
                 }
             })
-            .transpose()<span class="question-mark">?</span>;
+        } <span class="kw">else </span>{
+            messages.map(|messages| process_out_messages(<span class="kw-2">&amp;</span>messages, <span class="self">self</span>.abi))
+        }
+        .transpose()<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(ExecutionOutput {
             tokens,
@@ -2292,6 +2299,13 @@
 <span class="kw">impl</span>&lt;T: StandaloneToken&gt; StandaloneToken <span class="kw">for </span>Box&lt;T&gt; {}
 <span class="kw">impl</span>&lt;T: StandaloneToken&gt; StandaloneToken <span class="kw">for </span>Arc&lt;T&gt; {}
 <span class="kw">impl</span>&lt;T: StandaloneToken&gt; StandaloneToken <span class="kw">for </span><span class="kw-2">&amp;</span>T {}
+
+<span class="kw">pub fn </span>default_blockchain_config() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_executor::BlockchainConfig {
+    <span class="kw">use </span>once_cell::race::OnceBox;
+
+    <span class="kw">pub static </span>CONFIG: OnceBox&lt;ton_executor::BlockchainConfig&gt; = OnceBox::new();
+    CONFIG.get_or_init(Box::default)
+}
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {

@@ -257,7 +257,7 @@
         .ok_or(QueryConfigError::InvalidBlock)<span class="question-mark">?
         </span>.clone();
 
-    <span class="kw">let </span>config = ton_executor::BlockchainConfig::with_config(params)
+    <span class="kw">let </span>config = ton_executor::BlockchainConfig::with_config(params, block.global_id)
         .map_err(|<span class="kw">_</span>| QueryConfigError::InvalidConfig)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>capabilities = NetworkCapabilities {
