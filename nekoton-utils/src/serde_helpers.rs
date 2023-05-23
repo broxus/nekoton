@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::convert::TryInto;
 use std::fmt;
 use std::str::FromStr;
@@ -32,12 +33,12 @@ impl<'de> Deserialize<'de> for StringOrNumber {
         #[derive(Deserialize)]
         #[serde(untagged)]
         enum Value<'a> {
-            String(&'a str),
+            String(#[serde(borrow)] Cow<'a, str>),
             Number(u64),
         }
 
         match Value::deserialize(deserializer)? {
-            Value::String(str) => u64::from_str(str)
+            Value::String(str) => u64::from_str(str.as_ref())
                 .map(Self)
                 .map_err(|_| D::Error::custom("Invalid number")),
             Value::Number(value) => Ok(Self(value)),
