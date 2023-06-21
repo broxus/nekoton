@@ -400,6 +400,9 @@ impl ContractSubscription {
             on_contract_state(&contract_state);
             self.contract_state = new_contract_state;
             self.transactions_synced = false;
+        } else {
+            // Always update the latest known time
+            self.contract_state.gen_timings = new_contract_state.gen_timings;
         }
 
         Ok(updated)
