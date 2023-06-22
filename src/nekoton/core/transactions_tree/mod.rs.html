@@ -263,7 +263,44 @@
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{HashMap, VecDeque};
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::Ordering;
+<span class="kw">use </span>std::collections::{BinaryHeap, HashMap};
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>nekoton_abi::Executor;
@@ -274,7 +311,7 @@
 
 <span class="kw">pub struct </span>TransactionsTreeStream {
     states: HashMap&lt;MsgAddressInt, StoredAccount&gt;,
-    messages: VecDeque&lt;Message&gt;,
+    messages: BinaryHeap&lt;MessageWrapper&gt;,
     config: ton_executor::BlockchainConfig,
     disable_signature_check: bool,
     unlimited_message_balance: bool,
@@ -292,7 +329,7 @@
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             states: Default::default(),
-            messages: VecDeque::from([message]),
+            messages: BinaryHeap::from([MessageWrapper(message)]),
             config,
             disable_signature_check: <span class="bool-val">false</span>,
             unlimited_message_balance: <span class="bool-val">false</span>,
@@ -317,22 +354,28 @@
         <span class="self">self
     </span>}
 
-    <span class="kw">pub fn </span>message_queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>VecDeque&lt;ton_block::Message&gt; {
+    <span class="kw">pub fn </span>message_queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>BinaryHeap&lt;MessageWrapper&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.messages
     }
 
-    <span class="kw">pub fn </span>retain_message_queue&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F)
+    <span class="kw">pub fn </span>retain_message_queue&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>f: F)
     <span class="kw">where
         </span>F: FnMut(<span class="kw-2">&amp;</span>ton_block::Message) -&gt; bool,
     {
+        <span class="kw">let </span>f = |wrapper: <span class="kw-2">&amp;</span>MessageWrapper| f(<span class="kw-2">&amp;</span>wrapper.<span class="number">0</span>);
         <span class="self">self</span>.messages.retain(f);
     }
 
     <span class="kw">pub async fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; TransactionTreeResult&lt;<span class="prelude-ty">Option</span>&lt;Transaction&gt;&gt; {
-        <span class="kw">match </span><span class="self">self</span>.messages.pop_front() {
-            <span class="prelude-val">Some</span>(message) =&gt; <span class="self">self</span>.step(message).<span class="kw">await</span>.map(<span class="prelude-val">Some</span>),
+        <span class="kw">match </span><span class="self">self</span>.messages.pop() {
+            <span class="prelude-val">Some</span>(message) =&gt; <span class="self">self</span>.step(message.<span class="number">0</span>).<span class="kw">await</span>.map(<span class="prelude-val">Some</span>),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
+    }
+
+    <span class="doccomment">/// Pushes a message to the queue based on its lt
+    </span><span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, message: Message) {
+        <span class="self">self</span>.messages.push(MessageWrapper(message));
     }
 
     <span class="kw">async fn </span>step(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>message: Message) -&gt; TransactionTreeResult&lt;Transaction&gt; {
@@ -393,7 +436,7 @@
 
         tx.iterate_out_msgs(|x| {
             <span class="kw">if </span>x.is_internal() {
-                <span class="self">self</span>.messages.push_back(x);
+                <span class="self">self</span>.messages.push(MessageWrapper(x));
             }
             <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
         })
@@ -437,6 +480,35 @@
     last_transaction_lt: u64,
     last_paid: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 }
+
+<span class="kw">pub struct </span>MessageWrapper(Message);
+
+<span class="kw">impl </span>AsRef&lt;Message&gt; <span class="kw">for </span>MessageWrapper {
+    <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Message {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
+    </span>}
+}
+
+<span class="kw">impl </span>Ord <span class="kw">for </span>MessageWrapper {
+    <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; Ordering {
+        <span class="comment">// binary heap is max heap, so we need to reverse the order
+        </span>std::cmp::Reverse(<span class="self">self</span>.<span class="number">0</span>.lt()).cmp(<span class="kw-2">&amp;</span>std::cmp::Reverse(other.<span class="number">0</span>.lt()))
+    }
+}
+
+<span class="kw">impl </span>PartialOrd <span class="kw">for </span>MessageWrapper {
+    <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Ordering&gt; {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.cmp(other))
+    }
+}
+
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>MessageWrapper {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="self">self</span>.<span class="number">0</span>.lt() == other.<span class="number">0</span>.lt()
+    }
+}
+
+<span class="kw">impl </span>Eq <span class="kw">for </span>MessageWrapper {}
 
 <span class="kw">type </span>TransactionTreeResult&lt;T&gt; = <span class="prelude-ty">Result</span>&lt;T, TransactionTreeError&gt;;
 

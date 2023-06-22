@@ -496,9 +496,6 @@
 <a href="#496" id="496">496</a>
 <a href="#497" id="497">497</a>
 <a href="#498" id="498">498</a>
-<a href="#499" id="499">499</a>
-<a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>anyhow::Result;
@@ -901,9 +898,6 @@
             on_contract_state(<span class="kw-2">&amp;</span>contract_state);
             <span class="self">self</span>.contract_state = new_contract_state;
             <span class="self">self</span>.transactions_synced = <span class="bool-val">false</span>;
-        } <span class="kw">else </span>{
-            <span class="comment">// Always update the latest known time
-            </span><span class="self">self</span>.contract_state.gen_timings = new_contract_state.gen_timings;
         }
 
         <span class="prelude-val">Ok</span>(updated)
