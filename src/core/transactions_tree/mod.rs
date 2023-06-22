@@ -4,12 +4,13 @@ use std::sync::Arc;
 
 use nekoton_abi::Executor;
 use nekoton_utils::Clock;
-use ton_block::{Account, Message, MsgAddressInt, Transaction};
+use ton_block::{Account, Message, MsgAddressInt, Serializable, Transaction};
 
 use crate::transport::Transport;
 
 pub struct TransactionsTreeStream {
     states: HashMap<MsgAddressInt, StoredAccount>,
+    breakpoints: HashMap<i32, HashMap<MsgAddressInt, StoredAccount>>,
     messages: BinaryHeap<MessageWrapper>,
     config: ton_executor::BlockchainConfig,
     disable_signature_check: bool,
@@ -35,6 +36,7 @@ impl TransactionsTreeStream {
             unlimited_account_balance: false,
             transport,
             clock,
+            breakpoints: Default::default(),
         }
     }
 
@@ -51,6 +53,24 @@ impl TransactionsTreeStream {
     pub fn unlimited_account_balance(&mut self) -> &mut Self {
         self.unlimited_account_balance = true;
         self
+    }
+
+    pub fn set_account_state(&mut self, address: MsgAddressInt, state: StoredAccount) {
+        self.states.insert(address, state);
+    }
+
+    pub fn get_account_states(&self) -> HashMap<MsgAddressInt, StoredAccount> {
+        self.states.clone()
+    }
+
+    pub fn set_breakpoint(&mut self, breakpoint: i32) {
+        self.breakpoints.insert(breakpoint, self.states.clone());
+    }
+
+    pub fn resume_breakpoint(&mut self, breakpoint: i32) {
+        if let Some(state) = self.breakpoints.get(&breakpoint) {
+            self.states = state.clone();
+        }
     }
 
     pub fn message_queue(&self) -> &BinaryHeap<MessageWrapper> {
@@ -153,6 +173,11 @@ impl TransactionsTreeStream {
                     .await
                     .map_err(TransactionTreeError::TransportError)?
                     .into_account();
+                println!(
+                    "account address - {}, state - {}",
+                    account.get_addr().unwrap(),
+                    base64::encode(&account.write_to_bytes().unwrap())
+                );
 
                 let (last_transaction_lt, last_paid) = match &account {
                     Account::Account(account) => (
@@ -174,7 +199,7 @@ impl TransactionsTreeStream {
 }
 
 #[derive(Clone)]
-struct StoredAccount {
+pub struct StoredAccount {
     account: Account,
     last_transaction_lt: u64,
     last_paid: Option<u32>,
@@ -225,6 +250,7 @@ pub enum TransactionTreeError {
 #[cfg(feature = "jrpc_transport")]
 mod test {
     use anyhow::Result;
+    use std::str::FromStr;
 
     use crate::transport::jrpc::JrpcTransport;
 
@@ -271,6 +297,82 @@ mod test {
                 exit_code
             );
         }
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_states() -> Result<()> {
+        let connection = reqwest::Client::new();
+        let transport = Arc::new(JrpcTransport::new(Arc::new(connection)));
+
+        let message = "te6ccgEBBAEA0gABRYgBM+H2Exdbjf63Lplq1qvMw+lQe6guFTZX0u7MSlwU4cYMAQHh87ZYC1Kyg52QmML8rjkNNn4TSjvwQR5XQo5/UX2c+Nft+aaOMoeTailTwVQZwCqhLXgKiTrLU+/NkkY4tplcgvNWf9joJ6QJyXwr0vbypej62Iu6edG0oNvfoS8X0rVewAAAYjkezTEZJSap0zuZGyACAWWAEz4fYTF1uN/rcumWrWq8zD6VB7qC4VNlfS7sxKXBThxgAAAAAAAAAAAAAAAHc1lAADgDAAA=";
+        // let message = "te6ccgECCwEAAiEAAUWIATPh9hMXW43+ty6ZatarzMPpUHuoLhU2V9LuzEpcFOHGDAEB4eCqhU7/PlCj0KyP6744g7cJopmuJxQyCzxeBACgGJTnDLwitE30sbAVsNSQQQTifvaOHHhOGCKq35zCE/A+MoHzVn/Y6CekCcl8K9L28qXo+tiLunnRtKDb36EvF9K1XsAAAGI5JYYXGSUoYlM7mRsgAgFlgAqvKvl06VY7ioloEDfQPiQRWucy+ulWduWysMlINu80gAAAAAAAAAAAAAAALLQXgBA4AwFraJxXwwAAAAAAAAAAAAAAADuaygCABEZC7FHFS9VUcSR5TBn+cO9HfJ5s2GqC8qQSN9nkZl1QBAFDgBM+H2Exdbjf63Lplq1qvMw+lQe6guFTZX0u7MSlwU4ccAUBQ4Acl5cuaS7g+1r0QlJsMoOfX8ZyPtWIG7T55ZRTha2dV7AGBLcGAAAAADzk2bwAAAAAAAAAAAAAAAAF9eEAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgoJCAcAMgEAAAAAPOTZvAAAAAAAAAAAAAAAAAX14QAAMgAAAAAAPOTZvAAAAAAAAAAAAAAAAAX14QAAYwAAAAAAAAAAAAAAAAA2WvaAFn2pcoBRA47HCs1oIbtAqmiM82DLucMwDpL4xEBXU5xwAAA=";
+        let message = Message::construct_from_base64(message)?;
+
+        let config = transport.get_blockchain_config(&SimpleClock, true).await?;
+
+        let time = 1687460460;
+        let mut stream = TransactionsTreeStream::new(
+            message,
+            config,
+            transport.clone(),
+            Arc::new(ConstClock::from_secs(time)),
+        );
+
+        let state = "te6ccgECRgEAEYoAAnHACZ8PsJi63G/1uXTLVrVeZh9Kg91BcKmyvpd2YlLgpw4ykqNOgyNlitAAAIu2od4pIUNlqE9vk0ADAQHVzVn/Y6CekCcl8K9L28qXo+tiLunnRtKDb36EvF9K1XsAAAGISJTDT+as/7HQT0gTkvhXpe3lS9H1sRd086NpQbe/Ql4vpWq9gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgLACAEWgGas/7HQT0gTkvhXpe3lS9H1sRd086NpQbe/Ql4vpWq9gEAIm/wD0pCAiwAGS9KDhiu1TWDD0oQYEAQr0pCD0oQUAAAIBIAkHAcj/fyHtRNAg10nCAY4n0//TP9MA0//T/9MH0wf0BPQF+G34bPhv+G74a/hqf/hh+Gb4Y/hijir0BXD4anD4a234bG34bXD4bnD4b3ABgED0DvK91wv/+GJw+GNw+GZ/+GHi0wABCAC4jh2BAgDXGCD5AQHTAAGU0/8DAZMC+ELiIPhl+RDyqJXTAAHyeuLTPwH4QyG5IJ8wIPgjgQPoqIIIG3dAoLnekyD4Y5SANPLw4jDTHwH4I7zyudMfAfAB+EdukN4CASAsCgIBIBwLAgEgFAwCASAODQAJt1ynMiABzbbEi9y+EFujirtRNDT/9M/0wDT/9P/0wfTB/QE9AX4bfhs+G/4bvhr+Gp/+GH4Zvhj+GLe0XBtbwL4I7U/gQ4QoYAgrPhMgED0ho4aAdM/0x/TB9MH0//TB/pA03/TD9TXCgBvC3+APAWiOL3BfYI0IYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHBwyMlwbwtw4pEgEAL+joDoXwTIghBzEi9yghCAAAAAsc8LHyFvIgLLH/QAyIJYYAAAAAAAAAAAAAAAAM8LZiHPMYEDmLmWcc9AIc8XlXHPQSHN4iDJcfsAWzDA/44s+ELIy//4Q88LP/hGzwsA+Er4S/hO+E/4TPhNXlDL/8v/ywfLB/QA9ADJ7VTefxIRAAT4ZwHSUyO8jkBTQW8ryCvPCz8qzwsfKc8LByjPCwcnzwv/Js8LByXPFiTPC38jzwsPIs8UIc8KAAtfCwFvIiGkA1mAIPRDbwI13iL4TIBA9HyOGgHTP9Mf0wfTB9P/0wf6QNN/0w/U1woAbwt/EwBsji9wX2CNCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARwcMjJcG8LcOICNTMxAgJ2GBUBB7BRu9EWAfr4QW6OKu1E0NP/0z/TANP/0//TB9MH9AT0Bfht+Gz4b/hu+Gv4an/4Yfhm+GP4Yt7RdYAggQ4QgggPQkD4T8iCEG0o3eiCEIAAAACxzwsfJc8LByTPCwcjzws/Is8LfyHPCwfIglhgAAAAAAAAAAAAAAAAzwtmIc8xgQOYuRcAlJZxz0AhzxeVcc9BIc3iIMlx+wBbXwXA/44s+ELIy//4Q88LP/hGzwsA+Er4S/hO+E/4TPhNXlDL/8v/ywfLB/QA9ADJ7VTef/hnAQewPNJ5GQH6+EFujl7tRNAg10nCAY4n0//TP9MA0//T/9MH0wf0BPQF+G34bPhv+G74a/hqf/hh+Gb4Y/hijir0BXD4anD4a234bG34bXD4bnD4b3ABgED0DvK91wv/+GJw+GNw+GZ/+GHi3vhGkvIzk3H4ZuLTH/QEWW8CAdMH0fhFIG4aAfySMHDe+EK68uBkIW8QwgAglzAhbxCAILve8uB1+ABfIXBwI28iMYAg9A7ystcL//hqIm8QcJtTAbkglTAigCC53o40UwRvIjGAIPQO8rLXC/8g+E2BAQD0DiCRMd6zjhRTM6Q1IfhNVQHIywdZgQEA9EP4bd4wpOgwUxK7kSEbAHKRIuL4byH4bl8G+ELIy//4Q88LP/hGzwsA+Er4S/hO+E/4TPhNXlDL/8v/ywfLB/QA9ADJ7VR/+GcCASApHQIBICUeAgFmIh8BmbABsLPwgt0cVdqJoaf/pn+mAaf/p/+mD6YP6AnoC/Db8Nnw3/Dd8Nfw1P/ww/DN8Mfwxb2i4NreBfCbAgIB6Q0qA64WDv8m4ODhxSJBIAH+jjdUcxJvAm8iyCLPCwchzwv/MTEBbyIhpANZgCD0Q28CNCL4TYEBAPR8lQHXCwd/k3BwcOICNTMx6F8DyIIQWwDYWYIQgAAAALHPCx8hbyICyx/0AMiCWGAAAAAAAAAAAAAAAADPC2YhzzGBA5i5lnHPQCHPF5Vxz0EhzeIgySEAcnH7AFswwP+OLPhCyMv/+EPPCz/4Rs8LAPhK+Ev4TvhP+Ez4TV5Qy//L/8sHywf0APQAye1U3n/4ZwEHsMgZ6SMB/vhBbo4q7UTQ0//TP9MA0//T/9MH0wf0BPQF+G34bPhv+G74a/hqf/hh+Gb4Y/hi3tTRyIIQfXKcyIIQf////7DPCx8hzxTIglhgAAAAAAAAAAAAAAAAzwtmIc8xgQOYuZZxz0AhzxeVcc9BIc3iIMlx+wBbMPhCyMv/+EPPCz8kAEr4Rs8LAPhK+Ev4TvhP+Ez4TV5Qy//L/8sHywf0APQAye1Uf/hnAbu2JwNDfhBbo4q7UTQ0//TP9MA0//T/9MH0wf0BPQF+G34bPhv+G74a/hqf/hh+Gb4Y/hi3tFwbW8CcHD4TIBA9IaOGgHTP9Mf0wfTB9P/0wf6QNN/0w/U1woAbwt/gJgFwji9wX2CNCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARwcMjJcG8LcOICNDAxkSAnAfyObF8iyMs/AW8iIaQDWYAg9ENvAjMh+EyAQPR8jhoB0z/TH9MH0wfT/9MH+kDTf9MP1NcKAG8Lf44vcF9gjQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcHDIyXBvC3DiAjQwMehbyIIQUJwNDYIQgAAAALEoANzPCx8hbyICyx/0AMiCWGAAAAAAAAAAAAAAAADPC2YhzzGBA5i5lnHPQCHPF5Vxz0EhzeIgyXH7AFswwP+OLPhCyMv/+EPPCz/4Rs8LAPhK+Ev4TvhP+Ez4TV5Qy//L/8sHywf0APQAye1U3n/4ZwEJuZ3MjZAqAfz4QW6OKu1E0NP/0z/TANP/0//TB9MH9AT0Bfht+Gz4b/hu+Gv4an/4Yfhm+GP4Yt76QZXU0dD6QN/XDX+V1NHQ03/f1wwAldTR0NIA39cNB5XU0dDTB9/U0fhOwAHy4Gz4RSBukjBw3vhKuvLgZPgAVHNCyM+FgMoAc89AzgErAK76AoBqz0Ah0MjOASHPMSHPNbyUz4PPEZTPgc8T4ski+wBfBcD/jiz4QsjL//hDzws/+EbPCwD4SvhL+E74T/hM+E1eUMv/y//LB8sH9AD0AMntVN5/+GcCAUhBLQIBIDYuAgEgMS8Bx7XwKHHpj+mD6LgvkS+YuNqPkVZYYYAqoC+Cqogt5EEID/AoccEIQAAAAFjnhY+Q54UAZEEsMAAAAAAAAAAAAAAAAGeFsxDnmMCBzFzLOOegEOeLyrjnoJDm8RBkuP2ALZhgf8AwAGSOLPhCyMv/+EPPCz/4Rs8LAPhK+Ev4TvhP+Ez4TV5Qy//L/8sHywf0APQAye1U3n/4ZwGttVOgdvwgt0cVdqJoaf/pn+mAaf/p/+mD6YP6AnoC/Db8Nnw3/Dd8Nfw1P/ww/DN8Mfwxb2mf6PwikDdJGDhvEHwmwICAegcQSgDrhYPIuHEQ+XAyGJjAMgKgjoDYIfhMgED0DiCOGQHTP9Mf0wfTB9P/0wf6QNN/0w/U1woAbwuRbeIh8uBmIG8RI18xcbUfIqywwwBVMF8Es/LgZ/gAVHMCIW8TpCJvEr4+MwGqjlMhbxcibxYjbxrIz4WAygBzz0DOAfoCgGrPQCJvGdDIzgEhzzEhzzW8lM+DzxGUz4HPE+LJIm8Y+wD4SyJvFSFxeCOorKExMfhrIvhMgED0WzD4bDQB/o5VIW8RIXG1HyGsIrEyMCIBb1EyUxFvE6RvUzIi+EwjbyvIK88LPyrPCx8pzwsHKM8LByfPC/8mzwsHJc8WJM8LfyPPCw8izxQhzwoAC18LWYBA9EP4bOJfB/hCyMv/+EPPCz/4Rs8LAPhK+Ev4TvhP+Ez4TV5Qy//L/8sHywc1ABT0APQAye1Uf/hnAb22x2CzfhBbo4q7UTQ0//TP9MA0//T/9MH0wf0BPQF+G34bPhv+G74a/hqf/hh+Gb4Y/hi3vpBldTR0PpA39cNf5XU0dDTf9/XDACV1NHQ0gDf1wwAldTR0NIA39TRcIDcB7I6A2MiCEBMdgs2CEIAAAACxzwsfIc8LP8iCWGAAAAAAAAAAAAAAAADPC2YhzzGBA5i5lnHPQCHPF5Vxz0EhzeIgyXH7AFsw+ELIy//4Q88LP/hGzwsA+Er4S/hO+E/4TPhNXlDL/8v/ywfLB/QA9ADJ7VR/+Gc4Aar4RSBukjBw3l8g+E2BAQD0DiCUAdcLB5Fw4iHy4GQxMSaCCA9CQL7y4Gsj0G0BcHGOESLXSpRY1VqklQLXSaAB4iJu5lgwIYEgALkglDAgwQje8uB5OQLcjoDY+EtTMHgiqK2BAP+wtQcxMXW58uBx+ABThnJxsSGdMHKBAICx+CdvELV/M95TAlUhXwP4TyDAAY4yVHHKyM+FgMoAc89AzgH6AoBqz0Ap0MjOASHPMSHPNbyUz4PPEZTPgc8T4skj+wBfDXA+OgEKjoDjBNk7AXT4S1NgcXgjqKygMTH4a/gjtT+AIKz4JYIQ/////7CxIHAjcF8rVhNTmlYSVhVvC18hU5BvE6QibxK+PAGqjlMhbxcibxYjbxrIz4WAygBzz0DOAfoCgGrPQCJvGdDIzgEhzzEhzzW8lM+DzxGUz4HPE+LJIm8Y+wD4SyJvFSFxeCOorKExMfhrIvhMgED0WzD4bD0AvI5VIW8RIXG1HyGsIrEyMCIBb1EyUxFvE6RvUzIi+EwjbyvIK88LPyrPCx8pzwsHKM8LByfPC/8mzwsHJc8WJM8LfyPPCw8izxQhzwoAC18LWYBA9EP4bOJfAyEPXw8B9PgjtT+BDhChgCCs+EyAQPSGjhoB0z/TH9MH0wfT/9MH+kDTf9MP1NcKAG8Lf44vcF9gjQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcHDIyXBvC3DiXyCUMFMju94gs5JfBeD4AHCZUxGVMCCAKLnePwH+jn2k+EskbxUhcXgjqKyhMTH4ayT4TIBA9Fsw+Gwk+EyAQPR8jhoB0z/TH9MH0wfT/9MH+kDTf9MP1NcKAG8Lf44vcF9gjQhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEcHDIyXBvC3DiAjc1M1MilDBTRbveMkAAYuj4QsjL//hDzws/+EbPCwD4SvhL+E74T/hM+E1eUMv/y//LB8sH9AD0AMntVPgPXwYCASBFQgHbtrZoI74QW6OKu1E0NP/0z/TANP/0//TB9MH9AT0Bfht+Gz4b/hu+Gv4an/4Yfhm+GP4Yt7TP9FwX1CNCGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARwcMjJcG8LIfhMgED0DiCBDAf6OGQHTP9Mf0wfTB9P/0wf6QNN/0w/U1woAbwuRbeIh8uBmIDNVAl8DyIIQCtmgjoIQgAAAALHPCx8hbytVCivPCz8qzwsfKc8LByjPCwcnzwv/Js8LByXPFiTPC38jzwsPIs8UIc8KAAtfC8iCWGAAAAAAAAAAAAAAAADPC2YhRACezzGBA5i5lnHPQCHPF5Vxz0EhzeIgyXH7AFswwP+OLPhCyMv/+EPPCz/4Rs8LAPhK+Ev4TvhP+Ez4TV5Qy//L/8sHywf0APQAye1U3n/4ZwBq23AhxwCdItBz1yHXCwDAAZCQ4uAh1w0fkOFTEcAAkODBAyKCEP////28sZDgAfAB+EdukN4=";
+        let account = ton_block::Account::construct_from_base64(state).unwrap();
+        let stored_account = StoredAccount {
+            account,
+            last_transaction_lt: 38404129000012,
+            last_paid: Some(1684844890),
+        };
+        println!(
+            "state balance {:?}",
+            stored_account.account.balance().unwrap().grams
+        );
+
+        stream.set_account_state(
+            MsgAddressInt::from_str(
+                "0:99f0fb098badc6ff5b974cb56b55e661f4a83dd4170a9b2be97766252e0a70e3",
+            )
+            .unwrap(),
+            stored_account,
+        );
+
+        while let Some(tx) = stream.next().await.unwrap() {
+            parse(&tx).await.ok();
+
+            let descr = tx.read_description()?;
+            let is_aborted = descr.is_aborted();
+            let exit_code = descr.compute_phase_ref().and_then(|c| match c {
+                ton_block::TrComputePhase::Vm(c) => Some(c.exit_code),
+                ton_block::TrComputePhase::Skipped(_) => None,
+            });
+
+            println!(
+                "{:x}: aborted={}, exit_code={:?}",
+                tx.hash().unwrap(),
+                is_aborted,
+                exit_code
+            );
+        }
+
+        let new_state = stream
+            .get_state(
+                &MsgAddressInt::from_str(
+                    "0:99f0fb098badc6ff5b974cb56b55e661f4a83dd4170a9b2be97766252e0a70e3",
+                )
+                .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        println!(
+            "new_state balance {:?}",
+            new_state.account.balance().unwrap().grams
+        );
 
         Ok(())
     }
