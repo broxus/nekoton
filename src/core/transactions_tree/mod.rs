@@ -1,4 +1,5 @@
-use std::collections::{HashMap, VecDeque};
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap};
 use std::sync::Arc;
 
 use nekoton_abi::Executor;
@@ -9,7 +10,7 @@ use crate::transport::Transport;
 
 pub struct TransactionsTreeStream {
     states: HashMap<MsgAddressInt, StoredAccount>,
-    messages: VecDeque<Message>,
+    messages: BinaryHeap<MessageWrapper>,
     config: ton_executor::BlockchainConfig,
     disable_signature_check: bool,
     unlimited_message_balance: bool,
@@ -27,7 +28,7 @@ impl TransactionsTreeStream {
     ) -> Self {
         Self {
             states: Default::default(),
-            messages: VecDeque::from([message]),
+            messages: BinaryHeap::from([MessageWrapper(message)]),
             config,
             disable_signature_check: false,
             unlimited_message_balance: false,
@@ -52,22 +53,28 @@ impl TransactionsTreeStream {
         self
     }
 
-    pub fn message_queue(&self) -> &VecDeque<ton_block::Message> {
+    pub fn message_queue(&self) -> &BinaryHeap<MessageWrapper> {
         &self.messages
     }
 
-    pub fn retain_message_queue<F>(&mut self, f: F)
+    pub fn retain_message_queue<F>(&mut self, mut f: F)
     where
         F: FnMut(&ton_block::Message) -> bool,
     {
+        let f = |wrapper: &MessageWrapper| f(&wrapper.0);
         self.messages.retain(f);
     }
 
     pub async fn next(&mut self) -> TransactionTreeResult<Option<Transaction>> {
-        match self.messages.pop_front() {
-            Some(message) => self.step(message).await.map(Some),
+        match self.messages.pop() {
+            Some(message) => self.step(message.0).await.map(Some),
             None => Ok(None),
         }
+    }
+
+    /// Pushes a message to the queue based on its lt
+    pub fn push(&mut self, message: Message) {
+        self.messages.push(MessageWrapper(message));
     }
 
     async fn step(&mut self, mut message: Message) -> TransactionTreeResult<Transaction> {
@@ -128,7 +135,7 @@ impl TransactionsTreeStream {
 
         tx.iterate_out_msgs(|x| {
             if x.is_internal() {
-                self.messages.push_back(x);
+                self.messages.push(MessageWrapper(x));
             }
             Ok(true)
         })
@@ -172,6 +179,35 @@ struct StoredAccount {
     last_transaction_lt: u64,
     last_paid: Option<u32>,
 }
+
+pub struct MessageWrapper(Message);
+
+impl AsRef<Message> for MessageWrapper {
+    fn as_ref(&self) -> &Message {
+        &self.0
+    }
+}
+
+impl Ord for MessageWrapper {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // binary heap is max heap, so we need to reverse the order
+        std::cmp::Reverse(self.0.lt()).cmp(&std::cmp::Reverse(other.0.lt()))
+    }
+}
+
+impl PartialOrd for MessageWrapper {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for MessageWrapper {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.lt() == other.0.lt()
+    }
+}
+
+impl Eq for MessageWrapper {}
 
 type TransactionTreeResult<T> = Result<T, TransactionTreeError>;
 
