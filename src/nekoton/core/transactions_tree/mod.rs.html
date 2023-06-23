@@ -401,6 +401,18 @@
 <a href="#401" id="401">401</a>
 <a href="#402" id="402">402</a>
 <a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::{BinaryHeap, HashMap};
 <span class="kw">use </span>std::sync::Arc;
@@ -606,6 +618,18 @@
     account: Account,
     last_transaction_lt: u64,
     last_paid: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+}
+
+<span class="kw">impl </span>StoredAccount {
+    <span class="kw">pub fn </span>new(account: Account) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>last_transaction_lt = account.last_tr_time().unwrap_or_default();
+        <span class="kw">let </span>last_paid = account.last_paid();
+        <span class="self">Self </span>{
+            account,
+            last_transaction_lt,
+            last_paid: <span class="prelude-val">Some</span>(last_paid),
+        }
+    }
 }
 
 <span class="kw">pub struct </span>MessageWrapper(Message);
