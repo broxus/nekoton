@@ -215,6 +215,9 @@ impl StoredAccount {
             last_paid: Some(last_paid),
         }
     }
+    pub fn get_state(&self) -> String {
+        base64::encode(&self.account.write_to_bytes().unwrap())
+    }
 }
 
 pub struct MessageWrapper(Message);
