@@ -141,7 +141,8 @@ impl TokenWallet {
             .get_blockchain_config(self.clock.as_ref(), true)
             .await?;
 
-        let mut tree = TransactionsTreeStream::new(message, config, transport, self.clock.clone());
+        let mut tree =
+            TransactionsTreeStream::new(message, config, transport, self.clock.clone(), false);
         tree.unlimited_account_balance();
         tree.unlimited_message_balance();
 
