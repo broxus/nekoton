@@ -413,6 +413,9 @@
 <a href="#413" id="413">413</a>
 <a href="#414" id="414">414</a>
 <a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::{BinaryHeap, HashMap};
 <span class="kw">use </span>std::sync::Arc;
@@ -629,6 +632,9 @@
             last_transaction_lt,
             last_paid: <span class="prelude-val">Some</span>(last_paid),
         }
+    }
+    <span class="kw">pub fn </span>get_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        base64::encode(<span class="kw-2">&amp;</span><span class="self">self</span>.account.write_to_bytes().unwrap())
     }
 }
 
