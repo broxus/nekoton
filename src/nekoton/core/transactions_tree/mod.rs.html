@@ -416,13 +416,24 @@
 <a href="#416" id="416">416</a>
 <a href="#417" id="417">417</a>
 <a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::{BinaryHeap, HashMap};
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>nekoton_abi::Executor;
 <span class="kw">use </span>nekoton_utils::Clock;
-<span class="kw">use </span>ton_block::{Account, Message, MsgAddressInt, Serializable, Transaction};
+<span class="kw">use </span>ton_block::{
+    Account, GetRepresentationHash, Message, MsgAddressInt, Serializable, Transaction,
+};
 
 <span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
 
@@ -649,7 +660,14 @@
 <span class="kw">impl </span>Ord <span class="kw">for </span>MessageWrapper {
     <span class="kw">fn </span>cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; Ordering {
         <span class="comment">// binary heap is max heap, so we need to reverse the order
-        </span>std::cmp::Reverse(<span class="self">self</span>.<span class="number">0</span>.lt()).cmp(<span class="kw-2">&amp;</span>std::cmp::Reverse(other.<span class="number">0</span>.lt()))
+        </span>(
+            std::cmp::Reverse(<span class="self">self</span>.<span class="number">0</span>.lt()),
+            <span class="self">self</span>.<span class="number">0</span>.hash().unwrap_or_default(),
+        )
+            .cmp(<span class="kw-2">&amp;</span>(
+                std::cmp::Reverse(other.<span class="number">0</span>.lt()),
+                other.<span class="number">0</span>.hash().unwrap_or_default(),
+            ))
     }
 }
 
