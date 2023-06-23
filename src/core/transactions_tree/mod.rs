@@ -205,6 +205,18 @@ pub struct StoredAccount {
     last_paid: Option<u32>,
 }
 
+impl StoredAccount {
+    pub fn new(account: Account) -> Self {
+        let last_transaction_lt = account.last_tr_time().unwrap_or_default();
+        let last_paid = account.last_paid();
+        Self {
+            account,
+            last_transaction_lt,
+            last_paid: Some(last_paid),
+        }
+    }
+}
+
 pub struct MessageWrapper(Message);
 
 impl AsRef<Message> for MessageWrapper {
