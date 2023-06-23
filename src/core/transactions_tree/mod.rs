@@ -4,7 +4,9 @@ use std::sync::Arc;
 
 use nekoton_abi::Executor;
 use nekoton_utils::Clock;
-use ton_block::{Account, Message, MsgAddressInt, Serializable, Transaction};
+use ton_block::{
+    Account, GetRepresentationHash, Message, MsgAddressInt, Serializable, Transaction,
+};
 
 use crate::transport::Transport;
 
@@ -231,7 +233,14 @@ impl AsRef<Message> for MessageWrapper {
 impl Ord for MessageWrapper {
     fn cmp(&self, other: &Self) -> Ordering {
         // binary heap is max heap, so we need to reverse the order
-        std::cmp::Reverse(self.0.lt()).cmp(&std::cmp::Reverse(other.0.lt()))
+        (
+            std::cmp::Reverse(self.0.lt()),
+            self.0.hash().unwrap_or_default(),
+        )
+            .cmp(&(
+                std::cmp::Reverse(other.0.lt()),
+                other.0.hash().unwrap_or_default(),
+            ))
     }
 }
 
