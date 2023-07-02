@@ -991,12 +991,43 @@
 <a href="#991" id="991">991</a>
 <a href="#992" id="992">992</a>
 <a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>num_bigint::BigUint;
 <span class="kw">use </span>serde::{Deserialize, Deserializer, Serialize, Serializer};
-<span class="kw">use </span>ton_block::{Deserializable, MsgAddressInt};
+<span class="kw">use </span>ton_block::{Deserializable, MsgAddressInt, Serializable};
 <span class="kw">use </span>ton_types::UInt256;
 
 <span class="kw">use </span>nekoton_abi::<span class="kw-2">*</span>;
@@ -1643,6 +1674,8 @@
     <span class="doccomment">/// Outgoing messages
     </span><span class="attr">#[serde(rename = <span class="string">&quot;outMessages&quot;</span>)]
     </span><span class="kw">pub </span>out_msgs: Vec&lt;Message&gt;,
+    <span class="doccomment">/// Serialized transaction cell as base64 string
+    </span><span class="kw">pub </span>boc: String,
 }
 
 <span class="kw">impl </span>TryFrom&lt;(UInt256, ton_block::Transaction)&gt; <span class="kw">for </span>Transaction {
@@ -1666,11 +1699,11 @@
                 <span class="kw">let </span>hash = message.cell().repr_hash();
                 message
                     .read_struct()
-                    .map(<span class="kw">move </span>|message| Message::from((hash, message)))
+                    .map(<span class="kw">move </span>|message| Message::try_from((hash, message)))
                     .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?
             </span>}
             <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TransactionError::Unsupported),
-        };
+        }<span class="question-mark">?</span>;
 
         <span class="kw">let </span>exit_code = <span class="kw">match </span><span class="kw-2">&amp;</span>desc.compute_ph {
             ton_block::TrComputePhase::Vm(vm) =&gt; <span class="prelude-val">Some</span>(vm.exit_code),
@@ -1684,14 +1717,23 @@
             .iterate_slices(|slice| {
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(message) = slice.reference(<span class="number">0</span>).and_then(|cell| {
                     <span class="kw">let </span>hash = cell.repr_hash();
-                    ton_block::Message::construct_from_cell(cell)
-                        .map(|message| Message::from((hash, message)))
+                    <span class="kw">let </span>message = ton_block::Message::construct_from_cell(cell)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>message = Message::try_from((hash, message))<span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(message)
                 }) {
                     out_msgs.push(message);
                 }
                 <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
             })
             .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = data
+            .write_to_new_cell()
+            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = boc
+            .into_cell()
+            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = ton_types::serialize_toc(<span class="kw-2">&amp;</span>boc).map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = base64::encode(boc);
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             id: TransactionId { lt: data.lt, hash },
@@ -1708,6 +1750,7 @@
             total_fees,
             in_msg,
             out_msgs,
+            boc,
         })
     }
 }
@@ -1767,10 +1810,13 @@
 
     <span class="doccomment">/// Message body
     </span><span class="kw">pub </span>body: <span class="prelude-ty">Option</span>&lt;MessageBody&gt;,
+
+    <span class="doccomment">/// Serialized message cell as base64 string
+    </span><span class="kw">pub </span>boc: String,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Message {
-    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; std::prelude::v1::Result&lt;<span class="self">Self</span>, D::Error&gt;
+    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
@@ -1790,6 +1836,8 @@
             bounce: bool,
             bounced: bool,
             body: <span class="prelude-ty">Option</span>&lt;String&gt;,
+            <span class="comment">// for backward compatibility :(
+            </span>boc: <span class="prelude-ty">Option</span>&lt;String&gt;,
         }
 
         <span class="kw">let </span>parsed = MessageHelper::deserialize(deserializer)<span class="question-mark">?</span>;
@@ -1812,6 +1860,7 @@
             bounce: parsed.bounce,
             bounced: parsed.bounced,
             body,
+            boc: parsed.boc.unwrap_or_default(),
         })
     }
 }
@@ -1867,8 +1916,9 @@
     }
 }
 
-<span class="kw">impl </span>From&lt;(UInt256, ton_block::Message)&gt; <span class="kw">for </span>Message {
-    <span class="kw">fn </span>from((hash, s): (UInt256, ton_block::Message)) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>TryFrom&lt;(UInt256, ton_block::Message)&gt; <span class="kw">for </span>Message {
+    <span class="kw">type </span>Error = TransactionError;
+    <span class="kw">fn </span>try_from((hash, s): (UInt256, ton_block::Message)) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span>body = s.body().map(|body| {
             <span class="kw">let </span>data = body.into_cell();
             MessageBody {
@@ -1877,7 +1927,16 @@
             }
         });
 
-        <span class="kw">match </span>s.header() {
+        <span class="kw">let </span>boc = s
+            .write_to_new_cell()
+            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = boc
+            .into_cell()
+            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = ton_types::serialize_toc(<span class="kw-2">&amp;</span>boc).map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = base64::encode(boc);
+
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>s.header() {
             ton_block::CommonMsgInfo::IntMsgInfo(header) =&gt; Message {
                 hash,
                 src: <span class="kw">match </span><span class="kw-2">&amp;</span>header.src {
@@ -1889,12 +1948,14 @@
                 body,
                 bounce: header.bounce,
                 bounced: header.bounced,
+                boc,
             },
             ton_block::CommonMsgInfo::ExtInMsgInfo(header) =&gt; Message {
                 hash,
                 src: <span class="prelude-val">None</span>,
                 dst: <span class="prelude-val">Some</span>(header.dst.clone()),
                 body,
+                boc,
                 ..Default::default()
             },
             ton_block::CommonMsgInfo::ExtOutMsgInfo(header) =&gt; Message {
@@ -1904,9 +1965,10 @@
                     ton_block::MsgAddressIntOrNone::None =&gt; <span class="prelude-val">None</span>,
                 },
                 body,
+                boc,
                 ..Default::default()
             },
-        }
+        })
     }
 }
 

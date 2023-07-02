@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["TransactionTreeError"],"struct":["MessageWrapper","StoredAccount","TransactionsTreeStream"]};
+window.SIDEBAR_ITEMS = {"enum":["TransactionTreeError"],"struct":["TransactionsTreeStream"]};
