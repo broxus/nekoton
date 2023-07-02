@@ -1695,6 +1695,14 @@
         };
 
         <span class="kw">let </span>total_fees = compute_total_transaction_fees(<span class="kw-2">&amp;</span>data, <span class="kw-2">&amp;</span>desc) <span class="kw">as </span>u64;
+        <span class="kw">let </span>boc = data
+            .write_to_new_cell()
+            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = boc
+            .into_cell()
+            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = ton_types::serialize_toc(<span class="kw-2">&amp;</span>boc).map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
+        <span class="kw">let </span>boc = base64::encode(boc);
 
         <span class="kw">let </span>in_msg = <span class="kw">match </span>data.in_msg.take() {
             <span class="prelude-val">Some</span>(message) =&gt; {
@@ -1728,14 +1736,6 @@
                 <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
             })
             .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
-        <span class="kw">let </span>boc = data
-            .write_to_new_cell()
-            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
-        <span class="kw">let </span>boc = boc
-            .into_cell()
-            .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
-        <span class="kw">let </span>boc = ton_types::serialize_toc(<span class="kw-2">&amp;</span>boc).map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
-        <span class="kw">let </span>boc = base64::encode(boc);
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             id: TransactionId { lt: data.lt, hash },
