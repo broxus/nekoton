@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use anyhow::Result;
 use num_bigint::BigUint;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use ton_block::{Deserializable, MsgAddressInt};
+use ton_block::{Deserializable, MsgAddressInt, Serializable};
 use ton_types::UInt256;
 
 use nekoton_abi::*;
@@ -650,6 +650,8 @@ pub struct Transaction {
     /// Outgoing messages
     #[serde(rename = "outMessages")]
     pub out_msgs: Vec<Message>,
+    /// Serialized transaction cell as base64 string
+    pub boc: String,
 }
 
 impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
@@ -673,11 +675,11 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
                 let hash = message.cell().repr_hash();
                 message
                     .read_struct()
-                    .map(move |message| Message::from((hash, message)))
+                    .map(move |message| Message::try_from((hash, message)))
                     .map_err(|_| TransactionError::InvalidStructure)?
             }
             None => return Err(TransactionError::Unsupported),
-        };
+        }?;
 
         let exit_code = match &desc.compute_ph {
             ton_block::TrComputePhase::Vm(vm) => Some(vm.exit_code),
@@ -691,14 +693,23 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             .iterate_slices(|slice| {
                 if let Ok(message) = slice.reference(0).and_then(|cell| {
                     let hash = cell.repr_hash();
-                    ton_block::Message::construct_from_cell(cell)
-                        .map(|message| Message::from((hash, message)))
+                    let message = ton_block::Message::construct_from_cell(cell)?;
+                    let message = Message::try_from((hash, message))?;
+                    Ok(message)
                 }) {
                     out_msgs.push(message);
                 }
                 Ok(true)
             })
             .map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = data
+            .write_to_new_cell()
+            .map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = boc
+            .into_cell()
+            .map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = ton_types::serialize_toc(&boc).map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = base64::encode(boc);
 
         Ok(Self {
             id: TransactionId { lt: data.lt, hash },
@@ -715,6 +726,7 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             total_fees,
             in_msg,
             out_msgs,
+            boc,
         })
     }
 }
@@ -774,10 +786,13 @@ pub struct Message {
 
     /// Message body
     pub body: Option<MessageBody>,
+
+    /// Serialized message cell as base64 string
+    pub boc: String,
 }
 
 impl<'de> Deserialize<'de> for Message {
-    fn deserialize<D>(deserializer: D) -> std::prelude::v1::Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -797,6 +812,8 @@ impl<'de> Deserialize<'de> for Message {
             bounce: bool,
             bounced: bool,
             body: Option<String>,
+            // for backward compatibility :(
+            boc: Option<String>,
         }
 
         let parsed = MessageHelper::deserialize(deserializer)?;
@@ -819,6 +836,7 @@ impl<'de> Deserialize<'de> for Message {
             bounce: parsed.bounce,
             bounced: parsed.bounced,
             body,
+            boc: parsed.boc.unwrap_or_default(),
         })
     }
 }
@@ -874,8 +892,9 @@ impl Serialize for Message {
     }
 }
 
-impl From<(UInt256, ton_block::Message)> for Message {
-    fn from((hash, s): (UInt256, ton_block::Message)) -> Self {
+impl TryFrom<(UInt256, ton_block::Message)> for Message {
+    type Error = TransactionError;
+    fn try_from((hash, s): (UInt256, ton_block::Message)) -> Result<Self, Self::Error> {
         let body = s.body().map(|body| {
             let data = body.into_cell();
             MessageBody {
@@ -884,7 +903,16 @@ impl From<(UInt256, ton_block::Message)> for Message {
             }
         });
 
-        match s.header() {
+        let boc = s
+            .write_to_new_cell()
+            .map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = boc
+            .into_cell()
+            .map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = ton_types::serialize_toc(&boc).map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = base64::encode(boc);
+
+        Ok(match s.header() {
             ton_block::CommonMsgInfo::IntMsgInfo(header) => Message {
                 hash,
                 src: match &header.src {
@@ -896,12 +924,14 @@ impl From<(UInt256, ton_block::Message)> for Message {
                 body,
                 bounce: header.bounce,
                 bounced: header.bounced,
+                boc,
             },
             ton_block::CommonMsgInfo::ExtInMsgInfo(header) => Message {
                 hash,
                 src: None,
                 dst: Some(header.dst.clone()),
                 body,
+                boc,
                 ..Default::default()
             },
             ton_block::CommonMsgInfo::ExtOutMsgInfo(header) => Message {
@@ -911,9 +941,10 @@ impl From<(UInt256, ton_block::Message)> for Message {
                     ton_block::MsgAddressIntOrNone::None => None,
                 },
                 body,
+                boc,
                 ..Default::default()
             },
-        }
+        })
     }
 }
 
