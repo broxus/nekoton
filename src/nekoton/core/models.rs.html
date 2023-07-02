@@ -1022,6 +1022,8 @@
 <a href="#1022" id="1022">1022</a>
 <a href="#1023" id="1023">1023</a>
 <a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 
 <span class="kw">use </span>anyhow::Result;
@@ -1866,7 +1868,7 @@
 }
 
 <span class="kw">impl </span>Serialize <span class="kw">for </span>Message {
-    <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; std::prelude::v1::Result&lt;S::Ok, S::Error&gt;
+    <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
     {
@@ -1892,6 +1894,7 @@
             bounced: bool,
             body: <span class="prelude-ty">Option</span>&lt;String&gt;,
             body_hash: <span class="prelude-ty">Option</span>&lt;String&gt;,
+            boc: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
         }
 
         <span class="kw">let </span>(body, body_hash) = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.body {
@@ -1911,6 +1914,7 @@
             bounced: <span class="self">self</span>.bounced,
             body,
             body_hash,
+            boc: <span class="kw-2">&amp;</span><span class="self">self</span>.boc,
         }
         .serialize(serializer)
     }
