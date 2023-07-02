@@ -669,6 +669,14 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
         };
 
         let total_fees = compute_total_transaction_fees(&data, &desc) as u64;
+        let boc = data
+            .write_to_new_cell()
+            .map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = boc
+            .into_cell()
+            .map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = ton_types::serialize_toc(&boc).map_err(|_| TransactionError::InvalidStructure)?;
+        let boc = base64::encode(boc);
 
         let in_msg = match data.in_msg.take() {
             Some(message) => {
@@ -702,14 +710,6 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
                 Ok(true)
             })
             .map_err(|_| TransactionError::InvalidStructure)?;
-        let boc = data
-            .write_to_new_cell()
-            .map_err(|_| TransactionError::InvalidStructure)?;
-        let boc = boc
-            .into_cell()
-            .map_err(|_| TransactionError::InvalidStructure)?;
-        let boc = ton_types::serialize_toc(&boc).map_err(|_| TransactionError::InvalidStructure)?;
-        let boc = base64::encode(boc);
 
         Ok(Self {
             id: TransactionId { lt: data.lt, hash },
