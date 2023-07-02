@@ -842,7 +842,7 @@ impl<'de> Deserialize<'de> for Message {
 }
 
 impl Serialize for Message {
-    fn serialize<S>(&self, serializer: S) -> std::prelude::v1::Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -868,6 +868,7 @@ impl Serialize for Message {
             bounced: bool,
             body: Option<String>,
             body_hash: Option<String>,
+            boc: &'a str,
         }
 
         let (body, body_hash) = match &self.body {
@@ -887,6 +888,7 @@ impl Serialize for Message {
             bounced: self.bounced,
             body,
             body_hash,
+            boc: &self.boc,
         }
         .serialize(serializer)
     }
