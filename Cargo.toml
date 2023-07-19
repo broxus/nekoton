@@ -1,6 +1,6 @@
 [package]
 name = "nekoton"
-version = "0.13.0"
+version = "0.13.1"
 authors = [
     "Alexey Pashinov <pashinov93@gmail.com>",
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
@@ -77,6 +77,7 @@ web = [
 ]
 gql_transport = ["dep:erased-serde"]
 jrpc_transport = ["dep:tiny-jsonrpc"]
+extended_models = []
 
 [package.metadata.docs.rs]
 all-features = true

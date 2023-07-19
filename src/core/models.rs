@@ -650,6 +650,11 @@ pub struct Transaction {
     /// Outgoing messages
     #[serde(rename = "outMessages")]
     pub out_msgs: Vec<Message>,
+
+    /// Raw transaction cell
+    #[cfg(feature = "extended_models")]
+    #[serde(with = "serde_cell")]
+    pub raw: ton_types::Cell,
 }
 
 impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
@@ -668,14 +673,12 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
 
         let total_fees = compute_total_transaction_fees(&data, &desc) as u64;
 
+        #[cfg(feature = "extended_models")]
+        let raw = ton_block::Serializable::serialize(&data)
+            .map_err(|_| TransactionError::InvalidStructure)?;
+
         let in_msg = match data.in_msg.take() {
-            Some(message) => {
-                let hash = message.cell().repr_hash();
-                message
-                    .read_struct()
-                    .map(move |message| Message::from((hash, message)))
-                    .map_err(|_| TransactionError::InvalidStructure)?
-            }
+            Some(message) => Message::try_from(message.cell())?,
             None => return Err(TransactionError::Unsupported),
         };
 
@@ -689,12 +692,8 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
         let mut out_msgs = Vec::new();
         data.out_msgs
             .iterate_slices(|slice| {
-                if let Ok(message) = slice.reference(0).and_then(|cell| {
-                    let hash = cell.repr_hash();
-                    ton_block::Message::construct_from_cell(cell)
-                        .map(|message| Message::from((hash, message)))
-                }) {
-                    out_msgs.push(message);
+                if let Ok(cell) = slice.reference(0) {
+                    out_msgs.push(Message::try_from(cell)?);
                 }
                 Ok(true)
             })
@@ -715,6 +714,8 @@ impl TryFrom<(UInt256, ton_block::Transaction)> for Transaction {
             total_fees,
             in_msg,
             out_msgs,
+            #[cfg(feature = "extended_models")]
+            raw,
         })
     }
 }
@@ -774,10 +775,14 @@ pub struct Message {
 
     /// Message body
     pub body: Option<MessageBody>,
+
+    /// Raw message cell
+    #[cfg(feature = "extended_models")]
+    pub raw: ton_types::Cell,
 }
 
 impl<'de> Deserialize<'de> for Message {
-    fn deserialize<D>(deserializer: D) -> std::prelude::v1::Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -797,6 +802,10 @@ impl<'de> Deserialize<'de> for Message {
             bounce: bool,
             bounced: bool,
             body: Option<String>,
+
+            #[cfg(feature = "extended_models")]
+            #[serde(with = "serde_cell")]
+            raw: ton_types::Cell,
         }
 
         let parsed = MessageHelper::deserialize(deserializer)?;
@@ -819,12 +828,14 @@ impl<'de> Deserialize<'de> for Message {
             bounce: parsed.bounce,
             bounced: parsed.bounced,
             body,
+            #[cfg(feature = "extended_models")]
+            raw: parsed.raw,
         })
     }
 }
 
 impl Serialize for Message {
-    fn serialize<S>(&self, serializer: S) -> std::prelude::v1::Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -850,6 +861,10 @@ impl Serialize for Message {
             bounced: bool,
             body: Option<String>,
             body_hash: Option<String>,
+
+            #[cfg(feature = "extended_models")]
+            #[serde(with = "serde_cell")]
+            raw: &'a ton_types::Cell,
         }
 
         let (body, body_hash) = match &self.body {
@@ -869,13 +884,25 @@ impl Serialize for Message {
             bounced: self.bounced,
             body,
             body_hash,
+
+            #[cfg(feature = "extended_models")]
+            raw: &self.raw,
         }
         .serialize(serializer)
     }
 }
 
-impl From<(UInt256, ton_block::Message)> for Message {
-    fn from((hash, s): (UInt256, ton_block::Message)) -> Self {
+impl TryFrom<ton_types::Cell> for Message {
+    type Error = TransactionError;
+    fn try_from(raw: ton_types::Cell) -> Result<Self, Self::Error> {
+        let hash = raw.repr_hash();
+
+        let s = ton_block::Message::construct_from_cell(raw.clone())
+            .map_err(|_| TransactionError::InvalidStructure)?;
+
+        #[cfg(not(feature = "extended_models"))]
+        let _ = raw;
+
         let body = s.body().map(|body| {
             let data = body.into_cell();
             MessageBody {
@@ -884,7 +911,7 @@ impl From<(UInt256, ton_block::Message)> for Message {
             }
         });
 
-        match s.header() {
+        Ok(match s.header() {
             ton_block::CommonMsgInfo::IntMsgInfo(header) => Message {
                 hash,
                 src: match &header.src {
@@ -896,12 +923,16 @@ impl From<(UInt256, ton_block::Message)> for Message {
                 body,
                 bounce: header.bounce,
                 bounced: header.bounced,
+                #[cfg(feature = "extended_models")]
+                raw,
             },
             ton_block::CommonMsgInfo::ExtInMsgInfo(header) => Message {
                 hash,
                 src: None,
                 dst: Some(header.dst.clone()),
                 body,
+                #[cfg(feature = "extended_models")]
+                raw,
                 ..Default::default()
             },
             ton_block::CommonMsgInfo::ExtOutMsgInfo(header) => Message {
@@ -911,9 +942,11 @@ impl From<(UInt256, ton_block::Message)> for Message {
                     ton_block::MsgAddressIntOrNone::None => None,
                 },
                 body,
+                #[cfg(feature = "extended_models")]
+                raw,
                 ..Default::default()
             },
-        }
+        })
     }
 }
 

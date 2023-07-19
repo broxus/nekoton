@@ -211,7 +211,7 @@ impl StoreSigner for DerivedKeySigner {
                     None => return Err(MasterKeyError::MasterKeyNotFound.into()),
                 };
 
-                let mut entry = match entry.accounts_map.get_mut(public_key.as_bytes()) {
+                let entry = match entry.accounts_map.get_mut(public_key.as_bytes()) {
                     Some(entry) => entry,
                     None => return Err(MasterKeyError::DerivedKeyNotFound.into()),
                 };
