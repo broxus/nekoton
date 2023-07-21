@@ -31,7 +31,8 @@ impl JrpcTransport {
     }
 }
 
-#[async_trait::async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl Transport for JrpcTransport {
     fn info(&self) -> TransportInfo {
         TransportInfo {
@@ -212,7 +213,8 @@ mod tests {
 
     use super::*;
 
-    #[async_trait::async_trait]
+    #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+    #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
     impl JrpcConnection for reqwest::Client {
         async fn post(&self, req: external::JrpcRequest) -> Result<String> {
             println!("{req:?}");

@@ -601,7 +601,8 @@ mod tests {
     #[derive(Default)]
     struct TestStorage(parking_lot::Mutex<HashMap<String, String>>);
 
-    #[async_trait::async_trait]
+    #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+    #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
     impl Storage for TestStorage {
         async fn get(&self, key: &str) -> Result<Option<String>> {
             Ok(self.0.lock().get(key).cloned())

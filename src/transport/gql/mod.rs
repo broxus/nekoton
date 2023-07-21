@@ -3,7 +3,6 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Result;
-use async_trait::async_trait;
 use serde::Deserialize;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
@@ -176,7 +175,8 @@ impl GqlTransport {
     }
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl Transport for GqlTransport {
     fn info(&self) -> TransportInfo {
         TransportInfo {
@@ -427,7 +427,8 @@ mod tests {
 
     use super::*;
 
-    #[async_trait::async_trait]
+    #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+    #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
     impl GqlConnection for reqwest::Client {
         fn is_local(&self) -> bool {
             false

@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
 use anyhow::Result;
-use async_trait::async_trait;
 use downcast_rs::{impl_downcast, Downcast};
 use dyn_clone::DynClone;
 use ed25519_dalek::PublicKey;
@@ -114,7 +113,8 @@ impl<'de> Deserialize<'de> for SignedMessage {
     }
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait Signer: SignerStorage {
     type CreateKeyInput;
     type ExportSeedInput;
@@ -171,7 +171,8 @@ pub trait Signer: SignerStorage {
     ) -> Result<Signature>;
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait SignerStorage: Downcast + Send + Sync {
     fn load_state(&mut self, data: &str) -> Result<()>;
     fn store_state(&self) -> String;

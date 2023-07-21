@@ -3,7 +3,6 @@ use std::convert::TryInto;
 use std::io::Read;
 
 use anyhow::Result;
-use async_trait::async_trait;
 use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce};
 use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signer};
 use rand::Rng;
@@ -46,7 +45,8 @@ impl EncryptedKeySigner {
     }
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl StoreSigner for EncryptedKeySigner {
     type CreateKeyInput = EncryptedKeyCreateInput;
     type ExportSeedInput = EncryptedKeyPassword;
@@ -210,7 +210,8 @@ impl StoreSigner for EncryptedKeySigner {
     }
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl SignerStorage for EncryptedKeySigner {
     fn load_state(&mut self, data: &str) -> Result<()> {
         let data = serde_json::from_str::<Vec<(String, String)>>(data)?;

@@ -4,7 +4,6 @@ use std::io::Read;
 use std::sync::Arc;
 
 use anyhow::Result;
-use async_trait::async_trait;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 
@@ -48,7 +47,8 @@ impl LedgerKeySigner {
     }
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl StoreSigner for LedgerKeySigner {
     type CreateKeyInput = LedgerKeyCreateInput;
     type ExportSeedInput = ();
@@ -177,7 +177,8 @@ impl StoreSigner for LedgerKeySigner {
     }
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl SignerStorage for LedgerKeySigner {
     fn load_state(&mut self, data: &str) -> Result<()> {
         let data = serde_json::from_str::<Vec<(String, String)>>(data)?;

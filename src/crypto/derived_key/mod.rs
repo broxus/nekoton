@@ -1,7 +1,6 @@
 use std::collections::hash_map::{self, HashMap};
 
 use anyhow::Result;
-use async_trait::async_trait;
 use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
 use ed25519_dalek::{Keypair, PublicKey, Signer};
 use secstr::SecUtf8;
@@ -78,7 +77,8 @@ impl DerivedKeySigner {
     }
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl StoreSigner for DerivedKeySigner {
     type CreateKeyInput = DerivedKeyCreateInput;
     type ExportSeedInput = DerivedKeyExportSeedParams;
@@ -364,7 +364,8 @@ impl StoreSigner for DerivedKeySigner {
     }
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl SignerStorage for DerivedKeySigner {
     fn load_state(&mut self, data: &str) -> Result<()> {
         #[derive(Deserialize)]

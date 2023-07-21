@@ -1,10 +1,10 @@
 use anyhow::Result;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 use nekoton_utils::serde_optional_hex_array;
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait Storage: Sync + Send {
     /// Retrieve data from storage
     async fn get(&self, key: &str) -> Result<Option<String>>;
@@ -30,7 +30,8 @@ pub struct GqlRequest {
 }
 
 #[cfg(feature = "gql_transport")]
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait GqlConnection: Send + Sync {
     fn is_local(&self) -> bool;
 
@@ -45,7 +46,8 @@ pub struct JrpcRequest {
 }
 
 #[cfg(feature = "jrpc_transport")]
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait JrpcConnection: Send + Sync {
     async fn post(&self, req: JrpcRequest) -> Result<String>;
 }
@@ -61,7 +63,8 @@ pub struct LedgerSignatureContext {
     pub address: Option<[u8; 32]>,
 }
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait LedgerConnection: Send + Sync {
     async fn get_public_key(
         &self,

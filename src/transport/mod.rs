@@ -1,5 +1,4 @@
 use anyhow::Result;
-use async_trait::async_trait;
 use nekoton_utils::Clock;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
@@ -17,7 +16,8 @@ pub mod models;
 #[cfg(any(feature = "gql_transport", feature = "jrpc_transport",))]
 mod utils;
 
-#[async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait Transport: Send + Sync {
     fn info(&self) -> TransportInfo;
 

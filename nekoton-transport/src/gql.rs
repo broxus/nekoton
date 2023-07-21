@@ -237,7 +237,8 @@ impl GqlClient {
     }
 }
 
-#[async_trait::async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl nekoton::external::GqlConnection for GqlClient {
     fn is_local(&self) -> bool {
         self.local

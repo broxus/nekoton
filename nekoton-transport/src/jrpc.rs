@@ -38,7 +38,8 @@ impl JrpcClient {
     }
 }
 
-#[async_trait::async_trait]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl nekoton::external::JrpcConnection for JrpcClient {
     async fn post(&self, req: nekoton::external::JrpcRequest) -> Result<String> {
         let url = if req.requires_db {

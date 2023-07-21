@@ -188,7 +188,10 @@ struct LatestTransactions<'a> {
     limit: Option<usize>,
 }
 
+#[cfg(not(feature = "non_threadsafe"))]
 type TransactionsFut<'a> = Pin<Box<dyn Future<Output = Result<Vec<RawTransaction>>> + Send + 'a>>;
+#[cfg(feature = "non_threadsafe")]
+type TransactionsFut<'a> = Pin<Box<dyn Future<Output = Result<Vec<RawTransaction>>> + 'a>>;
 
 impl<'a> Stream for LatestTransactions<'a> {
     type Item = Result<Vec<RawTransaction>>;

@@ -78,6 +78,7 @@ web = [
 gql_transport = ["dep:erased-serde"]
 jrpc_transport = ["dep:tiny-jsonrpc"]
 extended_models = []
+non_threadsafe = []
 
 [package.metadata.docs.rs]
 all-features = true
