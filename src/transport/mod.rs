@@ -59,6 +59,7 @@ pub trait Transport: Send + Sync {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TransportInfo {
     pub max_transactions_per_fetch: u8,
     pub reliable_behavior: ReliableBehavior,
