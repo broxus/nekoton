@@ -709,6 +709,7 @@
 <a href="#709" id="709">709</a>
 <a href="#710" id="710">710</a>
 <a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::any::TypeId;
 <span class="kw">use </span>std::collections::hash_map::{<span class="self">self</span>, HashMap};
 <span class="kw">use </span>std::collections::HashSet;
@@ -1312,7 +1313,8 @@
     <span class="attr">#[derive(Default)]
     </span><span class="kw">struct </span>TestStorage(parking_lot::Mutex&lt;HashMap&lt;String, String&gt;&gt;);
 
-    <span class="attr">#[async_trait::async_trait]
+    <span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
+    #[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
     </span><span class="kw">impl </span>Storage <span class="kw">for </span>TestStorage {
         <span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt; {
             <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="number">0</span>.lock().get(key).cloned())

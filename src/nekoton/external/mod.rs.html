@@ -84,13 +84,16 @@
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use </span>nekoton_utils::serde_optional_hex_array;
 
-<span class="attr">#[async_trait]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">pub trait </span>Storage: Sync + Send {
     <span class="doccomment">/// Retrieve data from storage
     </span><span class="kw">async fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;&gt;;
@@ -116,7 +119,8 @@
 }
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;gql_transport&quot;</span>)]
-#[async_trait]
+#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">pub trait </span>GqlConnection: Send + Sync {
     <span class="kw">fn </span>is_local(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
 
@@ -131,7 +135,8 @@
 }
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;jrpc_transport&quot;</span>)]
-#[async_trait]
+#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">pub trait </span>JrpcConnection: Send + Sync {
     <span class="kw">async fn </span>post(<span class="kw-2">&amp;</span><span class="self">self</span>, req: JrpcRequest) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt;;
 }
@@ -147,7 +152,8 @@
     </span><span class="kw">pub </span>address: <span class="prelude-ty">Option</span>&lt;[u8; <span class="number">32</span>]&gt;,
 }
 
-<span class="attr">#[async_trait]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">pub trait </span>LedgerConnection: Send + Sync {
     <span class="kw">async fn </span>get_public_key(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

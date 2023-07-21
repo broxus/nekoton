@@ -842,12 +842,12 @@
 <a href="#842" id="842">842</a>
 <a href="#843" id="843">843</a>
 <a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::convert::TryInto;
 <span class="kw">use </span>std::io::Read;
 
 <span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce};
 <span class="kw">use </span>ed25519_dalek::{Keypair, PublicKey, SecretKey, Signer};
 <span class="kw">use </span>rand::Rng;
@@ -890,7 +890,8 @@
     }
 }
 
-<span class="attr">#[async_trait]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>StoreSigner <span class="kw">for </span>EncryptedKeySigner {
     <span class="kw">type </span>CreateKeyInput = EncryptedKeyCreateInput;
     <span class="kw">type </span>ExportSeedInput = EncryptedKeyPassword;
@@ -1054,7 +1055,8 @@
     }
 }
 
-<span class="attr">#[async_trait]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>SignerStorage <span class="kw">for </span>EncryptedKeySigner {
     <span class="kw">fn </span>load_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>data = serde_json::from_str::&lt;Vec&lt;(String, String)&gt;&gt;(data)<span class="question-mark">?</span>;

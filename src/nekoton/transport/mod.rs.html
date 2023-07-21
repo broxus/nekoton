@@ -66,7 +66,6 @@
 <a href="#66" id="66">66</a>
 <a href="#67" id="67">67</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>nekoton_utils::Clock;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>ton_block::MsgAddressInt;
@@ -84,7 +83,8 @@
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;gql_transport&quot;</span>, feature = <span class="string">&quot;jrpc_transport&quot;</span>,))]
 </span><span class="kw">mod </span>utils;
 
-<span class="attr">#[async_trait]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">pub trait </span>Transport: Send + Sync {
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TransportInfo;
 
