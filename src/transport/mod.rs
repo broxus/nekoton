@@ -11,9 +11,11 @@ use self::models::*;
 pub mod gql;
 #[cfg(feature = "jrpc_transport")]
 pub mod jrpc;
+#[cfg(feature = "proto_transport")]
+pub mod proto;
 
 pub mod models;
-#[cfg(any(feature = "gql_transport", feature = "jrpc_transport",))]
+#[cfg(any(feature = "gql_transport", feature = "jrpc_transport", feature = "proto_transport",))]
 mod utils;
 
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]

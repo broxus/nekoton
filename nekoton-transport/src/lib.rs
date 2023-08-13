@@ -56,3 +56,5 @@
 pub mod gql;
 #[cfg(feature = "jrpc_transport")]
 pub mod jrpc;
+#[cfg(feature = "proto_transport")]
+pub mod proto;
