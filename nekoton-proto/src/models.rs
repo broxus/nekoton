@@ -1,12 +1,12 @@
+use anyhow::Result;
+use axum_core::extract::FromRequest;
 use axum_core::response::{IntoResponse, Response};
-use axum_core::extract::{FromRequest};
+use axum_core::{body, BoxError};
+use http::header::CONTENT_TYPE;
+use http::{HeaderValue, Request, StatusCode};
+use http_body::{Body, Full};
 use prost::bytes::Bytes;
 use prost::Message;
-use anyhow::Result;
-use axum_core::{body, BoxError};
-use http::{HeaderValue, Request, StatusCode};
-use http::header::CONTENT_TYPE;
-use http_body::{Body, Full};
 
 use crate::rpc;
 
@@ -14,12 +14,12 @@ pub struct Protobuf<T>(pub T);
 
 #[async_trait::async_trait]
 impl<S, B, T> FromRequest<S, B> for Protobuf<T>
-    where
-        T: Message + Default,
-        S: Send + Sync,
-        B: Body + Send + 'static,
-        B::Data: Send,
-        B::Error: Into<BoxError>,
+where
+    T: Message + Default,
+    S: Send + Sync,
+    B: Body + Send + 'static,
+    B::Data: Send,
+    B::Error: Into<BoxError>,
 {
     type Rejection = StatusCode;
 
@@ -43,8 +43,8 @@ impl<S, B, T> FromRequest<S, B> for Protobuf<T>
 }
 
 impl<T> IntoResponse for Protobuf<T>
-    where
-        T: Message,
+where
+    T: Message,
 {
     fn into_response(self) -> Response {
         let buf = self.0.encode_to_vec();

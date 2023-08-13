@@ -7,8 +7,8 @@ pub mod utils;
 
 pub use prost;
 
-use ton_types::UInt256;
 use prost::bytes::Bytes;
+use ton_types::UInt256;
 
 use crate::rpc::response::get_contract_state::contract_state;
 

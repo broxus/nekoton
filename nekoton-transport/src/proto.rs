@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use reqwest::{IntoUrl, Url};
 use nekoton_proto::models::ProtoAnswer;
 use nekoton_proto::prost::Message;
 use nekoton_proto::rpc;
+use reqwest::{IntoUrl, Url};
 
 pub struct ProtoClient {
     client: reqwest::Client,
@@ -50,14 +50,15 @@ impl nekoton::external::ProtoConnection for ProtoClient {
         } else {
             &self.base_url
         };
-        let response = self.client.post(url.clone()).body(req.data.encode_to_vec()).send().await?;
+        let response = self
+            .client
+            .post(url.clone())
+            .body(req.data.encode_to_vec())
+            .send()
+            .await?;
         match ProtoAnswer::parse_response(response).await? {
-            ProtoAnswer::Result(response) => {
-                Ok(response)
-            }
-            ProtoAnswer::Error(e) => {
-                Err(ProtoClientError::ErrorResponse(e.message).into())
-            }
+            ProtoAnswer::Result(response) => Ok(response),
+            ProtoAnswer::Error(e) => Err(ProtoClientError::ErrorResponse(e.message).into()),
         }
     }
 }

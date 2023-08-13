@@ -17,8 +17,7 @@ pub fn bytes_to_addr(bytes: &Bytes) -> Result<MsgAddressInt> {
     }
 
     let workchain_id = bytes[0] as i8;
-    let address =
-        ton_types::AccountId::from(<[u8; 32]>::try_from(&bytes[1..33])?);
+    let address = ton_types::AccountId::from(<[u8; 32]>::try_from(&bytes[1..33])?);
 
     MsgAddressInt::with_standart(None, workchain_id, address)
 }

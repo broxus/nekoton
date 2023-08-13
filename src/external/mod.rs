@@ -1,6 +1,6 @@
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
 use nekoton_utils::serde_optional_hex_array;
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "proto_transport")]
 use nekoton_proto::rpc;

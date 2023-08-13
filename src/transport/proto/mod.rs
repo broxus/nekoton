@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use ton_block::{Block, Deserializable, MsgAddressInt, Serializable};
 use nekoton_proto::prost::bytes::Bytes;
 use nekoton_proto::rpc;
 use nekoton_proto::utils;
 use nekoton_proto::utils::{addr_to_bytes, bytes_to_addr};
+use ton_block::{Block, Deserializable, MsgAddressInt, Serializable};
 
 use nekoton_utils::*;
 
@@ -46,7 +46,7 @@ impl Transport for ProtoTransport {
         let data = rpc::Request {
             call: Some(rpc::request::Call::SendMessage(rpc::request::SendMessage {
                 message: message.write_to_bytes()?.into(),
-            }))
+            })),
         };
 
         let req = external::ProtoRequest {
@@ -72,7 +72,7 @@ impl Transport for ProtoTransport {
 
         let response = self.connection.post(req).await?;
         match response.result {
-            Some(rpc::response::Result::GetContractState(state))=> match state.contract_state {
+            Some(rpc::response::Result::GetContractState(state)) => match state.contract_state {
                 Some(state) => {
                     let account = utils::deserialize_account_stuff(&state.account)?;
 
@@ -106,7 +106,11 @@ impl Transport for ProtoTransport {
     ) -> Result<Vec<MsgAddressInt>> {
         let data = rpc::Request {
             call: Some(rpc::request::Call::GetAccountsByCodeHash(
-                rpc::request::GetAccountsByCodeHash { code_hash: code_hash.into_vec().into() , continuation: continuation.as_ref().map(addr_to_bytes), limit: limit as u32 },
+                rpc::request::GetAccountsByCodeHash {
+                    code_hash: code_hash.into_vec().into(),
+                    continuation: continuation.as_ref().map(addr_to_bytes),
+                    limit: limit as u32,
+                },
             )),
         };
 
@@ -117,7 +121,8 @@ impl Transport for ProtoTransport {
 
         let response = self.connection.post(req).await?;
         match response.result {
-            Some(rpc::response::Result::GetAccounts(accounts)) => accounts.account
+            Some(rpc::response::Result::GetAccounts(accounts)) => accounts
+                .account
                 .iter()
                 .map(bytes_to_addr)
                 .collect::<Result<_>>(),
@@ -221,9 +226,9 @@ impl Transport for ProtoTransport {
 
         let response = self.connection.post(req).await?;
         match response.result {
-            Some(rpc::response::Result::GetLatestKeyBlock(key_block)) => Ok(
-                Block::construct_from_bytes(key_block.block.as_ref())?,
-            ),
+            Some(rpc::response::Result::GetLatestKeyBlock(key_block)) => {
+                Ok(Block::construct_from_bytes(key_block.block.as_ref())?)
+            }
             _ => Err(ProtoClientError::InvalidResponse.into()),
         }
     }
