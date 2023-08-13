@@ -14,6 +14,7 @@ members = [
     "nekoton-abi",
     "nekoton-contracts",
     "nekoton-derive",
+    "nekoton-proto",
     "nekoton-transport",
     "nekoton-utils",
 ]
@@ -60,6 +61,7 @@ ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 nekoton-contracts = { path = "nekoton-contracts" }
 nekoton-abi = { path = "nekoton-abi", features = ["derive"] }
 nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
+nekoton-proto = { path = "nekoton-proto", optional = true }
 
 [dev-dependencies]
 reqwest = { version = "0.11.8", features = ["gzip"] }
@@ -78,6 +80,7 @@ web = [
 ]
 gql_transport = ["dep:erased-serde"]
 jrpc_transport = ["dep:tiny-jsonrpc"]
+proto_transport = ["dep:nekoton-proto"]
 extended_models = []
 non_threadsafe = []
 
