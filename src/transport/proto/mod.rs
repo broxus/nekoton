@@ -292,7 +292,7 @@ mod tests {
 
             match ProtoAnswer::parse_response(response).await? {
                 ProtoAnswer::Result(response) => Ok(response),
-                ProtoAnswer::Error(e) => anyhow::bail!(e.message)
+                ProtoAnswer::Error(e) => anyhow::bail!(e.message),
             }
         }
     }
@@ -334,9 +334,7 @@ mod tests {
         )?;
         transport.get_contract_state(&address).await?;
 
-        let a = transport
-            .get_transactions(&address, 0, 10)
-            .await?;
+        let a = transport.get_transactions(&address, 0, 10).await?;
 
         println!("LEN: {}", a.len());
 
@@ -345,7 +343,8 @@ mod tests {
                 &hex::decode("4a0a06bfbfaba4da8fcc7f5ad617fdee5344d954a1794e35618df2a4b349d15c")
                     .unwrap(),
             ))
-            .await?.unwrap();
+            .await?
+            .unwrap();
 
         let setcode_multisig_code_hash = ton_types::UInt256::from_str(
             "e2b60b6b602c10ced7ea8ede4bdf96342c97570a3798066f3fb50a4b2b27a208",
