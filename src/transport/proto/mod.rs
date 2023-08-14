@@ -266,3 +266,108 @@ pub enum ProtoClientError {
     #[error("Failed to parse response")]
     InvalidResponse,
 }
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+    use std::time::Duration;
+
+    use futures_util::StreamExt;
+    use nekoton_proto::models::ProtoAnswer;
+    use nekoton_proto::prost::Message;
+
+    use super::*;
+
+    #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+    #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
+    impl ProtoConnection for reqwest::Client {
+        async fn post(&self, req: external::ProtoRequest) -> Result<rpc::Response> {
+            println!("{req:?}");
+            let response = self
+                .post("https://jrpc.everwallet.net/proto")
+                .body(req.data.encode_to_vec())
+                .header("Content-Type", "application/x-protobuf")
+                .send()
+                .await?;
+
+            match ProtoAnswer::parse_response(response).await? {
+                ProtoAnswer::Result(response) => Ok(response),
+                ProtoAnswer::Error(e) => anyhow::bail!(e.message)
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_transactions_stream() -> Result<()> {
+        let transport = ProtoTransport::new(Arc::new(reqwest::Client::new()));
+
+        let mut from_lt = 30526271000007;
+        let until_lt = 26005429000001;
+        let test_address =
+            "0:cd809fb1cde24b6d3cd4a3dd9102e10c0f73ddfa21c7118f233dc7309bbb0b73".parse()?;
+
+        let mut transactions = crate::core::utils::request_transactions(
+            &transport,
+            &test_address,
+            from_lt,
+            Some(until_lt),
+            2,
+            None,
+        );
+
+        while let Some(transactions) = transactions.next().await {
+            for transaction in transactions? {
+                assert_eq!(transaction.data.lt, from_lt);
+                from_lt = transaction.data.prev_trans_lt;
+            }
+        }
+
+        assert_eq!(from_lt, until_lt);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_connection() -> Result<()> {
+        let transport = ProtoTransport::new(Arc::new(reqwest::Client::new()));
+        let address = MsgAddressInt::from_str(
+            "-1:3333333333333333333333333333333333333333333333333333333333333333",
+        )?;
+        transport.get_contract_state(&address).await?;
+
+        let a = transport
+            .get_transactions(&address, 0, 10)
+            .await?;
+
+        println!("LEN: {}", a.len());
+
+        transport
+            .get_transaction(&ton_types::UInt256::from_slice(
+                &hex::decode("4a0a06bfbfaba4da8fcc7f5ad617fdee5344d954a1794e35618df2a4b349d15c")
+                    .unwrap(),
+            ))
+            .await?.unwrap();
+
+        let setcode_multisig_code_hash = ton_types::UInt256::from_str(
+            "e2b60b6b602c10ced7ea8ede4bdf96342c97570a3798066f3fb50a4b2b27a208",
+        )?;
+
+        let mut continuation = None;
+        loop {
+            let contracts = transport
+                .get_accounts_by_code_hash(&setcode_multisig_code_hash, 50, &continuation)
+                .await?;
+
+            continuation = contracts.last().cloned();
+            if continuation.is_none() {
+                break;
+            }
+
+            // Rate limits
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+
+        transport.get_latest_key_block().await?;
+
+        Ok(())
+    }
+}
