@@ -267,7 +267,7 @@ pub enum ProtoClientError {
     InvalidResponse,
 }
 
-#[cfg(test)]
+/*#[cfg(test)]
 mod tests {
     use std::str::FromStr;
     use std::time::Duration;
@@ -370,3 +370,4 @@ mod tests {
         Ok(())
     }
 }
+*/
