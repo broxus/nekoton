@@ -2,9 +2,6 @@ use anyhow::Result;
 use nekoton_utils::serde_optional_hex_array;
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "proto_transport")]
-use nekoton_proto::rpc;
-
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
 #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait Storage: Sync + Send {
@@ -57,7 +54,7 @@ pub trait JrpcConnection: Send + Sync {
 #[cfg(feature = "proto_transport")]
 #[derive(Debug, Clone)]
 pub struct ProtoRequest {
-    pub data: rpc::Request,
+    pub data: Vec<u8>,
     pub requires_db: bool,
 }
 
@@ -65,7 +62,7 @@ pub struct ProtoRequest {
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
 #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait ProtoConnection: Send + Sync {
-    async fn post(&self, req: ProtoRequest) -> Result<rpc::Response>;
+    async fn post(&self, req: ProtoRequest) -> Result<Vec<u8>>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

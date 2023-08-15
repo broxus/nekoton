@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use nekoton_proto::prost::bytes::Bytes;
+use nekoton_proto::prost::Message;
 use nekoton_proto::rpc;
 use nekoton_proto::utils;
-use nekoton_proto::utils::{addr_to_bytes, bytes_to_addr};
 use ton_block::{Block, Deserializable, MsgAddressInt, Serializable};
 
 use nekoton_utils::*;
@@ -50,10 +50,17 @@ impl Transport for ProtoTransport {
         };
 
         let req = external::ProtoRequest {
-            data,
+            data: data.encode_to_vec(),
             requires_db: false,
         };
-        self.connection.post(req).await.map(|_| ())
+
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+
+        match response.result {
+            Some(rpc::response::Result::SendMessage(())) => Ok(()),
+            _ => Err(ProtoClientError::InvalidResponse.into()),
+        }
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
@@ -66,11 +73,13 @@ impl Transport for ProtoTransport {
         };
 
         let req = external::ProtoRequest {
-            data,
+            data: data.encode_to_vec(),
             requires_db: false,
         };
 
-        let response = self.connection.post(req).await?;
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+
         match response.result {
             Some(rpc::response::Result::GetContractState(state)) => match state.contract_state {
                 Some(state) => {
@@ -108,23 +117,25 @@ impl Transport for ProtoTransport {
             call: Some(rpc::request::Call::GetAccountsByCodeHash(
                 rpc::request::GetAccountsByCodeHash {
                     code_hash: code_hash.into_vec().into(),
-                    continuation: continuation.as_ref().map(addr_to_bytes),
+                    continuation: continuation.as_ref().map(utils::addr_to_bytes),
                     limit: limit as u32,
                 },
             )),
         };
 
         let req = external::ProtoRequest {
-            data,
+            data: data.encode_to_vec(),
             requires_db: false,
         };
 
-        let response = self.connection.post(req).await?;
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+
         match response.result {
             Some(rpc::response::Result::GetAccounts(accounts)) => accounts
                 .account
                 .iter()
-                .map(bytes_to_addr)
+                .map(utils::bytes_to_addr)
                 .collect::<Result<_>>(),
             _ => Err(ProtoClientError::InvalidResponse.into()),
         }
@@ -148,11 +159,13 @@ impl Transport for ProtoTransport {
         };
 
         let req = external::ProtoRequest {
-            data,
+            data: data.encode_to_vec(),
             requires_db: true,
         };
 
-        let response = self.connection.post(req).await?;
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+
         match response.result {
             Some(rpc::response::Result::GetTransactionsList(txs)) => txs
                 .transactions
@@ -173,11 +186,13 @@ impl Transport for ProtoTransport {
         };
 
         let req = external::ProtoRequest {
-            data,
+            data: data.encode_to_vec(),
             requires_db: true,
         };
 
-        let response = self.connection.post(req).await?;
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+
         match response.result {
             Some(rpc::response::Result::GetRawTransaction(tx)) => match tx.transaction {
                 Some(bytes) => Some(decode_raw_transaction(bytes)).transpose(),
@@ -200,11 +215,13 @@ impl Transport for ProtoTransport {
         };
 
         let req = external::ProtoRequest {
-            data,
+            data: data.encode_to_vec(),
             requires_db: true,
         };
 
-        let response = self.connection.post(req).await?;
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+
         match response.result {
             Some(rpc::response::Result::GetRawTransaction(tx)) => match tx.transaction {
                 Some(bytes) => Some(decode_raw_transaction(bytes)).transpose(),
@@ -220,11 +237,13 @@ impl Transport for ProtoTransport {
         };
 
         let req = external::ProtoRequest {
-            data,
+            data: data.encode_to_vec(),
             requires_db: true,
         };
 
-        let response = self.connection.post(req).await?;
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+
         match response.result {
             Some(rpc::response::Result::GetLatestKeyBlock(key_block)) => {
                 Ok(Block::construct_from_bytes(key_block.block.as_ref())?)
@@ -273,27 +292,22 @@ mod tests {
     use std::time::Duration;
 
     use futures_util::StreamExt;
-    use nekoton_proto::models::ProtoAnswer;
-    use nekoton_proto::prost::Message;
 
     use super::*;
 
     #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
     #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
     impl ProtoConnection for reqwest::Client {
-        async fn post(&self, req: external::ProtoRequest) -> Result<rpc::Response> {
+        async fn post(&self, req: external::ProtoRequest) -> Result<Vec<u8>> {
             println!("{req:?}");
             let response = self
-                .post("https://jrpc.everwallet.net/proto")
-                .body(req.data.encode_to_vec())
+                .post("http://localhost:9000/proto")
+                .body(req.data)
                 .header("Content-Type", "application/x-protobuf")
                 .send()
                 .await?;
 
-            match ProtoAnswer::parse_response(response).await? {
-                ProtoAnswer::Result(response) => Ok(response),
-                ProtoAnswer::Error(e) => anyhow::bail!(e.message),
-            }
+            Ok(response.bytes().await?.into())
         }
     }
 
@@ -334,9 +348,7 @@ mod tests {
         )?;
         transport.get_contract_state(&address).await?;
 
-        let a = transport.get_transactions(&address, 0, 10).await?;
-
-        println!("LEN: {}", a.len());
+        transport.get_transactions(&address, 0, 10).await?;
 
         transport
             .get_transaction(&ton_types::UInt256::from_slice(
@@ -369,5 +381,4 @@ mod tests {
 
         Ok(())
     }
-}
-*/
+}*/

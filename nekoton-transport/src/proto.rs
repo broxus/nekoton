@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use nekoton_proto::models::ProtoAnswer;
-use nekoton_proto::prost::Message;
-use nekoton_proto::rpc;
 use reqwest::{IntoUrl, Url};
 
 pub struct ProtoClient {
@@ -44,27 +41,13 @@ impl ProtoClient {
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
 #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 impl nekoton::external::ProtoConnection for ProtoClient {
-    async fn post(&self, req: nekoton::external::ProtoRequest) -> Result<rpc::Response> {
+    async fn post(&self, req: nekoton::external::ProtoRequest) -> Result<Vec<u8>> {
         let url = if req.requires_db {
             self.alternative_url.as_ref().unwrap_or(&self.base_url)
         } else {
             &self.base_url
         };
-        let response = self
-            .client
-            .post(url.clone())
-            .body(req.data.encode_to_vec())
-            .send()
-            .await?;
-        match ProtoAnswer::parse_response(response).await? {
-            ProtoAnswer::Result(response) => Ok(response),
-            ProtoAnswer::Error(e) => Err(ProtoClientError::ErrorResponse(e.message).into()),
-        }
+        let response = self.client.post(url.clone()).body(req.data).send().await?;
+        Ok(response.bytes().await?.into())
     }
-}
-
-#[derive(thiserror::Error, Debug)]
-enum ProtoClientError {
-    #[error("Proto response result message: {}", .0)]
-    ErrorResponse(String),
 }
