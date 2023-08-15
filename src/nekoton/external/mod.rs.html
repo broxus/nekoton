@@ -100,15 +100,9 @@
 <a href="#100" id="100">100</a>
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>nekoton_utils::serde_optional_hex_array;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
-
-<span class="attr">#[cfg(feature = <span class="string">&quot;proto_transport&quot;</span>)]
-</span><span class="kw">use </span>nekoton_proto::rpc;
 
 <span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
 #[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
@@ -162,7 +156,7 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;proto_transport&quot;</span>)]
 #[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>ProtoRequest {
-    <span class="kw">pub </span>data: rpc::Request,
+    <span class="kw">pub </span>data: Vec&lt;u8&gt;,
     <span class="kw">pub </span>requires_db: bool,
 }
 
@@ -170,7 +164,7 @@
 #[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
 #[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">pub trait </span>ProtoConnection: Send + Sync {
-    <span class="kw">async fn </span>post(<span class="kw-2">&amp;</span><span class="self">self</span>, req: ProtoRequest) -&gt; <span class="prelude-ty">Result</span>&lt;rpc::Response&gt;;
+    <span class="kw">async fn </span>post(<span class="kw-2">&amp;</span><span class="self">self</span>, req: ProtoRequest) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;&gt;;
 }
 
 <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
