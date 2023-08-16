@@ -499,6 +499,21 @@
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
 <a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>anyhow::Result;
@@ -515,7 +530,7 @@
 };
 <span class="kw">use super</span>::{utils, PollingMethod};
 <span class="kw">use </span><span class="kw">crate</span>::core::utils::{MessageContext, PendingTransactionsExt};
-<span class="kw">use </span><span class="kw">crate</span>::transport::models::{RawContractState, RawTransaction};
+<span class="kw">use </span><span class="kw">crate</span>::transport::models::{PollContractState, RawContractState, RawTransaction};
 <span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
 
 <span class="doccomment">/// Used as a base object for different listeners implementation
@@ -751,7 +766,7 @@
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>account = <span class="kw">match </span><span class="self">self</span>.transport.get_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>.address).<span class="kw">await</span><span class="question-mark">? </span>{
             RawContractState::Exists(state) =&gt; ton_block::Account::Account(state.account),
-            RawContractState::NotExists =&gt; ton_block::Account::AccountNone,
+            RawContractState::NotExists { .. } =&gt; ton_block::Account::AccountNone,
         };
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(balance) = options.override_balance {
@@ -888,7 +903,22 @@
         prev_trans_lt: <span class="prelude-ty">Option</span>&lt;u64&gt;,
         on_contract_state: OnContractState&lt;<span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
-        <span class="kw">let </span>contract_state = <span class="self">self</span>.transport.get_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>.address).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>contract_state = <span class="kw">match </span>prev_trans_lt {
+            <span class="prelude-val">Some</span>(last_lt) =&gt; {
+                <span class="kw">match </span><span class="self">self
+                    </span>.transport
+                    .poll_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>.address, last_lt)
+                    .<span class="kw">await</span><span class="question-mark">?
+                </span>{
+                    PollContractState::Changed(new_state) =&gt; new_state,
+                    PollContractState::Unchanged { timings } =&gt; {
+                        <span class="self">self</span>.contract_state.gen_timings = timings;
+                        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+                    }
+                }
+            }
+            <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.transport.get_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>.address).<span class="kw">await</span><span class="question-mark">?</span>,
+        };
         <span class="kw">let </span>new_contract_state = contract_state.brief();
 
         <span class="kw">let </span>updated = <span class="kw">if let </span><span class="prelude-val">Some</span>(last_lt) = prev_trans_lt {

@@ -1023,6 +1023,8 @@
 <a href="#1023" id="1023">1023</a>
 <a href="#1024" id="1024">1024</a>
 <a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::convert::TryFrom;
 <span class="kw">use </span>std::num::NonZeroU8;
@@ -1116,7 +1118,9 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>(public_key, wallet_type) = <span class="kw">match </span>transport.get_contract_state(<span class="kw-2">&amp;</span>address).<span class="kw">await</span><span class="question-mark">? </span>{
             RawContractState::Exists(contract) =&gt; extract_wallet_init_data(<span class="kw-2">&amp;</span>contract)<span class="question-mark">?</span>,
-            RawContractState::NotExists =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TonWalletError::AccountNotExists.into()),
+            RawContractState::NotExists { .. } =&gt; {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(TonWalletError::AccountNotExists.into())
+            }
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>wallet_data = WalletData::default();

@@ -548,21 +548,21 @@
 
 <span class="kw">impl </span>ParsedBlock {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>empty(utime: u32) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">fn </span>empty(current_utime: u32) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            current_utime: utime,
+            current_utime,
             data: <span class="prelude-val">None</span>,
         }
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>with_data(
-        utime: u32,
+        current_utime: u32,
         contract_state: ContractState,
         new_transactions: <span class="prelude-ty">Option</span>&lt;NewTransactions&gt;,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            current_utime: utime,
+            current_utime,
             data: <span class="prelude-val">Some</span>((contract_state, new_transactions)),
         }
     }

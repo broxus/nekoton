@@ -84,15 +84,9 @@
 </span><span class="kw">pub mod </span>gql;
 <span class="attr">#[cfg(feature = <span class="string">&quot;jrpc_transport&quot;</span>)]
 </span><span class="kw">pub mod </span>jrpc;
-<span class="attr">#[cfg(feature = <span class="string">&quot;proto_transport&quot;</span>)]
-</span><span class="kw">pub mod </span>proto;
 
 <span class="kw">pub mod </span>models;
-<span class="attr">#[cfg(any(
-    feature = <span class="string">&quot;gql_transport&quot;</span>,
-    feature = <span class="string">&quot;jrpc_transport&quot;</span>,
-    feature = <span class="string">&quot;proto_transport&quot;</span>,
-))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;gql_transport&quot;</span>, feature = <span class="string">&quot;jrpc_transport&quot;</span>,))]
 </span><span class="kw">mod </span>utils;
 
 <span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
@@ -103,6 +97,12 @@
     <span class="kw">async fn </span>send_message(<span class="kw-2">&amp;</span><span class="self">self</span>, message: <span class="kw-2">&amp;</span>ton_block::Message) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 
     <span class="kw">async fn </span>get_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>, address: <span class="kw-2">&amp;</span>MsgAddressInt) -&gt; <span class="prelude-ty">Result</span>&lt;RawContractState&gt;;
+
+    <span class="kw">async fn </span>poll_contract_state(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        address: <span class="kw-2">&amp;</span>MsgAddressInt,
+        last_trans_lt: u64,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;PollContractState&gt;;
 
     <span class="kw">async fn </span>get_accounts_by_code_hash(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

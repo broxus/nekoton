@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["nekoton","nekoton_abi","nekoton_contracts","nekoton_derive","nekoton_proto","nekoton_transport","nekoton_utils"];
+window.ALL_CRATES = ["nekoton","nekoton_abi","nekoton_contracts","nekoton_derive","nekoton_transport","nekoton_utils"];

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["contract_state"],"struct":["ContractState"]};

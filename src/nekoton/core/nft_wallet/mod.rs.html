@@ -585,7 +585,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;NftCollection&gt; {
         <span class="kw">let </span>state = <span class="kw">match </span>transport.get_contract_state(<span class="kw-2">&amp;</span>collection_address).<span class="kw">await</span><span class="question-mark">? </span>{
             RawContractState::Exists(state) =&gt; state,
-            RawContractState::NotExists =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(NftError::ContractNotExist.into()),
+            RawContractState::NotExists { .. } =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(NftError::ContractNotExist.into()),
         };
 
         <span class="kw">let </span>contract = CollectionContractState(<span class="kw-2">&amp;</span>state);
@@ -662,7 +662,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Nft&gt; {
         <span class="kw">let </span>state = <span class="kw">match </span>transport.get_contract_state(index_address).<span class="kw">await</span><span class="question-mark">? </span>{
             RawContractState::Exists(state) =&gt; state,
-            RawContractState::NotExists =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(NftError::ContractNotExist.into()),
+            RawContractState::NotExists { .. } =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(NftError::ContractNotExist.into()),
         };
         <span class="kw">let </span>index_state = IndexContractState(<span class="kw-2">&amp;</span>state);
 
@@ -687,7 +687,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Nft&gt; {
         <span class="kw">let </span>state = <span class="kw">match </span>transport.get_contract_state(nft_address).<span class="kw">await</span><span class="question-mark">? </span>{
             RawContractState::Exists(state) =&gt; state,
-            RawContractState::NotExists =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(NftError::ContractNotExist.into()),
+            RawContractState::NotExists { .. } =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(NftError::ContractNotExist.into()),
         };
         <span class="kw">let </span>nft_state = NftContractState(<span class="kw-2">&amp;</span>state);
 

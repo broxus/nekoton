@@ -821,6 +821,8 @@
 <a href="#821" id="821">821</a>
 <a href="#822" id="822">822</a>
 <a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 <span class="kw">use </span>std::sync::Arc;
 
@@ -860,7 +862,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TokenWallet&gt; {
         <span class="kw">let </span>state = <span class="kw">match </span>transport.get_contract_state(<span class="kw-2">&amp;</span>root_token_contract).<span class="kw">await</span><span class="question-mark">? </span>{
             RawContractState::Exists(state) =&gt; state,
-            RawContractState::NotExists =&gt; {
+            RawContractState::NotExists { .. } =&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(TokenWalletError::InvalidRootTokenContract.into())
             }
         };
@@ -1198,7 +1200,7 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;RootTokenContractDetails&gt; {
     <span class="kw">let </span>state = <span class="kw">match </span>transport.get_contract_state(root_token_contract).<span class="kw">await</span><span class="question-mark">? </span>{
         RawContractState::Exists(state) =&gt; state,
-        RawContractState::NotExists =&gt; {
+        RawContractState::NotExists { .. } =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TokenWalletError::InvalidRootTokenContract.into())
         }
     };
@@ -1212,7 +1214,7 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(TokenWalletDetails, RootTokenContractDetails)&gt; {
     <span class="kw">let </span>token_wallet_state = <span class="kw">match </span>transport.get_contract_state(token_wallet).<span class="kw">await</span><span class="question-mark">? </span>{
         RawContractState::Exists(state) =&gt; state,
-        RawContractState::NotExists =&gt; {
+        RawContractState::NotExists { .. } =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TokenWalletError::InvalidTokenWalletContract.into())
         }
     };
@@ -1226,7 +1228,7 @@
         .<span class="kw">await</span><span class="question-mark">?
     </span>{
         RawContractState::Exists(state) =&gt; state,
-        RawContractState::NotExists =&gt; {
+        RawContractState::NotExists { .. } =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TokenWalletError::InvalidRootTokenContract.into())
         }
     };
@@ -1243,7 +1245,9 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(MsgAddressInt, RootTokenContractDetails)&gt; {
     <span class="kw">let </span>state = <span class="kw">match </span>transport.get_contract_state(token_wallet_address).<span class="kw">await</span><span class="question-mark">? </span>{
         RawContractState::Exists(state) =&gt; state,
-        RawContractState::NotExists =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(TokenWalletError::WalletNotDeployed.into()),
+        RawContractState::NotExists { .. } =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(TokenWalletError::WalletNotDeployed.into())
+        }
     };
     <span class="kw">let </span>state = TokenWalletContractState(<span class="kw-2">&amp;</span>state);
     <span class="kw">let </span>version = state.get_version(clock)<span class="question-mark">?</span>;
@@ -1251,7 +1255,7 @@
 
     <span class="kw">let </span>state = <span class="kw">match </span>transport.get_contract_state(<span class="kw-2">&amp;</span>root_token_contract).<span class="kw">await</span><span class="question-mark">? </span>{
         RawContractState::Exists(state) =&gt; state,
-        RawContractState::NotExists =&gt; {
+        RawContractState::NotExists { .. } =&gt; {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TokenWalletError::InvalidRootTokenContract.into())
         }
     };

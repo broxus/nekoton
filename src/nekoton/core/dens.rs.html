@@ -385,7 +385,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>state = <span class="kw">match </span>transport.get_contract_state(address).<span class="kw">await</span><span class="question-mark">? </span>{
             RawContractState::Exists(state) =&gt; state,
-            RawContractState::NotExists =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(DensError::InvalidTldContract.into()),
+            RawContractState::NotExists { .. } =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(DensError::InvalidTldContract.into()),
         };
         <span class="kw">let </span>path = dens::RootContract(state.as_context(clock.as_ref())).get_path()<span class="question-mark">?</span>;
 

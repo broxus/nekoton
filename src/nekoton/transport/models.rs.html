@@ -139,6 +139,32 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::Ordering;
 
 <span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -154,29 +180,47 @@
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>)]
 </span><span class="kw">pub enum </span>RawContractState {
-    NotExists,
+    NotExists { timings: GenTimings },
     Exists(ExistingContract),
 }
 
 <span class="kw">impl </span>RawContractState {
     <span class="kw">pub fn </span>brief(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ContractState {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::NotExists =&gt; ContractState::default(),
+            <span class="self">Self</span>::NotExists { .. } =&gt; ContractState::default(),
             <span class="self">Self</span>::Exists(state) =&gt; state.brief(),
         }
     }
 
     <span class="kw">pub fn </span>into_account(<span class="self">self</span>) -&gt; Account {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::NotExists =&gt; Account::AccountNone,
+            <span class="self">Self</span>::NotExists { .. } =&gt; Account::AccountNone,
             <span class="self">Self</span>::Exists(state) =&gt; Account::Account(state.account),
         }
     }
 
     <span class="kw">pub fn </span>into_contract(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;ExistingContract&gt; {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::NotExists =&gt; <span class="prelude-val">None</span>,
+            <span class="self">Self</span>::NotExists { .. } =&gt; <span class="prelude-val">None</span>,
             <span class="self">Self</span>::Exists(contract) =&gt; <span class="prelude-val">Some</span>(contract),
+        }
+    }
+
+    <span class="kw">pub fn </span>update_timings(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_timings: GenTimings) {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::NotExists { timings } =&gt; <span class="kw-2">*</span>timings = new_timings,
+            <span class="self">Self</span>::Exists(state) =&gt; state.timings = new_timings,
+        }
+    }
+
+    <span class="kw">pub fn </span>last_known_trans_lt(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
+        <span class="kw">let </span>timings = <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::NotExists { timings } =&gt; timings,
+            <span class="self">Self</span>::Exists(contract) =&gt; <span class="kw-2">&amp;</span>contract.timings,
+        };
+        <span class="kw">match </span>timings {
+            GenTimings::Known { gen_lt, .. } =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">*</span>gen_lt),
+            GenTimings::Unknown =&gt; <span class="prelude-val">None</span>,
         }
     }
 }
@@ -185,6 +229,14 @@
     <span class="kw">fn </span>from(state: RawContractState) -&gt; <span class="self">Self </span>{
         state.into_contract()
     }
+}
+
+<span class="attr">#[allow(clippy::large_enum_variant)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>)]
+</span><span class="kw">pub enum </span>PollContractState {
+    Unchanged { timings: GenTimings },
+    Changed(RawContractState),
 }
 
 <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]

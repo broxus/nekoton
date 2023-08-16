@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Result"],"mod":["get_contract_state"],"struct":["GetAccountsByCodeHash","GetBlockchainConfig","GetCapabilities","GetContractState","GetLatestKeyBlock","GetRawTransaction","GetStatus","GetTimings","GetTransactionsList"]};
