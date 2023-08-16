@@ -14,7 +14,7 @@ use super::models::{
 };
 use super::{utils, PollingMethod};
 use crate::core::utils::{MessageContext, PendingTransactionsExt};
-use crate::transport::models::{RawContractState, RawTransaction};
+use crate::transport::models::{PollContractState, RawContractState, RawTransaction};
 use crate::transport::Transport;
 
 /// Used as a base object for different listeners implementation
@@ -387,7 +387,22 @@ impl ContractSubscription {
         prev_trans_lt: Option<u64>,
         on_contract_state: OnContractState<'_>,
     ) -> Result<bool> {
-        let contract_state = self.transport.get_contract_state(&self.address).await?;
+        let contract_state = match prev_trans_lt {
+            Some(last_lt) => {
+                match self
+                    .transport
+                    .poll_contract_state(&self.address, last_lt)
+                    .await?
+                {
+                    PollContractState::Changed(new_state) => new_state,
+                    PollContractState::Unchanged { timings } => {
+                        self.contract_state.gen_timings = timings;
+                        return Ok(false);
+                    }
+                }
+            }
+            None => self.transport.get_contract_state(&self.address).await?,
+        };
         let new_contract_state = contract_state.brief();
 
         let updated = if let Some(last_lt) = prev_trans_lt {

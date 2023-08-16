@@ -19,14 +19,16 @@ mod models;
 
 pub struct JrpcTransport {
     connection: Arc<dyn JrpcConnection>,
-    cache: Cache,
+    config_cache: ConfigCache,
+    accounts_cache: AccountsCache,
 }
 
 impl JrpcTransport {
     pub fn new(connection: Arc<dyn JrpcConnection>) -> Self {
         Self {
             connection,
-            cache: Cache::new(false),
+            config_cache: ConfigCache::new(false),
+            accounts_cache: AccountsCache::new(),
         }
     }
 }
@@ -51,13 +53,17 @@ impl Transport for JrpcTransport {
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
-        if let Some(known_state) = self.cache.get_account_state(address) {
+        if let Some(known_state) = self.accounts_cache.get_account_state(address) {
             if let Some(last_trans_lt) = known_state.last_known_trans_lt() {
                 return Ok(
                     match self.poll_contract_state(address, last_trans_lt).await? {
-                        PollContractState::Unchanged { .. } => known_state.as_ref().clone(),
+                        PollContractState::Unchanged { timings } => {
+                            let mut known_state = known_state.as_ref().clone();
+                            known_state.update_timings(timings);
+                            known_state
+                        }
                         PollContractState::Changed(contract) => {
-                            self.cache.update_account_state(address, &contract);
+                            self.accounts_cache.update_account_state(address, &contract);
                             contract
                         }
                     },
@@ -77,7 +83,7 @@ impl Transport for JrpcTransport {
         };
         let data = self.connection.post(req).await?;
         let response = tiny_jsonrpc::parse_response::<RawContractState>(&data)?;
-        self.cache.update_account_state(address, &response);
+        self.accounts_cache.update_account_state(address, &response);
         Ok(response)
     }
 
@@ -187,7 +193,10 @@ impl Transport for JrpcTransport {
     }
 
     async fn get_capabilities(&self, clock: &dyn Clock) -> Result<NetworkCapabilities> {
-        let (capabilities, _) = self.cache.get_blockchain_config(self, clock, false).await?;
+        let (capabilities, _) = self
+            .config_cache
+            .get_blockchain_config(self, clock, false)
+            .await?;
         Ok(capabilities)
     }
 
@@ -196,7 +205,10 @@ impl Transport for JrpcTransport {
         clock: &dyn Clock,
         force: bool,
     ) -> Result<ton_executor::BlockchainConfig> {
-        let (_, config) = self.cache.get_blockchain_config(self, clock, force).await?;
+        let (_, config) = self
+            .config_cache
+            .get_blockchain_config(self, clock, force)
+            .await?;
         Ok(config)
     }
 }

@@ -14,14 +14,14 @@ use crate::external::{GqlConnection, GqlRequest};
 
 use self::queries::*;
 use super::models::*;
-use super::utils::Cache;
+use super::utils::ConfigCache;
 use super::{Transport, TransportInfo};
 
 mod queries;
 
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
-    config_cache: Cache,
+    config_cache: ConfigCache,
 }
 
 impl GqlTransport {
@@ -30,7 +30,7 @@ impl GqlTransport {
 
         Self {
             connection,
-            config_cache: Cache::new(use_default_config),
+            config_cache: ConfigCache::new(use_default_config),
         }
     }
 
@@ -216,7 +216,11 @@ impl Transport for GqlTransport {
             .and_then(|state| state.boc)
         {
             Some(boc) => boc,
-            None => return Ok(RawContractState::NotExists),
+            None => {
+                return Ok(RawContractState::NotExists {
+                    timings: GenTimings::Unknown,
+                })
+            }
         };
 
         match Account::construct_from_base64(&account_state) {
@@ -231,7 +235,9 @@ impl Transport for GqlTransport {
                     last_transaction_id,
                 }))
             }
-            Ok(_) => Ok(RawContractState::NotExists),
+            Ok(_) => Ok(RawContractState::NotExists {
+                timings: GenTimings::Unknown,
+            }),
             Err(_) => Err(NodeClientError::InvalidAccountState.into()),
         }
     }
@@ -239,9 +245,11 @@ impl Transport for GqlTransport {
     async fn poll_contract_state(
         &self,
         address: &MsgAddressInt,
-        last_trans_lt: u64,
+        _last_trans_lt: u64,
     ) -> Result<PollContractState> {
-        Ok(None)
+        // TODO: use two queries for state and status
+        let state = self.get_contract_state(address).await?;
+        Ok(PollContractState::Changed(state))
     }
 
     async fn get_accounts_by_code_hash(

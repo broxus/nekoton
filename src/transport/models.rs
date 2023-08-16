@@ -39,6 +39,13 @@ impl RawContractState {
         }
     }
 
+    pub fn update_timings(&mut self, new_timings: GenTimings) {
+        match self {
+            Self::NotExists { timings } => *timings = new_timings,
+            Self::Exists(state) => state.timings = new_timings,
+        }
+    }
+
     pub fn last_known_trans_lt(&self) -> Option<u64> {
         let timings = match self {
             Self::NotExists { timings } => timings,
