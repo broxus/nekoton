@@ -37,7 +37,7 @@ impl TokenWallet {
     ) -> Result<TokenWallet> {
         let state = match transport.get_contract_state(&root_token_contract).await? {
             RawContractState::Exists(state) => state,
-            RawContractState::NotExists => {
+            RawContractState::NotExists { .. } => {
                 return Err(TokenWalletError::InvalidRootTokenContract.into())
             }
         };
@@ -375,7 +375,7 @@ pub async fn get_token_root_details(
 ) -> Result<RootTokenContractDetails> {
     let state = match transport.get_contract_state(root_token_contract).await? {
         RawContractState::Exists(state) => state,
-        RawContractState::NotExists => {
+        RawContractState::NotExists { .. } => {
             return Err(TokenWalletError::InvalidRootTokenContract.into())
         }
     };
@@ -389,7 +389,7 @@ pub async fn get_token_wallet_details(
 ) -> Result<(TokenWalletDetails, RootTokenContractDetails)> {
     let token_wallet_state = match transport.get_contract_state(token_wallet).await? {
         RawContractState::Exists(state) => state,
-        RawContractState::NotExists => {
+        RawContractState::NotExists { .. } => {
             return Err(TokenWalletError::InvalidTokenWalletContract.into())
         }
     };
@@ -403,7 +403,7 @@ pub async fn get_token_wallet_details(
         .await?
     {
         RawContractState::Exists(state) => state,
-        RawContractState::NotExists => {
+        RawContractState::NotExists { .. } => {
             return Err(TokenWalletError::InvalidRootTokenContract.into())
         }
     };
@@ -420,7 +420,9 @@ pub async fn get_token_root_details_from_token_wallet(
 ) -> Result<(MsgAddressInt, RootTokenContractDetails)> {
     let state = match transport.get_contract_state(token_wallet_address).await? {
         RawContractState::Exists(state) => state,
-        RawContractState::NotExists => return Err(TokenWalletError::WalletNotDeployed.into()),
+        RawContractState::NotExists { .. } => {
+            return Err(TokenWalletError::WalletNotDeployed.into())
+        }
     };
     let state = TokenWalletContractState(&state);
     let version = state.get_version(clock)?;
@@ -428,7 +430,7 @@ pub async fn get_token_root_details_from_token_wallet(
 
     let state = match transport.get_contract_state(&root_token_contract).await? {
         RawContractState::Exists(state) => state,
-        RawContractState::NotExists => {
+        RawContractState::NotExists { .. } => {
             return Err(TokenWalletError::InvalidRootTokenContract.into())
         }
     };

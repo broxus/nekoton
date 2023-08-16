@@ -14,14 +14,14 @@ use crate::external::{GqlConnection, GqlRequest};
 
 use self::queries::*;
 use super::models::*;
-use super::utils::ConfigCache;
+use super::utils::Cache;
 use super::{Transport, TransportInfo};
 
 mod queries;
 
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
-    config_cache: ConfigCache,
+    config_cache: Cache,
 }
 
 impl GqlTransport {
@@ -30,7 +30,7 @@ impl GqlTransport {
 
         Self {
             connection,
-            config_cache: ConfigCache::new(use_default_config),
+            config_cache: Cache::new(use_default_config),
         }
     }
 
@@ -234,6 +234,14 @@ impl Transport for GqlTransport {
             Ok(_) => Ok(RawContractState::NotExists),
             Err(_) => Err(NodeClientError::InvalidAccountState.into()),
         }
+    }
+
+    async fn poll_contract_state(
+        &self,
+        address: &MsgAddressInt,
+        last_trans_lt: u64,
+    ) -> Result<PollContractState> {
+        Ok(None)
     }
 
     async fn get_accounts_by_code_hash(

@@ -1,18 +1,33 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use tokio::sync::Mutex;
 
 use nekoton_utils::*;
 
+#[cfg(not(feature = "non_threadsafe"))]
+use quick_cache::sync::Cache as QuickCache;
+#[cfg(feature = "non_threadsafe")]
+use quick_cache::unsync::Cache as QuickCache;
+
+use super::models::RawContractState;
 use super::Transport;
 use crate::core::models::NetworkCapabilities;
 
-pub struct ConfigCache {
+const DEFAULT_ACCOUNTS_CAPACITY: usize = 100;
+
+pub struct Cache {
     use_default_config: bool,
     state: Mutex<Option<ConfigCacheState>>,
+    accounts: QuickCache<ton_block::MsgAddressInt, Arc<RawContractState>>,
 }
 
-impl ConfigCache {
+impl Cache {
     pub fn new(use_default_config: bool) -> Self {
+        Self::with_capacity(use_default_config, DEFAULT_ACCOUNTS_CAPACITY)
+    }
+
+    pub fn with_capacity(use_default_config: bool, account_cache_capacity: usize) -> Self {
         Self {
             use_default_config,
             state: Mutex::new(if use_default_config {
@@ -28,7 +43,24 @@ impl ConfigCache {
             } else {
                 None
             }),
+            accounts: QuickCache::new(account_cache_capacity),
         }
+    }
+
+    pub fn get_account_state(
+        &self,
+        address: &ton_block::MsgAddressInt,
+    ) -> Option<Arc<RawContractState>> {
+        self.accounts.get(address)
+    }
+
+    pub fn update_account_state(
+        &self,
+        address: &ton_block::MsgAddressInt,
+        account: &RawContractState,
+    ) {
+        self.accounts
+            .insert(address.clone(), Arc::new(account.clone()))
     }
 
     pub async fn get_blockchain_config(

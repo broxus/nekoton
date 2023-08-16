@@ -91,7 +91,9 @@ impl TonWallet {
     ) -> Result<Self> {
         let (public_key, wallet_type) = match transport.get_contract_state(&address).await? {
             RawContractState::Exists(contract) => extract_wallet_init_data(&contract)?,
-            RawContractState::NotExists => return Err(TonWalletError::AccountNotExists.into()),
+            RawContractState::NotExists { .. } => {
+                return Err(TonWalletError::AccountNotExists.into())
+            }
         };
 
         let mut wallet_data = WalletData::default();

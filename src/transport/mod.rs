@@ -25,6 +25,12 @@ pub trait Transport: Send + Sync {
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState>;
 
+    async fn poll_contract_state(
+        &self,
+        address: &MsgAddressInt,
+        last_trans_lt: u64,
+    ) -> Result<PollContractState>;
+
     async fn get_accounts_by_code_hash(
         &self,
         code_hash: &ton_types::UInt256,

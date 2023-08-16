@@ -119,7 +119,7 @@ impl OwnersCache {
                     .await?
                 {
                     RawContractState::Exists(state) => state,
-                    RawContractState::NotExists => {
+                    RawContractState::NotExists { .. } => {
                         return Err(OwnersCacheError::InvalidRootTokenContract.into())
                     }
                 };
@@ -164,7 +164,7 @@ impl OwnersCache {
                     let _permit = semaphore.acquire().await.ok()?;
                     match transport.get_contract_state(token_wallet).await.ok()? {
                         RawContractState::Exists(state) => state,
-                        RawContractState::NotExists => return None,
+                        RawContractState::NotExists { .. } => return None,
                     }
                 };
 
@@ -257,7 +257,7 @@ async fn check_token_wallet(
     }
 
     Ok(match transport.get_contract_state(&token_wallet).await? {
-        RawContractState::NotExists => RecipientWallet::NotExists,
+        RawContractState::NotExists { .. } => RecipientWallet::NotExists,
         RawContractState::Exists(_) => RecipientWallet::Exists(token_wallet),
     })
 }
