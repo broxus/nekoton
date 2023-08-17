@@ -71,6 +71,12 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>nekoton_utils::Clock;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -84,9 +90,15 @@
 </span><span class="kw">pub mod </span>gql;
 <span class="attr">#[cfg(feature = <span class="string">&quot;jrpc_transport&quot;</span>)]
 </span><span class="kw">pub mod </span>jrpc;
+<span class="attr">#[cfg(feature = <span class="string">&quot;proto_transport&quot;</span>)]
+</span><span class="kw">pub mod </span>proto;
 
 <span class="kw">pub mod </span>models;
-<span class="attr">#[cfg(any(feature = <span class="string">&quot;gql_transport&quot;</span>, feature = <span class="string">&quot;jrpc_transport&quot;</span>,))]
+<span class="attr">#[cfg(any(
+    feature = <span class="string">&quot;gql_transport&quot;</span>,
+    feature = <span class="string">&quot;jrpc_transport&quot;</span>,
+    feature = <span class="string">&quot;proto_transport&quot;</span>,
+))]
 </span><span class="kw">mod </span>utils;
 
 <span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]

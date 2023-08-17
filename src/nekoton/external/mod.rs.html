@@ -87,10 +87,22 @@
 <a href="#87" id="87">87</a>
 <a href="#88" id="88">88</a>
 <a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>serde::{Deserialize, Serialize};
-
 <span class="kw">use </span>nekoton_utils::serde_optional_hex_array;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
 #[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
@@ -139,6 +151,20 @@
 #[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">pub trait </span>JrpcConnection: Send + Sync {
     <span class="kw">async fn </span>post(<span class="kw-2">&amp;</span><span class="self">self</span>, req: JrpcRequest) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt;;
+}
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;proto_transport&quot;</span>)]
+#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>ProtoRequest {
+    <span class="kw">pub </span>data: Vec&lt;u8&gt;,
+    <span class="kw">pub </span>requires_db: bool,
+}
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;proto_transport&quot;</span>)]
+#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
+</span><span class="kw">pub trait </span>ProtoConnection: Send + Sync {
+    <span class="kw">async fn </span>post(<span class="kw-2">&amp;</span><span class="self">self</span>, req: ProtoRequest) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;&gt;;
 }
 
 <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
