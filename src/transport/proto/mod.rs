@@ -1,17 +1,16 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use nekoton_proto::prost::bytes::Bytes;
-use nekoton_proto::prost::Message;
-use nekoton_proto::rpc;
-use nekoton_proto::utils;
+use everscale_rpc_proto::prost::{bytes::Bytes, Message};
+use everscale_rpc_proto::rpc;
+use everscale_rpc_proto::utils;
 use ton_block::{Block, Deserializable, MsgAddressInt, Serializable};
 
 use nekoton_utils::*;
 
 use crate::core::models::{NetworkCapabilities, ReliableBehavior};
 use crate::external::{self, ProtoConnection};
-use crate::transport::models::ExistingContract;
+use crate::transport::models::{ExistingContract, PollContractState};
 
 use super::models::{RawContractState, RawTransaction};
 use super::utils::*;
@@ -20,6 +19,7 @@ use super::{Transport, TransportInfo};
 pub struct ProtoTransport {
     connection: Arc<dyn ProtoConnection>,
     config_cache: ConfigCache,
+    accounts_cache: AccountsCache,
 }
 
 impl ProtoTransport {
@@ -27,6 +27,7 @@ impl ProtoTransport {
         Self {
             connection,
             config_cache: ConfigCache::new(false),
+            accounts_cache: AccountsCache::new(),
         }
     }
 }
@@ -64,11 +65,32 @@ impl Transport for ProtoTransport {
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
-        let address = utils::addr_to_bytes(address);
+        if let Some(known_state) = self.accounts_cache.get_account_state(address) {
+            if let Some(last_trans_lt) = known_state.last_known_trans_lt() {
+                return Ok(
+                    match self.poll_contract_state(address, last_trans_lt).await? {
+                        PollContractState::Unchanged { timings } => {
+                            let mut known_state = known_state.as_ref().clone();
+                            known_state.update_timings(timings);
+                            known_state
+                        }
+                        PollContractState::Changed(contract) => {
+                            self.accounts_cache.update_account_state(address, &contract);
+                            contract
+                        }
+                    },
+                );
+            }
+        }
+
+        let address_bytes = utils::addr_to_bytes(address);
 
         let data = rpc::Request {
             call: Some(rpc::request::Call::GetContractState(
-                rpc::request::GetContractState { address },
+                rpc::request::GetContractState {
+                    address: address_bytes,
+                    last_transaction_lt: None,
+                },
             )),
         };
 
@@ -80,31 +102,43 @@ impl Transport for ProtoTransport {
         let data = self.connection.post(req).await?;
         let response = rpc::Response::decode(Bytes::from(data))?;
 
-        match response.result {
-            Some(rpc::response::Result::GetContractState(state)) => match state.contract_state {
-                Some(state) => {
-                    let account = utils::deserialize_account_stuff(&state.account)?;
+        let result = match parse_response(response)? {
+            PollContractState::Changed(state) => state,
+            PollContractState::Unchanged { .. } => {
+                return Err(ProtoClientError::InvalidResponse.into())
+            }
+        };
 
-                    let timings = state
-                        .gen_timings
-                        .ok_or::<ProtoClientError>(ProtoClientError::InvalidResponse)?
-                        .into();
+        self.accounts_cache.update_account_state(address, &result);
+        Ok(result)
+    }
 
-                    let last_transaction_id = state
-                        .last_transaction_id
-                        .ok_or::<ProtoClientError>(ProtoClientError::InvalidResponse)?
-                        .into();
+    async fn poll_contract_state(
+        &self,
+        address: &MsgAddressInt,
+        last_trans_lt: u64,
+    ) -> Result<PollContractState> {
+        let address = utils::addr_to_bytes(address);
 
-                    Ok(RawContractState::Exists(ExistingContract {
-                        account,
-                        timings,
-                        last_transaction_id,
-                    }))
-                }
-                None => Ok(RawContractState::NotExists),
-            },
-            _ => Err(ProtoClientError::InvalidResponse.into()),
-        }
+        let data = rpc::Request {
+            call: Some(rpc::request::Call::GetContractState(
+                rpc::request::GetContractState {
+                    address,
+                    last_transaction_lt: Some(last_trans_lt),
+                },
+            )),
+        };
+
+        let req = external::ProtoRequest {
+            data: data.encode_to_vec(),
+            requires_db: false,
+        };
+
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+
+        let result = parse_response(response)?;
+        Ok(result)
     }
 
     async fn get_accounts_by_code_hash(
@@ -278,6 +312,57 @@ fn decode_raw_transaction(bytes: Bytes) -> Result<RawTransaction> {
     let hash = cell.repr_hash();
     let data = ton_block::Transaction::construct_from_cell(cell)?;
     Ok(RawTransaction { hash, data })
+}
+
+fn parse_response(response: rpc::Response) -> Result<PollContractState> {
+    let result = match response.result {
+        Some(rpc::response::Result::GetContractState(rpc::response::GetContractState {
+            state: Some(state),
+        })) => match state {
+            rpc::response::get_contract_state::State::Exists(state) => {
+                let account = utils::deserialize_account_stuff(&state.account)?;
+
+                let timings = state
+                    .gen_timings
+                    .ok_or::<ProtoClientError>(ProtoClientError::InvalidResponse)?
+                    .into();
+
+                let last_transaction_id = state
+                    .last_transaction_id
+                    .ok_or::<ProtoClientError>(ProtoClientError::InvalidResponse)?
+                    .into();
+
+                PollContractState::Changed(RawContractState::Exists(ExistingContract {
+                    account,
+                    timings,
+                    last_transaction_id,
+                }))
+            }
+            rpc::response::get_contract_state::State::NotExists(state) => {
+                let timings = match state
+                    .gen_timings
+                    .ok_or::<ProtoClientError>(ProtoClientError::InvalidResponse)?
+                {
+                    rpc::response::get_contract_state::not_exist::GenTimings::Known(timings) => {
+                        timings.into()
+                    }
+                    rpc::response::get_contract_state::not_exist::GenTimings::Unknown(()) => {
+                        nekoton_abi::GenTimings::Unknown
+                    }
+                };
+
+                PollContractState::Changed(RawContractState::NotExists { timings })
+            }
+            rpc::response::get_contract_state::State::Unchanged(timings) => {
+                PollContractState::Unchanged {
+                    timings: timings.into(),
+                }
+            }
+        },
+        _ => return Err(ProtoClientError::InvalidResponse.into()),
+    };
+
+    Ok(result)
 }
 
 #[derive(thiserror::Error, Copy, Clone, Debug)]
