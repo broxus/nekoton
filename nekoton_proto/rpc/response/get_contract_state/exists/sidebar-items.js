@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LastTransactionId"],"struct":["Exact","Inexact"]};
