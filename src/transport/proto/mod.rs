@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use everscale_rpc_proto::prost::{bytes::Bytes, Message};
-use everscale_rpc_proto::rpc;
-use everscale_rpc_proto::utils;
 use ton_block::{Block, Deserializable, MsgAddressInt, Serializable};
+
+use nekoton_proto::prost::{bytes::Bytes, Message};
+use nekoton_proto::rpc;
+use nekoton_proto::utils;
 
 use nekoton_utils::*;
 
