@@ -769,7 +769,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;PollContractState&gt; {
         <span class="comment">// TODO: use two queries for state and status
         </span><span class="kw">let </span>state = <span class="self">self</span>.get_contract_state(address).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(PollContractState::Changed(state))
+        <span class="prelude-val">Ok</span>(PollContractState::from(state))
     }
 
     <span class="kw">async fn </span>get_accounts_by_code_hash(

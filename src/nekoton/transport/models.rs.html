@@ -165,6 +165,26 @@
 <a href="#165" id="165">165</a>
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::Ordering;
 
 <span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -236,7 +256,27 @@
 #[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>)]
 </span><span class="kw">pub enum </span>PollContractState {
     Unchanged { timings: GenTimings },
-    Changed(RawContractState),
+    NotExists { timings: GenTimings },
+    Exists(ExistingContract),
+}
+
+<span class="kw">impl </span>PollContractState {
+    <span class="kw">pub fn </span>to_changed(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;RawContractState, GenTimings&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Exists(state) =&gt; <span class="prelude-val">Ok</span>(RawContractState::Exists(state)),
+            <span class="self">Self</span>::NotExists { timings } =&gt; <span class="prelude-val">Ok</span>(RawContractState::NotExists { timings }),
+            <span class="self">Self</span>::Unchanged { timings } =&gt; <span class="prelude-val">Err</span>(timings),
+        }
+    }
+}
+
+<span class="kw">impl </span>From&lt;RawContractState&gt; <span class="kw">for </span>PollContractState {
+    <span class="kw">fn </span>from(value: RawContractState) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>value {
+            RawContractState::Exists(state) =&gt; <span class="self">Self</span>::Exists(state),
+            RawContractState::NotExists { timings } =&gt; <span class="self">Self</span>::NotExists { timings },
+        }
+    }
 }
 
 <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]

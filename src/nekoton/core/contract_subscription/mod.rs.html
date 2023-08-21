@@ -530,7 +530,7 @@
 };
 <span class="kw">use super</span>::{utils, PollingMethod};
 <span class="kw">use </span><span class="kw">crate</span>::core::utils::{MessageContext, PendingTransactionsExt};
-<span class="kw">use </span><span class="kw">crate</span>::transport::models::{PollContractState, RawContractState, RawTransaction};
+<span class="kw">use </span><span class="kw">crate</span>::transport::models::{RawContractState, RawTransaction};
 <span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
 
 <span class="doccomment">/// Used as a base object for different listeners implementation
@@ -905,13 +905,13 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
         <span class="kw">let </span>contract_state = <span class="kw">match </span>prev_trans_lt {
             <span class="prelude-val">Some</span>(last_lt) =&gt; {
-                <span class="kw">match </span><span class="self">self
+                <span class="kw">let </span>poll = <span class="self">self
                     </span>.transport
                     .poll_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>.address, last_lt)
-                    .<span class="kw">await</span><span class="question-mark">?
-                </span>{
-                    PollContractState::Changed(new_state) =&gt; new_state,
-                    PollContractState::Unchanged { timings } =&gt; {
+                    .<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">match </span>poll.to_changed() {
+                    <span class="prelude-val">Ok</span>(new_state) =&gt; new_state,
+                    <span class="prelude-val">Err</span>(timings) =&gt; {
                         <span class="self">self</span>.contract_state.gen_timings = timings;
                         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
                     }
