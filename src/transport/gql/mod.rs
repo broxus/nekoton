@@ -249,7 +249,7 @@ impl Transport for GqlTransport {
     ) -> Result<PollContractState> {
         // TODO: use two queries for state and status
         let state = self.get_contract_state(address).await?;
-        Ok(PollContractState::Changed(state))
+        Ok(PollContractState::from(state))
     }
 
     async fn get_accounts_by_code_hash(

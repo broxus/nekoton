@@ -69,7 +69,27 @@ impl From<RawContractState> for Option<ExistingContract> {
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum PollContractState {
     Unchanged { timings: GenTimings },
-    Changed(RawContractState),
+    NotExists { timings: GenTimings },
+    Exists(ExistingContract),
+}
+
+impl PollContractState {
+    pub fn to_changed(self) -> Result<RawContractState, GenTimings> {
+        match self {
+            Self::Exists(state) => Ok(RawContractState::Exists(state)),
+            Self::NotExists { timings } => Ok(RawContractState::NotExists { timings }),
+            Self::Unchanged { timings } => Err(timings),
+        }
+    }
+}
+
+impl From<RawContractState> for PollContractState {
+    fn from(value: RawContractState) -> Self {
+        match value {
+            RawContractState::Exists(state) => Self::Exists(state),
+            RawContractState::NotExists { timings } => Self::NotExists { timings },
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

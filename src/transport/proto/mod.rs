@@ -68,19 +68,18 @@ impl Transport for ProtoTransport {
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
         if let Some(known_state) = self.accounts_cache.get_account_state(address) {
             if let Some(last_trans_lt) = known_state.last_known_trans_lt() {
-                return Ok(
-                    match self.poll_contract_state(address, last_trans_lt).await? {
-                        PollContractState::Unchanged { timings } => {
-                            let mut known_state = known_state.as_ref().clone();
-                            known_state.update_timings(timings);
-                            known_state
-                        }
-                        PollContractState::Changed(contract) => {
-                            self.accounts_cache.update_account_state(address, &contract);
-                            contract
-                        }
-                    },
-                );
+                let poll = self.poll_contract_state(address, last_trans_lt).await?;
+                return Ok(match poll.to_changed() {
+                    Ok(contract) => {
+                        self.accounts_cache.update_account_state(address, &contract);
+                        contract
+                    }
+                    Err(timings) => {
+                        let mut known_state = known_state.as_ref().clone();
+                        known_state.update_timings(timings);
+                        known_state
+                    }
+                });
             }
         }
 
@@ -103,11 +102,9 @@ impl Transport for ProtoTransport {
         let data = self.connection.post(req).await?;
         let response = rpc::Response::decode(Bytes::from(data))?;
 
-        let result = match parse_response(response)? {
-            PollContractState::Changed(state) => state,
-            PollContractState::Unchanged { .. } => {
-                return Err(ProtoClientError::InvalidResponse.into())
-            }
+        let result = match parse_response(response)?.to_changed() {
+            Ok(state) => state,
+            Err(_) => return Err(ProtoClientError::InvalidResponse.into()),
         };
 
         self.accounts_cache.update_account_state(address, &result);
@@ -119,12 +116,10 @@ impl Transport for ProtoTransport {
         address: &MsgAddressInt,
         last_trans_lt: u64,
     ) -> Result<PollContractState> {
-        let address = utils::addr_to_bytes(address);
-
         let data = rpc::Request {
             call: Some(rpc::request::Call::GetContractState(
                 rpc::request::GetContractState {
-                    address,
+                    address: utils::addr_to_bytes(address),
                     last_transaction_lt: Some(last_trans_lt),
                 },
             )),
@@ -136,9 +131,13 @@ impl Transport for ProtoTransport {
         };
 
         let data = self.connection.post(req).await?;
-        let response = rpc::Response::decode(Bytes::from(data))?;
+        let result = rpc::Response::decode(Bytes::from(data))?;
+        let result = parse_response(result)?;
 
-        let result = parse_response(response)?;
+        if let Ok(new_state) = result.clone().to_changed() {
+            self.accounts_cache
+                .update_account_state(address, &new_state);
+        }
         Ok(result)
     }
 
@@ -333,11 +332,11 @@ fn parse_response(response: rpc::Response) -> Result<PollContractState> {
                     .ok_or::<ProtoClientError>(ProtoClientError::InvalidResponse)?
                     .into();
 
-                PollContractState::Changed(RawContractState::Exists(ExistingContract {
+                PollContractState::Exists(ExistingContract {
                     account,
                     timings,
                     last_transaction_id,
-                }))
+                })
             }
             rpc::response::get_contract_state::State::NotExists(state) => {
                 let timings = match state
@@ -352,7 +351,7 @@ fn parse_response(response: rpc::Response) -> Result<PollContractState> {
                     }
                 };
 
-                PollContractState::Changed(RawContractState::NotExists { timings })
+                PollContractState::NotExists { timings }
             }
             rpc::response::get_contract_state::State::Unchanged(timings) => {
                 PollContractState::Unchanged {

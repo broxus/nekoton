@@ -55,19 +55,18 @@ impl Transport for JrpcTransport {
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
         if let Some(known_state) = self.accounts_cache.get_account_state(address) {
             if let Some(last_trans_lt) = known_state.last_known_trans_lt() {
-                return Ok(
-                    match self.poll_contract_state(address, last_trans_lt).await? {
-                        PollContractState::Unchanged { timings } => {
-                            let mut known_state = known_state.as_ref().clone();
-                            known_state.update_timings(timings);
-                            known_state
-                        }
-                        PollContractState::Changed(contract) => {
-                            self.accounts_cache.update_account_state(address, &contract);
-                            contract
-                        }
-                    },
-                );
+                let poll = self.poll_contract_state(address, last_trans_lt).await?;
+                return Ok(match poll.to_changed() {
+                    Ok(contract) => {
+                        self.accounts_cache.update_account_state(address, &contract);
+                        contract
+                    }
+                    Err(timings) => {
+                        let mut known_state = known_state.as_ref().clone();
+                        known_state.update_timings(timings);
+                        known_state
+                    }
+                });
             }
         }
 
@@ -104,6 +103,10 @@ impl Transport for JrpcTransport {
         };
         let data = self.connection.post(req).await?;
         let response = tiny_jsonrpc::parse_response::<PollContractState>(&data)?;
+        if let Ok(new_state) = response.clone().to_changed() {
+            self.accounts_cache
+                .update_account_state(address, &new_state);
+        }
         Ok(response)
     }
 
