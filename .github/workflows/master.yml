@@ -3,42 +3,6 @@ on: [push, pull_request]
 name: master
 
 jobs:
-  docs:
-    name: Docs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v2
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: Install protobuf
-        run: |
-          wget https://github.com/protocolbuffers/protobuf/releases/download/v24.0/protoc-24.0-linux-x86_64.zip
-          unzip protoc-24.0-linux-x86_64.zip
-          sudo cp bin/protoc /usr/bin/protoc
-          sudo cp -r include/. /usr/include
-
-      - name: Build docs
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --workspace --no-deps
-
-      - name: Set default page
-        run: echo '<meta http-equiv="refresh" content="0; url=nekoton">' > ./target/doc/index.html
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/doc
-
   check:
     name: Check
     runs-on: ubuntu-latest
