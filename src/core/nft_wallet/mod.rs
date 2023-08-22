@@ -37,7 +37,7 @@ impl NftCollection {
     ) -> Result<NftCollection> {
         let state = match transport.get_contract_state(&collection_address).await? {
             RawContractState::Exists(state) => state,
-            RawContractState::NotExists => return Err(NftError::ContractNotExist.into()),
+            RawContractState::NotExists { .. } => return Err(NftError::ContractNotExist.into()),
         };
 
         let contract = CollectionContractState(&state);
@@ -114,7 +114,7 @@ impl Nft {
     ) -> Result<Nft> {
         let state = match transport.get_contract_state(index_address).await? {
             RawContractState::Exists(state) => state,
-            RawContractState::NotExists => return Err(NftError::ContractNotExist.into()),
+            RawContractState::NotExists { .. } => return Err(NftError::ContractNotExist.into()),
         };
         let index_state = IndexContractState(&state);
 
@@ -139,7 +139,7 @@ impl Nft {
     ) -> Result<Nft> {
         let state = match transport.get_contract_state(nft_address).await? {
             RawContractState::Exists(state) => state,
-            RawContractState::NotExists => return Err(NftError::ContractNotExist.into()),
+            RawContractState::NotExists { .. } => return Err(NftError::ContractNotExist.into()),
         };
         let nft_state = NftContractState(&state);
 

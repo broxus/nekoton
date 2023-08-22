@@ -56,21 +56,21 @@ pub struct ParsedBlock {
 
 impl ParsedBlock {
     #[inline]
-    fn empty(utime: u32) -> Self {
+    fn empty(current_utime: u32) -> Self {
         Self {
-            current_utime: utime,
+            current_utime,
             data: None,
         }
     }
 
     #[inline]
     fn with_data(
-        utime: u32,
+        current_utime: u32,
         contract_state: ContractState,
         new_transactions: Option<NewTransactions>,
     ) -> Self {
         Self {
-            current_utime: utime,
+            current_utime,
             data: Some((contract_state, new_transactions)),
         }
     }

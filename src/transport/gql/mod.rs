@@ -216,7 +216,11 @@ impl Transport for GqlTransport {
             .and_then(|state| state.boc)
         {
             Some(boc) => boc,
-            None => return Ok(RawContractState::NotExists),
+            None => {
+                return Ok(RawContractState::NotExists {
+                    timings: GenTimings::Unknown,
+                })
+            }
         };
 
         match Account::construct_from_base64(&account_state) {
@@ -231,9 +235,21 @@ impl Transport for GqlTransport {
                     last_transaction_id,
                 }))
             }
-            Ok(_) => Ok(RawContractState::NotExists),
+            Ok(_) => Ok(RawContractState::NotExists {
+                timings: GenTimings::Unknown,
+            }),
             Err(_) => Err(NodeClientError::InvalidAccountState.into()),
         }
+    }
+
+    async fn poll_contract_state(
+        &self,
+        address: &MsgAddressInt,
+        _last_trans_lt: u64,
+    ) -> Result<PollContractState> {
+        // TODO: use two queries for state and status
+        let state = self.get_contract_state(address).await?;
+        Ok(PollContractState::from(state))
     }
 
     async fn get_accounts_by_code_hash(

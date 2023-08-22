@@ -1,10 +1,58 @@
+use std::sync::Arc;
+
 use anyhow::Result;
+use quick_cache::sync::Cache as QuickCache;
 use tokio::sync::Mutex;
 
 use nekoton_utils::*;
 
+use super::models::RawContractState;
 use super::Transport;
 use crate::core::models::NetworkCapabilities;
+
+#[allow(unused)]
+pub struct AccountsCache {
+    accounts: QuickCache<ton_block::MsgAddressInt, Arc<RawContractState>>,
+}
+
+impl Default for AccountsCache {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl AccountsCache {
+    pub fn new() -> Self {
+        const DEFAULT_ACCOUNTS_CAPACITY: usize = 100;
+
+        Self::with_capacity(DEFAULT_ACCOUNTS_CAPACITY)
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            accounts: QuickCache::new(capacity),
+        }
+    }
+
+    #[allow(unused)]
+    pub fn get_account_state(
+        &self,
+        address: &ton_block::MsgAddressInt,
+    ) -> Option<Arc<RawContractState>> {
+        self.accounts.get(address)
+    }
+
+    #[allow(unused)]
+    pub fn update_account_state(
+        &self,
+        address: &ton_block::MsgAddressInt,
+        account: &RawContractState,
+    ) {
+        self.accounts
+            .insert(address.clone(), Arc::new(account.clone()))
+    }
+}
 
 pub struct ConfigCache {
     use_default_config: bool,

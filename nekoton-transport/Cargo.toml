@@ -29,3 +29,4 @@ tokio = { version = "1", features = ["sync", "time", "macros"] }
 default = ["gql_transport"]
 gql_transport = ["nekoton/gql_transport"]
 jrpc_transport = ["nekoton/jrpc_transport"]
+proto_transport = ["nekoton/proto_transport"]

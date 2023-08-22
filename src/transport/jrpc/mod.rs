@@ -9,7 +9,7 @@ use nekoton_utils::*;
 use crate::core::models::{NetworkCapabilities, ReliableBehavior};
 use crate::external::{self, JrpcConnection};
 
-use super::models::{RawContractState, RawTransaction};
+use super::models::{PollContractState, RawContractState, RawTransaction};
 use super::utils::*;
 use super::{Transport, TransportInfo};
 
@@ -20,6 +20,7 @@ mod models;
 pub struct JrpcTransport {
     connection: Arc<dyn JrpcConnection>,
     config_cache: ConfigCache,
+    accounts_cache: AccountsCache,
 }
 
 impl JrpcTransport {
@@ -27,6 +28,7 @@ impl JrpcTransport {
         Self {
             connection,
             config_cache: ConfigCache::new(false),
+            accounts_cache: AccountsCache::new(),
         }
     }
 }
@@ -51,12 +53,60 @@ impl Transport for JrpcTransport {
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
+        if let Some(known_state) = self.accounts_cache.get_account_state(address) {
+            if let Some(last_trans_lt) = known_state.last_known_trans_lt() {
+                let poll = self.poll_contract_state(address, last_trans_lt).await?;
+                return Ok(match poll.to_changed() {
+                    Ok(contract) => {
+                        self.accounts_cache.update_account_state(address, &contract);
+                        contract
+                    }
+                    Err(timings) => {
+                        let mut known_state = known_state.as_ref().clone();
+                        known_state.update_timings(timings);
+                        known_state
+                    }
+                });
+            }
+        }
+
         let req = external::JrpcRequest {
-            data: make_jrpc_request("getContractState", &GetContractState { address }),
+            data: make_jrpc_request(
+                "getContractState",
+                &GetContractState {
+                    address,
+                    last_transaction_lt: None,
+                },
+            ),
             requires_db: false,
         };
         let data = self.connection.post(req).await?;
         let response = tiny_jsonrpc::parse_response::<RawContractState>(&data)?;
+        self.accounts_cache.update_account_state(address, &response);
+        Ok(response)
+    }
+
+    async fn poll_contract_state(
+        &self,
+        address: &MsgAddressInt,
+        last_trans_lt: u64,
+    ) -> Result<PollContractState> {
+        let req = external::JrpcRequest {
+            data: make_jrpc_request(
+                "getContractState",
+                &GetContractState {
+                    address,
+                    last_transaction_lt: Some(last_trans_lt),
+                },
+            ),
+            requires_db: false,
+        };
+        let data = self.connection.post(req).await?;
+        let response = tiny_jsonrpc::parse_response::<PollContractState>(&data)?;
+        if let Ok(new_state) = response.clone().to_changed() {
+            self.accounts_cache
+                .update_account_state(address, &new_state);
+        }
         Ok(response)
     }
 

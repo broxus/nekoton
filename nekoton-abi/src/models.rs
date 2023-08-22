@@ -53,7 +53,7 @@ impl<'de> Deserialize<'de> for GenTimings {
         let gen_lt = u64::from_str(&gen_lt).map_err(D::Error::custom)?;
 
         Ok(match (gen_lt, gen_utime) {
-            (0, _) | (_, 0) => Self::Unknown,
+            (_, 0) => Self::Unknown,
             (gen_lt, gen_utime) => Self::Known { gen_lt, gen_utime },
         })
     }

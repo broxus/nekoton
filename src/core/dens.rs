@@ -144,7 +144,7 @@ impl DensTld {
     ) -> Result<Self> {
         let state = match transport.get_contract_state(address).await? {
             RawContractState::Exists(state) => state,
-            RawContractState::NotExists => return Err(DensError::InvalidTldContract.into()),
+            RawContractState::NotExists { .. } => return Err(DensError::InvalidTldContract.into()),
         };
         let path = dens::RootContract(state.as_context(clock.as_ref())).get_path()?;
 

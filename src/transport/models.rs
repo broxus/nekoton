@@ -13,29 +13,47 @@ use crate::core::models::{ContractState, PendingTransaction};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum RawContractState {
-    NotExists,
+    NotExists { timings: GenTimings },
     Exists(ExistingContract),
 }
 
 impl RawContractState {
     pub fn brief(&self) -> ContractState {
         match self {
-            Self::NotExists => ContractState::default(),
+            Self::NotExists { .. } => ContractState::default(),
             Self::Exists(state) => state.brief(),
         }
     }
 
     pub fn into_account(self) -> Account {
         match self {
-            Self::NotExists => Account::AccountNone,
+            Self::NotExists { .. } => Account::AccountNone,
             Self::Exists(state) => Account::Account(state.account),
         }
     }
 
     pub fn into_contract(self) -> Option<ExistingContract> {
         match self {
-            Self::NotExists => None,
+            Self::NotExists { .. } => None,
             Self::Exists(contract) => Some(contract),
+        }
+    }
+
+    pub fn update_timings(&mut self, new_timings: GenTimings) {
+        match self {
+            Self::NotExists { timings } => *timings = new_timings,
+            Self::Exists(state) => state.timings = new_timings,
+        }
+    }
+
+    pub fn last_known_trans_lt(&self) -> Option<u64> {
+        let timings = match self {
+            Self::NotExists { timings } => timings,
+            Self::Exists(contract) => &contract.timings,
+        };
+        match timings {
+            GenTimings::Known { gen_lt, .. } => Some(*gen_lt),
+            GenTimings::Unknown => None,
         }
     }
 }
@@ -43,6 +61,34 @@ impl RawContractState {
 impl From<RawContractState> for Option<ExistingContract> {
     fn from(state: RawContractState) -> Self {
         state.into_contract()
+    }
+}
+
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum PollContractState {
+    Unchanged { timings: GenTimings },
+    NotExists { timings: GenTimings },
+    Exists(ExistingContract),
+}
+
+impl PollContractState {
+    pub fn to_changed(self) -> Result<RawContractState, GenTimings> {
+        match self {
+            Self::Exists(state) => Ok(RawContractState::Exists(state)),
+            Self::NotExists { timings } => Ok(RawContractState::NotExists { timings }),
+            Self::Unchanged { timings } => Err(timings),
+        }
+    }
+}
+
+impl From<RawContractState> for PollContractState {
+    fn from(value: RawContractState) -> Self {
+        match value {
+            RawContractState::Exists(state) => Self::Exists(state),
+            RawContractState::NotExists { timings } => Self::NotExists { timings },
+        }
     }
 }
 

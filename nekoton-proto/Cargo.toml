@@ -1,0 +1,16 @@
+[package]
+name = "nekoton-proto"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+prost = "0.11"
+
+ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
+ton_types = { git = "https://github.com/broxus/ton-labs-types" }
+
+nekoton-abi = { path = "../nekoton-abi"}
+
+[build-dependencies]
+prost-build = "0.11"

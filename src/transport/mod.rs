@@ -11,9 +11,15 @@ use self::models::*;
 pub mod gql;
 #[cfg(feature = "jrpc_transport")]
 pub mod jrpc;
+#[cfg(feature = "proto_transport")]
+pub mod proto;
 
 pub mod models;
-#[cfg(any(feature = "gql_transport", feature = "jrpc_transport",))]
+#[cfg(any(
+    feature = "gql_transport",
+    feature = "jrpc_transport",
+    feature = "proto_transport",
+))]
 mod utils;
 
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
@@ -24,6 +30,12 @@ pub trait Transport: Send + Sync {
     async fn send_message(&self, message: &ton_block::Message) -> Result<()>;
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState>;
+
+    async fn poll_contract_state(
+        &self,
+        address: &MsgAddressInt,
+        last_trans_lt: u64,
+    ) -> Result<PollContractState>;
 
     async fn get_accounts_by_code_hash(
         &self,

@@ -250,7 +250,7 @@ impl ContractSubscription {
             .await?;
         let mut account = match self.transport.get_contract_state(&self.address).await? {
             RawContractState::Exists(state) => ton_block::Account::Account(state.account),
-            RawContractState::NotExists => ton_block::Account::AccountNone,
+            RawContractState::NotExists { .. } => ton_block::Account::AccountNone,
         };
 
         if let Some(balance) = options.override_balance {
@@ -387,7 +387,22 @@ impl ContractSubscription {
         prev_trans_lt: Option<u64>,
         on_contract_state: OnContractState<'_>,
     ) -> Result<bool> {
-        let contract_state = self.transport.get_contract_state(&self.address).await?;
+        let contract_state = match prev_trans_lt {
+            Some(last_lt) => {
+                let poll = self
+                    .transport
+                    .poll_contract_state(&self.address, last_lt)
+                    .await?;
+                match poll.to_changed() {
+                    Ok(new_state) => new_state,
+                    Err(timings) => {
+                        self.contract_state.gen_timings = timings;
+                        return Ok(false);
+                    }
+                }
+            }
+            None => self.transport.get_contract_state(&self.address).await?,
+        };
         let new_contract_state = contract_state.brief();
 
         let updated = if let Some(last_lt) = prev_trans_lt {

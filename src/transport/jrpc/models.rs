@@ -6,6 +6,9 @@ use nekoton_utils::*;
 pub struct GetContractState<'a> {
     #[serde(with = "serde_address")]
     pub address: &'a ton_block::MsgAddressInt,
+
+    #[serde(default, with = "serde_optional_string")]
+    pub last_transaction_lt: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize)]
