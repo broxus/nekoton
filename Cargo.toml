@@ -11,7 +11,7 @@ edition = "2021"
 
 [workspace]
 members = [
-    "gen-protoc",
+    "gen-protos",
     "nekoton-abi",
     "nekoton-contracts",
     "nekoton-derive",

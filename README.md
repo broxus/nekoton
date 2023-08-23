@@ -21,6 +21,22 @@ cargo add nekoton
 - Rust 1.62+
 - `wasm-pack` 0.9.1+ (to test build for wasm target)
 
+### Modifying protobuffers
+
+Occasionally, you may need to change the `.proto` files that define request/response
+data format. In this case, you will need to add a few steps to the above
+workflow.
+
+- Install the `protoc` compiler.
+- Run `cargo run -p gen-protos` regularly (or after every edit to a `.proto`
+  file).  The `gen-protos` binary will use the `prost-build` library to compile the
+  `.proto` files into `.rs` files.
+- If you are adding a new `.proto` file, you will need to edit the list of
+  these files in `gen-protos/src/main.rs`.
+
+The `.rs` files generated from `.proto` files are included in the repository,
+and there is a Github CI check that will complain if they do not match.
+
 ## Contributing
 
 We welcome contributions to the project! If you notice any issues or errors, feel free to open an issue or submit a pull request.
