@@ -20,13 +20,6 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Install protobuf
-        run: |
-          wget https://github.com/protocolbuffers/protobuf/releases/download/v24.0/protoc-24.0-linux-x86_64.zip
-          unzip protoc-24.0-linux-x86_64.zip
-          sudo cp bin/protoc /usr/bin/protoc
-          sudo cp -r include/. /usr/include
-
       - name: Build docs
         uses: actions-rs/cargo@v1
         with:

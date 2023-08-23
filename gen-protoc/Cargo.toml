@@ -1,0 +1,14 @@
+[package]
+name = "gen-protos"
+description = "Generate Protocol Buffers definitions for nekoton-proto crate"
+version = "0.13.0"
+authors = [
+    "Alexey Pashinov <pashinov93@gmail.com>",
+    "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
+    "Ivan Kalinin <i.kalinin@dexpa.io>"
+]
+rust-version = "1.62.0"
+edition = "2021"
+
+[dependencies]
+prost-build = "0.11"

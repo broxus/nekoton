@@ -1,9 +1,9 @@
 use prost::bytes::Bytes;
 use ton_types::UInt256;
 
-use crate::rpc::response::get_contract_state::exists::{Exact, Inexact, LastTransactionId};
-use crate::rpc::response::get_contract_state::not_exist::GenTimings;
-use crate::rpc::response::get_contract_state::{NotExist, Timings};
+use crate::protos::rpc::response::get_contract_state::exists::{Exact, Inexact, LastTransactionId};
+use crate::protos::rpc::response::get_contract_state::not_exist::GenTimings;
+use crate::protos::rpc::response::get_contract_state::{NotExist, Timings};
 
 impl From<GenTimings> for nekoton_abi::GenTimings {
     fn from(t: GenTimings) -> Self {
