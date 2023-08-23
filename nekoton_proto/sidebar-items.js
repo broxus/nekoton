@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["models","rpc","utils"]};
+window.SIDEBAR_ITEMS = {"mod":["models","protos","utils"]};

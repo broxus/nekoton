@@ -104,9 +104,9 @@
 </pre></div><pre class="rust"><code><span class="kw">use </span>prost::bytes::Bytes;
 <span class="kw">use </span>ton_types::UInt256;
 
-<span class="kw">use </span><span class="kw">crate</span>::rpc::response::get_contract_state::exists::{Exact, Inexact, LastTransactionId};
-<span class="kw">use </span><span class="kw">crate</span>::rpc::response::get_contract_state::not_exist::GenTimings;
-<span class="kw">use </span><span class="kw">crate</span>::rpc::response::get_contract_state::{NotExist, Timings};
+<span class="kw">use </span><span class="kw">crate</span>::protos::rpc::response::get_contract_state::exists::{Exact, Inexact, LastTransactionId};
+<span class="kw">use </span><span class="kw">crate</span>::protos::rpc::response::get_contract_state::not_exist::GenTimings;
+<span class="kw">use </span><span class="kw">crate</span>::protos::rpc::response::get_contract_state::{NotExist, Timings};
 
 <span class="kw">impl </span>From&lt;GenTimings&gt; <span class="kw">for </span>nekoton_abi::GenTimings {
     <span class="kw">fn </span>from(t: GenTimings) -&gt; <span class="self">Self </span>{

@@ -3,14 +3,8 @@
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
 <a href="#5" id="5">5</a>
-<a href="#6" id="6">6</a>
-<a href="#7" id="7">7</a>
-<a href="#8" id="8">8</a>
-</pre></div><pre class="rust"><code><span class="kw">pub mod </span>rpc {
-    <span class="macro">include!</span>(<span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">&quot;OUT_DIR&quot;</span>), <span class="string">&quot;/rpc.rs&quot;</span>));
-}
-
-<span class="kw">pub mod </span>models;
+</pre></div><pre class="rust"><code><span class="kw">pub mod </span>models;
+<span class="kw">pub mod </span>protos;
 <span class="kw">pub mod </span>utils;
 
 <span class="kw">pub use </span>prost;
