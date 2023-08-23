@@ -4,7 +4,7 @@ use anyhow::Result;
 use ton_block::{Block, Deserializable, MsgAddressInt, Serializable};
 
 use nekoton_proto::prost::{bytes::Bytes, Message};
-use nekoton_proto::rpc;
+use nekoton_proto::protos::rpc;
 use nekoton_proto::utils;
 
 use nekoton_utils::*;

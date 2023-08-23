@@ -22,8 +22,8 @@ jobs:
         with:
           command: check
 
-  test:
-    name: Test Suite
+  check-protos:
+    name: Check protos
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -37,11 +37,27 @@ jobs:
           override: true
 
       - name: Install protobuf
-        run: |
-          wget https://github.com/protocolbuffers/protobuf/releases/download/v24.0/protoc-24.0-linux-x86_64.zip
-          unzip protoc-24.0-linux-x86_64.zip
-          sudo cp bin/protoc /usr/bin/protoc
-          sudo cp -r include/. /usr/include
+        run: sudo apt update && sudo apt-get -y install protobuf-compiler
+
+      - name: Generate Rust code from .proto files
+        run: cargo run -p gen-protos
+
+      - name: Check for uncommitted changes
+        run: git diff --exit-code
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
 
       - name: Run cargo test for nekoton
         uses: actions-rs/cargo@v1
@@ -87,13 +103,6 @@ jobs:
           toolchain: stable
           override: true
           components: rustfmt, clippy
-
-      - name: Install protobuf
-        run: |
-          wget https://github.com/protocolbuffers/protobuf/releases/download/v24.0/protoc-24.0-linux-x86_64.zip
-          unzip protoc-24.0-linux-x86_64.zip
-          sudo cp bin/protoc /usr/bin/protoc
-          sudo cp -r include/. /usr/include
 
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
