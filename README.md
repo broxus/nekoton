@@ -20,6 +20,7 @@ cargo add nekoton
 
 - Rust 1.62+
 - `wasm-pack` 0.9.1+ (to test build for wasm target)
+- protoc 3.12.4+ (to generate .rs files from .proto)
 
 ### Modifying protobuffers
 
