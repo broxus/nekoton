@@ -457,9 +457,6 @@ mod tests {
             if continuation.is_none() {
                 break;
             }
-
-            // Rate limits
-            tokio::time::sleep(Duration::from_secs(1)).await;
         }
 
         transport.get_latest_key_block().await?;
