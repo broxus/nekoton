@@ -374,7 +374,6 @@ pub enum ProtoClientError {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
-    use std::time::Duration;
 
     use futures_util::StreamExt;
 
