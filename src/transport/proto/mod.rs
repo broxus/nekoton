@@ -371,7 +371,7 @@ pub enum ProtoClientError {
     InvalidResponse,
 }
 
-/*#[cfg(test)]
+#[cfg(test)]
 mod tests {
     use std::str::FromStr;
     use std::time::Duration;
@@ -386,7 +386,7 @@ mod tests {
         async fn post(&self, req: external::ProtoRequest) -> Result<Vec<u8>> {
             println!("{req:?}");
             let response = self
-                .post("http://localhost:9000/proto")
+                .post("https://jrpc.everwallet.net/")
                 .body(req.data)
                 .header("Content-Type", "application/x-protobuf")
                 .send()
@@ -466,4 +466,4 @@ mod tests {
 
         Ok(())
     }
-}*/
+}
