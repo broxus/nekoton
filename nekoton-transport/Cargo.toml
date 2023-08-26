@@ -19,6 +19,7 @@ serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0"
 tokio = { version = "1", features = ["sync", "time"] }
 
+nekoton-proto = { path = "../nekoton-proto" }
 nekoton-utils = { path = "../nekoton-utils" }
 nekoton = { path = ".." }
 
