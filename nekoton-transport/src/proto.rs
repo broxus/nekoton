@@ -49,12 +49,18 @@ impl nekoton::external::ProtoConnection for ProtoClient {
         } else {
             &self.base_url
         };
-        let response = self.client.post(url.clone()).body(req.data).send().await?;
-        if response.status() != StatusCode::OK {
-            let msg = rpc::Error::decode(response.bytes().await?)?;
-            anyhow::bail!(msg.message)
-        }
 
-        Ok(response.bytes().await?.into())
+        let response = self.client.post(url.clone()).body(req.data).send().await?;
+
+        let res = match response.status() {
+            StatusCode::OK => response.bytes().await?.into(),
+            StatusCode::UNPROCESSABLE_ENTITY => {
+                let msg = rpc::Error::decode(response.bytes().await?)?;
+                anyhow::bail!(msg.message)
+            }
+            _ => anyhow::bail!(response.status().to_string()),
+        };
+
+        Ok(res)
     }
 }
