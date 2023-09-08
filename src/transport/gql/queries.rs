@@ -54,7 +54,7 @@ declare_queries! {
 pub mod query_block {
     use super::*;
 
-    pub const QUERY: &str = "query($id:String!){blocks(filter:{id:{eq:$id}},limit:1){boc}}";
+    pub const QUERY: &str = "query($id:String!){blockchain{block(hash:$id){boc}}}";
 
     #[derive(Serialize)]
     pub struct Variables {
@@ -63,11 +63,16 @@ pub mod query_block {
 
     #[derive(Deserialize)]
     pub struct ResponseData {
-        pub blocks: Vec<QueryBlockBlocks>,
+        pub blockchain: BlockchainData,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryBlockBlocks {
+    pub struct BlockchainData {
+        pub block: Option<Block>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Block {
         pub boc: String,
     }
 }
@@ -124,7 +129,7 @@ pub mod query_block_after_split {
 pub mod query_account_state {
     use super::*;
 
-    pub const QUERY: &str = "query($a:String!){accounts(filter:{id:{eq:$a}},limit:1){boc}}";
+    pub const QUERY: &str = "query($a:String!){blockchain{account(address:$a){info{boc}}}}";
 
     #[derive(Serialize)]
     pub struct Variables {
@@ -134,11 +139,21 @@ pub mod query_account_state {
 
     #[derive(Deserialize)]
     pub struct ResponseData {
-        pub accounts: Vec<QueryAccountStateAccounts>,
+        pub blockchain: BlockchainData,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryAccountStateAccounts {
+    pub struct BlockchainData {
+        pub account: Account,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Account {
+        pub info: AccountInfo,
+    }
+
+    #[derive(Deserialize)]
+    pub struct AccountInfo {
         pub boc: Option<String>,
     }
 }
@@ -146,6 +161,21 @@ pub mod query_account_state {
 pub mod query_account_transactions {
     use super::*;
 
+    // TODO: use new query when it is fixed:
+    //
+    // query($a:String!,$lt:String!,$l:Int!) {
+    //   blockchain {
+    //     account(address:$a) {
+    //       transactions_by_lt(allow_latest_inconsistent_data:true,last:$l,before:$lt,archive:true) {
+    //         edges {
+    //           node {
+    //             lt
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
     pub const QUERY: &str = "query($a:String!,$lt:String!,$l:Int!){transactions(filter:{account_addr:{eq:$a},lt:{le:$lt}},orderBy:[{path:\"lt\",direction:DESC}],limit:$l){boc}}";
 
     #[derive(Serialize)]
@@ -172,7 +202,7 @@ pub mod query_account_transactions {
 pub mod query_transaction {
     use super::*;
 
-    pub const QUERY: &str = "query($h:String!){transactions(filter:{id:{eq:$h}},limit:1){boc}}";
+    pub const QUERY: &str = "query($h:String!){blockchain{transaction(hash:$h){boc}}}";
 
     #[derive(Serialize)]
     pub struct Variables {
@@ -182,11 +212,16 @@ pub mod query_transaction {
 
     #[derive(Deserialize)]
     pub struct ResponseData {
-        pub transactions: Vec<QueryTransactionTransactions>,
+        pub blockchain: BlockchainData,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryTransactionTransactions {
+    pub struct BlockchainData {
+        pub transaction: Option<Transaction>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Transaction {
         pub boc: String,
     }
 }
@@ -194,7 +229,8 @@ pub mod query_transaction {
 pub mod query_dst_transaction {
     use super::*;
 
-    pub const QUERY: &str = "query($h:String!){transactions(filter:{in_msg:{eq:$h}},limit:1){boc}}";
+    pub const QUERY: &str =
+        "query($h:String!){blockchain{transactions_by_in_msg(msg_hash:$h){boc}}}";
 
     #[derive(Serialize)]
     pub struct Variables {
@@ -204,11 +240,16 @@ pub mod query_dst_transaction {
 
     #[derive(Deserialize)]
     pub struct ResponseData {
-        pub transactions: Vec<QueryTransactionTransactions>,
+        pub blockchain: BlockchainData,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryTransactionTransactions {
+    pub struct BlockchainData {
+        pub transactions_by_in_msg: Vec<Transaction>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Transaction {
         pub boc: String,
     }
 }
@@ -242,37 +283,52 @@ pub mod query_accounts_by_code_hash {
 pub mod query_latest_masterchain_block {
     use super::*;
 
-    pub const QUERY: &str = "query{blocks(filter:{workchain_id:{eq:-1}},orderBy:[{path:\"seq_no\",direction:DESC}],limit:1){id gen_utime end_lt master{shard_hashes{workchain_id shard descr{root_hash gen_utime end_lt}}}}}";
+    pub const QUERY: &str = "query{blockchain{blocks(allow_latest_inconsistent_data:true,workchain:-1,last:1){edges{node{hash gen_utime end_lt master{shard_hashes{workchain_id shard descr{root_hash gen_utime end_lt}}}}}}}}";
 
     pub type Variables = ();
 
     #[derive(Deserialize)]
     pub struct ResponseData {
-        pub blocks: Vec<QueryLatestMasterchainBlockBlocks>,
+        pub blockchain: BlockchainData,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryLatestMasterchainBlockBlocks {
-        pub id: String,
+    pub struct BlockchainData {
+        pub blocks: Blocks,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Blocks {
+        pub edges: Vec<Edge>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Edge {
+        pub node: Block,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Block {
+        pub hash: String,
         pub gen_utime: f64,
         pub end_lt: String,
-        pub master: QueryLatestMasterchainBlockBlocksMaster,
+        pub master: BlockMaster,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryLatestMasterchainBlockBlocksMaster {
-        pub shard_hashes: Vec<QueryLatestMasterchainBlockBlocksMasterShardHashes>,
+    pub struct BlockMaster {
+        pub shard_hashes: Vec<ShardHashes>,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryLatestMasterchainBlockBlocksMasterShardHashes {
+    pub struct ShardHashes {
         pub workchain_id: i32,
         pub shard: String,
-        pub descr: QueryLatestMasterchainBlockBlocksMasterShardHashesDescr,
+        pub descr: ShardHashesDescr,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryLatestMasterchainBlockBlocksMasterShardHashesDescr {
+    pub struct ShardHashesDescr {
         pub root_hash: String,
         pub gen_utime: f64,
         pub end_lt: String,
@@ -282,17 +338,32 @@ pub mod query_latest_masterchain_block {
 pub mod query_latest_key_block {
     use super::*;
 
-    pub const QUERY: &str = "query{blocks(filter:{key_block:{eq:true},workchain_id:{eq:-1}},orderBy:[{path:\"seq_no\",direction:DESC}],limit:1){boc}}";
+    pub const QUERY: &str = "query{blockchain{key_blocks(allow_latest_inconsistent_data:true,last:1){edges{node{boc}}}}}";
 
     pub type Variables = ();
 
     #[derive(Deserialize)]
     pub struct ResponseData {
-        pub blocks: Vec<QueryLatestKeyBlockBlocks>,
+        pub blockchain: BlockchainData,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryLatestKeyBlockBlocks {
+    pub struct BlockchainData {
+        pub key_blocks: KeyBlocks,
+    }
+
+    #[derive(Deserialize)]
+    pub struct KeyBlocks {
+        pub edges: Vec<Edge>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Edge {
+        pub node: Block,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Block {
         pub boc: String,
     }
 }
@@ -300,7 +371,7 @@ pub mod query_latest_key_block {
 pub mod query_node_se_conditions {
     use super::*;
 
-    pub const QUERY: &str = "query($w:Int!){blocks(filter:{workchain_id:{eq:$w}},orderBy:[{path:\"seq_no\",direction:DESC}],limit:1){after_merge shard}}";
+    pub const QUERY: &str = "query($w:Int!){blockchain{blocks(allow_latest_inconsistent_data:true,workchain:$w,last:1){edges{node{after_merge shard}}}}}";
 
     #[derive(Serialize)]
     pub struct Variables {
@@ -310,11 +381,26 @@ pub mod query_node_se_conditions {
 
     #[derive(Deserialize)]
     pub struct ResponseData {
-        pub blocks: Vec<QueryNodeSeConditionsBlocks>,
+        pub blockchain: BlockchainData,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryNodeSeConditionsBlocks {
+    pub struct BlockchainData {
+        pub blocks: Blocks,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Blocks {
+        pub edges: Vec<Edge>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Edge {
+        pub node: Block,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Block {
         pub after_merge: bool,
         pub shard: String,
     }
@@ -323,7 +409,7 @@ pub mod query_node_se_conditions {
 pub mod query_node_se_latest_block {
     use super::*;
 
-    pub const QUERY: &str = "query($w:Int!){blocks(filter:{workchain_id:{eq:$w},shard:{eq:\"8000000000000000\"}},orderBy:[{path:\"seq_no\",direction:DESC}],limit:1){id end_lt gen_utime}}";
+    pub const QUERY: &str = r#"query($w:Int!){blockchain{blocks(allow_latest_inconsistent_data:true,workchain:$w,shard:"8000000000000000",last:1){edges{node{hash end_lt gen_utime}}}}}"#;
 
     #[derive(Serialize)]
     pub struct Variables {
@@ -333,12 +419,27 @@ pub mod query_node_se_latest_block {
 
     #[derive(Deserialize)]
     pub struct ResponseData {
-        pub blocks: Vec<QueryNodeSeLatestBlockBlocks>,
+        pub blockchain: BlockchainData,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryNodeSeLatestBlockBlocks {
-        pub id: String,
+    pub struct BlockchainData {
+        pub blocks: Blocks,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Blocks {
+        pub edges: Vec<Edge>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Edge {
+        pub node: Block,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Block {
+        pub hash: String,
         pub end_lt: String,
         pub gen_utime: f64,
     }

@@ -65,19 +65,21 @@ impl GqlTransport {
     pub async fn get_latest_block(&self, addr: &MsgAddressInt) -> Result<LatestBlock> {
         let workchain_id = addr.get_workchain_id();
 
-        let block = self
+        let blocks = self
             .fetch::<QueryLatestMasterchainBlock>(())
             .await?
-            .blocks
-            .into_iter()
-            .next();
+            .blockchain
+            .blocks;
+        let block = blocks.edges.into_iter().next();
 
         match block {
             Some(block) => {
+                let block = block.node;
+
                 // Handle simple case when searched account is in masterchain
                 if workchain_id == -1 {
                     return Ok(LatestBlock {
-                        id: block.id,
+                        id: block.hash,
                         end_lt: parse_lt(&block.end_lt)?,
                         gen_utime: block.gen_utime as u32,
                     });
@@ -103,8 +105,10 @@ impl GqlTransport {
                         workchain: workchain_id,
                     })
                     .await?
-                    .blocks;
-                let block = blocks.into_iter().next().ok_or_else(no_blocks_found)?;
+                    .blockchain
+                    .blocks
+                    .edges;
+                let block = blocks.into_iter().next().ok_or_else(no_blocks_found)?.node;
 
                 // If workchain is sharded then it is not Node SE and missing masterchain blocks is error
                 if block.after_merge || block.shard != "8000000000000000" {
@@ -116,11 +120,13 @@ impl GqlTransport {
                         workchain: workchain_id,
                     })
                     .await?
-                    .blocks;
-                let block = blocks.into_iter().next().ok_or_else(no_blocks_found)?;
+                    .blockchain
+                    .blocks
+                    .edges;
+                let block = blocks.into_iter().next().ok_or_else(no_blocks_found)?.node;
 
                 Ok(LatestBlock {
-                    id: block.id,
+                    id: block.hash,
                     end_lt: parse_lt(&block.end_lt)?,
                     gen_utime: block.gen_utime as u32,
                 })
@@ -132,8 +138,10 @@ impl GqlTransport {
         let blocks = self
             .fetch::<QueryBlock>(query_block::Variables { id: id.to_owned() })
             .await?
-            .blocks;
-        let boc = blocks.into_iter().next().ok_or_else(no_blocks_found)?.boc;
+            .blockchain
+            .block
+            .ok_or_else(no_blocks_found)?;
+        let boc = blocks.boc;
 
         ton_block::Block::construct_from_base64(&boc)
             .map_err(|_| NodeClientError::InvalidBlock.into())
@@ -205,16 +213,14 @@ impl Transport for GqlTransport {
     }
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState> {
-        let account_state = match self
+        let account = self
             .fetch::<QueryAccountState>(query_account_state::Variables {
                 address: address.to_string(),
             })
             .await?
-            .accounts
-            .into_iter()
-            .next()
-            .and_then(|state| state.boc)
-        {
+            .blockchain
+            .account;
+        let account_state = match account.info.boc {
             Some(boc) => boc,
             None => {
                 return Ok(RawContractState::NotExists {
@@ -303,8 +309,8 @@ impl Transport for GqlTransport {
             hash: id.to_hex_string(),
         })
         .await?
-        .transactions
-        .into_iter()
+        .blockchain
+        .transaction
         .map(|transaction| {
             let bytes = base64::decode(transaction.boc)?;
             let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
@@ -316,7 +322,6 @@ impl Transport for GqlTransport {
                     .map_err(|_| NodeClientError::InvalidTransaction)?,
             })
         })
-        .next()
         .transpose()
     }
 
@@ -328,7 +333,8 @@ impl Transport for GqlTransport {
             hash: message_hash.to_hex_string(),
         })
         .await?
-        .transactions
+        .blockchain
+        .transactions_by_in_msg
         .into_iter()
         .map(|transaction| {
             let bytes = base64::decode(transaction.boc)?;
@@ -346,8 +352,14 @@ impl Transport for GqlTransport {
     }
 
     async fn get_latest_key_block(&self) -> Result<ton_block::Block> {
-        let blocks = self.fetch::<QueryLatestKeyBlock>(()).await?.blocks;
-        let boc = blocks.into_iter().next().ok_or_else(no_blocks_found)?.boc;
+        let blocks = self
+            .fetch::<QueryLatestKeyBlock>(())
+            .await?
+            .blockchain
+            .key_blocks
+            .edges;
+        let block = blocks.into_iter().next().ok_or_else(no_blocks_found)?;
+        let boc = block.node.boc;
 
         ton_block::Block::construct_from_base64(&boc)
             .map_err(|_| NodeClientError::InvalidBlock.into())
