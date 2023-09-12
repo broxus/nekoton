@@ -282,26 +282,37 @@ impl Transport for GqlTransport {
         from_lt: u64,
         count: u8,
     ) -> Result<Vec<RawTransaction>> {
-        self.fetch::<QueryAccountTransactions>(query_account_transactions::Variables {
-            address: address.to_string(),
-            last_transaction_lt: from_lt.to_string(),
-            limit: count,
-        })
-        .await?
-        .transactions
-        .into_iter()
-        .map(|transaction| {
-            let bytes = base64::decode(transaction.boc)?;
-            let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
-                .map_err(|_| NodeClientError::InvalidTransaction)?;
-            let hash = cell.repr_hash();
-            Ok(RawTransaction {
-                hash,
-                data: ton_block::Transaction::construct_from_cell(cell)
-                    .map_err(|_| NodeClientError::InvalidTransaction)?,
+        let transactions = self
+            .fetch::<QueryAccountTransactions>(query_account_transactions::Variables {
+                address: address.to_string(),
+                last_transaction_lt: from_lt.to_string(),
+                limit: count,
+                archive: true,
             })
-        })
-        .collect()
+            .await?
+            .blockchain
+            .account
+            .transactions_by_lt
+            .edges;
+
+        let mut transactions = transactions
+            .into_iter()
+            .map(|edge| {
+                let bytes = base64::decode(edge.node.boc)?;
+                let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
+                    .map_err(|_| NodeClientError::InvalidTransaction)?;
+                let hash = cell.repr_hash();
+                Ok(RawTransaction {
+                    hash,
+                    data: ton_block::Transaction::construct_from_cell(cell)
+                        .map_err(|_| NodeClientError::InvalidTransaction)?,
+                })
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        transactions.sort_by_key(|tx| std::cmp::Reverse(tx.data.lt));
+
+        Ok(transactions)
     }
 
     async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>> {
@@ -492,10 +503,11 @@ mod tests {
         transport.send_message(&Message::default()).await.unwrap();
 
         transport.get_contract_state(&address).await.unwrap();
-        transport
+        let transactions = transport
             .get_transactions(&address, 21968513000000, 10)
             .await
             .unwrap();
+        println!("TRANSACTIONS: {transactions:?}");
 
         transport.get_latest_block(&address).await.unwrap();
         transport.get_latest_block(&base_wc_address).await.unwrap();

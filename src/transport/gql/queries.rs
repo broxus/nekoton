@@ -161,22 +161,7 @@ pub mod query_account_state {
 pub mod query_account_transactions {
     use super::*;
 
-    // TODO: use new query when it is fixed:
-    //
-    // query($a:String!,$lt:String!,$l:Int!) {
-    //   blockchain {
-    //     account(address:$a) {
-    //       transactions_by_lt(allow_latest_inconsistent_data:true,last:$l,before:$lt,archive:true) {
-    //         edges {
-    //           node {
-    //             lt
-    //           }
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
-    pub const QUERY: &str = "query($a:String!,$lt:String!,$l:Int!){transactions(filter:{account_addr:{eq:$a},lt:{le:$lt}},orderBy:[{path:\"lt\",direction:DESC}],limit:$l){boc}}";
+    pub const QUERY: &str = "query($a:String!,$lt:String!,$l:Int!,$o:Boolean){blockchain{account(address:$a){transactions_by_lt(allow_latest_inconsistent_data:true,last:$l,before:$lt,archive:$o){edges{node{boc}}}}}}";
 
     #[derive(Serialize)]
     pub struct Variables {
@@ -186,15 +171,37 @@ pub mod query_account_transactions {
         pub last_transaction_lt: String,
         #[serde(rename = "l")]
         pub limit: u8,
+        #[serde(rename = "o")]
+        pub archive: bool,
     }
 
     #[derive(Deserialize)]
     pub struct ResponseData {
-        pub transactions: Vec<QueryAccountTransactionsTransactions>,
+        pub blockchain: BlockchainData,
     }
 
     #[derive(Deserialize)]
-    pub struct QueryAccountTransactionsTransactions {
+    pub struct BlockchainData {
+        pub account: Account,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Account {
+        pub transactions_by_lt: Transactions,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Transactions {
+        pub edges: Vec<Edge>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Edge {
+        pub node: Transaction,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Transaction {
         pub boc: String,
     }
 }
