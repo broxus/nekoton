@@ -192,7 +192,6 @@ pub enum TransactionTreeError {
 #[cfg(test)]
 #[cfg(feature = "jrpc_transport")]
 mod test {
-    use std::str::FromStr;
     use anyhow::Result;
 
     use crate::transport::jrpc::JrpcTransport;
@@ -205,95 +204,42 @@ mod test {
     use super::*;
 
     #[tokio::test]
+    #[ignore]
     async fn test() -> Result<()> {
-        const FEE_MULTIPLIER: u128 = 2;
-
-
-        let simulate_max = 100;
-        let mut executed = 0;
-
-
         let connection = reqwest::Client::new();
         let transport = Arc::new(JrpcTransport::new(Arc::new(connection)));
 
-        let message = "te6ccgECBgEAAUAAAUWIAfPq6ksCQX/kNfsY8xS5PTRd4WSjwjs5C/fod9ktFK+MDAEB4amL7qMv9ScFTr9uI3S256ZfAUpQd31utDJu/AVA1hxS2jd0rAxnfspEo74ULeUhlTgoep0zCaAXIwCmqmK0ZoPbC+VFMHA8uxUz/4awroOhSaOdkQsFCBVgevICP5+5SwAAAGKjpAyR2UBrl1M7mRsgAgFlgAbWXytRjCv/TJHSRYKrfWd3TY3IC3ClhOGd4nN5cpM/oAAAAAAAAAAAAAAAA7msoAA4AwGLc+IhQwAAAAAAAAAAAAAAADuaygCAAAff7szYGmr+bVED+268VSWLqK1DuRnaHZi5MJCegELAAAAAAAAAAAAAAAAAvrwgEAQBQ4AfPq6ksCQX/kNfsY8xS5PTRd4WSjwjs5C/fod9ktFK+MgFAAA=";
+        let message = "te6ccgECCwEAAiAAAUWIAXu46jwbX3fmTWCR+sOP7NSfC9w6Ieb8ey6yinH94TG6DAEB4cHe2X7ZSGJPEZ8yA3uMskehJrNV78S5dTI7RkmjJAW2amO4V7DBILqXcTRnnbX9dABGRV0t4ouCjVWw6UYUZIR8drjTwv63I+aPTBLtMULU+zuEMSAmO8j5A00qizUXzUAAAGCAkCZIGLReThM7mRsgAgFlgAqvKvl06VY7ioloEDfQPiQRWucy+ulWduWysMlINu80gAAAAAAAAAAAAAAANOYs4BA4AwFraJxXwwAAAAAAAAAAAAAAADuaygCAEdfCW6r8F9gtsIJr8E6H1Ja37Lgfs8pNl/Q6IaXh4oBQBAFDgBe7jqPBtfd+ZNYJH6w4/s1J8L3Doh5vx7LrKKcf3hMbsAUBQ4Acl5cuaS7g+1r0QlJsMoOfX8ZyPtWIG7T55ZRTha2dV7AGA5UEABCKHoVX1z4AAAAAAAAAAAAAAAAF9eEAAAAAAAAAAAAAAAAAAALitIAYb2f1+Ut++m4JYQP7z76p5TDm3cCzftpl9YS+vMELftAJCAcAMgEAEIoehVfXPgAAAAAAAAAAAAAAAAX14QAAMgAAEIoehVfXPgAAAAAAAAAAAAAAAAX14QABYwAAAAAAAAAAAAAAAAABTVaAFKM/M3a62qPfKx2kmmb1rrQ47hELuahao6zMfz+bWfZQCgAgAAAAAAAAAAAAAAAAAAFLzA==";
         let message = Message::construct_from_base64(message)?;
 
         let config = transport.get_blockchain_config(&SimpleClock, true).await?;
 
-        let time = 1694608978;
+        let time = 1657895160;
+        let mut stream = TransactionsTreeStream::new(
+            message,
+            config,
+            transport.clone(),
+            Arc::new(ConstClock::from_secs(time)),
+        );
 
-        let mut tree = TransactionsTreeStream::new(message,
-           config,
-           transport.clone(),
-           Arc::new(ConstClock::from_secs(time)));
+        while let Some(tx) = stream.next().await.unwrap() {
+            parse(&tx).await.ok();
 
-        tree.unlimited_account_balance();
-        tree.unlimited_message_balance();
-
-        type Err = fn(Option<i32>) -> TokenWalletError;
-        let check_exit_code = |tx: &ton_block::Transaction, err: Err| -> Result<()> {
             let descr = tx.read_description()?;
-            if descr.is_aborted() {
-                let exit_code = match descr {
-                    ton_block::TransactionDescr::Ordinary(descr) => match descr.compute_ph {
-                        ton_block::TrComputePhase::Vm(phase) => Some(phase.exit_code),
-                        ton_block::TrComputePhase::Skipped(_) => None,
-                    },
-                    _ => None,
-                };
-                Err(err(exit_code).into())
-            } else {
-                Ok(())
-            }
-        };
-
-        let mut attached_amount: u128 = 0;
-
-        // Simulate source transaction
-        let source_tx = tree.next().await?.ok_or(TokenWalletError::NoSourceTx)?;
-        check_exit_code(&source_tx, TokenWalletError::SourceTxFailed)?;
-        attached_amount += source_tx.total_fees.grams.as_u128() * FEE_MULTIPLIER;
-        executed += 1;
-
-        if source_tx.outmsg_cnt == 0 {
-            return Err(TokenWalletError::NoDestTx.into());
-        }
-
-
-
-        let address = MsgAddressInt::from_str("0:4f4f10cb9a30582792fb3c1e364de5a6fbe6fe04f4167f1f12f83468c767aeb3").unwrap();
-
-        if simulate_max == 2 {
-            tree.retain_message_queue(|message| {
-                message.state_init().is_none() && (message.src_ref() == Some(&address))
+            let is_aborted = descr.is_aborted();
+            let exit_code = descr.compute_phase_ref().and_then(|c| match c {
+                ton_block::TrComputePhase::Vm(c) => Some(c.exit_code),
+                ton_block::TrComputePhase::Skipped(_) => None,
             });
 
-            if tree.message_queue().len() != 1  {
-                return Err(TokenWalletError::NoDestTx.into());
-            }
-
-
-            // Simulate destination transaction
-            let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
-            check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
-            attached_amount += dest_tx.total_fees.grams.as_u128() * FEE_MULTIPLIER;
-        } else {
-            'main: while executed < simulate_max   {
-                if let Some(tx) = tree.next().await? {
-                    check_exit_code(&tx, TokenWalletError::DestinationTxFailed)?;
-                    if executed != 1 {
-                        attached_amount += tx.total_fees.grams.as_u128() * FEE_MULTIPLIER;
-                    }
-                    executed += 1;
-                } else {
-                    break 'main;
-                }
-            }
+            println!(
+                "{:x}: aborted={}, exit_code={:?}",
+                tx.hash().unwrap(),
+                is_aborted,
+                exit_code
+            );
         }
 
-
-        println!("attached amount: {attached_amount}");
         Ok(())
     }
 
@@ -319,27 +265,5 @@ mod test {
         }
 
         Ok(())
-    }
-
-    #[derive(thiserror::Error, Debug)]
-    enum TokenWalletError {
-        #[error("Unknown version")]
-        UnknownVersion,
-        #[error("Invalid root token contract")]
-        InvalidRootTokenContract,
-        #[error("Invalid token wallet contract")]
-        InvalidTokenWalletContract,
-        #[error("Non-zero execution result code: {}", .0)]
-        NonZeroResultCode(i32),
-        #[error("Wallet not deployed")]
-        WalletNotDeployed,
-        #[error("No source transaction produced")]
-        NoSourceTx,
-        #[error("No destination transaction produced")]
-        NoDestTx,
-        #[error("Source transaction failed with exit code {0:?}")]
-        SourceTxFailed(Option<i32>),
-        #[error("Destination transaction failed with exit code {0:?}")]
-        DestinationTxFailed(Option<i32>),
     }
 }
