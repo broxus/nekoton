@@ -70,6 +70,10 @@ impl TransactionsTreeStream {
         }
     }
 
+    pub fn peek(&self) -> Option<&Message> {
+        self.messages.get(0)
+    }
+
     async fn step(&mut self, mut message: Message) -> TransactionTreeResult<Transaction> {
         const A_LOT: u64 = 1_000_000_000_000_000; // 1'000'000 ever
 

@@ -167,27 +167,35 @@ impl TokenWallet {
         // Simulate source transaction
         let source_tx = tree.next().await?.ok_or(TokenWalletError::NoSourceTx)?;
         check_exit_code(&source_tx, TokenWalletError::SourceTxFailed)?;
-        attached_amount += source_tx.total_fees.grams.as_u128() * FEE_MULTIPLIER;
+        attached_amount += source_tx.total_fees.grams.as_u128();
 
         if source_tx.outmsg_cnt == 0 {
             return Err(TokenWalletError::NoDestTx.into());
         }
+        //
 
-        // Remove deployment messages
+        if let Some(message) = tree.peek() {
+            if message.state_init().is_some() && message.src_ref() == Some(self.address()) {
+                //simulate first deploy transaction (we don't need to count attached amount here because of)
+                let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
+                check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
+            }
+        }
+
         tree.retain_message_queue(|message| {
-            message.state_init().is_none() && message.src_ref() == Some(self.address())
+            message.state_init().is_none() && (message.src_ref() == Some(self.address()))
         });
-        if tree.message_queue().len() != 1 {
+
+        if tree.message_queue().len() != 1  {
             return Err(TokenWalletError::NoDestTx.into());
         }
 
         // Simulate destination transaction
         let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
         check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
-        attached_amount += dest_tx.total_fees.grams.as_u128() * FEE_MULTIPLIER;
+        attached_amount += dest_tx.total_fees.grams.as_u128();
 
-        // Done
-        Ok(attached_amount as u64)
+        Ok((attached_amount * FEE_MULTIPLIER) as u64)
     }
 
     pub fn prepare_transfer(
@@ -822,4 +830,5 @@ mod tests {
         let root_state = RootTokenContractState(&root_state);
         root_state.guess_details(&SimpleClock).unwrap();
     }
+
 }
