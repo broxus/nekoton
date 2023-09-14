@@ -116,11 +116,8 @@ impl TokenWallet {
         tokens: BigUint,
         notify_receiver: bool,
         payload: ton_types::Cell,
-        max_simulated_transactions: u32,
     ) -> Result<u64> {
         const FEE_MULTIPLIER: u128 = 2;
-
-        let mut simulated = 0;
 
         // Prepare internal message
         let internal_message =
@@ -171,39 +168,32 @@ impl TokenWallet {
         let source_tx = tree.next().await?.ok_or(TokenWalletError::NoSourceTx)?;
         check_exit_code(&source_tx, TokenWalletError::SourceTxFailed)?;
         attached_amount += source_tx.total_fees.grams.as_u128();
-        simulated += 1;
 
         if source_tx.outmsg_cnt == 0 {
             return Err(TokenWalletError::NoDestTx.into());
         }
+        //
 
-        if max_simulated_transactions == 2 {
-            tree.retain_message_queue(|message| {
-                message.state_init().is_none() && (message.src_ref() == Some(self.address()))
-            });
-
-            if tree.message_queue().len() != 1  {
-                return Err(TokenWalletError::NoDestTx.into());
-            }
-
-
-            // Simulate destination transaction
-            let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
-            check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
-            attached_amount += dest_tx.total_fees.grams.as_u128();
-        } else {
-            'main: while simulated < max_simulated_transactions   {
-                if let Some(tx) = tree.next().await? {
-                    check_exit_code(&tx, TokenWalletError::DestinationTxFailed)?;
-                    if simulated != 1 {
-                        attached_amount += tx.total_fees.grams.as_u128();
-                    }
-                    simulated += 1;
-                } else {
-                    break 'main;
-                }
+        if let Some(message) = tree.peek() {
+            if message.state_init().is_some() && message.src_ref() == Some(self.address()) {
+                //simulate first deploy transaction (we don't need to count attached amount here because of)
+                let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
+                check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
             }
         }
+
+        tree.retain_message_queue(|message| {
+            message.state_init().is_none() && (message.src_ref() == Some(self.address()))
+        });
+
+        if tree.message_queue().len() != 1  {
+            return Err(TokenWalletError::NoDestTx.into());
+        }
+
+        // Simulate destination transaction
+        let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
+        check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
+        attached_amount += dest_tx.total_fees.grams.as_u128();
 
         Ok((attached_amount * FEE_MULTIPLIER) as u64)
     }
@@ -839,11 +829,6 @@ mod tests {
         let root_state: ExistingContract = serde_json::from_str(root_state).unwrap();
         let root_state = RootTokenContractState(&root_state);
         root_state.guess_details(&SimpleClock).unwrap();
-    }
-
-    #[test]
-    fn estimate_min_amount() {
-
     }
 
 }
