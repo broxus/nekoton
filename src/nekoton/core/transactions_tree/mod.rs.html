@@ -263,6 +263,10 @@
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{HashMap, VecDeque};
 <span class="kw">use </span>std::sync::Arc;
 
@@ -333,6 +337,10 @@
             <span class="prelude-val">Some</span>(message) =&gt; <span class="self">self</span>.step(message).<span class="kw">await</span>.map(<span class="prelude-val">Some</span>),
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         }
+    }
+
+    <span class="kw">pub fn </span>peek(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Message&gt; {
+        <span class="self">self</span>.messages.get(<span class="number">0</span>)
     }
 
     <span class="kw">async fn </span>step(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>message: Message) -&gt; TransactionTreeResult&lt;Transaction&gt; {

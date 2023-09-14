@@ -1923,7 +1923,7 @@
     <span class="kw">fn </span>try_from(raw: ton_types::Cell) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span>hash = raw.repr_hash();
 
-        <span class="kw">let </span>s = ton_block::Message::construct_from_cell(raw.clone())
+        <span class="kw">let </span>s = ton_block::Message::construct_from_cell(raw)
             .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
 
         <span class="attr">#[cfg(not(feature = <span class="string">&quot;extended_models&quot;</span>))]

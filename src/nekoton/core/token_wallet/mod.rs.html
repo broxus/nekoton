@@ -823,6 +823,15 @@
 <a href="#823" id="823">823</a>
 <a href="#824" id="824">824</a>
 <a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 <span class="kw">use </span>std::sync::Arc;
 
@@ -992,27 +1001,35 @@
         <span class="comment">// Simulate source transaction
         </span><span class="kw">let </span>source_tx = tree.next().<span class="kw">await</span><span class="question-mark">?</span>.ok_or(TokenWalletError::NoSourceTx)<span class="question-mark">?</span>;
         check_exit_code(<span class="kw-2">&amp;</span>source_tx, TokenWalletError::SourceTxFailed)<span class="question-mark">?</span>;
-        attached_amount += source_tx.total_fees.grams.as_u128() * FEE_MULTIPLIER;
+        attached_amount += source_tx.total_fees.grams.as_u128();
 
         <span class="kw">if </span>source_tx.outmsg_cnt == <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(TokenWalletError::NoDestTx.into());
         }
+        <span class="comment">//
 
-        <span class="comment">// Remove deployment messages
-        </span>tree.retain_message_queue(|message| {
-            message.state_init().is_none() &amp;&amp; message.src_ref() == <span class="prelude-val">Some</span>(<span class="self">self</span>.address())
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(message) = tree.peek() {
+            <span class="kw">if </span>message.state_init().is_some() &amp;&amp; message.src_ref() == <span class="prelude-val">Some</span>(<span class="self">self</span>.address()) {
+                <span class="comment">//simulate first deploy transaction (we don&#39;t need to count attached amount here because of)
+                </span><span class="kw">let </span>dest_tx = tree.next().<span class="kw">await</span><span class="question-mark">?</span>.ok_or(TokenWalletError::NoDestTx)<span class="question-mark">?</span>;
+                check_exit_code(<span class="kw-2">&amp;</span>dest_tx, TokenWalletError::DestinationTxFailed)<span class="question-mark">?</span>;
+            }
+        }
+
+        tree.retain_message_queue(|message| {
+            message.state_init().is_none() &amp;&amp; (message.src_ref() == <span class="prelude-val">Some</span>(<span class="self">self</span>.address()))
         });
-        <span class="kw">if </span>tree.message_queue().len() != <span class="number">1 </span>{
+
+        <span class="kw">if </span>tree.message_queue().len() != <span class="number">1  </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(TokenWalletError::NoDestTx.into());
         }
 
         <span class="comment">// Simulate destination transaction
         </span><span class="kw">let </span>dest_tx = tree.next().<span class="kw">await</span><span class="question-mark">?</span>.ok_or(TokenWalletError::NoDestTx)<span class="question-mark">?</span>;
         check_exit_code(<span class="kw-2">&amp;</span>dest_tx, TokenWalletError::DestinationTxFailed)<span class="question-mark">?</span>;
-        attached_amount += dest_tx.total_fees.grams.as_u128() * FEE_MULTIPLIER;
+        attached_amount += dest_tx.total_fees.grams.as_u128();
 
-        <span class="comment">// Done
-        </span><span class="prelude-val">Ok</span>(attached_amount <span class="kw">as </span>u64)
+        <span class="prelude-val">Ok</span>((attached_amount * FEE_MULTIPLIER) <span class="kw">as </span>u64)
     }
 
     <span class="kw">pub fn </span>prepare_transfer(
@@ -1647,5 +1664,6 @@
         <span class="kw">let </span>root_state = RootTokenContractState(<span class="kw-2">&amp;</span>root_state);
         root_state.guess_details(<span class="kw-2">&amp;</span>SimpleClock).unwrap();
     }
+
 }
 </code></pre></div></section></main></body></html>
