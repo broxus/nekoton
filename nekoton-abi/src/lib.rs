@@ -729,9 +729,10 @@ impl<'a> FunctionAbi<'a> {
                     .and_then(SliceData::load_builder)?,
             );
         } else {
+            // NOTE: `now_ms + 1000` is used here to satisfy the replay protection check
             msg.set_body(
                 self.abi
-                    .encode_run_local_input(now_ms, input)
+                    .encode_run_local_input(now_ms + 1000, input)
                     .and_then(SliceData::load_builder)?,
             );
         }

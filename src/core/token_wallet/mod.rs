@@ -172,21 +172,21 @@ impl TokenWallet {
         if source_tx.outmsg_cnt == 0 {
             return Err(TokenWalletError::NoDestTx.into());
         }
-        //
 
         if let Some(message) = tree.peek() {
             if message.state_init().is_some() && message.src_ref() == Some(self.address()) {
-                //simulate first deploy transaction (we don't need to count attached amount here because of)
+                // Simulate first deploy transaction
+                // NOTE: we don't need to count attached amount here because of separate `initial_balance`
                 let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
                 check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
             }
         }
 
         tree.retain_message_queue(|message| {
-            message.state_init().is_none() && (message.src_ref() == Some(self.address()))
+            message.state_init().is_none() && message.src_ref() == Some(self.address())
         });
 
-        if tree.message_queue().len() != 1  {
+        if tree.message_queue().len() != 1 {
             return Err(TokenWalletError::NoDestTx.into());
         }
 
@@ -830,5 +830,4 @@ mod tests {
         let root_state = RootTokenContractState(&root_state);
         root_state.guess_details(&SimpleClock).unwrap();
     }
-
 }

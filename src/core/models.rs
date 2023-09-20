@@ -897,7 +897,7 @@ impl TryFrom<ton_types::Cell> for Message {
     fn try_from(raw: ton_types::Cell) -> Result<Self, Self::Error> {
         let hash = raw.repr_hash();
 
-        let s = ton_block::Message::construct_from_cell(raw)
+        let s = ton_block::Message::construct_from_cell(raw.clone())
             .map_err(|_| TransactionError::InvalidStructure)?;
 
         #[cfg(not(feature = "extended_models"))]
