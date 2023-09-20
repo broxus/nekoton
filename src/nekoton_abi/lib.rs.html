@@ -1971,10 +1971,10 @@
                     .and_then(SliceData::load_builder)<span class="question-mark">?</span>,
             );
         } <span class="kw">else </span>{
-            <span class="comment">// NOTE: `now_ms + 1` is used here to satisfy the replay protection check
+            <span class="comment">// NOTE: `now_ms + 1000` is used here to satisfy the replay protection check
             </span>msg.set_body(
                 <span class="self">self</span>.abi
-                    .encode_run_local_input(now_ms + <span class="number">1</span>, input)
+                    .encode_run_local_input(now_ms + <span class="number">1000</span>, input)
                     .and_then(SliceData::load_builder)<span class="question-mark">?</span>,
             );
         }
