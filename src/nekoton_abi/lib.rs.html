@@ -1239,7 +1239,6 @@
 <a href="#1239" id="1239">1239</a>
 <a href="#1240" id="1240">1240</a>
 <a href="#1241" id="1241">1241</a>
-<a href="#1242" id="1242">1242</a>
 </pre></div><pre class="rust"><code><span class="attr">#![warn(
     missing_copy_implementations,
     macro_use_extern_crate,
@@ -1971,10 +1970,9 @@
                     .and_then(SliceData::load_builder)<span class="question-mark">?</span>,
             );
         } <span class="kw">else </span>{
-            <span class="comment">// NOTE: `now_ms + 1000` is used here to satisfy the replay protection check
-            </span>msg.set_body(
+            msg.set_body(
                 <span class="self">self</span>.abi
-                    .encode_run_local_input(now_ms + <span class="number">1000</span>, input)
+                    .encode_run_local_input(now_ms, input)
                     .and_then(SliceData::load_builder)<span class="question-mark">?</span>,
             );
         }
