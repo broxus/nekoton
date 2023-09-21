@@ -177,8 +177,8 @@ impl TokenWallet {
             if message.state_init().is_some() && message.src_ref() == Some(self.address()) {
                 // Simulate first deploy transaction
                 // NOTE: we don't need to count attached amount here because of separate `initial_balance`
-                let dest_tx = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
-                check_exit_code(&dest_tx, TokenWalletError::DestinationTxFailed)?;
+                let _ = tree.next().await?.ok_or(TokenWalletError::NoDestTx)?;
+                //also we ignore non zero exit code for deploy transactions
             }
         }
 
