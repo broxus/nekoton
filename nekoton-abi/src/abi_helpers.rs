@@ -1,5 +1,5 @@
-use num_bigint::{BigUint, BigInt};
-use ton_abi::{ParamType, TokenValue, Uint, Int};
+use num_bigint::{BigInt, BigUint};
+use ton_abi::{Int, ParamType, TokenValue, Uint};
 use ton_types::UInt256;
 
 use super::{BuildTokenValue, KnownParamType, UnpackerError, UnpackerResult};
@@ -178,8 +178,9 @@ pub mod array_int256_number {
     use super::*;
     pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<BigInt>> {
         match value {
-            TokenValue::Array(ParamType::Int(256), array) =>
-                array.iter().map(int256_number::unpack).collect(),
+            TokenValue::Array(ParamType::Int(256), array) => {
+                array.iter().map(int256_number::unpack).collect()
+            }
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
