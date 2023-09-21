@@ -1,5 +1,5 @@
-use num_bigint::BigUint;
-use ton_abi::{ParamType, TokenValue, Uint};
+use num_bigint::{BigUint, BigInt};
+use ton_abi::{ParamType, TokenValue, Uint, Int};
 use ton_types::UInt256;
 
 use super::{BuildTokenValue, KnownParamType, UnpackerError, UnpackerResult};
@@ -152,6 +152,40 @@ pub mod uint128_number {
 
     pub fn param_type() -> ParamType {
         ParamType::Uint(128)
+    }
+}
+
+pub mod int256_number {
+    use super::*;
+
+    pub fn pack(value: BigInt) -> TokenValue {
+        BigUint256(value.magnitude().clone()).token_value()
+    }
+
+    pub fn unpack(value: &TokenValue) -> UnpackerResult<BigInt> {
+        match value {
+            TokenValue::Int(Int { number, size: 256 }) => Ok(number.clone()),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Int(256)
+    }
+}
+
+pub mod array_int256_number {
+    use super::*;
+    pub fn unpack(value: &TokenValue) -> UnpackerResult<Vec<BigInt>> {
+        match value {
+            TokenValue::Array(ParamType::Int(256), array) =>
+                array.iter().map(int256_number::unpack).collect(),
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+
+    pub fn param_type() -> ParamType {
+        ParamType::Array(Box::new(ParamType::Int(256)))
     }
 }
 
