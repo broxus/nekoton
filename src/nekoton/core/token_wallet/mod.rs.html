@@ -1010,9 +1010,9 @@
             <span class="kw">if </span>message.state_init().is_some() &amp;&amp; message.src_ref() == <span class="prelude-val">Some</span>(<span class="self">self</span>.address()) {
                 <span class="comment">// Simulate first deploy transaction
                 // NOTE: we don&#39;t need to count attached amount here because of separate `initial_balance`
-                </span><span class="kw">let </span>dest_tx = tree.next().<span class="kw">await</span><span class="question-mark">?</span>.ok_or(TokenWalletError::NoDestTx)<span class="question-mark">?</span>;
-                check_exit_code(<span class="kw-2">&amp;</span>dest_tx, TokenWalletError::DestinationTxFailed)<span class="question-mark">?</span>;
-            }
+                </span><span class="kw">let _ </span>= tree.next().<span class="kw">await</span><span class="question-mark">?</span>.ok_or(TokenWalletError::NoDestTx)<span class="question-mark">?</span>;
+                <span class="comment">//also we ignore non zero exit code for deploy transactions
+            </span>}
         }
 
         tree.retain_message_queue(|message| {
