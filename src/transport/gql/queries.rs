@@ -209,12 +209,14 @@ pub mod query_account_transactions {
 pub mod query_transaction {
     use super::*;
 
-    pub const QUERY: &str = "query($h:String!){blockchain{transaction(hash:$h){boc}}}";
+    pub const QUERY: &str = "query($h:String!){blockchain{transaction(hash:$h,archive:$o){boc}}}";
 
     #[derive(Serialize)]
     pub struct Variables {
         #[serde(rename = "h")]
         pub hash: String,
+        #[serde(rename = "o")]
+        pub archive: bool,
     }
 
     #[derive(Deserialize)]
@@ -237,12 +239,14 @@ pub mod query_dst_transaction {
     use super::*;
 
     pub const QUERY: &str =
-        "query($h:String!){blockchain{transactions_by_in_msg(msg_hash:$h){boc}}}";
+        "query($h:String!){blockchain{transactions_by_in_msg(msg_hash:$h,archive:$o){boc}}}";
 
     #[derive(Serialize)]
     pub struct Variables {
         #[serde(rename = "h")]
         pub hash: String,
+        #[serde(rename = "0")]
+        pub archive: bool,
     }
 
     #[derive(Deserialize)]

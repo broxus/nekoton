@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -22,6 +23,8 @@ mod queries;
 pub struct GqlTransport {
     connection: Arc<dyn GqlConnection>,
     config_cache: ConfigCache,
+
+    latest_transaction_lt: AtomicU64,
 }
 
 impl GqlTransport {
@@ -31,6 +34,7 @@ impl GqlTransport {
         Self {
             connection,
             config_cache: ConfigCache::new(use_default_config),
+            latest_transaction_lt: AtomicU64::new(0),
         }
     }
 
@@ -282,42 +286,81 @@ impl Transport for GqlTransport {
         from_lt: u64,
         count: u8,
     ) -> Result<Vec<RawTransaction>> {
-        let transactions = self
-            .fetch::<QueryAccountTransactions>(query_account_transactions::Variables {
-                address: address.to_string(),
-                last_transaction_lt: from_lt.to_string(),
-                limit: count,
-                archive: true,
-            })
-            .await?
-            .blockchain
-            .account
-            .transactions_by_lt
-            .edges;
+        let mut use_archive = false;
+        let mut transaction_limit = count;
 
-        let mut transactions = transactions
-            .into_iter()
-            .map(|edge| {
-                let bytes = base64::decode(edge.node.boc)?;
-                let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
-                    .map_err(|_| NodeClientError::InvalidTransaction)?;
-                let hash = cell.repr_hash();
-                Ok(RawTransaction {
-                    hash,
-                    data: ton_block::Transaction::construct_from_cell(cell)
-                        .map_err(|_| NodeClientError::InvalidTransaction)?,
+        let previous = self
+            .latest_transaction_lt
+            .fetch_max(from_lt, Ordering::Release);
+
+        if previous != 0 {
+            use_archive = true;
+        }
+
+        let mut all_transactions = Vec::with_capacity(count as usize);
+
+        loop {
+            let transactions = self
+                .fetch::<QueryAccountTransactions>(query_account_transactions::Variables {
+                    address: address.to_string(),
+                    last_transaction_lt: self
+                        .latest_transaction_lt
+                        .load(Ordering::Acquire)
+                        .to_string(),
+                    limit: transaction_limit,
+                    archive: use_archive,
                 })
-            })
-            .collect::<Result<Vec<_>>>()?;
+                .await?
+                .blockchain
+                .account
+                .transactions_by_lt
+                .edges;
 
-        transactions.sort_by_key(|tx| std::cmp::Reverse(tx.data.lt));
+            let mut transactions = transactions
+                .into_iter()
+                .map(|edge| {
+                    let bytes = base64::decode(edge.node.boc)?;
+                    let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())
+                        .map_err(|_| NodeClientError::InvalidTransaction)?;
+                    let hash = cell.repr_hash();
+                    Ok(RawTransaction {
+                        hash,
+                        data: ton_block::Transaction::construct_from_cell(cell)
+                            .map_err(|_| NodeClientError::InvalidTransaction)?,
+                    })
+                })
+                .collect::<Result<Vec<_>>>()?;
 
-        Ok(transactions)
+            transactions.sort_by_key(|tx| std::cmp::Reverse(tx.data.lt));
+            all_transactions.extend_from_slice(transactions.as_slice());
+
+            match transactions.last() {
+                Some(last_transaction) => {
+                    self.latest_transaction_lt
+                        .store(last_transaction.data.prev_trans_lt, Ordering::Release);
+
+                    if last_transaction.data.prev_trans_lt == 0 {
+                        break;
+                    }
+                }
+                None => break,
+            }
+
+            if all_transactions.len() == count as usize {
+                break;
+            }
+
+            transaction_limit = count - transactions.len() as u8;
+            use_archive = true;
+        }
+
+        Ok(all_transactions)
     }
 
     async fn get_transaction(&self, id: &ton_types::UInt256) -> Result<Option<RawTransaction>> {
         self.fetch::<QueryTransaction>(query_transaction::Variables {
             hash: id.to_hex_string(),
+            archive: true,
         })
         .await?
         .blockchain
@@ -342,6 +385,7 @@ impl Transport for GqlTransport {
     ) -> Result<Option<RawTransaction>> {
         self.fetch::<QueryDstTransaction>(query_dst_transaction::Variables {
             hash: message_hash.to_hex_string(),
+            archive: false,
         })
         .await?
         .blockchain
