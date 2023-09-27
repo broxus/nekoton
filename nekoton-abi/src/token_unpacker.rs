@@ -5,7 +5,7 @@ use std::sync::Arc;
 use num_bigint::{BigInt, BigUint};
 use num_traits::ToPrimitive;
 use ton_abi::{Token, TokenValue};
-use ton_block::{MsgAddrStd, MsgAddressInt};
+use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
 use ton_types::Cell;
 
 use super::{MaybeRef, StandaloneToken};
@@ -214,6 +214,15 @@ impl UnpackAbi<MsgAddressInt> for TokenValue {
             TokenValue::Address(ton_block::MsgAddress::AddrVar(addr)) => {
                 Ok(MsgAddressInt::AddrVar(addr))
             }
+            _ => Err(UnpackerError::InvalidAbi),
+        }
+    }
+}
+
+impl UnpackAbi<MsgAddress> for TokenValue {
+    fn unpack(self) -> UnpackerResult<MsgAddress> {
+        match self {
+            TokenValue::Address(address) => Ok(address),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
