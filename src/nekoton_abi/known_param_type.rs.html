@@ -186,10 +186,16 @@
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">use </span>ton_abi::{Param, ParamType};
-<span class="kw">use </span>ton_block::{MsgAddrStd, MsgAddressInt};
+<span class="kw">use </span>ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
 <span class="kw">use </span>ton_types::{BuilderData, Cell};
 
 <span class="kw">use super</span>::{MaybeRef, StandaloneToken};
@@ -303,6 +309,12 @@
 }
 
 <span class="kw">impl </span>KnownParamType <span class="kw">for </span>MsgAddressInt {
+    <span class="kw">fn </span>param_type() -&gt; ParamType {
+        ParamType::Address
+    }
+}
+
+<span class="kw">impl </span>KnownParamType <span class="kw">for </span>MsgAddress {
     <span class="kw">fn </span>param_type() -&gt; ParamType {
         ParamType::Address
     }
