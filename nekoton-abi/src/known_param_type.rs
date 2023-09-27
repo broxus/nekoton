@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use ton_abi::{Param, ParamType};
-use ton_block::{MsgAddrStd, MsgAddressInt};
+use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
 use ton_types::{BuilderData, Cell};
 
 use super::{MaybeRef, StandaloneToken};
@@ -115,6 +115,12 @@ impl KnownParamType for Cell {
 }
 
 impl KnownParamType for MsgAddressInt {
+    fn param_type() -> ParamType {
+        ParamType::Address
+    }
+}
+
+impl KnownParamType for MsgAddress {
     fn param_type() -> ParamType {
         ParamType::Address
     }
