@@ -1,4 +1,5 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
+use std::hash::BuildHasher;
 
 use ton_abi::{Param, ParamType};
 use ton_block::{MsgAddrStd, MsgAddress, MsgAddressInt};
@@ -147,6 +148,17 @@ impl KnownParamType for ton_block::Grams {
 impl KnownParamType for Vec<u8> {
     fn param_type() -> ParamType {
         ParamType::Bytes
+    }
+}
+
+impl<K, V, S> KnownParamType for HashMap<K, V, S>
+where
+    K: KnownParamType,
+    V: KnownParamType,
+    S: BuildHasher,
+{
+    fn param_type() -> ParamType {
+        ParamType::Map(Box::new(K::param_type()), Box::new(V::param_type()))
     }
 }
 
