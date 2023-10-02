@@ -5,6 +5,7 @@ authors = [
     "Alexey Pashinov <pashinov93@gmail.com>",
     "Vladimir Petrzhikovskiy <v.petrzhikovskiy@dexpa.io>",
     "Ivan Kalinin <i.kalinin@dexpa.io>",
+    "Stanislav Eliseev <s.eliseev@dexpa.io>"
 ]
 rust-version = "1.62.0"
 edition = "2021"
