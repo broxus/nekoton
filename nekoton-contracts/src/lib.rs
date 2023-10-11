@@ -63,6 +63,8 @@ pub mod tip4_1;
 pub mod tip4_2;
 pub mod tip4_3;
 pub mod tip6;
+
+pub mod tip1155;
 pub mod wallets;
 
 trait RunLocalSimple {
