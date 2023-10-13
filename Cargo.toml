@@ -25,35 +25,35 @@ members = [
 anyhow = "1.0"
 async-trait = "0.1"
 base64 = "0.13"
-chacha20poly1305 = "0.10.0-pre.1"
-curve25519-dalek-ng = "4.1.1"
+chacha20poly1305 = { version = "0.10.1", optional = true }
+curve25519-dalek-ng = { version = "4.1.1", optional = true }
 downcast-rs = "1.2"
 dyn-clone = "1.0"
 erased-serde = { version = "0.3.23", optional = true }
 futures-util = "0.3"
-getrandom = "0.2.4"
+getrandom = { version = "0.2.4", optional = true }
 hex = "0.4"
-hmac = "0.11.0"
+hmac = { version = "0.11.0", optional = true }
 log = "0.4"
 lru = "0.8.0"
 num-bigint = "0.4"
 once_cell = "1.12.0"
 parking_lot = "0.12.0"
-pbkdf2 = "0.9.0"
+pbkdf2 = { version = "0.9.0", optional = true }
 quick_cache = "0.3.0"
-rand = { version = "0.8", features = ["getrandom"] }
-secstr = { version = "0.5.0", features = ["serde"] }
+rand = { version = "0.8", features = ["getrandom"] , optional = true }
+secstr = { version = "0.5.0", features = ["serde"], optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-sha2 = "0.9.9"
+sha2 = { version = "0.9.9", optional = true }
 thiserror = "1.0"
 tiny-jsonrpc = { version = "0.6.0", default-features = false, optional = true }
 tokio = { version = "1", default-features = false, features = ["sync"] }
-zeroize = "1"
+zeroize = { version = "1", optional = true }
 
-ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
-tiny-bip39 = { git = "https://github.com/broxus/tiny-bip39.git", default-features = false }
-tiny-hderive = { git = "https://github.com/broxus/tiny-hderive.git" }
+ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git", optional = true }
+tiny-bip39 = { git = "https://github.com/broxus/tiny-bip39.git", default-features = false, optional = true }
+tiny-hderive = { git = "https://github.com/broxus/tiny-hderive.git", optional = true }
 
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
@@ -62,7 +62,7 @@ ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 
 nekoton-contracts = { path = "nekoton-contracts" }
 nekoton-abi = { path = "nekoton-abi", features = ["derive"] }
-nekoton-utils = { path = "nekoton-utils", features = ["encryption"] }
+nekoton-utils = { path = "nekoton-utils" }
 nekoton-proto = { path = "nekoton-proto", optional = true }
 
 [dev-dependencies]
@@ -71,7 +71,7 @@ cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-carg
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 
 [features]
-default = ["gql_transport"]
+default = ["gql_transport", "wallet_core"]
 integration_test = []
 web = [
     "nekoton-contracts/web",
@@ -79,12 +79,15 @@ web = [
     "nekoton-utils/web",
     "getrandom/wasm-bindgen",
     "ton_abi/web",
+    "wallet_core"
 ]
 gql_transport = ["dep:erased-serde"]
 jrpc_transport = ["dep:tiny-jsonrpc"]
 proto_transport = ["dep:nekoton-proto"]
 extended_models = []
 non_threadsafe = []
+wallet_core = ["dep:pbkdf2", "dep:chacha20poly1305", "dep:zeroize", "dep:secstr", "dep:hmac", "dep:ed25519-dalek",
+    "dep:tiny-bip39", "dep:tiny-hderive", "dep:sha2", "dep:getrandom", "dep:rand", "dep:curve25519-dalek-ng", "nekoton-utils/encryption"]
 
 [package.metadata.docs.rs]
 all-features = true

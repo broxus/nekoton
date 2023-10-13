@@ -968,6 +968,7 @@ pub enum MessageBodyError {
     FailedToDeserialize,
 }
 
+#[cfg(feature = "wallet_core")]
 #[derive(thiserror::Error, Debug)]
 pub(super) enum AccountSubscriptionError {
     #[error("Invalid message destination")]
