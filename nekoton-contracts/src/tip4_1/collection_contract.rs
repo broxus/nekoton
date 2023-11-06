@@ -83,7 +83,7 @@ pub fn nft_code_hash() -> &'static ton_abi::Function {
 ///
 pub fn nft_address() -> &'static ton_abi::Function {
     declare_function! {
-        name: "nftCodeHash",
+        name: "nftAddress",
         inputs: vec![
             Param::new("answerId", ParamType::Uint(32)),
             Param::new("id", ParamType::Uint(256))
