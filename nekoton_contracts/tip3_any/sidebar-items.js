@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Tip3Error","TokenWalletVersion"],"struct":["RootTokenContractDetails","RootTokenContractState","TokenWalletContractState","TokenWalletDetails"]};

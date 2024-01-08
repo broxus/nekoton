@@ -290,10 +290,10 @@
 <span class="kw">use </span>tokio::sync::{RwLock, Semaphore};
 <span class="kw">use </span>ton_block::MsgAddressInt;
 
+<span class="kw">use </span>nekoton_contracts::tip3_any::{RootTokenContractState, TokenWalletContractState};
 <span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">super</span>::models::TokenWalletVersion;
-<span class="kw">use </span><span class="kw">crate</span>::core::token_wallet::{RootTokenContractState, TokenWalletContractState};
 <span class="kw">use </span><span class="kw">crate</span>::external::Storage;
 <span class="kw">use </span><span class="kw">crate</span>::transport::models::{ExistingContract, RawContractState};
 <span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
@@ -405,8 +405,8 @@
                     }
                 };
 
-                <span class="kw">let </span>version = RootTokenContractState(<span class="kw-2">&amp;</span>state)
-                    .guess_details(<span class="self">self</span>.clock.as_ref())<span class="question-mark">?
+                <span class="kw">let </span>version = RootTokenContractState(state.as_context(<span class="self">self</span>.clock.as_ref()))
+                    .guess_details()<span class="question-mark">?
                     </span>.version;
 
                 check_token_wallet(
@@ -449,9 +449,9 @@
                     }
                 };
 
-                <span class="kw">let </span>state = TokenWalletContractState(<span class="kw-2">&amp;</span>contract_state);
-                <span class="kw">let </span>version = state.get_version(clock).ok()<span class="question-mark">?</span>;
-                <span class="kw">let </span>details = state.get_details(clock, version).ok()<span class="question-mark">?</span>;
+                <span class="kw">let </span>state = TokenWalletContractState(contract_state.as_context(clock));
+                <span class="kw">let </span>version = state.get_version().ok()<span class="question-mark">?</span>;
+                <span class="kw">let </span>details = state.get_details(version).ok()<span class="question-mark">?</span>;
 
                 owners
                     .write()
@@ -529,8 +529,8 @@
     (state, version): <span class="kw-2">&amp;</span>(ExistingContract, TokenWalletVersion),
     owner_wallet: <span class="kw-2">&amp;</span>MsgAddressInt,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;RecipientWallet&gt; {
-    <span class="kw">let </span>token_wallet =
-        RootTokenContractState(state).get_wallet_address(clock, <span class="kw-2">*</span>version, owner_wallet)<span class="question-mark">?</span>;
+    <span class="kw">let </span>token_wallet = RootTokenContractState(state.as_context(clock))
+        .get_wallet_address(<span class="kw-2">*</span>version, owner_wallet)<span class="question-mark">?</span>;
 
     {
         <span class="kw">let </span><span class="kw-2">mut </span>owners = owners.write().<span class="kw">await</span>;
