@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["core","crypto","external","transport"]};
+window.SIDEBAR_ITEMS = {"mod":["core","crypto","external","models","transport"]};
