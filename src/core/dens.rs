@@ -1,12 +1,11 @@
 use std::collections::hash_map::{self, HashMap};
-use std::num::NonZeroUsize;
 use std::sync::Arc;
 
 use anyhow::Result;
-use lru::LruCache;
 use nekoton_contracts::dens;
 use nekoton_utils::Clock;
-use parking_lot::{Mutex, RwLock};
+use parking_lot::RwLock;
+use quick_cache::sync::Cache;
 use ton_block::MsgAddressInt;
 
 use crate::transport::models::{ExistingContract, RawContractState};
@@ -16,7 +15,7 @@ use crate::transport::Transport;
 #[derive(Default)]
 pub struct Dens {
     tld: RwLock<HashMap<String, Arc<DensTld>>>,
-    contract_address_cache: Option<Mutex<LruCache<String, MsgAddressInt>>>,
+    contract_address_cache: Option<Cache<String, MsgAddressInt>>,
 }
 
 impl Dens {
@@ -48,7 +47,7 @@ impl Dens {
         }
 
         if let Some(contract_address_cache) = &self.contract_address_cache {
-            if let Some(address) = contract_address_cache.lock().get(path) {
+            if let Some(address) = contract_address_cache.get(path) {
                 return Ok(Some(address.clone()));
             }
         }
@@ -60,9 +59,7 @@ impl Dens {
 
         if let Some(address) = &address {
             if let Some(contract_address_cache) = &self.contract_address_cache {
-                contract_address_cache
-                    .lock()
-                    .push(path.to_owned(), address.clone());
+                contract_address_cache.insert(path.to_owned(), address.clone());
             }
         }
 
@@ -79,7 +76,7 @@ impl Dens {
 
     pub fn reset_cache(&self) {
         if let Some(contract_address_cache) = &self.contract_address_cache {
-            contract_address_cache.lock().clear();
+            contract_address_cache.clear();
         }
     }
 
@@ -117,9 +114,7 @@ impl DensBuilder {
     }
 
     pub fn with_contract_address_cache(mut self, capacity: usize) -> Self {
-        self.dens.contract_address_cache = NonZeroUsize::new(capacity)
-            .map(LruCache::new)
-            .map(Mutex::new);
+        self.dens.contract_address_cache = Some(Cache::new(capacity));
         self
     }
 
