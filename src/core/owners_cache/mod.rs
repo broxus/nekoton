@@ -9,10 +9,10 @@ use serde::Deserialize;
 use tokio::sync::{RwLock, Semaphore};
 use ton_block::MsgAddressInt;
 
+use nekoton_contracts::tip3_any::{RootTokenContractState, TokenWalletContractState};
 use nekoton_utils::*;
 
 use super::models::TokenWalletVersion;
-use crate::core::token_wallet::{RootTokenContractState, TokenWalletContractState};
 use crate::external::Storage;
 use crate::transport::models::{ExistingContract, RawContractState};
 use crate::transport::Transport;
@@ -124,8 +124,8 @@ impl OwnersCache {
                     }
                 };
 
-                let version = RootTokenContractState(&state)
-                    .guess_details(self.clock.as_ref())?
+                let version = RootTokenContractState(state.as_context(self.clock.as_ref()))
+                    .guess_details()?
                     .version;
 
                 check_token_wallet(
@@ -168,9 +168,9 @@ impl OwnersCache {
                     }
                 };
 
-                let state = TokenWalletContractState(&contract_state);
-                let version = state.get_version(clock).ok()?;
-                let details = state.get_details(clock, version).ok()?;
+                let state = TokenWalletContractState(contract_state.as_context(clock));
+                let version = state.get_version().ok()?;
+                let details = state.get_details(version).ok()?;
 
                 owners
                     .write()
@@ -248,8 +248,8 @@ async fn check_token_wallet(
     (state, version): &(ExistingContract, TokenWalletVersion),
     owner_wallet: &MsgAddressInt,
 ) -> Result<RecipientWallet> {
-    let token_wallet =
-        RootTokenContractState(state).get_wallet_address(clock, *version, owner_wallet)?;
+    let token_wallet = RootTokenContractState(state.as_context(clock))
+        .get_wallet_address(*version, owner_wallet)?;
 
     {
         let mut owners = owners.write().await;

@@ -1,5 +1,4 @@
 #![warn(
-    missing_copy_implementations,
     macro_use_extern_crate,
     keyword_idents,
     explicit_outlives_requirements,
@@ -60,6 +59,7 @@ pub mod old_tip3;
 pub mod tip1155;
 pub mod tip3;
 pub mod tip3_1;
+pub mod tip3_any;
 pub mod tip4_1;
 pub mod tip4_2;
 pub mod tip4_3;

@@ -12,6 +12,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0"
 once_cell = "1.12"
+serde = { version = "1.0.183", features = ["derive"] }
 thiserror = "1.0"
 
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
@@ -19,6 +20,7 @@ ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
 
 nekoton-abi = { path = "../nekoton-abi", features = ["derive"] }
+nekoton-utils = { path = "../nekoton-utils" }
 
 [features]
 web = ["ton_abi/web"]
