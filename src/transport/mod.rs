@@ -3,7 +3,7 @@ use nekoton_utils::Clock;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 
-use crate::core::models::{NetworkCapabilities, ReliableBehavior};
+use crate::models::{NetworkCapabilities, ReliableBehavior};
 
 use self::models::*;
 

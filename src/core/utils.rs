@@ -13,6 +13,7 @@ use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
 use nekoton_utils::*;
 
 use crate::core::models::*;
+#[cfg(feature = "wallet_core")]
 use crate::crypto::{SignedMessage, UnsignedMessage};
 use crate::transport::models::RawTransaction;
 use crate::transport::Transport;

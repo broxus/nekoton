@@ -71,7 +71,7 @@ impl TransactionsTreeStream {
     }
 
     pub fn peek(&self) -> Option<&Message> {
-        self.messages.get(0)
+        self.messages.front()
     }
 
     async fn step(&mut self, mut message: Message) -> TransactionTreeResult<Transaction> {

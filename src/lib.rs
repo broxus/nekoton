@@ -50,9 +50,13 @@
     rust_2018_idioms
 )]
 
+#[cfg(feature = "wallet_core")]
 pub mod core;
+#[cfg(feature = "wallet_core")]
 pub mod crypto;
+#[cfg(feature = "wallet_core")]
 pub mod external;
+pub mod models;
 pub mod transport;
 
 pub use nekoton_abi as abi;

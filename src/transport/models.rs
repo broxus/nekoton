@@ -4,10 +4,9 @@ use serde::{Deserialize, Serialize};
 use ton_block::{Account, AccountStuff, Transaction};
 use ton_types::UInt256;
 
+use crate::models::{ContractState, PendingTransaction};
 use nekoton_abi::{ExecutionContext, GenTimings, LastTransactionId};
 use nekoton_utils::{serde_account_stuff, Clock};
-
-use crate::core::models::{ContractState, PendingTransaction};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, Serialize, Deserialize)]

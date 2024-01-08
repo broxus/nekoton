@@ -153,7 +153,7 @@ pub fn call_msg(
         .map_err(|_| ExecutionError::FailedToRetrieveActions)?;
 
     let mut msgs = Vec::new();
-    for (_, action) in actions.iter_mut().enumerate() {
+    for action in actions.iter_mut() {
         if let OutAction::SendMsg { out_msg, .. } = std::mem::replace(action, OutAction::None) {
             msgs.push(out_msg);
         }
