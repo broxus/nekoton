@@ -12,7 +12,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0"
 base64 = "0.13"
-chacha20poly1305 = { version = "0.10.0-pre.1", optional = true }
+chacha20poly1305 = { version = "0.10.1", optional = true }
 hex = "0.4"
 hmac = "0.11.0"
 js-sys = { version = "0.3", optional = true }
