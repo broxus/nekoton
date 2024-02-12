@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/gql/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/gql/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -576,7 +577,7 @@
         <span class="kw">match </span>serde_json::from_str::&lt;Response&lt;T::ResponseData&gt;&gt;(<span class="kw-2">&amp;</span>response) {
             <span class="prelude-val">Ok</span>(response) =&gt; response.data.ok_or_else(|| invalid_response().into()),
             <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(api_failure(<span class="macro">format!</span>(
-                <span class="string">&quot;Failed parsing api response: {e}. Response data: {response}&quot;
+                <span class="string">"Failed parsing api response: {e}. Response data: {response}"
             </span>))
             .into()),
         }
@@ -627,7 +628,7 @@
                 <span class="kw">let </span>block = blocks.into_iter().next().ok_or_else(no_blocks_found)<span class="question-mark">?</span>;
 
                 <span class="comment">// If workchain is sharded then it is not Node SE and missing masterchain blocks is error
-                </span><span class="kw">if </span>block.after_merge || block.shard != <span class="string">&quot;8000000000000000&quot; </span>{
+                </span><span class="kw">if </span>block.after_merge || block.shard != <span class="string">"8000000000000000" </span>{
                     <span class="kw">return </span><span class="prelude-val">Err</span>(no_blocks_found().into());
                 }
 
@@ -695,8 +696,8 @@
     }
 }
 
-<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
-#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">"non_threadsafe"</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">"non_threadsafe"</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>Transport <span class="kw">for </span>GqlTransport {
     <span class="kw">fn </span>info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TransportInfo {
         TransportInfo {
@@ -921,7 +922,7 @@
 }
 
 <span class="kw">fn </span>parse_lt(lt: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;u64, std::num::ParseIntError&gt; {
-    <span class="kw">match </span>lt.strip_prefix(<span class="string">&quot;0x&quot;</span>) {
+    <span class="kw">match </span>lt.strip_prefix(<span class="string">"0x"</span>) {
         <span class="prelude-val">Some</span>(lt) =&gt; u64::from_str_radix(lt, <span class="number">16</span>),
         <span class="prelude-val">None </span>=&gt; u64::from_str(lt),
     }
@@ -937,23 +938,23 @@
 
 <span class="attr">#[derive(Debug, Clone, thiserror::Error)]
 </span><span class="kw">pub enum </span>NodeClientError {
-    <span class="attr">#[error(<span class="string">&quot;API request failed. {reason}&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"API request failed. {reason}"</span>)]
     </span>ApiFailure { reason: String },
-    <span class="attr">#[error(<span class="string">&quot;Invalid response&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid response"</span>)]
     </span>InvalidResponse,
-    <span class="attr">#[error(<span class="string">&quot;Invalid transaction data&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid transaction data"</span>)]
     </span>InvalidTransaction,
-    <span class="attr">#[error(<span class="string">&quot;Failed to serialize data&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Failed to serialize data"</span>)]
     </span>FailedToSerialize,
-    <span class="attr">#[error(<span class="string">&quot;Invalid account state&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid account state"</span>)]
     </span>InvalidAccountState,
-    <span class="attr">#[error(<span class="string">&quot;No blocks found&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"No blocks found"</span>)]
     </span>NoBlocksFound,
-    <span class="attr">#[error(<span class="string">&quot;Unsupported network&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unsupported network"</span>)]
     </span>UnsupportedNetwork,
-    <span class="attr">#[error(<span class="string">&quot;Invalid block&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid block"</span>)]
     </span>InvalidBlock,
-    <span class="attr">#[error(<span class="string">&quot;Invalid config&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid config"</span>)]
     </span>InvalidConfig,
 }
 
@@ -963,24 +964,24 @@
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
-    #[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
+    <span class="attr">#[cfg_attr(not(feature = <span class="string">"non_threadsafe"</span>), async_trait::async_trait)]
+    #[cfg_attr(feature = <span class="string">"non_threadsafe"</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
     </span><span class="kw">impl </span>GqlConnection <span class="kw">for </span>reqwest::Client {
         <span class="kw">fn </span>is_local(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
             <span class="bool-val">false
         </span>}
 
         <span class="kw">async fn </span>post(<span class="kw-2">&amp;</span><span class="self">self</span>, req: GqlRequest) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;{req:?}&quot;</span>);
+            <span class="macro">println!</span>(<span class="string">"{req:?}"</span>);
             <span class="kw">let </span>text = <span class="self">self
-                </span>.post(<span class="string">&quot;https://mainnet.evercloud.dev/57a5b802e303424fb0078f612a4fbe35/graphql&quot;</span>)
+                </span>.post(<span class="string">"https://mainnet.evercloud.dev/57a5b802e303424fb0078f612a4fbe35/graphql"</span>)
                 .body(req.data)
-                .header(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json&quot;</span>)
+                .header(<span class="string">"Content-Type"</span>, <span class="string">"application/json"</span>)
                 .send()
                 .<span class="kw">await</span><span class="question-mark">?
                 </span>.text()
                 .<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="comment">// println!(&quot;{text}&quot;);
+            <span class="comment">// println!("{text}");
             </span><span class="prelude-val">Ok</span>(text)
         }
     }
@@ -989,11 +990,11 @@
     </span><span class="kw">async fn </span>test_connection() {
         <span class="kw">let </span>transport = GqlTransport::new(Arc::new(reqwest::Client::new()));
         <span class="kw">let </span>address = MsgAddressInt::from_str(
-            <span class="string">&quot;-1:3333333333333333333333333333333333333333333333333333333333333333&quot;</span>,
+            <span class="string">"-1:3333333333333333333333333333333333333333333333333333333333333333"</span>,
         )
         .unwrap();
         <span class="kw">let </span>base_wc_address = MsgAddressInt::from_str(
-            <span class="string">&quot;0:3333333333333333333333333333333333333333333333333333333333333333&quot;</span>,
+            <span class="string">"0:3333333333333333333333333333333333333333333333333333333333333333"</span>,
         )
         .unwrap();
 
@@ -1010,7 +1011,7 @@
 
         transport
             .get_transaction(<span class="kw-2">&amp;</span>ton_types::UInt256::from_slice(
-                <span class="kw-2">&amp;</span>hex::decode(<span class="string">&quot;4a0a06bfbfaba4da8fcc7f5ad617fdee5344d954a1794e35618df2a4b349d15c&quot;</span>)
+                <span class="kw-2">&amp;</span>hex::decode(<span class="string">"4a0a06bfbfaba4da8fcc7f5ad617fdee5344d954a1794e35618df2a4b349d15c"</span>)
                     .unwrap(),
             ))
             .<span class="kw">await
@@ -1018,7 +1019,7 @@
             .unwrap();
 
         <span class="kw">let </span>setcode_multisig_code_hash = ton_types::UInt256::from_str(
-            <span class="string">&quot;e2b60b6b602c10ced7ea8ede4bdf96342c97570a3798066f3fb50a4b2b27a208&quot;</span>,
+            <span class="string">"e2b60b6b602c10ced7ea8ede4bdf96342c97570a3798066f3fb50a4b2b27a208"</span>,
         )
         .unwrap();
 

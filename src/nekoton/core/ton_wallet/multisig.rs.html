@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/multisig.rs`."><title>multisig.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/multisig.rs`."><title>multisig.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -758,14 +759,14 @@
 <span class="kw">use </span><span class="kw">crate</span>::crypto::UnsignedMessage;
 
 <span class="attr">#[derive(Copy, Clone, Debug)]
-</span><span class="kw">pub struct </span>DeployParams&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>owners: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[PublicKey],
+</span><span class="kw">pub struct </span>DeployParams&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>owners: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[PublicKey],
     <span class="kw">pub </span>req_confirms: u8,
     <span class="kw">pub </span>expiration_time: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; DeployParams&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub fn </span>single_custodian(pubkey: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>PublicKey) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; DeployParams&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub fn </span>single_custodian(pubkey: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>PublicKey) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             owners: std::slice::from_ref(pubkey),
             req_confirms: <span class="number">1</span>,
@@ -780,7 +781,7 @@
     multisig_type: MultisigType,
     workchain: i8,
     expiration: Expiration,
-    params: DeployParams&lt;<span class="lifetime">&#39;_</span>&gt;,
+    params: DeployParams&lt;<span class="lifetime">'_</span>&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>UnsignedMessage&gt;&gt; {
     <span class="kw">let </span>state_init = prepare_state_init(public_key, multisig_type);
     <span class="kw">let </span>hash = state_init.hash().trust_me();
@@ -1174,22 +1175,22 @@
 
 <span class="attr">#[derive(Copy, Clone, UnpackAbiPlain)]
 </span><span class="kw">pub struct </span>MultisigParamsPrefix {
-    <span class="attr">#[abi(uint8, name = <span class="string">&quot;maxQueuedTransactions&quot;</span>)]
+    <span class="attr">#[abi(uint8, name = <span class="string">"maxQueuedTransactions"</span>)]
     </span><span class="kw">pub </span>max_queued_transactions: u8,
-    <span class="attr">#[abi(uint8, name = <span class="string">&quot;maxCustodianCount&quot;</span>)]
+    <span class="attr">#[abi(uint8, name = <span class="string">"maxCustodianCount"</span>)]
     </span><span class="kw">pub </span>max_custodian_count: u8,
-    <span class="attr">#[abi(uint64, name = <span class="string">&quot;expirationTime&quot;</span>)]
+    <span class="attr">#[abi(uint64, name = <span class="string">"expirationTime"</span>)]
     </span><span class="kw">pub </span>expiration_time: u64,
-    <span class="attr">#[abi(uint128, name = <span class="string">&quot;minValue&quot;</span>)]
+    <span class="attr">#[abi(uint128, name = <span class="string">"minValue"</span>)]
     </span><span class="kw">pub </span>min_value: u128,
-    <span class="attr">#[abi(uint8, name = <span class="string">&quot;requiredTxnConfirms&quot;</span>)]
+    <span class="attr">#[abi(uint8, name = <span class="string">"requiredTxnConfirms"</span>)]
     </span><span class="kw">pub </span>required_confirms: u8,
 }
 
 <span class="kw">pub fn </span>get_params(
     clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
     multisig_type: MultisigType,
-    account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
+    account_stuff: Cow&lt;<span class="lifetime">'_</span>, ton_block::AccountStuff&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;MultisigParamsPrefix&gt; {
     <span class="kw">let </span>function = <span class="kw">match </span>multisig_type {
         MultisigType::Multisig2 | MultisigType::Multisig2_1 =&gt; {
@@ -1215,7 +1216,7 @@
 <span class="kw">pub fn </span>get_custodians(
     clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
     multisig_type: MultisigType,
-    account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
+    account_stuff: Cow&lt;<span class="lifetime">'_</span>, ton_block::AccountStuff&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;UInt256&gt;&gt; {
     <span class="kw">let </span>function = <span class="kw">if </span>multisig_type.is_multisig2() {
         nekoton_contracts::wallets::multisig2::get_custodians()
@@ -1245,7 +1246,7 @@
 <span class="kw">pub fn </span>find_pending_transaction(
     clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
     multisig_type: MultisigType,
-    account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
+    account_stuff: Cow&lt;<span class="lifetime">'_</span>, ton_block::AccountStuff&gt;,
     pending_transaction_id: u64,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
     <span class="attr">#[derive(Copy, Clone, UnpackAbi)]
@@ -1279,7 +1280,7 @@
 <span class="kw">pub fn </span>find_pending_update(
     clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
     multisig_type: MultisigType,
-    account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
+    account_stuff: Cow&lt;<span class="lifetime">'_</span>, ton_block::AccountStuff&gt;,
     update_id: u64,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;UpdatedParams&gt;&gt; {
     <span class="kw">use </span>nekoton_contracts::wallets::multisig2;
@@ -1323,7 +1324,7 @@
 <span class="kw">pub fn </span>get_pending_transactions(
     clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
     multisig_type: MultisigType,
-    account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
+    account_stuff: Cow&lt;<span class="lifetime">'_</span>, ton_block::AccountStuff&gt;,
     custodians: <span class="kw-2">&amp;</span>[UInt256],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;MultisigPendingTransaction&gt;&gt; {
     <span class="kw">let </span>function = <span class="kw">if </span>multisig_type.is_multisig2() {
@@ -1349,7 +1350,7 @@
 <span class="kw">pub fn </span>get_pending_updates(
     clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
     multisig_type: MultisigType,
-    account_stuff: Cow&lt;<span class="lifetime">&#39;_</span>, ton_block::AccountStuff&gt;,
+    account_stuff: Cow&lt;<span class="lifetime">'_</span>, ton_block::AccountStuff&gt;,
     custodians: <span class="kw-2">&amp;</span>[UInt256],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;MultisigPendingUpdate&gt;&gt; {
     <span class="kw">use </span>nekoton_contracts::wallets::multisig2;
@@ -1430,7 +1431,7 @@
     public_key: <span class="kw-2">&amp;</span>PublicKey,
     address: MsgAddressInt,
     expiration: Expiration,
-    function: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    function: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
     input: Vec&lt;ton_abi::Token&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>UnsignedMessage&gt;&gt; {
     <span class="kw">let </span>message = ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
@@ -1452,13 +1453,13 @@
 
 <span class="attr">#[derive(thiserror::Error, Debug)]
 </span><span class="kw">enum </span>MultisigError {
-    <span class="attr">#[error(<span class="string">&quot;Non-zero execution result code: {}&quot;</span>, .<span class="number">0</span>)]
+    <span class="attr">#[error(<span class="string">"Non-zero execution result code: {}"</span>, .<span class="number">0</span>)]
     </span>NonZeroResultCode(i32),
-    <span class="attr">#[error(<span class="string">&quot;Unsupported message flags set&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unsupported message flags set"</span>)]
     </span>UnsupportedFlagsSet,
-    <span class="attr">#[error(<span class="string">&quot;Custom lifetime is not supported for this contract type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Custom lifetime is not supported for this contract type"</span>)]
     </span>CustomExpirationTimeNotSupported,
-    <span class="attr">#[error(<span class="string">&quot;Update is not supported or not implemented for this contract type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Update is not supported or not implemented for this contract type"</span>)]
     </span>UnsupportedUpdate,
 }
 
@@ -1469,14 +1470,14 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>correct_address() {
         <span class="kw">let </span>key = PublicKey::from_bytes(
-            <span class="kw-2">&amp;</span>hex::decode(<span class="string">&quot;5ace46d93d8f3932499df9f2bc7ef787385e16965e7797258948febd186de7f6&quot;</span>)
+            <span class="kw-2">&amp;</span>hex::decode(<span class="string">"5ace46d93d8f3932499df9f2bc7ef787385e16965e7797258948febd186de7f6"</span>)
                 .unwrap(),
         )
         .unwrap();
 
         <span class="macro">assert_eq!</span>(
             compute_contract_address(<span class="kw-2">&amp;</span>key, MultisigType::SetcodeMultisigWallet24h, <span class="number">0</span>).to_string(),
-            <span class="string">&quot;0:3de70f9212154344a3158768b3fed731fc865ca15948b0d6d0d34daf4c6a7a0a&quot;
+            <span class="string">"0:3de70f9212154344a3158768b3fed731fc865ca15948b0d6d0d34daf4c6a7a0a"
         </span>);
     }
 }

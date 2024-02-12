@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/models.rs`."><title>models.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/models.rs`."><title>models.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1004,7 +1005,7 @@
 
 <span class="attr">#[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"snake_case"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>TransactionAdditionalInfo {
     <span class="doccomment">/// Transaction with incoming message, which body is valid UTF-8 comment
     </span>Comment(String),
@@ -1019,16 +1020,16 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>WalletInteractionInfo {
     <span class="attr">#[serde(
         default,
-        skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>,
-        with = <span class="string">&quot;serde_optional_address&quot;
+        skip_serializing_if = <span class="string">"Option::is_none"</span>,
+        with = <span class="string">"serde_optional_address"
     </span>)]
     </span><span class="kw">pub </span>recipient: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
 
-    <span class="attr">#[serde(default, skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>)]
+    <span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
     </span><span class="kw">pub </span>known_payload: <span class="prelude-ty">Option</span>&lt;KnownPayload&gt;,
 
     <span class="kw">pub </span>method: WalletInteractionMethod,
@@ -1036,7 +1037,7 @@
 
 <span class="attr">#[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"snake_case"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>KnownPayload {
     Comment(String),
     TokenOutgoingTransfer(TokenOutgoingTransfer),
@@ -1044,63 +1045,63 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"snake_case"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>WalletInteractionMethod {
     WalletV3Transfer,
     Multisig(Box&lt;MultisigTransaction&gt;),
 }
 
 <span class="attr">#[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize, Copy)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>DePoolOnRoundCompleteNotification {
-    <span class="attr">#[abi(uint64, name = <span class="string">&quot;roundId&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[abi(uint64, name = <span class="string">"roundId"</span>)]
+    #[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>round_id: u64,
 
-    <span class="attr">#[abi(uint64, name = <span class="string">&quot;reward&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[abi(uint64, name = <span class="string">"reward"</span>)]
+    #[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>reward: u64,
 
-    <span class="attr">#[abi(uint64, name = <span class="string">&quot;ordinaryStake&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[abi(uint64, name = <span class="string">"ordinaryStake"</span>)]
+    #[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>ordinary_stake: u64,
 
-    <span class="attr">#[abi(uint64, name = <span class="string">&quot;vestingStake&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[abi(uint64, name = <span class="string">"vestingStake"</span>)]
+    #[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>vesting_stake: u64,
 
-    <span class="attr">#[abi(uint64, name = <span class="string">&quot;lockStake&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[abi(uint64, name = <span class="string">"lockStake"</span>)]
+    #[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>lock_stake: u64,
 
-    <span class="attr">#[abi(bool, name = <span class="string">&quot;reinvest&quot;</span>)]
+    <span class="attr">#[abi(bool, name = <span class="string">"reinvest"</span>)]
     </span><span class="kw">pub </span>reinvest: bool,
 
-    <span class="attr">#[abi(uint8, name = <span class="string">&quot;reason&quot;</span>)]
+    <span class="attr">#[abi(uint8, name = <span class="string">"reason"</span>)]
     </span><span class="kw">pub </span>reason: u8,
 }
 
 <span class="attr">#[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize, Copy)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>DePoolReceiveAnswerNotification {
-    <span class="attr">#[abi(uint32, name = <span class="string">&quot;errcode&quot;</span>)]
+    <span class="attr">#[abi(uint32, name = <span class="string">"errcode"</span>)]
     </span><span class="kw">pub </span>error_code: u32,
 
-    <span class="attr">#[abi(uint64, name = <span class="string">&quot;comment&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[abi(uint64, name = <span class="string">"comment"</span>)]
+    #[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>comment: u64,
 }
 
 <span class="attr">#[derive(UnpackAbiPlain, Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>TokenWalletDeployedNotification {
-    <span class="attr">#[abi(address, name = <span class="string">&quot;root&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[abi(address, name = <span class="string">"root"</span>)]
+    #[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>root_token_contract: MsgAddressInt,
 }
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>MultisigTransaction {
     Send(MultisigSendTransaction),
     Submit(MultisigSubmitTransaction),
@@ -1111,48 +1112,48 @@
 }
 
 <span class="attr">#[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize, Copy)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>MultisigConfirmTransaction {
     <span class="attr">#[abi(skip)]
-    #[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    #[serde(with = <span class="string">"serde_uint256"</span>)]
     </span><span class="kw">pub </span>custodian: UInt256,
 
-    <span class="attr">#[abi(uint64, name = <span class="string">&quot;transactionId&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[abi(uint64, name = <span class="string">"transactionId"</span>)]
+    #[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>transaction_id: u64,
 }
 
 <span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>MultisigSubmitTransaction {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
     </span><span class="kw">pub </span>custodian: UInt256,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>dest: MsgAddressInt,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>value: BigUint,
 
     <span class="kw">pub </span>bounce: bool,
 
     <span class="kw">pub </span>all_balance: bool,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_cell"</span>)]
     </span><span class="kw">pub </span>payload: ton_types::Cell,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>trans_id: u64,
 }
 
 <span class="attr">#[derive(UnpackAbiPlain, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>MultisigSendTransaction {
     <span class="attr">#[abi(address)]
-    #[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    #[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>dest: MsgAddressInt,
 
-    <span class="attr">#[abi(with = <span class="string">&quot;nekoton_abi::uint128_number&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[abi(with = <span class="string">"nekoton_abi::uint128_number"</span>)]
+    #[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>value: BigUint,
 
     <span class="attr">#[abi(bool)]
@@ -1162,64 +1163,64 @@
     </span><span class="kw">pub </span>flags: u8,
 
     <span class="attr">#[abi(cell)]
-    #[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    #[serde(with = <span class="string">"serde_cell"</span>)]
     </span><span class="kw">pub </span>payload: ton_types::Cell,
 }
 
 <span class="attr">#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>MultisigSubmitUpdate {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
     </span><span class="kw">pub </span>custodian: UInt256,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_optional_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_optional_uint256"</span>)]
     </span><span class="kw">pub </span>new_code_hash: <span class="prelude-ty">Option</span>&lt;ton_types::UInt256&gt;,
     <span class="kw">pub </span>new_owners: bool,
     <span class="kw">pub </span>new_req_confirms: bool,
     <span class="kw">pub </span>new_lifetime: bool,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>update_id: u64,
 }
 
 <span class="attr">#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>MultisigConfirmUpdate {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
     </span><span class="kw">pub </span>custodian: UInt256,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>update_id: u64,
 }
 
 <span class="attr">#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>MultisigExecuteUpdate {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
     </span><span class="kw">pub </span>custodian: UInt256,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>update_id: u64,
 }
 
 <span class="attr">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>MultisigPendingTransaction {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>id: u64,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_vec_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_vec_uint256"</span>)]
     </span><span class="kw">pub </span>confirmations: Vec&lt;UInt256&gt;,
 
     <span class="kw">pub </span>signs_required: u8,
     <span class="kw">pub </span>signs_received: u8,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
     </span><span class="kw">pub </span>creator: UInt256,
 
     <span class="kw">pub </span>index: u8,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>dest: MsgAddressInt,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>value: BigUint,
 
     <span class="kw">pub </span>send_flags: u16,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_cell"</span>)]
     </span><span class="kw">pub </span>payload: ton_types::Cell,
 
     <span class="kw">pub </span>bounce: bool,
@@ -1227,43 +1228,43 @@
 
 <span class="attr">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>MultisigPendingUpdate {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>id: u64,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_vec_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_vec_uint256"</span>)]
     </span><span class="kw">pub </span>confirmations: Vec&lt;UInt256&gt;,
 
     <span class="kw">pub </span>signs_received: u8,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
     </span><span class="kw">pub </span>creator: UInt256,
 
     <span class="kw">pub </span>index: u8,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_optional_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_optional_uint256"</span>)]
     </span><span class="kw">pub </span>new_code_hash: <span class="prelude-ty">Option</span>&lt;ton_types::UInt256&gt;,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_optional_vec_uint256&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_optional_vec_uint256"</span>)]
     </span><span class="kw">pub </span>new_custodians: <span class="prelude-ty">Option</span>&lt;Vec&lt;ton_types::UInt256&gt;&gt;,
     <span class="kw">pub </span>new_req_confirms: <span class="prelude-ty">Option</span>&lt;u8&gt;,
     <span class="kw">pub </span>new_lifetime: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 }
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"snake_case"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>TokenWalletTransaction {
     IncomingTransfer(TokenIncomingTransfer),
     OutgoingTransfer(TokenOutgoingTransfer),
     SwapBack(TokenSwapBack),
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span>Accept(BigUint),
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span>TransferBounced(BigUint),
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span>SwapBackBounced(BigUint),
 }
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"snake_case"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>NftTransaction {
     Transfer(IncomingNftTransfer),
     ChangeOwner(IncomingChangeOwner),
@@ -1271,77 +1272,77 @@
 }
 
 <span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>TokenIncomingTransfer {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>tokens: BigUint,
     <span class="doccomment">/// Not the address of the token wallet, but the address of its owner
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>sender_address: MsgAddressInt,
 }
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>TokenOutgoingTransfer {
     <span class="kw">pub </span>to: TransferRecipient,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>tokens: BigUint,
     <span class="doccomment">/// token transfer payload
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_cell"</span>)]
     </span><span class="kw">pub </span>payload: ton_types::Cell,
 }
 
 <span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>IncomingNftTransfer {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>send_gas_to: MsgAddressInt,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>to: MsgAddressInt,
     <span class="comment">//pub callbacks: BTreeMap&lt;String, NftCallbackPayload&gt;,
 </span>}
 
 <span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>IncomingChangeOwner {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>send_gas_to: MsgAddressInt,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>new_owner: MsgAddressInt,
     <span class="comment">//pub callbacks: BTreeMap&lt;String, NftCallbackPayload&gt;,
 </span>}
 
 <span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>IncomingChangeManager {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>send_gas_to: MsgAddressInt,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>new_manager: MsgAddressInt,
     <span class="comment">//pub callbacks: BTreeMap&lt;String, NftCallbackPayload&gt;,
 </span>}
 
 <span class="attr">#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>TransferRecipient {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span>OwnerWallet(MsgAddressInt),
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span>TokenWallet(MsgAddressInt),
 }
 
 <span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>TokenSwapBack {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>tokens: BigUint,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>callback_address: MsgAddressInt,
     <span class="doccomment">/// ETH address or something else
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_cell"</span>)]
     </span><span class="kw">pub </span>callback_payload: ton_types::Cell,
 }
 
 <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>)]
+#[serde(rename_all = <span class="string">"lowercase"</span>)]
 </span><span class="kw">pub enum </span>PollingMethod {
     <span class="doccomment">/// Manual polling once a minute or by a click.
     /// Used when there are no pending transactions
@@ -1354,7 +1355,7 @@
 <span class="macro">define_string_enum!</span>(
     <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
     </span><span class="kw">pub enum </span>ReliableBehavior {
-        <span class="doccomment">/// Used for transports which doesn&#39;t support getting blocks directly (ADNL)
+        <span class="doccomment">/// Used for transports which doesn't support getting blocks directly (ADNL)
         </span>IntensivePolling,
         <span class="doccomment">/// Used for transports which support getting blocks directly (GQL)
         </span>BlockWalking,
@@ -1362,7 +1363,7 @@
 );
 
 <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>NetworkCapabilities {
     <span class="doccomment">/// Network global id.
     </span><span class="kw">pub </span>global_id: i32,
@@ -1380,7 +1381,7 @@
 }
 
 <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"lowercase"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>Expiration {
     <span class="doccomment">/// Message will never be expired. Not recommended to use
     </span>Never,
@@ -1445,7 +1446,7 @@
 }
 
 <span class="attr">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>Symbol {
     <span class="doccomment">/// Short name, e.g. USDT, DAI, etc.
     </span><span class="kw">pub </span>name: String,
@@ -1457,7 +1458,7 @@
     </span><span class="kw">pub </span>decimals: u8,
 
     <span class="doccomment">/// Address of the root token contract
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>root_token_contract: MsgAddressInt,
 }
 
@@ -1477,14 +1478,14 @@
 );
 
 <span class="attr">#[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>ContractState {
     <span class="doccomment">/// Latest known lt
     </span><span class="attr">#[serde(skip)]
     </span><span class="kw">pub </span>last_lt: u64,
 
     <span class="doccomment">/// Full account balance in nano TON
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>balance: u64,
     <span class="doccomment">/// At what point was this state obtained
     </span><span class="kw">pub </span>gen_timings: GenTimings,
@@ -1493,7 +1494,7 @@
     <span class="doccomment">/// Whether the contract is deployed
     </span><span class="kw">pub </span>is_deployed: bool,
     <span class="doccomment">/// Contract code hash
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_optional_uint256&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_optional_uint256"</span>)]
     </span><span class="kw">pub </span>code_hash: <span class="prelude-ty">Option</span>&lt;UInt256&gt;,
 }
 
@@ -1506,16 +1507,16 @@
 <span class="kw">impl </span>Eq <span class="kw">for </span>ContractState {}
 
 <span class="attr">#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>PendingTransaction {
     <span class="doccomment">/// External message hash
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
     </span><span class="kw">pub </span>message_hash: UInt256,
     <span class="doccomment">/// Incoming message source
     </span><span class="attr">#[serde(
         default,
-        skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>,
-        with = <span class="string">&quot;serde_optional_address&quot;
+        skip_serializing_if = <span class="string">"Option::is_none"</span>,
+        with = <span class="string">"serde_optional_address"
     </span>)]
     </span><span class="kw">pub </span>src: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
     <span class="doccomment">/// Last known lt at the time the message was sent
@@ -1535,7 +1536,7 @@
 }
 
 <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>)]
+#[serde(rename_all = <span class="string">"lowercase"</span>)]
 </span><span class="kw">pub enum </span>MessageType {
     Internal,
     External,
@@ -1549,60 +1550,60 @@
 }
 
 <span class="attr">#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>TransactionsBatchInfo {
     <span class="doccomment">/// The smallest lt in a group
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>min_lt: u64,
     <span class="doccomment">/// Maximum lt in a group
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>max_lt: u64,
     <span class="doccomment">/// Whether this batch was from the preload request
     </span><span class="kw">pub </span>batch_type: TransactionsBatchType,
 }
 
 <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>)]
+#[serde(rename_all = <span class="string">"lowercase"</span>)]
 </span><span class="kw">pub enum </span>TransactionsBatchType {
     Old,
     New,
 }
 
 <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>Transaction {
     <span class="doccomment">/// Full transaction id
     </span><span class="kw">pub </span>id: TransactionId,
     <span class="doccomment">/// Previous transaction id. `None` for last transaction
-    </span><span class="attr">#[serde(rename = <span class="string">&quot;prevTransactionId&quot;</span>)]
+    </span><span class="attr">#[serde(rename = <span class="string">"prevTransactionId"</span>)]
     </span><span class="kw">pub </span>prev_trans_id: <span class="prelude-ty">Option</span>&lt;TransactionId&gt;,
     <span class="doccomment">/// Transaction unix timestamp
     </span><span class="kw">pub </span>created_at: u32,
     <span class="doccomment">/// Whether transaction execution was unsuccessful
     </span><span class="kw">pub </span>aborted: bool,
     <span class="doccomment">/// Compute phase result code. `None` if compute phase was skipped
-    </span><span class="attr">#[serde(default, skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>)]
+    </span><span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
     </span><span class="kw">pub </span>exit_code: <span class="prelude-ty">Option</span>&lt;i32&gt;,
     <span class="doccomment">/// Action phase result code. `None` if action phase was skipped
-    </span><span class="attr">#[serde(default, skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>)]
+    </span><span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
     </span><span class="kw">pub </span>result_code: <span class="prelude-ty">Option</span>&lt;i32&gt;,
     <span class="doccomment">/// Account status before transaction execution
     </span><span class="kw">pub </span>orig_status: AccountStatus,
     <span class="doccomment">/// Account status after transaction execution
     </span><span class="kw">pub </span>end_status: AccountStatus,
     <span class="doccomment">/// Sum of fees from all execution stages
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>total_fees: u64,
     <span class="doccomment">/// Incoming message
-    </span><span class="attr">#[serde(rename = <span class="string">&quot;inMessage&quot;</span>)]
+    </span><span class="attr">#[serde(rename = <span class="string">"inMessage"</span>)]
     </span><span class="kw">pub </span>in_msg: Message,
     <span class="doccomment">/// Outgoing messages
-    </span><span class="attr">#[serde(rename = <span class="string">&quot;outMessages&quot;</span>)]
+    </span><span class="attr">#[serde(rename = <span class="string">"outMessages"</span>)]
     </span><span class="kw">pub </span>out_msgs: Vec&lt;Message&gt;,
 
     <span class="doccomment">/// Raw transaction cell
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
-    #[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
+    #[serde(with = <span class="string">"serde_cell"</span>)]
     </span><span class="kw">pub </span>raw: ton_types::Cell,
 }
 
@@ -1622,7 +1623,7 @@
 
         <span class="kw">let </span>total_fees = compute_total_transaction_fees(<span class="kw-2">&amp;</span>data, <span class="kw-2">&amp;</span>desc) <span class="kw">as </span>u64;
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
         </span><span class="kw">let </span>raw = ton_block::Serializable::serialize(<span class="kw-2">&amp;</span>data)
             .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
 
@@ -1663,7 +1664,7 @@
             total_fees,
             in_msg,
             out_msgs,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
             </span>raw,
         })
     }
@@ -1671,14 +1672,14 @@
 
 <span class="attr">#[derive(thiserror::Error, Debug, Copy, Clone)]
 </span><span class="kw">pub enum </span>TransactionError {
-    <span class="attr">#[error(<span class="string">&quot;Invalid transaction structure&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid transaction structure"</span>)]
     </span>InvalidStructure,
-    <span class="attr">#[error(<span class="string">&quot;Unsupported transaction type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unsupported transaction type"</span>)]
     </span>Unsupported,
 }
 
 <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;lowercase&quot;</span>)]
+#[serde(rename_all = <span class="string">"lowercase"</span>)]
 </span><span class="kw">pub enum </span>AccountStatus {
     <span class="doccomment">/// Account exists and has a positive balance
     </span>Uninit,
@@ -1686,7 +1687,7 @@
     </span>Frozen,
     <span class="doccomment">/// Account exists, has a deployed contract code and has a positive balance
     </span>Active,
-    <span class="doccomment">/// Account doesn&#39;t exist
+    <span class="doccomment">/// Account doesn't exist
     </span>Nonexist,
 }
 
@@ -1726,34 +1727,34 @@
     </span><span class="kw">pub </span>body: <span class="prelude-ty">Option</span>&lt;MessageBody&gt;,
 
     <span class="doccomment">/// Raw message cell
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
     </span><span class="kw">pub </span>raw: ton_types::Cell,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Message {
+<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; Deserialize&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>Message {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
-        </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        </span>D: Deserializer&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="kw">use </span>serde::de::Error;
 
         <span class="attr">#[derive(Deserialize)]
-        #[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+        #[serde(rename_all = <span class="string">"camelCase"</span>)]
         </span><span class="kw">struct </span>MessageHelper {
-            <span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+            <span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
             </span>hash: UInt256,
-            <span class="attr">#[serde(default, with = <span class="string">&quot;serde_optional_address&quot;</span>)]
+            <span class="attr">#[serde(default, with = <span class="string">"serde_optional_address"</span>)]
             </span>src: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
-            <span class="attr">#[serde(default, with = <span class="string">&quot;serde_optional_address&quot;</span>)]
+            <span class="attr">#[serde(default, with = <span class="string">"serde_optional_address"</span>)]
             </span>dst: <span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
-            <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+            <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
             </span>value: u64,
             bounce: bool,
             bounced: bool,
             body: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
-            #[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
+            #[serde(with = <span class="string">"serde_cell"</span>)]
             </span>raw: ton_types::Cell,
         }
 
@@ -1777,7 +1778,7 @@
             bounce: parsed.bounce,
             bounced: parsed.bounced,
             body,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
             </span>raw: parsed.raw,
         })
     }
@@ -1791,29 +1792,29 @@
         <span class="kw">use </span>serde::ser::Error;
 
         <span class="attr">#[derive(Serialize)]
-        #[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
-        </span><span class="kw">struct </span>MessageHelper&lt;<span class="lifetime">&#39;a</span>&gt; {
-            <span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
-            </span>hash: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>UInt256,
+        #[serde(rename_all = <span class="string">"camelCase"</span>)]
+        </span><span class="kw">struct </span>MessageHelper&lt;<span class="lifetime">'a</span>&gt; {
+            <span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
+            </span>hash: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>UInt256,
             <span class="attr">#[serde(
-                skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>,
-                with = <span class="string">&quot;serde_optional_address&quot;
+                skip_serializing_if = <span class="string">"Option::is_none"</span>,
+                with = <span class="string">"serde_optional_address"
             </span>)]
-            </span>src: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
+            </span>src: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
             <span class="attr">#[serde(
-                skip_serializing_if = <span class="string">&quot;Option::is_none&quot;</span>,
-                with = <span class="string">&quot;serde_optional_address&quot;
+                skip_serializing_if = <span class="string">"Option::is_none"</span>,
+                with = <span class="string">"serde_optional_address"
             </span>)]
-            </span>dst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
+            </span>dst: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="prelude-ty">Option</span>&lt;MsgAddressInt&gt;,
             value: String,
             bounce: bool,
             bounced: bool,
             body: <span class="prelude-ty">Option</span>&lt;String&gt;,
             body_hash: <span class="prelude-ty">Option</span>&lt;String&gt;,
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
-            #[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
-            </span>raw: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ton_types::Cell,
+            <span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
+            #[serde(with = <span class="string">"serde_cell"</span>)]
+            </span>raw: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>ton_types::Cell,
         }
 
         <span class="kw">let </span>(body, body_hash) = <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.body {
@@ -1834,7 +1835,7 @@
             body,
             body_hash,
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
             </span>raw: <span class="kw-2">&amp;</span><span class="self">self</span>.raw,
         }
         .serialize(serializer)
@@ -1849,7 +1850,7 @@
         <span class="kw">let </span>s = ton_block::Message::construct_from_cell(raw.clone())
             .map_err(|<span class="kw">_</span>| TransactionError::InvalidStructure)<span class="question-mark">?</span>;
 
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;extended_models&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">"extended_models"</span>))]
         </span><span class="kw">let _ </span>= raw;
 
         <span class="kw">let </span>body = s.body().map(|body| {
@@ -1872,7 +1873,7 @@
                 body,
                 bounce: header.bounce,
                 bounced: header.bounced,
-                <span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
                 </span>raw,
             },
             ton_block::CommonMsgInfo::ExtInMsgInfo(header) =&gt; Message {
@@ -1880,7 +1881,7 @@
                 src: <span class="prelude-val">None</span>,
                 dst: <span class="prelude-val">Some</span>(header.dst.clone()),
                 body,
-                <span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
                 </span>raw,
                 ..Default::default()
             },
@@ -1891,7 +1892,7 @@
                     ton_block::MsgAddressIntOrNone::None =&gt; <span class="prelude-val">None</span>,
                 },
                 body,
-                <span class="attr">#[cfg(feature = <span class="string">&quot;extended_models&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"extended_models"</span>)]
                 </span>raw,
                 ..Default::default()
             },
@@ -1902,27 +1903,27 @@
 <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>MessageBody {
     <span class="doccomment">/// Hash of body in cell representation
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_uint256&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_uint256"</span>)]
     </span><span class="kw">pub </span>hash: UInt256,
     <span class="doccomment">/// Base64 encoded message body
-    </span><span class="attr">#[serde(with = <span class="string">&quot;serde_cell&quot;</span>)]
+    </span><span class="attr">#[serde(with = <span class="string">"serde_cell"</span>)]
     </span><span class="kw">pub </span>data: ton_types::Cell,
 }
 
 <span class="attr">#[derive(thiserror::Error, Debug, Copy, Clone)]
 </span><span class="kw">pub enum </span>MessageBodyError {
-    <span class="attr">#[error(<span class="string">&quot;Failed to serialize data&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Failed to serialize data"</span>)]
     </span>FailedToSerialize,
-    <span class="attr">#[error(<span class="string">&quot;Failed to deserialize data&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Failed to deserialize data"</span>)]
     </span>FailedToDeserialize,
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;wallet_core&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"wallet_core"</span>)]
 #[derive(thiserror::Error, Debug)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>AccountSubscriptionError {
-    <span class="attr">#[error(<span class="string">&quot;Invalid message destination&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid message destination"</span>)]
     </span>InvalidMessageDestination,
-    <span class="attr">#[error(<span class="string">&quot;Invalid message type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid message type"</span>)]
     </span>InvalidMessageType,
 }
 
@@ -1959,7 +1960,7 @@
 
 <span class="attr">#[derive(thiserror::Error, Debug, Copy, Clone)]
 </span><span class="kw">pub enum </span>MessageFlagsError {
-    <span class="attr">#[error(<span class="string">&quot;Unknown message flags combination&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Unknown message flags combination"</span>)]
     </span>UnknownMessageFlags,
 }
 
@@ -1969,7 +1970,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_parse_transaction() {
-        <span class="kw">let </span>transaction =  ton_block::Transaction::construct_from_base64(<span class="string">&quot;te6ccgECCgEAAmIAA7VxDMDpxVKoQf1ESN4flYWnx79MwznjFCnHv2LMYnj5e/AAAMAPptS0HL7tNWkkUnpwkWevWy0v6QllFeZdkxpKd3jABu53GMiwAADABeYcjBYH/izgADRpb9DoBQQBAhEMgEHGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAJdRbUJwB114ymQlNQVCfa9Moy2h4xlzAjFN0wo4BiqckBQGUwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnIKnXiVk1PWmbnJrrJ8ZuP6tVF8xWwdT4FzwpwwbcybITXW+aJKu2Ai+6iWudx7E+cmmtyYoMFlMnA6RJvjslElAgHgCAYBAd8HAMtoACGYHTiqVQg/qIkbw/KwtPj36ZhnPGKFOPfsWYxPHy9/AC7y/frS28SA7otT/U3XeMKVAioEwv3n4cO+8/UnsFk6VAnHZSQABhRYYAAAGAH02paEwP/FnAVWDH6AAAABKgXyAEAB34gAIZgdOKpVCD+oiRvD8rC0+PfpmGc8YoU49+xZjE8fL34FEnWHwu7iFVw1r2O1eQN6i3g5Ib9nJIGpQqRtpYG36Pjrmo9/vgPWf5ev1vhedfPUgkaxeInhVroDrGaLYfhoEl1JbFYH/i5IAAADOBwJAIJiAF3l+/Wlt4kB3Ran+puu8YUqBFQJhfvPw4d95+pPYLJ0qBOOykgAAAAAAAAAAAAAAAAAAAqsGP0AAAACVAvkAA==&quot;</span>).unwrap();
+        <span class="kw">let </span>transaction =  ton_block::Transaction::construct_from_base64(<span class="string">"te6ccgECCgEAAmIAA7VxDMDpxVKoQf1ESN4flYWnx79MwznjFCnHv2LMYnj5e/AAAMAPptS0HL7tNWkkUnpwkWevWy0v6QllFeZdkxpKd3jABu53GMiwAADABeYcjBYH/izgADRpb9DoBQQBAhEMgEHGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAJdRbUJwB114ymQlNQVCfa9Moy2h4xlzAjFN0wo4BiqckBQGUwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnIKnXiVk1PWmbnJrrJ8ZuP6tVF8xWwdT4FzwpwwbcybITXW+aJKu2Ai+6iWudx7E+cmmtyYoMFlMnA6RJvjslElAgHgCAYBAd8HAMtoACGYHTiqVQg/qIkbw/KwtPj36ZhnPGKFOPfsWYxPHy9/AC7y/frS28SA7otT/U3XeMKVAioEwv3n4cO+8/UnsFk6VAnHZSQABhRYYAAAGAH02paEwP/FnAVWDH6AAAABKgXyAEAB34gAIZgdOKpVCD+oiRvD8rC0+PfpmGc8YoU49+xZjE8fL34FEnWHwu7iFVw1r2O1eQN6i3g5Ib9nJIGpQqRtpYG36Pjrmo9/vgPWf5ev1vhedfPUgkaxeInhVroDrGaLYfhoEl1JbFYH/i5IAAADOBwJAIJiAF3l+/Wlt4kB3Ran+puu8YUqBFQJhfvPw4d95+pPYLJ0qBOOykgAAAAAAAAAAAAAAAAAAAqsGP0AAAACVAvkAA=="</span>).unwrap();
         <span class="kw">let </span>parsed = Transaction::try_from((Default::default(), transaction)).unwrap();
         <span class="macro">assert!</span>(parsed.in_msg.body.is_some())
     }

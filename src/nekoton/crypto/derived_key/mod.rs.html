@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/derived_key/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/derived_key/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1067,7 +1068,7 @@
     }
 
     <span class="kw">fn </span>use_sign_input(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="self">self</span>,
+        <span class="kw-2">&amp;</span><span class="lifetime">'_ </span><span class="self">self</span>,
         password_cache: <span class="kw-2">&amp;</span>PasswordCache,
         input: DerivedKeyPassword,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Keypair&gt; {
@@ -1111,8 +1112,8 @@
     }
 }
 
-<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
-#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">"non_threadsafe"</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">"non_threadsafe"</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>StoreSigner <span class="kw">for </span>DerivedKeySigner {
     <span class="kw">type </span>CreateKeyInput = DerivedKeyCreateInput;
     <span class="kw">type </span>ExportSeedInput = DerivedKeyExportSeedParams;
@@ -1125,7 +1126,7 @@
 
     <span class="kw">async fn </span>add_key(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::CreateKeyInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>input {
@@ -1231,7 +1232,7 @@
 
     <span class="kw">async fn </span>update_key(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::UpdateKeyInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
         <span class="kw">match </span>input {
@@ -1297,7 +1298,7 @@
 
     <span class="kw">async fn </span>export_seed(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::ExportSeedInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::ExportSeedOutput&gt; {
         <span class="kw">let </span>master_key = <span class="kw">match </span><span class="self">self</span>.master_keys.get(input.master_key.as_bytes()) {
@@ -1324,7 +1325,7 @@
 
     <span class="kw">async fn </span>export_keypair(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::ExportKeypairInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::ExportKeypairOutput&gt; {
         <span class="self">self</span>.use_sign_input(ctx.password_cache, input)
@@ -1332,7 +1333,7 @@
 
     <span class="kw">async fn </span>get_public_keys(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::GetPublicKeys,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;PublicKey&gt;&gt; {
         <span class="kw">let </span>master_key = <span class="kw">match </span><span class="self">self</span>.master_keys.get(input.master_key.as_bytes()) {
@@ -1367,7 +1368,7 @@
 
     <span class="kw">async fn </span>compute_shared_secrets(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         public_keys: <span class="kw-2">&amp;</span>[PublicKey],
         input: <span class="self">Self</span>::SignInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SharedSecret&gt;&gt; {
@@ -1387,7 +1388,7 @@
 
     <span class="kw">async fn </span>sign(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         data: <span class="kw-2">&amp;</span>[u8],
         signature_id: <span class="prelude-ty">Option</span>&lt;SignatureId&gt;,
         input: <span class="self">Self</span>::SignInput,
@@ -1398,8 +1399,8 @@
     }
 }
 
-<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
-#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">"non_threadsafe"</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">"non_threadsafe"</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>SignerStorage <span class="kw">for </span>DerivedKeySigner {
     <span class="kw">fn </span>load_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="attr">#[derive(Deserialize)]
@@ -1429,9 +1430,9 @@
     }
 
     <span class="kw">fn </span>store_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        <span class="kw">struct </span>StoredMasterKeys&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;[u8; <span class="number">32</span>], MasterKey&gt;);
+        <span class="kw">struct </span>StoredMasterKeys&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>HashMap&lt;[u8; <span class="number">32</span>], MasterKey&gt;);
 
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Serialize <span class="kw">for </span>StoredMasterKeys&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Serialize <span class="kw">for </span>StoredMasterKeys&lt;<span class="lifetime">'a</span>&gt; {
             <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
             <span class="kw">where
                 </span>S: Serializer,
@@ -1448,8 +1449,8 @@
         }
 
         <span class="attr">#[derive(Serialize)]
-        </span><span class="kw">struct </span>StoredDerivedKeySigner&lt;<span class="lifetime">&#39;a</span>&gt; {
-            master_keys: StoredMasterKeys&lt;<span class="lifetime">&#39;a</span>&gt;,
+        </span><span class="kw">struct </span>StoredDerivedKeySigner&lt;<span class="lifetime">'a</span>&gt; {
+            master_keys: StoredMasterKeys&lt;<span class="lifetime">'a</span>&gt;,
         }
 
         serde_json::to_string(<span class="kw-2">&amp;</span>StoredDerivedKeySigner {
@@ -1500,35 +1501,35 @@
 
 <span class="attr">#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
 </span><span class="kw">struct </span>MasterKey {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
     </span>public_key: PublicKey,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
     </span>salt: Vec&lt;u8&gt;,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
     </span>enc_entropy: Vec&lt;u8&gt;,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_nonce"</span>)]
     </span>entropy_nonce: Nonce,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
     </span>enc_phrase: Vec&lt;u8&gt;,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_nonce"</span>)]
     </span>phrase_nonce: Nonce,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_accounts_map&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_accounts_map"</span>)]
     </span>accounts_map: AccountsMap,
 }
 
 <span class="kw">impl </span>MasterKey {
     <span class="kw">fn </span>new(
-        password_cache: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>PasswordCache,
+        password_cache: <span class="kw-2">&amp;</span><span class="lifetime">'_ </span>PasswordCache,
         password: Password,
         phrase: SecUtf8,
         key_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>, String, PasswordCacheTransaction&lt;<span class="lifetime">&#39;_</span>&gt;)&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>, String, PasswordCacheTransaction&lt;<span class="lifetime">'_</span>&gt;)&gt; {
         <span class="kw">use </span>zeroize::Zeroize;
 
         <span class="kw">let </span><span class="kw-2">mut </span>phrase = phrase.unsecure().to_string();
@@ -1642,18 +1643,18 @@
 <span class="kw">type </span>AccountsMap = HashMap&lt;PubKey, Account&gt;;
 
 <span class="attr">#[derive(Clone, Serialize, Deserialize, Debug)]
-#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"snake_case"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>DerivedKeyPassword {
     ByAccountId {
-        <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
         </span>master_key: PublicKey,
         account_id: u16,
         password: Password,
     },
     ByPublicKey {
-        <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
         </span>master_key: PublicKey,
-        <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
         </span>public_key: PublicKey,
         password: Password,
     },
@@ -1661,7 +1662,7 @@
 
 <span class="attr">#[derive(Serialize, Deserialize, Debug)]
 </span><span class="kw">pub struct </span>DerivedKeyExportSeedParams {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
     </span><span class="kw">pub </span>master_key: PublicKey,
     <span class="kw">pub </span>password: Password,
 }
@@ -1673,7 +1674,7 @@
 
 <span class="attr">#[derive(Serialize, Deserialize, Debug)]
 </span><span class="kw">pub struct </span>DerivedKeyGetPublicKeys {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
     </span><span class="kw">pub </span>master_key: PublicKey,
     <span class="kw">pub </span>password: Password,
     <span class="kw">pub </span>limit: u16,
@@ -1681,17 +1682,17 @@
 }
 
 <span class="attr">#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"snake_case"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>DerivedKeyUpdateParams {
     RenameKey {
-        <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
         </span>master_key: PublicKey,
-        <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
         </span>public_key: PublicKey,
         name: String,
     },
     ChangePassword {
-        <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
         </span>master_key: PublicKey,
         old_password: Password,
         new_password: Password,
@@ -1699,7 +1700,7 @@
 }
 
 <span class="attr">#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"snake_case"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>DerivedKeyCreateInput {
     Import {
         key_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
@@ -1708,7 +1709,7 @@
     },
     Derive {
         key_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-        <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
         </span>master_key: PublicKey,
         account_id: u16,
         password: Password,
@@ -1730,8 +1731,8 @@
         </span>S: serde::Serializer,
     {
         <span class="attr">#[derive(Serialize)]
-        </span><span class="kw">struct </span>StoredItem&lt;<span class="lifetime">&#39;a</span>&gt; {
-            name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+        </span><span class="kw">struct </span>StoredItem&lt;<span class="lifetime">'a</span>&gt; {
+            name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
             account_id: u16,
         }
 
@@ -1749,9 +1750,9 @@
         map.end()
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deserialize&lt;<span class="lifetime">&#39;de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;AccountsMap, D::Error&gt;
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>deserialize&lt;<span class="lifetime">'de</span>, D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;AccountsMap, D::Error&gt;
     <span class="kw">where
-        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="attr">#[derive(Deserialize)]
         </span><span class="kw">struct </span>StoredItem {
@@ -1770,7 +1771,7 @@
                         .and_then(|public_key| {
                             public_key
                                 .try_into()
-                                .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">&quot;Invalid public key&quot;</span>))
+                                .map_err(|<span class="kw">_</span>| D::Error::custom(<span class="string">"Invalid public key"</span>))
                         })<span class="question-mark">?</span>;
                 <span class="kw">let </span>name = name.unwrap_or_else(|| default_key_name(<span class="kw-2">&amp;</span>public_key));
                 <span class="prelude-val">Ok</span>((public_key, Account { name, account_id }))
@@ -1782,7 +1783,7 @@
 <span class="kw">fn </span>derive_from_master(id: u16, master: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;ed25519_dalek::Keypair&gt; {
     <span class="kw">use </span>tiny_hderive::bip32;
 
-    <span class="kw">let </span>path = <span class="macro">format!</span>(<span class="string">&quot;m/44&#39;/396&#39;/0&#39;/0/{id}&quot;</span>);
+    <span class="kw">let </span>path = <span class="macro">format!</span>(<span class="string">"m/44'/396'/0'/0/{id}"</span>);
     <span class="kw">let </span>key = bip32::ExtendedPrivKey::derive(master, path.as_str())
         .map_err(|<span class="kw">_</span>| MasterKeyError::DerivationError)<span class="question-mark">?
         </span>.secret();
@@ -1795,13 +1796,13 @@
 
 <span class="attr">#[derive(Debug, thiserror::Error)]
 </span><span class="kw">enum </span>MasterKeyError {
-    <span class="attr">#[error(<span class="string">&quot;Master key not found&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Master key not found"</span>)]
     </span>MasterKeyNotFound,
-    <span class="attr">#[error(<span class="string">&quot;Derived key not found&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Derived key not found"</span>)]
     </span>DerivedKeyNotFound,
-    <span class="attr">#[error(<span class="string">&quot;Failed to derive account from master key&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Failed to derive account from master key"</span>)]
     </span>DerivationError,
-    <span class="attr">#[error(<span class="string">&quot;Derived key already exists&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Derived key already exists"</span>)]
     </span>DerivedKeyExists,
 }
 
@@ -1813,7 +1814,7 @@
     <span class="kw">use </span><span class="kw">crate</span>::crypto::PasswordCacheBehavior;
 
     <span class="kw">const </span>TEST_PHRASE: <span class="kw-2">&amp;</span>str =
-        <span class="string">&quot;pioneer fever hazard scan install wise reform corn bubble leisure amazing note&quot;</span>;
+        <span class="string">"pioneer fever hazard scan install wise reform corn bubble leisure amazing note"</span>;
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>test_creation() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -1829,10 +1830,10 @@
             .add_key(
                 ctx,
                 DerivedKeyCreateInput::Import {
-                    key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;Key&quot;</span>.to_owned()),
+                    key_name: <span class="prelude-val">Some</span>(<span class="string">"Key"</span>.to_owned()),
                     phrase: SecUtf8::from(TEST_PHRASE),
                     password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;123&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"123"</span>),
                         cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(<span class="number">1</span>)),
                     },
                 },
@@ -1869,10 +1870,10 @@
             .add_key(
                 ctx,
                 DerivedKeyCreateInput::Import {
-                    key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;Key 2&quot;</span>.to_owned()),
+                    key_name: <span class="prelude-val">Some</span>(<span class="string">"Key 2"</span>.to_owned()),
                     phrase: SecUtf8::from(TEST_PHRASE),
                     password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;321&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"321"</span>),
                         cache_behavior: PasswordCacheBehavior::Remove,
                     },
                 },
@@ -1887,7 +1888,7 @@
                 DerivedKeyExportSeedParams {
                     master_key: entry.master_key,
                     password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;321&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"321"</span>),
                         cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(<span class="number">1</span>)),
                     },
                 },
@@ -1911,10 +1912,10 @@
             .add_key(
                 ctx,
                 DerivedKeyCreateInput::Import {
-                    key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;Key&quot;</span>.to_owned()),
+                    key_name: <span class="prelude-val">Some</span>(<span class="string">"Key"</span>.to_owned()),
                     phrase: SecUtf8::from(TEST_PHRASE),
                     password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;123&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"123"</span>),
                         cache_behavior: Default::default(),
                     },
                 },
@@ -1927,11 +1928,11 @@
                 DerivedKeyUpdateParams::ChangePassword {
                     master_key: entry.master_key,
                     old_password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;123&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"123"</span>),
                         cache_behavior: Default::default(),
                     },
                     new_password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;321&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"321"</span>),
                         cache_behavior: Default::default(),
                     },
                 },
@@ -1944,11 +1945,11 @@
                 DerivedKeyUpdateParams::ChangePassword {
                     master_key: entry.master_key,
                     old_password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;totally different&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"totally different"</span>),
                         cache_behavior: Default::default(),
                     },
                     new_password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;321&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"321"</span>),
                         cache_behavior: Default::default(),
                     },
                 }
@@ -1964,17 +1965,17 @@
         <span class="kw">use </span>serde::{Deserialize, Serialize};
 
         <span class="attr">#[derive(Serialize, Deserialize, Debug)]
-        </span><span class="kw">struct </span>Wr(<span class="attr">#[serde(with = <span class="string">&quot;super::serde_accounts_map&quot;</span>)] </span>AccountsMap);
+        </span><span class="kw">struct </span>Wr(<span class="attr">#[serde(with = <span class="string">"super::serde_accounts_map"</span>)] </span>AccountsMap);
 
-        <span class="kw">let </span>map_str = <span class="string">r#&quot;{&quot;3030303030303030303030303030303030303030303030303030303030303030&quot;:{&quot;account_id&quot;:0},&quot;3030303030303030303030303030303030303030303030303030303030303031&quot;:{&quot;account_id&quot;:1}}&quot;#</span>;
+        <span class="kw">let </span>map_str = <span class="string">r#"{"3030303030303030303030303030303030303030303030303030303030303030":{"account_id":0},"3030303030303030303030303030303030303030303030303030303030303031":{"account_id":1}}"#</span>;
         <span class="kw">let </span>wr: Wr = serde_json::from_str(map_str).unwrap();
         <span class="macro">assert_eq!</span>(
-            wr.<span class="number">0</span>[<span class="string">b&quot;00000000000000000000000000000000&quot;</span>].name,
-            <span class="string">&quot;3030...3030&quot;
+            wr.<span class="number">0</span>[<span class="string">b"00000000000000000000000000000000"</span>].name,
+            <span class="string">"3030...3030"
         </span>);
-        <span class="kw">let </span>map_str = <span class="string">r#&quot;{&quot;3030303030303030303030303030303030303030303030303030303030303030&quot;:{&quot;account_id&quot;:0, &quot;name&quot;:&quot;lil&quot;},&quot;3030303030303030303030303030303030303030303030303030303030303031&quot;:{&quot;account_id&quot;:1}}&quot;#</span>;
+        <span class="kw">let </span>map_str = <span class="string">r#"{"3030303030303030303030303030303030303030303030303030303030303030":{"account_id":0, "name":"lil"},"3030303030303030303030303030303030303030303030303030303030303031":{"account_id":1}}"#</span>;
         <span class="kw">let </span>wr: Wr = serde_json::from_str(map_str).unwrap();
-        <span class="macro">assert_eq!</span>(wr.<span class="number">0</span>[<span class="string">b&quot;00000000000000000000000000000000&quot;</span>].name, <span class="string">&quot;lil&quot;</span>);
+        <span class="macro">assert_eq!</span>(wr.<span class="number">0</span>[<span class="string">b"00000000000000000000000000000000"</span>].name, <span class="string">"lil"</span>);
     }
 
     <span class="attr">#[tokio::test]
@@ -1990,10 +1991,10 @@
             .add_key(
                 ctx,
                 DerivedKeyCreateInput::Import {
-                    key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;from giver&quot;</span>.into()),
+                    key_name: <span class="prelude-val">Some</span>(<span class="string">"from giver"</span>.into()),
                     phrase: TEST_PHRASE.into(),
                     password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"supasecret"</span>),
                         cache_behavior: Default::default(),
                     },
                 },
@@ -2004,10 +2005,10 @@
         key.add_key(
             ctx,
             DerivedKeyCreateInput::Derive {
-                key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;all my money 🤑&quot;</span>.into()),
+                key_name: <span class="prelude-val">Some</span>(<span class="string">"all my money 🤑"</span>.into()),
                 master_key: master,
                 password: Password::Explicit {
-                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    password: SecUtf8::from(<span class="string">"supasecret"</span>),
                     cache_behavior: Default::default(),
                 },
                 account_id: <span class="number">1</span>,
@@ -2018,10 +2019,10 @@
         key.add_key(
             ctx,
             DerivedKeyCreateInput::Derive {
-                key_name: <span class="prelude-val">Some</span>(<span class="string">&quot;史萊克的模因.&quot;</span>.into()),
+                key_name: <span class="prelude-val">Some</span>(<span class="string">"史萊克的模因."</span>.into()),
                 master_key: master,
                 password: Password::Explicit {
-                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    password: SecUtf8::from(<span class="string">"supasecret"</span>),
                     cache_behavior: Default::default(),
                 },
                 account_id: <span class="number">2</span>,
@@ -2038,30 +2039,30 @@
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>load_old() {
-        <span class="kw">let </span>json = <span class="string">r#&quot;{
-    &quot;master_keys&quot;: {
-        &quot;4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89&quot;: {
-            &quot;public_key&quot;: &quot;4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89&quot;,
-            &quot;salt&quot;: &quot;c782d6aff7fac03173335ba42d6428ff7f67140e24f10cccd50d97275e55baaa&quot;,
-            &quot;enc_entropy&quot;: &quot;eb614567ea07d21b2df912462e375466d169c35fc93f8b5d2947c14580c5d0897f2fc13c4631ca4a1c264725523fc3acf2618e6c3957939b807ffbf1bff637d4899cfd75f4ea6d20f8a9774e7c5f13d1&quot;,
-            &quot;entropy_nonce&quot;: &quot;ba7e99f7e02fafc54f6118a9&quot;,
-            &quot;enc_phrase&quot;: &quot;8ae34ee2e87d80f1ef708a3025cd717e048522a0814529f5d27e04dad5b5d25628e80c5c022ed0bd2818348dca74729ec86e7d5537313c15079c305e9c3b982a518c9b3f2b9d5f1ab0be7065d6577ef58083e3f77d79a229b6216dbda961&quot;,
-            &quot;phrase_nonce&quot;: &quot;737a285244c779159a3904dd&quot;,
-            &quot;accounts_map&quot;: {
-                &quot;4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89&quot;: {
-                    &quot;name&quot;: &quot;shrek&quot;,
-                    &quot;account_id&quot;: 0
+        <span class="kw">let </span>json = <span class="string">r#"{
+    "master_keys": {
+        "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89": {
+            "public_key": "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89",
+            "salt": "c782d6aff7fac03173335ba42d6428ff7f67140e24f10cccd50d97275e55baaa",
+            "enc_entropy": "eb614567ea07d21b2df912462e375466d169c35fc93f8b5d2947c14580c5d0897f2fc13c4631ca4a1c264725523fc3acf2618e6c3957939b807ffbf1bff637d4899cfd75f4ea6d20f8a9774e7c5f13d1",
+            "entropy_nonce": "ba7e99f7e02fafc54f6118a9",
+            "enc_phrase": "8ae34ee2e87d80f1ef708a3025cd717e048522a0814529f5d27e04dad5b5d25628e80c5c022ed0bd2818348dca74729ec86e7d5537313c15079c305e9c3b982a518c9b3f2b9d5f1ab0be7065d6577ef58083e3f77d79a229b6216dbda961",
+            "phrase_nonce": "737a285244c779159a3904dd",
+            "accounts_map": {
+                "4ebe5acc31dea9432b6b83470d7b4594a3f24fccbd60d78a2e92a5e441339a89": {
+                    "name": "shrek",
+                    "account_id": 0
                 },
-                &quot;4d5653ed69caaa8e0417d952728bd5dc99a6d53510328a059e3584450a6a0359&quot;: {
-                    &quot;account_id&quot;: 2
+                "4d5653ed69caaa8e0417d952728bd5dc99a6d53510328a059e3584450a6a0359": {
+                    "account_id": 2
                 },
-                &quot;76fadb08e46bfeb71e63236a8bba9b2ce1f5025ea618837be24ead51ae7451fa&quot;: {
-                    &quot;account_id&quot;: 1
+                "76fadb08e46bfeb71e63236a8bba9b2ce1f5025ea618837be24ead51ae7451fa": {
+                    "account_id": 1
                 }
             }
         }
     }
-}&quot;#</span>;
+}"#</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>loaded = DerivedKeySigner::new();
         loaded.load_state(json).unwrap();
     }

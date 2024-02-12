@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/encrypted_key/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/crypto/encrypted_key/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -890,8 +891,8 @@
     }
 }
 
-<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
-#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">"non_threadsafe"</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">"non_threadsafe"</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>StoreSigner <span class="kw">for </span>EncryptedKeySigner {
     <span class="kw">type </span>CreateKeyInput = EncryptedKeyCreateInput;
     <span class="kw">type </span>ExportSeedInput = EncryptedKeyPassword;
@@ -904,7 +905,7 @@
 
     <span class="kw">async fn </span>add_key(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::CreateKeyInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
         <span class="kw">let </span>(key, password) = EncryptedKey::new(
@@ -931,7 +932,7 @@
 
     <span class="kw">async fn </span>update_key(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::UpdateKeyInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;SignerEntry&gt; {
         <span class="kw">match </span>input {
@@ -974,7 +975,7 @@
 
     <span class="kw">async fn </span>export_seed(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::ExportSeedInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::ExportSeedOutput&gt; {
         <span class="kw">let </span>key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
@@ -993,7 +994,7 @@
 
     <span class="kw">async fn </span>export_keypair(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::ExportKeypairInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::ExportKeypairOutput&gt; {
         <span class="kw">let </span>key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
@@ -1010,7 +1011,7 @@
     <span class="doccomment">/// Does nothing useful, only exists for compatibility with other signers
     </span><span class="kw">async fn </span>get_public_keys(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        <span class="kw">_</span>: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         input: <span class="self">Self</span>::GetPublicKeys,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;PublicKey&gt;&gt; {
         <span class="kw">let </span>_key = <span class="self">self</span>.get_key(<span class="kw-2">&amp;</span>input.public_key)<span class="question-mark">?</span>;
@@ -1019,7 +1020,7 @@
 
     <span class="kw">async fn </span>compute_shared_secrets(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         public_keys: <span class="kw-2">&amp;</span>[PublicKey],
         input: <span class="self">Self</span>::SignInput,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SharedSecret&gt;&gt; {
@@ -1037,7 +1038,7 @@
 
     <span class="kw">async fn </span>sign(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        ctx: SignerContext&lt;<span class="lifetime">&#39;_</span>&gt;,
+        ctx: SignerContext&lt;<span class="lifetime">'_</span>&gt;,
         data: <span class="kw-2">&amp;</span>[u8],
         signature_id: <span class="prelude-ty">Option</span>&lt;SignatureId&gt;,
         input: <span class="self">Self</span>::SignInput,
@@ -1055,8 +1056,8 @@
     }
 }
 
-<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;non_threadsafe&quot;</span>), async_trait::async_trait)]
-#[cfg_attr(feature = <span class="string">&quot;non_threadsafe&quot;</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">"non_threadsafe"</span>), async_trait::async_trait)]
+#[cfg_attr(feature = <span class="string">"non_threadsafe"</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
 </span><span class="kw">impl </span>SignerStorage <span class="kw">for </span>EncryptedKeySigner {
     <span class="kw">fn </span>load_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>data = serde_json::from_str::&lt;Vec&lt;(String, String)&gt;&gt;(data)<span class="question-mark">?</span>;
@@ -1078,11 +1079,11 @@
     <span class="kw">fn </span>store_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
         <span class="kw">use </span>serde::ser::SerializeSeq;
 
-        <span class="kw">struct </span>StoredData&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>KeysMap);
+        <span class="kw">struct </span>StoredData&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>KeysMap);
         <span class="attr">#[derive(Serialize)]
-        </span><span class="kw">struct </span>StoredDataItem&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str);
+        </span><span class="kw">struct </span>StoredDataItem&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str);
 
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Serialize <span class="kw">for </span>StoredData&lt;<span class="lifetime">&#39;a</span>&gt; {
+        <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Serialize <span class="kw">for </span>StoredData&lt;<span class="lifetime">'a</span>&gt; {
             <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
             <span class="kw">where
                 </span>S: serde::Serializer,
@@ -1137,7 +1138,7 @@
 
 <span class="attr">#[derive(Debug, Clone, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>EncryptedKeyPassword {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
     </span><span class="kw">pub </span>public_key: PublicKey,
     <span class="kw">pub </span>password: Password,
 }
@@ -1150,20 +1151,20 @@
 
 <span class="attr">#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>EncryptedKeyGetPublicKeys {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
     </span><span class="kw">pub </span>public_key: PublicKey,
 }
 
 <span class="attr">#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;snake_case&quot;</span>, tag = <span class="string">&quot;type&quot;</span>, content = <span class="string">&quot;data&quot;</span>)]
+#[serde(rename_all = <span class="string">"snake_case"</span>, tag = <span class="string">"type"</span>, content = <span class="string">"data"</span>)]
 </span><span class="kw">pub enum </span>EncryptedKeyUpdateParams {
     Rename {
-        <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
         </span>public_key: PublicKey,
         name: String,
     },
     ChangePassword {
-        <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+        <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
         </span>public_key: PublicKey,
         old_password: Password,
         new_password: Password,
@@ -1179,12 +1180,12 @@
 
 <span class="kw">impl </span>EncryptedKey {
     <span class="kw">pub fn </span>new(
-        password_cache: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>PasswordCache,
+        password_cache: <span class="kw-2">&amp;</span><span class="lifetime">'_ </span>PasswordCache,
         password: Password,
         mnemonic_type: MnemonicType,
         phrase: SecUtf8,
         name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>, PasswordCacheTransaction&lt;<span class="lifetime">&#39;_</span>&gt;)&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>, PasswordCacheTransaction&lt;<span class="lifetime">'_</span>&gt;)&gt; {
         <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>rand::thread_rng();
 
         <span class="comment">// prepare nonce
@@ -1344,8 +1345,8 @@
 }
 
 <span class="kw">impl </span>std::fmt::Debug <span class="kw">for </span>EncryptedKey {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;{:?}&quot;</span>, <span class="self">self</span>.inner.pubkey)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"{:?}"</span>, <span class="self">self</span>.inner.pubkey)
     }
 }
 
@@ -1356,20 +1357,20 @@
 
     mnemonic_type: MnemonicType,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
     </span>pubkey: PublicKey,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
     </span>encrypted_private_key: Vec&lt;u8&gt;,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_nonce"</span>)]
     </span>private_key_nonce: Nonce,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
     </span>encrypted_seed_phrase: Vec&lt;u8&gt;,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_nonce"</span>)]
     </span>seed_phrase_nonce: Nonce,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
     </span>salt: Vec&lt;u8&gt;,
 }
 
@@ -1426,27 +1427,27 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>CryptoData {
+<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; Deserialize&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>CryptoData {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
-        </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        </span>D: serde::Deserializer&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="attr">#[derive(Deserialize)]
         </span><span class="kw">struct </span>StoredCryptoData {
             <span class="attr">#[serde(default)]
             </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
             mnemonic_type: MnemonicType,
-            <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+            <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
             </span>pubkey: PublicKey,
-            <span class="attr">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+            <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
             </span>encrypted_private_key: Vec&lt;u8&gt;,
-            <span class="attr">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+            <span class="attr">#[serde(with = <span class="string">"serde_nonce"</span>)]
             </span>private_key_nonce: Nonce,
-            <span class="attr">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+            <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
             </span>encrypted_seed_phrase: Vec&lt;u8&gt;,
-            <span class="attr">#[serde(with = <span class="string">&quot;serde_nonce&quot;</span>)]
+            <span class="attr">#[serde(with = <span class="string">"serde_nonce"</span>)]
             </span>seed_phrase_nonce: Nonce,
-            <span class="attr">#[serde(with = <span class="string">&quot;serde_bytes&quot;</span>)]
+            <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
             </span>salt: Vec&lt;u8&gt;,
         }
 
@@ -1483,15 +1484,15 @@
 
 <span class="attr">#[derive(thiserror::Error, Debug, Copy, Clone)]
 </span><span class="kw">pub enum </span>EncryptedKeyError {
-    <span class="attr">#[error(<span class="string">&quot;Invalid private key&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid private key"</span>)]
     </span>InvalidPrivateKey,
-    <span class="attr">#[error(<span class="string">&quot;Failed to decrypt data&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Failed to decrypt data"</span>)]
     </span>FailedToDecryptData,
-    <span class="attr">#[error(<span class="string">&quot;Failed to encrypt data&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Failed to encrypt data"</span>)]
     </span>FailedToEncryptData,
-    <span class="attr">#[error(<span class="string">&quot;Key not found&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Key not found"</span>)]
     </span>KeyNotFound,
-    <span class="attr">#[error(<span class="string">&quot;Invalid public key&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid public key"</span>)]
     </span>InvalidPublicKey,
 }
 
@@ -1511,8 +1512,8 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::crypto::PasswordCacheBehavior;
 
-    <span class="kw">const </span>TEST_PASSWORD: <span class="kw-2">&amp;</span>str = <span class="string">&quot;123&quot;</span>;
-    <span class="kw">const </span>TEST_MNEMONIC: <span class="kw-2">&amp;</span>str = <span class="string">&quot;canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley&quot;</span>;
+    <span class="kw">const </span>TEST_PASSWORD: <span class="kw-2">&amp;</span>str = <span class="string">"123"</span>;
+    <span class="kw">const </span>TEST_MNEMONIC: <span class="kw-2">&amp;</span>str = <span class="string">"canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley"</span>;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_init() {
@@ -1527,7 +1528,7 @@
             password,
             MnemonicType::Legacy,
             TEST_MNEMONIC.into(),
-            <span class="prelude-val">Some</span>(<span class="string">&quot;Test&quot;</span>.to_owned()),
+            <span class="prelude-val">Some</span>(<span class="string">"Test"</span>.to_owned()),
         )
         .unwrap();
     }
@@ -1545,31 +1546,31 @@
             password,
             MnemonicType::Legacy,
             TEST_MNEMONIC.into(),
-            <span class="prelude-val">Some</span>(<span class="string">&quot;Test&quot;</span>.to_owned()),
+            <span class="prelude-val">Some</span>(<span class="string">"Test"</span>.to_owned()),
         )
         .unwrap();
 
         <span class="macro">assert!</span>(!signer.as_json().is_empty());
-        <span class="kw">let </span>result = signer.sign(<span class="string">b&quot;lol&quot;</span>, <span class="prelude-val">None</span>, <span class="string">&quot;lol&quot;</span>);
+        <span class="kw">let </span>result = signer.sign(<span class="string">b"lol"</span>, <span class="prelude-val">None</span>, <span class="string">"lol"</span>);
         <span class="macro">assert!</span>(result.is_err());
     }
 
     <span class="attr">#[tokio::test]
     </span><span class="kw">async fn </span>load_old() {
-        <span class="kw">let </span>json = <span class="string">r#&quot;[
+        <span class="kw">let </span>json = <span class="string">r#"[
     [
-        &quot;122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0&quot;,
-        &quot;{\&quot;mnemonic_type\&quot;:{\&quot;Labs\&quot;:1},\&quot;pubkey\&quot;:\&quot;122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0\&quot;,\&quot;encrypted_private_key\&quot;:\&quot;7a714b8e92a9ef54c5da539141817018be4846fcf8a964e833712b39d560f50ec67dbde7c1a695fcb9303ef5c2002c70\&quot;,\&quot;private_key_nonce\&quot;:\&quot;1abc471cb49672d8ada0bed8\&quot;,\&quot;encrypted_seed_phrase\&quot;:\&quot;db7d9e170734990bff07e98758122aeb47d617393e12e761a69f384825b1b7423d991fed2ffa14e34cb31a26ba84e6ff3e688662655f401a6d9dd22b281a2be70ebab5f170ceb9a69c4770433aff5125cd7d35b5e6cc8a5dc0e3458ee9362cb5a3f50ac32be824171118cf802b5322e86a08ad8c9ead4b9f3afe549305107097960807d9c9b440ddc5b1fb8df0a0d97f9697a0c206accccd3d1795b524683bc0d7ac\&quot;,\&quot;seed_phrase_nonce\&quot;:\&quot;63d7a96bd2e8bd824f01a330\&quot;,\&quot;salt\&quot;:\&quot;b3ccb59480f3d4d6d6725b8f70bfaf520476cfa246bb50723f55a14535158358\&quot;}&quot;
+        "122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0",
+        "{\"mnemonic_type\":{\"Labs\":1},\"pubkey\":\"122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0\",\"encrypted_private_key\":\"7a714b8e92a9ef54c5da539141817018be4846fcf8a964e833712b39d560f50ec67dbde7c1a695fcb9303ef5c2002c70\",\"private_key_nonce\":\"1abc471cb49672d8ada0bed8\",\"encrypted_seed_phrase\":\"db7d9e170734990bff07e98758122aeb47d617393e12e761a69f384825b1b7423d991fed2ffa14e34cb31a26ba84e6ff3e688662655f401a6d9dd22b281a2be70ebab5f170ceb9a69c4770433aff5125cd7d35b5e6cc8a5dc0e3458ee9362cb5a3f50ac32be824171118cf802b5322e86a08ad8c9ead4b9f3afe549305107097960807d9c9b440ddc5b1fb8df0a0d97f9697a0c206accccd3d1795b524683bc0d7ac\",\"seed_phrase_nonce\":\"63d7a96bd2e8bd824f01a330\",\"salt\":\"b3ccb59480f3d4d6d6725b8f70bfaf520476cfa246bb50723f55a14535158358\"}"
     ],
     [
-        &quot;ef9ddfa972f424124033519c0190200d7e0f7964a637ebb131d1b0f999e02181&quot;,
-        &quot;{\&quot;name\&quot;:\&quot;史萊克的模因\&quot;,\&quot;mnemonic_type\&quot;:{\&quot;Labs\&quot;:2},\&quot;pubkey\&quot;:\&quot;ef9ddfa972f424124033519c0190200d7e0f7964a637ebb131d1b0f999e02181\&quot;,\&quot;encrypted_private_key\&quot;:\&quot;5397c31290043841221ce797ad9c7dbed21dd460ed937d3d988fd6a26e371ae7d5a717018a91ed5ab1db3e9516e53782\&quot;,\&quot;private_key_nonce\&quot;:\&quot;818dc748e3bf30b4f9dfe8c9\&quot;,\&quot;encrypted_seed_phrase\&quot;:\&quot;3ed4d10cee5034f1a09e8758a6f9cca4918399f9884c4e7607f8e9ce44cd7dad5e6daa8f71ca2522eac64c820b4d1b4b012400252c8a3dedbf19d4026dcdf4c02bec654190b686bfc9949daa884679ef47b435cc419ce0b2b677b81a7068da1bd5cfcc4f7dc1c772c653fede224eb94608b420045abf11eef94ea044bd75cbd86be5dbb1e45a891ec241f281970a498fab3153591d9e6abf18e368ac46ef1b6b9f46\&quot;,\&quot;seed_phrase_nonce\&quot;:\&quot;c0c964e2bf869cccbb8bc019\&quot;,\&quot;salt\&quot;:\&quot;c9f141e6516f40ea0d8879cc1149b8e489e1c39325d3f79ced4cf1ec17affd81\&quot;}&quot;
+        "ef9ddfa972f424124033519c0190200d7e0f7964a637ebb131d1b0f999e02181",
+        "{\"name\":\"史萊克的模因\",\"mnemonic_type\":{\"Labs\":2},\"pubkey\":\"ef9ddfa972f424124033519c0190200d7e0f7964a637ebb131d1b0f999e02181\",\"encrypted_private_key\":\"5397c31290043841221ce797ad9c7dbed21dd460ed937d3d988fd6a26e371ae7d5a717018a91ed5ab1db3e9516e53782\",\"private_key_nonce\":\"818dc748e3bf30b4f9dfe8c9\",\"encrypted_seed_phrase\":\"3ed4d10cee5034f1a09e8758a6f9cca4918399f9884c4e7607f8e9ce44cd7dad5e6daa8f71ca2522eac64c820b4d1b4b012400252c8a3dedbf19d4026dcdf4c02bec654190b686bfc9949daa884679ef47b435cc419ce0b2b677b81a7068da1bd5cfcc4f7dc1c772c653fede224eb94608b420045abf11eef94ea044bd75cbd86be5dbb1e45a891ec241f281970a498fab3153591d9e6abf18e368ac46ef1b6b9f46\",\"seed_phrase_nonce\":\"c0c964e2bf869cccbb8bc019\",\"salt\":\"c9f141e6516f40ea0d8879cc1149b8e489e1c39325d3f79ced4cf1ec17affd81\"}"
     ],
     [
-        &quot;93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190&quot;,
-        &quot;{\&quot;mnemonic_type\&quot;:{\&quot;Labs\&quot;:0},\&quot;pubkey\&quot;:\&quot;93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190\&quot;,\&quot;encrypted_private_key\&quot;:\&quot;518d6158968995a815f022bf5d0f9ada40c3d779454d54abb7a17e32b5a83a9f6ca57756142515b8fc968f87a1bceef7\&quot;,\&quot;private_key_nonce\&quot;:\&quot;0eaa9fcda666b7715c41b56b\&quot;,\&quot;encrypted_seed_phrase\&quot;:\&quot;f4e394d118230a8acb8af95b126fbf2a62fd764c24be9627f2bc2cb6d2aa48ba6694ecbac7cdf5317f42062acb8bb4645381d2c0ae63dd0ed577001743de96bec8f5968e516e585153d264b0d48132ead1daea9dd0bd68fb49263c3cd92df74a358f1611e92905ac3dc1f1105b743c07a9e2e7cb33344d1e3e3d6cf072a43ecbd771662e03ff61f4613015a2fc0298bbdbe9de87051d2e76ef01edfb25316d0f5131\&quot;,\&quot;seed_phrase_nonce\&quot;:\&quot;6266222cb4fd6bebf2b3b67e\&quot;,\&quot;salt\&quot;:\&quot;d3a0e42f386cbbc332d8d873b3e80ed0cde2ee9c16804f8866c0901493f2b6a5\&quot;}&quot;
+        "93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190",
+        "{\"mnemonic_type\":{\"Labs\":0},\"pubkey\":\"93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190\",\"encrypted_private_key\":\"518d6158968995a815f022bf5d0f9ada40c3d779454d54abb7a17e32b5a83a9f6ca57756142515b8fc968f87a1bceef7\",\"private_key_nonce\":\"0eaa9fcda666b7715c41b56b\",\"encrypted_seed_phrase\":\"f4e394d118230a8acb8af95b126fbf2a62fd764c24be9627f2bc2cb6d2aa48ba6694ecbac7cdf5317f42062acb8bb4645381d2c0ae63dd0ed577001743de96bec8f5968e516e585153d264b0d48132ead1daea9dd0bd68fb49263c3cd92df74a358f1611e92905ac3dc1f1105b743c07a9e2e7cb33344d1e3e3d6cf072a43ecbd771662e03ff61f4613015a2fc0298bbdbe9de87051d2e76ef01edfb25316d0f5131\",\"seed_phrase_nonce\":\"6266222cb4fd6bebf2b3b67e\",\"salt\":\"d3a0e42f386cbbc332d8d873b3e80ed0cde2ee9c16804f8866c0901493f2b6a5\"}"
     ]
-]&quot;#</span>;
+]"#</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>key = EncryptedKeySigner::new();
         key.load_state(json).unwrap();
         <span class="macro">assert!</span>(!key.store_state().is_empty());
@@ -1588,11 +1589,11 @@
             .add_key(
                 ctx,
                 EncryptedKeyCreateInput {
-                    name: <span class="prelude-val">Some</span>(<span class="string">&quot;from giver&quot;</span>.to_string()),
+                    name: <span class="prelude-val">Some</span>(<span class="string">"from giver"</span>.to_string()),
                     phrase: TEST_MNEMONIC.into(),
                     mnemonic_type: MnemonicType::Labs(<span class="number">0</span>),
                     password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"supasecret"</span>),
                         cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(<span class="number">2</span>)),
                     },
                 },
@@ -1614,11 +1615,11 @@
             .add_key(
                 ctx,
                 EncryptedKeyCreateInput {
-                    name: <span class="prelude-val">Some</span>(<span class="string">&quot;new name. same mnemonic&quot;</span>.to_string()),
+                    name: <span class="prelude-val">Some</span>(<span class="string">"new name. same mnemonic"</span>.to_string()),
                     phrase: TEST_MNEMONIC.into(),
                     mnemonic_type: MnemonicType::Labs(<span class="number">0</span>),
                     password: Password::Explicit {
-                        password: SecUtf8::from(<span class="string">&quot;123123123123123123&quot;</span>),
+                        password: SecUtf8::from(<span class="string">"123123123123123123"</span>),
                         cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(<span class="number">2</span>)),
                     },
                 },
@@ -1639,11 +1640,11 @@
         key.add_key(
             ctx,
             EncryptedKeyCreateInput {
-                name: <span class="prelude-val">Some</span>(<span class="string">&quot;from giver&quot;</span>.to_string()),
+                name: <span class="prelude-val">Some</span>(<span class="string">"from giver"</span>.to_string()),
                 phrase: TEST_MNEMONIC.into(),
                 mnemonic_type: MnemonicType::Labs(<span class="number">0</span>),
                 password: Password::Explicit {
-                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    password: SecUtf8::from(<span class="string">"supasecret"</span>),
                     cache_behavior: Default::default(),
                 },
             },
@@ -1654,11 +1655,11 @@
         key.add_key(
             ctx,
             EncryptedKeyCreateInput {
-                name: <span class="prelude-val">Some</span>(<span class="string">&quot;all my money 🤑&quot;</span>.to_string()),
+                name: <span class="prelude-val">Some</span>(<span class="string">"all my money 🤑"</span>.to_string()),
                 phrase: TEST_MNEMONIC.into(),
                 mnemonic_type: MnemonicType::Labs(<span class="number">1</span>),
                 password: Password::Explicit {
-                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    password: SecUtf8::from(<span class="string">"supasecret"</span>),
                     cache_behavior: Default::default(),
                 },
             },
@@ -1669,11 +1670,11 @@
         key.add_key(
             ctx,
             EncryptedKeyCreateInput {
-                name: <span class="prelude-val">Some</span>(<span class="string">&quot;史萊克的模因&quot;</span>.to_string()),
+                name: <span class="prelude-val">Some</span>(<span class="string">"史萊克的模因"</span>.to_string()),
                 phrase: TEST_MNEMONIC.into(),
                 mnemonic_type: MnemonicType::Labs(<span class="number">2</span>),
                 password: Password::Explicit {
-                    password: SecUtf8::from(<span class="string">&quot;supasecret&quot;</span>),
+                    password: SecUtf8::from(<span class="string">"supasecret"</span>),
                     cache_behavior: Default::default(),
                 },
             },

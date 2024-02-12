@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1290,7 +1291,7 @@
                     expiration_time,
                 },
             ),
-            <span class="comment">// Non-multisig wallets doesn&#39;t support multiple owners
+            <span class="comment">// Non-multisig wallets doesn't support multiple owners
             </span><span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(TonWalletError::InvalidContractType.into()),
         }
     }
@@ -1391,7 +1392,7 @@
                     expiration,
                 )
             }
-            <span class="comment">// Non-multisig wallets doesn&#39;t support pending transactions
+            <span class="comment">// Non-multisig wallets doesn't support pending transactions
             </span><span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(TonWalletError::PendingTransactionNotFound.into()),
         }
     }
@@ -1729,11 +1730,11 @@
 </span>}
 
 <span class="attr">#[derive(Serialize, Deserialize)]
-#[serde(rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>ExistingWalletInfo {
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_address&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_address"</span>)]
     </span><span class="kw">pub </span>address: MsgAddressInt,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_public_key&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_public_key"</span>)]
     </span><span class="kw">pub </span>public_key: PublicKey,
     <span class="kw">pub </span>wallet_type: WalletType,
     <span class="kw">pub </span>contract_state: ContractState,
@@ -1779,37 +1780,37 @@
 
 <span class="attr">#[derive(thiserror::Error, Debug)]
 </span><span class="kw">enum </span>InternalMessageSenderError {
-    <span class="attr">#[error(<span class="string">&quot;Invalid sender&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid sender"</span>)]
     </span>InvalidSender,
 }
 
 <span class="attr">#[derive(thiserror::Error, Debug)]
 </span><span class="kw">enum </span>TonWalletError {
-    <span class="attr">#[error(<span class="string">&quot;Account not exists&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Account not exists"</span>)]
     </span>AccountNotExists,
-    <span class="attr">#[error(<span class="string">&quot;Account is frozen&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Account is frozen"</span>)]
     </span>AccountIsFrozen,
-    <span class="attr">#[error(<span class="string">&quot;Invalid contract type&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Invalid contract type"</span>)]
     </span>InvalidContractType,
-    <span class="attr">#[error(<span class="string">&quot;Custodians not found&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Custodians not found"</span>)]
     </span>CustodiansNotFound,
-    <span class="attr">#[error(<span class="string">&quot;Pending transaction not found&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Pending transaction not found"</span>)]
     </span>PendingTransactionNotFound,
-    <span class="attr">#[error(<span class="string">&quot;Update not supported&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Update not supported"</span>)]
     </span>UpdateNotSupported,
-    <span class="attr">#[error(<span class="string">&quot;Pending update not found&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Pending update not found"</span>)]
     </span>PendingUpdateNotFound,
-    <span class="attr">#[error(<span class="string">&quot;Updated data mismatch&quot;</span>)]
+    <span class="attr">#[error(<span class="string">"Updated data mismatch"</span>)]
     </span>UpdatedDataMismatch,
 }
 
-<span class="kw">fn </span>make_contract_state_handler&lt;<span class="lifetime">&#39;a</span>&gt;(
-    clock: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">dyn </span>Clock,
-    handler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
-    public_key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>PublicKey,
+<span class="kw">fn </span>make_contract_state_handler&lt;<span class="lifetime">'a</span>&gt;(
+    clock: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>Clock,
+    handler: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
+    public_key: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>PublicKey,
     wallet_type: WalletType,
-    wallet_data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>WalletData,
-) -&gt; <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>RawContractState) + <span class="lifetime">&#39;a </span>{
+    wallet_data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>WalletData,
+) -&gt; <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;</span>RawContractState) + <span class="lifetime">'a </span>{
     <span class="kw">move </span>|contract_state| {
         <span class="kw">if let </span>RawContractState::Exists(contract_state) = contract_state {
             <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = wallet_data.update(
@@ -1819,7 +1820,7 @@
                 <span class="kw-2">&amp;</span>contract_state.account,
                 handler,
             ) {
-                <span class="macro">log::error!</span>(<span class="string">&quot;{e}&quot;</span>);
+                <span class="macro">log::error!</span>(<span class="string">"{e}"</span>);
             }
         }
         handler.on_state_changed(contract_state.brief())
@@ -1827,9 +1828,9 @@
 }
 
 <span class="kw">fn </span>make_transactions_handler(
-    handler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
+    handler: <span class="kw-2">&amp;</span><span class="lifetime">'_ </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
     wallet_type: WalletType,
-) -&gt; <span class="kw">impl </span>FnMut(Vec&lt;RawTransaction&gt;, TransactionsBatchInfo) + <span class="lifetime">&#39;_ </span>{
+) -&gt; <span class="kw">impl </span>FnMut(Vec&lt;RawTransaction&gt;, TransactionsBatchInfo) + <span class="lifetime">'_ </span>{
     <span class="kw">move </span>|transactions, batch_info| {
         <span class="kw">let </span>transactions = transactions
             .into_iter()
@@ -1846,8 +1847,8 @@
 }
 
 <span class="kw">fn </span>make_message_sent_handler(
-    handler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
-) -&gt; <span class="kw">impl </span>FnMut(PendingTransaction, RawTransaction) + <span class="lifetime">&#39;_ </span>{
+    handler: <span class="kw-2">&amp;</span><span class="lifetime">'_ </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
+) -&gt; <span class="kw">impl </span>FnMut(PendingTransaction, RawTransaction) + <span class="lifetime">'_ </span>{
     <span class="kw">move </span>|pending_transaction, transaction| {
         <span class="kw">let </span>transaction = Transaction::try_from((transaction.hash, transaction.data)).ok();
         handler.on_message_sent(pending_transaction, transaction);
@@ -1855,15 +1856,15 @@
 }
 
 <span class="kw">fn </span>make_message_expired_handler(
-    handler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
-) -&gt; <span class="kw">impl </span>FnMut(PendingTransaction) + <span class="lifetime">&#39;_ </span>{
+    handler: <span class="kw-2">&amp;</span><span class="lifetime">'_ </span><span class="kw">dyn </span>TonWalletSubscriptionHandler,
+) -&gt; <span class="kw">impl </span>FnMut(PendingTransaction) + <span class="lifetime">'_ </span>{
     <span class="kw">move </span>|pending_transaction| handler.on_message_expired(pending_transaction)
 }
 
 <span class="attr">#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 </span><span class="kw">pub struct </span>TonWalletDetails {
     <span class="kw">pub </span>requires_separate_deploy: bool,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_string&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_string"</span>)]
     </span><span class="kw">pub </span>min_amount: u64,
     <span class="kw">pub </span>max_messages: usize,
     <span class="kw">pub </span>supports_payload: bool,
@@ -1909,7 +1910,7 @@
         }
     }
 
-    <span class="kw">pub fn </span>possible_updates(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[<span class="self">Self</span>] {
+    <span class="kw">pub fn </span>possible_updates(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[<span class="self">Self</span>] {
         <span class="kw">const </span>MULTISIG2_UPDATES: <span class="kw-2">&amp;</span>[WalletType] = <span class="kw-2">&amp;</span>[WalletType::Multisig(MultisigType::Multisig2_1)];
 
         <span class="kw">match </span><span class="self">self </span>{
@@ -1943,9 +1944,9 @@
 
     <span class="kw">fn </span>from_str(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Err&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>s {
-            <span class="string">&quot;WalletV3&quot; </span>=&gt; <span class="self">Self</span>::WalletV3,
-            <span class="string">&quot;HighloadWalletV2&quot; </span>=&gt; <span class="self">Self</span>::HighloadWalletV2,
-            <span class="string">&quot;EverWallet&quot; </span>=&gt; <span class="self">Self</span>::EverWallet,
+            <span class="string">"WalletV3" </span>=&gt; <span class="self">Self</span>::WalletV3,
+            <span class="string">"HighloadWalletV2" </span>=&gt; <span class="self">Self</span>::HighloadWalletV2,
+            <span class="string">"EverWallet" </span>=&gt; <span class="self">Self</span>::EverWallet,
             s =&gt; <span class="self">Self</span>::Multisig(MultisigType::from_str(s)<span class="question-mark">?</span>),
         })
     }
@@ -1965,7 +1966,7 @@
             WalletType::Multisig(MultisigType::SurfWallet) =&gt; <span class="number">6</span>,
             WalletType::Multisig(MultisigType::Multisig2) =&gt; <span class="number">7</span>,
             WalletType::Multisig(MultisigType::Multisig2_1) =&gt; <span class="number">8</span>,
-            <span class="kw">_ </span>=&gt; <span class="macro">anyhow::bail!</span>(<span class="string">&quot;Unimplemented wallet type&quot;</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">anyhow::bail!</span>(<span class="string">"Unimplemented wallet type"</span>),
         };
 
         <span class="prelude-val">Ok</span>(res)
@@ -1973,12 +1974,12 @@
 }
 
 <span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>WalletType {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw-2">mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;</span><span class="lifetime">'_ </span><span class="kw-2">mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Multisig(multisig_type) =&gt; multisig_type.fmt(f),
-            <span class="self">Self</span>::WalletV3 =&gt; f.write_str(<span class="string">&quot;WalletV3&quot;</span>),
-            <span class="self">Self</span>::HighloadWalletV2 =&gt; f.write_str(<span class="string">&quot;HighloadWalletV2&quot;</span>),
-            <span class="self">Self</span>::EverWallet =&gt; f.write_str(<span class="string">&quot;EverWallet&quot;</span>),
+            <span class="self">Self</span>::WalletV3 =&gt; f.write_str(<span class="string">"WalletV3"</span>),
+            <span class="self">Self</span>::HighloadWalletV2 =&gt; f.write_str(<span class="string">"HighloadWalletV2"</span>),
+            <span class="self">Self</span>::EverWallet =&gt; f.write_str(<span class="string">"EverWallet"</span>),
         }
     }
 }

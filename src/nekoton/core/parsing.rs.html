@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/parsing.rs`."><title>parsing.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/parsing.rs`."><title>parsing.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1198,12 +1199,12 @@
 }
 
 <span class="kw">struct </span>DePoolParticipantFunctions {
-    on_round_complete: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
-    receive_answer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    on_round_complete: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
+    receive_answer: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
 }
 
 <span class="kw">impl </span>DePoolParticipantFunctions {
-    <span class="kw">fn </span>instance() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">Self </span>{
+    <span class="kw">fn </span>instance() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="self">Self </span>{
         <span class="kw">use </span>nekoton_contracts::wallets::notifications;
 
         <span class="kw">static </span>IDS: OnceBox&lt;DePoolParticipantFunctions&gt; = OnceBox::new();
@@ -1217,11 +1218,11 @@
 }
 
 <span class="kw">struct </span>WalletNotificationFunctions {
-    notify_wallet_deployed: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    notify_wallet_deployed: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
 }
 
 <span class="kw">impl </span>WalletNotificationFunctions {
-    <span class="kw">fn </span>instance() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">Self </span>{
+    <span class="kw">fn </span>instance() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="self">Self </span>{
         <span class="kw">use </span>nekoton_contracts::wallets::notifications;
 
         <span class="kw">static </span>IDS: OnceBox&lt;WalletNotificationFunctions&gt; = OnceBox::new();
@@ -1367,20 +1368,20 @@
 }
 
 <span class="kw">struct </span>MultisigFunctions {
-    send_transaction: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
-    submit_transaction: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
-    confirm_transaction: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    send_transaction: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
+    submit_transaction: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
+    confirm_transaction: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
     update_functions: <span class="prelude-ty">Option</span>&lt;UpdateFunctions&gt;,
 }
 
 <span class="kw">struct </span>UpdateFunctions {
-    submit_update: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
-    confirm_update: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
-    execute_update: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    submit_update: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
+    confirm_update: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
+    execute_update: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
 }
 
 <span class="kw">impl </span>MultisigFunctions {
-    <span class="kw">fn </span>instance(multisig_type: MultisigType) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">Self </span>{
+    <span class="kw">fn </span>instance(multisig_type: MultisigType) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="self">Self </span>{
         <span class="kw">use </span>nekoton_contracts::wallets::{multisig, multisig2};
 
         <span class="kw">static </span>OLD_FUNCTIONS: OnceBox&lt;MultisigFunctions&gt; = OnceBox::new();
@@ -1427,11 +1428,11 @@
 </span><span class="kw">struct </span>MultisigSubmitTransactionInput {
     <span class="attr">#[abi(address)]
     </span>dest: MsgAddressInt,
-    <span class="attr">#[abi(with = <span class="string">&quot;uint128_number&quot;</span>)]
+    <span class="attr">#[abi(with = <span class="string">"uint128_number"</span>)]
     </span>value: BigUint,
     <span class="attr">#[abi(bool)]
     </span>bounce: bool,
-    <span class="attr">#[abi(bool, name = <span class="string">&quot;allBalance&quot;</span>)]
+    <span class="attr">#[abi(bool, name = <span class="string">"allBalance"</span>)]
     </span>all_balance: bool,
     <span class="attr">#[abi(cell)]
     </span>payload: ton_types::Cell,
@@ -1439,7 +1440,7 @@
 
 <span class="attr">#[derive(UnpackAbiPlain)]
 </span><span class="kw">struct </span>MultisigSubmitTransactionOutput {
-    <span class="attr">#[abi(uint64, name = <span class="string">&quot;transId&quot;</span>)]
+    <span class="attr">#[abi(uint64, name = <span class="string">"transId"</span>)]
     </span>trans_id: u64,
 }
 
@@ -1606,13 +1607,13 @@
 }
 
 <span class="kw">struct </span>NftFunctions {
-    transfer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
-    change_owner: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
-    change_manager: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    transfer: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
+    change_owner: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
+    change_manager: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
 }
 
 <span class="kw">impl </span>NftFunctions {
-    <span class="kw">pub fn </span>instance() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">Self </span>{
+    <span class="kw">pub fn </span>instance() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span><span class="self">Self </span>{
         <span class="kw">static </span>IDS: OnceBox&lt;NftFunctions&gt; = OnceBox::new();
         IDS.get_or_init(|| {
             Box::new(<span class="self">Self </span>{
@@ -1664,21 +1665,21 @@
 
 <span class="kw">struct </span>TokenWalletFunctions {
     <span class="comment">// Incoming
-    </span>accept_mint: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    </span>accept_mint: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
     <span class="comment">// Incoming
-    </span>transfer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    </span>transfer: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
     <span class="comment">// Incoming
-    </span>transfer_to_wallet: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    </span>transfer_to_wallet: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
     <span class="comment">// Incoming
-    </span>accept_transfer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    </span>accept_transfer: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
     <span class="comment">// Incoming
-    </span>burn: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    </span>burn: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
     <span class="comment">// Outgoing
-    </span>accept_burn: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>ton_abi::Function,
+    </span>accept_burn: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>ton_abi::Function,
 }
 
 <span class="kw">impl </span>TokenWalletFunctions {
-    <span class="kw">pub fn </span>for_version(version: TokenWalletVersion) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>TokenWalletFunctions {
+    <span class="kw">pub fn </span>for_version(version: TokenWalletVersion) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>TokenWalletFunctions {
         <span class="kw">match </span>version {
             TokenWalletVersion::OldTip3v4 =&gt; {
                 <span class="kw">static </span>IDS: OnceBox&lt;TokenWalletFunctions&gt; = OnceBox::new();
@@ -1777,7 +1778,7 @@
         <span class="prelude-val">Ok</span>(<span class="kw">match </span>version {
             TokenWalletVersion::OldTip3v4 =&gt; {
                 <span class="kw">match </span>transfer_type {
-                    <span class="comment">// &quot;transferToRecipient&quot;
+                    <span class="comment">// "transferToRecipient"
                     </span>TransferType::ByOwnerWalletAddress =&gt; {
                         <span class="kw">let </span>input: old_tip3::token_wallet_contract::TransferToRecipientInputs =
                             value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
@@ -1787,7 +1788,7 @@
                             payload: input.payload,
                         }
                     }
-                    <span class="comment">// &quot;transfer
+                    <span class="comment">// "transfer
                     </span>TransferType::ByTokenWalletAddress =&gt; {
                         <span class="kw">let </span>input: old_tip3::token_wallet_contract::TransferInputs =
                             value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
@@ -1801,7 +1802,7 @@
             }
             TokenWalletVersion::Tip3 =&gt; {
                 <span class="kw">match </span>transfer_type {
-                    <span class="comment">// &quot;transfer&quot;
+                    <span class="comment">// "transfer"
                     </span>TransferType::ByOwnerWalletAddress =&gt; {
                         <span class="kw">let </span>input: tip3_1::token_wallet_contract::TransferInputs =
                             value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
@@ -1811,7 +1812,7 @@
                             payload: input.payload,
                         }
                     }
-                    <span class="comment">// &quot;transferToWallet&quot;
+                    <span class="comment">// "transferToWallet"
                     </span>TransferType::ByTokenWalletAddress =&gt; {
                         <span class="kw">let </span>input: tip3_1::token_wallet_contract::TransferToWalletInputs =
                             value.<span class="number">0</span>.unpack()<span class="question-mark">?</span>;
@@ -1913,7 +1914,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_transaction_with_comment() {
-        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECCAEAAa0AA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAALi67rDsNGkd3DyaHde6qGSNyU7rxIrKKUFCg2XCiOWm8qj/wgcwAAC4uu6w7BYG3S5AABRh6EgIBQQBAhUECQ7msoAYYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzD0JAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnI6oOa5hnaAmb92gCQ5BlaDDjAmDoH5UvSJNuK95TfvcajtZ/eBLgOpVpjmuIPSjgFKd0RzU/MXZ1uRuop7DU5HAQGgBgG5aAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlwAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDuaygABhnMOAAAFxdd1h2EwNulyAAAAABABwAqaSBsb3ZlIG1lbWVzIGFuZCDwn6aA&quot;</span>).unwrap();
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">"te6ccgECCAEAAa0AA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAALi67rDsNGkd3DyaHde6qGSNyU7rxIrKKUFCg2XCiOWm8qj/wgcwAAC4uu6w7BYG3S5AABRh6EgIBQQBAhUECQ7msoAYYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzD0JAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnI6oOa5hnaAmb92gCQ5BlaDDjAmDoH5UvSJNuK95TfvcajtZ/eBLgOpVpjmuIPSjgFKd0RzU/MXZ1uRuop7DU5HAQGgBgG5aAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlwAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDuaygABhnMOAAAFxdd1h2EwNulyAAAAABABwAqaSBsb3ZlIG1lbWVzIGFuZCDwn6aA"</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
@@ -1923,7 +1924,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>parse_depool_on_round_complete() {
-        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECBgEAATYAA7F6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhcEbrIEikkn05Ku83ZEENvShriMSDo3Wrh+PZVqEZZFR73UDNgAADIW3VTuCYJRG2wABQiKAMCAQALDERIQEkgAIJy0W3rZziZMBhdOhOSsj9f2V3MqUZWvD39kx9ersOjLDlIhSvIB0KaWZELIJ7zw+I+Sy9Ykv6tSJbSpB49hDcHiQEBoAQBq0gBd5fv1pbeJAd0Wp/qbrvGFKgRUCYX7z8OHfefqT2CydMAKkhRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLEBAYduXAAABkLgdvLrMEojabABQBbRE1D9QAAAAAAAAB5AAAAAES7c48AAATFd7ZSmgAAAAAAAAAAAAAAAAAAAACCwA==&quot;</span>).unwrap();
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">"te6ccgECBgEAATYAA7F6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhcEbrIEikkn05Ku83ZEENvShriMSDo3Wrh+PZVqEZZFR73UDNgAADIW3VTuCYJRG2wABQiKAMCAQALDERIQEkgAIJy0W3rZziZMBhdOhOSsj9f2V3MqUZWvD39kx9ersOjLDlIhSvIB0KaWZELIJ7zw+I+Sy9Ykv6tSJbSpB49hDcHiQEBoAQBq0gBd5fv1pbeJAd0Wp/qbrvGFKgRUCYX7z8OHfefqT2CydMAKkhRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLEBAYduXAAABkLgdvLrMEojabABQBbRE1D9QAAAAAAAAB5AAAAAES7c48AAATFd7ZSmgAAAAAAAAAAAAAAAAAAAACCwA=="</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
@@ -1933,7 +1934,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>parse_depool_receive_answer() {
-        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECBwEAAaEAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhnsD1kVwt3ZSvzdkgOgwJsxv58wEM0BQZrsemU6arhBFJ4fxjwAADIZ7A9ZBYJRjLgABRh6EgIBQQBAhUMCQ66Pp4YYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzDxS7AAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIEOMO6fRXte5PGI5jiEUhiDtcNPCIWL5NWNQNOK9Xcl+MnFzrWwqjP3BjSUMj+iqVsHR/XXRK4EG15vN19dQTxAQGgBgDRSAFA+IzRUVgwA2vU75DcYvlAT67YURjbSaU6+j+uLV/oFQAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDro+ngBhRYYAAAGQz2B6yIwSjGXB+ITyIAAAADAAAAAAAAAABA&quot;</span>).unwrap();
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">"te6ccgECBwEAAaEAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAMhnsD1kVwt3ZSvzdkgOgwJsxv58wEM0BQZrsemU6arhBFJ4fxjwAADIZ7A9ZBYJRjLgABRh6EgIBQQBAhUMCQ66Pp4YYehIEQMCAFvAAAAAAAAAAAAAAAABLUUtpEnlC4z33SeGHxRhIq/htUa7i3D8ghbwxhQTn44EAJwnzDxS7AAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIEOMO6fRXte5PGI5jiEUhiDtcNPCIWL5NWNQNOK9Xcl+MnFzrWwqjP3BjSUMj+iqVsHR/XXRK4EG15vN19dQTxAQGgBgDRSAFA+IzRUVgwA2vU75DcYvlAT67YURjbSaU6+j+uLV/oFQAqSFFNHI2a3/u7BUyOpa13PFxl8iNwNRXjfpSkAuKM8tDro+ngBhRYYAAAGQz2B6yIwSjGXB+ITyIAAAADAAAAAAAAAABA"</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
@@ -1943,7 +1944,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_parse_wallet_deployment() {
-        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECBQEAATAAA7F44lhmAlE+maVfor4IVhRpx85Rp9WiWXdVjnfvK8k4e0AAALc5peDsFNAtcF1BRBGfRP73+ljNPUUc+ir7FmHntIcbeh/ba28gAAC3OZS2ZBYGofQAABQgSAMCAQAVBECIicQJoBh6EgIAgnIIhWuBGHA/f3IsyBPHr57C3d7pcU83NmIoz5CkFu+Hsn742ILtpOsOCyUw6fEN9VwMZzJ8dj6MuR/kKlztR9sKAQGgBAD3aAHILrQNhiymjQB0/Pw/ubdxFv4FXRIQhcVcOMZMH8eJ5wAjiWGYCUT6ZpV+ivghWFGnHzlGn1aJZd1WOd+8ryTh7QicQAYUWGAAABbnNEILiMDUPm4kKd2bwA7tPzMWNNSaXaK1RvRlLdSIlIehh8LvndIgPP8XtYTj2A==&quot;</span>).unwrap();
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">"te6ccgECBQEAATAAA7F44lhmAlE+maVfor4IVhRpx85Rp9WiWXdVjnfvK8k4e0AAALc5peDsFNAtcF1BRBGfRP73+ljNPUUc+ir7FmHntIcbeh/ba28gAAC3OZS2ZBYGofQAABQgSAMCAQAVBECIicQJoBh6EgIAgnIIhWuBGHA/f3IsyBPHr57C3d7pcU83NmIoz5CkFu+Hsn742ILtpOsOCyUw6fEN9VwMZzJ8dj6MuR/kKlztR9sKAQGgBAD3aAHILrQNhiymjQB0/Pw/ubdxFv4FXRIQhcVcOMZMH8eJ5wAjiWGYCUT6ZpV+ivghWFGnHzlGn1aJZd1WOd+8ryTh7QicQAYUWGAAABbnNEILiMDUPm4kKd2bwA7tPzMWNNSaXaK1RvRlLdSIlIehh8LvndIgPP8XtYTj2A=="</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
@@ -1953,7 +1954,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_parse_wallet_v3_transfer() {
-        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECCgEAAkgAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAOsYeZvcH4TzG78Qm4432VnPT2nEy4Ms4gzZ+kR9Dc3m2ovCml6wAADqzLEDICYOmNuQADRpPeiIBQQBAhEMggEGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAPgixOHXZ98UI4dij2WkyFV1pxMvMnheV/eiEMi5McOJkBQFgwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnKb5t2GaSGpykknfbY8sbLCoUmDjRnHY8ac6h6aQu56Ln3v5XCybUkA/gfrXRR3FEMh6/ByWbJu6d1D4Gxa7IrOAgHgCAYBAd8HALFIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeXACpIUU0cjZrf+7sFTI6lrXc8XGXyI3A1FeN+lKQC4ozy0O5rKAAGFFhgAAAdYw8ze4TB0xtyQAHfiAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlgOVFdAK7dI4eTxuEFTOhLxRr9wbXDgGzg0hdU9yZ5Fh4kK1kUZwoNhGrMoZQuRfhZC579ikC131c9r3A1GPZdA6XUlsUwdMb1gAABcAHAkAaEIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeWh3NZQAAAAAAAAAAAAAAAAAAA=&quot;</span>).unwrap();
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">"te6ccgECCgEAAkgAA7V6khRTRyNmt/7uwVMjqWtdzxcZfIjcDUV436UpALijPLAAAOsYeZvcH4TzG78Qm4432VnPT2nEy4Ms4gzZ+kR9Dc3m2ovCml6wAADqzLEDICYOmNuQADRpPeiIBQQBAhEMggEGGW16hEADAgBvyYehIEwUWEAAAAAAAAIAAAAAAAPgixOHXZ98UI4dij2WkyFV1pxMvMnheV/eiEMi5McOJkBQFgwAnUF2QxOIAAAAAAAAAAAQgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnKb5t2GaSGpykknfbY8sbLCoUmDjRnHY8ac6h6aQu56Ln3v5XCybUkA/gfrXRR3FEMh6/ByWbJu6d1D4Gxa7IrOAgHgCAYBAd8HALFIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeXACpIUU0cjZrf+7sFTI6lrXc8XGXyI3A1FeN+lKQC4ozy0O5rKAAGFFhgAAAdYw8ze4TB0xtyQAHfiAFSQopo5GzW/93YKmR1LWu54uMvkRuBqK8b9KUgFxRnlgOVFdAK7dI4eTxuEFTOhLxRr9wbXDgGzg0hdU9yZ5Fh4kK1kUZwoNhGrMoZQuRfhZC579ikC131c9r3A1GPZdA6XUlsUwdMb1gAABcAHAkAaEIAVJCimjkbNb/3dgqZHUta7ni4y+RG4Gorxv0pSAXFGeWh3NZQAAAAAAAAAAAAAAAAAAA="</span>).unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             parse_transaction_additional_info(<span class="kw-2">&amp;</span>tx, WalletType::WalletV3).unwrap(),
@@ -1967,25 +1968,25 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_parse_wallet_v3_token_transfer_with_payload() {
-        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;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&quot;</span>).unwrap();
-        <span class="macro">println!</span>(<span class="string">&quot;tx: {tx:#?}&quot;</span>);
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">"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"</span>).unwrap();
+        <span class="macro">println!</span>(<span class="string">"tx: {tx:#?}"</span>);
 
         <span class="kw">let </span>description = <span class="kw">match </span>tx.description.read_struct() {
             <span class="prelude-val">Ok</span>(ton_block::TransactionDescr::Ordinary(description)) =&gt; description,
             <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(),
         };
-        <span class="macro">println!</span>(<span class="string">&quot;description: {description:#?}&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"description: {description:#?}"</span>);
 
         <span class="kw">let </span>parsed = parse_token_transaction(<span class="kw-2">&amp;</span>tx, <span class="kw-2">&amp;</span>description, TokenWalletVersion::Tip3);
-        <span class="macro">println!</span>(<span class="string">&quot;parsed tx: {parsed:#?}&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"parsed tx: {parsed:#?}"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_parse_multisig_submit() {
-        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECDAEAAkMAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAEv38uN8H+CfBrFklcU0i9Vs4RZzxi5vtTa9PqJ/LpPctz/rat2wAABIjJ0UsBX2sytAADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAOylU78GhKKYOUuj1Rh3dLpOOzgJUEyoySchhaM60lDREBQDowAnUfXAxOIAAAAAAAAAABtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnJ5QDnTzA46E1KOsPz7QLrshaiw53aaaTNY7TZfFM9uf9wCstMqmz8MmfSmYLSpRuMah9ruqiOVsRPjzhTEdu9aAgHgCAYBAd8HAHXn+7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u4AAAJfv5cb4S+1mVoSY7BZq+1mVo/lxvgwAFFif7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7gwJAeGUlZeW3g4p7fOroeyZUZdj1hWrKWusR/Na6V9uRhKJvV3dgWDQ1/YR5hQfYLaM861DgLJMku/LPDKMt43TyJUH+ToLdTA3yCwRnsc9IMg9JIXlsbI92/1mZ+RrZF1GGY1AAABdLq+AHhfazLsEx2CzYAoBY4AVKmRhQN1a9YbnwdGmdH0KtPv2SINcG4FpEDjh70ON2qAAAAAAAAAAAAAdjv+NHoAUCwAA&quot;</span>).unwrap();
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">"te6ccgECDAEAAkMAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAEv38uN8H+CfBrFklcU0i9Vs4RZzxi5vtTa9PqJ/LpPctz/rat2wAABIjJ0UsBX2sytAADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAOylU78GhKKYOUuj1Rh3dLpOOzgJUEyoySchhaM60lDREBQDowAnUfXAxOIAAAAAAAAAABtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnJ5QDnTzA46E1KOsPz7QLrshaiw53aaaTNY7TZfFM9uf9wCstMqmz8MmfSmYLSpRuMah9ruqiOVsRPjzhTEdu9aAgHgCAYBAd8HAHXn+7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u4AAAJfv5cb4S+1mVoSY7BZq+1mVo/lxvgwAFFif7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7gwJAeGUlZeW3g4p7fOroeyZUZdj1hWrKWusR/Na6V9uRhKJvV3dgWDQ1/YR5hQfYLaM861DgLJMku/LPDKMt43TyJUH+ToLdTA3yCwRnsc9IMg9JIXlsbI92/1mZ+RrZF1GGY1AAABdLq+AHhfazLsEx2CzYAoBY4AVKmRhQN1a9YbnwdGmdH0KtPv2SINcG4FpEDjh70ON2qAAAAAAAAAAAAAdjv+NHoAUCwAA"</span>).unwrap();
 
         <span class="kw">let </span>custodian =
-            UInt256::from_str(<span class="string">&quot;e4e82dd4c0df20b0467b1cf48320f4921796c6c8f76ff5999f91ad9175186635&quot;</span>)
+            UInt256::from_str(<span class="string">"e4e82dd4c0df20b0467b1cf48320f4921796c6c8f76ff5999f91ad9175186635"</span>)
                 .unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
@@ -2004,10 +2005,10 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_parse_multisig_confirm() {
-        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">&quot;te6ccgECCgEAAjAAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAJcbrc/8GSsRcwsaEKUmFwdbT9tmaf3vKqKpeWIR9/9GyMA8r2+gAACXGutDTBYBvSYwADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAI1K3sqU+I63UTJ+xkdHcyrkM2hxcBJu//z7hF+/hEtukBQFcwAnUYtYxOIAAAAAAAAAABSwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnITMJnhiVklA89yLWhQU+4BB1tJ3iPLRRZoWlPVKSkbvYENWnQphG03/JbEJJWwJbdhZCl+oH7UI7ARqCUcU6H/AgHgCAYBAd8HAK9J/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7vACa4ZyAEEjOHCY7aEkcDRTMruTfdNxrg9GyWxKU18Pes2WvMQekAAAAAABLjdbn/hMA3pMZAAUWJ/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7uDAkA8c+cpxQ8FYd2C/XWiibmIX4wPfvHIultapCNOhW5dJ5hl2YD+PHO24RUXdbY669yR8BUfGNuxVTwVkV1K0HA7QByTARuQhGj9eozhRteIImtsExhdcFckfL9FqBq5uNuaoAAAF3bK3Ps2Ab0p4ap0DtYBvF9mf0BgGA=&quot;</span>).unwrap();
+        <span class="kw">let </span>tx = Transaction::construct_from_base64(<span class="string">"te6ccgECCgEAAjAAA693d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3AAAJcbrc/8GSsRcwsaEKUmFwdbT9tmaf3vKqKpeWIR9/9GyMA8r2+gAACXGutDTBYBvSYwADQIBQQBAgcMBgRAAwIAYcAAAAAAAAIAAAAAAAI1K3sqU+I63UTJ+xkdHcyrkM2hxcBJu//z7hF+/hEtukBQFcwAnUYtYxOIAAAAAAAAAABSwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAgnITMJnhiVklA89yLWhQU+4BB1tJ3iPLRRZoWlPVKSkbvYENWnQphG03/JbEJJWwJbdhZCl+oH7UI7ARqCUcU6H/AgHgCAYBAd8HAK9J/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7vACa4ZyAEEjOHCY7aEkcDRTMruTfdNxrg9GyWxKU18Pes2WvMQekAAAAAABLjdbn/hMA3pMZAAUWJ/u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7uDAkA8c+cpxQ8FYd2C/XWiibmIX4wPfvHIultapCNOhW5dJ5hl2YD+PHO24RUXdbY669yR8BUfGNuxVTwVkV1K0HA7QByTARuQhGj9eozhRteIImtsExhdcFckfL9FqBq5uNuaoAAAF3bK3Ps2Ab0p4ap0DtYBvF9mf0BgGA="</span>).unwrap();
 
         <span class="kw">let </span>custodian =
-            UInt256::from_str(<span class="string">&quot;c93011b908468fd7a8ce146d788226b6c13185d7057247cbf45a81ab9b8db9aa&quot;</span>)
+            UInt256::from_str(<span class="string">"c93011b908468fd7a8ce146d788226b6c13185d7057247cbf45a81ab9b8db9aa"</span>)
                 .unwrap();
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
@@ -2026,7 +2027,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_parse_bounced_tokens_transfer() {
-        <span class="kw">let </span>(tx, description) = parse_transaction(<span class="string">&quot;te6ccgECCQEAAiEAA7V9jKvgMYxeLukedeW/PRr7QyRzEpkal33nb9KfgpelA3AAAO1mmxCMEy4UbEGiIQKVpE2nzO2Ar32k7H36ni1NMpxrcPorUNuwAADtZo+e3BYO9BHwADRwGMkIBQQBAhcMSgkCmI36GG92AhEDAgBvyYehIEwUWEAAAAAAAAQAAgAAAAKLF5Ge7DorMQ9dbEzZTgWK7Jiugap8s4dRpkiQl7CNEEBQFgwAnkP1TAqiBAAAAAAAAAAAtgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIBZa/nTbAD2Vcr8A6p+uT7XD4tLowmBLZEuIHLxU1zbeHGgHFi5dfeWnrNgtL3FHE6zw6ysjTJJI3LFFDAgPi3AgHgCAYBAd8HALFoAbGVfAYxi8XdI868t+ejX2hkjmJTI1LvvO36U/BS9KBvABgzjiRJUfoXsV99CuD/WnKK4QN5mlferMiVbk0Y3Jc3ECddFmAGFFhgAAAdrNNiEYTB3oI+QAD5WAHF6/YBDYNj7TABzedO3/4+ENpaE0PhwRx5NFYisFNfpQA2Mq+AxjF4u6R515b89GvtDJHMSmRqXfedv0p+Cl6UDdApiN+gBhRYYAAAHazSjHIEwd6CFH////+MaQuBAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAEA=&quot;</span>);
+        <span class="kw">let </span>(tx, description) = parse_transaction(<span class="string">"te6ccgECCQEAAiEAA7V9jKvgMYxeLukedeW/PRr7QyRzEpkal33nb9KfgpelA3AAAO1mmxCMEy4UbEGiIQKVpE2nzO2Ar32k7H36ni1NMpxrcPorUNuwAADtZo+e3BYO9BHwADRwGMkIBQQBAhcMSgkCmI36GG92AhEDAgBvyYehIEwUWEAAAAAAAAQAAgAAAAKLF5Ge7DorMQ9dbEzZTgWK7Jiugap8s4dRpkiQl7CNEEBQFgwAnkP1TAqiBAAAAAAAAAAAtgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnIBZa/nTbAD2Vcr8A6p+uT7XD4tLowmBLZEuIHLxU1zbeHGgHFi5dfeWnrNgtL3FHE6zw6ysjTJJI3LFFDAgPi3AgHgCAYBAd8HALFoAbGVfAYxi8XdI868t+ejX2hkjmJTI1LvvO36U/BS9KBvABgzjiRJUfoXsV99CuD/WnKK4QN5mlferMiVbk0Y3Jc3ECddFmAGFFhgAAAdrNNiEYTB3oI+QAD5WAHF6/YBDYNj7TABzedO3/4+ENpaE0PhwRx5NFYisFNfpQA2Mq+AxjF4u6R515b89GvtDJHMSmRqXfedv0p+Cl6UDdApiN+gBhRYYAAAHazSjHIEwd6CFH////+MaQuBAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAEA="</span>);
 
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(
             parse_token_transaction(<span class="kw-2">&amp;</span>tx, <span class="kw-2">&amp;</span>description, TokenWalletVersion::OldTip3v4).unwrap(),

@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/contract_subscription/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/contract_subscription/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -549,8 +550,8 @@
         clock: Arc&lt;<span class="kw">dyn </span>Clock&gt;,
         transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
         address: MsgAddressInt,
-        on_contract_state: OnContractState&lt;<span class="lifetime">&#39;_</span>&gt;,
-        on_transactions_found: <span class="prelude-ty">Option</span>&lt;OnTransactionsFound&lt;<span class="lifetime">&#39;_</span>&gt;&gt;,
+        on_contract_state: OnContractState&lt;<span class="lifetime">'_</span>&gt;,
+        on_transactions_found: <span class="prelude-ty">Option</span>&lt;OnTransactionsFound&lt;<span class="lifetime">'_</span>&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="self">Self </span>{
             clock,
@@ -665,10 +666,10 @@
 
     <span class="kw">pub async fn </span>refresh(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        on_contract_state: OnContractState&lt;<span class="lifetime">&#39;_</span>&gt;,
-        on_transactions_found: OnTransactionsFound&lt;<span class="lifetime">&#39;_</span>&gt;,
-        on_message_sent: OnMessageSent&lt;<span class="lifetime">&#39;_</span>&gt;,
-        on_message_expired: OnMessageExpired&lt;<span class="lifetime">&#39;_</span>&gt;,
+        on_contract_state: OnContractState&lt;<span class="lifetime">'_</span>&gt;,
+        on_transactions_found: OnTransactionsFound&lt;<span class="lifetime">'_</span>&gt;,
+        on_message_sent: OnMessageSent&lt;<span class="lifetime">'_</span>&gt;,
+        on_message_expired: OnMessageExpired&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="comment">// optimistic prediction, that there were at most N new transactions
         </span><span class="kw">const </span>INITIAL_TRANSACTION_COUNT: u8 = <span class="number">4</span>;
@@ -709,9 +710,9 @@
     <span class="kw">pub fn </span>handle_block(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         block: <span class="kw-2">&amp;</span>ton_block::Block,
-        on_transactions_found: OnTransactionsFound&lt;<span class="lifetime">&#39;_</span>&gt;,
-        on_message_sent: OnMessageSent&lt;<span class="lifetime">&#39;_</span>&gt;,
-        on_message_expired: OnMessageExpired&lt;<span class="lifetime">&#39;_</span>&gt;,
+        on_transactions_found: OnTransactionsFound&lt;<span class="lifetime">'_</span>&gt;,
+        on_message_sent: OnMessageSent&lt;<span class="lifetime">'_</span>&gt;,
+        on_message_expired: OnMessageExpired&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;ContractState&gt;&gt; {
         <span class="kw">let </span>block = utils::parse_block(<span class="kw-2">&amp;</span><span class="self">self</span>.address, <span class="kw-2">&amp;</span><span class="self">self</span>.contract_state, block)<span class="question-mark">?</span>;
 
@@ -786,7 +787,7 @@
     /// NOTE: resets `transactions_synced` if state changes
     </span><span class="kw">pub async fn </span>refresh_contract_state(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        on_contract_state: OnContractState&lt;<span class="lifetime">&#39;_</span>&gt;,
+        on_contract_state: OnContractState&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
         <span class="self">self</span>.refresh_contract_state_impl(<span class="prelude-val">Some</span>(<span class="self">self</span>.contract_state.last_lt), on_contract_state)
             .<span class="kw">await
@@ -801,8 +802,8 @@
         initial_count: u8,
         limit: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         batch_type: TransactionsBatchType,
-        on_transactions_found: OnTransactionsFound&lt;<span class="lifetime">&#39;_</span>&gt;,
-        on_message_sent: OnMessageSent&lt;<span class="lifetime">&#39;_</span>&gt;,
+        on_transactions_found: OnTransactionsFound&lt;<span class="lifetime">'_</span>&gt;,
+        on_message_sent: OnMessageSent&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>last_tx_id_from_state = <span class="kw">match </span><span class="self">self</span>.contract_state.last_transaction_id {
             <span class="prelude-val">Some</span>(id) =&gt; id,
@@ -874,7 +875,7 @@
     </span><span class="kw">pub async fn </span>preload_transactions(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         from_lt: u64,
-        on_transactions_found: OnTransactionsFound&lt;<span class="lifetime">&#39;_</span>&gt;,
+        on_transactions_found: OnTransactionsFound&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>transactions = <span class="self">self
             </span>.transport
@@ -901,7 +902,7 @@
     <span class="kw">async fn </span>refresh_contract_state_impl(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         prev_trans_lt: <span class="prelude-ty">Option</span>&lt;u64&gt;,
-        on_contract_state: OnContractState&lt;<span class="lifetime">&#39;_</span>&gt;,
+        on_contract_state: OnContractState&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
         <span class="kw">let </span>contract_state = <span class="kw">match </span>prev_trans_lt {
             <span class="prelude-val">Some</span>(last_lt) =&gt; {
@@ -943,7 +944,7 @@
     </span><span class="kw">fn </span>check_executed_transactions(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         transactions: <span class="kw-2">&amp;</span>[RawTransaction],
-        on_message_sent: OnMessageSent&lt;<span class="lifetime">&#39;_</span>&gt;,
+        on_message_sent: OnMessageSent&lt;<span class="lifetime">'_</span>&gt;,
     ) {
         <span class="self">self</span>.pending_transactions.retain(|pending| {
             <span class="kw">let </span>transaction = <span class="kw">match </span>transactions
@@ -963,7 +964,7 @@
     </span><span class="kw">fn </span>check_expired_transactions(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         current_utime: u32,
-        on_message_expired: OnMessageExpired&lt;<span class="lifetime">&#39;_</span>&gt;,
+        on_message_expired: OnMessageExpired&lt;<span class="lifetime">'_</span>&gt;,
     ) {
         <span class="self">self</span>.pending_transactions.retain(|pending| {
             <span class="kw">let </span>expired = current_utime &gt; pending.expire_at;
@@ -975,17 +976,17 @@
     }
 }
 
-<span class="kw">type </span>OnContractState&lt;<span class="lifetime">&#39;a</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>(<span class="kw">dyn </span>FnMut(<span class="kw-2">&amp;</span>RawContractState) + Send + Sync);
-<span class="kw">type </span>OnTransactionsFound&lt;<span class="lifetime">&#39;a</span>&gt; =
-    <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>(<span class="kw">dyn </span>FnMut(Vec&lt;RawTransaction&gt;, TransactionsBatchInfo) + Send + Sync);
-<span class="kw">type </span>OnMessageSent&lt;<span class="lifetime">&#39;a</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>(<span class="kw">dyn </span>FnMut(PendingTransaction, RawTransaction) + Send + Sync);
-<span class="kw">type </span>OnMessageExpired&lt;<span class="lifetime">&#39;a</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>(<span class="kw">dyn </span>FnMut(PendingTransaction) + Send + Sync);
+<span class="kw">type </span>OnContractState&lt;<span class="lifetime">'a</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>(<span class="kw">dyn </span>FnMut(<span class="kw-2">&amp;</span>RawContractState) + Send + Sync);
+<span class="kw">type </span>OnTransactionsFound&lt;<span class="lifetime">'a</span>&gt; =
+    <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>(<span class="kw">dyn </span>FnMut(Vec&lt;RawTransaction&gt;, TransactionsBatchInfo) + Send + Sync);
+<span class="kw">type </span>OnMessageSent&lt;<span class="lifetime">'a</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>(<span class="kw">dyn </span>FnMut(PendingTransaction, RawTransaction) + Send + Sync);
+<span class="kw">type </span>OnMessageExpired&lt;<span class="lifetime">'a</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>(<span class="kw">dyn </span>FnMut(PendingTransaction) + Send + Sync);
 
 <span class="attr">#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(default, rename_all = <span class="string">&quot;camelCase&quot;</span>)]
+#[serde(default, rename_all = <span class="string">"camelCase"</span>)]
 </span><span class="kw">pub struct </span>TransactionExecutionOptions {
     <span class="kw">pub </span>disable_signature_check: bool,
-    <span class="attr">#[serde(with = <span class="string">&quot;serde_optional_u64&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"serde_optional_u64"</span>)]
     </span><span class="kw">pub </span>override_balance: <span class="prelude-ty">Option</span>&lt;u64&gt;,
 }
 
@@ -996,13 +997,13 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>executor_params_serialization() {
         <span class="macro">assert_eq!</span>(
-            serde_json::from_str::&lt;TransactionExecutionOptions&gt;(<span class="string">&quot;{}&quot;</span>).unwrap(),
+            serde_json::from_str::&lt;TransactionExecutionOptions&gt;(<span class="string">"{}"</span>).unwrap(),
             TransactionExecutionOptions::default()
         );
 
         <span class="macro">assert_eq!</span>(
             serde_json::from_str::&lt;TransactionExecutionOptions&gt;(
-                <span class="string">r#&quot;{&quot;disableSignatureCheck&quot;:true}&quot;#
+                <span class="string">r#"{"disableSignatureCheck":true}"#
             </span>)
             .unwrap(),
             TransactionExecutionOptions {
@@ -1012,7 +1013,7 @@
         );
 
         <span class="macro">assert_eq!</span>(
-            serde_json::from_str::&lt;TransactionExecutionOptions&gt;(<span class="string">r#&quot;{&quot;overrideBalance&quot;:123}&quot;#</span>)
+            serde_json::from_str::&lt;TransactionExecutionOptions&gt;(<span class="string">r#"{"overrideBalance":123}"#</span>)
                 .unwrap(),
             TransactionExecutionOptions {
                 override_balance: <span class="prelude-val">Some</span>(<span class="number">123</span>),
@@ -1021,7 +1022,7 @@
         );
 
         <span class="macro">assert_eq!</span>(
-            serde_json::from_str::&lt;TransactionExecutionOptions&gt;(<span class="string">r#&quot;{&quot;overrideBalance&quot;:&quot;123123&quot;}&quot;#</span>)
+            serde_json::from_str::&lt;TransactionExecutionOptions&gt;(<span class="string">r#"{"overrideBalance":"123123"}"#</span>)
                 .unwrap(),
             TransactionExecutionOptions {
                 override_balance: <span class="prelude-val">Some</span>(<span class="number">123123</span>),

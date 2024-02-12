@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-proto/src/protos/rpc.rs`."><title>rpc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nekoton_proto" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-proto/src/protos/rpc.rs`."><title>rpc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nekoton_proto" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -263,7 +264,7 @@
 </pre></div><pre class="rust"><code><span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 </span><span class="kw">pub struct </span>Request {
-    <span class="attr">#[prost(oneof = <span class="string">&quot;request::Call&quot;</span>, tags = <span class="string">&quot;1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11&quot;</span>)]
+    <span class="attr">#[prost(oneof = <span class="string">"request::Call"</span>, tags = <span class="string">"1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11"</span>)]
     </span><span class="kw">pub </span>call: ::core::option::Option&lt;request::Call&gt;,
 }
 <span class="doccomment">/// Nested message and enum types in `Request`.
@@ -271,80 +272,80 @@
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetContractState {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>address: ::prost::bytes::Bytes,
-        <span class="attr">#[prost(uint64, optional, tag = <span class="string">&quot;2&quot;</span>)]
+        <span class="attr">#[prost(uint64, optional, tag = <span class="string">"2"</span>)]
         </span><span class="kw">pub </span>last_transaction_lt: ::core::option::Option&lt;u64&gt;,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetTransaction {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>id: ::prost::bytes::Bytes,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetDstTransaction {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>message_hash: ::prost::bytes::Bytes,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetTransactionsList {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>account: ::prost::bytes::Bytes,
-        <span class="attr">#[prost(uint64, optional, tag = <span class="string">&quot;2&quot;</span>)]
+        <span class="attr">#[prost(uint64, optional, tag = <span class="string">"2"</span>)]
         </span><span class="kw">pub </span>last_transaction_lt: ::core::option::Option&lt;u64&gt;,
-        <span class="attr">#[prost(uint32, tag = <span class="string">&quot;3&quot;</span>)]
+        <span class="attr">#[prost(uint32, tag = <span class="string">"3"</span>)]
         </span><span class="kw">pub </span>limit: u32,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetAccountsByCodeHash {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>code_hash: ::prost::bytes::Bytes,
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, optional, tag = <span class="string">&quot;2&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, optional, tag = <span class="string">"2"</span>)]
         </span><span class="kw">pub </span>continuation: ::core::option::Option&lt;::prost::bytes::Bytes&gt;,
-        <span class="attr">#[prost(uint32, tag = <span class="string">&quot;3&quot;</span>)]
+        <span class="attr">#[prost(uint32, tag = <span class="string">"3"</span>)]
         </span><span class="kw">pub </span>limit: u32,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>SendMessage {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>message: ::prost::bytes::Bytes,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     </span><span class="kw">pub enum </span>Call {
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"1"</span>)]
         </span>GetCapabilities(()),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;2&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"2"</span>)]
         </span>GetLatestKeyBlock(()),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;3&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"3"</span>)]
         </span>GetBlockchainConfig(()),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;4&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"4"</span>)]
         </span>GetStatus(()),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;5&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"5"</span>)]
         </span>GetTimings(()),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;6&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"6"</span>)]
         </span>GetContractState(GetContractState),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;7&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"7"</span>)]
         </span>GetTransaction(GetTransaction),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;8&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"8"</span>)]
         </span>GetDstTransaction(GetDstTransaction),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;9&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"9"</span>)]
         </span>GetTransactionsList(GetTransactionsList),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;10&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"10"</span>)]
         </span>GetAccountsByCodeHash(GetAccountsByCodeHash),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;11&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"11"</span>)]
         </span>SendMessage(SendMessage),
     }
 }
 <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 </span><span class="kw">pub struct </span>Response {
-    <span class="attr">#[prost(oneof = <span class="string">&quot;response::Result&quot;</span>, tags = <span class="string">&quot;1, 2, 3, 4, 5, 6, 7, 8, 9, 10&quot;</span>)]
+    <span class="attr">#[prost(oneof = <span class="string">"response::Result"</span>, tags = <span class="string">"1, 2, 3, 4, 5, 6, 7, 8, 9, 10"</span>)]
     </span><span class="kw">pub </span>result: ::core::option::Option&lt;response::Result&gt;,
 }
 <span class="doccomment">/// Nested message and enum types in `Response`.
@@ -352,68 +353,68 @@
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetRawTransaction {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, optional, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, optional, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>transaction: ::core::option::Option&lt;::prost::bytes::Bytes&gt;,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetTransactionsList {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, repeated, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, repeated, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>transactions: ::prost::alloc::vec::Vec&lt;::prost::bytes::Bytes&gt;,
     }
     <span class="attr">#[derive(Eq)]
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetTimings {
-        <span class="attr">#[prost(uint32, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(uint32, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>last_mc_block_seqno: u32,
-        <span class="attr">#[prost(uint32, tag = <span class="string">&quot;2&quot;</span>)]
+        <span class="attr">#[prost(uint32, tag = <span class="string">"2"</span>)]
         </span><span class="kw">pub </span>last_shard_client_mc_block_seqno: u32,
-        <span class="attr">#[prost(uint32, tag = <span class="string">&quot;3&quot;</span>)]
+        <span class="attr">#[prost(uint32, tag = <span class="string">"3"</span>)]
         </span><span class="kw">pub </span>last_mc_utime: u32,
-        <span class="attr">#[prost(int64, tag = <span class="string">&quot;4&quot;</span>)]
+        <span class="attr">#[prost(int64, tag = <span class="string">"4"</span>)]
         </span><span class="kw">pub </span>mc_time_diff: i64,
-        <span class="attr">#[prost(int64, tag = <span class="string">&quot;5&quot;</span>)]
+        <span class="attr">#[prost(int64, tag = <span class="string">"5"</span>)]
         </span><span class="kw">pub </span>shard_client_time_diff: i64,
-        <span class="attr">#[prost(uint64, tag = <span class="string">&quot;6&quot;</span>)]
+        <span class="attr">#[prost(uint64, tag = <span class="string">"6"</span>)]
         </span><span class="kw">pub </span>smallest_known_lt: u64,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetStatus {
-        <span class="attr">#[prost(bool, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bool, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>ready: bool,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetCapabilities {
-        <span class="attr">#[prost(string, repeated, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(string, repeated, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>capabilities: ::prost::alloc::vec::Vec&lt;::prost::alloc::string::String&gt;,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetLatestKeyBlock {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>block: ::prost::bytes::Bytes,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetBlockchainConfig {
-        <span class="attr">#[prost(int32, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(int32, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>global_id: i32,
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;2&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"2"</span>)]
         </span><span class="kw">pub </span>config: ::prost::bytes::Bytes,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetAccountsByCodeHash {
-        <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, repeated, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, repeated, tag = <span class="string">"1"</span>)]
         </span><span class="kw">pub </span>account: ::prost::alloc::vec::Vec&lt;::prost::bytes::Bytes&gt;,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     </span><span class="kw">pub struct </span>GetContractState {
-        <span class="attr">#[prost(oneof = <span class="string">&quot;get_contract_state::State&quot;</span>, tags = <span class="string">&quot;1, 2, 3&quot;</span>)]
+        <span class="attr">#[prost(oneof = <span class="string">"get_contract_state::State"</span>, tags = <span class="string">"1, 2, 3"</span>)]
         </span><span class="kw">pub </span>state: ::core::option::Option&lt;get_contract_state::State&gt;,
     }
     <span class="doccomment">/// Nested message and enum types in `GetContractState`.
@@ -421,15 +422,15 @@
         <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
         #[derive(Clone, PartialEq, ::prost::Message)]
         </span><span class="kw">pub struct </span>Timings {
-            <span class="attr">#[prost(uint64, tag = <span class="string">&quot;1&quot;</span>)]
+            <span class="attr">#[prost(uint64, tag = <span class="string">"1"</span>)]
             </span><span class="kw">pub </span>gen_lt: u64,
-            <span class="attr">#[prost(uint32, tag = <span class="string">&quot;2&quot;</span>)]
+            <span class="attr">#[prost(uint32, tag = <span class="string">"2"</span>)]
             </span><span class="kw">pub </span>gen_utime: u32,
         }
         <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
         #[derive(Clone, PartialEq, ::prost::Message)]
         </span><span class="kw">pub struct </span>NotExist {
-            <span class="attr">#[prost(oneof = <span class="string">&quot;not_exist::GenTimings&quot;</span>, tags = <span class="string">&quot;2, 3&quot;</span>)]
+            <span class="attr">#[prost(oneof = <span class="string">"not_exist::GenTimings"</span>, tags = <span class="string">"2, 3"</span>)]
             </span><span class="kw">pub </span>gen_timings: ::core::option::Option&lt;not_exist::GenTimings&gt;,
         }
         <span class="doccomment">/// Nested message and enum types in `NotExist`.
@@ -437,20 +438,20 @@
             <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
             #[derive(Clone, PartialEq, ::prost::Oneof)]
             </span><span class="kw">pub enum </span>GenTimings {
-                <span class="attr">#[prost(message, tag = <span class="string">&quot;2&quot;</span>)]
+                <span class="attr">#[prost(message, tag = <span class="string">"2"</span>)]
                 </span>Known(<span class="kw">super</span>::Timings),
-                <span class="attr">#[prost(message, tag = <span class="string">&quot;3&quot;</span>)]
+                <span class="attr">#[prost(message, tag = <span class="string">"3"</span>)]
                 </span>Unknown(()),
             }
         }
         <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
         #[derive(Clone, PartialEq, ::prost::Message)]
         </span><span class="kw">pub struct </span>Exists {
-            <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;1&quot;</span>)]
+            <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"1"</span>)]
             </span><span class="kw">pub </span>account: ::prost::bytes::Bytes,
-            <span class="attr">#[prost(message, optional, tag = <span class="string">&quot;2&quot;</span>)]
+            <span class="attr">#[prost(message, optional, tag = <span class="string">"2"</span>)]
             </span><span class="kw">pub </span>gen_timings: ::core::option::Option&lt;Timings&gt;,
-            <span class="attr">#[prost(oneof = <span class="string">&quot;exists::LastTransactionId&quot;</span>, tags = <span class="string">&quot;3, 4&quot;</span>)]
+            <span class="attr">#[prost(oneof = <span class="string">"exists::LastTransactionId"</span>, tags = <span class="string">"3, 4"</span>)]
             </span><span class="kw">pub </span>last_transaction_id: ::core::option::Option&lt;exists::LastTransactionId&gt;,
         }
         <span class="doccomment">/// Nested message and enum types in `Exists`.
@@ -458,68 +459,68 @@
             <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
             #[derive(Clone, PartialEq, ::prost::Message)]
             </span><span class="kw">pub struct </span>Exact {
-                <span class="attr">#[prost(uint64, tag = <span class="string">&quot;1&quot;</span>)]
+                <span class="attr">#[prost(uint64, tag = <span class="string">"1"</span>)]
                 </span><span class="kw">pub </span>lt: u64,
-                <span class="attr">#[prost(bytes = <span class="string">&quot;bytes&quot;</span>, tag = <span class="string">&quot;2&quot;</span>)]
+                <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"2"</span>)]
                 </span><span class="kw">pub </span>hash: ::prost::bytes::Bytes,
             }
             <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
             #[derive(Clone, PartialEq, ::prost::Message)]
             </span><span class="kw">pub struct </span>Inexact {
-                <span class="attr">#[prost(uint64, tag = <span class="string">&quot;1&quot;</span>)]
+                <span class="attr">#[prost(uint64, tag = <span class="string">"1"</span>)]
                 </span><span class="kw">pub </span>latest_lt: u64,
             }
             <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
             #[derive(Clone, PartialEq, ::prost::Oneof)]
             </span><span class="kw">pub enum </span>LastTransactionId {
-                <span class="attr">#[prost(message, tag = <span class="string">&quot;3&quot;</span>)]
+                <span class="attr">#[prost(message, tag = <span class="string">"3"</span>)]
                 </span>Exact(Exact),
-                <span class="attr">#[prost(message, tag = <span class="string">&quot;4&quot;</span>)]
+                <span class="attr">#[prost(message, tag = <span class="string">"4"</span>)]
                 </span>Inexact(Inexact),
             }
         }
         <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
         #[derive(Clone, PartialEq, ::prost::Oneof)]
         </span><span class="kw">pub enum </span>State {
-            <span class="attr">#[prost(message, tag = <span class="string">&quot;1&quot;</span>)]
+            <span class="attr">#[prost(message, tag = <span class="string">"1"</span>)]
             </span>NotExists(NotExist),
-            <span class="attr">#[prost(message, tag = <span class="string">&quot;2&quot;</span>)]
+            <span class="attr">#[prost(message, tag = <span class="string">"2"</span>)]
             </span>Exists(Exists),
-            <span class="attr">#[prost(message, tag = <span class="string">&quot;3&quot;</span>)]
+            <span class="attr">#[prost(message, tag = <span class="string">"3"</span>)]
             </span>Unchanged(Timings),
         }
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     </span><span class="kw">pub enum </span><span class="prelude-ty">Result </span>{
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;1&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"1"</span>)]
         </span>GetRawTransaction(GetRawTransaction),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;2&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"2"</span>)]
         </span>GetTransactionsList(GetTransactionsList),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;3&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"3"</span>)]
         </span>GetTimings(GetTimings),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;4&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"4"</span>)]
         </span>GetStatus(GetStatus),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;5&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"5"</span>)]
         </span>GetCapabilities(GetCapabilities),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;6&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"6"</span>)]
         </span>GetLatestKeyBlock(GetLatestKeyBlock),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;7&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"7"</span>)]
         </span>GetBlockchainConfig(GetBlockchainConfig),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;8&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"8"</span>)]
         </span>GetAccounts(GetAccountsByCodeHash),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;9&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"9"</span>)]
         </span>GetContractState(GetContractState),
-        <span class="attr">#[prost(message, tag = <span class="string">&quot;10&quot;</span>)]
+        <span class="attr">#[prost(message, tag = <span class="string">"10"</span>)]
         </span>SendMessage(()),
     }
 }
 <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 </span><span class="kw">pub struct </span>Error {
-    <span class="attr">#[prost(int32, tag = <span class="string">&quot;1&quot;</span>)]
+    <span class="attr">#[prost(int32, tag = <span class="string">"1"</span>)]
     </span><span class="kw">pub </span>code: i32,
-    <span class="attr">#[prost(string, tag = <span class="string">&quot;2&quot;</span>)]
+    <span class="attr">#[prost(string, tag = <span class="string">"2"</span>)]
     </span><span class="kw">pub </span>message: ::prost::alloc::string::String,
 }
 </code></pre></div></section></main></body></html>
