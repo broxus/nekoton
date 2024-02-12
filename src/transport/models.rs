@@ -162,7 +162,7 @@ impl Eq for RawTransaction {}
 
 impl PartialOrd for RawTransaction {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.data.lt.partial_cmp(&other.data.lt)
+        Some(self.cmp(other))
     }
 }
 
