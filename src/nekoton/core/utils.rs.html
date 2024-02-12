@@ -492,6 +492,7 @@
 <a href="#491" id="491">491</a>
 <a href="#492" id="492">492</a>
 <a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::convert::TryFrom;
@@ -514,7 +515,7 @@
 
 <span class="kw">pub fn </span>convert_transactions(
     transactions: Vec&lt;RawTransaction&gt;,
-) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Transaction&gt; + DoubleEndedIterator {
+) -&gt; <span class="kw">impl </span>DoubleEndedIterator&lt;Item = Transaction&gt; {
     transactions
         .into_iter()
         .filter_map(|transaction| Transaction::try_from((transaction.hash, transaction.data)).ok())
@@ -605,13 +606,14 @@
     <span class="kw">let </span><span class="kw-2">mut </span>is_deployed = contract_state.is_deployed;
 
     <span class="kw">for </span>item <span class="kw">in </span>account_block.transactions().iter() {
-        <span class="kw">let </span>transaction = <span class="kw">match </span>item.and_then(|(<span class="kw">_</span>, value)| {
+        <span class="kw">let </span>result = item.and_then(|(<span class="kw">_</span>, value)| {
             <span class="kw">let </span>cell = value.into_cell().reference(<span class="number">0</span>)<span class="question-mark">?</span>;
             <span class="kw">let </span>hash = cell.repr_hash();
 
             ton_block::Transaction::construct_from_cell(cell)
                 .map(|data| RawTransaction { hash, data })
-        }) {
+        });
+        <span class="kw">let </span>transaction = <span class="kw">match </span>result {
             <span class="prelude-val">Ok</span>(transaction) =&gt; transaction,
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
         };

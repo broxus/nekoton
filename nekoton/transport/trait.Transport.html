@@ -64,14 +64,14 @@
              'life0: 'async_trait</span>;
 <span class="item-spacer"></span>    fn <a href="#tymethod.get_capabilities" class="fn">get_capabilities</a>&lt;'life0, 'life1, 'async_trait&gt;(
         &amp;'life0 self,
-        clock: &amp;'life1 dyn Clock
+        clock: &amp;'life1 dyn <a class="trait" href="../../nekoton_utils/clock/trait.Clock.html" title="trait nekoton_utils::clock::Clock">Clock</a>
     ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.76.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.76.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.76.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="https://docs.rs/anyhow/1.0.79/anyhow/type.Result.html" title="type anyhow::Result">Result</a>&lt;<a class="struct" href="../models/struct.NetworkCapabilities.html" title="struct nekoton::models::NetworkCapabilities">NetworkCapabilities</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.76.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
        <span class="where">where Self: 'async_trait,
              'life0: 'async_trait,
              'life1: 'async_trait</span>;
 <span class="item-spacer"></span>    fn <a href="#tymethod.get_blockchain_config" class="fn">get_blockchain_config</a>&lt;'life0, 'life1, 'async_trait&gt;(
         &amp;'life0 self,
-        clock: &amp;'life1 dyn Clock,
+        clock: &amp;'life1 dyn <a class="trait" href="../../nekoton_utils/clock/trait.Clock.html" title="trait nekoton_utils::clock::Clock">Clock</a>,
         force: <a class="primitive" href="https://doc.rust-lang.org/1.76.0/std/primitive.bool.html">bool</a>
     ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.76.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.76.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.76.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="https://docs.rs/anyhow/1.0.79/anyhow/type.Result.html" title="type anyhow::Result">Result</a>&lt;BlockchainConfig&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.76.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;
        <span class="where">where Self: 'async_trait,
@@ -131,13 +131,13 @@
     Self: 'async_trait,
     'life0: 'async_trait,</div></h4></section><section id="tymethod.get_capabilities" class="method"><a class="src rightside" href="../../src/nekoton/transport/mod.rs.html#63">source</a><h4 class="code-header">fn <a href="#tymethod.get_capabilities" class="fn">get_capabilities</a>&lt;'life0, 'life1, 'async_trait&gt;(
     &amp;'life0 self,
-    clock: &amp;'life1 dyn Clock
+    clock: &amp;'life1 dyn <a class="trait" href="../../nekoton_utils/clock/trait.Clock.html" title="trait nekoton_utils::clock::Clock">Clock</a>
 ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.76.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.76.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.76.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="https://docs.rs/anyhow/1.0.79/anyhow/type.Result.html" title="type anyhow::Result">Result</a>&lt;<a class="struct" href="../models/struct.NetworkCapabilities.html" title="struct nekoton::models::NetworkCapabilities">NetworkCapabilities</a>&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.76.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
     Self: 'async_trait,
     'life0: 'async_trait,
     'life1: 'async_trait,</div></h4></section><section id="tymethod.get_blockchain_config" class="method"><a class="src rightside" href="../../src/nekoton/transport/mod.rs.html#66-70">source</a><h4 class="code-header">fn <a href="#tymethod.get_blockchain_config" class="fn">get_blockchain_config</a>&lt;'life0, 'life1, 'async_trait&gt;(
     &amp;'life0 self,
-    clock: &amp;'life1 dyn Clock,
+    clock: &amp;'life1 dyn <a class="trait" href="../../nekoton_utils/clock/trait.Clock.html" title="trait nekoton_utils::clock::Clock">Clock</a>,
     force: <a class="primitive" href="https://doc.rust-lang.org/1.76.0/std/primitive.bool.html">bool</a>
 ) -&gt; <a class="struct" href="https://doc.rust-lang.org/1.76.0/core/pin/struct.Pin.html" title="struct core::pin::Pin">Pin</a>&lt;<a class="struct" href="https://doc.rust-lang.org/1.76.0/alloc/boxed/struct.Box.html" title="struct alloc::boxed::Box">Box</a>&lt;dyn <a class="trait" href="https://doc.rust-lang.org/1.76.0/core/future/future/trait.Future.html" title="trait core::future::future::Future">Future</a>&lt;Output = <a class="type" href="https://docs.rs/anyhow/1.0.79/anyhow/type.Result.html" title="type anyhow::Result">Result</a>&lt;BlockchainConfig&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.76.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'async_trait&gt;&gt;<div class="where">where
     Self: 'async_trait,
