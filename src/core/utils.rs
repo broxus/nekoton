@@ -20,7 +20,7 @@ use crate::transport::Transport;
 
 pub fn convert_transactions(
     transactions: Vec<RawTransaction>,
-) -> impl Iterator<Item = Transaction> + DoubleEndedIterator {
+) -> impl DoubleEndedIterator<Item = Transaction> {
     transactions
         .into_iter()
         .filter_map(|transaction| Transaction::try_from((transaction.hash, transaction.data)).ok())
@@ -111,13 +111,14 @@ pub fn parse_block(
     let mut is_deployed = contract_state.is_deployed;
 
     for item in account_block.transactions().iter() {
-        let transaction = match item.and_then(|(_, value)| {
+        let result = item.and_then(|(_, value)| {
             let cell = value.into_cell().reference(0)?;
             let hash = cell.repr_hash();
 
             ton_block::Transaction::construct_from_cell(cell)
                 .map(|data| RawTransaction { hash, data })
-        }) {
+        });
+        let transaction = match result {
             Ok(transaction) => transaction,
             Err(_) => continue,
         };
