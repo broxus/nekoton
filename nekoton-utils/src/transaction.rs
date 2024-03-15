@@ -50,5 +50,22 @@ pub fn compute_total_transaction_fees(
             .map(|grams| grams.as_u128())
             .unwrap_or_default();
     };
+    if let Some(ton_block::TrBouncePhase::Ok(phase)) = &description.bounce {
+        total_fees += phase.fwd_fees.as_u128();
+    }
     total_fees
+}
+
+#[cfg(test)]
+mod tests {
+    use ton_block::Deserializable;
+
+    use super::*;
+
+    #[test]
+    fn balance_change_for_bounce_tx() {
+        let tx = ton_block::Transaction::construct_from_base64("te6ccgECBwEAAXgAA7V7I6v9Bo6UZTcpUTDMPNHomt63V2qkcrrjqlh+9STZH1AAArX2P2tMMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZfQohAAD5gUWEIAwIBAB8ECQ7kyjgBwDAosIMFFhhAAIJykK7Illr6uxbrw8ubQI665xthjXh4i8gNCYQ1k8rJjaSQrsiWWvq7FuvDy5tAjrrnG2GNeHiLyA0JhDWTysmNpAIB4AYEAQHfBQC5WAFkdX+g0dKMpuUqJhmHmj0TW9bq7VSOV1x1Sw/epJsj6wAmfD7CYutxv9bl0y1a1XmYfSoPdQXCpsr6XdmJS4KcONDuLh8ABgosMAAAVr7H7WmIy+hRCH/////AALFoATPh9hMXW43+ty6ZatarzMPpUHuoLhU2V9LuzEpcFOHHACyOr/QaOlGU3KVEwzDzR6Jret1dqpHK646pYfvUk2R9UO5Mo4AGCiwwAABWvsftaYTL6FEIQA==").unwrap();
+        let balance_change = compute_balance_change(&tx);
+        assert_eq!(balance_change, 0);
+    }
 }
