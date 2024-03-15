@@ -53,6 +53,25 @@
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
 </pre></div><pre class="rust"><code><span class="kw">pub fn </span>compute_account_lt(transaction: <span class="kw-2">&amp;</span>ton_block::Transaction) -&gt; u64 {
     <span class="comment">// TODO: read in_msg and check whether dst has rewrite_pfx
     </span>transaction.lt + <span class="number">1 </span>+ transaction.outmsg_cnt <span class="kw">as </span>u64
@@ -105,6 +124,25 @@
             .map(|grams| grams.as_u128())
             .unwrap_or_default();
     };
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(phase) = <span class="kw-2">&amp;</span>description.bounce {
+        <span class="kw">if let </span>ton_block::TrBouncePhase::Ok(phase) = phase {
+            total_fees += phase.fwd_fees.as_u128();
+        }
+    }
     total_fees
+}
+
+<span class="attr">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>ton_block::Deserializable;
+
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>balance_change_for_bounce_tx() {
+        <span class="kw">let </span>tx = ton_block::Transaction::construct_from_base64(<span class="string">"te6ccgECBwEAAXgAA7V7I6v9Bo6UZTcpUTDMPNHomt63V2qkcrrjqlh+9STZH1AAArX2P2tMMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZfQohAAD5gUWEIAwIBAB8ECQ7kyjgBwDAosIMFFhhAAIJykK7Illr6uxbrw8ubQI665xthjXh4i8gNCYQ1k8rJjaSQrsiWWvq7FuvDy5tAjrrnG2GNeHiLyA0JhDWTysmNpAIB4AYEAQHfBQC5WAFkdX+g0dKMpuUqJhmHmj0TW9bq7VSOV1x1Sw/epJsj6wAmfD7CYutxv9bl0y1a1XmYfSoPdQXCpsr6XdmJS4KcONDuLh8ABgosMAAAVr7H7WmIy+hRCH/////AALFoATPh9hMXW43+ty6ZatarzMPpUHuoLhU2V9LuzEpcFOHHACyOr/QaOlGU3KVEwzDzR6Jret1dqpHK646pYfvUk2R9UO5Mo4AGCiwwAABWvsftaYTL6FEIQA=="</span>).unwrap();
+        <span class="kw">let </span>balance_change = compute_balance_change(<span class="kw-2">&amp;</span>tx);
+        <span class="macro">assert_eq!</span>(balance_change, <span class="number">0</span>);
+    }
 }
 </code></pre></div></section></main></body></html>
