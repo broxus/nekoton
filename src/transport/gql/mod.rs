@@ -2,7 +2,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::Deserialize;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
 
@@ -14,7 +14,7 @@ use crate::external::{GqlConnection, GqlRequest};
 
 use self::queries::*;
 use super::models::*;
-use super::utils::ConfigCache;
+use super::utils::{ConfigCache, ConfigResponse};
 use super::{Transport, TransportInfo};
 
 mod queries;
@@ -172,6 +172,20 @@ impl GqlTransport {
             };
 
         Ok(block_id)
+    }
+
+    async fn fetch_config(&self) -> Result<ConfigResponse> {
+        let block = self.get_latest_key_block().await?;
+        let seqno = block.info.read_struct()?.seq_no();
+        let extra = block.read_extra()?;
+        let master = extra.read_custom()?.context("invalid key block")?;
+        let config = master.config().context("invalid key block")?.clone();
+
+        Ok(ConfigResponse {
+            global_id: block.global_id,
+            seqno,
+            config,
+        })
     }
 }
 
@@ -356,7 +370,7 @@ impl Transport for GqlTransport {
     async fn get_capabilities(&self, clock: &dyn Clock) -> Result<NetworkCapabilities> {
         let (capabilities, _) = self
             .config_cache
-            .get_blockchain_config(self, clock, false)
+            .get_blockchain_config(clock, false, || self.fetch_config())
             .await?;
         Ok(capabilities)
     }
@@ -368,7 +382,7 @@ impl Transport for GqlTransport {
     ) -> Result<ton_executor::BlockchainConfig> {
         let (_, config) = self
             .config_cache
-            .get_blockchain_config(self, clock, force)
+            .get_blockchain_config(clock, force, || self.fetch_config())
             .await?;
         Ok(config)
     }

@@ -141,6 +141,8 @@ pub mod response {
         pub global_id: i32,
         #[prost(bytes = "bytes", tag = "2")]
         pub config: ::prost::bytes::Bytes,
+        #[prost(uint32, tag = "3")]
+        pub seqno: u32,
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]

@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use futures_util::Future;
 use quick_cache::sync::Cache as QuickCache;
 use tokio::sync::Mutex;
 
 use nekoton_utils::*;
 
 use super::models::RawContractState;
-use super::Transport;
 use crate::core::models::NetworkCapabilities;
 
 #[allow(unused)]
@@ -79,19 +79,23 @@ impl ConfigCache {
         }
     }
 
-    pub async fn get_blockchain_config(
+    pub async fn get_blockchain_config<F, Fut>(
         &self,
-        transport: &dyn Transport,
         clock: &dyn Clock,
         force: bool,
-    ) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig)> {
+        f: F,
+    ) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig)>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = Result<ConfigResponse>>,
+    {
         let mut cache = self.state.lock().await;
 
         let now = clock.now_sec_u64() as u32;
 
         Ok(match &*cache {
             None => {
-                let (capabilities, config, key_block_seqno) = fetch_config(transport).await?;
+                let (capabilities, config, key_block_seqno) = fetch_config(f).await?;
                 let phase = compute_next_phase(now, &config, None, key_block_seqno)?;
                 *cache = Some(ConfigCacheState {
                     capabilities,
@@ -102,7 +106,7 @@ impl ConfigCache {
                 (capabilities, config)
             }
             Some(a) if force && !self.use_default_config || cache_expired(now, a.phase) => {
-                let (capabilities, config, key_block_seqno) = fetch_config(transport).await?;
+                let (capabilities, config, key_block_seqno) = fetch_config(f).await?;
                 let phase = compute_next_phase(
                     now,
                     &config,
@@ -122,36 +126,30 @@ impl ConfigCache {
     }
 }
 
-async fn fetch_config(
-    transport: &dyn Transport,
-) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig, u32)> {
-    let block = transport.get_latest_key_block().await?;
+async fn fetch_config<F, Fut>(
+    f: F,
+) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig, u32)>
+where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = Result<ConfigResponse>>,
+{
+    let res = f().await?;
 
-    let info = block.info.read_struct()?;
-
-    let extra = block
-        .read_extra()
-        .map_err(|_| QueryConfigError::InvalidBlock)?;
-
-    let master = extra
-        .read_custom()
-        .map_err(|_| QueryConfigError::InvalidBlock)?
-        .ok_or(QueryConfigError::InvalidBlock)?;
-
-    let params = master
-        .config()
-        .ok_or(QueryConfigError::InvalidBlock)?
-        .clone();
-
-    let config = ton_executor::BlockchainConfig::with_config(params, block.global_id)
+    let config = ton_executor::BlockchainConfig::with_config(res.config, res.global_id)
         .map_err(|_| QueryConfigError::InvalidConfig)?;
 
     let capabilities = NetworkCapabilities {
-        global_id: block.global_id,
+        global_id: res.global_id,
         raw: config.capabilites(),
     };
 
-    Ok((capabilities, config, info.seq_no()))
+    Ok((capabilities, config, res.seqno))
+}
+
+pub struct ConfigResponse {
+    pub global_id: i32,
+    pub seqno: u32,
+    pub config: ton_block::ConfigParams,
 }
 
 fn compute_next_phase(
@@ -203,8 +201,6 @@ enum ConfigCachePhase {
 
 #[derive(thiserror::Error, Debug)]
 enum QueryConfigError {
-    #[error("Invalid block")]
-    InvalidBlock,
     #[error("Invalid config")]
     InvalidConfig,
 }
