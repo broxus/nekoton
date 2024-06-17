@@ -514,7 +514,7 @@ impl<'a> NftContractState<'a> {
             tip6_interface.supports_interface(tip4_2_2::metadata_contract::INTERFACE_ID)?;
         result.tip4_3 = tip6_interface.supports_interface(tip4_3::nft_contract::INTERFACE_ID)?;
 
-        Ok(result.tip4_1.then(|| result))
+        Ok((result.tip4_1 || result.tip4_3).then(|| result))
     }
 
     pub fn get_json(&self, clock: &dyn Clock) -> Result<String> {
