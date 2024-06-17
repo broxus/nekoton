@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-derive/src/pack_abi.rs`."><title>pack_abi.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton_derive" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-derive/src/pack_abi.rs`."><title>pack_abi.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton_derive" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nekoton_derive/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -296,7 +295,7 @@
                 EnumType::Int
             };
             <span class="kw">let </span>body = serialize_enum(<span class="kw-2">&amp;</span>container, variants, enum_type);
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 <span class="kw">impl </span>::nekoton_abi::BuildTokenValue <span class="kw">for </span>#ident {
                     <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; ::ton_abi::TokenValue {
                         #body
@@ -313,7 +312,7 @@
         Data::Struct(<span class="kw">_</span>, fields) =&gt; {
             <span class="kw">if </span>plain {
                 <span class="kw">let </span>body = serialize_struct(<span class="kw-2">&amp;</span>container, fields, StructType::Plain);
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     <span class="kw">impl </span>::nekoton_abi::PackAbiPlain <span class="kw">for </span>#ident {
                         <span class="kw">fn </span>pack(<span class="self">self</span>) -&gt; Vec&lt;::ton_abi::Token&gt; {
                             #body
@@ -322,7 +321,7 @@
                 }
             } <span class="kw">else </span>{
                 <span class="kw">let </span>body = serialize_struct(<span class="kw-2">&amp;</span>container, fields, StructType::Tuple);
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     <span class="kw">impl </span>::nekoton_abi::BuildTokenValue <span class="kw">for </span>#ident {
                         <span class="kw">fn </span>token_value(<span class="self">self</span>) -&gt; ::ton_abi::TokenValue {
                             #body
@@ -362,21 +361,21 @@
             <span class="kw">let </span>number = token.parse::&lt;u8&gt;().unwrap();
 
             <span class="kw">match </span>enum_type {
-                EnumType::Int =&gt; <span class="macro">quote! </span>{
+                EnumType::Int =&gt; <span class="macro">quote!</span> {
                     #name::#ident =&gt; ::nekoton_abi::BuildTokenValue::token_value(#number)
                 },
                 EnumType::Bool =&gt; <span class="kw">match </span>number {
-                    <span class="number">0 </span>=&gt; <span class="macro">quote! </span>{
+                    <span class="number">0 </span>=&gt; <span class="macro">quote!</span> {
                         #name::#ident =&gt; ::nekoton_abi::BuildTokenValue::token_value(<span class="bool-val">false</span>)
                     },
-                    <span class="kw">_ </span>=&gt; <span class="macro">quote! </span>{
+                    <span class="kw">_ </span>=&gt; <span class="macro">quote!</span> {
                         #name::#ident =&gt; ::nekoton_abi::BuildTokenValue::token_value(<span class="bool-val">true</span>)
                     },
                 },
             }
         });
 
-    <span class="macro">quote! </span>{
+    <span class="macro">quote!</span> {
         <span class="kw">match </span><span class="self">self </span>{
             #(#build_variants,)*
         }
@@ -390,13 +389,13 @@
 ) -&gt; proc_macro2::TokenStream {
     <span class="kw">let </span>field_count = fields.len();
 
-    <span class="kw">let </span>definition = <span class="macro">quote! </span>{
+    <span class="kw">let </span>definition = <span class="macro">quote!</span> {
         <span class="kw">let </span><span class="kw-2">mut </span>tokens: Vec&lt;::ton_abi::Token&gt; = Vec::with_capacity(#field_count);
     };
 
     <span class="kw">let </span>build_fields = fields.iter().map(|f| {
         <span class="kw">if </span>f.attrs.skip {
-            <span class="kw">return </span><span class="macro">quote! </span>{}; <span class="comment">// do nothing
+            <span class="kw">return </span><span class="macro">quote!</span> {}; <span class="comment">// do nothing
         </span>}
 
         <span class="kw">let </span>name = f.original.ident.as_ref().unwrap();
@@ -412,7 +411,7 @@
             <span class="kw">let </span>handler = type_name.get_handler();
             <span class="kw">match </span>f.attrs.is_array {
                 <span class="bool-val">true </span>=&gt; {
-                    <span class="macro">quote! </span>{
+                    <span class="macro">quote!</span> {
                         tokens.push(::ton_abi::Token::new(
                             #field_name,
                             ::ton_abi::TokenValue::Array(
@@ -423,24 +422,24 @@
                     }
                 }
                 <span class="bool-val">false </span>=&gt; {
-                    <span class="macro">quote! </span>{
+                    <span class="macro">quote!</span> {
                         <span class="kw">let </span>value = <span class="self">self</span>.#name;
                         tokens.push(::ton_abi::Token::new(#field_name, #handler))
                     }
                 }
             }
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(with) = f.attrs.with.as_ref() {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 tokens.push(::ton_abi::Token::new(#field_name, #with::pack(<span class="self">self</span>.#name)))
             }
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(pack_with) = f.attrs.pack_with.as_ref() {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 tokens.push(::ton_abi::Token::new(#field_name, #pack_with(<span class="self">self</span>.#name)))
             }
         } <span class="kw">else </span>{
             <span class="kw">match </span>f.attrs.is_array {
                 <span class="bool-val">true </span>=&gt; {
-                    <span class="macro">quote! </span>{
+                    <span class="macro">quote!</span> {
                         tokens.push(::nekoton_abi::TokenValueExt::named(
                             ::ton_abi::TokenValue::Array(
                                 &lt;#ty <span class="kw">as </span>::nekoton_abi::KnownParamTypeArray&lt;<span class="kw">_</span>&gt;&gt;::item_param_type(),
@@ -451,7 +450,7 @@
                     }
                 }
                 <span class="bool-val">false </span>=&gt; {
-                    <span class="macro">quote! </span>{
+                    <span class="macro">quote!</span> {
                         tokens.push(::nekoton_abi::TokenValueExt::named(
                             ::nekoton_abi::BuildTokenValue::token_value(<span class="self">self</span>.#name),
                             #field_name
@@ -464,14 +463,14 @@
 
     <span class="kw">match </span>struct_type {
         StructType::Plain =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 #definition
                 #(#build_fields;)*
                 <span class="kw">return </span>tokens;
             }
         }
         StructType::Tuple =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 #definition
                 #(#build_fields;)*
                 <span class="kw">return </span>::ton_abi::TokenValue::Tuple(tokens);
@@ -483,46 +482,46 @@
 <span class="kw">impl </span>TypeName {
     <span class="kw">fn </span>get_handler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; proc_macro2::TokenStream {
         <span class="kw">match </span><span class="self">self </span>{
-            TypeName::Int8 =&gt; <span class="macro">quote! </span>{
+            TypeName::Int8 =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Int(::ton_abi::Int { number: ::nekoton_abi::num_bigint::BigInt::from(value), size: <span class="number">8 </span>})
             },
-            TypeName::Uint8 =&gt; <span class="macro">quote! </span>{
+            TypeName::Uint8 =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: <span class="number">8 </span>})
             },
-            TypeName::Uint16 =&gt; <span class="macro">quote! </span>{
+            TypeName::Uint16 =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: <span class="number">16 </span>})
             },
-            TypeName::Uint32 =&gt; <span class="macro">quote! </span>{
+            TypeName::Uint32 =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: <span class="number">32 </span>})
             },
-            TypeName::Uint64 =&gt; <span class="macro">quote! </span>{
+            TypeName::Uint64 =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: <span class="number">64 </span>})
             },
-            TypeName::Uint128 =&gt; <span class="macro">quote! </span>{
+            TypeName::Uint128 =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from(value), size: <span class="number">128 </span>})
             },
-            TypeName::Uint256 =&gt; <span class="macro">quote! </span>{
+            TypeName::Uint256 =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: ::nekoton_abi::num_bigint::BigUint::from_bytes_be(value.as_slice()), size: <span class="number">256 </span>})
             },
-            TypeName::Grams =&gt; <span class="macro">quote! </span>{
+            TypeName::Grams =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Grams(::ton_block::Grams::from(value))
             },
-            TypeName::Address =&gt; <span class="macro">quote! </span>{
+            TypeName::Address =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Address(<span class="kw">match </span>value {
                     ::ton_block::MsgAddressInt::AddrStd(addr) =&gt; ::ton_block::MsgAddress::AddrStd(addr),
                     ::ton_block::MsgAddressInt::AddrVar(addr) =&gt; ::ton_block::MsgAddress::AddrVar(addr),
                 })
             },
-            TypeName::Cell =&gt; <span class="macro">quote! </span>{
+            TypeName::Cell =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Cell(value)
             },
-            TypeName::Bool =&gt; <span class="macro">quote! </span>{
+            TypeName::Bool =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Bool(value)
             },
-            TypeName::String =&gt; <span class="macro">quote! </span>{
+            TypeName::String =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::String(value.into())
             },
-            TypeName::Bytes =&gt; <span class="macro">quote! </span>{
+            TypeName::Bytes =&gt; <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Bytes(value)
             },
             TypeName::None =&gt; <span class="macro">unreachable!</span>(),

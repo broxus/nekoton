@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["dens","old_tip3","tip1155","tip3","tip3_1","tip3_any","tip4_1","tip4_2","tip4_3","tip6","wallets"],"struct":["NonZeroResultCode"]};
+window.SIDEBAR_ITEMS = {"mod":["dens","old_tip3","tip1155","tip3","tip3_1","tip3_any","tip4_1","tip4_2","tip4_2_2","tip4_3","tip6","wallets"],"struct":["NonZeroResultCode"]};

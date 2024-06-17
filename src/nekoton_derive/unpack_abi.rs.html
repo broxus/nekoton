@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-derive/src/unpack_abi.rs`."><title>unpack_abi.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton_derive" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-derive/src/unpack_abi.rs`."><title>unpack_abi.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton_derive" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nekoton_derive/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -396,7 +395,7 @@
                 EnumType::Int
             };
             <span class="kw">let </span>body = serialize_enum(<span class="kw-2">&amp;</span>container, variants, enum_type);
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 <span class="kw">impl </span>::nekoton_abi::UnpackAbi&lt;#ident&gt; <span class="kw">for </span>::ton_abi::TokenValue {
                     <span class="kw">fn </span>unpack(<span class="self">self</span>) -&gt; ::nekoton_abi::UnpackerResult&lt;#ident&gt; {
                         #body
@@ -407,7 +406,7 @@
         Data::Struct(<span class="kw">_</span>, fields) =&gt; {
             <span class="kw">if </span>plain {
                 <span class="kw">let </span>body = serialize_struct(<span class="kw-2">&amp;</span>container, fields, StructType::Plain);
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     <span class="kw">impl </span>::nekoton_abi::UnpackAbiPlain&lt;#ident&gt; <span class="kw">for </span>Vec&lt;::ton_abi::Token&gt; {
                         <span class="kw">fn </span>unpack(<span class="self">self</span>) -&gt; ::nekoton_abi::UnpackerResult&lt;#ident&gt; {
                             #body
@@ -416,7 +415,7 @@
                 }
             } <span class="kw">else </span>{
                 <span class="kw">let </span>body = serialize_struct(<span class="kw-2">&amp;</span>container, fields, StructType::Tuple);
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     <span class="kw">impl </span>::nekoton_abi::UnpackAbi&lt;#ident&gt; <span class="kw">for </span>::ton_abi::TokenValue {
                         <span class="kw">fn </span>unpack(<span class="self">self</span>) -&gt; ::nekoton_abi::UnpackerResult&lt;#ident&gt; {
                             #body
@@ -451,17 +450,17 @@
 
             <span class="kw">match </span>enum_type {
                 EnumType::Int =&gt; {
-                    <span class="macro">quote! </span>{
+                    <span class="macro">quote!</span> {
                         <span class="prelude-val">Some</span>(#number) =&gt; <span class="prelude-val">Ok</span>(#name::#ident)
                     }
                 }
                 EnumType::Bool =&gt; {
                     <span class="kw">if </span>number == <span class="number">0 </span>{
-                        <span class="macro">quote! </span>{
+                        <span class="macro">quote!</span> {
                             ::ton_abi::TokenValue::Bool(<span class="bool-val">false</span>) =&gt; <span class="prelude-val">Ok</span>(#name::#ident)
                         }
                     } <span class="kw">else </span>{
-                        <span class="macro">quote! </span>{
+                        <span class="macro">quote!</span> {
                             ::ton_abi::TokenValue::Bool(<span class="bool-val">true</span>) =&gt; <span class="prelude-val">Ok</span>(#name::#ident)
                         }
                     }
@@ -471,7 +470,7 @@
 
     <span class="kw">match </span>enum_type {
         EnumType::Int =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 <span class="kw">match </span><span class="self">self </span>{
                     ::ton_abi::TokenValue::Uint(int) =&gt; <span class="kw">match </span>::nekoton_abi::num_traits::ToPrimitive::to_u8(<span class="kw-2">&amp;</span>int.number) {
                         #(#build_variants,)*
@@ -482,7 +481,7 @@
             }
         }
         EnumType::Bool =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 <span class="kw">match </span><span class="self">self </span>{
                     #(#build_variants,)*
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(::nekoton_abi::UnpackerError::InvalidAbi),
@@ -503,7 +502,7 @@
         <span class="kw">let </span>name = f.original.ident.as_ref().unwrap();
 
         <span class="kw">if </span>f.attrs.skip {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                #name: std::default::Default::default()
             }
         } <span class="kw">else </span>{
@@ -514,7 +513,7 @@
                 f.attrs.is_array,
             );
 
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 #name: {
                     <span class="kw">let </span>token = tokens.next();
                     #try_unpack
@@ -525,7 +524,7 @@
 
     <span class="kw">match </span>struct_type {
         StructType::Plain =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 <span class="kw">let </span><span class="kw-2">mut </span>tokens = <span class="self">self</span>.into_iter();
 
                 std::result::Result::Ok(#name {
@@ -534,7 +533,7 @@
             }
         }
         StructType::Tuple =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 <span class="kw">let </span><span class="kw-2">mut </span>tokens = <span class="kw">match </span><span class="self">self </span>{
                     ::ton_abi::TokenValue::Tuple(tokens) =&gt; tokens.into_iter(),
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(::nekoton_abi::UnpackerError::InvalidAbi),
@@ -558,7 +557,7 @@
         <span class="kw">let </span>handler = get_handler(type_name);
         <span class="kw">match </span>is_array {
             <span class="bool-val">true </span>=&gt; {
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     <span class="kw">let </span>array = <span class="kw">match </span>token {
                         <span class="prelude-val">Some</span>(token) =&gt; <span class="kw">match </span>token.value {
                             ::ton_abi::TokenValue::Array(<span class="kw">_</span>, tokens) | ::ton_abi::TokenValue::FixedArray(<span class="kw">_</span>, tokens) =&gt; {
@@ -580,7 +579,7 @@
                 </span>}
             }
             <span class="bool-val">false </span>=&gt; {
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     <span class="kw">match </span>token {
                         <span class="prelude-val">Some</span>(token) =&gt; <span class="kw">match </span>token.value {
                             #handler
@@ -592,14 +591,14 @@
             }
         }
     } <span class="kw">else if let </span><span class="prelude-val">Some</span>(with) = with.as_ref() {
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">match </span>token {
                 <span class="prelude-val">Some</span>(token) =&gt; #with::unpack(<span class="kw-2">&amp;</span>token.value)<span class="question-mark">?</span>,
                 <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(::nekoton_abi::UnpackerError::InvalidAbi),
             }
         }
     } <span class="kw">else if let </span><span class="prelude-val">Some</span>(unpack_with) = unpack_with.as_ref() {
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">match </span>token {
                 <span class="prelude-val">Some</span>(token) =&gt; #unpack_with(<span class="kw-2">&amp;</span>token.value)<span class="question-mark">?</span>,
                 <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(::nekoton_abi::UnpackerError::InvalidAbi),
@@ -608,7 +607,7 @@
     } <span class="kw">else </span>{
         <span class="kw">match </span>is_array {
             <span class="bool-val">true </span>=&gt; {
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     <span class="kw">let </span>array = <span class="kw">match </span>token {
                         <span class="prelude-val">Some</span>(token) =&gt; <span class="kw">match </span>token.value {
                             ::ton_abi::TokenValue::Array(<span class="kw">_</span>, tokens) | ::ton_abi::TokenValue::FixedArray(<span class="kw">_</span>, tokens) =&gt; tokens,
@@ -623,7 +622,7 @@
                 </span>}
             }
             <span class="bool-val">false </span>=&gt; {
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     ::nekoton_abi::UnpackAbi::unpack(token)<span class="question-mark">?
                 </span>}
             }
@@ -634,7 +633,7 @@
 <span class="kw">fn </span>get_handler(type_name: <span class="kw-2">&amp;</span>TypeName) -&gt; proc_macro2::TokenStream {
     <span class="kw">match </span>type_name {
         TypeName::Int8 =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Int(::ton_abi::Int { number: value, size: <span class="number">8 </span>}) =&gt; {
                     ::nekoton_abi::num_traits::ToPrimitive::to_i8(<span class="kw-2">&amp;</span>value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)<span class="question-mark">?
@@ -642,7 +641,7 @@
             }
         }
         TypeName::Uint8 =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: <span class="number">8 </span>}) =&gt; {
                     ::nekoton_abi::num_traits::ToPrimitive::to_u8(<span class="kw-2">&amp;</span>value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)<span class="question-mark">?
@@ -650,7 +649,7 @@
             }
         }
         TypeName::Uint16 =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: <span class="number">16 </span>}) =&gt; {
                     ::nekoton_abi::num_traits::ToPrimitive::to_u16(<span class="kw-2">&amp;</span>value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)<span class="question-mark">?
@@ -658,7 +657,7 @@
             }
         }
         TypeName::Uint32 =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: <span class="number">32 </span>}) =&gt; {
                     ::nekoton_abi::num_traits::ToPrimitive::to_u32(<span class="kw-2">&amp;</span>value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)<span class="question-mark">?
@@ -666,7 +665,7 @@
             }
         }
         TypeName::Uint64 =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: <span class="number">64 </span>}) =&gt; {
                     ::nekoton_abi::num_traits::ToPrimitive::to_u64(<span class="kw-2">&amp;</span>value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)<span class="question-mark">?
@@ -674,7 +673,7 @@
             }
         }
         TypeName::Uint128 =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Uint(::ton_abi::Uint { number: value, size: <span class="number">128 </span>}) =&gt; {
                     ::nekoton_abi::num_traits::ToPrimitive::to_u128(<span class="kw-2">&amp;</span>value)
                     .ok_or(::nekoton_abi::UnpackerError::InvalidAbi)<span class="question-mark">?
@@ -682,14 +681,14 @@
             }
         }
         TypeName::Uint256 =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 value @ ::ton_abi::TokenValue::Uint(::ton_abi::Uint { size: <span class="number">256</span>, .. }) =&gt; {
                     ::nekoton_abi::UnpackAbi::&lt;::ton_types::UInt256&gt;::unpack(value)<span class="question-mark">?
                 </span>}
             }
         }
         TypeName::Grams =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Token(grams) =&gt; {
                     ::std::convert::TryFrom::try_from(grams.as_u128())
                     .map_err(|<span class="kw">_</span>| ::nekoton_abi::UnpackerError::InvalidAbi)<span class="question-mark">?
@@ -697,7 +696,7 @@
             }
         }
         TypeName::Address =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrStd(addr)) =&gt; {
                     ::ton_block::MsgAddressInt::AddrStd(addr)
                 },
@@ -707,22 +706,22 @@
             }
         }
         TypeName::Cell =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Cell(cell) =&gt; cell,
             }
         }
         TypeName::Bool =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::Bool(value) =&gt; value,
             }
         }
         TypeName::String =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ::ton_abi::TokenValue::String(data) =&gt; data,
             }
         }
         TypeName::Bytes =&gt; {
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 ton_abi::TokenValue::Bytes(bytes) =&gt; bytes,
             }
         }

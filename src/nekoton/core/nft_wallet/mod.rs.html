@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/nft_wallet/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/nft_wallet/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../nekoton/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -547,6 +546,10 @@
 <a href="#546" id="546">546</a>
 <a href="#547" id="547">547</a>
 <a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 <span class="kw">use </span>std::sync::Arc;
 
@@ -560,8 +563,7 @@
 <span class="kw">use </span>ton_types::{BuilderData, Cell, UInt256};
 
 <span class="kw">use </span><span class="kw">crate</span>::core::models::{
-    NftTransaction, NftVersion, PendingTransaction, Transaction, TransactionWithData,
-    TransactionsBatchInfo,
+    NftTransaction, PendingTransaction, Transaction, TransactionWithData, TransactionsBatchInfo,
 };
 <span class="kw">use </span><span class="kw">crate</span>::core::parsing::parse_nft_transaction;
 <span class="kw">use </span><span class="kw">crate</span>::core::{ContractSubscription, InternalMessage};
@@ -648,7 +650,7 @@
     collection_address: MsgAddressInt,
     owner: MsgAddressInt,
     manager: MsgAddressInt,
-    version: NftVersion,
+    interfaces: NftInterfaces,
     json_info: <span class="prelude-ty">Option</span>&lt;String&gt;,
     contract_subscription: ContractSubscription,
     handler: Arc&lt;<span class="kw">dyn </span>NftSubscriptionHandler&gt;,
@@ -692,18 +694,18 @@
         };
         <span class="kw">let </span>nft_state = NftContractState(<span class="kw-2">&amp;</span>state);
 
-        <span class="kw">let </span>version = <span class="kw">match </span>nft_state.check_supported_interface(clock.as_ref())<span class="question-mark">? </span>{
-            <span class="prelude-val">Some</span>(version) =&gt; version,
+        <span class="kw">let </span>interfaces = <span class="kw">match </span>nft_state.check_supported_interfaces(clock.as_ref())<span class="question-mark">? </span>{
+            <span class="prelude-val">Some</span>(interfaces) =&gt; interfaces,
             <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(NftError::InvalidNftContact.into()),
         };
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>info, json_metadata) = <span class="kw">match </span>version {
-            NftVersion::Tip4_3 | NftVersion::Tip4_2 =&gt; (
-                nft_state.get_info(clock.as_ref())<span class="question-mark">?</span>,
-                <span class="prelude-val">Some</span>(nft_state.get_json(clock.as_ref())<span class="question-mark">?</span>),
-            ),
-            NftVersion::Tip4_1 =&gt; (nft_state.get_info(clock.as_ref())<span class="question-mark">?</span>, <span class="prelude-val">None</span>),
-        };
+        <span class="comment">// NOTE: Assume that TIP4.1 support is mandatory
+        </span><span class="kw">let </span><span class="kw-2">mut </span>info = nft_state.get_info(clock.as_ref())<span class="question-mark">?</span>;
+        <span class="kw">let </span>json_info = <span class="kw">if </span>interfaces.tip4_2 {
+            <span class="prelude-val">Some</span>(nft_state.get_json(clock.as_ref())<span class="question-mark">?</span>)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
 
         <span class="kw">let </span>contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
@@ -728,15 +730,15 @@
             collection_address: info.collection,
             owner: info.owner,
             manager: info.manager,
-            version,
-            json_info: json_metadata,
+            interfaces,
+            json_info,
             contract_subscription,
             handler,
         })
     }
 
-    <span class="kw">pub fn </span>version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>NftVersion {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.version
+    <span class="kw">pub fn </span>interfaces(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>NftInterfaces {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.interfaces
     }
 
     <span class="kw">pub fn </span>contract_subscription(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ContractSubscription {
@@ -1040,26 +1042,31 @@
     <span class="kw">pub </span>tip4_2: bool,
 }
 
+<span class="attr">#[derive(Copy, Clone, Default)]
+</span><span class="kw">pub struct </span>NftInterfaces {
+    <span class="kw">pub </span>tip4_3: bool,
+    <span class="kw">pub </span>tip4_2_2: bool,
+    <span class="kw">pub </span>tip4_2: bool,
+    <span class="kw">pub </span>tip4_1: bool,
+}
+
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>NftContractState&lt;<span class="lifetime">'a</span>&gt;(<span class="kw">pub </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span>ExistingContract);
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; NftContractState&lt;<span class="lifetime">'a</span>&gt; {
-    <span class="kw">pub fn </span>check_supported_interface(<span class="kw-2">&amp;</span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;NftVersion&gt;&gt; {
+    <span class="kw">pub fn </span>check_supported_interfaces(<span class="kw-2">&amp;</span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;NftInterfaces&gt;&gt; {
         <span class="kw">let </span>ctx = <span class="self">self</span>.<span class="number">0</span>.as_context(clock);
         <span class="kw">let </span>tip6_interface = tip6::SidContract(ctx);
-        <span class="kw">if </span>tip6_interface.supports_interface(tip4_3::nft_contract::INTERFACE_ID)<span class="question-mark">? </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(NftVersion::Tip4_3));
-        }
 
-        <span class="kw">if </span>tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)<span class="question-mark">? </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(NftVersion::Tip4_2));
-        }
+        <span class="kw">let </span><span class="kw-2">mut </span>result = NftInterfaces::default();
+        result.tip4_1 = tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)<span class="question-mark">?</span>;
+        result.tip4_2 =
+            tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)<span class="question-mark">?</span>;
+        result.tip4_2_2 =
+            tip6_interface.supports_interface(tip4_2_2::metadata_contract::INTERFACE_ID)<span class="question-mark">?</span>;
+        result.tip4_3 = tip6_interface.supports_interface(tip4_3::nft_contract::INTERFACE_ID)<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)<span class="question-mark">? </span>{
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(NftVersion::Tip4_1));
-        }
-
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
+        <span class="prelude-val">Ok</span>(result.tip4_1.then(|| result))
     }
 
     <span class="kw">pub fn </span>get_json(<span class="kw-2">&amp;</span><span class="self">self</span>, clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {

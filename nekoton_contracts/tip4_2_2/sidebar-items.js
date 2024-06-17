@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["collection_contract","metadata_contract"],"struct":["CollectionContract","MetadataContract"]};
