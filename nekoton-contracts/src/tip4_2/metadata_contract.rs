@@ -3,7 +3,7 @@ use ton_abi::{Param, ParamType};
 
 pub const INTERFACE_ID: u32 = 0x24D7D5F5;
 
-///Get NFT metadata in JSON format
+/// Get NFT metadata in JSON format
 ///
 /// # Type
 /// Responsible getter method

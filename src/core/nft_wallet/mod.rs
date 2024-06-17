@@ -11,8 +11,7 @@ use ton_block::{MsgAddressInt, Serializable};
 use ton_types::{BuilderData, Cell, UInt256};
 
 use crate::core::models::{
-    NftTransaction, NftVersion, PendingTransaction, Transaction, TransactionWithData,
-    TransactionsBatchInfo,
+    NftTransaction, PendingTransaction, Transaction, TransactionWithData, TransactionsBatchInfo,
 };
 use crate::core::parsing::parse_nft_transaction;
 use crate::core::{ContractSubscription, InternalMessage};
@@ -99,7 +98,7 @@ pub struct Nft {
     collection_address: MsgAddressInt,
     owner: MsgAddressInt,
     manager: MsgAddressInt,
-    version: NftVersion,
+    interfaces: NftInterfaces,
     json_info: Option<String>,
     contract_subscription: ContractSubscription,
     handler: Arc<dyn NftSubscriptionHandler>,
@@ -143,17 +142,17 @@ impl Nft {
         };
         let nft_state = NftContractState(&state);
 
-        let version = match nft_state.check_supported_interface(clock.as_ref())? {
-            Some(version) => version,
+        let interfaces = match nft_state.check_supported_interfaces(clock.as_ref())? {
+            Some(interfaces) => interfaces,
             None => return Err(NftError::InvalidNftContact.into()),
         };
 
-        let (mut info, json_metadata) = match version {
-            NftVersion::Tip4_3 | NftVersion::Tip4_2 => (
-                nft_state.get_info(clock.as_ref())?,
-                Some(nft_state.get_json(clock.as_ref())?),
-            ),
-            NftVersion::Tip4_1 => (nft_state.get_info(clock.as_ref())?, None),
+        // NOTE: Assume that TIP4.1 support is mandatory
+        let mut info = nft_state.get_info(clock.as_ref())?;
+        let json_info = if interfaces.tip4_2 {
+            Some(nft_state.get_json(clock.as_ref())?)
+        } else {
+            None
         };
 
         let contract_subscription = ContractSubscription::subscribe(
@@ -179,15 +178,15 @@ impl Nft {
             collection_address: info.collection,
             owner: info.owner,
             manager: info.manager,
-            version,
-            json_info: json_metadata,
+            interfaces,
+            json_info,
             contract_subscription,
             handler,
         })
     }
 
-    pub fn version(&self) -> &NftVersion {
-        &self.version
+    pub fn interfaces(&self) -> &NftInterfaces {
+        &self.interfaces
     }
 
     pub fn contract_subscription(&self) -> &ContractSubscription {
@@ -491,26 +490,31 @@ pub struct CollectionInterfaces {
     pub tip4_2: bool,
 }
 
+#[derive(Copy, Clone, Default)]
+pub struct NftInterfaces {
+    pub tip4_3: bool,
+    pub tip4_2_2: bool,
+    pub tip4_2: bool,
+    pub tip4_1: bool,
+}
+
 #[derive(Debug)]
 pub struct NftContractState<'a>(pub &'a ExistingContract);
 
 impl<'a> NftContractState<'a> {
-    pub fn check_supported_interface(&self, clock: &dyn Clock) -> Result<Option<NftVersion>> {
+    pub fn check_supported_interfaces(&self, clock: &dyn Clock) -> Result<Option<NftInterfaces>> {
         let ctx = self.0.as_context(clock);
         let tip6_interface = tip6::SidContract(ctx);
-        if tip6_interface.supports_interface(tip4_3::nft_contract::INTERFACE_ID)? {
-            return Ok(Some(NftVersion::Tip4_3));
-        }
 
-        if tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)? {
-            return Ok(Some(NftVersion::Tip4_2));
-        }
+        let mut result = NftInterfaces::default();
+        result.tip4_1 = tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)?;
+        result.tip4_2 =
+            tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)?;
+        result.tip4_2_2 =
+            tip6_interface.supports_interface(tip4_2_2::metadata_contract::INTERFACE_ID)?;
+        result.tip4_3 = tip6_interface.supports_interface(tip4_3::nft_contract::INTERFACE_ID)?;
 
-        if tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)? {
-            return Ok(Some(NftVersion::Tip4_1));
-        }
-
-        Ok(None)
+        Ok(result.tip4_1.then(|| result))
     }
 
     pub fn get_json(&self, clock: &dyn Clock) -> Result<String> {

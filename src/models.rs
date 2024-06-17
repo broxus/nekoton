@@ -473,21 +473,6 @@ pub struct Symbol {
     pub root_token_contract: MsgAddressInt,
 }
 
-define_string_enum!(
-    #[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
-    pub enum NftVersion {
-        /// First iteration of NFT
-        /// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/1.md)
-        Tip4_1,
-        /// Second iteration of NFT
-        /// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/2.md)
-        Tip4_2,
-        /// Latest iteration of NFT
-        /// [implementation](https://github.com/nftalliance/docs/blob/main/src/standard/TIP-4/3.md)
-        Tip4_3,
-    }
-);
-
 #[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]
 #[serde(rename_all = "camelCase")]
 pub struct ContractState {
