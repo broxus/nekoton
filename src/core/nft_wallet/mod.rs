@@ -25,7 +25,9 @@ pub struct NftCollection {
     collection_address: MsgAddressInt,
     state: ExistingContract,
     index_code: Cell,
+    interfaces: CollectionInterfaces,
     json_info: Option<String>,
+    json_url: Option<String>,
 }
 
 impl NftCollection {
@@ -48,9 +50,14 @@ impl NftCollection {
 
         let index_code = contract.resolve_collection_index_code(clock)?;
 
+        let ctx = state.as_context(clock);
         let json_info = interfaces
             .tip4_2
-            .then(|| tip4_2::MetadataContract(state.as_context(clock)).get_json())
+            .then(|| tip4_2::MetadataContract(ctx).get_json())
+            .transpose()?;
+        let json_url = interfaces
+            .tip4_2_2
+            .then(|| tip4_2_2::CollectionContract(ctx).get_collection_url())
             .transpose()?;
 
         Ok(NftCollection {
@@ -58,7 +65,9 @@ impl NftCollection {
             collection_address,
             state,
             index_code,
+            interfaces,
             json_info,
+            json_url,
         })
     }
 
@@ -72,6 +81,10 @@ impl NftCollection {
 
     pub fn json_info(&self) -> &Option<String> {
         &self.json_info
+    }
+
+    pub fn json_url(&self) -> &Option<String> {
+        &self.json_url
     }
 
     pub fn compute_collection_code_hash(&self, owner: &MsgAddressInt) -> Result<UInt256> {
@@ -90,6 +103,10 @@ impl NftCollection {
             .get_accounts_by_code_hash(&code_hash, limit, &continuation)
             .await
     }
+
+    pub fn interfaces(&self) -> &CollectionInterfaces {
+        &self.interfaces
+    }
 }
 
 pub struct Nft {
@@ -100,6 +117,7 @@ pub struct Nft {
     manager: MsgAddressInt,
     interfaces: NftInterfaces,
     json_info: Option<String>,
+    json_url: Option<String>,
     contract_subscription: ContractSubscription,
     handler: Arc<dyn NftSubscriptionHandler>,
 }
@@ -149,11 +167,15 @@ impl Nft {
 
         // NOTE: Assume that TIP4.1 support is mandatory
         let mut info = nft_state.get_info(clock.as_ref())?;
-        let json_info = if interfaces.tip4_2 {
-            Some(nft_state.get_json(clock.as_ref())?)
-        } else {
-            None
-        };
+        let json_info = interfaces
+            .tip4_2
+            .then(|| nft_state.get_json(clock.as_ref()))
+            .transpose()?;
+
+        let json_url = interfaces
+            .tip4_2_2
+            .then(|| nft_state.get_json_url(clock.as_ref()))
+            .transpose()?;
 
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
@@ -180,6 +202,7 @@ impl Nft {
             manager: info.manager,
             interfaces,
             json_info,
+            json_url,
             contract_subscription,
             handler,
         })
@@ -211,6 +234,10 @@ impl Nft {
 
     pub fn metadata(&self) -> &Option<String> {
         &self.json_info
+    }
+
+    pub fn metadata_url(&self) -> &Option<String> {
+        &self.json_url
     }
 
     pub fn prepare_transfer(
@@ -447,6 +474,8 @@ impl<'a> CollectionContractState<'a> {
 
         if tip6_interface.supports_interface(tip4_3::collection_contract::INTERFACE_ID)? {
             result.tip4_3 = true;
+            result.tip4_2_2 =
+                tip6_interface.supports_interface(tip4_2_2::collection_contract::INTERFACE_ID)?;
             result.tip4_2 =
                 tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)?;
         }
@@ -487,6 +516,7 @@ impl<'a> CollectionContractState<'a> {
 #[derive(Copy, Clone, Default)]
 pub struct CollectionInterfaces {
     pub tip4_3: bool,
+    pub tip4_2_2: bool,
     pub tip4_2: bool,
 }
 
@@ -506,21 +536,27 @@ impl<'a> NftContractState<'a> {
         let ctx = self.0.as_context(clock);
         let tip6_interface = tip6::SidContract(ctx);
 
-        let mut result = NftInterfaces::default();
-        result.tip4_1 = tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)?;
-        result.tip4_2 =
-            tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)?;
-        result.tip4_2_2 =
-            tip6_interface.supports_interface(tip4_2_2::metadata_contract::INTERFACE_ID)?;
-        result.tip4_3 = tip6_interface.supports_interface(tip4_3::nft_contract::INTERFACE_ID)?;
+        let result = NftInterfaces {
+            tip4_1: tip6_interface.supports_interface(tip4_1::nft_contract::INTERFACE_ID)?,
+            tip4_2: tip6_interface.supports_interface(tip4_2::metadata_contract::INTERFACE_ID)?,
+            tip4_2_2: tip6_interface
+                .supports_interface(tip4_2_2::metadata_contract::INTERFACE_ID)?,
+            tip4_3: tip6_interface.supports_interface(tip4_3::nft_contract::INTERFACE_ID)?,
+        };
 
-        Ok((result.tip4_1 || result.tip4_3).then(|| result))
+        Ok((result.tip4_1 || result.tip4_3).then_some(result))
     }
 
     pub fn get_json(&self, clock: &dyn Clock) -> Result<String> {
         let ctx = self.0.as_context(clock);
         let tip4_2_interface = tip4_2::MetadataContract(ctx);
         tip4_2_interface.get_json()
+    }
+
+    pub fn get_json_url(&self, clock: &dyn Clock) -> Result<String> {
+        let ctx = self.0.as_context(clock);
+        let part = tip4_2_2::MetadataContract(ctx).get_url_parts()?;
+        tip4_2_2::CollectionContract(ctx).get_nft_url(part)
     }
 
     pub fn get_info(&self, clock: &dyn Clock) -> Result<GetInfoOutputs> {
