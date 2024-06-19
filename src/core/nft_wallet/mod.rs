@@ -26,8 +26,12 @@ pub struct NftCollection {
     state: ExistingContract,
     index_code: Cell,
     interfaces: CollectionInterfaces,
-    json_info: Option<String>,
-    json_url: Option<String>,
+    json_info: Option<JsonInfo>,
+}
+
+pub enum JsonInfo {
+    Json(String),
+    Url(String),
 }
 
 impl NftCollection {
@@ -51,14 +55,19 @@ impl NftCollection {
         let index_code = contract.resolve_collection_index_code(clock)?;
 
         let ctx = state.as_context(clock);
-        let json_info = interfaces
+        let json_data = interfaces
             .tip4_2
             .then(|| tip4_2::MetadataContract(ctx).get_json())
-            .transpose()?;
+            .transpose()?
+            .map(JsonInfo::Json);
+
         let json_url = interfaces
             .tip4_2_2
             .then(|| tip4_2_2::CollectionContract(ctx).get_collection_url())
-            .transpose()?;
+            .transpose()?
+            .map(JsonInfo::Url);
+
+        let json_info = json_data.or(json_url);
 
         Ok(NftCollection {
             transport,
@@ -67,7 +76,6 @@ impl NftCollection {
             index_code,
             interfaces,
             json_info,
-            json_url,
         })
     }
 
@@ -79,12 +87,8 @@ impl NftCollection {
         &self.index_code
     }
 
-    pub fn json_info(&self) -> &Option<String> {
+    pub fn json_info(&self) -> &Option<JsonInfo> {
         &self.json_info
-    }
-
-    pub fn json_url(&self) -> &Option<String> {
-        &self.json_url
     }
 
     pub fn compute_collection_code_hash(&self, owner: &MsgAddressInt) -> Result<UInt256> {
@@ -116,8 +120,7 @@ pub struct Nft {
     owner: MsgAddressInt,
     manager: MsgAddressInt,
     interfaces: NftInterfaces,
-    json_info: Option<String>,
-    json_url: Option<String>,
+    json_info: Option<JsonInfo>,
     contract_subscription: ContractSubscription,
     handler: Arc<dyn NftSubscriptionHandler>,
 }
@@ -167,15 +170,27 @@ impl Nft {
 
         // NOTE: Assume that TIP4.1 support is mandatory
         let mut info = nft_state.get_info(clock.as_ref())?;
-        let json_info = interfaces
+
+        let collection_contract = match transport.get_contract_state(&info.collection).await? {
+            RawContractState::Exists(state) => state,
+            RawContractState::NotExists { .. } => return Err(NftError::ContractNotExist.into()),
+        };
+
+        let collection_state = CollectionContractState(&collection_contract);
+
+        let json_data = interfaces
             .tip4_2
             .then(|| nft_state.get_json(clock.as_ref()))
             .transpose()?;
 
         let json_url = interfaces
             .tip4_2_2
-            .then(|| nft_state.get_json_url(clock.as_ref()))
+            .then(|| nft_state.get_url_parts(clock.as_ref()))
+            .transpose()?
+            .map(|part| collection_state.get_nft_url(clock.as_ref(), part))
             .transpose()?;
+
+        let json_info = json_data.or(json_url);
 
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
@@ -202,7 +217,6 @@ impl Nft {
             manager: info.manager,
             interfaces,
             json_info,
-            json_url,
             contract_subscription,
             handler,
         })
@@ -232,12 +246,8 @@ impl Nft {
         &self.manager
     }
 
-    pub fn metadata(&self) -> &Option<String> {
+    pub fn metadata(&self) -> &Option<JsonInfo> {
         &self.json_info
-    }
-
-    pub fn metadata_url(&self) -> &Option<String> {
-        &self.json_url
     }
 
     pub fn prepare_transfer(
@@ -511,6 +521,12 @@ impl<'a> CollectionContractState<'a> {
         let cell = nekoton_abi::set_code_salt(code_index, salt)?;
         Ok(cell.hash(0))
     }
+
+    pub fn get_nft_url(&self, clock: &dyn Clock, part: Cell) -> Result<JsonInfo> {
+        let ctx = self.0.as_context(clock);
+        let tip4_2_2_interface = tip4_2_2::CollectionContract(ctx);
+        tip4_2_2_interface.get_nft_url(part).map(JsonInfo::Url)
+    }
 }
 
 #[derive(Copy, Clone, Default)]
@@ -547,16 +563,15 @@ impl<'a> NftContractState<'a> {
         Ok((result.tip4_1 || result.tip4_3).then_some(result))
     }
 
-    pub fn get_json(&self, clock: &dyn Clock) -> Result<String> {
+    pub fn get_json(&self, clock: &dyn Clock) -> Result<JsonInfo> {
         let ctx = self.0.as_context(clock);
         let tip4_2_interface = tip4_2::MetadataContract(ctx);
-        tip4_2_interface.get_json()
+        tip4_2_interface.get_json().map(JsonInfo::Json)
     }
 
-    pub fn get_json_url(&self, clock: &dyn Clock) -> Result<String> {
+    pub fn get_url_parts(&self, clock: &dyn Clock) -> Result<Cell> {
         let ctx = self.0.as_context(clock);
-        let part = tip4_2_2::MetadataContract(ctx).get_url_parts()?;
-        tip4_2_2::CollectionContract(ctx).get_nft_url(part)
+        tip4_2_2::MetadataContract(ctx).get_url_parts()
     }
 
     pub fn get_info(&self, clock: &dyn Clock) -> Result<GetInfoOutputs> {
