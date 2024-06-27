@@ -56,13 +56,18 @@ impl AccountsCache {
 
 pub struct ConfigCache {
     use_default_config: bool,
+    min_cache_for: Option<u32>,
     state: Mutex<Option<ConfigCacheState>>,
 }
 
 impl ConfigCache {
     pub fn new(use_default_config: bool) -> Self {
+        // TODO: Move to params or connection config
+        const MIN_CACHE_FOR: u32 = 60;
+
         Self {
             use_default_config,
+            min_cache_for: Some(MIN_CACHE_FOR),
             state: Mutex::new(if use_default_config {
                 Some(ConfigCacheState {
                     capabilities: NetworkCapabilities {
@@ -71,6 +76,7 @@ impl ConfigCache {
                     },
                     config: ton_executor::BlockchainConfig::default(),
                     last_key_block_seqno: 0,
+                    updated_at: 0,
                     phase: ConfigCachePhase::WainingNextValidatorsSet { deadline: u32::MAX },
                 })
             } else {
@@ -101,11 +107,12 @@ impl ConfigCache {
                     capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
+                    updated_at: now,
                     phase,
                 });
                 (capabilities, config)
             }
-            Some(a) if force && !self.use_default_config || cache_expired(now, a.phase) => {
+            Some(a) if force && !self.use_default_config || self.cache_expired(now, a) => {
                 let (capabilities, config, key_block_seqno) = fetch_config(f).await?;
                 let phase = compute_next_phase(
                     now,
@@ -117,12 +124,27 @@ impl ConfigCache {
                     capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
+                    updated_at: now,
                     phase,
                 });
                 (capabilities, config)
             }
             Some(a) => (a.capabilities, a.config.clone()),
         })
+    }
+
+    fn cache_expired(&self, now: u32, state: &ConfigCacheState) -> bool {
+        if let Some(min_cache_for) = self.min_cache_for {
+            if now <= state.updated_at.saturating_add(min_cache_for) {
+                return false;
+            }
+        }
+
+        match state.phase {
+            ConfigCachePhase::WaitingKeyBlock => true,
+            ConfigCachePhase::WaitingElectionsEnd { deadline }
+            | ConfigCachePhase::WainingNextValidatorsSet { deadline } => now > deadline,
+        }
     }
 }
 
@@ -177,18 +199,11 @@ fn compute_next_phase(
     }
 }
 
-fn cache_expired(now: u32, phase: ConfigCachePhase) -> bool {
-    match phase {
-        ConfigCachePhase::WaitingKeyBlock => true,
-        ConfigCachePhase::WaitingElectionsEnd { deadline }
-        | ConfigCachePhase::WainingNextValidatorsSet { deadline } => now > deadline,
-    }
-}
-
 struct ConfigCacheState {
     capabilities: NetworkCapabilities,
     config: ton_executor::BlockchainConfig,
     last_key_block_seqno: u32,
+    updated_at: u32,
     phase: ConfigCachePhase,
 }
 
