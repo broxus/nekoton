@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use nekoton_abi::MessageBuilder;
+use nekoton_contracts::access::OwnableInternalContract;
 use nekoton_contracts::tip4_1::nft_contract::{self, GetInfoOutputs, NftCallbackPayload};
 use nekoton_contracts::tip4_3::index_contract::IndexGetInfoOutputs;
 use nekoton_contracts::*;
@@ -27,6 +28,7 @@ pub struct NftCollection {
     index_code: Cell,
     interfaces: CollectionInterfaces,
     json_info: Option<JsonInfo>,
+    owner: Option<MsgAddressInt>,
 }
 
 pub enum JsonInfo {
@@ -69,6 +71,8 @@ impl NftCollection {
 
         let json_info = json_data.or(json_url);
 
+        let owner = OwnableInternalContract(ctx).owner().ok();
+
         Ok(NftCollection {
             transport,
             collection_address,
@@ -76,6 +80,7 @@ impl NftCollection {
             index_code,
             interfaces,
             json_info,
+            owner,
         })
     }
 
@@ -89,6 +94,10 @@ impl NftCollection {
 
     pub fn json_info(&self) -> &Option<JsonInfo> {
         &self.json_info
+    }
+
+    pub fn owner(&self) -> &Option<MsgAddressInt> {
+        &self.owner
     }
 
     pub fn compute_collection_code_hash(&self, owner: &MsgAddressInt) -> Result<UInt256> {
