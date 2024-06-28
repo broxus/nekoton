@@ -37,7 +37,7 @@ pub fn get_nft_url() -> &'static ton_abi::Function {
 /// * `collectionUrl: string` - NFT collection metadata URL
 pub fn get_collection_url() -> &'static ton_abi::Function {
     declare_function! {
-        name: "get_collection_url",
+        name: "getCollectionUrl",
         inputs: vec![
             Param::new("answerId", ParamType::Uint(32)),
         ],
