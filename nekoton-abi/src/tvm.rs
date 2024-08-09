@@ -7,7 +7,10 @@ use ton_block::{
 use ton_types::SliceData;
 use ton_vm::executor::gas::gas_state::Gas;
 use ton_vm::stack::integer::IntegerData;
-use ton_vm::stack::{savelist::SaveList, Stack, StackItem};
+use ton_vm::stack::{savelist::SaveList, Stack};
+
+pub type BehaviorModifiers = ton_vm::executor::BehaviorModifiers;
+pub type StackItem = ton_vm::stack::StackItem;
 
 #[derive(Debug, Copy, Clone)]
 pub struct BriefBlockchainConfig {
@@ -43,11 +46,12 @@ impl From<ton_executor::BlockchainConfig> for BriefBlockchainConfig {
 pub fn call(
     utime: u32,
     lt: u64,
-    account: &mut AccountStuff,
+    account: &AccountStuff,
     stack: Stack,
     config: &BriefBlockchainConfig,
+    modifiers: &BehaviorModifiers,
 ) -> Result<(ton_vm::executor::Engine, i32, bool), ExecutionError> {
-    let state = match &mut account.storage.state {
+    let state = match &account.storage.state {
         ton_block::AccountState::AccountActive { state_init, .. } => Ok(state_init),
         _ => Err(ExecutionError::AccountIsNotActive),
     }?;
@@ -85,6 +89,7 @@ pub fn call(
         Some(gas),
     );
     engine.set_signature_id(config.global_id);
+    engine.modify_behavior(modifiers.clone());
 
     let result = engine.execute();
 
@@ -112,6 +117,7 @@ pub fn call_msg(
     account: &mut AccountStuff,
     msg: &Message,
     config: &BriefBlockchainConfig,
+    modifiers: &ton_vm::executor::BehaviorModifiers,
 ) -> Result<ActionPhaseOutput, ExecutionError> {
     let msg_cell = msg
         .write_to_new_cell()
@@ -135,7 +141,7 @@ pub fn call_msg(
         .push(StackItem::Slice(msg.body().unwrap_or_default())) // message body
         .push(function_selector); // function selector
 
-    let (engine, exit_code, success) = call(utime, lt, account, stack, config)?;
+    let (engine, exit_code, success) = call(utime, lt, account, stack, config, modifiers)?;
     if !success {
         return Ok(ActionPhaseOutput {
             messages: None,
@@ -166,6 +172,37 @@ pub fn call_msg(
     })
 }
 
+pub fn call_getter(
+    utime: u32,
+    lt: u64,
+    account: &AccountStuff,
+    method_id: u32,
+    args: &[ton_vm::stack::StackItem],
+    config: &BriefBlockchainConfig,
+    modifiers: &ton_vm::executor::BehaviorModifiers,
+) -> Result<VmGetterOutput, ExecutionError> {
+    let mut stack = Stack::new();
+    for arg in args {
+        stack.push(arg.clone());
+    }
+    stack.push(ton_vm::int!(method_id));
+
+    let (mut engine, exit_code, is_ok) = call(utime, lt, account, stack, config, modifiers)?;
+
+    Ok(VmGetterOutput {
+        stack: engine.withdraw_stack().storage,
+        exit_code,
+        is_ok,
+    })
+}
+
+#[derive(Debug, Clone)]
+pub struct VmGetterOutput {
+    pub stack: Vec<ton_vm::stack::StackItem>,
+    pub exit_code: i32,
+    pub is_ok: bool,
+}
+
 fn build_contract_info(
     address: &MsgAddressInt,
     balance: &CurrencyCollection,
@@ -192,7 +229,7 @@ pub struct ActionPhaseOutput {
     pub exit_code: i32,
 }
 
-#[derive(thiserror::Error, Debug)]
+#[derive(thiserror::Error, Debug, Clone, Copy)]
 pub enum ExecutionError {
     #[error("Failed to serialize message")]
     FailedToSerializeMessage,

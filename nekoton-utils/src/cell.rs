@@ -1,4 +1,5 @@
 use anyhow::Result;
+use ton_block::{Deserializable, MaybeDeserialize};
 use ton_types::{BuilderData, Cell, CellType, IBitstring, LevelMask, UInt256};
 
 const EMPTY_CELL_HASH: [u8; 32] = [
@@ -55,4 +56,22 @@ pub fn make_pruned_branch_cell(cell: &Cell, merkle_depth: u8) -> Result<Cell> {
         result.append_u16(depth)?;
     }
     result.into_cell()
+}
+
+pub fn deserialize_account_stuff(cell: Cell) -> Result<ton_block::AccountStuff> {
+    let slice = &mut ton_types::SliceData::load_cell(cell)?;
+    Ok(ton_block::AccountStuff {
+        addr: Deserializable::construct_from(slice)?,
+        storage_stat: Deserializable::construct_from(slice)?,
+        storage: ton_block::AccountStorage {
+            last_trans_lt: Deserializable::construct_from(slice)?,
+            balance: Deserializable::construct_from(slice)?,
+            state: Deserializable::construct_from(slice)?,
+            init_code_hash: if slice.remaining_bits() > 0 {
+                UInt256::read_maybe_from(slice)?
+            } else {
+                None
+            },
+        },
+    })
 }

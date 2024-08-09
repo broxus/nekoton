@@ -55,6 +55,7 @@
 pub use self::address::*;
 pub use self::cell::*;
 pub use self::clock::*;
+pub use self::crc::crc_16;
 #[cfg(feature = "encryption")]
 pub use self::encryption::*;
 pub use self::serde_helpers::*;

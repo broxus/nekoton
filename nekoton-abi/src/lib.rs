@@ -65,6 +65,7 @@ use ton_block::{
 };
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
 use ton_types::{SliceData, UInt256};
+use ton_vm::executor::BehaviorModifiers;
 
 #[cfg(feature = "derive")]
 pub use {
@@ -86,8 +87,8 @@ pub use self::models::*;
 pub use self::token_packer::*;
 pub use self::token_unpacker::*;
 pub use self::tokens_json::*;
-pub use self::tvm::BriefBlockchainConfig;
-pub use transaction_parser::TransactionParser;
+pub use self::transaction_parser::TransactionParser;
+pub use self::tvm::{BriefBlockchainConfig, StackItem, VmGetterOutput};
 
 mod abi_helpers;
 mod code_salt;
@@ -100,7 +101,7 @@ mod token_packer;
 mod token_unpacker;
 mod tokens_json;
 pub mod transaction_parser;
-mod tvm;
+pub mod tvm;
 
 pub fn read_function_id(data: &SliceData) -> Result<u32> {
     let mut value: u32 = 0;
@@ -582,6 +583,76 @@ impl<'a> ExecutionContext<'a> {
     ) -> Result<ExecutionOutput> {
         function.run_local_responsible(self.clock, self.account_stuff.clone(), input)
     }
+
+    pub fn run_getter<M>(
+        &self,
+        method_id: &M,
+        args: &[StackItem],
+    ) -> Result<VmGetterOutput, tvm::ExecutionError>
+    where
+        M: AsGetterMethodId + ?Sized,
+    {
+        self.run_getter_ext(
+            method_id,
+            args,
+            &BriefBlockchainConfig::default(),
+            &Default::default(),
+        )
+    }
+
+    pub fn run_getter_ext<M>(
+        &self,
+        method_id: &M,
+        args: &[StackItem],
+        config: &BriefBlockchainConfig,
+        modifier: &BehaviorModifiers,
+    ) -> Result<VmGetterOutput, tvm::ExecutionError>
+    where
+        M: AsGetterMethodId + ?Sized,
+    {
+        let BlockStats {
+            gen_utime, gen_lt, ..
+        } = get_block_stats(self.clock, None, self.account_stuff.storage.last_trans_lt);
+
+        tvm::call_getter(
+            gen_utime,
+            gen_lt,
+            self.account_stuff,
+            method_id.as_getter_method_id(),
+            args,
+            config,
+            modifier,
+        )
+    }
+}
+
+pub trait AsGetterMethodId {
+    fn as_getter_method_id(&self) -> u32;
+}
+
+impl<T: AsGetterMethodId + ?Sized> AsGetterMethodId for &T {
+    fn as_getter_method_id(&self) -> u32 {
+        T::as_getter_method_id(*self)
+    }
+}
+
+impl<T: AsGetterMethodId + ?Sized> AsGetterMethodId for &mut T {
+    fn as_getter_method_id(&self) -> u32 {
+        T::as_getter_method_id(*self)
+    }
+}
+
+impl AsGetterMethodId for u32 {
+    fn as_getter_method_id(&self) -> u32 {
+        *self
+    }
+}
+
+impl AsGetterMethodId for str {
+    fn as_getter_method_id(&self) -> u32 {
+        let crc = crc_16(self.as_bytes());
+        crc as u32 | 0x10000
+    }
 }
 
 pub trait FunctionExt {
@@ -739,7 +810,14 @@ impl<'a> FunctionAbi<'a> {
         let tvm::ActionPhaseOutput {
             messages,
             exit_code: result_code,
-        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, &msg, config)?;
+        } = tvm::call_msg(
+            gen_utime,
+            gen_lt,
+            account_stuff,
+            &msg,
+            config,
+            &Default::default(),
+        )?;
 
         let tokens = if let Some(answer_id) = answer_id {
             messages.map(|messages| {
@@ -1170,6 +1248,21 @@ mod tests {
 
         let decoded_comment = parse_comment_payload(encoded_comment).unwrap();
         assert_eq!(decoded_comment, comment);
+    }
+
+    #[test]
+    fn execute_getter() {
+        let cell = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEA1wACcIAStWnZig414CoO3Ix5SSSgxF+4p0D15b9rxM7Q6hTG2AQNApWGauQIQAABez2Soaga3FkkG3ymAgEAUAAACtJLqS2Krp5U49k0sATqkF/7CPTREi6T4gLBqodDaVGp3w9YHEEA3v8AIN0gggFMl7ohggEznLqxn3Gw7UTQ0x/THzHXC//jBOCk8mCDCNcYINMf0x/TH/gjE7vyY+1E0NMf0x/T/9FRMrryoVFEuvKiBPkBVBBV+RDyo/gAkyDXSpbTB9QC+wDo0QGkyMsfyx/L/8ntVA==").unwrap().as_slice()).unwrap();
+        let state = nekoton_utils::deserialize_account_stuff(cell).unwrap();
+
+        let res = ExecutionContext {
+            clock: &SimpleClock,
+            account_stuff: &state,
+        }
+        .run_getter("seqno", &[])
+        .unwrap();
+
+        println!("{res:?}");
     }
 
     #[test]
