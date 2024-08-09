@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton_abi" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../nekoton_abi/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-abi/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton_abi" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1239,6 +1239,99 @@
 <a href="#1239" id="1239">1239</a>
 <a href="#1240" id="1240">1240</a>
 <a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
 </pre></div><pre class="rust"><code><span class="attr">#![warn(
     missing_copy_implementations,
     macro_use_extern_crate,
@@ -1306,6 +1399,7 @@
 };
 <span class="kw">use </span>ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
 <span class="kw">use </span>ton_types::{SliceData, UInt256};
+<span class="kw">use </span>ton_vm::executor::BehaviorModifiers;
 
 <span class="attr">#[cfg(feature = <span class="string">"derive"</span>)]
 </span><span class="kw">pub use </span>{
@@ -1327,8 +1421,8 @@
 <span class="kw">pub use </span><span class="self">self</span>::token_packer::<span class="kw-2">*</span>;
 <span class="kw">pub use </span><span class="self">self</span>::token_unpacker::<span class="kw-2">*</span>;
 <span class="kw">pub use </span><span class="self">self</span>::tokens_json::<span class="kw-2">*</span>;
-<span class="kw">pub use </span><span class="self">self</span>::tvm::BriefBlockchainConfig;
-<span class="kw">pub use </span>transaction_parser::TransactionParser;
+<span class="kw">pub use </span><span class="self">self</span>::transaction_parser::TransactionParser;
+<span class="kw">pub use </span><span class="self">self</span>::tvm::{BriefBlockchainConfig, StackItem, VmGetterOutput};
 
 <span class="kw">mod </span>abi_helpers;
 <span class="kw">mod </span>code_salt;
@@ -1341,7 +1435,7 @@
 <span class="kw">mod </span>token_unpacker;
 <span class="kw">mod </span>tokens_json;
 <span class="kw">pub mod </span>transaction_parser;
-<span class="kw">mod </span>tvm;
+<span class="kw">pub mod </span>tvm;
 
 <span class="kw">pub fn </span>read_function_id(data: <span class="kw-2">&amp;</span>SliceData) -&gt; <span class="prelude-ty">Result</span>&lt;u32&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>value: u32 = <span class="number">0</span>;
@@ -1823,6 +1917,76 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ExecutionOutput&gt; {
         function.run_local_responsible(<span class="self">self</span>.clock, <span class="self">self</span>.account_stuff.clone(), input)
     }
+
+    <span class="kw">pub fn </span>run_getter&lt;M&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        method_id: <span class="kw-2">&amp;</span>M,
+        args: <span class="kw-2">&amp;</span>[StackItem],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;VmGetterOutput, tvm::ExecutionError&gt;
+    <span class="kw">where
+        </span>M: AsGetterMethodId + <span class="question-mark">?</span>Sized,
+    {
+        <span class="self">self</span>.run_getter_ext(
+            method_id,
+            args,
+            <span class="kw-2">&amp;</span>BriefBlockchainConfig::default(),
+            <span class="kw-2">&amp;</span>Default::default(),
+        )
+    }
+
+    <span class="kw">pub fn </span>run_getter_ext&lt;M&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        method_id: <span class="kw-2">&amp;</span>M,
+        args: <span class="kw-2">&amp;</span>[StackItem],
+        config: <span class="kw-2">&amp;</span>BriefBlockchainConfig,
+        modifier: <span class="kw-2">&amp;</span>BehaviorModifiers,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;VmGetterOutput, tvm::ExecutionError&gt;
+    <span class="kw">where
+        </span>M: AsGetterMethodId + <span class="question-mark">?</span>Sized,
+    {
+        <span class="kw">let </span>BlockStats {
+            gen_utime, gen_lt, ..
+        } = get_block_stats(<span class="self">self</span>.clock, <span class="prelude-val">None</span>, <span class="self">self</span>.account_stuff.storage.last_trans_lt);
+
+        tvm::call_getter(
+            gen_utime,
+            gen_lt,
+            <span class="self">self</span>.account_stuff,
+            method_id.as_getter_method_id(),
+            args,
+            config,
+            modifier,
+        )
+    }
+}
+
+<span class="kw">pub trait </span>AsGetterMethodId {
+    <span class="kw">fn </span>as_getter_method_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32;
+}
+
+<span class="kw">impl</span>&lt;T: AsGetterMethodId + <span class="question-mark">?</span>Sized&gt; AsGetterMethodId <span class="kw">for </span><span class="kw-2">&amp;</span>T {
+    <span class="kw">fn </span>as_getter_method_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        T::as_getter_method_id(<span class="kw-2">*</span><span class="self">self</span>)
+    }
+}
+
+<span class="kw">impl</span>&lt;T: AsGetterMethodId + <span class="question-mark">?</span>Sized&gt; AsGetterMethodId <span class="kw">for </span><span class="kw-2">&amp;mut </span>T {
+    <span class="kw">fn </span>as_getter_method_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        T::as_getter_method_id(<span class="kw-2">*</span><span class="self">self</span>)
+    }
+}
+
+<span class="kw">impl </span>AsGetterMethodId <span class="kw">for </span>u32 {
+    <span class="kw">fn </span>as_getter_method_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="kw-2">*</span><span class="self">self
+    </span>}
+}
+
+<span class="kw">impl </span>AsGetterMethodId <span class="kw">for </span>str {
+    <span class="kw">fn </span>as_getter_method_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="kw">let </span>crc = crc_16(<span class="self">self</span>.as_bytes());
+        crc <span class="kw">as </span>u32 | <span class="number">0x10000
+    </span>}
 }
 
 <span class="kw">pub trait </span>FunctionExt {
@@ -1980,7 +2144,14 @@
         <span class="kw">let </span>tvm::ActionPhaseOutput {
             messages,
             exit_code: result_code,
-        } = tvm::call_msg(gen_utime, gen_lt, account_stuff, <span class="kw-2">&amp;</span>msg, config)<span class="question-mark">?</span>;
+        } = tvm::call_msg(
+            gen_utime,
+            gen_lt,
+            account_stuff,
+            <span class="kw-2">&amp;</span>msg,
+            config,
+            <span class="kw-2">&amp;</span>Default::default(),
+        )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>tokens = <span class="kw">if let </span><span class="prelude-val">Some</span>(answer_id) = answer_id {
             messages.map(|messages| {
@@ -2411,6 +2582,21 @@
 
         <span class="kw">let </span>decoded_comment = parse_comment_payload(encoded_comment).unwrap();
         <span class="macro">assert_eq!</span>(decoded_comment, comment);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>execute_getter() {
+        <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>base64::decode(<span class="string">"te6ccgEBAwEA1wACcIAStWnZig414CoO3Ix5SSSgxF+4p0D15b9rxM7Q6hTG2AQNApWGauQIQAABez2Soaga3FkkG3ymAgEAUAAACtJLqS2Krp5U49k0sATqkF/7CPTREi6T4gLBqodDaVGp3w9YHEEA3v8AIN0gggFMl7ohggEznLqxn3Gw7UTQ0x/THzHXC//jBOCk8mCDCNcYINMf0x/TH/gjE7vyY+1E0NMf0x/T/9FRMrryoVFEuvKiBPkBVBBV+RDyo/gAkyDXSpbTB9QC+wDo0QGkyMsfyx/L/8ntVA=="</span>).unwrap().as_slice()).unwrap();
+        <span class="kw">let </span>state = nekoton_utils::deserialize_account_stuff(cell).unwrap();
+
+        <span class="kw">let </span>res = ExecutionContext {
+            clock: <span class="kw-2">&amp;</span>SimpleClock,
+            account_stuff: <span class="kw-2">&amp;</span>state,
+        }
+        .run_getter(<span class="string">"seqno"</span>, <span class="kw-2">&amp;</span>[])
+        .unwrap();
+
+        <span class="macro">println!</span>(<span class="string">"{res:?}"</span>);
     }
 
     <span class="attr">#[test]
