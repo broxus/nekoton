@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/utils.rs`."><title>utils.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/transport/utils.rs`."><title>utils.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-c5d6553a23f1e5a6.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0 (eeb90cda1 2024-09-04)" data-channel="1.81.0" data-search-js="search-d234aafac6c221dd.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-d2fab2bf619172d3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -208,16 +208,27 @@
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
 <a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>futures_util::Future;
 <span class="kw">use </span>quick_cache::sync::Cache <span class="kw">as </span>QuickCache;
 <span class="kw">use </span>tokio::sync::Mutex;
 
 <span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">super</span>::models::RawContractState;
-<span class="kw">use </span><span class="kw">super</span>::Transport;
 <span class="kw">use </span><span class="kw">crate</span>::core::models::NetworkCapabilities;
 
 <span class="attr">#[allow(unused)]
@@ -266,13 +277,18 @@
 
 <span class="kw">pub struct </span>ConfigCache {
     use_default_config: bool,
+    min_cache_for: <span class="prelude-ty">Option</span>&lt;u32&gt;,
     state: Mutex&lt;<span class="prelude-ty">Option</span>&lt;ConfigCacheState&gt;&gt;,
 }
 
 <span class="kw">impl </span>ConfigCache {
     <span class="kw">pub fn </span>new(use_default_config: bool) -&gt; <span class="self">Self </span>{
+        <span class="comment">// TODO: Move to params or connection config
+        </span><span class="kw">const </span>MIN_CACHE_FOR: u32 = <span class="number">60</span>;
+
         <span class="self">Self </span>{
             use_default_config,
+            min_cache_for: <span class="prelude-val">Some</span>(MIN_CACHE_FOR),
             state: Mutex::new(<span class="kw">if </span>use_default_config {
                 <span class="prelude-val">Some</span>(ConfigCacheState {
                     capabilities: NetworkCapabilities {
@@ -281,6 +297,7 @@
                     },
                     config: ton_executor::BlockchainConfig::default(),
                     last_key_block_seqno: <span class="number">0</span>,
+                    updated_at: <span class="number">0</span>,
                     phase: ConfigCachePhase::WainingNextValidatorsSet { deadline: u32::MAX },
                 })
             } <span class="kw">else </span>{
@@ -289,30 +306,35 @@
         }
     }
 
-    <span class="kw">pub async fn </span>get_blockchain_config(
+    <span class="kw">pub async fn </span>get_blockchain_config&lt;F, Fut&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        transport: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Transport,
         clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
         force: bool,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(NetworkCapabilities, ton_executor::BlockchainConfig)&gt; {
+        f: F,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(NetworkCapabilities, ton_executor::BlockchainConfig)&gt;
+    <span class="kw">where
+        </span>F: FnOnce() -&gt; Fut,
+        Fut: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ConfigResponse&gt;&gt;,
+    {
         <span class="kw">let </span><span class="kw-2">mut </span>cache = <span class="self">self</span>.state.lock().<span class="kw">await</span>;
 
         <span class="kw">let </span>now = clock.now_sec_u64() <span class="kw">as </span>u32;
 
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="kw-2">&amp;*</span>cache {
             <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span>(capabilities, config, key_block_seqno) = fetch_config(transport).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let </span>(capabilities, config, key_block_seqno) = fetch_config(f).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">let </span>phase = compute_next_phase(now, <span class="kw-2">&amp;</span>config, <span class="prelude-val">None</span>, key_block_seqno)<span class="question-mark">?</span>;
                 <span class="kw-2">*</span>cache = <span class="prelude-val">Some</span>(ConfigCacheState {
                     capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
+                    updated_at: now,
                     phase,
                 });
                 (capabilities, config)
             }
-            <span class="prelude-val">Some</span>(a) <span class="kw">if </span>force &amp;&amp; !<span class="self">self</span>.use_default_config || cache_expired(now, a.phase) =&gt; {
-                <span class="kw">let </span>(capabilities, config, key_block_seqno) = fetch_config(transport).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>(a) <span class="kw">if </span>force &amp;&amp; !<span class="self">self</span>.use_default_config || <span class="self">self</span>.cache_expired(now, a) =&gt; {
+                <span class="kw">let </span>(capabilities, config, key_block_seqno) = fetch_config(f).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">let </span>phase = compute_next_phase(
                     now,
                     <span class="kw-2">&amp;</span>config,
@@ -323,6 +345,7 @@
                     capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
+                    updated_at: now,
                     phase,
                 });
                 (capabilities, config)
@@ -330,38 +353,46 @@
             <span class="prelude-val">Some</span>(a) =&gt; (a.capabilities, a.config.clone()),
         })
     }
+
+    <span class="kw">fn </span>cache_expired(<span class="kw-2">&amp;</span><span class="self">self</span>, now: u32, state: <span class="kw-2">&amp;</span>ConfigCacheState) -&gt; bool {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(min_cache_for) = <span class="self">self</span>.min_cache_for {
+            <span class="kw">if </span>now &lt;= state.updated_at.saturating_add(min_cache_for) {
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+        }
+
+        <span class="kw">match </span>state.phase {
+            ConfigCachePhase::WaitingKeyBlock =&gt; <span class="bool-val">true</span>,
+            ConfigCachePhase::WaitingElectionsEnd { deadline }
+            | ConfigCachePhase::WainingNextValidatorsSet { deadline } =&gt; now &gt; deadline,
+        }
+    }
 }
 
-<span class="kw">async fn </span>fetch_config(
-    transport: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Transport,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(NetworkCapabilities, ton_executor::BlockchainConfig, u32)&gt; {
-    <span class="kw">let </span>block = transport.get_latest_key_block().<span class="kw">await</span><span class="question-mark">?</span>;
+<span class="kw">async fn </span>fetch_config&lt;F, Fut&gt;(
+    f: F,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(NetworkCapabilities, ton_executor::BlockchainConfig, u32)&gt;
+<span class="kw">where
+    </span>F: FnOnce() -&gt; Fut,
+    Fut: Future&lt;Output = <span class="prelude-ty">Result</span>&lt;ConfigResponse&gt;&gt;,
+{
+    <span class="kw">let </span>res = f().<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let </span>info = block.info.read_struct()<span class="question-mark">?</span>;
-
-    <span class="kw">let </span>extra = block
-        .read_extra()
-        .map_err(|<span class="kw">_</span>| QueryConfigError::InvalidBlock)<span class="question-mark">?</span>;
-
-    <span class="kw">let </span>master = extra
-        .read_custom()
-        .map_err(|<span class="kw">_</span>| QueryConfigError::InvalidBlock)<span class="question-mark">?
-        </span>.ok_or(QueryConfigError::InvalidBlock)<span class="question-mark">?</span>;
-
-    <span class="kw">let </span>params = master
-        .config()
-        .ok_or(QueryConfigError::InvalidBlock)<span class="question-mark">?
-        </span>.clone();
-
-    <span class="kw">let </span>config = ton_executor::BlockchainConfig::with_config(params, block.global_id)
+    <span class="kw">let </span>config = ton_executor::BlockchainConfig::with_config(res.config, res.global_id)
         .map_err(|<span class="kw">_</span>| QueryConfigError::InvalidConfig)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>capabilities = NetworkCapabilities {
-        global_id: block.global_id,
+        global_id: res.global_id,
         raw: config.capabilites(),
     };
 
-    <span class="prelude-val">Ok</span>((capabilities, config, info.seq_no()))
+    <span class="prelude-val">Ok</span>((capabilities, config, res.seqno))
+}
+
+<span class="kw">pub struct </span>ConfigResponse {
+    <span class="kw">pub </span>global_id: i32,
+    <span class="kw">pub </span>seqno: u32,
+    <span class="kw">pub </span>config: ton_block::ConfigParams,
 }
 
 <span class="kw">fn </span>compute_next_phase(
@@ -389,18 +420,11 @@
     }
 }
 
-<span class="kw">fn </span>cache_expired(now: u32, phase: ConfigCachePhase) -&gt; bool {
-    <span class="kw">match </span>phase {
-        ConfigCachePhase::WaitingKeyBlock =&gt; <span class="bool-val">true</span>,
-        ConfigCachePhase::WaitingElectionsEnd { deadline }
-        | ConfigCachePhase::WainingNextValidatorsSet { deadline } =&gt; now &gt; deadline,
-    }
-}
-
 <span class="kw">struct </span>ConfigCacheState {
     capabilities: NetworkCapabilities,
     config: ton_executor::BlockchainConfig,
     last_key_block_seqno: u32,
+    updated_at: u32,
     phase: ConfigCachePhase,
 }
 
@@ -413,8 +437,6 @@
 
 <span class="attr">#[derive(thiserror::Error, Debug)]
 </span><span class="kw">enum </span>QueryConfigError {
-    <span class="attr">#[error(<span class="string">"Invalid block"</span>)]
-    </span>InvalidBlock,
     <span class="attr">#[error(<span class="string">"Invalid config"</span>)]
     </span>InvalidConfig,
 }
