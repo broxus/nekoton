@@ -60,3 +60,13 @@ pub struct GetBlockResponse {
     #[serde(with = "serde_ton_block")]
     pub block: ton_block::Block,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetBlockchainConfigResponse {
+    pub global_id: i32,
+    #[serde(default)]
+    pub seqno: u32,
+    #[serde(with = "serde_ton_block")]
+    pub config: ton_block::ConfigParams,
+}

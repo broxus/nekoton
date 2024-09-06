@@ -31,6 +31,32 @@ impl ProtoTransport {
             accounts_cache: AccountsCache::new(),
         }
     }
+
+    async fn fetch_config(&self) -> Result<ConfigResponse> {
+        let data = rpc::Request {
+            call: Some(rpc::request::Call::GetBlockchainConfig(())),
+        };
+
+        let req = external::ProtoRequest {
+            data: data.encode_to_vec(),
+            requires_db: true,
+        };
+
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+
+        match response.result {
+            Some(rpc::response::Result::GetBlockchainConfig(res)) => {
+                let params = ton_block::ConfigParams::construct_from_bytes(res.config.as_ref())?;
+                Ok(ConfigResponse {
+                    global_id: res.global_id,
+                    seqno: res.seqno,
+                    config: params,
+                })
+            }
+            _ => Err(ProtoClientError::InvalidResponse.into()),
+        }
+    }
 }
 
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
@@ -289,7 +315,7 @@ impl Transport for ProtoTransport {
     async fn get_capabilities(&self, clock: &dyn Clock) -> Result<NetworkCapabilities> {
         let (capabilities, _) = self
             .config_cache
-            .get_blockchain_config(self, clock, false)
+            .get_blockchain_config(clock, false, || self.fetch_config())
             .await?;
         Ok(capabilities)
     }
@@ -301,7 +327,7 @@ impl Transport for ProtoTransport {
     ) -> Result<ton_executor::BlockchainConfig> {
         let (_, config) = self
             .config_cache
-            .get_blockchain_config(self, clock, force)
+            .get_blockchain_config(clock, force, || self.fetch_config())
             .await?;
         Ok(config)
     }

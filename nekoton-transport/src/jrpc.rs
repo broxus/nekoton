@@ -20,6 +20,7 @@ impl JrpcClient {
         );
 
         let client = reqwest::ClientBuilder::new()
+            .http2_prior_knowledge()
             .default_headers(headers)
             .build()
             .context("failed to build http client")?;

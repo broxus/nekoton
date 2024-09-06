@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use futures_util::Future;
 use quick_cache::sync::Cache as QuickCache;
 use tokio::sync::Mutex;
 
 use nekoton_utils::*;
 
 use super::models::RawContractState;
-use super::Transport;
 use crate::core::models::NetworkCapabilities;
 
 #[allow(unused)]
@@ -56,13 +56,18 @@ impl AccountsCache {
 
 pub struct ConfigCache {
     use_default_config: bool,
+    min_cache_for: Option<u32>,
     state: Mutex<Option<ConfigCacheState>>,
 }
 
 impl ConfigCache {
     pub fn new(use_default_config: bool) -> Self {
+        // TODO: Move to params or connection config
+        const MIN_CACHE_FOR: u32 = 60;
+
         Self {
             use_default_config,
+            min_cache_for: Some(MIN_CACHE_FOR),
             state: Mutex::new(if use_default_config {
                 Some(ConfigCacheState {
                     capabilities: NetworkCapabilities {
@@ -71,6 +76,7 @@ impl ConfigCache {
                     },
                     config: ton_executor::BlockchainConfig::default(),
                     last_key_block_seqno: 0,
+                    updated_at: 0,
                     phase: ConfigCachePhase::WainingNextValidatorsSet { deadline: u32::MAX },
                 })
             } else {
@@ -79,30 +85,35 @@ impl ConfigCache {
         }
     }
 
-    pub async fn get_blockchain_config(
+    pub async fn get_blockchain_config<F, Fut>(
         &self,
-        transport: &dyn Transport,
         clock: &dyn Clock,
         force: bool,
-    ) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig)> {
+        f: F,
+    ) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig)>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = Result<ConfigResponse>>,
+    {
         let mut cache = self.state.lock().await;
 
         let now = clock.now_sec_u64() as u32;
 
         Ok(match &*cache {
             None => {
-                let (capabilities, config, key_block_seqno) = fetch_config(transport).await?;
+                let (capabilities, config, key_block_seqno) = fetch_config(f).await?;
                 let phase = compute_next_phase(now, &config, None, key_block_seqno)?;
                 *cache = Some(ConfigCacheState {
                     capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
+                    updated_at: now,
                     phase,
                 });
                 (capabilities, config)
             }
-            Some(a) if force && !self.use_default_config || cache_expired(now, a.phase) => {
-                let (capabilities, config, key_block_seqno) = fetch_config(transport).await?;
+            Some(a) if force && !self.use_default_config || self.cache_expired(now, a) => {
+                let (capabilities, config, key_block_seqno) = fetch_config(f).await?;
                 let phase = compute_next_phase(
                     now,
                     &config,
@@ -113,6 +124,7 @@ impl ConfigCache {
                     capabilities,
                     config: config.clone(),
                     last_key_block_seqno: key_block_seqno,
+                    updated_at: now,
                     phase,
                 });
                 (capabilities, config)
@@ -120,38 +132,46 @@ impl ConfigCache {
             Some(a) => (a.capabilities, a.config.clone()),
         })
     }
+
+    fn cache_expired(&self, now: u32, state: &ConfigCacheState) -> bool {
+        if let Some(min_cache_for) = self.min_cache_for {
+            if now <= state.updated_at.saturating_add(min_cache_for) {
+                return false;
+            }
+        }
+
+        match state.phase {
+            ConfigCachePhase::WaitingKeyBlock => true,
+            ConfigCachePhase::WaitingElectionsEnd { deadline }
+            | ConfigCachePhase::WainingNextValidatorsSet { deadline } => now > deadline,
+        }
+    }
 }
 
-async fn fetch_config(
-    transport: &dyn Transport,
-) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig, u32)> {
-    let block = transport.get_latest_key_block().await?;
+async fn fetch_config<F, Fut>(
+    f: F,
+) -> Result<(NetworkCapabilities, ton_executor::BlockchainConfig, u32)>
+where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = Result<ConfigResponse>>,
+{
+    let res = f().await?;
 
-    let info = block.info.read_struct()?;
-
-    let extra = block
-        .read_extra()
-        .map_err(|_| QueryConfigError::InvalidBlock)?;
-
-    let master = extra
-        .read_custom()
-        .map_err(|_| QueryConfigError::InvalidBlock)?
-        .ok_or(QueryConfigError::InvalidBlock)?;
-
-    let params = master
-        .config()
-        .ok_or(QueryConfigError::InvalidBlock)?
-        .clone();
-
-    let config = ton_executor::BlockchainConfig::with_config(params, block.global_id)
+    let config = ton_executor::BlockchainConfig::with_config(res.config, res.global_id)
         .map_err(|_| QueryConfigError::InvalidConfig)?;
 
     let capabilities = NetworkCapabilities {
-        global_id: block.global_id,
+        global_id: res.global_id,
         raw: config.capabilites(),
     };
 
-    Ok((capabilities, config, info.seq_no()))
+    Ok((capabilities, config, res.seqno))
+}
+
+pub struct ConfigResponse {
+    pub global_id: i32,
+    pub seqno: u32,
+    pub config: ton_block::ConfigParams,
 }
 
 fn compute_next_phase(
@@ -179,18 +199,11 @@ fn compute_next_phase(
     }
 }
 
-fn cache_expired(now: u32, phase: ConfigCachePhase) -> bool {
-    match phase {
-        ConfigCachePhase::WaitingKeyBlock => true,
-        ConfigCachePhase::WaitingElectionsEnd { deadline }
-        | ConfigCachePhase::WainingNextValidatorsSet { deadline } => now > deadline,
-    }
-}
-
 struct ConfigCacheState {
     capabilities: NetworkCapabilities,
     config: ton_executor::BlockchainConfig,
     last_key_block_seqno: u32,
+    updated_at: u32,
     phase: ConfigCachePhase,
 }
 
@@ -203,8 +216,6 @@ enum ConfigCachePhase {
 
 #[derive(thiserror::Error, Debug)]
 enum QueryConfigError {
-    #[error("Invalid block")]
-    InvalidBlock,
     #[error("Invalid config")]
     InvalidConfig,
 }

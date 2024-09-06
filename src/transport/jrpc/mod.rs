@@ -31,6 +31,22 @@ impl JrpcTransport {
             accounts_cache: AccountsCache::new(),
         }
     }
+
+    async fn fetch_config(&self) -> Result<ConfigResponse> {
+        let req = external::JrpcRequest {
+            data: make_jrpc_request("getBlockchainConfig", &()),
+            requires_db: true,
+        };
+        self.connection
+            .post(req)
+            .await
+            .map(|data| tiny_jsonrpc::parse_response(&data))?
+            .map(|block: GetBlockchainConfigResponse| ConfigResponse {
+                global_id: block.global_id,
+                seqno: block.seqno,
+                config: block.config,
+            })
+    }
 }
 
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
@@ -198,7 +214,7 @@ impl Transport for JrpcTransport {
     async fn get_capabilities(&self, clock: &dyn Clock) -> Result<NetworkCapabilities> {
         let (capabilities, _) = self
             .config_cache
-            .get_blockchain_config(self, clock, false)
+            .get_blockchain_config(clock, false, || self.fetch_config())
             .await?;
         Ok(capabilities)
     }
@@ -210,7 +226,7 @@ impl Transport for JrpcTransport {
     ) -> Result<ton_executor::BlockchainConfig> {
         let (_, config) = self
             .config_cache
-            .get_blockchain_config(self, clock, force)
+            .get_blockchain_config(clock, force, || self.fetch_config())
             .await?;
         Ok(config)
     }
