@@ -82,9 +82,9 @@ message Response {
   }
 
   message GetBlockchainConfig {
-    int32 global_id = 1;
-    bytes config    = 2;
-    uint32 seqno    = 3;
+    int32 global_id          = 1;
+    bytes config             = 2;
+    uint32 seqno             = 3;
   }
 
   message GetAccountsByCodeHash {

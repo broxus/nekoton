@@ -11,3 +11,6 @@ ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types" }
 
 nekoton-abi = { path = "../nekoton-abi"}
+
+[dev-dependencies]
+base64 = "0.13"
