@@ -405,8 +405,8 @@
         </span><span class="kw">pub </span>global_id: i32,
         <span class="attr">#[prost(bytes = <span class="string">"bytes"</span>, tag = <span class="string">"2"</span>)]
         </span><span class="kw">pub </span>config: ::prost::bytes::Bytes,
-        <span class="attr">#[prost(uint32, optional, tag = <span class="string">"3"</span>)]
-        </span><span class="kw">pub </span>seqno: ::core::option::Option&lt;u32&gt;,
+        <span class="attr">#[prost(uint32, tag = <span class="string">"3"</span>)]
+        </span><span class="kw">pub </span>seqno: u32,
     }
     <span class="attr">#[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
