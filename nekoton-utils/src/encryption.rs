@@ -1,6 +1,6 @@
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
-use pbkdf2::{pbkdf2_hmac};
+use pbkdf2::pbkdf2_hmac;
 use secstr::{SecUtf8, SecVec};
 use zeroize::Zeroize;
 

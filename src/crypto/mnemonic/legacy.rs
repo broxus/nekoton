@@ -1,6 +1,9 @@
 use anyhow::Error;
 use ed25519_dalek::Keypair;
-use pbkdf2::{pbkdf2_hmac, hmac::{Mac, Hmac}};
+use pbkdf2::{
+    hmac::{Hmac, Mac},
+    pbkdf2_hmac,
+};
 
 use super::LANGUAGE;
 
