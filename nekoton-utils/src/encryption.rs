@@ -1,6 +1,6 @@
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, Nonce};
-use pbkdf2::pbkdf2;
+use pbkdf2::{pbkdf2_hmac};
 use secstr::{SecUtf8, SecVec};
 use zeroize::Zeroize;
 
@@ -56,7 +56,7 @@ pub fn encrypt(
 // Calculates symmetric key from user password, using pbkdf2
 pub fn symmetric_key_from_password(password: &str, salt: &[u8]) -> Key {
     let mut pbkdf2_hash = SecVec::new(vec![0; CREDENTIAL_LEN]);
-    pbkdf2::<hmac::Hmac<sha2::Sha256>>(
+    pbkdf2_hmac::<sha2::Sha256>(
         password.as_bytes(),
         salt,
         N_ITER,
