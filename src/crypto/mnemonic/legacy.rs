@@ -1,6 +1,6 @@
 use anyhow::Error;
 use ed25519_dalek::Keypair;
-use pbkdf2::{pbkdf2_hmac};
+use pbkdf2::{pbkdf2_hmac, hmac::{Mac, Hmac}};
 
 use super::LANGUAGE;
 
@@ -22,8 +22,13 @@ pub fn derive_from_phrase(phrase: &str) -> Result<Keypair, Error> {
         anyhow::bail!("Expected 24 words")
     }
 
+    let password = Hmac::<sha2::Sha512>::new_from_slice(phrase.as_bytes())
+        .unwrap()
+        .finalize()
+        .into_bytes();
+
     let mut res = [0; 512 / 8];
-    pbkdf2_hmac::<sha2::Sha512>(phrase.as_bytes(), SALT, PBKDF_ITERATIONS, &mut res);
+    pbkdf2_hmac::<sha2::Sha512>(&password, SALT, PBKDF_ITERATIONS, &mut res);
     let secret = ed25519_dalek::SecretKey::from_bytes(&res[0..32])?;
     let public = ed25519_dalek::PublicKey::from(&secret);
     Ok(Keypair { secret, public })
