@@ -2,7 +2,6 @@ use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use anyhow::Result;
 use everscale_types::models::*;
 use everscale_types::prelude::*;
 use nekoton_core::transport::{ContractState, Transport};
@@ -23,7 +22,7 @@ pub struct JrpcClient {
 }
 
 impl JrpcClient {
-    pub async fn post<Q, R>(&self, data: &Q) -> Result<R>
+    pub async fn post<Q, R>(&self, data: &Q) -> anyhow::Result<R>
     where
         Q: Serialize,
         for<'de> R: Deserialize<'de>,
@@ -86,11 +85,30 @@ impl Connection for JrpcClient {
 #[async_trait::async_trait]
 impl Transport for JrpcClient {
     async fn broadcast_message(&self, message: &DynCell) -> anyhow::Result<()> {
-        todo!()
+        #[derive(Serialize)]
+        struct Params<'a> {
+            #[serde(with = "Boc")]
+            message: &'a DynCell,
+        }
+
+        self.post(&JrpcRequest {
+            method: "sendMessage",
+            params: &Params { message },
+        })
+        .await
     }
 
     async fn get_contract_state(&self, address: &StdAddr) -> anyhow::Result<ContractState> {
-        todo!()
+        #[derive(Serialize)]
+        struct Params<'a> {
+            address: &'a StdAddr,
+        }
+
+        self.post(&JrpcRequest {
+            method: "getContractState",
+            params: &Params { address },
+        })
+        .await
     }
 }
 

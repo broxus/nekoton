@@ -21,7 +21,7 @@ mod utils;
 static ROUND_ROBIN_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Clone)]
-pub struct GeneralTransport {
+pub struct RpcClient {
     inner: Arc<Inner>,
 }
 
@@ -31,8 +31,8 @@ pub struct Inner {
     options: ClientOptions,
 }
 
-impl GeneralTransport {
-    async fn new<I: IntoIterator<Item = Url> + Send, T: Connection>(
+impl RpcClient {
+    async fn new<I: IntoIterator<Item = Url> + Send>(
         endpoints: I,
         options: ClientOptions,
     ) -> anyhow::Result<Self> {
@@ -156,7 +156,7 @@ impl GeneralTransport {
 }
 
 #[async_trait::async_trait]
-impl Transport for GeneralTransport {
+impl Transport for RpcClient {
     // TODO: avoid of additional Future created by async move { ... }
 
     async fn broadcast_message(&self, message: &DynCell) -> anyhow::Result<()> {
@@ -249,4 +249,32 @@ impl LiveCheckResult {
 pub enum TransportError {
     #[error("No endpoint available")]
     NoEndpointsAvailable,
+}
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+
+    use anyhow::Result;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn connection_test() -> Result<()> {
+        let endpoints = ["http://57.129.53.62:8080/rpc"]
+            .iter()
+            .map(|x| x.parse().unwrap())
+            .collect::<Vec<_>>();
+
+        let _client = RpcClient::new(
+            endpoints,
+            ClientOptions {
+                probe_interval: Duration::from_secs(10),
+                ..Default::default()
+            },
+        )
+        .await?;
+
+        Ok(())
+    }
 }
