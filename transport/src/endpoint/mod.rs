@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use everscale_types::cell::DynCell;
 use everscale_types::models::StdAddr;
 use nekoton_core::transport::{ContractState, Transport};
@@ -9,24 +11,22 @@ use crate::LiveCheckResult;
 mod jrpc;
 
 #[derive(Clone)]
-pub enum Endpoint {
-    Jrpc(jrpc::JrpcClient),
-    Proto,
+pub struct Endpoint {
+    inner: Arc<dyn Connection>,
 }
 
-#[async_trait::async_trait]
-impl Transport for Endpoint {
-    async fn broadcast_message(&self, message: &DynCell) -> anyhow::Result<()> {
-        match &self {
-            Self::Jrpc(client) => client.broadcast_message(message).await,
-            Self::Proto => todo!(),
-        }
-    }
+impl Endpoint {
+    pub fn new(endpoint: Url, client: reqwest::Client) -> Self {
+        let is_jrpc = endpoint.path().ends_with("/rpc");
+        let client = if is_jrpc {
+            jrpc::JrpcClient::new(endpoint, client)
+        } else {
+            // Proto implementation
+            todo!()
+        };
 
-    async fn get_contract_state(&self, address: &StdAddr) -> anyhow::Result<ContractState> {
-        match &self {
-            Self::Jrpc(client) => client.get_contract_state(address).await,
-            Self::Proto => todo!(),
+        Self {
+            inner: Arc::new(client),
         }
     }
 }
@@ -35,7 +35,7 @@ impl Eq for Endpoint {}
 
 impl PartialEq<Self> for Endpoint {
     fn eq(&self, other: &Self) -> bool {
-        self.endpoint() == other.endpoint()
+        self.inner.endpoint() == other.inner.endpoint()
     }
 }
 
@@ -50,8 +50,8 @@ impl Ord for Endpoint {
         if self.eq(other) {
             std::cmp::Ordering::Equal
         } else {
-            let left_stats = self.get_stats();
-            let right_stats = other.get_stats();
+            let left_stats = self.inner.get_stats();
+            let right_stats = other.inner.get_stats();
 
             match (left_stats, right_stats) {
                 (Some(left_stats), Some(right_stats)) => left_stats.cmp(&right_stats),
@@ -64,9 +64,18 @@ impl Ord for Endpoint {
 }
 
 #[async_trait::async_trait]
-pub trait Connection: Send + Sync {
-    fn new(endpoint: Url, client: reqwest::Client) -> Self;
+impl Transport for Endpoint {
+    async fn broadcast_message(&self, message: &DynCell) -> anyhow::Result<()> {
+        self.inner.broadcast_message(message).await
+    }
 
+    async fn get_contract_state(&self, address: &StdAddr) -> anyhow::Result<ContractState> {
+        self.inner.get_contract_state(address).await
+    }
+}
+
+#[async_trait::async_trait]
+pub trait Connection: Transport + Send + Sync {
     async fn is_alive(&self) -> bool {
         let check_result = self.is_alive_inner().await;
         let is_alive = check_result.as_bool();
@@ -93,54 +102,27 @@ pub trait Connection: Send + Sync {
 
 #[async_trait::async_trait]
 impl Connection for Endpoint {
-    fn new(endpoint: Url, client: reqwest::Client) -> Self {
-        let is_jrpc = endpoint.path().ends_with("/rpc");
-        if is_jrpc {
-            Self::Jrpc(jrpc::JrpcClient::new(endpoint, client))
-        } else {
-            Self::Proto
-        }
-    }
-
     async fn is_alive(&self) -> bool {
-        match &self {
-            Self::Jrpc(client) => client.is_alive().await,
-            Self::Proto => todo!(),
-        }
+        self.inner.is_alive().await
     }
 
     fn endpoint(&self) -> &str {
-        match &self {
-            Self::Jrpc(client) => client.endpoint(),
-            Self::Proto => todo!(),
-        }
+        self.inner.endpoint()
     }
 
     fn get_stats(&self) -> Option<Timings> {
-        match &self {
-            Self::Jrpc(client) => client.get_stats(),
-            Self::Proto => todo!(),
-        }
+        self.inner.get_stats()
     }
 
     fn set_stats(&self, stats: Option<Timings>) {
-        match &self {
-            Self::Jrpc(client) => client.set_stats(stats),
-            Self::Proto => todo!(),
-        }
+        self.inner.set_stats(stats)
     }
 
     fn update_was_dead(&self, is_dead: bool) {
-        match &self {
-            Self::Jrpc(client) => client.update_was_dead(is_dead),
-            Self::Proto => todo!(),
-        }
+        self.inner.update_was_dead(is_dead)
     }
 
     async fn is_alive_inner(&self) -> LiveCheckResult {
-        match &self {
-            Self::Jrpc(client) => client.is_alive_inner().await,
-            Self::Proto => todo!(),
-        }
+        self.inner.is_alive_inner().await
     }
 }

@@ -22,6 +22,15 @@ pub struct JrpcClient {
 }
 
 impl JrpcClient {
+    pub fn new(endpoint: Url, client: reqwest::Client) -> Self {
+        JrpcClient {
+            client,
+            endpoint: Arc::new(endpoint.to_string()),
+            was_dead: Arc::new(AtomicBool::new(false)),
+            stats: Arc::new(Default::default()),
+        }
+    }
+
     pub async fn post<Q, R>(&self, data: &Q) -> anyhow::Result<R>
     where
         Q: Serialize,
@@ -44,15 +53,6 @@ impl JrpcClient {
 
 #[async_trait::async_trait]
 impl Connection for JrpcClient {
-    fn new(endpoint: Url, client: reqwest::Client) -> Self {
-        JrpcClient {
-            client,
-            endpoint: Arc::new(endpoint.to_string()),
-            was_dead: Arc::new(AtomicBool::new(false)),
-            stats: Arc::new(Default::default()),
-        }
-    }
-
     fn endpoint(&self) -> &str {
         self.endpoint.as_str()
     }
@@ -142,7 +142,7 @@ impl<'de, T> Deserialize<'de> for JrpcResponse<T>
 where
     T: Deserialize<'de>,
 {
-    fn deserialize<D>(de: D) -> std::result::Result<Self, D::Error>
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
@@ -172,7 +172,7 @@ where
                 f.write_str("a JSON-RPC response object")
             }
 
-            fn visit_map<A>(self, mut map: A) -> std::result::Result<Self::Value, A::Error>
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
             where
                 A: serde::de::MapAccess<'de>,
             {
