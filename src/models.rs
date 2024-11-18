@@ -276,6 +276,13 @@ pub enum TokenWalletTransaction {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum JettonWalletTransaction {
+    #[serde(with = "serde_string")]
+    Transfer(BigUint),
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum NftTransaction {
     Transfer(IncomingNftTransfer),
     ChangeOwner(IncomingChangeOwner),

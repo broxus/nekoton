@@ -3,13 +3,14 @@ use std::convert::TryFrom;
 use anyhow::Result;
 use num_bigint::BigUint;
 use once_cell::race::OnceBox;
-use ton_block::MsgAddressInt;
+use ton_block::{Deserializable, MsgAddressInt};
 use ton_types::UInt256;
 
 use nekoton_abi::*;
 use nekoton_contracts::tip4_1::nft_contract;
 use nekoton_contracts::{old_tip3, tip3_1};
 
+use crate::core::jetton_wallet::JETTON_TRANSFER_OPCODE;
 use crate::core::models::*;
 use crate::core::ton_wallet::{MultisigType, WalletType};
 
@@ -585,6 +586,34 @@ pub fn parse_token_transaction(
     } else {
         None
     }
+}
+
+pub fn parse_jetton_transaction(
+    tx: &ton_block::Transaction,
+    description: &ton_block::TransactionDescrOrdinary,
+) -> Option<JettonWalletTransaction> {
+    if description.aborted {
+        return None;
+    }
+
+    let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
+
+    let mut body = in_msg.body()?;
+    let opcode = body.get_next_u32().ok()?;
+
+    if opcode == JETTON_TRANSFER_OPCODE {
+        // Skip query id
+        body.move_by(64).ok()?;
+
+        let mut amount = ton_block::Grams::default();
+        amount.read_from(&mut body).ok()?;
+
+        return Some(JettonWalletTransaction::Transfer(BigUint::from(
+            amount.as_u128(),
+        )));
+    }
+
+    None
 }
 
 struct NftFunctions {

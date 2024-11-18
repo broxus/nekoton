@@ -12,6 +12,7 @@ pub mod dens;
 pub mod generic_contract;
 pub mod keystore;
 pub use super::models;
+pub mod jetton_wallet;
 pub mod nft_wallet;
 pub mod owners_cache;
 pub mod parsing;
