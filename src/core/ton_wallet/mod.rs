@@ -30,6 +30,7 @@ pub mod ever_wallet;
 pub mod highload_wallet_v2;
 pub mod multisig;
 pub mod wallet_v3;
+pub mod wallet_v5r1;
 
 pub const DEFAULT_WORKCHAIN: i8 = 0;
 
@@ -228,6 +229,12 @@ impl TonWallet {
                 self.workchain(),
                 expiration,
             ),
+            WalletType::WalletV5R1 => wallet_v5r1::prepare_deploy(
+                self.clock.as_ref(),
+                &self.public_key,
+                self.workchain(),
+                expiration,
+            ),
             WalletType::EverWallet => ever_wallet::prepare_deploy(
                 self.clock.as_ref(),
                 &self.public_key,
@@ -311,6 +318,14 @@ impl TonWallet {
                 )
             }
             WalletType::WalletV3 => wallet_v3::prepare_transfer(
+                self.clock.as_ref(),
+                public_key,
+                current_state,
+                0,
+                vec![gift],
+                expiration,
+            ),
+            WalletType::WalletV5R1 => wallet_v5r1::prepare_transfer(
                 self.clock.as_ref(),
                 public_key,
                 current_state,
@@ -635,6 +650,10 @@ pub fn extract_wallet_init_data(contract: &ExistingContract) -> Result<(PublicKe
     } else if wallet_v3::is_wallet_v3(&code_hash) {
         let public_key = PublicKey::from_bytes(wallet_v3::InitData::try_from(data)?.public_key())?;
         Ok((public_key, WalletType::WalletV3))
+    } else if wallet_v5r1::is_wallet_v5r1(&code_hash) {
+        let public_key =
+            PublicKey::from_bytes(wallet_v5r1::InitData::try_from(data)?.public_key())?;
+        Ok((public_key, WalletType::WalletV5R1))
     } else if ever_wallet::is_ever_wallet(&code_hash) {
         let public_key = extract_public_key(&contract.account)?;
         Ok((public_key, WalletType::EverWallet))
@@ -868,6 +887,7 @@ pub enum TransferAction {
 pub enum WalletType {
     Multisig(MultisigType),
     WalletV3,
+    WalletV5R1,
     HighloadWalletV2,
     EverWallet,
 }
@@ -877,6 +897,7 @@ impl WalletType {
         match self {
             Self::Multisig(multisig_type) => multisig::ton_wallet_details(*multisig_type),
             Self::WalletV3 => wallet_v3::DETAILS,
+            Self::WalletV5R1 => wallet_v5r1::DETAILS,
             Self::HighloadWalletV2 => highload_wallet_v2::DETAILS,
             Self::EverWallet => ever_wallet::DETAILS,
         }
@@ -895,6 +916,7 @@ impl WalletType {
         match self {
             Self::Multisig(multisig_type) => multisig_type.code_hash(),
             Self::WalletV3 => wallet_v3::CODE_HASH,
+            Self::WalletV5R1 => wallet_v5r1::CODE_HASH,
             Self::HighloadWalletV2 => highload_wallet_v2::CODE_HASH,
             Self::EverWallet => ever_wallet::CODE_HASH,
         }
@@ -905,6 +927,7 @@ impl WalletType {
         match self {
             Self::Multisig(multisig_type) => multisig_type.code(),
             Self::WalletV3 => wallets::code::wallet_v3(),
+            Self::WalletV5R1 => wallets::code::wallet_v5r1(),
             Self::HighloadWalletV2 => wallets::code::highload_wallet_v2(),
             Self::EverWallet => wallets::code::ever_wallet(),
         }
@@ -917,6 +940,7 @@ impl FromStr for WalletType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             "WalletV3" => Self::WalletV3,
+            "WalletV5R1" => Self::WalletV5R1,
             "HighloadWalletV2" => Self::HighloadWalletV2,
             "EverWallet" => Self::EverWallet,
             s => Self::Multisig(MultisigType::from_str(s)?),
@@ -938,6 +962,7 @@ impl TryInto<u16> for WalletType {
             WalletType::Multisig(MultisigType::SurfWallet) => 6,
             WalletType::Multisig(MultisigType::Multisig2) => 7,
             WalletType::Multisig(MultisigType::Multisig2_1) => 8,
+            WalletType::WalletV5R1 => 9,
             _ => anyhow::bail!("Unimplemented wallet type"),
         };
 
@@ -950,6 +975,7 @@ impl std::fmt::Display for WalletType {
         match self {
             Self::Multisig(multisig_type) => multisig_type.fmt(f),
             Self::WalletV3 => f.write_str("WalletV3"),
+            Self::WalletV5R1 => f.write_str("WalletV5R1"),
             Self::HighloadWalletV2 => f.write_str("HighloadWalletV2"),
             Self::EverWallet => f.write_str("EverWallet"),
         }
@@ -966,6 +992,7 @@ pub fn compute_address(
             multisig::compute_contract_address(public_key, multisig_type, workchain_id)
         }
         WalletType::WalletV3 => wallet_v3::compute_contract_address(public_key, workchain_id),
+        WalletType::WalletV5R1 => wallet_v5r1::compute_contract_address(public_key, workchain_id),
         WalletType::EverWallet => ever_wallet::compute_contract_address(public_key, workchain_id),
         WalletType::HighloadWalletV2 => {
             highload_wallet_v2::compute_contract_address(public_key, workchain_id)

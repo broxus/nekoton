@@ -122,6 +122,9 @@ pub fn parse_transaction_additional_info(
                         WalletInteractionMethod::Multisig(Box::new(method)),
                     )
                 }
+                WalletType::WalletV5R1 => {
+                    todo!()
+                }
             };
 
             return Some(TransactionAdditionalInfo::WalletInteraction(

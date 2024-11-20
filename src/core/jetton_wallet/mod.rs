@@ -94,18 +94,17 @@ impl JettonWallet {
         _payload: ton_types::Cell,
     ) -> Result<u64> {
         // TODO: estimate?
-        const ATTACHED_AMOUNT: u64 = 100_000_000;
+        const ATTACHED_AMOUNT: u64 = 100_000_000; // 0.1 TON
         Ok(ATTACHED_AMOUNT)
     }
 
     pub fn prepare_transfer(
         &self,
-        query_id: u64,
         amount: BigUint,
         destination: MsgAddressInt,
         remaining_gas_to: MsgAddressInt,
         custom_payload: Option<ton_types::Cell>,
-        callback_to: BigUint,
+        callback_value: BigUint,
         callback_payload: Option<ton_types::Cell>,
         attached_amount: u64,
     ) -> Result<InternalMessage> {
@@ -115,7 +114,7 @@ impl JettonWallet {
         builder.append_u32(JETTON_TRANSFER_OPCODE)?;
 
         // Query id
-        builder.append_u64(query_id)?;
+        builder.append_u64(self.clock.now_ms_u64())?;
 
         // Amount
         let grams =
@@ -143,7 +142,7 @@ impl JettonWallet {
 
         // Callback value
         let grams = ton_block::Grams::new(
-            callback_to
+            callback_value
                 .to_u128()
                 .ok_or(JettonWalletError::TryFromGrams)?,
         )?;
