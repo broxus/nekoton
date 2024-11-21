@@ -65,6 +65,30 @@ pub fn parse_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
     None
 }
 
+pub fn parse_payload_wallet_v5r1(payload: ton_types::SliceData) -> Option<KnownPayload> {
+    let mut payload = payload;
+
+    let opcode = payload.get_next_u32().ok()?;
+    if opcode != JETTON_TRANSFER_OPCODE {
+        return None;
+    }
+
+    let _query_id = payload.get_next_u64().ok()?;
+
+    let mut amount = ton_block::Grams::default();
+    amount.read_from(&mut payload).ok()?;
+
+    let mut dst_addr = MsgAddressInt::default();
+    dst_addr.read_from(&mut payload).ok()?;
+
+    Some(KnownPayload::JettonOutgoingTransfer(
+        JettonOutgoingTransfer {
+            to: dst_addr,
+            tokens: BigUint::from(amount.as_u128()),
+        },
+    ))
+}
+
 pub fn parse_transaction_additional_info(
     tx: &ton_block::Transaction,
     wallet_type: WalletType,
@@ -97,6 +121,29 @@ pub fn parse_transaction_additional_info(
                         WalletInteractionMethod::WalletV3Transfer,
                     )
                 }
+                WalletType::WalletV5R1 => {
+                    let mut out_msg = None;
+                    tx.out_msgs
+                        .iterate(|item| {
+                            out_msg = Some(item.0);
+                            Ok(false)
+                        })
+                        .ok()?;
+
+                    let out_msg = out_msg?;
+                    let recipient = match out_msg.header() {
+                        ton_block::CommonMsgInfo::IntMsgInfo(header) => &header.dst,
+                        _ => return None,
+                    };
+
+                    let known_payload = out_msg.body().and_then(parse_payload_wallet_v5r1);
+
+                    (
+                        Some(recipient.clone()),
+                        known_payload,
+                        WalletInteractionMethod::WalletV5R1Transfer,
+                    )
+                }
                 WalletType::Multisig(multisig_type) => {
                     let method = parse_multisig_transaction_impl(multisig_type, in_msg, tx)?;
                     let (recipient, known_payload) = match &method {
@@ -121,9 +168,6 @@ pub fn parse_transaction_additional_info(
                         known_payload,
                         WalletInteractionMethod::Multisig(Box::new(method)),
                     )
-                }
-                WalletType::WalletV5R1 => {
-                    todo!()
                 }
             };
 

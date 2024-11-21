@@ -53,12 +53,14 @@ pub enum KnownPayload {
     Comment(String),
     TokenOutgoingTransfer(TokenOutgoingTransfer),
     TokenSwapBack(TokenSwapBack),
+    JettonOutgoingTransfer(JettonOutgoingTransfer),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum WalletInteractionMethod {
     WalletV3Transfer,
+    WalletV5R1Transfer,
     Multisig(Box<MultisigTransaction>),
 }
 
@@ -307,6 +309,14 @@ pub struct TokenOutgoingTransfer {
     /// token transfer payload
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct JettonOutgoingTransfer {
+    #[serde(with = "serde_string")]
+    pub to: MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub tokens: BigUint,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
