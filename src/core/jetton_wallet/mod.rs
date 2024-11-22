@@ -148,15 +148,15 @@ impl JettonWallet {
         )?;
         grams.write_to(&mut builder)?;
 
-        // Optional(TvmCell)
-        match callback_payload {
-            Some(payload) => {
-                builder.append_bit_one()?;
-                builder.checked_append_reference(payload)?;
-            }
-            None => {
-                builder.append_bit_zero()?;
-            }
+        let callback_payload = callback_payload.unwrap_or_default();
+        if callback_payload.bit_length() < builder.bits_free() {
+            builder.append_bit_zero()?;
+
+            let callback_builder = BuilderData::from_cell(&callback_payload);
+            builder.append_builder(&callback_builder)?;
+        } else {
+            builder.append_bit_one()?;
+            builder.checked_append_reference(callback_payload)?;
         }
 
         let body = builder.into_cell().map(SliceData::load_cell)??;

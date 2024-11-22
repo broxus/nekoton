@@ -158,7 +158,7 @@ mod tests {
         });
 
         let balance = contract.balance()?;
-        assert_eq!(balance, BigUint::from_u32(2000000000).unwrap());
+        assert_eq!(balance, BigUint::from_u128(2000000000).unwrap());
 
         let root = contract.root()?;
         assert_eq!(

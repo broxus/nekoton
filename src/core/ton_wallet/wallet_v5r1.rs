@@ -12,7 +12,6 @@ use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
 
 const SIGNED_EXTERNAL_PREFIX: u32 = 0x7369676E;
-const ACTION_SEND_MSG_PREFIX: u32 = 0x0ec3c86d;
 
 pub fn prepare_deploy(
     clock: &dyn Clock,
@@ -20,7 +19,9 @@ pub fn prepare_deploy(
     workchain: i8,
     expiration: Expiration,
 ) -> Result<Box<dyn UnsignedMessage>> {
-    let init_data = InitData::from_key(public_key);
+    let init_data = InitData::from_key(public_key)
+        .with_wallet_id(WALLET_ID)
+        .with_is_signature_allowed(true);
     let dst = compute_contract_address(public_key, workchain);
     let mut message =
         ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
@@ -63,7 +64,12 @@ pub fn prepare_transfer(
         ton_block::AccountState::AccountFrozen { .. } => {
             return Err(WalletV5Error::AccountIsFrozen.into())
         }
-        ton_block::AccountState::AccountUninit => (InitData::from_key(public_key), true),
+        ton_block::AccountState::AccountUninit => (
+            InitData::from_key(public_key)
+                .with_wallet_id(WALLET_ID)
+                .with_is_signature_allowed(true),
+            true,
+        ),
     };
 
     init_data.seqno += seqno_offset;
@@ -279,7 +285,8 @@ impl InitData {
             .append_u32(expire_at)?
             .append_u32(self.seqno)?;
 
-        // create internal message
+        let mut actions = ton_block::OutActions::new();
+
         for gift in gifts {
             let mut internal_message =
                 ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
@@ -303,10 +310,14 @@ impl InitData {
                 out_msg: internal_message,
             };
 
-            payload
-                .append_u32(ACTION_SEND_MSG_PREFIX)?
-                .checked_append_reference(action.serialize()?)?;
+            actions.push_back(action);
         }
+
+        payload.append_bit_one()?;
+        payload.checked_append_reference(actions.serialize()?)?;
+
+        // has_other_actions
+        payload.append_bit_zero()?;
 
         let hash = payload.clone().into_cell()?.repr_hash();
 
