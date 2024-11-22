@@ -138,8 +138,6 @@ impl JettonWallet {
             }
         }
 
-        builder.checked_append_reference(Default::default())?;
-
         // Callback value
         let grams = ton_block::Grams::new(
             callback_value
