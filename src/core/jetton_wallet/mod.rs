@@ -18,6 +18,7 @@ use crate::transport::Transport;
 use super::{ContractSubscription, InternalMessage};
 
 pub const JETTON_TRANSFER_OPCODE: u32 = 0x0f8a7ea5;
+pub const JETTON_NOTIFY_OPCODE: u32 = 0x7362d09c;
 
 pub struct JettonWallet {
     clock: Arc<dyn Clock>,
@@ -210,6 +211,9 @@ impl JettonWallet {
                             match data {
                                 JettonWalletTransaction::Transfer(tokens) => {
                                     balance -= tokens.clone().to_bigint().trust_me();
+                                }
+                                JettonWalletTransaction::Notify(tokens) => {
+                                    balance += tokens.clone().to_bigint().trust_me();
                                 }
                             }
                         }

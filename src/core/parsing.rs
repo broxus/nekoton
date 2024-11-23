@@ -10,7 +10,7 @@ use nekoton_abi::*;
 use nekoton_contracts::tip4_1::nft_contract;
 use nekoton_contracts::{old_tip3, tip3_1};
 
-use crate::core::jetton_wallet::JETTON_TRANSFER_OPCODE;
+use crate::core::jetton_wallet::{JETTON_NOTIFY_OPCODE, JETTON_TRANSFER_OPCODE};
 use crate::core::models::*;
 use crate::core::ton_wallet::{MultisigType, WalletType};
 
@@ -637,30 +637,33 @@ pub fn parse_token_transaction(
 
 pub fn parse_jetton_transaction(
     tx: &ton_block::Transaction,
-    description: &ton_block::TransactionDescrOrdinary,
+    _description: &ton_block::TransactionDescrOrdinary,
 ) -> Option<JettonWalletTransaction> {
-    if description.aborted {
-        return None;
-    }
+    // if description.aborted {
+    //     return None;
+    // }
 
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
-
     let mut body = in_msg.body()?;
     let opcode = body.get_next_u32().ok()?;
 
-    if opcode == JETTON_TRANSFER_OPCODE {
-        // Skip query id
-        body.move_by(64).ok()?;
-
-        let mut amount = ton_block::Grams::default();
-        amount.read_from(&mut body).ok()?;
-
-        return Some(JettonWalletTransaction::Transfer(BigUint::from(
-            amount.as_u128(),
-        )));
+    if opcode != JETTON_TRANSFER_OPCODE && opcode != JETTON_NOTIFY_OPCODE {
+        return None;
     }
 
-    None
+    // Skip query id
+    body.move_by(64).ok()?;
+
+    let mut grams = ton_block::Grams::default();
+    grams.read_from(&mut body).ok()?;
+
+    let amount = BigUint::from(grams.as_u128());
+
+    match opcode {
+        JETTON_TRANSFER_OPCODE => Some(JettonWalletTransaction::Transfer(amount)),
+        JETTON_NOTIFY_OPCODE => Some(JettonWalletTransaction::Notify(amount)),
+        _ => None,
+    }
 }
 
 struct NftFunctions {
@@ -955,10 +958,11 @@ impl TryFrom<InputMessage> for IncomingChangeOwner {
 mod tests {
     use std::str::FromStr;
 
-    use ton_block::{Deserializable, Transaction, TransactionDescrOrdinary};
-
     use super::*;
     use crate::core::ton_wallet::MultisigType;
+
+    use nekoton_abi::num_traits::ToPrimitive;
+    use ton_block::{Deserializable, Transaction, TransactionDescrOrdinary};
 
     fn parse_transaction(data: &str) -> (Transaction, TransactionDescrOrdinary) {
         let tx = Transaction::construct_from_base64(data).unwrap();
@@ -1090,5 +1094,17 @@ mod tests {
             parse_token_transaction(&tx, &description, TokenWalletVersion::OldTip3v4).unwrap(),
             TokenWalletTransaction::TransferBounced(_)
         ));
+    }
+
+    #[test]
+    fn test_jetton_tokens_incoming_transfer() {
+        let (tx, description) = parse_transaction("te6ccgECBgEAAUEAA7F5WehEBzKkG99WEqFRkzi98nCWmpXQJBUBmsu+62sSSaAAAujDMA9YPbDkegBLk39wTvj+oYkQn/oiUxWp8d52BTFTfDVpe66gAALouYkW/BZ0Hn3gAAAoSAMCAQARDFCJAT9rXEEgAIJyP0XywcegmfnHNRlyzBk1fCDnCH7vhvlGb9ZcIR/c1sVcySdx1adc9HfHMJmGQfZqbrhnFk2erivzrCxhpNhIwQEBoAQBsUgBCW497xW4vg6Jw7WmJUrLC2JRQDOPb6GH1xJsclEw3tkAJWehEBzKkG99WEqFRkzi98nCWmpXQJBUBmsu+62sSSaQE/a1xAYMRbIAAF0YZgHrBM6Dz7zABQBmc2LQnAAAAZNZcVp9UXSHboAIANlGpOcSSxFpi+ldExuDMH3ZLMW//X1Zt9BCB0OjuVjA");
+
+        let wallet_transaction = parse_jetton_transaction(&tx, &description);
+        assert!(wallet_transaction.is_some());
+
+        if let Some(JettonWalletTransaction::Notify(amount)) = wallet_transaction {
+            assert_eq!(amount.to_u128().unwrap(), 100000000000);
+        }
     }
 }

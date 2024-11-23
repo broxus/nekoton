@@ -281,6 +281,8 @@ pub enum TokenWalletTransaction {
 pub enum JettonWalletTransaction {
     #[serde(with = "serde_string")]
     Transfer(BigUint),
+    #[serde(with = "serde_string")]
+    Notify(BigUint),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
