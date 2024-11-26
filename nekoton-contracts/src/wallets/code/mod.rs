@@ -1,4 +1,5 @@
-use ton_types::Cell;
+use std::collections::HashMap;
+use ton_types::{Cell, UInt256};
 
 macro_rules! declare_tvc {
     ($($contract:ident => $source:literal ($const_bytes:ident)),*$(,)?) => {$(
@@ -23,8 +24,26 @@ declare_tvc! {
     wallet_v5r1 => "./wallet_v5r1_code.boc" (WALLET_V5R1_CODE),
     highload_wallet_v2 => "./highload_wallet_v2_code.boc" (HIGHLOAD_WALLET_V2_CODE),
     ever_wallet => "./ever_wallet_code.boc" (EVER_WALLET_CODE),
+    jetton_wallet_governed => "./jetton_wallet_governed.boc" (JETTON_WALLET_GOVERNED),
 }
 
 fn load(mut data: &[u8]) -> Cell {
     ton_types::deserialize_tree_of_cells(&mut data).expect("Trust me")
+}
+
+static JETTON_LIBRARY_CELLS: once_cell::sync::Lazy<HashMap<UInt256, Cell>> =
+    once_cell::sync::Lazy::new(|| {
+        let mut m = HashMap::new();
+
+        let codes = [jetton_wallet_governed()];
+
+        for code in codes {
+            m.insert(code.repr_hash(), code);
+        }
+
+        m
+    });
+
+pub fn get_jetton_library_cell(hash: &UInt256) -> Option<&'static Cell> {
+    JETTON_LIBRARY_CELLS.get(hash)
 }

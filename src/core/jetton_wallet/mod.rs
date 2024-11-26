@@ -1,6 +1,10 @@
 use std::convert::TryFrom;
 use std::sync::Arc;
 
+use crate::core::models::*;
+use crate::core::parsing::*;
+use crate::transport::models::{RawContractState, RawTransaction};
+use crate::transport::Transport;
 use anyhow::Result;
 use nekoton_abi::num_traits::ToPrimitive;
 use nekoton_abi::*;
@@ -9,11 +13,6 @@ use nekoton_utils::*;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{MsgAddressInt, Serializable};
 use ton_types::{BuilderData, IBitstring, SliceData};
-
-use crate::core::models::*;
-use crate::core::parsing::*;
-use crate::transport::models::{RawContractState, RawTransaction};
-use crate::transport::Transport;
 
 use super::{ContractSubscription, InternalMessage};
 
@@ -209,11 +208,11 @@ impl JettonWallet {
 
                         if let Some(data) = &data {
                             match data {
-                                JettonWalletTransaction::Transfer(tokens) => {
-                                    balance -= tokens.clone().to_bigint().trust_me();
+                                JettonWalletTransaction::Transfer(transfer) => {
+                                    balance -= transfer.tokens.clone().to_bigint().trust_me();
                                 }
-                                JettonWalletTransaction::Notify(tokens) => {
-                                    balance += tokens.clone().to_bigint().trust_me();
+                                JettonWalletTransaction::Notify(transfer) => {
+                                    balance += transfer.tokens.clone().to_bigint().trust_me();
                                 }
                             }
                         }
@@ -267,12 +266,15 @@ pub async fn get_token_wallet_details(
     transport: &dyn Transport,
     token_wallet: &MsgAddressInt,
 ) -> Result<(JettonWalletData, JettonRootData)> {
-    let token_wallet_state = match transport.get_contract_state(token_wallet).await? {
+    let mut token_wallet_state = match transport.get_contract_state(token_wallet).await? {
         RawContractState::Exists(state) => state,
         RawContractState::NotExists { .. } => {
             return Err(JettonWalletError::InvalidTokenWalletContract.into())
         }
     };
+
+    nekoton_contracts::jetton::update_library_cell(&mut token_wallet_state.account.storage.state)?;
+
     let token_wallet_state =
         nekoton_contracts::jetton::TokenWalletContract(token_wallet_state.as_context(clock));
 
@@ -313,12 +315,14 @@ pub async fn get_token_root_details_from_token_wallet(
     transport: &dyn Transport,
     token_wallet_address: &MsgAddressInt,
 ) -> Result<(MsgAddressInt, JettonRootData)> {
-    let state = match transport.get_contract_state(token_wallet_address).await? {
+    let mut state = match transport.get_contract_state(token_wallet_address).await? {
         RawContractState::Exists(state) => state,
         RawContractState::NotExists { .. } => {
             return Err(JettonWalletError::WalletNotDeployed.into())
         }
     };
+
+    nekoton_contracts::jetton::update_library_cell(&mut state.account.storage.state)?;
 
     let root_token_contract =
         nekoton_contracts::jetton::TokenWalletContract(state.as_context(clock)).root()?;
@@ -338,15 +342,17 @@ pub async fn get_token_root_details_from_token_wallet(
 fn make_contract_state_handler(
     clock: Arc<dyn Clock>,
     balance: &'_ mut BigUint,
-) -> impl FnMut(&RawContractState) + '_ {
+) -> impl FnMut(&mut RawContractState) + '_ {
     move |contract_state| {
         if let RawContractState::Exists(state) = contract_state {
-            if let Ok(new_balance) =
-                nekoton_contracts::jetton::TokenWalletContract(state.as_context(clock.as_ref()))
-                    .balance()
-            {
-                *balance = new_balance;
-            }
+            nekoton_contracts::jetton::update_library_cell(&mut state.account.storage.state)
+                .ok()
+                .and_then(|_| {
+                    nekoton_contracts::jetton::TokenWalletContract(state.as_context(clock.as_ref()))
+                        .balance()
+                        .ok()
+                        .map(|new_balance| *balance = new_balance)
+                });
         }
     }
 }

@@ -659,9 +659,18 @@ pub fn parse_jetton_transaction(
 
     let amount = BigUint::from(grams.as_u128());
 
+    let mut addr = MsgAddressInt::default();
+    addr.read_from(&mut body).ok()?;
+
     match opcode {
-        JETTON_TRANSFER_OPCODE => Some(JettonWalletTransaction::Transfer(amount)),
-        JETTON_NOTIFY_OPCODE => Some(JettonWalletTransaction::Notify(amount)),
+        JETTON_TRANSFER_OPCODE => Some(JettonWalletTransaction::Transfer(JettonOutgoingTransfer {
+            to: addr,
+            tokens: amount,
+        })),
+        JETTON_NOTIFY_OPCODE => Some(JettonWalletTransaction::Notify(JettonIncomingTransfer {
+            from: addr,
+            tokens: amount,
+        })),
         _ => None,
     }
 }
@@ -1103,8 +1112,15 @@ mod tests {
         let wallet_transaction = parse_jetton_transaction(&tx, &description);
         assert!(wallet_transaction.is_some());
 
-        if let Some(JettonWalletTransaction::Notify(amount)) = wallet_transaction {
-            assert_eq!(amount.to_u128().unwrap(), 100000000000);
+        if let Some(JettonWalletTransaction::Notify(transfer)) = wallet_transaction {
+            assert_eq!(transfer.tokens.to_u128().unwrap(), 100000000000);
+            assert_eq!(
+                transfer.from,
+                MsgAddressInt::from_str(
+                    "0:6ca35273892588b4c5f4ae898dc1983eec9662dffebeacdbe82103a1d1dcac60"
+                )
+                .unwrap()
+            );
         }
     }
 }

@@ -279,10 +279,8 @@ pub enum TokenWalletTransaction {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum JettonWalletTransaction {
-    #[serde(with = "serde_string")]
-    Transfer(BigUint),
-    #[serde(with = "serde_string")]
-    Notify(BigUint),
+    Transfer(JettonOutgoingTransfer),
+    Notify(JettonIncomingTransfer),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -311,6 +309,14 @@ pub struct TokenOutgoingTransfer {
     /// token transfer payload
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct JettonIncomingTransfer {
+    #[serde(with = "serde_string")]
+    pub from: MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub tokens: BigUint,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

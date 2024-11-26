@@ -141,7 +141,7 @@ impl GenericContract {
 
 fn make_contract_state_handler(
     handler: &dyn GenericContractSubscriptionHandler,
-) -> impl FnMut(&RawContractState) + '_ {
+) -> impl FnMut(&mut RawContractState) + '_ {
     move |contract_state| handler.on_state_changed(contract_state.brief())
 }
 
