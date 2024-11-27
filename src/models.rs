@@ -60,7 +60,7 @@ pub enum KnownPayload {
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum WalletInteractionMethod {
     WalletV3Transfer,
-    WalletV5R1Transfer,
+    TonWalletTransfer,
     Multisig(Box<MultisigTransaction>),
 }
 
@@ -280,7 +280,7 @@ pub enum TokenWalletTransaction {
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum JettonWalletTransaction {
     Transfer(JettonOutgoingTransfer),
-    Notify(JettonIncomingTransfer),
+    InternalTransfer(JettonIncomingTransfer),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

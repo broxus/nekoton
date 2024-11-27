@@ -10,7 +10,7 @@ use nekoton_abi::*;
 use nekoton_contracts::tip4_1::nft_contract;
 use nekoton_contracts::{old_tip3, tip3_1};
 
-use crate::core::jetton_wallet::{JETTON_NOTIFY_OPCODE, JETTON_TRANSFER_OPCODE};
+use crate::core::jetton_wallet::{JETTON_INTERNAL_TRANSFER_OPCODE, JETTON_TRANSFER_OPCODE};
 use crate::core::models::*;
 use crate::core::ton_wallet::{MultisigType, WalletType};
 
@@ -65,7 +65,7 @@ pub fn parse_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
     None
 }
 
-pub fn parse_payload_wallet_v5r1(payload: ton_types::SliceData) -> Option<KnownPayload> {
+pub fn parse_jetton_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
     let mut payload = payload;
 
     let opcode = payload.get_next_u32().ok()?;
@@ -121,7 +121,7 @@ pub fn parse_transaction_additional_info(
                         WalletInteractionMethod::WalletV3Transfer,
                     )
                 }
-                WalletType::WalletV5R1 => {
+                WalletType::WalletV4R1 | WalletType::WalletV4R2 | WalletType::WalletV5R1 => {
                     let mut out_msg = None;
                     tx.out_msgs
                         .iterate(|item| {
@@ -136,12 +136,12 @@ pub fn parse_transaction_additional_info(
                         _ => return None,
                     };
 
-                    let known_payload = out_msg.body().and_then(parse_payload_wallet_v5r1);
+                    let known_payload = out_msg.body().and_then(parse_jetton_payload);
 
                     (
                         Some(recipient.clone()),
                         known_payload,
-                        WalletInteractionMethod::WalletV5R1Transfer,
+                        WalletInteractionMethod::TonWalletTransfer,
                     )
                 }
                 WalletType::Multisig(multisig_type) => {
@@ -637,17 +637,17 @@ pub fn parse_token_transaction(
 
 pub fn parse_jetton_transaction(
     tx: &ton_block::Transaction,
-    _description: &ton_block::TransactionDescrOrdinary,
+    description: &ton_block::TransactionDescrOrdinary,
 ) -> Option<JettonWalletTransaction> {
-    // if description.aborted {
-    //     return None;
-    // }
+    if description.aborted {
+        return None;
+    }
 
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
     let mut body = in_msg.body()?;
     let opcode = body.get_next_u32().ok()?;
 
-    if opcode != JETTON_TRANSFER_OPCODE && opcode != JETTON_NOTIFY_OPCODE {
+    if opcode != JETTON_TRANSFER_OPCODE && opcode != JETTON_INTERNAL_TRANSFER_OPCODE {
         return None;
     }
 
@@ -667,10 +667,12 @@ pub fn parse_jetton_transaction(
             to: addr,
             tokens: amount,
         })),
-        JETTON_NOTIFY_OPCODE => Some(JettonWalletTransaction::Notify(JettonIncomingTransfer {
-            from: addr,
-            tokens: amount,
-        })),
+        JETTON_INTERNAL_TRANSFER_OPCODE => Some(JettonWalletTransaction::InternalTransfer(
+            JettonIncomingTransfer {
+                from: addr,
+                tokens: amount,
+            },
+        )),
         _ => None,
     }
 }
@@ -1106,16 +1108,59 @@ mod tests {
     }
 
     #[test]
-    fn test_jetton_tokens_incoming_transfer() {
-        let (tx, description) = parse_transaction("te6ccgECBgEAAUEAA7F5WehEBzKkG99WEqFRkzi98nCWmpXQJBUBmsu+62sSSaAAAujDMA9YPbDkegBLk39wTvj+oYkQn/oiUxWp8d52BTFTfDVpe66gAALouYkW/BZ0Hn3gAAAoSAMCAQARDFCJAT9rXEEgAIJyP0XywcegmfnHNRlyzBk1fCDnCH7vhvlGb9ZcIR/c1sVcySdx1adc9HfHMJmGQfZqbrhnFk2erivzrCxhpNhIwQEBoAQBsUgBCW497xW4vg6Jw7WmJUrLC2JRQDOPb6GH1xJsclEw3tkAJWehEBzKkG99WEqFRkzi98nCWmpXQJBUBmsu+62sSSaQE/a1xAYMRbIAAF0YZgHrBM6Dz7zABQBmc2LQnAAAAZNZcVp9UXSHboAIANlGpOcSSxFpi+ldExuDMH3ZLMW//X1Zt9BCB0OjuVjA");
+    fn test_parse_wallet_v5r1_transfer() {
+        let (tx, description) = parse_transaction("te6ccgECDgEAAroAA7V6PzxB5ur5JLcojkw57D91dcch0SdJBkRg11onChvcQxAAAuqQo7KQGfOICr+MryG/HTeCGLoHvR2QzQp8l/VW7Jy5KteDKoNgAALqkJdMvBZ0b1RwADRmUxQIBQQBAg8MQoYY8SmEQAMCAG/JhfBQTA/WGAAAAAAAAgAAAAAAAxZIaTNMW1cxmByM5WsWV9cxExzB5+1s+b7Uz5613xWmQNAtXACdQmljE4gAAAAAAAAAACPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIACCcp/sV0iKg0YadasmKflOuBQl9+BT1AMGK8jDUAHzabPWEAUiOhXPDSZMLX8X/WQ0jZRy1Ef+OW9TZFgZ7OoiSM4CAeAIBgEB3wcBsWgBR+eIPN1fJJblEcmHPYfurrjkOiTpIMiMGutE4UN7iGMABaelQoOWDtcjd5wKID6i0sUbGwEsUr2tFotsGs7AiEdQUQ/0AAYP1jQAAF1SFHZSBM6N6o7ACwHliAFH54g83V8kluURyYc9h+6uuOQ6JOkgyIwa60ThQ3uIYgObSztz///4izo3vDAAACqUsU/LVK+ma1KSpaW5p+h9917oIw6a7Txpn/VJg/WB7C5dJQYSdVOvNFZvNMz1vvv5wMwo33jnWdrh1jaHQJXGBQkCCg7DyG0DDQoBaGIAC09KhQcsHa5G7zgUQH1FpYo2NgJYpXtaLRbYNZ2BEI6goh/oAAAAAAAAAAAAAAAAAAELAbIPin6lAAAAAAAAAABUUC0RQAgAcgwTrCsIXFRhmQTVWMIpgapb1R1i6mXzRjfAhiAa+x8AKPzxB5ur5JLcojkw57D91dcch0SdJBkRg11onChvcQxIHJw4AQwACW7J3GUgAAA=");
+        assert!(!description.aborted);
 
-        let wallet_transaction = parse_jetton_transaction(&tx, &description);
+        let wallet_transaction = parse_transaction_additional_info(&tx, WalletType::WalletV5R1);
         assert!(wallet_transaction.is_some());
 
-        if let Some(JettonWalletTransaction::Notify(transfer)) = wallet_transaction {
-            assert_eq!(transfer.tokens.to_u128().unwrap(), 100000000000);
+        if let Some(TransactionAdditionalInfo::WalletInteraction(WalletInteractionInfo {
+            recipient,
+            known_payload,
+            ..
+        })) = wallet_transaction
+        {
             assert_eq!(
-                transfer.from,
+                recipient.unwrap(),
+                MsgAddressInt::from_str(
+                    "0:169e950a0e583b5c8dde702880fa8b4b146c6c04b14af6b45a2db06b3b02211d"
+                )
+                .unwrap()
+            );
+
+            assert!(known_payload.is_some());
+
+            let payload = known_payload.unwrap();
+            if let KnownPayload::JettonOutgoingTransfer(JettonOutgoingTransfer { to, tokens }) =
+                payload
+            {
+                assert_eq!(
+                    to,
+                    MsgAddressInt::from_str(
+                        "0:390609d615842e2a30cc826aac6114c0d52dea8eb17532f9a31be043100d7d8f"
+                    )
+                    .unwrap()
+                );
+
+                assert_eq!(tokens.to_u128().unwrap(), 296400000000);
+            }
+        }
+    }
+
+    #[test]
+    fn test_jetton_incoming_transfer() {
+        let (tx, description) = parse_transaction("te6ccgECEQEAA18AA7VyIr+K0006cnz63RzDYQCVEwPdJSutXyVs8FkkuI/aUhAAAuqVnc5wMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZ0cDmQAFxhZIHoBQQBAhUECQF3khgYYMNQEQMCAG/Jh45gTBQmPAAAAAAABgACAAAABCVSGbb14fUjN0CNk0Gb357AgRdmQAzjvhXKQxQsysyEQNA6FACeQH0MDwXYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCcpCuyJZa+rsW68PLm0COuucbYY14eIvIDQmENZPKyY2kdcLRm1JwTMPyj/1uPSmUxtxqBm0adw5aQV4xl7KOWKwCAeAMBgIB3QkHAQEgCADJSABEV/FaaadOT59bo5hsIBKiYHukpXWr5K2eCySXEftKQwAbKNSc4kliLTF9K6JjcGYPuyWYt/+vqzb6CEDodHcrGBAVsEtIBggjWgAAXVKzuc4Kzo4HMmqZO22AAADJtrLp10ABASAKAatIAERX8Vppp05Pn1ujmGwgEqJge6SldavkrZ4LJJcR+0pDACVnoRAcypBvfVhKhUZM4vfJwlpqV0CQVAZrLvutrEkmhAQGDAMIAABdUrO5zgjOjgcywAsAXnNi0JwAAAGTbWXTrhZIANlGpOcSSxFpi+ldExuDMH3ZLMW//X1Zt9BCB0OjuVjAArFoAFvJbBqvg228UqryRCckJdyJhdWLi/oZ3qOObCPE9jQBAAiK/itNNOnJ8+t0cw2EAlRMD3SUrrV8lbPBZJLiP2lIUBd5IYAGF1LiAABdUrO5zgTOjgcz4A4NAKMXjUUZAAABk21l064WSADZRqTnEksRaYvpXRMbgzB92SzFv/19WbfQQgdDo7lYwQAbKNSc4kliLTF9K6JjcGYPuyWYt/+vqzb6CEDodHcrGAQFAgE0EA8AhwCAErPQiA5lSDe+rCVCoyZxe+ThLTUroEgqAzWXfdbWJJNQAsROplLUCShZxn2kTkyjrdZWWw4ol9ZAosUb+zcNiHf6CEICj0Utek39dAZraCNlF3JZ7QVzRDW+drX9S9XYryt8PWg=");
+        assert!(!description.aborted);
+
+        let jetton_transaction = parse_jetton_transaction(&tx, &description).unwrap();
+
+        if let JettonWalletTransaction::InternalTransfer(JettonIncomingTransfer { from, tokens }) =
+            jetton_transaction
+        {
+            assert_eq!(tokens.to_u128().unwrap(), 100);
+            assert_eq!(
+                from,
                 MsgAddressInt::from_str(
                     "0:6ca35273892588b4c5f4ae898dc1983eec9662dffebeacdbe82103a1d1dcac60"
                 )

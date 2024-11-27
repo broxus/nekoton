@@ -131,11 +131,9 @@ mod tests {
     use nekoton_abi::num_traits::{FromPrimitive, ToPrimitive};
     use nekoton_abi::ExecutionContext;
     use nekoton_utils::SimpleClock;
-    use ton_block::{AccountState, Deserializable, MsgAddressInt};
-    use ton_types::{CellType, SliceData, UInt256};
+    use ton_block::MsgAddressInt;
 
     use crate::jetton;
-    use crate::wallets;
 
     #[test]
     fn usdt_root_token_contract() -> anyhow::Result<()> {
@@ -179,6 +177,12 @@ mod tests {
         let expected_code = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6cckECEQEAAyMAART/APSkE/S88sgLAQIBYgIDAgLMBAUAG6D2BdqJofQB9IH0gahhAgHUBgcCASAICQDDCDHAJJfBOAB0NMDAXGwlRNfA/AM4PpA+kAx+gAxcdch+gAx+gAwc6m0AALTH4IQD4p+pVIgupUxNFnwCeCCEBeNRRlSILqWMUREA/AK4DWCEFlfB7y6k1nwC+BfBIQP8vCAAET6RDBwuvLhTYAIBIAoLAIPUAQa5D2omh9AH0gfSBqGAJpj8EIC8aijKkQXUEIPe7L7wndCVj5cWLpn5j9ABgJ0CgR5CgCfQEsZ4sA54tmZPaqQB8VA9M/+gD6QCHwAe1E0PoA+kD6QNQwUTahUirHBfLiwSjC//LiwlQ0QnBUIBNUFAPIUAT6AljPFgHPFszJIsjLARL0APQAywDJIPkAcHTIywLKB8v/ydAE+kD0BDH6ACDXScIA8uLEd4AYyMsFUAjPFnD6AhfLaxPMgMAgEgDQ4AnoIQF41FGcjLHxnLP1AH+gIizxZQBs8WJfoCUAPPFslQBcwjkXKRceJQCKgToIIJycOAoBS88uLFBMmAQPsAECPIUAT6AljPFgHPFszJ7VQC9ztRND6APpA+kDUMAjTP/oAUVGgBfpA+kBTW8cFVHNtcFQgE1QUA8hQBPoCWM8WAc8WzMkiyMsBEvQA9ADLAMn5AHB0yMsCygfL/8nQUA3HBRyx8uLDCvoAUaihggiYloBmtgihggiYloCgGKEnlxBJEDg3XwTjDSXXCwGAPEADXO1E0PoA+kD6QNQwB9M/+gD6QDBRUaFSSccF8uLBJ8L/8uLCBYIJMS0AoBa88uLDghB73ZfeyMsfFcs/UAP6AiLPFgHPFslxgBjIywUkzxZw+gLLaszJgED7AEATyFAE+gJYzxYBzxbMye1UgAHBSeaAYoYIQc2LQnMjLH1Iwyz9Y+gJQB88WUAfPFslxgBDIywUkzxZQBvoCFctqFMzJcfsAECQQIwB8wwAjwgCwjiGCENUydttwgBDIywVQCM8WUAT6AhbLahLLHxLLP8ly+wCTNWwh4gPIUAT6AljPFgHPFszJ7VSV6u3X")?.as_slice())?;
         assert_eq!(wallet_code, expected_code);
 
+        let token_address = contract.get_wallet_address(&MsgAddressInt::default())?;
+        assert_eq!(
+            token_address.to_string(),
+            "0:0c6a835483369275c9ae76e7e31d9eda0845368045a8ec2ed78609d96bb0a087"
+        );
+
         Ok(())
     }
 
@@ -187,23 +191,7 @@ mod tests {
         let cell = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEAqAACbIAXsqVXAuRG6+GFp/25WVl2IsmatSkX0jbrXVjoBOwsnEQNAdiGdFv5kAABdRDp2cQZrn10JgIBAJEFJFfQYxaABHulQdJwYfnHP5r0FXhq3wjit36+D+zzx7bkE76OQgrwAsROplLUCShZxn2kTkyjrdZWWw4ol9ZAosUb+zcNiHf6CEICj0Utek39dAZraCNlF3JZ7QVzRDW+drX9S9XYryt8PWg=").unwrap().as_slice()).unwrap();
         let mut state = nekoton_utils::deserialize_account_stuff(cell)?;
 
-        if let AccountState::AccountActive { state_init } = &mut state.storage.state {
-            if let Some(cell) = &state_init.code {
-                if cell.cell_type() == CellType::LibraryReference {
-                    let mut slice_data = SliceData::load_cell(cell.clone())?;
-
-                    let tag = slice_data.get_next_byte()?;
-                    assert_eq!(tag, 2);
-
-                    let mut hash = UInt256::default();
-                    hash.read_from(&mut slice_data)?;
-
-                    if let Some(cell) = wallets::code::get_jetton_library_cell(&hash) {
-                        state_init.set_code(cell.clone());
-                    }
-                }
-            }
-        }
+        jetton::update_library_cell(&mut state.storage.state)?;
 
         let contract = jetton::TokenWalletContract(ExecutionContext {
             clock: &SimpleClock,
@@ -212,6 +200,24 @@ mod tests {
 
         let balance = contract.balance()?;
         assert_eq!(balance.to_u128().unwrap(), 156092097302);
+
+        Ok(())
+    }
+
+    #[test]
+    fn notcoin_wallet_token_contract() -> anyhow::Result<()> {
+        let cell = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEAqgACbIAX5XxfY9N6rJiyOS4NGQc01nd0dzEnWBk87cdqg9bLTwQNAeCGdH/3UAABdXbIjToZrn5eJgIBAJUHFxcOBj4fBYAfGfo6PQWliRZGmmqpYpA1QxmYkyLZonLf41f59x68XdAAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM//IIQgK6KRjIlH6bJa+awbiDNXdUFz5YEvgHo9bmQqFHCVlTlQ==").unwrap().as_slice()).unwrap();
+        let mut state = nekoton_utils::deserialize_account_stuff(cell)?;
+
+        jetton::update_library_cell(&mut state.storage.state)?;
+
+        let contract = jetton::TokenWalletContract(ExecutionContext {
+            clock: &SimpleClock,
+            account_stuff: &state,
+        });
+
+        let balance = contract.balance()?;
+        assert_eq!(balance.to_u128().unwrap(), 6499273466060549);
 
         Ok(())
     }
@@ -262,6 +268,24 @@ mod tests {
 
         let address = contract.get_wallet_address(&owner)?;
         assert_eq!(address, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn mintless_points_root_token_contract() -> anyhow::Result<()> {
+        let cell =
+            ton_types::deserialize_tree_of_cells(&mut base64::decode("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").unwrap().as_slice())
+                .unwrap();
+        let state = nekoton_utils::deserialize_account_stuff(cell)?;
+
+        let contract = jetton::RootTokenContract(ExecutionContext {
+            clock: &SimpleClock,
+            account_stuff: &state,
+        });
+
+        let details = contract.get_details()?;
+        assert_eq!(details.admin_address, MsgAddressInt::default());
 
         Ok(())
     }

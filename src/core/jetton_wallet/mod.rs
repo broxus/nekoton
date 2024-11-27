@@ -1,10 +1,6 @@
 use std::convert::TryFrom;
 use std::sync::Arc;
 
-use crate::core::models::*;
-use crate::core::parsing::*;
-use crate::transport::models::{RawContractState, RawTransaction};
-use crate::transport::Transport;
 use anyhow::Result;
 use nekoton_abi::num_traits::ToPrimitive;
 use nekoton_abi::*;
@@ -14,10 +10,16 @@ use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{MsgAddressInt, Serializable};
 use ton_types::{BuilderData, IBitstring, SliceData};
 
+use crate::core::models::*;
+use crate::core::parsing::*;
+use crate::core::transactions_tree::TransactionsTreeStream;
+use crate::transport::models::{RawContractState, RawTransaction};
+use crate::transport::Transport;
+
 use super::{ContractSubscription, InternalMessage};
 
 pub const JETTON_TRANSFER_OPCODE: u32 = 0x0f8a7ea5;
-pub const JETTON_NOTIFY_OPCODE: u32 = 0x7362d09c;
+pub const JETTON_INTERNAL_TRANSFER_OPCODE: u32 = 0x178d4519;
 
 pub struct JettonWallet {
     clock: Arc<dyn Clock>,
@@ -88,14 +90,99 @@ impl JettonWallet {
 
     pub async fn estimate_min_attached_amount(
         &self,
-        _destination: TransferRecipient,
-        _tokens: BigUint,
-        _notify_receiver: bool,
-        _payload: ton_types::Cell,
+        amount: BigUint,
+        destination: MsgAddressInt,
+        remaining_gas_to: MsgAddressInt,
+        custom_payload: Option<ton_types::Cell>,
+        callback_value: BigUint,
+        callback_payload: Option<ton_types::Cell>,
     ) -> Result<u64> {
-        // TODO: estimate?
-        const ATTACHED_AMOUNT: u64 = 100_000_000; // 0.1 TON
-        Ok(ATTACHED_AMOUNT)
+        const FEE_MULTIPLIER: u128 = 2;
+
+        // Prepare internal message
+        let internal_message = self.prepare_transfer(
+            amount,
+            destination,
+            remaining_gas_to,
+            custom_payload,
+            callback_value,
+            callback_payload,
+            0,
+        )?;
+
+        let mut message = ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
+            src: ton_block::MsgAddressIntOrNone::Some(
+                internal_message
+                    .source
+                    .unwrap_or_else(|| self.owner.clone()),
+            ),
+            dst: internal_message.destination,
+            ..Default::default()
+        });
+
+        message.set_body(internal_message.body.clone());
+
+        // Prepare executor
+        let transport = self.contract_subscription.transport().clone();
+        let config = transport
+            .get_blockchain_config(self.clock.as_ref(), true)
+            .await?;
+
+        let mut tree = TransactionsTreeStream::new(message, config, transport, self.clock.clone());
+        tree.unlimited_account_balance();
+        tree.unlimited_message_balance();
+
+        type Err = fn(Option<i32>) -> JettonWalletError;
+        let check_exit_code = |tx: &ton_block::Transaction, err: Err| -> Result<()> {
+            let descr = tx.read_description()?;
+            if descr.is_aborted() {
+                let exit_code = match descr {
+                    ton_block::TransactionDescr::Ordinary(descr) => match descr.compute_ph {
+                        ton_block::TrComputePhase::Vm(phase) => Some(phase.exit_code),
+                        ton_block::TrComputePhase::Skipped(_) => None,
+                    },
+                    _ => None,
+                };
+                Err(err(exit_code).into())
+            } else {
+                Ok(())
+            }
+        };
+
+        let mut attached_amount: u128 = 0;
+
+        // Simulate source transaction
+        let source_tx = tree.next().await?.ok_or(JettonWalletError::NoSourceTx)?;
+        check_exit_code(&source_tx, JettonWalletError::SourceTxFailed)?;
+        attached_amount += source_tx.total_fees.grams.as_u128();
+
+        if source_tx.outmsg_cnt == 0 {
+            return Err(JettonWalletError::NoDestTx.into());
+        }
+
+        if let Some(message) = tree.peek() {
+            if message.state_init().is_some() && message.src_ref() == Some(self.address()) {
+                // Simulate first deploy transaction
+                // NOTE: we don't need to count attached amount here because of separate `initial_balance`
+                let _ = tree.next().await?.ok_or(JettonWalletError::NoDestTx)?;
+                //also we ignore non zero exit code for deploy transactions
+            }
+        }
+
+        tree.retain_message_queue(|message| {
+            message.state_init().is_none() && message.src_ref() == Some(self.address())
+        });
+
+        if tree.message_queue().len() != 1 {
+            return Err(JettonWalletError::NoDestTx.into());
+        }
+
+        // Simulate destination transaction
+        let dest_tx = tree.next().await?.ok_or(JettonWalletError::NoDestTx)?;
+        check_exit_code(&dest_tx, JettonWalletError::DestinationTxFailed)?;
+        attached_amount += dest_tx.total_fees.grams.as_u128();
+
+        Ok((attached_amount * FEE_MULTIPLIER) as u64)
     }
 
     pub fn prepare_transfer(
@@ -211,7 +298,7 @@ impl JettonWallet {
                                 JettonWalletTransaction::Transfer(transfer) => {
                                     balance -= transfer.tokens.clone().to_bigint().trust_me();
                                 }
-                                JettonWalletTransaction::Notify(transfer) => {
+                                JettonWalletTransaction::InternalTransfer(transfer) => {
                                     balance += transfer.tokens.clone().to_bigint().trust_me();
                                 }
                             }
@@ -392,4 +479,12 @@ enum JettonWalletError {
     WalletNotDeployed,
     #[error("Failed to convert grams")]
     TryFromGrams,
+    #[error("No source transaction produced")]
+    NoSourceTx,
+    #[error("No destination transaction produced")]
+    NoDestTx,
+    #[error("Source transaction failed with exit code {0:?}")]
+    SourceTxFailed(Option<i32>),
+    #[error("Destination transaction failed with exit code {0:?}")]
+    DestinationTxFailed(Option<i32>),
 }

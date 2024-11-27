@@ -39,7 +39,8 @@ pub fn get_jetton_data(res: VmGetterOutput) -> Result<JettonRootData> {
     let mintable = stack[1].as_bool()?;
 
     let mut address_data = stack[2].as_slice()?.clone();
-    let admin_address = MsgAddressInt::construct_from(&mut address_data)?;
+
+    let admin_address = MsgAddressInt::construct_from(&mut address_data).unwrap_or_default();
 
     let content = stack[3].as_cell()?;
     let content = MetaDataContent::parse(content)?;
