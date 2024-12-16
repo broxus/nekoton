@@ -35,6 +35,7 @@ impl TokenWallet {
         owner: MsgAddressInt,
         root_token_contract: MsgAddressInt,
         handler: Arc<dyn TokenWalletSubscriptionHandler>,
+        preload_transactions: bool,
     ) -> Result<TokenWallet> {
         let state = match transport.get_contract_state(&root_token_contract).await? {
             RawContractState::Exists(state) => state,
@@ -52,16 +53,35 @@ impl TokenWallet {
         } = state.guess_details()?;
 
         let address = state.get_wallet_address(version, &owner)?;
-
         let mut balance = Default::default();
-        let contract_subscription = ContractSubscription::subscribe(
-            clock.clone(),
-            transport,
-            address,
-            &mut make_contract_state_handler(clock.clone(), version, &mut balance),
-            Some(&mut make_transactions_handler(handler.as_ref(), version)),
-        )
-        .await?;
+
+        let contract_subscription = {
+            let handler = handler.as_ref();
+
+            // NOTE: create handler beforehead to prevent lifetime issues
+            let mut on_transactions_found = match preload_transactions {
+                true => Some(make_transactions_handler(handler, version)),
+                false => None,
+            };
+
+            // Manual map is used here due to unsoundness
+            // See issue: https://github.com/rust-lang/rust/issues/84305
+            #[allow(trivial_casts)]
+            #[allow(clippy::manual_map)]
+            let on_transactions_found = match &mut on_transactions_found {
+                Some(handler) => Some(handler as _),
+                None => None,
+            };
+
+            ContractSubscription::subscribe(
+                clock.clone(),
+                transport,
+                address,
+                &mut make_contract_state_handler(clock.clone(), version, &mut balance),
+                on_transactions_found,
+            )
+            .await?
+        };
 
         handler.on_balance_changed(balance.clone());
 
