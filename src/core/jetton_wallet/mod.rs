@@ -36,6 +36,7 @@ impl JettonWallet {
         owner: MsgAddressInt,
         root_token_contract: MsgAddressInt,
         handler: Arc<dyn JettonWalletSubscriptionHandler>,
+        preload_transactions: bool,
     ) -> Result<JettonWallet> {
         let state = match transport.get_contract_state(&root_token_contract).await? {
             RawContractState::Exists(state) => state,
@@ -46,16 +47,34 @@ impl JettonWallet {
         let state = nekoton_contracts::jetton::RootTokenContract(state.as_context(clock.as_ref()));
 
         let address = state.get_wallet_address(&owner)?;
-
         let mut balance = Default::default();
-        let contract_subscription = ContractSubscription::subscribe(
-            clock.clone(),
-            transport,
-            address,
-            &mut make_contract_state_handler(clock.clone(), &mut balance),
-            Some(&mut make_transactions_handler(handler.as_ref())),
-        )
-        .await?;
+
+        let contract_subscription = {
+            let handler = handler.as_ref();
+            // NOTE: create handler beforehead to prevent lifetime issues
+            let mut on_transactions_found = match preload_transactions {
+                true => Some(make_transactions_handler(handler)),
+                false => None,
+            };
+
+            // Manual map is used here due to unsoundness
+            // See issue: https://github.com/rust-lang/rust/issues/84305
+            #[allow(trivial_casts)]
+            #[allow(clippy::manual_map)]
+            let on_transactions_found = match &mut on_transactions_found {
+                Some(handler) => Some(handler as _),
+                None => None,
+            };
+
+            ContractSubscription::subscribe(
+                clock.clone(),
+                transport,
+                address,
+                &mut make_contract_state_handler(clock.clone(), &mut balance),
+                on_transactions_found,
+            )
+            .await?
+        };
 
         handler.on_balance_changed(balance.clone());
 
