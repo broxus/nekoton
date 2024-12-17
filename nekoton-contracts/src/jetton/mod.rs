@@ -287,6 +287,19 @@ mod tests {
         let details = contract.get_details()?;
         assert_eq!(details.admin_address, MsgAddressInt::default());
 
+        let owner = nekoton_utils::unpack_std_smc_addr(
+            "UQA8aeJrWO-5DZ-1Zs2juDYfT4V_ud2KY8gegMd33gHjeUaF",
+            true,
+        )?;
+
+        let address = contract.get_wallet_address(&owner)?;
+        assert_eq!(
+            address,
+            MsgAddressInt::from_str(
+                "0:3d97d11909a20de878c4400ed241a714065d3a0f4d4f0d60ecaf0dbe11cdd1bc"
+            )?
+        );
+
         Ok(())
     }
 }
