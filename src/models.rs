@@ -28,6 +28,8 @@ pub enum TransactionAdditionalInfo {
     TokenWalletDeployed(TokenWalletDeployedNotification),
     /// User interaction with wallet contract
     WalletInteraction(WalletInteractionInfo),
+    /// Jetton wallet notification
+    JettonNotify(JettonIncomingTransfer),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

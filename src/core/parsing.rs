@@ -222,6 +222,8 @@ pub fn parse_transaction_additional_info(
         TokenWalletDeployedNotification::try_from(InputMessage(inputs))
             .map(TransactionAdditionalInfo::TokenWalletDeployed)
             .ok()
+    } else if function_id == JettonNotify::FUNCTION_ID {
+        JettonNotify::decode_body(body).map(|x| TransactionAdditionalInfo::JettonNotify(x))
     } else {
         None
     }
@@ -259,6 +261,32 @@ impl WalletNotificationFunctions {
             Box::new(WalletNotificationFunctions {
                 notify_wallet_deployed: notifications::notify_wallet_deployed(),
             })
+        })
+    }
+}
+
+struct JettonNotify;
+
+impl JettonNotify {
+    const FUNCTION_ID: u32 = 0x7362d09c;
+
+    fn decode_body(data: ton_types::SliceData) -> Option<JettonIncomingTransfer> {
+        let mut payload = data;
+
+        let function_id = payload.get_next_u32().ok()?;
+        assert_eq!(function_id, Self::FUNCTION_ID);
+
+        let _query_id = payload.get_next_u64().ok()?;
+
+        let mut amount = ton_block::Grams::default();
+        amount.read_from(&mut payload).ok()?;
+
+        let mut sender = MsgAddressInt::default();
+        sender.read_from(&mut payload).ok()?;
+
+        Some(JettonIncomingTransfer {
+            from: sender,
+            tokens: BigUint::from(amount.as_u128()),
         })
     }
 }
