@@ -20,8 +20,8 @@ ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
 
 nekoton-utils = { path = "../nekoton-utils" }
-num-bigint = "0.4.6"
-num-traits = "0.2.19"
+num-bigint = "0.4"
+num-traits = "0.2"
 
 [features]
 web = ["ton_abi/web"]

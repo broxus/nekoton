@@ -302,4 +302,24 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn mintless_points_token_wallet_contract() -> anyhow::Result<()> {
+        let cell =
+            ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEAyQACbIAMC6d7f4iHKlXHXBfufxF6w/5pIENHdpy1yJnyM+lsrQQNAl2Gc+Ll0AABc7gAAbghs2ElpgIBANQFAlQL5ACADZRqTnEksRaYvpXRMbgzB92SzFv/19WbfQQgdDo7lYwQA+mfQx3OTMfvDyPCOAYxl9HdjYWqWkQCtdgoLLcHjaDKvtRVlwuLLP8LwzhcDJNm1TPewFBFqmlIYet7ln0NupwfCEICDvGeG/QPK6SS/KrDhu7KWb9oJ6OFBwjZ/NmttoOrwzY=").unwrap().as_slice())
+                .unwrap();
+        let mut state = nekoton_utils::deserialize_account_stuff(cell)?;
+
+        jetton::update_library_cell(&mut state.storage.state)?;
+
+        let contract = jetton::TokenWalletContract(ExecutionContext {
+            clock: &SimpleClock,
+            account_stuff: &state,
+        });
+
+        let data = contract.get_details()?;
+        assert_eq!(data.balance.to_u128().unwrap(), 10000000000);
+
+        Ok(())
+    }
 }

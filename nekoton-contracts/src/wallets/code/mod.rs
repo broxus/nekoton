@@ -26,8 +26,9 @@ declare_tvc! {
     wallet_v5r1 => "./wallet_v5r1_code.boc" (WALLET_V5R1_CODE),
     highload_wallet_v2 => "./highload_wallet_v2_code.boc" (HIGHLOAD_WALLET_V2_CODE),
     ever_wallet => "./ever_wallet_code.boc" (EVER_WALLET_CODE),
-    jetton_wallet_governed => "./jetton_wallet_governed.boc" (JETTON_WALLET_GOVERNED),
+    jetton_wallet => "./jetton_wallet.boc" (JETTON_WALLET),
     jetton_wallet_v2 => "./jetton_wallet_v2.boc" (JETTON_WALLET_V2),
+    jetton_wallet_governed => "./jetton_wallet_governed.boc" (JETTON_WALLET_GOVERNED),
 }
 
 fn load(mut data: &[u8]) -> Cell {
@@ -38,7 +39,11 @@ static JETTON_LIBRARY_CELLS: once_cell::sync::Lazy<HashMap<UInt256, Cell>> =
     once_cell::sync::Lazy::new(|| {
         let mut m = HashMap::new();
 
-        let codes = [jetton_wallet_governed(), jetton_wallet_v2()];
+        let codes = [
+            jetton_wallet(),
+            jetton_wallet_v2(),
+            jetton_wallet_governed(),
+        ];
 
         for code in codes {
             m.insert(code.repr_hash(), code);
