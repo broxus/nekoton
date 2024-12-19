@@ -12,7 +12,6 @@ use ton_types::{BuilderData, IBitstring, SliceData};
 
 use crate::core::models::*;
 use crate::core::parsing::*;
-use crate::core::transactions_tree::TransactionsTreeStream;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 
@@ -25,6 +24,7 @@ pub struct JettonWallet {
     clock: Arc<dyn Clock>,
     contract_subscription: ContractSubscription,
     handler: Arc<dyn JettonWalletSubscriptionHandler>,
+    root: MsgAddressInt,
     owner: MsgAddressInt,
     balance: BigUint,
 }
@@ -84,6 +84,7 @@ impl JettonWallet {
             handler,
             owner,
             balance,
+            root: root_token_contract,
         })
     }
 
@@ -107,17 +108,26 @@ impl JettonWallet {
         self.contract_subscription.contract_state()
     }
 
-    pub async fn estimate_min_attached_amount(
-        &self,
-        _amount: BigUint,
-        _destination: MsgAddressInt,
-        _remaining_gas_to: MsgAddressInt,
-        _custom_payload: Option<ton_types::Cell>,
-        _callback_value: BigUint,
-        _callback_payload: Option<ton_types::Cell>,
-    ) -> Result<u64> {
-        const ATTACHED_AMOUNT: u64 = 50_000_000; // 0.05 TON
-        Ok(ATTACHED_AMOUNT)
+    pub async fn estimate_min_attached_amount(&self, destination: MsgAddressInt) -> Result<u64> {
+        let transport = self.contract_subscription.transport();
+
+        let state = match transport.get_contract_state(&self.root).await? {
+            RawContractState::Exists(state) => state,
+            RawContractState::NotExists { .. } => {
+                return Err(JettonWalletError::InvalidRootTokenContract.into())
+            }
+        };
+        let state =
+            nekoton_contracts::jetton::RootTokenContract(state.as_context(self.clock.as_ref()));
+
+        let token_wallet = state.get_wallet_address(&destination)?;
+
+        let attached_amount = match transport.get_contract_state(&token_wallet).await? {
+            RawContractState::Exists(_) => 50_000_000, // 0.05 TON
+            RawContractState::NotExists { .. } => 100_000_000, // 0.1 TON
+        };
+
+        Ok(attached_amount)
     }
 
     pub fn prepare_transfer(
@@ -414,12 +424,4 @@ enum JettonWalletError {
     WalletNotDeployed,
     #[error("Failed to convert grams")]
     TryFromGrams,
-    #[error("No source transaction produced")]
-    NoSourceTx,
-    #[error("No destination transaction produced")]
-    NoDestTx,
-    #[error("Source transaction failed with exit code {0:?}")]
-    SourceTxFailed(Option<i32>),
-    #[error("Destination transaction failed with exit code {0:?}")]
-    DestinationTxFailed(Option<i32>),
 }

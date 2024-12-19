@@ -4,7 +4,7 @@ use anyhow::Result;
 use num_bigint::BigUint;
 use once_cell::race::OnceBox;
 use ton_block::{Deserializable, MsgAddressInt};
-use ton_types::UInt256;
+use ton_types::{SliceData, UInt256};
 
 use nekoton_abi::*;
 use nekoton_contracts::tip4_1::nft_contract;
@@ -667,12 +667,29 @@ pub fn parse_jetton_transaction(
     tx: &ton_block::Transaction,
     description: &ton_block::TransactionDescrOrdinary,
 ) -> Option<JettonWalletTransaction> {
+    const STANDART_JETTON_CELLS: usize = 0;
+    const BROXUS_JETTON_CELLS: usize = 2;
+
     if description.aborted {
         return None;
     }
 
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
-    let mut body = in_msg.body()?;
+
+    let mut body = {
+        let body = in_msg.body()?;
+        let refs = body.remaining_references();
+
+        match refs {
+            BROXUS_JETTON_CELLS => {
+                let cell = body.reference_opt(1)?;
+                SliceData::load_cell(cell).ok()?
+            }
+            STANDART_JETTON_CELLS => body,
+            _ => return None,
+        }
+    };
+
     let opcode = body.get_next_u32().ok()?;
 
     if opcode != JETTON_TRANSFER_OPCODE && opcode != JETTON_INTERNAL_TRANSFER_OPCODE {
@@ -1191,6 +1208,27 @@ mod tests {
                 from,
                 MsgAddressInt::from_str(
                     "0:6ca35273892588b4c5f4ae898dc1983eec9662dffebeacdbe82103a1d1dcac60"
+                )
+                .unwrap()
+            );
+        }
+    }
+
+    #[test]
+    fn test_jetton_dai() {
+        let (tx, description) = parse_transaction("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");
+        assert!(!description.aborted);
+
+        let jetton_transaction = parse_jetton_transaction(&tx, &description).unwrap();
+
+        if let JettonWalletTransaction::InternalTransfer(JettonIncomingTransfer { from, tokens }) =
+            jetton_transaction
+        {
+            assert_eq!(tokens.to_u128().unwrap(), 100000000000000000);
+            assert_eq!(
+                from,
+                MsgAddressInt::from_str(
+                    "0:2cf545d69ef7331c637cbcbaa358c7d58277a1b5713788736d62435dfa050ced"
                 )
                 .unwrap()
             );
