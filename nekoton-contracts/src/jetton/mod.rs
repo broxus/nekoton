@@ -322,4 +322,24 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn hamster_token_wallet_contract() -> anyhow::Result<()> {
+        let cell =
+            ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEAyQACbIAKqccjBo+00V2Pb7qZhRYSHX52cx1iP9tpON3cdZrkP8QNAl2GdhkS0AABegbul1whs2ElpgIBANQFGHJ82gCACGZPh6infgRlai2q2zEzj6/XTCUYYz5sBXNuHUXFkiawACfLlnexAarJqUlmkXX/yPvEfPlx8Id4LDSocvlK3az1CNK1yFN5P0+WKSDutZY4tqmGqAE7w+lQchEcy4oOjEQUCEICDxrT2KRr0oMyHd5jkZX7cmAumzGxcn/swl4u3BCWbfQ=").unwrap().as_slice())
+                .unwrap();
+        let mut state = nekoton_utils::deserialize_account_stuff(cell)?;
+
+        jetton::update_library_cell(&mut state.storage.state)?;
+
+        let contract = jetton::TokenWalletContract(ExecutionContext {
+            clock: &SimpleClock,
+            account_stuff: &state,
+        });
+
+        let data = contract.get_details()?;
+        assert_eq!(data.balance.to_u128().unwrap(), 105000000000);
+
+        Ok(())
+    }
 }

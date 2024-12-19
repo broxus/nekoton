@@ -29,6 +29,7 @@ declare_tvc! {
     jetton_wallet => "./jetton_wallet.boc" (JETTON_WALLET),
     jetton_wallet_v2 => "./jetton_wallet_v2.boc" (JETTON_WALLET_V2),
     jetton_wallet_governed => "./jetton_wallet_governed.boc" (JETTON_WALLET_GOVERNED),
+    jetton_wallet_hamster_combat => "./jetton_wallet_hamster_combat.boc" (JETTON_WALLET_HAMSTER_COMBAT),
 }
 
 fn load(mut data: &[u8]) -> Cell {
@@ -43,6 +44,7 @@ static JETTON_LIBRARY_CELLS: once_cell::sync::Lazy<HashMap<UInt256, Cell>> =
             jetton_wallet(),
             jetton_wallet_v2(),
             jetton_wallet_governed(),
+            jetton_wallet_hamster_combat(),
         ];
 
         for code in codes {
