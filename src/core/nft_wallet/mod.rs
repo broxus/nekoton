@@ -363,7 +363,7 @@ fn make_contract_state_handler<'a>(
     owner: &'a mut MsgAddressInt,
     manager: &'a mut MsgAddressInt,
     handler: Option<&'a dyn NftSubscriptionHandler>,
-) -> impl FnMut(&RawContractState) + 'a {
+) -> impl FnMut(&mut RawContractState) + 'a {
     move |contract_state| {
         if let RawContractState::Exists(state) = contract_state {
             if let Ok(info) = NftContractState(state).get_info(clock) {

@@ -475,7 +475,7 @@ fn make_contract_state_handler(
     clock: Arc<dyn Clock>,
     version: TokenWalletVersion,
     balance: &'_ mut BigUint,
-) -> impl FnMut(&RawContractState) + '_ {
+) -> impl FnMut(&mut RawContractState) + '_ {
     move |contract_state| {
         if let RawContractState::Exists(state) = contract_state {
             if let Ok(new_balance) =

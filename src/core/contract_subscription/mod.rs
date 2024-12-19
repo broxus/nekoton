@@ -387,7 +387,7 @@ impl ContractSubscription {
         prev_trans_lt: Option<u64>,
         on_contract_state: OnContractState<'_>,
     ) -> Result<bool> {
-        let contract_state = match prev_trans_lt {
+        let mut contract_state = match prev_trans_lt {
             Some(last_lt) => {
                 let poll = self
                     .transport
@@ -412,7 +412,7 @@ impl ContractSubscription {
         };
 
         if updated {
-            on_contract_state(&contract_state);
+            on_contract_state(&mut contract_state);
             self.contract_state = new_contract_state;
             self.transactions_synced = false;
         } else {
@@ -459,7 +459,7 @@ impl ContractSubscription {
     }
 }
 
-type OnContractState<'a> = &'a mut (dyn FnMut(&RawContractState) + Send + Sync);
+type OnContractState<'a> = &'a mut (dyn FnMut(&mut RawContractState) + Send + Sync);
 type OnTransactionsFound<'a> =
     &'a mut (dyn FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + Send + Sync);
 type OnMessageSent<'a> = &'a mut (dyn FnMut(PendingTransaction, RawTransaction) + Send + Sync);
