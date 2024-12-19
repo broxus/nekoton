@@ -328,6 +328,21 @@ pub async fn get_token_wallet_details(
     Ok((token_wallet_details, root_contract_details))
 }
 
+pub fn get_wallet_data(account: ton_block::AccountStuff) -> Result<JettonWalletData> {
+    let mut account = account;
+
+    nekoton_contracts::jetton::update_library_cell(&mut account.storage.state)?;
+
+    let token_wallet_state = nekoton_contracts::jetton::TokenWalletContract(ExecutionContext {
+        clock: &SimpleClock,
+        account_stuff: &account,
+    });
+
+    let token_wallet_details = token_wallet_state.get_details()?;
+
+    Ok(token_wallet_details)
+}
+
 pub async fn get_token_root_details(
     clock: &dyn Clock,
     transport: &dyn Transport,
