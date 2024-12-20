@@ -223,7 +223,7 @@ pub fn parse_transaction_additional_info(
             .map(TransactionAdditionalInfo::TokenWalletDeployed)
             .ok()
     } else if function_id == JettonNotify::FUNCTION_ID {
-        JettonNotify::decode_body(body).map(|x| TransactionAdditionalInfo::JettonNotify(x))
+        JettonNotify::decode_body(body).map(TransactionAdditionalInfo::JettonNotify)
     } else {
         None
     }

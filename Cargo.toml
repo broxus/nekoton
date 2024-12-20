@@ -42,6 +42,7 @@ parking_lot = "0.12.0"
 pbkdf2 = { version = "0.12.2", optional = true }
 quick_cache = "0.4.1"
 rand = { version = "0.8", features = ["getrandom"], optional = true }
+reqwest = { version = "0.11.8", features = ["blocking", "json"], optional = true }
 secstr = { version = "0.5.0", features = ["serde"], optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -87,7 +88,7 @@ proto_transport = ["dep:nekoton-proto"]
 extended_models = []
 non_threadsafe = []
 wallet_core = ["dep:pbkdf2", "dep:chacha20poly1305", "dep:zeroize", "dep:secstr", "dep:hmac", "dep:ed25519-dalek",
-    "dep:tiny-bip39", "dep:tiny-hderive", "dep:sha2", "dep:getrandom", "dep:rand", "dep:curve25519-dalek-ng", "nekoton-utils/encryption"]
+    "dep:tiny-bip39", "dep:tiny-hderive", "dep:sha2", "dep:getrandom", "dep:rand", "dep:curve25519-dalek-ng", "dep:reqwest", "nekoton-utils/encryption"]
 
 [package.metadata.docs.rs]
 all-features = true
