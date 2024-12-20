@@ -72,6 +72,7 @@ impl TonWallet {
                 handler.as_ref(),
                 wallet_type,
             )),
+            false,
         )
         .await?;
 
@@ -115,6 +116,7 @@ impl TonWallet {
                 handler.as_ref(),
                 wallet_type,
             )),
+            false,
         )
         .await?;
 
@@ -151,6 +153,7 @@ impl TonWallet {
                 handler.as_ref(),
                 existing_wallet.wallet_type,
             )),
+            false,
         )
         .await?;
 
@@ -840,7 +843,7 @@ fn make_contract_state_handler<'a>(
     public_key: &'a PublicKey,
     wallet_type: WalletType,
     wallet_data: &'a mut WalletData,
-) -> impl FnMut(&mut RawContractState) + 'a {
+) -> impl FnMut(&RawContractState) + 'a {
     move |contract_state| {
         if let RawContractState::Exists(contract_state) = contract_state {
             if let Err(e) = wallet_data.update(

@@ -166,6 +166,7 @@ impl Nft {
                 None,
             ),
             Some(&mut make_transactions_handler(handler.as_ref())),
+            false,
         )
         .await?;
 
@@ -363,7 +364,7 @@ fn make_contract_state_handler<'a>(
     owner: &'a mut MsgAddressInt,
     manager: &'a mut MsgAddressInt,
     handler: Option<&'a dyn NftSubscriptionHandler>,
-) -> impl FnMut(&mut RawContractState) + 'a {
+) -> impl FnMut(&RawContractState) + 'a {
     move |contract_state| {
         if let RawContractState::Exists(state) = contract_state {
             if let Ok(info) = NftContractState(state).get_info(clock) {

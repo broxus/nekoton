@@ -2,17 +2,17 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use futures_util::StreamExt;
-use serde::{Deserialize, Serialize};
-use ton_block::MsgAddressInt;
-
 use nekoton_abi::{Executor, LastTransactionId};
 use nekoton_utils::*;
+use serde::{Deserialize, Serialize};
+use ton_block::MsgAddressInt;
 
 use super::models::{
     ContractState, PendingTransaction, ReliableBehavior, TransactionsBatchInfo,
     TransactionsBatchType,
 };
 use super::{utils, PollingMethod};
+
 use crate::core::utils::{MessageContext, PendingTransactionsExt};
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
@@ -26,6 +26,7 @@ pub struct ContractSubscription {
     latest_known_lt: Option<u64>,
     pending_transactions: Vec<PendingTransaction>,
     transactions_synced: bool,
+    supports_library_cells: bool,
 }
 
 impl ContractSubscription {
@@ -35,11 +36,13 @@ impl ContractSubscription {
         address: MsgAddressInt,
         on_contract_state: OnContractState<'_>,
         on_transactions_found: Option<OnTransactionsFound<'_>>,
+        supports_library_cells: bool,
     ) -> Result<Self> {
         let mut result = Self {
             clock,
             transport,
             address,
+            supports_library_cells,
             contract_state: Default::default(),
             latest_known_lt: None,
             pending_transactions: Vec::new(),
@@ -412,6 +415,12 @@ impl ContractSubscription {
         };
 
         if updated {
+            if self.supports_library_cells {
+                if let RawContractState::Exists(state) = &mut contract_state {
+                    utils::update_library_cell(&mut state.account.storage.state).await?;
+                }
+            }
+
             on_contract_state(&mut contract_state);
             self.contract_state = new_contract_state;
             self.transactions_synced = false;
@@ -459,7 +468,7 @@ impl ContractSubscription {
     }
 }
 
-type OnContractState<'a> = &'a mut (dyn FnMut(&mut RawContractState) + Send + Sync);
+type OnContractState<'a> = &'a mut (dyn FnMut(&RawContractState) + Send + Sync);
 type OnTransactionsFound<'a> =
     &'a mut (dyn FnMut(Vec<RawTransaction>, TransactionsBatchInfo) + Send + Sync);
 type OnMessageSent<'a> = &'a mut (dyn FnMut(PendingTransaction, RawTransaction) + Send + Sync);

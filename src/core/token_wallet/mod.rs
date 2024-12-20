@@ -79,6 +79,7 @@ impl TokenWallet {
                 address,
                 &mut make_contract_state_handler(clock.clone(), version, &mut balance),
                 on_transactions_found,
+                false,
             )
             .await?
         };
@@ -475,7 +476,7 @@ fn make_contract_state_handler(
     clock: Arc<dyn Clock>,
     version: TokenWalletVersion,
     balance: &'_ mut BigUint,
-) -> impl FnMut(&mut RawContractState) + '_ {
+) -> impl FnMut(&RawContractState) + '_ {
     move |contract_state| {
         if let RawContractState::Exists(state) = contract_state {
             if let Ok(new_balance) =

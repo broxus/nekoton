@@ -49,6 +49,7 @@ impl GenericContract {
                 address,
                 &mut make_contract_state_handler(handler),
                 on_transactions_found,
+                false,
             )
             .await?
         };
@@ -141,7 +142,7 @@ impl GenericContract {
 
 fn make_contract_state_handler(
     handler: &dyn GenericContractSubscriptionHandler,
-) -> impl FnMut(&mut RawContractState) + '_ {
+) -> impl FnMut(&RawContractState) + '_ {
     move |contract_state| handler.on_state_changed(contract_state.brief())
 }
 
