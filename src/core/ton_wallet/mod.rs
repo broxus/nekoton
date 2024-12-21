@@ -60,6 +60,7 @@ impl TonWallet {
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
             transport,
+            None,
             address,
             &mut make_contract_state_handler(
                 clock.as_ref(),
@@ -72,7 +73,6 @@ impl TonWallet {
                 handler.as_ref(),
                 wallet_type,
             )),
-            false,
         )
         .await?;
 
@@ -104,6 +104,7 @@ impl TonWallet {
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
             transport,
+            None,
             address,
             &mut make_contract_state_handler(
                 clock.as_ref(),
@@ -116,7 +117,6 @@ impl TonWallet {
                 handler.as_ref(),
                 wallet_type,
             )),
-            false,
         )
         .await?;
 
@@ -141,6 +141,7 @@ impl TonWallet {
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
             transport,
+            None,
             existing_wallet.address,
             &mut make_contract_state_handler(
                 clock.as_ref(),
@@ -153,7 +154,6 @@ impl TonWallet {
                 handler.as_ref(),
                 existing_wallet.wallet_type,
             )),
-            false,
         )
         .await?;
 

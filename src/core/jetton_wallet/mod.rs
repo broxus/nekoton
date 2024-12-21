@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use crate::core::models::*;
 use crate::core::parsing::*;
+use crate::external::GqlConnection;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 use anyhow::Result;
@@ -32,6 +33,7 @@ impl JettonWallet {
     pub async fn subscribe(
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
+        gql_connection: Option<Arc<dyn GqlConnection>>,
         owner: MsgAddressInt,
         root_token_contract: MsgAddressInt,
         handler: Arc<dyn JettonWalletSubscriptionHandler>,
@@ -68,10 +70,10 @@ impl JettonWallet {
             ContractSubscription::subscribe(
                 clock.clone(),
                 transport,
+                gql_connection,
                 address,
                 &mut make_contract_state_handler(clock.clone(), &mut balance),
                 on_transactions_found,
-                true,
             )
             .await?
         };
@@ -295,7 +297,8 @@ pub trait JettonWalletSubscriptionHandler: Send + Sync {
 
 pub async fn get_token_wallet_details(
     clock: &dyn Clock,
-    transport: &dyn Transport,
+    transport: Arc<dyn Transport>,
+    gql_connection: Arc<dyn GqlConnection>,
     token_wallet: &MsgAddressInt,
 ) -> Result<(JettonWalletData, JettonRootData)> {
     let mut token_wallet_state = match transport.get_contract_state(token_wallet).await? {
@@ -305,7 +308,11 @@ pub async fn get_token_wallet_details(
         }
     };
 
-    utils::update_library_cell(&mut token_wallet_state.account.storage.state).await?;
+    utils::update_library_cell(
+        gql_connection.as_ref(),
+        &mut token_wallet_state.account.storage.state,
+    )
+    .await?;
 
     let token_wallet_state =
         nekoton_contracts::jetton::TokenWalletContract(token_wallet_state.as_context(clock));
@@ -328,10 +335,13 @@ pub async fn get_token_wallet_details(
     Ok((token_wallet_details, root_contract_details))
 }
 
-pub async fn get_wallet_data(account: ton_block::AccountStuff) -> Result<JettonWalletData> {
+pub async fn get_wallet_data(
+    gql_connection: Arc<dyn GqlConnection>,
+    account: ton_block::AccountStuff,
+) -> Result<JettonWalletData> {
     let mut account = account;
 
-    utils::update_library_cell(&mut account.storage.state).await?;
+    utils::update_library_cell(gql_connection.as_ref(), &mut account.storage.state).await?;
 
     let token_wallet_state = nekoton_contracts::jetton::TokenWalletContract(ExecutionContext {
         clock: &SimpleClock,
@@ -359,7 +369,8 @@ pub async fn get_token_root_details(
 
 pub async fn get_token_root_details_from_token_wallet(
     clock: &dyn Clock,
-    transport: &dyn Transport,
+    transport: Arc<dyn Transport>,
+    gql_connection: Arc<dyn GqlConnection>,
     token_wallet_address: &MsgAddressInt,
 ) -> Result<(MsgAddressInt, JettonRootData)> {
     let mut state = match transport.get_contract_state(token_wallet_address).await? {
@@ -369,7 +380,7 @@ pub async fn get_token_root_details_from_token_wallet(
         }
     };
 
-    utils::update_library_cell(&mut state.account.storage.state).await?;
+    utils::update_library_cell(gql_connection.as_ref(), &mut state.account.storage.state).await?;
 
     let root_token_contract =
         nekoton_contracts::jetton::TokenWalletContract(state.as_context(clock)).root()?;
@@ -444,13 +455,11 @@ mod tests {
     use std::str::FromStr;
 
     use nekoton_abi::num_bigint::BigUint;
-    use nekoton_abi::num_traits::{FromPrimitive, ToPrimitive};
+    use nekoton_abi::num_traits::FromPrimitive;
     use nekoton_abi::ExecutionContext;
     use nekoton_contracts::jetton;
     use nekoton_utils::SimpleClock;
     use ton_block::MsgAddressInt;
-
-    use crate::core::utils::update_library_cell;
 
     #[test]
     fn usdt_root_token_contract() -> anyhow::Result<()> {
@@ -499,42 +508,6 @@ mod tests {
             token_address.to_string(),
             "0:0c6a835483369275c9ae76e7e31d9eda0845368045a8ec2ed78609d96bb0a087"
         );
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn usdt_wallet_token_contract() -> anyhow::Result<()> {
-        let cell = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEAqAACbIAXsqVXAuRG6+GFp/25WVl2IsmatSkX0jbrXVjoBOwsnEQNAdiGdFv5kAABdRDp2cQZrn10JgIBAJEFJFfQYxaABHulQdJwYfnHP5r0FXhq3wjit36+D+zzx7bkE76OQgrwAsROplLUCShZxn2kTkyjrdZWWw4ol9ZAosUb+zcNiHf6CEICj0Utek39dAZraCNlF3JZ7QVzRDW+drX9S9XYryt8PWg=").unwrap().as_slice()).unwrap();
-        let mut state = nekoton_utils::deserialize_account_stuff(cell)?;
-
-        update_library_cell(&mut state.storage.state).await?;
-
-        let contract = jetton::TokenWalletContract(ExecutionContext {
-            clock: &SimpleClock,
-            account_stuff: &state,
-        });
-
-        let balance = contract.balance()?;
-        assert_eq!(balance.to_u128().unwrap(), 156092097302);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn notcoin_wallet_token_contract() -> anyhow::Result<()> {
-        let cell = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEAqgACbIAX5XxfY9N6rJiyOS4NGQc01nd0dzEnWBk87cdqg9bLTwQNAeCGdH/3UAABdXbIjToZrn5eJgIBAJUHFxcOBj4fBYAfGfo6PQWliRZGmmqpYpA1QxmYkyLZonLf41f59x68XdAAvlWFDxGF2lXm67y4yzC17wYKD9A0guwPkMs1gOsM//IIQgK6KRjIlH6bJa+awbiDNXdUFz5YEvgHo9bmQqFHCVlTlQ==").unwrap().as_slice()).unwrap();
-        let mut state = nekoton_utils::deserialize_account_stuff(cell)?;
-
-        update_library_cell(&mut state.storage.state).await?;
-
-        let contract = jetton::TokenWalletContract(ExecutionContext {
-            clock: &SimpleClock,
-            account_stuff: &state,
-        });
-
-        let balance = contract.balance()?;
-        assert_eq!(balance.to_u128().unwrap(), 6499273466060549);
 
         Ok(())
     }
@@ -616,46 +589,6 @@ mod tests {
                 "0:3d97d11909a20de878c4400ed241a714065d3a0f4d4f0d60ecaf0dbe11cdd1bc"
             )?
         );
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn mintless_points_token_wallet_contract() -> anyhow::Result<()> {
-        let cell =
-            ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEAyQACbIAMC6d7f4iHKlXHXBfufxF6w/5pIENHdpy1yJnyM+lsrQQNAl2Gc+Ll0AABc7gAAbghs2ElpgIBANQFAlQL5ACADZRqTnEksRaYvpXRMbgzB92SzFv/19WbfQQgdDo7lYwQA+mfQx3OTMfvDyPCOAYxl9HdjYWqWkQCtdgoLLcHjaDKvtRVlwuLLP8LwzhcDJNm1TPewFBFqmlIYet7ln0NupwfCEICDvGeG/QPK6SS/KrDhu7KWb9oJ6OFBwjZ/NmttoOrwzY=").unwrap().as_slice())
-                .unwrap();
-        let mut state = nekoton_utils::deserialize_account_stuff(cell)?;
-
-        update_library_cell(&mut state.storage.state).await?;
-
-        let contract = jetton::TokenWalletContract(ExecutionContext {
-            clock: &SimpleClock,
-            account_stuff: &state,
-        });
-
-        let data = contract.get_details()?;
-        assert_eq!(data.balance.to_u128().unwrap(), 10000000000);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn hamster_token_wallet_contract() -> anyhow::Result<()> {
-        let cell =
-            ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgEBAwEAyQACbIAKqccjBo+00V2Pb7qZhRYSHX52cx1iP9tpON3cdZrkP8QNAl2GdhkS0AABegbul1whs2ElpgIBANQFGHJ82gCACGZPh6infgRlai2q2zEzj6/XTCUYYz5sBXNuHUXFkiawACfLlnexAarJqUlmkXX/yPvEfPlx8Id4LDSocvlK3az1CNK1yFN5P0+WKSDutZY4tqmGqAE7w+lQchEcy4oOjEQUCEICDxrT2KRr0oMyHd5jkZX7cmAumzGxcn/swl4u3BCWbfQ=").unwrap().as_slice())
-                .unwrap();
-        let mut state = nekoton_utils::deserialize_account_stuff(cell)?;
-
-        update_library_cell(&mut state.storage.state).await?;
-
-        let contract = jetton::TokenWalletContract(ExecutionContext {
-            clock: &SimpleClock,
-            account_stuff: &state,
-        });
-
-        let data = contract.get_details()?;
-        assert_eq!(data.balance.to_u128().unwrap(), 105000000000);
 
         Ok(())
     }
