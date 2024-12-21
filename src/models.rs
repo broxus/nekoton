@@ -28,6 +28,8 @@ pub enum TransactionAdditionalInfo {
     TokenWalletDeployed(TokenWalletDeployedNotification),
     /// User interaction with wallet contract
     WalletInteraction(WalletInteractionInfo),
+    /// Jetton wallet notification
+    JettonNotify(JettonIncomingTransfer),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -53,12 +55,14 @@ pub enum KnownPayload {
     Comment(String),
     TokenOutgoingTransfer(TokenOutgoingTransfer),
     TokenSwapBack(TokenSwapBack),
+    JettonOutgoingTransfer(JettonOutgoingTransfer),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum WalletInteractionMethod {
     WalletV3Transfer,
+    TonWalletTransfer,
     Multisig(Box<MultisigTransaction>),
 }
 
@@ -276,6 +280,13 @@ pub enum TokenWalletTransaction {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum JettonWalletTransaction {
+    Transfer(JettonOutgoingTransfer),
+    InternalTransfer(JettonIncomingTransfer),
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum NftTransaction {
     Transfer(IncomingNftTransfer),
     ChangeOwner(IncomingChangeOwner),
@@ -300,6 +311,22 @@ pub struct TokenOutgoingTransfer {
     /// token transfer payload
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct JettonIncomingTransfer {
+    #[serde(with = "serde_string")]
+    pub from: MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub tokens: BigUint,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct JettonOutgoingTransfer {
+    #[serde(with = "serde_string")]
+    pub to: MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub tokens: BigUint,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

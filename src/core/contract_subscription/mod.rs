@@ -2,18 +2,19 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use futures_util::StreamExt;
-use serde::{Deserialize, Serialize};
-use ton_block::MsgAddressInt;
-
 use nekoton_abi::{Executor, LastTransactionId};
 use nekoton_utils::*;
+use serde::{Deserialize, Serialize};
+use ton_block::MsgAddressInt;
 
 use super::models::{
     ContractState, PendingTransaction, ReliableBehavior, TransactionsBatchInfo,
     TransactionsBatchType,
 };
 use super::{utils, PollingMethod};
+
 use crate::core::utils::{MessageContext, PendingTransactionsExt};
+use crate::external::GqlConnection;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 
@@ -21,6 +22,7 @@ use crate::transport::Transport;
 pub struct ContractSubscription {
     clock: Arc<dyn Clock>,
     transport: Arc<dyn Transport>,
+    gql_connection: Option<Arc<dyn GqlConnection>>,
     address: MsgAddressInt,
     contract_state: ContractState,
     latest_known_lt: Option<u64>,
@@ -32,6 +34,7 @@ impl ContractSubscription {
     pub async fn subscribe(
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
+        gql_connection: Option<Arc<dyn GqlConnection>>,
         address: MsgAddressInt,
         on_contract_state: OnContractState<'_>,
         on_transactions_found: Option<OnTransactionsFound<'_>>,
@@ -39,6 +42,7 @@ impl ContractSubscription {
         let mut result = Self {
             clock,
             transport,
+            gql_connection,
             address,
             contract_state: Default::default(),
             latest_known_lt: None,
@@ -387,7 +391,7 @@ impl ContractSubscription {
         prev_trans_lt: Option<u64>,
         on_contract_state: OnContractState<'_>,
     ) -> Result<bool> {
-        let contract_state = match prev_trans_lt {
+        let mut contract_state = match prev_trans_lt {
             Some(last_lt) => {
                 let poll = self
                     .transport
@@ -412,7 +416,17 @@ impl ContractSubscription {
         };
 
         if updated {
-            on_contract_state(&contract_state);
+            if let Some(connection) = self.gql_connection.as_ref() {
+                if let RawContractState::Exists(state) = &mut contract_state {
+                    utils::update_library_cell(
+                        connection.as_ref(),
+                        &mut state.account.storage.state,
+                    )
+                    .await?;
+                }
+            }
+
+            on_contract_state(&mut contract_state);
             self.contract_state = new_contract_state;
             self.transactions_synced = false;
         } else {

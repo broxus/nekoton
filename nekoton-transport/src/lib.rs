@@ -54,6 +54,8 @@
 
 #[cfg(feature = "gql_transport")]
 pub mod gql;
+#[cfg(feature = "gql_transport")]
+pub mod gql_ext;
 #[cfg(feature = "jrpc_transport")]
 pub mod jrpc;
 #[cfg(feature = "proto_transport")]

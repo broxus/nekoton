@@ -158,6 +158,7 @@ impl Nft {
         let contract_subscription = ContractSubscription::subscribe(
             clock.clone(),
             transport,
+            None,
             nft_address.clone(),
             &mut make_contract_state_handler(
                 clock.as_ref(),

@@ -20,6 +20,9 @@ declare_tvc! {
     multisig2_1 => "./Multisig2_1.tvc" (MULTISIG2_1_CODE),
     surf_wallet => "./Surf.tvc" (SURF_WALLET_CODE),
     wallet_v3 => "./wallet_v3_code.boc" (WALLET_V3_CODE),
+    wallet_v4r1 => "./wallet_v4r1_code.boc" (WALLET_V4R1_CODE),
+    wallet_v4r2 => "./wallet_v4r2_code.boc" (WALLET_V4R2_CODE),
+    wallet_v5r1 => "./wallet_v5r1_code.boc" (WALLET_V5R1_CODE),
     highload_wallet_v2 => "./highload_wallet_v2_code.boc" (HIGHLOAD_WALLET_V2_CODE),
     ever_wallet => "./ever_wallet_code.boc" (EVER_WALLET_CODE),
 }
