@@ -24,7 +24,10 @@ nekoton-utils = { path = "../nekoton-utils" }
 nekoton = { path = ".." }
 
 [dev-dependencies]
+base64 = "0.13"
 tokio = { version = "1", features = ["sync", "time", "macros"] }
+
+ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 
 [features]
 default = ["gql_transport"]

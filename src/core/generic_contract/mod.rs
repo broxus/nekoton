@@ -46,10 +46,10 @@ impl GenericContract {
             ContractSubscription::subscribe(
                 clock,
                 transport,
+                None,
                 address,
                 &mut make_contract_state_handler(handler),
                 on_transactions_found,
-                false,
             )
             .await?
         };
