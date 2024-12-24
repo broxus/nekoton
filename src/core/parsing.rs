@@ -668,7 +668,7 @@ pub fn parse_jetton_transaction(
     description: &ton_block::TransactionDescrOrdinary,
 ) -> Option<JettonWalletTransaction> {
     const STANDART_JETTON_CELLS: usize = 0;
-    const BROXUS_JETTON_CELLS: usize = 2;
+    const MINTLESS_JETTON_CELLS: usize = 2;
 
     if description.aborted {
         return None;
@@ -676,12 +676,13 @@ pub fn parse_jetton_transaction(
 
     let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
 
+    // Workaround to extract body since we don`t store the type in message
     let mut body = {
         let body = in_msg.body()?;
         let refs = body.remaining_references();
 
         match refs {
-            BROXUS_JETTON_CELLS => {
+            MINTLESS_JETTON_CELLS => {
                 let cell = body.reference_opt(1)?;
                 SliceData::load_cell(cell).ok()?
             }

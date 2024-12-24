@@ -4,7 +4,7 @@ use nekoton_abi::VmGetterOutput;
 use nekoton_jetton::{JettonMetaData, MetaDataContent};
 use thiserror::Error;
 use ton_block::{Deserializable, MsgAddressInt};
-use ton_types::Cell;
+use ton_types::{Cell, SliceData};
 
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct JettonRootData {
@@ -13,6 +13,15 @@ pub struct JettonRootData {
     pub admin_address: MsgAddressInt,
     pub content: JettonMetaData,
     pub wallet_code: Cell,
+}
+
+#[derive(PartialEq, Eq, Debug, Clone)]
+pub struct JettonRootMeta {
+    pub name: String,
+    pub symbol: String,
+    pub decimals: u8,
+    pub base_chain_id: String,
+    pub base_token: String,
 }
 
 pub fn get_jetton_data(res: VmGetterOutput) -> Result<JettonRootData> {
@@ -60,6 +69,45 @@ pub fn get_jetton_data(res: VmGetterOutput) -> Result<JettonRootData> {
         admin_address,
         wallet_code,
         content: (&dict).into(),
+    })
+}
+
+pub fn get_jetton_meta(res: VmGetterOutput) -> Result<JettonRootMeta> {
+    if !res.is_ok {
+        return Err(RootContractError::ExecutionFailed {
+            exit_code: res.exit_code,
+        }
+        .into());
+    }
+
+    const JETTON_META_STACK_ELEMENTS: usize = 5;
+
+    let stack = res.stack;
+    if stack.len() != JETTON_META_STACK_ELEMENTS {
+        return Err(RootContractError::InvalidMethodResultStackSize {
+            actual: stack.len(),
+            expected: JETTON_META_STACK_ELEMENTS,
+        }
+        .into());
+    }
+
+    let slice = SliceData::load_cell_ref(stack[0].as_cell()?)?;
+    let name = String::from_utf8_lossy(slice.remaining_data().data()).to_string();
+
+    let slice = SliceData::load_cell_ref(stack[1].as_cell()?)?;
+    let symbol = String::from_utf8_lossy(slice.remaining_data().data()).to_string();
+
+    let decimals = stack[2].as_integer()?.into(0..=u8::MAX)?;
+
+    let base_chain_id = stack[3].as_integer()?.to_string();
+    let base_token = stack[4].as_integer()?.to_string();
+
+    Ok(JettonRootMeta {
+        name,
+        symbol,
+        decimals,
+        base_chain_id,
+        base_token,
     })
 }
 

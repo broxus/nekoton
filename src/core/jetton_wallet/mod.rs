@@ -9,7 +9,7 @@ use crate::transport::Transport;
 use anyhow::Result;
 use nekoton_abi::num_traits::ToPrimitive;
 use nekoton_abi::*;
-use nekoton_contracts::jetton::{JettonRootData, JettonWalletData};
+use nekoton_contracts::jetton::{JettonRootData, JettonRootMeta, JettonWalletData};
 use nekoton_utils::*;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{MsgAddressInt, Serializable};
@@ -295,6 +295,40 @@ pub trait JettonWalletSubscriptionHandler: Send + Sync {
     );
 }
 
+pub async fn get_wallet_data(
+    gql_connection: Arc<dyn GqlConnection>,
+    account: ton_block::AccountStuff,
+) -> Result<JettonWalletData> {
+    let mut account = account;
+
+    utils::update_library_cell(gql_connection.as_ref(), &mut account.storage.state).await?;
+
+    let token_wallet_state = nekoton_contracts::jetton::TokenWalletContract(ExecutionContext {
+        clock: &SimpleClock,
+        account_stuff: &account,
+    });
+
+    let token_wallet_details = token_wallet_state.get_details()?;
+    Ok(token_wallet_details)
+}
+
+pub async fn get_token_root_meta(
+    gql_connection: Arc<dyn GqlConnection>,
+    account: ton_block::AccountStuff,
+) -> Result<JettonRootMeta> {
+    let mut account = account;
+
+    utils::update_library_cell(gql_connection.as_ref(), &mut account.storage.state).await?;
+
+    let token_root_state = nekoton_contracts::jetton::RootTokenContract(ExecutionContext {
+        clock: &SimpleClock,
+        account_stuff: &account,
+    });
+
+    let token_root_meta = token_root_state.get_meta()?;
+    Ok(token_root_meta)
+}
+
 pub async fn get_token_wallet_details(
     clock: &dyn Clock,
     transport: Arc<dyn Transport>,
@@ -335,35 +369,21 @@ pub async fn get_token_wallet_details(
     Ok((token_wallet_details, root_contract_details))
 }
 
-pub async fn get_wallet_data(
-    gql_connection: Arc<dyn GqlConnection>,
-    account: ton_block::AccountStuff,
-) -> Result<JettonWalletData> {
-    let mut account = account;
-
-    utils::update_library_cell(gql_connection.as_ref(), &mut account.storage.state).await?;
-
-    let token_wallet_state = nekoton_contracts::jetton::TokenWalletContract(ExecutionContext {
-        clock: &SimpleClock,
-        account_stuff: &account,
-    });
-
-    let token_wallet_details = token_wallet_state.get_details()?;
-
-    Ok(token_wallet_details)
-}
-
 pub async fn get_token_root_details(
     clock: &dyn Clock,
     transport: &dyn Transport,
+    gql_connection: Arc<dyn GqlConnection>,
     root_token_contract: &MsgAddressInt,
 ) -> Result<JettonRootData> {
-    let state = match transport.get_contract_state(root_token_contract).await? {
+    let mut state = match transport.get_contract_state(root_token_contract).await? {
         RawContractState::Exists(state) => state,
         RawContractState::NotExists { .. } => {
             return Err(JettonWalletError::InvalidRootTokenContract.into())
         }
     };
+
+    utils::update_library_cell(gql_connection.as_ref(), &mut state.account.storage.state).await?;
+
     nekoton_contracts::jetton::RootTokenContract(state.as_context(clock)).get_details()
 }
 
@@ -589,6 +609,27 @@ mod tests {
                 "0:3d97d11909a20de878c4400ed241a714065d3a0f4d4f0d60ecaf0dbe11cdd1bc"
             )?
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn dai_root_token_contract() -> anyhow::Result<()> {
+        let cell =
+            ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgECRQEADYYAAm6AE+h17Oxgs1h/T5RXhP+oTLidxuHf0pC6qNWtwPVOkCqlFTHghnZCD2AAAXqAUR18GiVwJ0+mKAEDW4JK7BCRgnTXuADXSFAQWkxQ4t3cWOUGSbo/BQeScFYTTzcZwUuAG969LgAAAAMlCwIBFP8A9KQT9LzyyAsDAgLIBQQAEKqCXwWED/LwAgHNBwYAKbbhACGRlgqxnixD9AWW1ZMCAUH2AQFb2QY4BJL4JwAOhpgZj9IAFqAOhqaY/9IBgB+gIYdqJofQB9IH0gahjqGCo8CBPAgC/l3HBZNfBH+OTCBuk18EcODQ0x8x0z8x+gAx+kAwWXDIyVQTAyMQRgHIUAb6AlAEzxZYzxbMzMsfyXAgyMsBE/QA9ADLAMn5AHB0yMsCygfL/8nQxwXilhB7XwvwC+E3QDRURXfIUAb6AlAEzxZYzxbMzMsfye1UIPsEIW7jAtAKCQBG7R7tUwL6QDH6ADFx1yH6ADH6ADBzqbQAAtDTHzFERAPxBoIABF8GART/APSkE/S88sgLDAIBYhANAgFmDw4AI7dgXaiaH0AfSB9IGpqaY+YLcAAltxSdqJofQB9IH0gamppj5g2IUAICxRMRAfKqgjHtRND6APpA+kDU1NMfMAnTP/oAUXGgB/pA+kD6AFRzhnDIyVQTAyMQRgHIUAb6AlAEzxZYzxbMzMsfyXAgyMsBE/QA9ADLAMn5AHB0yMsCygfL/8nQU57HBQ/HBR6x8uLDUbqhggiYloBctgihggiYloCgG6EKEgH4ggiYloC2CXL7AiqOMDA4OIIQc2LQnMjLH8s/UAf6AlAFzxZQBs8WyXGAEMjLBSPPFnD6AstqzMmBAIL7AI44Ols4JtcLAcMABsIAFrCOIoIQ1TJ223CAEMjLBVAIzxYn+gIXy2oWyx8Wyz/JgQCC+wCSNTXiECPiBFAzBR4CAcsXFAIBzhYVAJk7UTQ+gD6QPpA1NTTHzAGgCDXIdMfghAXjUUZUiC6ghB73ZfeE7oSsfLixYBA1yH6ADAVoAUQNEEwyFAG+gJQBM8WWM8WzMzLH8ntVIACLO1E0PoA+kD6QNTU0x8wEEVfBQHHBfLiwYIImJaAcPsC0z+CENUydttwgBDIywUD+kAwE88WIvoCEstqyx/LP8mBAIL7AIAIBICEYAgFYHBkCASAbGgCtO1E0PoA+kD6QNTU0x8wMFImxwXy4sEF0z/6QNQB+wTTHzBHYMhQBvoCUATPFljPFszMyx/J7VSCENUydttwgBDIywVQA88WIvoCEstqyx/LP8mAQvsAgAJc7UTQ+gD6QPpA1NTTHzA1W1IUxwXy4sED0z/6QDCCEBT9raDIyx8Syz9QBM8WUAPPFhLLH8lxgBDIywVQA88WcPoCEstqzMmAQPsAgAgEgHx0B8TtRND6APpA+kDU1NMfMAnTP/oA+kD0BCDXSYEBC75RpKFSnscF8uLBLML/8uLCCoIJMS0AoBu88uLDghB73ZfeyMsfE8s/AfoCJc8WAc8WF/QABJgE+kAwE88WApE04gLJcYAYyMsFJM8WcPoCy2rMyYBA+wAEUDWAeACbIUAb6AlAEzxZYzxbMzMsfye1UAfcA9M/+gD6QCHwAe1E0PoA+kD6QNTU0x8wUVihUkzHBfLiwSrC//LiwlQ2JnDIyVQTAyMQRgHIUAb6AlAEzxZYzxbMzMsfyXAgyMsBE/QA9ADLAMkg+QBwdMjLAsoHy//J0Ab6QPQEMfoAINdJwgDy4sSCEBeNRRnIyx8cgIADayz9QCvoCJc8WIc8WKfoCUArPFsklyMsfUArPFlIgzMnIzBn0AMl3gBjIywVQB88WcPoCFstrGMwUzMklkXKRceJQCqgVoIIJycOAoBa88uLFBoBA+wBQBAUDyFAG+gJQBM8WWM8WzMzLH8ntVAIB1CMiABE+kQwcLry4U2AB9ztou37IMcAkl8E4AHQ0wMBcbCVE18D8BHg+kD6QDH6ADFx1yH6ADH6ADBzqbQAItdJwAGOEALUMfQEMCBulF8F2zHg0ALeAtMfghAPin6lUiC6lTE0WfAM4IIQF41FGVIgupcxREQD8QaC4DWCEFlfB7xSELqUMFnwDeCAkAFpsIoIQfW/yVFIQupMw8A7gggs2kZlSELqTMPAP4IIQHqYO/7qS8BDgW4QP8vACghIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAAAAAAAABrz8ynovhVAdNh2nR/6TuBYsdvDJyYABkRBSQASRGFpIFRva2VuART/APSkE/S88sgLKQIBYjMqAgFYLCsAI7ilXtRND6APpA1NTU0x8wbEKAIBIC4tADu2M12omh9AH0gampqaY+YCBqvguhqammD6f/p/5hACAVgyLwHvrxb2omh9AH0gampqaY+YLYDoamppg+n/6f+YLYDoAL14A/wUfSIAwAh4A4DACHgDwCB4BGRGhM0Ojo4OZ0Xl7o3txa6N7WytzmWsLg0lzEzFzu3uTW5l7S2sLOyl8GeLLGeLRYnUZ4sA54tFoXObszxni2ToNoDAMAHScMjLBwHPFsmC8GEF1sx2r0ADJelNWIzlEb5b/btztDfcUeykORfXpD49WIMH9BcBcMjLBwHPFsmC8O6A/S8eA0gOIoI2NZbudS17sn9Qd2uVCGoCeRiWdZI+WIMH9BcC0HDIywcBzxbJMQDEgvCCo1N/8NvOfuw11p7cOhie5vF9gvNTpVP5qpbLC+POiVgDgwf0FwFwyMsHAc8WyYLwt2p8oVPCRnFlgzW70IlGNQ/8Yh+hxRbnEjCV1P/VxYFYgwf0F3DIywf0AMl/QxMAla289qJofQB9IGpqammPmAqvgvwUALhkZKoJgZGIIwDkKAN9ASgCZ4ssZ4tmZmWP5LgQZGWAifoAegBlgGT8gDg6ZGWBZQPl/+ToQAICzDk0AgEgODUCASA3NgBRSCCzaRmcjLHxTLPwHPFszLH8lxgBDIywVQA88WcPoCEstqzMmAQPsAgAv1+ChGBHDIyVQTAyMQRgHIUAb6AlAEzxZYzxbMzMsfyXAgyMsBE/QA9ADLAMkg+QBwdMjLAsoHy//J0AXIyx9QBM8WzMnIzPQAyXeAGMjLBSTPFnD6AstrEszMyYBA+wCABF0Q66TVgVCQYQBHCuQQzEAYAOWDgNKA8mQZZ4uA54tk6HAYQCASA7OgBn9kODeARwuoodSGEGEEyVMryVMYcQq3xgDSEmAACXMZmZFOEVKpEDfAgOWDgVKBcjYQ5OhAH30QY4BJL4HwAOhpgYC42EkvgfB9IH0gGP0AGLjrkP0AGP0AGAFpj+mf9qJofQB9IGpqammPmEAKqUhdRx8bm5wcKahjgvlwJIF9IH0AGOoYEGhAMGuQ/QAYKhOwKjS9eAaYKAJQAoGiImQoA30BKAJniwlmZmZlj+T2qnBDwC/oIQe92X3lKQuo7zODk5A/oA+kD4KFRisXDIyVQTAyMQRgHIUAb6AlAEzxZYzxbMzMsfyXAgyMsBE/QA9ADLAMn5AHB0yMsCygfL/8nQKccF8uBKUUKhBQNKFFCXyFAG+gJQBM8WEszMzMsfye1UAfpA9AQi1wsBwwCSXwfjDeBEPQTwghAsdrlzUpC6jtEVXwUzggiYloAVoBW88uBLAvpA0wAwlcghzxbJkW3ighDRc1QAcIAYyMsFUAXPFiT6AhTLahPLHxTLPyP6RDBwupZsInABywHjDfQAyYBA+wDgghAT5cEaUpC64wI6OoIQFP2toFJwuuMCJsADQ0JBPgL+jiE1NRXHBfLgSfpAMBA1QTTIUAb6AlAEzxYSzMzMyx/J7VTgJsAEjiMxNDRRQ8cF8uBJ1DAQNUQzAshQBvoCUATPFhLMzMzLH8ntVOCCEBcjDDpScLqOERAjXwM1NVsBxwXy4EnUMPsE4IIQce3jjFJwuuMCMTKCEG+PxQFSUEA/AMy6jhswbCIh+kJvE9cL/8AA8tBMAfpAMEQUA23wDTDgMTU1ghAepg7/ErqOMwLHBfLgSYIQO5rKAHD7AoIQ1TJ223CAEMjLBQT6QDAUzxYj+gITy2oSyx/LP8mBAIL7AOBfBIQP8vAASDA0NFFDxwXy4EnUMASkEDVEMMhQBvoCUATPFhLMzMzLH8ntVADuNl8D+kD4KFAHcMjJVBMDIxBGAchQBvoCUATPFljPFszMyx/JcCDIywET9AD0AMsAyfkAcHTIywLKB8v/ydAjxwXy4EoE+kDTHzBSQLyVQQQD8A6OIWwxghDVMnbbcIAQyMsFUAPPFiL6AhLLassfyz/JgEL7AOIAkBA2XwYyggiYloAUoBS88uBLAtDU1NMH0//T/zCCEJPlwRpwgBjIywVQCc8WKPoCGMtqF8sfFcs/ywcTy/8Ty/8SzMzJgED7AAB2+ChEA3DIyVQTAyMQRgHIUAb6AlAEzxZYzxbMzMsfyXAgyMsBE/QA9ADLAMn5AHB0yMsCygfL/8nQzxYAsnCAEMjLBVAEzxYj+gITy2ohbp80W2wighDVMnbbWMsfyz+OLzMh10mBAQu+lAH6QDCSMSPiyAHPFszJyFADzxYSzMmCEGgIjZtYyx8Ty38BzxbM4smAQvsA").unwrap().as_slice())
+                .unwrap();
+        let state = nekoton_utils::deserialize_account_stuff(cell)?;
+
+        let contract = jetton::RootTokenContract(ExecutionContext {
+            clock: &SimpleClock,
+            account_stuff: &state,
+        });
+
+        let meta = contract.get_meta()?;
+        assert_eq!(meta.name, "Dai Token");
+        assert_eq!(meta.symbol, "DAI");
+        assert_eq!(meta.decimals, 18);
+        assert_eq!(meta.base_chain_id, "56");
 
         Ok(())
     }

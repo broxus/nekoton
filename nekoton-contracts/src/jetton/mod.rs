@@ -3,7 +3,7 @@ use nekoton_abi::{ExecutionContext, StackItem};
 use ton_block::Serializable;
 use ton_types::SliceData;
 
-pub use root_token_contract::JettonRootData;
+pub use root_token_contract::{JettonRootData, JettonRootMeta};
 pub use token_wallet_contract::JettonWalletData;
 
 mod root_token_contract;
@@ -13,6 +13,7 @@ mod token_wallet_contract;
 pub struct RootTokenContract<'a>(pub ExecutionContext<'a>);
 
 pub const GET_JETTON_DATA: &str = "get_jetton_data";
+pub const GET_JETTON_META: &str = "get_jetton_meta";
 pub const GET_WALLET_DATA: &str = "get_wallet_data";
 pub const GET_WALLET_ADDRESS: &str = "get_wallet_address";
 
@@ -68,6 +69,13 @@ impl RootTokenContract<'_> {
 
         let data = root_token_contract::get_jetton_data(result)?;
         Ok(data)
+    }
+
+    pub fn get_meta(&self) -> anyhow::Result<JettonRootMeta> {
+        let result = self.0.run_getter(GET_JETTON_META, &[])?;
+
+        let meta = root_token_contract::get_jetton_meta(result)?;
+        Ok(meta)
     }
 }
 
