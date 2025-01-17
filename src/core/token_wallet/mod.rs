@@ -221,29 +221,31 @@ impl TokenWallet {
         Ok((attached_amount * FEE_MULTIPLIER) as u64)
     }
 
-    async fn calculate_initial_balance(
+    fn calculate_initial_balance(
         &self,
         config: &BlockchainConfig,
         address: &MsgAddressInt,
     ) -> Result<u64> {
         let gas_config = config.get_gas_config(address.is_masterchain());
 
-        let contract_state = self
-            .contract_subscription()
-            .transport()
-            .get_contract_state(address)
-            .await?;
+        let prices = config.raw_config().storage_prices()?;
+        let mut most_recent_bit_price = 0;
+        let mut most_recent_mc_bit_price = 0;
+        let mut most_recent_time = 0;
 
-        let storage_fees = match contract_state.into_contract() {
-            Some(contract) => {
-                let storage_fees = config.calc_storage_fee(
-                    &contract.account.storage_stat,
-                    address.is_masterchain(),
-                    contract.timings.current_utime(self.clock.as_ref()),
-                )?;
-                storage_fees.as_u128() as u64
+        for i in 0..prices.len()? {
+            let price = prices.get(i as u32)?;
+            if most_recent_time < price.utime_since {
+                most_recent_time = price.utime_since;
+                most_recent_bit_price = price.bit_price_ps;
+                most_recent_mc_bit_price = price.mc_bit_price_ps;
             }
-            None => 0,
+        }
+
+        let storage_fees = if address.is_masterchain() {
+            most_recent_mc_bit_price
+        } else {
+            most_recent_bit_price
         };
 
         Ok(30000 * gas_config.gas_price + 100_000_000 * storage_fees / 1) // ever_storage_fee = 1)
@@ -266,11 +268,11 @@ impl TokenWallet {
 
         match &destination {
             TransferRecipient::OwnerWallet(address) => {
-                initial_balance = self.calculate_initial_balance(&config, &address).await?;
+                initial_balance = self.calculate_initial_balance(&config, &address)?;
                 attached_amount += initial_balance;
             }
             TransferRecipient::TokenWallet(address) => {
-                initial_balance = self.calculate_initial_balance(&config, &address).await?;
+                initial_balance = self.calculate_initial_balance(&config, &address)?;
             }
         }
 
