@@ -258,6 +258,7 @@ impl TokenWallet {
         mut attached_amount: u64,
     ) -> Result<InternalMessage> {
         let transport = self.contract_subscription.transport().clone();
+        let initial_balance: u64;
 
         let config = transport
             .get_blockchain_config(self.clock.as_ref(), true)
@@ -265,9 +266,12 @@ impl TokenWallet {
 
         match &destination {
             TransferRecipient::OwnerWallet(address) => {
-                attached_amount += self.calculate_initial_balance(&config, &address).await?;
+                initial_balance = self.calculate_initial_balance(&config, &address).await?;
+                attached_amount += initial_balance;
             }
-            _ => (),
+            TransferRecipient::TokenWallet(address) => {
+                initial_balance = self.calculate_initial_balance(&config, &address).await?;
+            }
         }
 
         let (function, input) = match self.version {
@@ -280,9 +284,6 @@ impl TokenWallet {
                             .arg(BigUint128(tokens)) // tokens
                     }
                     TransferRecipient::OwnerWallet(owner_wallet) => {
-                        let initial_balance = self
-                            .calculate_initial_balance(&config, &owner_wallet)
-                            .await?;
                         MessageBuilder::new(token_wallet_contract::transfer_to_recipient())
                             .arg(BigUint256(Default::default())) // recipient_public_key
                             .arg(owner_wallet) // recipient_address
@@ -305,9 +306,6 @@ impl TokenWallet {
                             .arg(token_wallet) // recipient token wallet
                     }
                     TransferRecipient::OwnerWallet(owner_wallet) => {
-                        let initial_balance = self
-                            .calculate_initial_balance(&config, &owner_wallet)
-                            .await?;
                         MessageBuilder::new(token_wallet_contract::transfer())
                             .arg(BigUint128(tokens)) // amount
                             .arg(owner_wallet) // recipient
