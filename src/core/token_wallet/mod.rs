@@ -2,13 +2,13 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use anyhow::Result;
-use num_bigint::{BigInt, BigUint, ToBigInt};
-use ton_block::MsgAddressInt;
-
 use nekoton_abi::*;
 use nekoton_contracts::tip3_any::{RootTokenContractState, TokenWalletContractState};
 use nekoton_contracts::{old_tip3, tip3_1};
 use nekoton_utils::*;
+use num_bigint::{BigInt, BigUint, ToBigInt};
+use ton_block::MsgAddressInt;
+use ton_executor::BlockchainConfig;
 
 use crate::core::models::*;
 use crate::core::parsing::*;
@@ -142,8 +142,9 @@ impl TokenWallet {
         const FEE_MULTIPLIER: u128 = 2;
 
         // Prepare internal message
-        let internal_message =
-            self.prepare_transfer(destination, tokens, notify_receiver, payload, 0)?;
+        let internal_message = self
+            .prepare_transfer(destination, tokens, notify_receiver, payload, 0)
+            .await?;
 
         let mut message = ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
             src: ton_block::MsgAddressIntOrNone::Some(
@@ -220,7 +221,35 @@ impl TokenWallet {
         Ok((attached_amount * FEE_MULTIPLIER) as u64)
     }
 
-    pub fn prepare_transfer(
+    async fn calculate_initial_balance(
+        &self,
+        config: &BlockchainConfig,
+        address: &MsgAddressInt,
+    ) -> Result<u64> {
+        let gas_config = config.get_gas_config(address.is_masterchain());
+
+        let contract_state = self
+            .contract_subscription()
+            .transport()
+            .get_contract_state(address)
+            .await?;
+
+        let storage_fees = match contract_state.into_contract() {
+            Some(contract) => {
+                let storage_fees = config.calc_storage_fee(
+                    &contract.account.storage_stat,
+                    address.is_masterchain(),
+                    contract.timings.current_utime(self.clock.as_ref()),
+                )?;
+                storage_fees.as_u128() as u64
+            }
+            None => 0,
+        };
+
+        Ok(30000 * gas_config.gas_price + 100_000_000 * storage_fees / 1) // ever_storage_fee = 1)
+    }
+
+    pub async fn prepare_transfer(
         &self,
         destination: TransferRecipient,
         tokens: BigUint,
@@ -228,8 +257,17 @@ impl TokenWallet {
         payload: ton_types::Cell,
         mut attached_amount: u64,
     ) -> Result<InternalMessage> {
-        if matches!(&destination, TransferRecipient::OwnerWallet(_)) {
-            attached_amount += INITIAL_BALANCE;
+        let transport = self.contract_subscription.transport().clone();
+
+        let config = transport
+            .get_blockchain_config(self.clock.as_ref(), true)
+            .await?;
+
+        match &destination {
+            TransferRecipient::OwnerWallet(address) => {
+                attached_amount += self.calculate_initial_balance(&config, &address).await?;
+            }
+            _ => (),
         }
 
         let (function, input) = match self.version {
@@ -242,11 +280,14 @@ impl TokenWallet {
                             .arg(BigUint128(tokens)) // tokens
                     }
                     TransferRecipient::OwnerWallet(owner_wallet) => {
+                        let initial_balance = self
+                            .calculate_initial_balance(&config, &owner_wallet)
+                            .await?;
                         MessageBuilder::new(token_wallet_contract::transfer_to_recipient())
                             .arg(BigUint256(Default::default())) // recipient_public_key
                             .arg(owner_wallet) // recipient_address
                             .arg(BigUint128(tokens)) // tokens
-                            .arg(BigUint128(INITIAL_BALANCE.into())) // deploy_grams
+                            .arg(BigUint128(initial_balance.into())) // deploy_grams
                     }
                 }
                 .arg(BigUint128(Default::default())) // grams / transfer_grams
@@ -264,10 +305,13 @@ impl TokenWallet {
                             .arg(token_wallet) // recipient token wallet
                     }
                     TransferRecipient::OwnerWallet(owner_wallet) => {
+                        let initial_balance = self
+                            .calculate_initial_balance(&config, &owner_wallet)
+                            .await?;
                         MessageBuilder::new(token_wallet_contract::transfer())
                             .arg(BigUint128(tokens)) // amount
                             .arg(owner_wallet) // recipient
-                            .arg(BigUint128(INITIAL_BALANCE.into())) // deployWalletValue
+                            .arg(BigUint128(initial_balance.into())) // deployWalletValue
                     }
                 }
                 .arg(&self.owner) // remainingGasTo
@@ -469,8 +513,6 @@ pub async fn get_token_root_details_from_token_wallet(
 
     Ok((root_token_contract, details))
 }
-
-const INITIAL_BALANCE: u64 = 100_000_000; // 0.1 TON
 
 fn make_contract_state_handler(
     clock: Arc<dyn Clock>,
