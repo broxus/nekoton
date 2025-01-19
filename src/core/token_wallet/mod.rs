@@ -1,6 +1,11 @@
 use std::convert::TryFrom;
 use std::sync::Arc;
 
+use crate::core::models::*;
+use crate::core::parsing::*;
+use crate::core::transactions_tree::*;
+use crate::transport::models::{RawContractState, RawTransaction};
+use crate::transport::Transport;
 use anyhow::Result;
 use nekoton_abi::*;
 use nekoton_contracts::tip3_any::{RootTokenContractState, TokenWalletContractState};
@@ -9,12 +14,6 @@ use nekoton_utils::*;
 use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::MsgAddressInt;
 use ton_executor::BlockchainConfig;
-
-use crate::core::models::*;
-use crate::core::parsing::*;
-use crate::core::transactions_tree::*;
-use crate::transport::models::{RawContractState, RawTransaction};
-use crate::transport::Transport;
 
 use super::{ContractSubscription, InternalMessage};
 
@@ -233,14 +232,14 @@ impl TokenWallet {
         let mut most_recent_mc_bit_price = 0;
         let mut most_recent_time = 0;
 
-        for i in 0..prices.len()? {
-            let price = prices.get(i as u32)?;
+        prices.map.iterate(|price| {
             if most_recent_time < price.utime_since {
                 most_recent_time = price.utime_since;
                 most_recent_bit_price = price.bit_price_ps;
                 most_recent_mc_bit_price = price.mc_bit_price_ps;
             }
-        }
+            Ok(true)
+        })?;
 
         let storage_fees = if address.is_masterchain() {
             most_recent_mc_bit_price
@@ -248,7 +247,9 @@ impl TokenWallet {
             most_recent_bit_price
         };
 
-        Ok(30000 * gas_config.gas_price + 100_000_000 * storage_fees / 1) // ever_storage_fee = 1)
+        Ok(30000u64
+            .saturating_mul(gas_config.gas_price)
+            .saturating_add(100_000_000u64.saturating_mul(storage_fees)))
     }
 
     pub async fn prepare_transfer(
@@ -259,21 +260,18 @@ impl TokenWallet {
         payload: ton_types::Cell,
         mut attached_amount: u64,
     ) -> Result<InternalMessage> {
-        let transport = self.contract_subscription.transport().clone();
-        let initial_balance: u64;
-
-        let config = transport
-            .get_blockchain_config(self.clock.as_ref(), true)
-            .await?;
+        let mut initial_balance: u64 = 0;
 
         match &destination {
-            TransferRecipient::OwnerWallet(address) => {
-                initial_balance = self.calculate_initial_balance(&config, &address)?;
-                attached_amount += initial_balance;
-            }
             TransferRecipient::TokenWallet(address) => {
-                initial_balance = self.calculate_initial_balance(&config, &address)?;
+                let transport = self.contract_subscription.transport();
+                let config = transport
+                    .get_blockchain_config(self.clock.as_ref(), true)
+                    .await?;
+                initial_balance = self.calculate_initial_balance(&config, address)?;
+                attached_amount += initial_balance
             }
+            _ => (),
         }
 
         let (function, input) = match self.version {
