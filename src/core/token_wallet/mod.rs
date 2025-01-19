@@ -252,6 +252,14 @@ impl TokenWallet {
             .saturating_add(100_000_000u64.saturating_mul(storage_fees)))
     }
 
+    fn stub_balance(address: &MsgAddressInt) -> u64 {
+        if address.is_masterchain() {
+            1000
+        } else {
+            1
+        }
+    }
+
     pub async fn prepare_transfer(
         &self,
         destination: TransferRecipient,
@@ -260,19 +268,22 @@ impl TokenWallet {
         payload: ton_types::Cell,
         mut attached_amount: u64,
     ) -> Result<InternalMessage> {
-        let mut initial_balance: u64 = 0;
-
-        match &destination {
-            TransferRecipient::TokenWallet(address) => {
+        let initial_balance = match &destination {
+            TransferRecipient::OwnerWallet(address) => {
                 let transport = self.contract_subscription.transport();
                 let config = transport
                     .get_blockchain_config(self.clock.as_ref(), true)
                     .await?;
-                initial_balance = self.calculate_initial_balance(&config, address)?;
-                attached_amount += initial_balance
+
+                let initial_balance = match self.calculate_initial_balance(&config, address) {
+                    Ok(value) => value + Self::stub_balance(address),
+                    Err(_) => Self::stub_balance(address),
+                };
+                attached_amount += initial_balance;
+                initial_balance
             }
-            _ => (),
-        }
+            TransferRecipient::TokenWallet(address) => Self::stub_balance(address),
+        };
 
         let (function, input) = match self.version {
             TokenWalletVersion::OldTip3v4 => {
