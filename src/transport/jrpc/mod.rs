@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use nekoton_utils::*;
 use serde::{Deserialize, Serialize};
 use ton_block::{Block, Deserializable, MsgAddressInt};
 use ton_types::{Cell, UInt256};
-use nekoton_utils::*;
 
 use crate::core::models::{NetworkCapabilities, ReliableBehavior};
 use crate::external::{self, JrpcConnection};
@@ -104,12 +104,7 @@ impl Transport for JrpcTransport {
 
     async fn get_library_cell(&self, hash: &UInt256) -> Result<Option<Cell>> {
         let req = external::JrpcRequest {
-            data: make_jrpc_request(
-                "getLibraryCell",
-                &GetLibraryCell {
-                    hash
-                },
-            ),
+            data: make_jrpc_request("getLibraryCell", &GetLibraryCell { hash }),
             requires_db: false,
         };
 
@@ -126,7 +121,7 @@ impl Transport for JrpcTransport {
                 let bytes = base64::decode(boc)?;
                 Some(ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())?)
             }
-            None => None
+            None => None,
         };
 
         Ok(cell)
@@ -330,7 +325,13 @@ mod tests {
     #[tokio::test]
     async fn test_library_cells() {
         let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
-        let result = transport.get_library_cell(&UInt256::from_str("4f4f10cb9a30582792fb3c1e364de5a6fbe6fe04f4167f1f12f83468c767aeb3").unwrap())
+        let result = transport
+            .get_library_cell(
+                &UInt256::from_str(
+                    "4f4f10cb9a30582792fb3c1e364de5a6fbe6fe04f4167f1f12f83468c767aeb3",
+                )
+                .unwrap(),
+            )
             .await
             .unwrap();
 

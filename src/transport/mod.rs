@@ -1,9 +1,9 @@
+use crate::models::{NetworkCapabilities, ReliableBehavior};
 use anyhow::Result;
 use nekoton_utils::Clock;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
 use ton_types::Cell;
-use crate::models::{NetworkCapabilities, ReliableBehavior};
 
 use self::models::*;
 

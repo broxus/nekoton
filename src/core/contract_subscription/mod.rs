@@ -421,7 +421,8 @@ impl ContractSubscription {
                 utils::update_library_cell(
                     self.transport.as_ref(),
                     &mut state.account.storage.state,
-                ).await?;
+                )
+                .await?;
             }
 
             on_contract_state(&mut contract_state);
