@@ -5,7 +5,7 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
-
+use ton_types::{Cell, UInt256};
 use nekoton_abi::{GenTimings, LastTransactionId};
 use nekoton_utils::*;
 
@@ -254,6 +254,10 @@ impl Transport for GqlTransport {
             }),
             Err(_) => Err(NodeClientError::InvalidAccountState.into()),
         }
+    }
+
+    async fn get_library_cell(&self, _: &UInt256) -> Result<Option<Cell>> {
+        unimplemented!()
     }
 
     async fn poll_contract_state(

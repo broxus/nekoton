@@ -9,14 +9,12 @@ use ed25519_dalek::PublicKey;
 use futures_util::{Future, FutureExt, Stream};
 use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
 use nekoton_utils::*;
-use serde::Deserialize;
 use ton_block::{AccountState, Deserializable, MsgAddressInt, Serializable};
 use ton_types::{CellType, SliceData, UInt256};
 
 use crate::core::models::*;
 #[cfg(feature = "wallet_core")]
 use crate::crypto::{SignedMessage, UnsignedMessage};
-use crate::external::{GqlConnection, GqlRequest};
 use crate::transport::models::RawTransaction;
 use crate::transport::Transport;
 
@@ -496,7 +494,7 @@ pub fn default_headers(
 type HeadersMap = HashMap<String, ton_abi::TokenValue>;
 
 pub async fn update_library_cell<'a>(
-    connection: &'a dyn GqlConnection,
+    transport: &'a dyn Transport,
     state: &mut AccountState,
 ) -> Result<()> {
     if let AccountState::AccountActive { ref mut state_init } = state {
@@ -512,49 +510,13 @@ pub async fn update_library_cell<'a>(
                 let mut hash = UInt256::default();
                 hash.read_from(&mut slice_data)?;
 
-                let cell = download_lib(connection, hash).await?;
-                state_init.set_code(cell);
+                let cell = transport.get_library_cell(&hash).await?;
+                if let Some(cell) = cell {
+                    state_init.set_code(cell);
+                }
             }
         }
     }
 
     Ok(())
-}
-
-async fn download_lib<'a>(
-    connection: &'a dyn GqlConnection,
-    hash: UInt256,
-) -> Result<ton_types::Cell> {
-    let query = serde_json::json!({
-        "query": format!("{{
-        get_lib(
-            lib_hash: \"{}\"
-        )
-    }}", hash.to_hex_string().to_uppercase())
-    })
-    .to_string();
-
-    let response = connection
-        .post(GqlRequest {
-            data: query,
-            long_query: false,
-        })
-        .await?;
-
-    #[derive(Deserialize)]
-    struct GqlResponse {
-        data: Data,
-    }
-
-    #[derive(Deserialize)]
-    struct Data {
-        get_lib: String,
-    }
-
-    let parsed: GqlResponse = serde_json::from_str(&response)?;
-
-    let bytes = base64::decode(parsed.data.get_lib)?;
-    let cell = ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())?;
-
-    Ok(cell)
 }

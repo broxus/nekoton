@@ -2,9 +2,10 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use ton_block::{Block, Deserializable, MsgAddressInt, Serializable};
-
+use ton_types::{Cell, UInt256};
 use nekoton_proto::prost::{bytes::Bytes, Message};
 use nekoton_proto::protos::rpc;
+use nekoton_proto::protos::rpc::response::GetLibraryCell;
 use nekoton_proto::utils;
 
 use nekoton_utils::*;
@@ -134,6 +135,37 @@ impl Transport for ProtoTransport {
         };
 
         self.accounts_cache.update_account_state(address, &result);
+        Ok(result)
+    }
+
+    async fn get_library_cell(&self, hash: &UInt256) -> Result<Option<Cell>> {
+        let data = rpc::Request {
+            call: Some(rpc::request::Call::GetLibraryCell(
+                rpc::request::GetLibraryCell {
+                    hash: hash.into_vec().into()
+                },
+            )),
+        };
+
+        let req = external::ProtoRequest {
+            data: data.encode_to_vec(),
+            requires_db: false,
+        };
+
+        let data = self.connection.post(req).await?;
+        let response = rpc::Response::decode(Bytes::from(data))?;
+        let result = match response.result {
+            Some(rpc::response::Result::GetLibraryCell(GetLibraryCell {cell})) => {
+                match cell {
+                    Some(boc) => {
+                        let cell = ton_types::deserialize_tree_of_cells(&mut boc.as_ref())?;
+                        Some(cell)
+                    },
+                    None => None
+                }
+            }
+            _ => return Err(ProtoClientError::InvalidResponse.into()),
+        };
         Ok(result)
     }
 
@@ -402,7 +434,6 @@ mod tests {
     use std::str::FromStr;
 
     use futures_util::StreamExt;
-
     use super::*;
 
     #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
@@ -418,6 +449,19 @@ mod tests {
                 .await?;
 
             Ok(response.bytes().await?.into())
+        }
+    }
+
+    #[tokio::test]
+    async fn test_library_cells_proto() {
+        let transport = ProtoTransport::new(Arc::new(reqwest::Client::new()));
+        let result = transport.get_library_cell(&UInt256::from_str("4f4f10cb9a30582792fb3c1e364de5a6fbe6fe04f4167f1f12f83468c767aeb3").unwrap())
+            .await
+            .unwrap();
+
+        match result {
+            Some(cell) => println!("{:?}", cell.repr_hash()),
+            None => println!("No library cell"),
         }
     }
 

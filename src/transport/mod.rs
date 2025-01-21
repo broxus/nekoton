@@ -2,7 +2,7 @@ use anyhow::Result;
 use nekoton_utils::Clock;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
-
+use ton_types::Cell;
 use crate::models::{NetworkCapabilities, ReliableBehavior};
 
 use self::models::*;
@@ -30,6 +30,8 @@ pub trait Transport: Send + Sync {
     async fn send_message(&self, message: &ton_block::Message) -> Result<()>;
 
     async fn get_contract_state(&self, address: &MsgAddressInt) -> Result<RawContractState>;
+
+    async fn get_library_cell(&self, hash: &ton_types::UInt256) -> Result<Option<Cell>>;
 
     async fn poll_contract_state(
         &self,

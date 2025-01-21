@@ -76,7 +76,6 @@ impl TokenWallet {
             ContractSubscription::subscribe(
                 clock.clone(),
                 transport,
-                None,
                 address,
                 &mut make_contract_state_handler(clock.clone(), version, &mut balance),
                 on_transactions_found,

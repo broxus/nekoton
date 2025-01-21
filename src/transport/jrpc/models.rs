@@ -3,6 +3,11 @@ use serde::{Deserialize, Serialize};
 use nekoton_utils::*;
 
 #[derive(Serialize)]
+pub struct GetLibraryCell<'a> {
+    #[serde(with = "serde_uint256")]
+    pub hash: &'a ton_types::UInt256,
+}
+#[derive(Serialize)]
 pub struct GetContractState<'a> {
     #[serde(with = "serde_address")]
     pub address: &'a ton_block::MsgAddressInt,

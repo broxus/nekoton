@@ -3,7 +3,6 @@ use std::sync::Arc;
 
 use crate::core::models::*;
 use crate::core::parsing::*;
-use crate::external::GqlConnection;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 use anyhow::Result;
@@ -33,7 +32,6 @@ impl JettonWallet {
     pub async fn subscribe(
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
-        gql_connection: Option<Arc<dyn GqlConnection>>,
         owner: MsgAddressInt,
         root_token_contract: MsgAddressInt,
         handler: Arc<dyn JettonWalletSubscriptionHandler>,
@@ -70,7 +68,6 @@ impl JettonWallet {
             ContractSubscription::subscribe(
                 clock.clone(),
                 transport,
-                gql_connection,
                 address,
                 &mut make_contract_state_handler(clock.clone(), &mut balance),
                 on_transactions_found,
@@ -296,12 +293,12 @@ pub trait JettonWalletSubscriptionHandler: Send + Sync {
 }
 
 pub async fn get_wallet_data(
-    gql_connection: Arc<dyn GqlConnection>,
+    transport: Arc<dyn Transport>,
     account: ton_block::AccountStuff,
 ) -> Result<JettonWalletData> {
     let mut account = account;
 
-    utils::update_library_cell(gql_connection.as_ref(), &mut account.storage.state).await?;
+    utils::update_library_cell(transport.as_ref(), &mut account.storage.state).await?;
 
     let token_wallet_state = nekoton_contracts::jetton::TokenWalletContract(ExecutionContext {
         clock: &SimpleClock,
@@ -313,12 +310,12 @@ pub async fn get_wallet_data(
 }
 
 pub async fn get_token_root_meta(
-    gql_connection: Arc<dyn GqlConnection>,
+    transport: Arc<dyn Transport>,
     account: ton_block::AccountStuff,
 ) -> Result<JettonRootMeta> {
     let mut account = account;
 
-    utils::update_library_cell(gql_connection.as_ref(), &mut account.storage.state).await?;
+    utils::update_library_cell(transport.as_ref(), &mut account.storage.state).await?;
 
     let token_root_state = nekoton_contracts::jetton::RootTokenContract(ExecutionContext {
         clock: &SimpleClock,
@@ -332,7 +329,6 @@ pub async fn get_token_root_meta(
 pub async fn get_token_wallet_details(
     clock: &dyn Clock,
     transport: Arc<dyn Transport>,
-    gql_connection: Arc<dyn GqlConnection>,
     token_wallet: &MsgAddressInt,
 ) -> Result<(JettonWalletData, JettonRootData)> {
     let mut token_wallet_state = match transport.get_contract_state(token_wallet).await? {
@@ -343,7 +339,7 @@ pub async fn get_token_wallet_details(
     };
 
     utils::update_library_cell(
-        gql_connection.as_ref(),
+        transport.as_ref(),
         &mut token_wallet_state.account.storage.state,
     )
     .await?;
@@ -372,7 +368,6 @@ pub async fn get_token_wallet_details(
 pub async fn get_token_root_details(
     clock: &dyn Clock,
     transport: &dyn Transport,
-    gql_connection: Arc<dyn GqlConnection>,
     root_token_contract: &MsgAddressInt,
 ) -> Result<JettonRootData> {
     let mut state = match transport.get_contract_state(root_token_contract).await? {
@@ -382,7 +377,7 @@ pub async fn get_token_root_details(
         }
     };
 
-    utils::update_library_cell(gql_connection.as_ref(), &mut state.account.storage.state).await?;
+    utils::update_library_cell(transport, &mut state.account.storage.state).await?;
 
     nekoton_contracts::jetton::RootTokenContract(state.as_context(clock)).get_details()
 }
@@ -390,7 +385,6 @@ pub async fn get_token_root_details(
 pub async fn get_token_root_details_from_token_wallet(
     clock: &dyn Clock,
     transport: Arc<dyn Transport>,
-    gql_connection: Arc<dyn GqlConnection>,
     token_wallet_address: &MsgAddressInt,
 ) -> Result<(MsgAddressInt, JettonRootData)> {
     let mut state = match transport.get_contract_state(token_wallet_address).await? {
@@ -400,7 +394,7 @@ pub async fn get_token_root_details_from_token_wallet(
         }
     };
 
-    utils::update_library_cell(gql_connection.as_ref(), &mut state.account.storage.state).await?;
+    utils::update_library_cell(transport.as_ref(), &mut state.account.storage.state).await?;
 
     let root_token_contract =
         nekoton_contracts::jetton::TokenWalletContract(state.as_context(clock)).root()?;

@@ -13,7 +13,6 @@ use super::models::{
 use super::{utils, PollingMethod};
 
 use crate::core::utils::{MessageContext, PendingTransactionsExt};
-use crate::external::GqlConnection;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
 
@@ -21,7 +20,6 @@ use crate::transport::Transport;
 pub struct ContractSubscription {
     clock: Arc<dyn Clock>,
     transport: Arc<dyn Transport>,
-    gql_connection: Option<Arc<dyn GqlConnection>>,
     address: MsgAddressInt,
     contract_state: ContractState,
     latest_known_lt: Option<u64>,
@@ -33,7 +31,6 @@ impl ContractSubscription {
     pub async fn subscribe(
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
-        gql_connection: Option<Arc<dyn GqlConnection>>,
         address: MsgAddressInt,
         on_contract_state: OnContractState<'_>,
         on_transactions_found: Option<OnTransactionsFound<'_>>,
@@ -41,7 +38,6 @@ impl ContractSubscription {
         let mut result = Self {
             clock,
             transport,
-            gql_connection,
             address,
             contract_state: Default::default(),
             latest_known_lt: None,
@@ -421,14 +417,11 @@ impl ContractSubscription {
         };
 
         if updated {
-            if let Some(connection) = self.gql_connection.as_ref() {
-                if let RawContractState::Exists(state) = &mut contract_state {
-                    utils::update_library_cell(
-                        connection.as_ref(),
-                        &mut state.account.storage.state,
-                    )
-                    .await?;
-                }
+            if let RawContractState::Exists(state) = &mut contract_state {
+                utils::update_library_cell(
+                    self.transport.as_ref(),
+                    &mut state.account.storage.state,
+                ).await?;
             }
 
             on_contract_state(&mut contract_state);
