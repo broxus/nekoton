@@ -1381,7 +1381,7 @@ mod tests {
             ..Default::default()
         };
 
-        let transaction =
+        let _ =
             executor.execute_with_libs_and_params(in_msg.as_ref(), &mut root_cell, params)?;
 
         Ok(())
