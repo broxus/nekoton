@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+use std::ops::Shr;
 use std::sync::Arc;
 
 use crate::core::models::*;
@@ -247,9 +248,15 @@ impl TokenWallet {
             most_recent_bit_price
         };
 
-        Ok(30000u64
-            .saturating_mul(gas_config.gas_price)
-            .saturating_add(100_000_000u64.saturating_mul(storage_fees)))
+        let fees = if storage_fees > 1 {
+            600_000_000u64
+        } else {
+            30000u64
+                .saturating_mul(gas_config.gas_price.shr(16))
+                .saturating_add(100_000_000u64.saturating_mul(storage_fees))
+        };
+
+        Ok(fees)
     }
 
     pub async fn prepare_transfer(
