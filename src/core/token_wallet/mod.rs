@@ -231,11 +231,11 @@ impl TokenWallet {
         let prices = config.raw_config().storage_prices()?;
         let mut most_recent_bit_price = 0;
         let mut most_recent_mc_bit_price = 0;
-        let mut most_recent_time = 0;
+        let mut most_recent_time: i32 = -1;
 
         prices.map.iterate(|price| {
-            if most_recent_time < price.utime_since {
-                most_recent_time = price.utime_since;
+            if most_recent_time < price.utime_since as i32 {
+                most_recent_time = price.utime_since as i32;
                 most_recent_bit_price = price.bit_price_ps;
                 most_recent_mc_bit_price = price.mc_bit_price_ps;
             }
