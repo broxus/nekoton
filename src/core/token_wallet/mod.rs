@@ -248,13 +248,13 @@ impl TokenWallet {
             most_recent_bit_price
         };
 
-        let fees = if storage_fees > 1 {
+        let fee_base = if storage_fees > 1 {
             600_000_000u64
         } else {
-            30000u64
-                .saturating_mul(gas_config.gas_price.shr(16))
-                .saturating_add(100_000_000u64.saturating_mul(storage_fees))
+            100_000_000u64
         };
+
+        let fees = 30000u64.saturating_mul(gas_config.gas_price.shr(16)) + fee_base;
 
         Ok(fees)
     }
