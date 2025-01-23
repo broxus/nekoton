@@ -257,7 +257,7 @@ impl Transport for GqlTransport {
     }
 
     async fn get_library_cell(&self, _: &UInt256) -> Result<Option<Cell>> {
-        unimplemented!()
+        Ok(None)
     }
 
     async fn poll_contract_state(
