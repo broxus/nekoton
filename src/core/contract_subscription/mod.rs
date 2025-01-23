@@ -5,8 +5,7 @@ use futures_util::StreamExt;
 use nekoton_abi::{Executor, LastTransactionId};
 use nekoton_utils::*;
 use serde::{Deserialize, Serialize};
-use ton_block::MsgAddressInt;
-
+use ton_block::{AccountStuff, MsgAddressInt};
 use super::models::{
     ContractState, PendingTransaction, ReliableBehavior, TransactionsBatchInfo,
     TransactionsBatchType,
@@ -252,10 +251,16 @@ impl ContractSubscription {
             .transport
             .get_blockchain_config(self.clock.as_ref(), true)
             .await?;
+
         let mut account = match self.transport.get_contract_state(&self.address).await? {
             RawContractState::Exists(state) => ton_block::Account::Account(state.account),
-            RawContractState::NotExists { .. } => ton_block::Account::AccountNone,
+            RawContractState::NotExists { .. } if options.override_balance.is_some() => {
+                let stuff = AccountStuff { addr: self.address.clone(), ..Default::default() };
+                ton_block::Account::Account(stuff)
+            }
+            RawContractState::NotExists { .. }  => ton_block::Account::AccountNone
         };
+
 
         if let Some(balance) = options.override_balance {
             account.set_balance(balance.into());
