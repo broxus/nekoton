@@ -1,11 +1,17 @@
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Request {
-    #[prost(oneof = "request::Call", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11")]
+    #[prost(oneof = "request::Call", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12")]
     pub call: ::core::option::Option<request::Call>,
 }
 /// Nested message and enum types in `Request`.
 pub mod request {
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct GetLibraryCell {
+        #[prost(bytes = "bytes", tag = "1")]
+        pub hash: ::prost::bytes::Bytes,
+    }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct GetContractState {
@@ -52,13 +58,6 @@ pub mod request {
         #[prost(bytes = "bytes", tag = "1")]
         pub message: ::prost::bytes::Bytes,
     }
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct GetLibraryCell {
-        #[prost(bytes = "bytes", tag = "1")]
-        pub hash: ::prost::bytes::Bytes,
-    }
-
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Call {
@@ -161,14 +160,15 @@ pub mod response {
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct GetContractState {
-        #[prost(oneof = "get_contract_state::State", tags = "1, 2, 3")]
-        pub state: ::core::option::Option<get_contract_state::State>,
-    }
-    #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct GetLibraryCell {
         #[prost(bytes = "bytes", optional, tag = "1")]
         pub cell: ::core::option::Option<::prost::bytes::Bytes>,
+    }
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct GetContractState {
+        #[prost(oneof = "get_contract_state::State", tags = "1, 2, 3")]
+        pub state: ::core::option::Option<get_contract_state::State>,
     }
     /// Nested message and enum types in `GetContractState`.
     pub mod get_contract_state {
@@ -267,7 +267,7 @@ pub mod response {
         #[prost(message, tag = "10")]
         SendMessage(()),
         #[prost(message, tag = "11")]
-        GetLibraryCell(GetLibraryCell)
+        GetLibraryCell(GetLibraryCell),
     }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
