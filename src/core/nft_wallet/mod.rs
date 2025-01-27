@@ -220,7 +220,7 @@ impl Nft {
         send_gas_to: MsgAddressInt,
         callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
     ) -> Result<InternalMessage> {
-        const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
+        const ATTACHED_AMOUNT: u128 = 1_000_000_000; // 1 TON
         let (function, input) = MessageBuilder::new(nft_contract::transfer())
             .arg(to)
             .arg(send_gas_to)
@@ -246,7 +246,7 @@ impl Nft {
         send_gas_to: MsgAddressInt,
         callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
     ) -> Result<InternalMessage> {
-        const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
+        const ATTACHED_AMOUNT: u128 = 1_000_000_000; // 1 TON
         let (function, input) = MessageBuilder::new(nft_contract::change_manager())
             .arg(new_manager)
             .arg(send_gas_to)
@@ -272,7 +272,7 @@ impl Nft {
         send_gas_to: MsgAddressInt,
         callbacks: BTreeMap<MsgAddressInt, NftCallbackPayload>,
     ) -> Result<InternalMessage> {
-        const ATTACHED_AMOUNT: u64 = 1_000_000_000; // 1 TON
+        const ATTACHED_AMOUNT: u128 = 1_000_000_000; // 1 TON
         let (function, input) = MessageBuilder::new(nft_contract::change_owner())
             .arg(new_owner)
             .arg(send_gas_to)

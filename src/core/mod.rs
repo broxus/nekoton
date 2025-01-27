@@ -49,7 +49,7 @@ pub struct InternalMessage {
     #[serde(with = "serde_address")]
     pub destination: ton_block::MsgAddressInt,
     #[serde(with = "serde_string")]
-    pub amount: u64,
+    pub amount: u128,
     pub bounce: bool,
     #[serde(with = "serde_boc")]
     pub body: ton_types::SliceData,
