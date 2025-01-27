@@ -287,7 +287,9 @@ impl InitData {
                     ihr_disabled: true,
                     bounce: gift.bounce,
                     dst: gift.destination,
-                    value: gift.amount.into(),
+                    value: ton_block::CurrencyCollection::from_grams(ton_block::Grams::new(
+                        gift.amount,
+                    )?),
                     ..Default::default()
                 });
 

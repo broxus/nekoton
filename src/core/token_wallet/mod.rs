@@ -224,7 +224,7 @@ impl TokenWallet {
         &self,
         config: &BlockchainConfig,
         address: &MsgAddressInt,
-    ) -> Result<u64> {
+    ) -> Result<u128> {
         let gas_config = config.get_gas_config(address.is_masterchain());
 
         let prices = config.raw_config().storage_prices()?;
@@ -255,7 +255,7 @@ impl TokenWallet {
 
         let fees = 30000u64.saturating_mul(gas_config.gas_price.shr(16)) + fee_base;
 
-        Ok(fees)
+        Ok(fees as u128)
     }
 
     pub async fn prepare_transfer(
@@ -264,9 +264,9 @@ impl TokenWallet {
         tokens: BigUint,
         notify_receiver: bool,
         payload: ton_types::Cell,
-        mut attached_amount: u64,
+        mut attached_amount: u128,
     ) -> Result<InternalMessage> {
-        fn stub_balance(address: &MsgAddressInt) -> u64 {
+        fn stub_balance(address: &MsgAddressInt) -> u128 {
             if address.is_masterchain() {
                 1000
             } else {

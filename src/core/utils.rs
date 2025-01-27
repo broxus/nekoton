@@ -140,7 +140,7 @@ pub fn parse_block(
 
     let new_contract_state = ContractState {
         last_lt,
-        balance: balance as u64,
+        balance: balance.try_into().unwrap_or_default(),
         gen_timings: GenTimings::Known {
             gen_lt: info.end_lt(),
             gen_utime: info.gen_utime().as_u32(),

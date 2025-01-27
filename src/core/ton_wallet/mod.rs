@@ -911,7 +911,7 @@ pub struct Gift {
     pub flags: u8,
     pub bounce: bool,
     pub destination: MsgAddressInt,
-    pub amount: u64,
+    pub amount: u128,
     pub body: Option<SliceData>,
     pub state_init: Option<ton_block::StateInit>,
 }

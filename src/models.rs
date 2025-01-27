@@ -509,7 +509,7 @@ pub struct ContractState {
 
     /// Full account balance in nano TON
     #[serde(with = "serde_string")]
-    pub balance: u64,
+    pub balance: u128,
     /// At what point was this state obtained
     pub gen_timings: GenTimings,
     /// Last transaction id
@@ -737,7 +737,7 @@ pub struct Message {
     pub dst: Option<MsgAddressInt>,
 
     /// Message value in nano TON
-    pub value: u64,
+    pub value: u128,
 
     /// Whether this message will be bounced on unsuccessful execution.
     pub bounce: bool,
@@ -771,7 +771,7 @@ impl<'de> Deserialize<'de> for Message {
             #[serde(default, with = "serde_optional_address")]
             dst: Option<MsgAddressInt>,
             #[serde(with = "serde_string")]
-            value: u64,
+            value: u128,
             bounce: bool,
             bounced: bool,
             body: Option<String>,
@@ -892,7 +892,7 @@ impl TryFrom<ton_types::Cell> for Message {
                     ton_block::MsgAddressIntOrNone::None => None,
                 },
                 dst: Some(header.dst.clone()),
-                value: header.value.grams.as_u128() as u64,
+                value: header.value.grams.as_u128(),
                 body,
                 bounce: header.bounce,
                 bounced: header.bounced,

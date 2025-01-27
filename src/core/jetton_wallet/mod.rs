@@ -137,7 +137,7 @@ impl JettonWallet {
         custom_payload: Option<ton_types::Cell>,
         callback_value: BigUint,
         callback_payload: Option<ton_types::Cell>,
-        attached_amount: u64,
+        attached_amount: u128,
     ) -> Result<InternalMessage> {
         let mut builder = BuilderData::new();
 
