@@ -1,11 +1,17 @@
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Request {
-    #[prost(oneof = "request::Call", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11")]
+    #[prost(oneof = "request::Call", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12")]
     pub call: ::core::option::Option<request::Call>,
 }
 /// Nested message and enum types in `Request`.
 pub mod request {
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct GetLibraryCell {
+        #[prost(bytes = "bytes", tag = "1")]
+        pub hash: ::prost::bytes::Bytes,
+    }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct GetContractState {
@@ -77,12 +83,14 @@ pub mod request {
         GetAccountsByCodeHash(GetAccountsByCodeHash),
         #[prost(message, tag = "11")]
         SendMessage(SendMessage),
+        #[prost(message, tag = "12")]
+        GetLibraryCell(GetLibraryCell),
     }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Response {
-    #[prost(oneof = "response::Result", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10")]
+    #[prost(oneof = "response::Result", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11")]
     pub result: ::core::option::Option<response::Result>,
 }
 /// Nested message and enum types in `Response`.
@@ -149,6 +157,12 @@ pub mod response {
     pub struct GetAccountsByCodeHash {
         #[prost(bytes = "bytes", repeated, tag = "1")]
         pub account: ::prost::alloc::vec::Vec<::prost::bytes::Bytes>,
+    }
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct GetLibraryCell {
+        #[prost(bytes = "bytes", optional, tag = "1")]
+        pub cell: ::core::option::Option<::prost::bytes::Bytes>,
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
@@ -252,6 +266,8 @@ pub mod response {
         GetContractState(GetContractState),
         #[prost(message, tag = "10")]
         SendMessage(()),
+        #[prost(message, tag = "11")]
+        GetLibraryCell(GetLibraryCell),
     }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]

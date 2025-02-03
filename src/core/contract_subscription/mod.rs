@@ -1,18 +1,17 @@
 use std::sync::Arc;
 
-use anyhow::Result;
-use futures_util::StreamExt;
-use serde::{Deserialize, Serialize};
-use ton_block::MsgAddressInt;
-
-use nekoton_abi::{Executor, LastTransactionId};
-use nekoton_utils::*;
-
 use super::models::{
     ContractState, PendingTransaction, ReliableBehavior, TransactionsBatchInfo,
     TransactionsBatchType,
 };
 use super::{utils, PollingMethod};
+use anyhow::Result;
+use futures_util::StreamExt;
+use nekoton_abi::{Executor, LastTransactionId};
+use nekoton_utils::*;
+use serde::{Deserialize, Serialize};
+use ton_block::{AccountStuff, MsgAddressInt};
+
 use crate::core::utils::{MessageContext, PendingTransactionsExt};
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
@@ -248,8 +247,16 @@ impl ContractSubscription {
             .transport
             .get_blockchain_config(self.clock.as_ref(), true)
             .await?;
+
         let mut account = match self.transport.get_contract_state(&self.address).await? {
             RawContractState::Exists(state) => ton_block::Account::Account(state.account),
+            RawContractState::NotExists { .. } if options.override_balance.is_some() => {
+                let stuff = AccountStuff {
+                    addr: self.address.clone(),
+                    ..Default::default()
+                };
+                ton_block::Account::Account(stuff)
+            }
             RawContractState::NotExists { .. } => ton_block::Account::AccountNone,
         };
 
@@ -387,7 +394,7 @@ impl ContractSubscription {
         prev_trans_lt: Option<u64>,
         on_contract_state: OnContractState<'_>,
     ) -> Result<bool> {
-        let contract_state = match prev_trans_lt {
+        let mut contract_state = match prev_trans_lt {
             Some(last_lt) => {
                 let poll = self
                     .transport
@@ -412,7 +419,15 @@ impl ContractSubscription {
         };
 
         if updated {
-            on_contract_state(&contract_state);
+            if let RawContractState::Exists(state) = &mut contract_state {
+                utils::update_library_cell(
+                    self.transport.as_ref(),
+                    &mut state.account.storage.state,
+                )
+                .await?;
+            }
+
+            on_contract_state(&mut contract_state);
             self.contract_state = new_contract_state;
             self.transactions_synced = false;
         } else {

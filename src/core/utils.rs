@@ -7,10 +7,10 @@ use std::task::{Context, Poll};
 use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use futures_util::{Future, FutureExt, Stream};
-use ton_block::{MsgAddressInt, Serializable};
-
 use nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
 use nekoton_utils::*;
+use ton_block::{AccountState, Deserializable, MsgAddressInt, Serializable};
+use ton_types::{CellType, SliceData, UInt256};
 
 use crate::core::models::*;
 #[cfg(feature = "wallet_core")]
@@ -140,7 +140,7 @@ pub fn parse_block(
 
     let new_contract_state = ContractState {
         last_lt,
-        balance: balance as u64,
+        balance: balance.try_into().unwrap_or_default(),
         gen_timings: GenTimings::Known {
             gen_lt: info.end_lt(),
             gen_utime: info.gen_utime().as_u32(),
@@ -492,3 +492,31 @@ pub fn default_headers(
 }
 
 type HeadersMap = HashMap<String, ton_abi::TokenValue>;
+
+pub async fn update_library_cell<'a>(
+    transport: &'a dyn Transport,
+    state: &mut AccountState,
+) -> Result<()> {
+    if let AccountState::AccountActive { ref mut state_init } = state {
+        if let Some(cell) = &state_init.code {
+            if cell.cell_type() == CellType::LibraryReference {
+                let mut slice_data = SliceData::load_cell(cell.clone())?;
+
+                // Read Library Cell Tag
+                let tag = slice_data.get_next_byte()?;
+                assert_eq!(tag, 2);
+
+                // Read Code Hash
+                let mut hash = UInt256::default();
+                hash.read_from(&mut slice_data)?;
+
+                let cell = transport.get_library_cell(&hash).await?;
+                if let Some(cell) = cell {
+                    state_init.set_code(cell);
+                }
+            }
+        }
+    }
+
+    Ok(())
+}

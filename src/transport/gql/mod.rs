@@ -3,11 +3,11 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use serde::Deserialize;
-use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
-
 use nekoton_abi::{GenTimings, LastTransactionId};
 use nekoton_utils::*;
+use serde::Deserialize;
+use ton_block::{Account, Deserializable, Message, MsgAddressInt, Serializable};
+use ton_types::{Cell, UInt256};
 
 use crate::core::models::{NetworkCapabilities, ReliableBehavior};
 use crate::external::{GqlConnection, GqlRequest};
@@ -254,6 +254,10 @@ impl Transport for GqlTransport {
             }),
             Err(_) => Err(NodeClientError::InvalidAccountState.into()),
         }
+    }
+
+    async fn get_library_cell(&self, _: &UInt256) -> Result<Option<Cell>> {
+        anyhow::bail!("Library cells search is not supported by this GraphQL transport")
     }
 
     async fn poll_contract_state(

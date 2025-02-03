@@ -8,8 +8,10 @@ use ton_types::{BuilderData, Cell, IBitstring, SliceData, UInt256};
 use nekoton_utils::*;
 
 use super::{Gift, TonWalletDetails, TransferAction};
-use crate::core::models::{Expiration, ExpireAt, PendingTransaction};
+use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
+
+const SIGNED_EXTERNAL_PREFIX: u32 = 0x7369676E;
 
 pub fn prepare_deploy(
     clock: &dyn Clock,
@@ -17,7 +19,9 @@ pub fn prepare_deploy(
     workchain: i8,
     expiration: Expiration,
 ) -> Result<Box<dyn UnsignedMessage>> {
-    let init_data = InitData::from_key(public_key).with_wallet_id(WALLET_ID);
+    let init_data = InitData::from_key(public_key)
+        .with_wallet_id(WALLET_ID)
+        .with_is_signature_allowed(true);
     let dst = compute_contract_address(public_key, workchain);
     let mut message =
         ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
@@ -30,7 +34,7 @@ pub fn prepare_deploy(
     let expire_at = ExpireAt::new(clock, expiration);
     let (hash, payload) = init_data.make_transfer_payload(None, expire_at.timestamp)?;
 
-    Ok(Box::new(UnsignedWalletV3Message {
+    Ok(Box::new(UnsignedWalletV5 {
         init_data,
         gifts: Vec::new(),
         payload,
@@ -38,50 +42,6 @@ pub fn prepare_deploy(
         expire_at,
         hash,
     }))
-}
-
-/// Adjusts seqno if there are some recent pending transactions that have not expired
-pub fn estimate_seqno_offset(
-    clock: &dyn Clock,
-    current_state: &ton_block::AccountStuff,
-    pending_transactions: &[PendingTransaction],
-) -> u32 {
-    const SEQNO_ADJUST_INTERVAL: u32 = 30; // seconds
-
-    #[inline]
-    fn same_lt(lt_from_pending: u64, lt_from_state: u64) -> bool {
-        // NOTE: `pending.latest_lt` can be exact transaction lt, or
-        // `storage.last_trans_lt` which is a bit greater
-        const ALLOWED_LT_DIFF: u64 = 1 + MAX_MESSAGES as u64;
-
-        (lt_from_pending..=lt_from_pending + ALLOWED_LT_DIFF).contains(&lt_from_state)
-    }
-
-    if pending_transactions.is_empty() {
-        return 0;
-    }
-
-    let now = clock.now_sec_u64() as u32;
-    let latest_lt = current_state.storage.last_trans_lt;
-
-    let mut seqno_offset = 0;
-    for pending in pending_transactions.iter().rev() {
-        // Adjust only for sufficiently new pending transactions.
-        if now > pending.created_at + SEQNO_ADJUST_INTERVAL {
-            break;
-        }
-
-        // Adjust only if account state hasn't changed
-        if !same_lt(pending.latest_lt, latest_lt) {
-            break;
-        }
-
-        if now < pending.expire_at {
-            seqno_offset += 1;
-        }
-    }
-
-    seqno_offset
 }
 
 pub fn prepare_transfer(
@@ -93,19 +53,21 @@ pub fn prepare_transfer(
     expiration: Expiration,
 ) -> Result<TransferAction> {
     if gifts.len() > MAX_MESSAGES {
-        return Err(WalletV3Error::TooManyGifts.into());
+        return Err(WalletV5Error::TooManyGifts.into());
     }
 
     let (mut init_data, with_state_init) = match &current_state.storage.state {
         ton_block::AccountState::AccountActive { state_init, .. } => match &state_init.data {
             Some(data) => (InitData::try_from(data)?, false),
-            None => return Err(WalletV3Error::InvalidInitData.into()),
+            None => return Err(WalletV5Error::InvalidInitData.into()),
         },
         ton_block::AccountState::AccountFrozen { .. } => {
-            return Err(WalletV3Error::AccountIsFrozen.into())
+            return Err(WalletV5Error::AccountIsFrozen.into())
         }
         ton_block::AccountState::AccountUninit => (
-            InitData::from_key(public_key).with_wallet_id(WALLET_ID),
+            InitData::from_key(public_key)
+                .with_wallet_id(WALLET_ID)
+                .with_is_signature_allowed(true),
             true,
         ),
     };
@@ -125,7 +87,7 @@ pub fn prepare_transfer(
     let expire_at = ExpireAt::new(clock, expiration);
     let (hash, payload) = init_data.make_transfer_payload(gifts.clone(), expire_at.timestamp)?;
 
-    Ok(TransferAction::Sign(Box::new(UnsignedWalletV3Message {
+    Ok(TransferAction::Sign(Box::new(UnsignedWalletV5 {
         init_data,
         gifts,
         payload,
@@ -136,7 +98,7 @@ pub fn prepare_transfer(
 }
 
 #[derive(Clone)]
-struct UnsignedWalletV3Message {
+struct UnsignedWalletV5 {
     init_data: InitData,
     gifts: Vec<Gift>,
     payload: BuilderData,
@@ -145,7 +107,7 @@ struct UnsignedWalletV3Message {
     message: ton_block::Message,
 }
 
-impl UnsignedMessage for UnsignedWalletV3Message {
+impl UnsignedMessage for UnsignedWalletV5 {
     fn refresh_timeout(&mut self, clock: &dyn Clock) {
         if !self.expire_at.refresh(clock) {
             return;
@@ -169,7 +131,7 @@ impl UnsignedMessage for UnsignedWalletV3Message {
 
     fn sign(&self, signature: &[u8; ed25519_dalek::SIGNATURE_LENGTH]) -> Result<SignedMessage> {
         let mut payload = self.payload.clone();
-        payload.prepend_raw(signature, signature.len() * 8)?;
+        payload.append_raw(signature, signature.len() * 8)?;
 
         let mut message = self.message.clone();
         message.set_body(SliceData::load_builder(payload)?);
@@ -186,7 +148,7 @@ impl UnsignedMessage for UnsignedWalletV3Message {
         prune_after_depth: u16,
     ) -> Result<SignedMessage> {
         let mut payload = self.payload.clone();
-        payload.prepend_raw(signature, signature.len() * 8)?;
+        payload.append_raw(signature, signature.len() * 8)?;
         let body = payload.into_cell()?;
 
         let mut message = self.message.clone();
@@ -200,16 +162,17 @@ impl UnsignedMessage for UnsignedWalletV3Message {
 }
 
 pub static CODE_HASH: &[u8; 32] = &[
-    0x84, 0xda, 0xfa, 0x44, 0x9f, 0x98, 0xa6, 0x98, 0x77, 0x89, 0xba, 0x23, 0x23, 0x58, 0x07, 0x2b,
-    0xc0, 0xf7, 0x6d, 0xc4, 0x52, 0x40, 0x02, 0xa5, 0xd0, 0x91, 0x8b, 0x9a, 0x75, 0xd2, 0xd5, 0x99,
+    0x20, 0x83, 0x4b, 0x7b, 0x72, 0xb1, 0x12, 0x14, 0x7e, 0x1b, 0x2f, 0xb4, 0x57, 0xb8, 0x4e, 0x74,
+    0xd1, 0xa3, 0x0f, 0x04, 0xf7, 0x37, 0xd4, 0xf6, 0x2a, 0x66, 0x8e, 0x95, 0x52, 0xd2, 0xb7, 0x2f,
 ];
 
-pub fn is_wallet_v3(code_hash: &UInt256) -> bool {
+pub fn is_wallet_v5r1(code_hash: &UInt256) -> bool {
     code_hash.as_slice() == CODE_HASH
 }
 
 pub fn compute_contract_address(public_key: &PublicKey, workchain_id: i8) -> MsgAddressInt {
     InitData::from_key(public_key)
+        .with_is_signature_allowed(true)
         .with_wallet_id(WALLET_ID)
         .compute_addr(workchain_id)
         .trust_me()
@@ -227,14 +190,16 @@ pub static DETAILS: TonWalletDetails = TonWalletDetails {
     required_confirmations: None,
 };
 
-const MAX_MESSAGES: usize = 4;
+const MAX_MESSAGES: usize = 250;
 
-/// `WalletV3` init data
-#[derive(Clone, Copy)]
+/// `WalletV5` init data
+#[derive(Clone)]
 pub struct InitData {
+    pub is_signature_allowed: bool,
     pub seqno: u32,
     pub wallet_id: u32,
     pub public_key: UInt256,
+    pub extensions: Option<Cell>,
 }
 
 impl InitData {
@@ -244,10 +209,17 @@ impl InitData {
 
     pub fn from_key(key: &PublicKey) -> Self {
         Self {
+            is_signature_allowed: false,
             seqno: 0,
             wallet_id: 0,
             public_key: key.as_bytes().into(),
+            extensions: Default::default(),
         }
+    }
+
+    pub fn with_is_signature_allowed(mut self, is_allowed: bool) -> Self {
+        self.is_signature_allowed = is_allowed;
+        self
     }
 
     pub fn with_wallet_id(mut self, id: u32) -> Self {
@@ -267,7 +239,7 @@ impl InitData {
 
     pub fn make_state_init(&self) -> Result<ton_block::StateInit> {
         Ok(ton_block::StateInit {
-            code: Some(nekoton_contracts::wallets::code::wallet_v3()),
+            code: Some(nekoton_contracts::wallets::code::wallet_v5r1()),
             data: Some(self.serialize()?),
             ..Default::default()
         })
@@ -275,9 +247,18 @@ impl InitData {
 
     pub fn serialize(&self) -> Result<Cell> {
         let mut data = BuilderData::new();
-        data.append_u32(self.seqno)?
+        data.append_bit_bool(self.is_signature_allowed)?
+            .append_u32(self.seqno)?
             .append_u32(self.wallet_id)?
             .append_raw(self.public_key.as_slice(), 256)?;
+
+        if let Some(extensions) = &self.extensions {
+            data.append_bit_one()?
+                .checked_append_reference(extensions.clone())?;
+        } else {
+            data.append_bit_zero()?;
+        }
+
         data.into_cell()
     }
 
@@ -286,15 +267,26 @@ impl InitData {
         gifts: impl IntoIterator<Item = Gift>,
         expire_at: u32,
     ) -> Result<(UInt256, BuilderData)> {
+        // Check if signatures are allowed
+        if !self.is_signature_allowed {
+            return if self.extensions.is_none() {
+                Err(WalletV5Error::WalletLocked.into())
+            } else {
+                Err(WalletV5Error::SignaturesDisabled.into())
+            };
+        }
+
         let mut payload = BuilderData::new();
 
         // insert prefix
         payload
+            .append_u32(SIGNED_EXTERNAL_PREFIX)?
             .append_u32(self.wallet_id)?
             .append_u32(expire_at)?
             .append_u32(self.seqno)?;
 
-        // create internal message
+        let mut actions = ton_block::OutActions::new();
+
         for gift in gifts {
             let mut internal_message =
                 ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
@@ -315,11 +307,19 @@ impl InitData {
                 internal_message.set_state_init(state_init);
             }
 
-            // append it to the body
-            payload
-                .append_u8(gift.flags)?
-                .checked_append_reference(internal_message.serialize()?)?;
+            let action = ton_block::OutAction::SendMsg {
+                mode: gift.flags,
+                out_msg: internal_message,
+            };
+
+            actions.push_back(action);
         }
+
+        payload.append_bit_one()?;
+        payload.checked_append_reference(actions.serialize()?)?;
+
+        // has_other_actions
+        payload.append_bit_zero()?;
 
         let hash = payload.clone().into_cell()?.repr_hash();
 
@@ -333,21 +333,74 @@ impl TryFrom<&Cell> for InitData {
     fn try_from(data: &Cell) -> Result<Self, Self::Error> {
         let mut cs = SliceData::load_cell_ref(data)?;
         Ok(Self {
+            is_signature_allowed: cs.get_next_bit()?,
             seqno: cs.get_next_u32()?,
             wallet_id: cs.get_next_u32()?,
             public_key: UInt256::from_be_bytes(&cs.get_next_bytes(32)?),
+            extensions: cs.get_next_dictionary()?,
         })
     }
 }
 
-const WALLET_ID: u32 = 0x4BA92D8A;
+const WALLET_ID: u32 = 0x7FFFFF11;
 
 #[derive(thiserror::Error, Debug)]
-enum WalletV3Error {
+enum WalletV5Error {
     #[error("Invalid init data")]
     InvalidInitData,
     #[error("Account is frozen")]
     AccountIsFrozen,
     #[error("Too many outgoing messages")]
     TooManyGifts,
+    #[error("Signatures are disabled")]
+    SignaturesDisabled,
+    #[error("Wallet locked")]
+    WalletLocked,
+}
+
+#[cfg(test)]
+mod tests {
+    use ed25519_dalek::PublicKey;
+    use nekoton_contracts::wallets;
+    use ton_block::AccountState;
+
+    use crate::core::ton_wallet::wallet_v5r1::{
+        compute_contract_address, is_wallet_v5r1, InitData, WALLET_ID,
+    };
+
+    #[test]
+    fn state_init() -> anyhow::Result<()> {
+        let cell = ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgECFgEAAucAAm6ADZRqTnEksRaYvpXRMbgzB92SzFv/19WbfQQgdDo7lYwEWQnKBnPzD1AAAXPmjwdAEj9i9OgmAgEAUYAAAAG///+IyIPTKTihvw1MFdzCAl7NQWIaeY9xhjENsss4FdrN+FAgART/APSkE/S88sgLAwIBIAYEAQLyBQEeINcLH4IQc2lnbrry4Ip/EQIBSBAHAgEgCQgAGb5fD2omhAgKDrkPoCwCASANCgIBSAwLABGyYvtRNDXCgCAAF7Ml+1E0HHXIdcLH4AIBbg8OABmvHfaiaEAQ65DrhY/AABmtznaiaEAg65Drhf/AAtzQINdJwSCRW49jINcLHyCCEGV4dG69IYIQc2ludL2wkl8D4IIQZXh0brqOtIAg1yEB0HTXIfpAMPpE+Cj6RDBYvZFb4O1E0IEBQdch9AWDB/QOb6ExkTDhgEDXIXB/2zzgMSDXSYECgLmRMOBw4hIRAeaO8O2i7fshgwjXIgKDCNcjIIAg1yHTH9Mf0x/tRNDSANMfINMf0//XCgAK+QFAzPkQmiiUXwrbMeHywIffArNQB7Dy0IRRJbry4IVQNrry4Ib4I7vy0IgikvgA3gGkf8jKAMsfAc8Wye1UIJL4D95w2zzYEgP27aLt+wL0BCFukmwhjkwCIdc5MHCUIccAs44tAdcoIHYeQ2wg10nACPLgkyDXSsAC8uCTINcdBscSwgBSMLDy0InXTNc5MAGk6GwShAe78uCT10rAAPLgk+1V4tIAAcAAkVvg69csCBQgkXCWAdcsCBwS4lIQseMPINdKFRQTABCTW9sx4ddM0AByMNcsCCSOLSHy4JLSAO1E0NIAURO68tCPVFAwkTGcAYEBQNch1woA8uCO4sjKAFjPFsntVJPywI3iAJYB+kAB+kT4KPpEMFi68uCR7UTQgQFB1xj0BQSdf8jKAEAEgwf0U/Lgi44UA4MH9Fvy4Iwi1woAIW4Bs7Dy0JDiyFADzxYS9ADJ7VQ=").unwrap().as_slice()).unwrap();
+        let state = nekoton_utils::deserialize_account_stuff(cell)?;
+
+        if let AccountState::AccountActive { state_init } = state.storage.state() {
+            let init_data = InitData::try_from(state_init.data().unwrap())?;
+            assert_eq!(init_data.is_signature_allowed, true);
+            assert_eq!(
+                init_data.public_key.to_hex_string(),
+                "9107a65271437e1a982bb98404bd9a82c434f31ee30c621b6596702bb59bf0a0"
+            );
+            assert_eq!(init_data.wallet_id, WALLET_ID);
+            assert_eq!(init_data.extensions, None);
+
+            let public_key = PublicKey::from_bytes(init_data.public_key.as_slice())?;
+            let address = compute_contract_address(&public_key, 0);
+            assert_eq!(
+                address.to_string(),
+                "0:6ca35273892588b4c5f4ae898dc1983eec9662dffebeacdbe82103a1d1dcac60"
+            );
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn code_hash() -> anyhow::Result<()> {
+        let code_cell = wallets::code::wallet_v5r1();
+
+        let is_wallet_v5r1 = is_wallet_v5r1(&code_cell.repr_hash());
+        assert!(is_wallet_v5r1);
+
+        Ok(())
+    }
 }

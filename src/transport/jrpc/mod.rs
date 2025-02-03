@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use nekoton_utils::*;
 use serde::{Deserialize, Serialize};
 use ton_block::{Block, Deserializable, MsgAddressInt};
-
-use nekoton_utils::*;
+use ton_types::{Cell, UInt256};
 
 use crate::core::models::{NetworkCapabilities, ReliableBehavior};
 use crate::external::{self, JrpcConnection};
@@ -100,6 +100,31 @@ impl Transport for JrpcTransport {
         let response = tiny_jsonrpc::parse_response::<RawContractState>(&data)?;
         self.accounts_cache.update_account_state(address, &response);
         Ok(response)
+    }
+
+    async fn get_library_cell(&self, hash: &UInt256) -> Result<Option<Cell>> {
+        let req = external::JrpcRequest {
+            data: make_jrpc_request("getLibraryCell", &GetLibraryCell { hash }),
+            requires_db: false,
+        };
+
+        #[derive(Deserialize)]
+        struct LibraryCellResponse {
+            cell: Option<String>,
+        }
+
+        let data = self.connection.post(req).await?;
+
+        let response = tiny_jsonrpc::parse_response::<LibraryCellResponse>(&data)?;
+        let cell = match response.cell {
+            Some(boc) => {
+                let bytes = base64::decode(boc)?;
+                Some(ton_types::deserialize_tree_of_cells(&mut bytes.as_slice())?)
+            }
+            None => None,
+        };
+
+        Ok(cell)
     }
 
     async fn poll_contract_state(
@@ -294,6 +319,25 @@ mod tests {
                 .await?;
             // println!("{}", text);
             Ok(text)
+        }
+    }
+
+    #[tokio::test]
+    async fn test_library_cells() {
+        let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
+        let result = transport
+            .get_library_cell(
+                &UInt256::from_str(
+                    "4f4f10cb9a30582792fb3c1e364de5a6fbe6fe04f4167f1f12f83468c767aeb3",
+                )
+                .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        match result {
+            Some(cell) => println!("{:?}", cell.repr_hash()),
+            None => println!("No library cell"),
         }
     }
 

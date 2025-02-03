@@ -3,13 +3,14 @@ use std::convert::TryFrom;
 use anyhow::Result;
 use num_bigint::BigUint;
 use once_cell::race::OnceBox;
-use ton_block::MsgAddressInt;
-use ton_types::UInt256;
+use ton_block::{Deserializable, MsgAddressInt};
+use ton_types::{SliceData, UInt256};
 
 use nekoton_abi::*;
 use nekoton_contracts::tip4_1::nft_contract;
 use nekoton_contracts::{old_tip3, tip3_1};
 
+use crate::core::jetton_wallet::{JETTON_INTERNAL_TRANSFER_OPCODE, JETTON_TRANSFER_OPCODE};
 use crate::core::models::*;
 use crate::core::ton_wallet::{MultisigType, WalletType};
 
@@ -64,6 +65,30 @@ pub fn parse_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
     None
 }
 
+pub fn parse_jetton_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
+    let mut payload = payload;
+
+    let opcode = payload.get_next_u32().ok()?;
+    if opcode != JETTON_TRANSFER_OPCODE {
+        return None;
+    }
+
+    let _query_id = payload.get_next_u64().ok()?;
+
+    let mut amount = ton_block::Grams::default();
+    amount.read_from(&mut payload).ok()?;
+
+    let mut dst_addr = MsgAddressInt::default();
+    dst_addr.read_from(&mut payload).ok()?;
+
+    Some(KnownPayload::JettonOutgoingTransfer(
+        JettonOutgoingTransfer {
+            to: dst_addr,
+            tokens: BigUint::from(amount.as_u128()),
+        },
+    ))
+}
+
 pub fn parse_transaction_additional_info(
     tx: &ton_block::Transaction,
     wallet_type: WalletType,
@@ -94,6 +119,29 @@ pub fn parse_transaction_additional_info(
                         Some(recipient.clone()),
                         known_payload,
                         WalletInteractionMethod::WalletV3Transfer,
+                    )
+                }
+                WalletType::WalletV4R1 | WalletType::WalletV4R2 | WalletType::WalletV5R1 => {
+                    let mut out_msg = None;
+                    tx.out_msgs
+                        .iterate(|item| {
+                            out_msg = Some(item.0);
+                            Ok(false)
+                        })
+                        .ok()?;
+
+                    let out_msg = out_msg?;
+                    let recipient = match out_msg.header() {
+                        ton_block::CommonMsgInfo::IntMsgInfo(header) => &header.dst,
+                        _ => return None,
+                    };
+
+                    let known_payload = out_msg.body().and_then(parse_jetton_payload);
+
+                    (
+                        Some(recipient.clone()),
+                        known_payload,
+                        WalletInteractionMethod::TonWalletTransfer,
                     )
                 }
                 WalletType::Multisig(multisig_type) => {
@@ -174,6 +222,8 @@ pub fn parse_transaction_additional_info(
         TokenWalletDeployedNotification::try_from(InputMessage(inputs))
             .map(TransactionAdditionalInfo::TokenWalletDeployed)
             .ok()
+    } else if function_id == JettonNotify::FUNCTION_ID {
+        JettonNotify::decode_body(body).map(TransactionAdditionalInfo::JettonNotify)
     } else {
         None
     }
@@ -211,6 +261,32 @@ impl WalletNotificationFunctions {
             Box::new(WalletNotificationFunctions {
                 notify_wallet_deployed: notifications::notify_wallet_deployed(),
             })
+        })
+    }
+}
+
+struct JettonNotify;
+
+impl JettonNotify {
+    const FUNCTION_ID: u32 = 0x7362d09c;
+
+    fn decode_body(data: ton_types::SliceData) -> Option<JettonIncomingTransfer> {
+        let mut payload = data;
+
+        let function_id = payload.get_next_u32().ok()?;
+        assert_eq!(function_id, Self::FUNCTION_ID);
+
+        let _query_id = payload.get_next_u64().ok()?;
+
+        let mut amount = ton_block::Grams::default();
+        amount.read_from(&mut payload).ok()?;
+
+        let mut sender = MsgAddressInt::default();
+        sender.read_from(&mut payload).ok()?;
+
+        Some(JettonIncomingTransfer {
+            from: sender,
+            tokens: BigUint::from(amount.as_u128()),
         })
     }
 }
@@ -587,6 +663,66 @@ pub fn parse_token_transaction(
     }
 }
 
+pub fn parse_jetton_transaction(
+    tx: &ton_block::Transaction,
+    description: &ton_block::TransactionDescrOrdinary,
+) -> Option<JettonWalletTransaction> {
+    const STANDART_JETTON_CELLS: usize = 0;
+    const MINTLESS_JETTON_CELLS: usize = 2;
+
+    if description.aborted {
+        return None;
+    }
+
+    let in_msg = tx.in_msg.as_ref()?.read_struct().ok()?;
+
+    // Workaround to extract body since we don`t store the type in message
+    let mut body = {
+        let body = in_msg.body()?;
+        let refs = body.remaining_references();
+
+        match refs {
+            MINTLESS_JETTON_CELLS => {
+                let cell = body.reference_opt(1)?;
+                SliceData::load_cell(cell).ok()?
+            }
+            STANDART_JETTON_CELLS => body,
+            _ => return None,
+        }
+    };
+
+    let opcode = body.get_next_u32().ok()?;
+
+    if opcode != JETTON_TRANSFER_OPCODE && opcode != JETTON_INTERNAL_TRANSFER_OPCODE {
+        return None;
+    }
+
+    // Skip query id
+    body.move_by(64).ok()?;
+
+    let mut grams = ton_block::Grams::default();
+    grams.read_from(&mut body).ok()?;
+
+    let amount = BigUint::from(grams.as_u128());
+
+    let mut addr = MsgAddressInt::default();
+    addr.read_from(&mut body).ok()?;
+
+    match opcode {
+        JETTON_TRANSFER_OPCODE => Some(JettonWalletTransaction::Transfer(JettonOutgoingTransfer {
+            to: addr,
+            tokens: amount,
+        })),
+        JETTON_INTERNAL_TRANSFER_OPCODE => Some(JettonWalletTransaction::InternalTransfer(
+            JettonIncomingTransfer {
+                from: addr,
+                tokens: amount,
+            },
+        )),
+        _ => None,
+    }
+}
+
 struct NftFunctions {
     transfer: &'static ton_abi::Function,
     change_owner: &'static ton_abi::Function,
@@ -879,10 +1015,11 @@ impl TryFrom<InputMessage> for IncomingChangeOwner {
 mod tests {
     use std::str::FromStr;
 
-    use ton_block::{Deserializable, Transaction, TransactionDescrOrdinary};
-
     use super::*;
     use crate::core::ton_wallet::MultisigType;
+
+    use nekoton_abi::num_traits::ToPrimitive;
+    use ton_block::{Deserializable, Transaction, TransactionDescrOrdinary};
 
     fn parse_transaction(data: &str) -> (Transaction, TransactionDescrOrdinary) {
         let tx = Transaction::construct_from_base64(data).unwrap();
@@ -1014,5 +1151,88 @@ mod tests {
             parse_token_transaction(&tx, &description, TokenWalletVersion::OldTip3v4).unwrap(),
             TokenWalletTransaction::TransferBounced(_)
         ));
+    }
+
+    #[test]
+    fn test_parse_wallet_v5r1_transfer() {
+        let (tx, description) = parse_transaction("te6ccgECDgEAAroAA7V6PzxB5ur5JLcojkw57D91dcch0SdJBkRg11onChvcQxAAAuqQo7KQGfOICr+MryG/HTeCGLoHvR2QzQp8l/VW7Jy5KteDKoNgAALqkJdMvBZ0b1RwADRmUxQIBQQBAg8MQoYY8SmEQAMCAG/JhfBQTA/WGAAAAAAAAgAAAAAAAxZIaTNMW1cxmByM5WsWV9cxExzB5+1s+b7Uz5613xWmQNAtXACdQmljE4gAAAAAAAAAACPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIACCcp/sV0iKg0YadasmKflOuBQl9+BT1AMGK8jDUAHzabPWEAUiOhXPDSZMLX8X/WQ0jZRy1Ef+OW9TZFgZ7OoiSM4CAeAIBgEB3wcBsWgBR+eIPN1fJJblEcmHPYfurrjkOiTpIMiMGutE4UN7iGMABaelQoOWDtcjd5wKID6i0sUbGwEsUr2tFotsGs7AiEdQUQ/0AAYP1jQAAF1SFHZSBM6N6o7ACwHliAFH54g83V8kluURyYc9h+6uuOQ6JOkgyIwa60ThQ3uIYgObSztz///4izo3vDAAACqUsU/LVK+ma1KSpaW5p+h9917oIw6a7Txpn/VJg/WB7C5dJQYSdVOvNFZvNMz1vvv5wMwo33jnWdrh1jaHQJXGBQkCCg7DyG0DDQoBaGIAC09KhQcsHa5G7zgUQH1FpYo2NgJYpXtaLRbYNZ2BEI6goh/oAAAAAAAAAAAAAAAAAAELAbIPin6lAAAAAAAAAABUUC0RQAgAcgwTrCsIXFRhmQTVWMIpgapb1R1i6mXzRjfAhiAa+x8AKPzxB5ur5JLcojkw57D91dcch0SdJBkRg11onChvcQxIHJw4AQwACW7J3GUgAAA=");
+        assert!(!description.aborted);
+
+        let wallet_transaction = parse_transaction_additional_info(&tx, WalletType::WalletV5R1);
+        assert!(wallet_transaction.is_some());
+
+        if let Some(TransactionAdditionalInfo::WalletInteraction(WalletInteractionInfo {
+            recipient,
+            known_payload,
+            ..
+        })) = wallet_transaction
+        {
+            assert_eq!(
+                recipient.unwrap(),
+                MsgAddressInt::from_str(
+                    "0:169e950a0e583b5c8dde702880fa8b4b146c6c04b14af6b45a2db06b3b02211d"
+                )
+                .unwrap()
+            );
+
+            assert!(known_payload.is_some());
+
+            let payload = known_payload.unwrap();
+            if let KnownPayload::JettonOutgoingTransfer(JettonOutgoingTransfer { to, tokens }) =
+                payload
+            {
+                assert_eq!(
+                    to,
+                    MsgAddressInt::from_str(
+                        "0:390609d615842e2a30cc826aac6114c0d52dea8eb17532f9a31be043100d7d8f"
+                    )
+                    .unwrap()
+                );
+
+                assert_eq!(tokens.to_u128().unwrap(), 296400000000);
+            }
+        }
+    }
+
+    #[test]
+    fn test_jetton_incoming_transfer() {
+        let (tx, description) = parse_transaction("te6ccgECEQEAA18AA7VyIr+K0006cnz63RzDYQCVEwPdJSutXyVs8FkkuI/aUhAAAuqVnc5wMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZ0cDmQAFxhZIHoBQQBAhUECQF3khgYYMNQEQMCAG/Jh45gTBQmPAAAAAAABgACAAAABCVSGbb14fUjN0CNk0Gb357AgRdmQAzjvhXKQxQsysyEQNA6FACeQH0MDwXYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACCcpCuyJZa+rsW68PLm0COuucbYY14eIvIDQmENZPKyY2kdcLRm1JwTMPyj/1uPSmUxtxqBm0adw5aQV4xl7KOWKwCAeAMBgIB3QkHAQEgCADJSABEV/FaaadOT59bo5hsIBKiYHukpXWr5K2eCySXEftKQwAbKNSc4kliLTF9K6JjcGYPuyWYt/+vqzb6CEDodHcrGBAVsEtIBggjWgAAXVKzuc4Kzo4HMmqZO22AAADJtrLp10ABASAKAatIAERX8Vppp05Pn1ujmGwgEqJge6SldavkrZ4LJJcR+0pDACVnoRAcypBvfVhKhUZM4vfJwlpqV0CQVAZrLvutrEkmhAQGDAMIAABdUrO5zgjOjgcywAsAXnNi0JwAAAGTbWXTrhZIANlGpOcSSxFpi+ldExuDMH3ZLMW//X1Zt9BCB0OjuVjAArFoAFvJbBqvg228UqryRCckJdyJhdWLi/oZ3qOObCPE9jQBAAiK/itNNOnJ8+t0cw2EAlRMD3SUrrV8lbPBZJLiP2lIUBd5IYAGF1LiAABdUrO5zgTOjgcz4A4NAKMXjUUZAAABk21l064WSADZRqTnEksRaYvpXRMbgzB92SzFv/19WbfQQgdDo7lYwQAbKNSc4kliLTF9K6JjcGYPuyWYt/+vqzb6CEDodHcrGAQFAgE0EA8AhwCAErPQiA5lSDe+rCVCoyZxe+ThLTUroEgqAzWXfdbWJJNQAsROplLUCShZxn2kTkyjrdZWWw4ol9ZAosUb+zcNiHf6CEICj0Utek39dAZraCNlF3JZ7QVzRDW+drX9S9XYryt8PWg=");
+        assert!(!description.aborted);
+
+        let jetton_transaction = parse_jetton_transaction(&tx, &description).unwrap();
+
+        if let JettonWalletTransaction::InternalTransfer(JettonIncomingTransfer { from, tokens }) =
+            jetton_transaction
+        {
+            assert_eq!(tokens.to_u128().unwrap(), 100);
+            assert_eq!(
+                from,
+                MsgAddressInt::from_str(
+                    "0:6ca35273892588b4c5f4ae898dc1983eec9662dffebeacdbe82103a1d1dcac60"
+                )
+                .unwrap()
+            );
+        }
+    }
+
+    #[test]
+    fn test_jetton_dai() {
+        let (tx, description) = parse_transaction("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");
+        assert!(!description.aborted);
+
+        let jetton_transaction = parse_jetton_transaction(&tx, &description).unwrap();
+
+        if let JettonWalletTransaction::InternalTransfer(JettonIncomingTransfer { from, tokens }) =
+            jetton_transaction
+        {
+            assert_eq!(tokens.to_u128().unwrap(), 100000000000000000);
+            assert_eq!(
+                from,
+                MsgAddressInt::from_str(
+                    "0:2cf545d69ef7331c637cbcbaa358c7d58277a1b5713788736d62435dfa050ced"
+                )
+                .unwrap()
+            );
+        }
     }
 }

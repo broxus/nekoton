@@ -28,6 +28,8 @@ pub enum TransactionAdditionalInfo {
     TokenWalletDeployed(TokenWalletDeployedNotification),
     /// User interaction with wallet contract
     WalletInteraction(WalletInteractionInfo),
+    /// Jetton wallet notification
+    JettonNotify(JettonIncomingTransfer),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -53,12 +55,14 @@ pub enum KnownPayload {
     Comment(String),
     TokenOutgoingTransfer(TokenOutgoingTransfer),
     TokenSwapBack(TokenSwapBack),
+    JettonOutgoingTransfer(JettonOutgoingTransfer),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum WalletInteractionMethod {
     WalletV3Transfer,
+    TonWalletTransfer,
     Multisig(Box<MultisigTransaction>),
 }
 
@@ -276,6 +280,13 @@ pub enum TokenWalletTransaction {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum JettonWalletTransaction {
+    Transfer(JettonOutgoingTransfer),
+    InternalTransfer(JettonIncomingTransfer),
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
 pub enum NftTransaction {
     Transfer(IncomingNftTransfer),
     ChangeOwner(IncomingChangeOwner),
@@ -300,6 +311,22 @@ pub struct TokenOutgoingTransfer {
     /// token transfer payload
     #[serde(with = "serde_cell")]
     pub payload: ton_types::Cell,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct JettonIncomingTransfer {
+    #[serde(with = "serde_string")]
+    pub from: MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub tokens: BigUint,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct JettonOutgoingTransfer {
+    #[serde(with = "serde_string")]
+    pub to: MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub tokens: BigUint,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -482,7 +509,7 @@ pub struct ContractState {
 
     /// Full account balance in nano TON
     #[serde(with = "serde_string")]
-    pub balance: u64,
+    pub balance: u128,
     /// At what point was this state obtained
     pub gen_timings: GenTimings,
     /// Last transaction id
@@ -710,7 +737,7 @@ pub struct Message {
     pub dst: Option<MsgAddressInt>,
 
     /// Message value in nano TON
-    pub value: u64,
+    pub value: u128,
 
     /// Whether this message will be bounced on unsuccessful execution.
     pub bounce: bool,
@@ -744,7 +771,7 @@ impl<'de> Deserialize<'de> for Message {
             #[serde(default, with = "serde_optional_address")]
             dst: Option<MsgAddressInt>,
             #[serde(with = "serde_string")]
-            value: u64,
+            value: u128,
             bounce: bool,
             bounced: bool,
             body: Option<String>,
@@ -865,7 +892,7 @@ impl TryFrom<ton_types::Cell> for Message {
                     ton_block::MsgAddressIntOrNone::None => None,
                 },
                 dst: Some(header.dst.clone()),
-                value: header.value.grams.as_u128() as u64,
+                value: header.value.grams.as_u128(),
                 body,
                 bounce: header.bounce,
                 bounced: header.bounced,

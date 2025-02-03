@@ -12,6 +12,7 @@ pub mod dens;
 pub mod generic_contract;
 pub mod keystore;
 pub use super::models;
+pub mod jetton_wallet;
 pub mod nft_wallet;
 pub mod owners_cache;
 pub mod parsing;
@@ -48,7 +49,7 @@ pub struct InternalMessage {
     #[serde(with = "serde_address")]
     pub destination: ton_block::MsgAddressInt,
     #[serde(with = "serde_string")]
-    pub amount: u64,
+    pub amount: u128,
     pub bounce: bool,
     #[serde(with = "serde_boc")]
     pub body: ton_types::SliceData,
