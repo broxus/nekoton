@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["BlockParsingError"],"fn":["convert_transactions","default_headers","make_labs_unsigned_message","parse_block","request_transactions"],"struct":["MessageContext","ParsedBlock"],"trait":["PendingTransactionsExt"]};
+window.SIDEBAR_ITEMS = {"enum":["BlockParsingError"],"fn":["convert_transactions","default_headers","make_labs_unsigned_message","parse_block","request_transactions","update_library_cell"],"struct":["MessageContext","ParsedBlock"],"trait":["PendingTransactionsExt"]};

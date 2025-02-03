@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/utils.rs`."><title>utils.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-b0742ba02757f159.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0 (90b35a623 2024-11-26)" data-channel="1.83.0" data-search-js="search-f0d225181b97f9a4.js" data-settings-js="settings-805db61a62df4bd2.js" ><script src="../../../static.files/storage-1d39b6787ed640ff.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f070b9041d14864c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-0111fcff984fae8f.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nekoton/core/</div>utils.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/utils.rs`."><title>utils.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.1 (e71f9a9a9 2025-01-27)" data-channel="1.84.1" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nekoton/core/</div>utils.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -492,7 +492,35 @@
 <a href="#491" id="491">491</a>
 <a href="#492" id="492">492</a>
 <a href="#493" id="493">493</a>
-<a href="#494" id="494">494</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::convert::TryFrom;
 <span class="kw">use </span>std::pin::Pin;
@@ -501,10 +529,10 @@
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>ed25519_dalek::PublicKey;
 <span class="kw">use </span>futures_util::{Future, FutureExt, Stream};
-<span class="kw">use </span>ton_block::{MsgAddressInt, Serializable};
-
 <span class="kw">use </span>nekoton_abi::{GenTimings, LastTransactionId, TransactionId};
 <span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
+<span class="kw">use </span>ton_block::{AccountState, Deserializable, MsgAddressInt, Serializable};
+<span class="kw">use </span>ton_types::{CellType, SliceData, UInt256};
 
 <span class="kw">use </span><span class="kw">crate</span>::core::models::<span class="kw-2">*</span>;
 <span class="attr">#[cfg(feature = <span class="string">"wallet_core"</span>)]
@@ -634,7 +662,7 @@
 
     <span class="kw">let </span>new_contract_state = ContractState {
         last_lt,
-        balance: balance <span class="kw">as </span>u64,
+        balance: balance.try_into().unwrap_or_default(),
         gen_timings: GenTimings::Known {
             gen_lt: info.end_lt(),
             gen_utime: info.gen_utime().as_u32(),
@@ -986,4 +1014,32 @@
 }
 
 <span class="kw">type </span>HeadersMap = HashMap&lt;String, ton_abi::TokenValue&gt;;
+
+<span class="kw">pub async fn </span>update_library_cell&lt;<span class="lifetime">'a</span>&gt;(
+    transport: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw">dyn </span>Transport,
+    state: <span class="kw-2">&amp;mut </span>AccountState,
+) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">if let </span>AccountState::AccountActive { <span class="kw-2">ref mut </span>state_init } = state {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cell) = <span class="kw-2">&amp;</span>state_init.code {
+            <span class="kw">if </span>cell.cell_type() == CellType::LibraryReference {
+                <span class="kw">let </span><span class="kw-2">mut </span>slice_data = SliceData::load_cell(cell.clone())<span class="question-mark">?</span>;
+
+                <span class="comment">// Read Library Cell Tag
+                </span><span class="kw">let </span>tag = slice_data.get_next_byte()<span class="question-mark">?</span>;
+                <span class="macro">assert_eq!</span>(tag, <span class="number">2</span>);
+
+                <span class="comment">// Read Code Hash
+                </span><span class="kw">let </span><span class="kw-2">mut </span>hash = UInt256::default();
+                hash.read_from(<span class="kw-2">&amp;mut </span>slice_data)<span class="question-mark">?</span>;
+
+                <span class="kw">let </span>cell = transport.get_library_cell(<span class="kw-2">&amp;</span>hash).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(cell) = cell {
+                    state_init.set_code(cell);
+                }
+            }
+        }
+    }
+
+    <span class="prelude-val">Ok</span>(())
+}
 </code></pre></div></section></main></body></html>

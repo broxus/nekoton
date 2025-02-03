@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["GET_JETTON_DATA","GET_JETTON_META","GET_WALLET_ADDRESS","GET_WALLET_DATA"],"struct":["JettonRootData","JettonRootMeta","JettonWalletData","RootTokenContract","TokenWalletContract"]};

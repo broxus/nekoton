@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["compute_contract_address","is_wallet_v5r1","prepare_deploy","prepare_transfer"],"static":["CODE_HASH","DETAILS"],"struct":["InitData"]};

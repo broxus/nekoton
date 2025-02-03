@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MetaDataContent"],"fn":["load_dict_snake_format"],"struct":["JettonMetaData","META_ATTRIBUTES","META_CONTENT_URL","META_DECIMALS","META_DESCRIPTION","META_IMAGE","META_IMAGE_DATA","META_MARKETPLACE","META_NAME","META_SOCIAL_LINKS","META_SYMBOL","META_URI","MetaDataField"],"type":["SnakeFormatDict"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["bridge_multisig_wallet","ever_wallet","highload_wallet_v2","multisig2","multisig2_1","safe_multisig_wallet","safe_multisig_wallet_24h","setcode_multisig_wallet","setcode_multisig_wallet_24h","surf_wallet","wallet_v3"]};
+window.SIDEBAR_ITEMS = {"fn":["bridge_multisig_wallet","ever_wallet","highload_wallet_v2","multisig2","multisig2_1","safe_multisig_wallet","safe_multisig_wallet_24h","setcode_multisig_wallet","setcode_multisig_wallet_24h","surf_wallet","wallet_v3","wallet_v4r1","wallet_v4r2","wallet_v5r1"]};

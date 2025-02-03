@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["accounts_storage","contract_subscription","dens","generic_contract","keystore","nft_wallet","owners_cache","parsing","token_wallet","ton_wallet","transactions_tree","utils"],"struct":["InternalMessage","TonInterface"]};
+window.SIDEBAR_ITEMS = {"mod":["accounts_storage","contract_subscription","dens","generic_contract","jetton_wallet","keystore","nft_wallet","owners_cache","parsing","token_wallet","ton_wallet","transactions_tree","utils"],"struct":["InternalMessage","TonInterface"]};

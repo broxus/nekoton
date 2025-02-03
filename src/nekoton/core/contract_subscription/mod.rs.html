@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/contract_subscription/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-b0742ba02757f159.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0 (90b35a623 2024-11-26)" data-channel="1.83.0" data-search-js="search-f0d225181b97f9a4.js" data-settings-js="settings-805db61a62df4bd2.js" ><script src="../../../../static.files/storage-1d39b6787ed640ff.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-f070b9041d14864c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-0111fcff984fae8f.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nekoton/core/contract_subscription/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/contract_subscription/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.1 (e71f9a9a9 2025-01-27)" data-channel="1.84.1" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nekoton/core/contract_subscription/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -514,21 +514,35 @@
 <a href="#513" id="513">513</a>
 <a href="#514" id="514">514</a>
 <a href="#515" id="515">515</a>
-<a href="#516" id="516">516</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
-
-<span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>futures_util::StreamExt;
-<span class="kw">use </span>serde::{Deserialize, Serialize};
-<span class="kw">use </span>ton_block::MsgAddressInt;
-
-<span class="kw">use </span>nekoton_abi::{Executor, LastTransactionId};
-<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span><span class="kw">super</span>::models::{
     ContractState, PendingTransaction, ReliableBehavior, TransactionsBatchInfo,
     TransactionsBatchType,
 };
 <span class="kw">use super</span>::{utils, PollingMethod};
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>futures_util::StreamExt;
+<span class="kw">use </span>nekoton_abi::{Executor, LastTransactionId};
+<span class="kw">use </span>nekoton_utils::<span class="kw-2">*</span>;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>ton_block::{AccountStuff, MsgAddressInt};
+
 <span class="kw">use </span><span class="kw">crate</span>::core::utils::{MessageContext, PendingTransactionsExt};
 <span class="kw">use </span><span class="kw">crate</span>::transport::models::{RawContractState, RawTransaction};
 <span class="kw">use </span><span class="kw">crate</span>::transport::Transport;
@@ -764,8 +778,16 @@
             </span>.transport
             .get_blockchain_config(<span class="self">self</span>.clock.as_ref(), <span class="bool-val">true</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>;
+
         <span class="kw">let </span><span class="kw-2">mut </span>account = <span class="kw">match </span><span class="self">self</span>.transport.get_contract_state(<span class="kw-2">&amp;</span><span class="self">self</span>.address).<span class="kw">await</span><span class="question-mark">? </span>{
             RawContractState::Exists(state) =&gt; ton_block::Account::Account(state.account),
+            RawContractState::NotExists { .. } <span class="kw">if </span>options.override_balance.is_some() =&gt; {
+                <span class="kw">let </span>stuff = AccountStuff {
+                    addr: <span class="self">self</span>.address.clone(),
+                    ..Default::default()
+                };
+                ton_block::Account::Account(stuff)
+            }
             RawContractState::NotExists { .. } =&gt; ton_block::Account::AccountNone,
         };
 
@@ -903,7 +925,7 @@
         prev_trans_lt: <span class="prelude-ty">Option</span>&lt;u64&gt;,
         on_contract_state: OnContractState&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool&gt; {
-        <span class="kw">let </span>contract_state = <span class="kw">match </span>prev_trans_lt {
+        <span class="kw">let </span><span class="kw-2">mut </span>contract_state = <span class="kw">match </span>prev_trans_lt {
             <span class="prelude-val">Some</span>(last_lt) =&gt; {
                 <span class="kw">let </span>poll = <span class="self">self
                     </span>.transport
@@ -928,7 +950,15 @@
         </span>};
 
         <span class="kw">if </span>updated {
-            on_contract_state(<span class="kw-2">&amp;</span>contract_state);
+            <span class="kw">if let </span>RawContractState::Exists(state) = <span class="kw-2">&amp;mut </span>contract_state {
+                utils::update_library_cell(
+                    <span class="self">self</span>.transport.as_ref(),
+                    <span class="kw-2">&amp;mut </span>state.account.storage.state,
+                )
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+            }
+
+            on_contract_state(<span class="kw-2">&amp;mut </span>contract_state);
             <span class="self">self</span>.contract_state = new_contract_state;
             <span class="self">self</span>.transactions_synced = <span class="bool-val">false</span>;
         } <span class="kw">else </span>{

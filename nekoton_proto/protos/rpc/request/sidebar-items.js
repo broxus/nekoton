@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Call"],"struct":["GetAccountsByCodeHash","GetContractState","GetDstTransaction","GetTransaction","GetTransactionsList","SendMessage"]};
+window.SIDEBAR_ITEMS = {"enum":["Call"],"struct":["GetAccountsByCodeHash","GetContractState","GetDstTransaction","GetLibraryCell","GetTransaction","GetTransactionsList","SendMessage"]};

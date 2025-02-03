@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["JETTON_INTERNAL_TRANSFER_OPCODE","JETTON_TRANSFER_OPCODE"],"fn":["get_token_root_details","get_token_root_details_from_token_wallet","get_token_root_meta","get_token_wallet_details","get_wallet_data"],"struct":["JettonWallet"],"trait":["JettonWalletSubscriptionHandler"]};

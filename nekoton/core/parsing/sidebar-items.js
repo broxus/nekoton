@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["parse_multisig_transaction","parse_nft_transaction","parse_payload","parse_token_transaction","parse_transaction_additional_info"],"struct":["ContractCall","InputMessage"]};
+window.SIDEBAR_ITEMS = {"fn":["parse_jetton_payload","parse_jetton_transaction","parse_multisig_transaction","parse_nft_transaction","parse_payload","parse_token_transaction","parse_transaction_additional_info"],"struct":["ContractCall","InputMessage"]};
