@@ -257,7 +257,7 @@ impl Transport for GqlTransport {
     }
 
     async fn get_library_cell(&self, _: &UInt256) -> Result<Option<Cell>> {
-        Ok(None)
+        anyhow::bail!("Library cells search is not supported by this GraphQL transport")
     }
 
     async fn poll_contract_state(
