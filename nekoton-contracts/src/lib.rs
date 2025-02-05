@@ -54,6 +54,7 @@
 use anyhow::Result;
 use nekoton_abi::{ExecutionContext, ExecutionOutput};
 
+pub mod access;
 pub mod dens;
 pub mod jetton;
 pub mod old_tip3;
