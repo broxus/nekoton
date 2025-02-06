@@ -29,7 +29,7 @@ ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
-ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git", branch = "feature/jetton" }
+ton_vm = { git = "https://github.com/broxus/ton-labs-vm.git" }
 
 nekoton-derive = { path = "../nekoton-derive", optional = true }
 nekoton-utils = { path = "../nekoton-utils" }
