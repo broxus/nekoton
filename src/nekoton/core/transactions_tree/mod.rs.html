@@ -267,7 +267,42 @@
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{HashMap, VecDeque};
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{HashMap, VecDeque};
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>nekoton_abi::Executor;
@@ -463,6 +498,8 @@
 </span><span class="kw">mod </span>test {
     <span class="kw">use </span>anyhow::Result;
 
+    <span class="kw">use </span><span class="kw">crate</span>::external;
+    <span class="kw">use </span><span class="kw">crate</span>::external::JrpcConnection;
     <span class="kw">use </span><span class="kw">crate</span>::transport::jrpc::JrpcTransport;
 
     <span class="kw">use </span>nekoton_abi::TransactionParser;
@@ -472,10 +509,43 @@
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
+    <span class="kw">struct </span>Client {
+        url: String,
+        client: reqwest::Client,
+    }
+
+    <span class="kw">impl </span>Client {
+        <span class="kw">fn </span>new(url: <span class="kw-2">&amp;</span>str) -&gt; <span class="self">Self </span>{
+            <span class="self">Self </span>{
+                url: url.to_string(),
+                client: reqwest::Client::new(),
+            }
+        }
+    }
+
+    <span class="attr">#[cfg_attr(not(feature = <span class="string">"non_threadsafe"</span>), async_trait::async_trait)]
+    #[cfg_attr(feature = <span class="string">"non_threadsafe"</span>, async_trait::async_trait(<span class="question-mark">?</span>Send))]
+    </span><span class="kw">impl </span>JrpcConnection <span class="kw">for </span>Client {
+        <span class="kw">async fn </span>post(<span class="kw-2">&amp;</span><span class="self">self</span>, req: external::JrpcRequest) -&gt; <span class="prelude-ty">Result</span>&lt;String&gt; {
+            <span class="macro">println!</span>(<span class="string">"{req:?}"</span>);
+            <span class="kw">let </span>text = <span class="self">self
+                </span>.client
+                .post(<span class="kw-2">&amp;</span><span class="self">self</span>.url)
+                .body(req.data)
+                .header(<span class="string">"Content-Type"</span>, <span class="string">"application/json"</span>)
+                .send()
+                .<span class="kw">await</span><span class="question-mark">?
+                </span>.text()
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="comment">// println!("{}", text);
+            </span><span class="prelude-val">Ok</span>(text)
+        }
+    }
+
     <span class="attr">#[tokio::test]
     #[ignore]
     </span><span class="kw">async fn </span>test() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>connection = reqwest::Client::new();
+        <span class="kw">let </span>connection = Client::new(<span class="string">"https://jrpc.everwallet.net/rpc"</span>);
         <span class="kw">let </span>transport = Arc::new(JrpcTransport::new(Arc::new(connection)));
 
         <span class="kw">let </span>message = <span class="string">"te6ccgECCwEAAiAAAUWIAXu46jwbX3fmTWCR+sOP7NSfC9w6Ieb8ey6yinH94TG6DAEB4cHe2X7ZSGJPEZ8yA3uMskehJrNV78S5dTI7RkmjJAW2amO4V7DBILqXcTRnnbX9dABGRV0t4ouCjVWw6UYUZIR8drjTwv63I+aPTBLtMULU+zuEMSAmO8j5A00qizUXzUAAAGCAkCZIGLReThM7mRsgAgFlgAqvKvl06VY7ioloEDfQPiQRWucy+ulWduWysMlINu80gAAAAAAAAAAAAAAANOYs4BA4AwFraJxXwwAAAAAAAAAAAAAAADuaygCAEdfCW6r8F9gtsIJr8E6H1Ja37Lgfs8pNl/Q6IaXh4oBQBAFDgBe7jqPBtfd+ZNYJH6w4/s1J8L3Doh5vx7LrKKcf3hMbsAUBQ4Acl5cuaS7g+1r0QlJsMoOfX8ZyPtWIG7T55ZRTha2dV7AGA5UEABCKHoVX1z4AAAAAAAAAAAAAAAAF9eEAAAAAAAAAAAAAAAAAAALitIAYb2f1+Ut++m4JYQP7z76p5TDm3cCzftpl9YS+vMELftAJCAcAMgEAEIoehVfXPgAAAAAAAAAAAAAAAAX14QAAMgAAEIoehVfXPgAAAAAAAAAAAAAAAAX14QABYwAAAAAAAAAAAAAAAAABTVaAFKM/M3a62qPfKx2kmmb1rrQ47hELuahao6zMfz+bWfZQCgAgAAAAAAAAAAAAAAAAAAFLzA=="</span>;

@@ -628,7 +628,13 @@
 <a href="#627" id="627">627</a>
 <a href="#628" id="628">628</a>
 <a href="#629" id="629">629</a>
-<a href="#630" id="630">630</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::convert::TryFrom;
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span><span class="kw">crate</span>::core::models::<span class="kw-2">*</span>;
@@ -923,36 +929,42 @@
 }
 
 <span class="kw">pub async fn </span>get_wallet_data(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
     transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
-    account: ton_block::AccountStuff,
+    address: <span class="kw-2">&amp;</span>MsgAddressInt,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;JettonWalletData&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>account = account;
+    <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="kw">match </span>transport.get_contract_state(address).<span class="kw">await</span><span class="question-mark">? </span>{
+        RawContractState::Exists(state) =&gt; state,
+        RawContractState::NotExists { .. } =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(JettonWalletError::InvalidTokenWalletContract.into())
+        }
+    };
 
-    utils::update_library_cell(transport.as_ref(), <span class="kw-2">&amp;mut </span>account.storage.state).<span class="kw">await</span><span class="question-mark">?</span>;
+    utils::update_library_cell(transport.as_ref(), <span class="kw-2">&amp;mut </span>state.account.storage.state).<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let </span>token_wallet_state = nekoton_contracts::jetton::TokenWalletContract(ExecutionContext {
-        clock: <span class="kw-2">&amp;</span>SimpleClock,
-        account_stuff: <span class="kw-2">&amp;</span>account,
-    });
+    <span class="kw">let </span>token_wallet_details =
+        nekoton_contracts::jetton::TokenWalletContract(state.as_context(clock)).get_details()<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>token_wallet_details = token_wallet_state.get_details()<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(token_wallet_details)
 }
 
 <span class="kw">pub async fn </span>get_token_root_meta(
+    clock: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Clock,
     transport: Arc&lt;<span class="kw">dyn </span>Transport&gt;,
-    account: ton_block::AccountStuff,
+    address: <span class="kw-2">&amp;</span>MsgAddressInt,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;JettonRootMeta&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>account = account;
+    <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="kw">match </span>transport.get_contract_state(address).<span class="kw">await</span><span class="question-mark">? </span>{
+        RawContractState::Exists(state) =&gt; state,
+        RawContractState::NotExists { .. } =&gt; {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(JettonWalletError::InvalidTokenWalletContract.into())
+        }
+    };
 
-    utils::update_library_cell(transport.as_ref(), <span class="kw-2">&amp;mut </span>account.storage.state).<span class="kw">await</span><span class="question-mark">?</span>;
+    utils::update_library_cell(transport.as_ref(), <span class="kw-2">&amp;mut </span>state.account.storage.state).<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let </span>token_root_state = nekoton_contracts::jetton::RootTokenContract(ExecutionContext {
-        clock: <span class="kw-2">&amp;</span>SimpleClock,
-        account_stuff: <span class="kw-2">&amp;</span>account,
-    });
+    <span class="kw">let </span>token_root_meta =
+        nekoton_contracts::jetton::RootTokenContract(state.as_context(clock)).get_meta()<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>token_root_meta = token_root_state.get_meta()<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(token_root_meta)
 }
 
