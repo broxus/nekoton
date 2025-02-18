@@ -194,6 +194,8 @@ pub enum TransactionTreeError {
 mod test {
     use anyhow::Result;
 
+    use crate::external;
+    use crate::external::JrpcConnection;
     use crate::transport::jrpc::JrpcTransport;
 
     use nekoton_abi::TransactionParser;
@@ -203,10 +205,43 @@ mod test {
 
     use super::*;
 
+    struct Client {
+        url: String,
+        client: reqwest::Client,
+    }
+
+    impl Client {
+        fn new(url: &str) -> Self {
+            Self {
+                url: url.to_string(),
+                client: reqwest::Client::new(),
+            }
+        }
+    }
+
+    #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+    #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
+    impl JrpcConnection for Client {
+        async fn post(&self, req: external::JrpcRequest) -> Result<String> {
+            println!("{req:?}");
+            let text = self
+                .client
+                .post(&self.url)
+                .body(req.data)
+                .header("Content-Type", "application/json")
+                .send()
+                .await?
+                .text()
+                .await?;
+            // println!("{}", text);
+            Ok(text)
+        }
+    }
+
     #[tokio::test]
     #[ignore]
     async fn test() -> Result<()> {
-        let connection = reqwest::Client::new();
+        let connection = Client::new("https://jrpc.everwallet.net/rpc");
         let transport = Arc::new(JrpcTransport::new(Arc::new(connection)));
 
         let message = "te6ccgECCwEAAiAAAUWIAXu46jwbX3fmTWCR+sOP7NSfC9w6Ieb8ey6yinH94TG6DAEB4cHe2X7ZSGJPEZ8yA3uMskehJrNV78S5dTI7RkmjJAW2amO4V7DBILqXcTRnnbX9dABGRV0t4ouCjVWw6UYUZIR8drjTwv63I+aPTBLtMULU+zuEMSAmO8j5A00qizUXzUAAAGCAkCZIGLReThM7mRsgAgFlgAqvKvl06VY7ioloEDfQPiQRWucy+ulWduWysMlINu80gAAAAAAAAAAAAAAANOYs4BA4AwFraJxXwwAAAAAAAAAAAAAAADuaygCAEdfCW6r8F9gtsIJr8E6H1Ja37Lgfs8pNl/Q6IaXh4oBQBAFDgBe7jqPBtfd+ZNYJH6w4/s1J8L3Doh5vx7LrKKcf3hMbsAUBQ4Acl5cuaS7g+1r0QlJsMoOfX8ZyPtWIG7T55ZRTha2dV7AGA5UEABCKHoVX1z4AAAAAAAAAAAAAAAAF9eEAAAAAAAAAAAAAAAAAAALitIAYb2f1+Ut++m4JYQP7z76p5TDm3cCzftpl9YS+vMELftAJCAcAMgEAEIoehVfXPgAAAAAAAAAAAAAAAAX14QAAMgAAEIoehVfXPgAAAAAAAAAAAAAAAAX14QABYwAAAAAAAAAAAAAAAAABTVaAFKM/M3a62qPfKx2kmmb1rrQ47hELuahao6zMfz+bWfZQCgAgAAAAAAAAAAAAAAAAAAFLzA==";

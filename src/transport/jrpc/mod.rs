@@ -301,16 +301,32 @@ mod tests {
     use std::str::FromStr;
 
     use futures_util::StreamExt;
+    use nekoton_contracts::jetton;
 
     use super::*;
 
+    struct Client {
+        url: String,
+        client: reqwest::Client,
+    }
+
+    impl Client {
+        fn new(url: &str) -> Self {
+            Self {
+                url: url.to_string(),
+                client: reqwest::Client::new(),
+            }
+        }
+    }
+
     #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
     #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
-    impl JrpcConnection for reqwest::Client {
+    impl JrpcConnection for Client {
         async fn post(&self, req: external::JrpcRequest) -> Result<String> {
             println!("{req:?}");
             let text = self
-                .post("https://jrpc.everwallet.net/rpc")
+                .client
+                .post(&self.url)
                 .body(req.data)
                 .header("Content-Type", "application/json")
                 .send()
@@ -324,7 +340,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_library_cells() {
-        let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
+        let transport = JrpcTransport::new(Arc::new(Client::new("https://jrpc-ton.broxus.com")));
         let result = transport
             .get_library_cell(
                 &UInt256::from_str(
@@ -343,7 +359,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_transactions_stream() -> Result<()> {
-        let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
+        let transport =
+            JrpcTransport::new(Arc::new(Client::new("https://jrpc.everwallet.net/rpc")));
 
         let mut from_lt = 30526271000007;
         let until_lt = 26005429000001;
@@ -372,7 +389,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_connection() -> Result<()> {
-        let transport = JrpcTransport::new(Arc::new(reqwest::Client::new()));
+        let transport =
+            JrpcTransport::new(Arc::new(Client::new("https://jrpc.everwallet.net/rpc")));
         let address = MsgAddressInt::from_str(
             "-1:3333333333333333333333333333333333333333333333333333333333333333",
         )?;
@@ -406,6 +424,54 @@ mod tests {
         }
 
         transport.get_latest_key_block().await?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn jetton_wallet_data() -> Result<()> {
+        let transport = Arc::new(JrpcTransport::new(Arc::new(Client::new(
+            "https://jrpc-ton.broxus.com",
+        ))));
+
+        let address = MsgAddressInt::from_str(
+            "0:f5308490402448489540c8b55dc04a3c5a2140c525f5ef77941d314fcf615d7c",
+        )?;
+
+        let _wallet_data =
+            crate::core::jetton_wallet::get_wallet_data(&SimpleClock, transport, &address).await?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn jetton_wallet_address() -> Result<()> {
+        let transport = Arc::new(JrpcTransport::new(Arc::new(Client::new(
+            "https://jrpc-ton.broxus.com",
+        ))));
+
+        let root = MsgAddressInt::from_str(
+            "0:09f2e59dec406ab26a5259a45d7ff23ef11f3e5c7c21de0b0d2a1cbe52b76b3d",
+        )?;
+
+        let owner = MsgAddressInt::from_str(
+            "0:43327c3d453bf0232b516d56d9899c7d7eba6128c319f3602b9b70ea2e2c9135",
+        )?;
+
+        let state = match transport.get_contract_state(&root).await? {
+            RawContractState::Exists(state) => state,
+            RawContractState::NotExists { .. } => {
+                unreachable!()
+            }
+        };
+
+        let token_address =
+            jetton::RootTokenContract(state.as_context(&SimpleClock)).get_wallet_address(&owner)?;
+
+        let expected_token_address = MsgAddressInt::from_str(
+            "0:554e3918347da68aec7b7dd4cc28b090ebf3b398eb11fedb49c6eee3acd721fe",
+        )?;
+        assert_eq!(token_address, expected_token_address);
 
         Ok(())
     }

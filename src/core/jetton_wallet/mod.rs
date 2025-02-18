@@ -293,36 +293,42 @@ pub trait JettonWalletSubscriptionHandler: Send + Sync {
 }
 
 pub async fn get_wallet_data(
+    clock: &dyn Clock,
     transport: Arc<dyn Transport>,
-    account: ton_block::AccountStuff,
+    address: &MsgAddressInt,
 ) -> Result<JettonWalletData> {
-    let mut account = account;
+    let mut state = match transport.get_contract_state(address).await? {
+        RawContractState::Exists(state) => state,
+        RawContractState::NotExists { .. } => {
+            return Err(JettonWalletError::InvalidTokenWalletContract.into())
+        }
+    };
 
-    utils::update_library_cell(transport.as_ref(), &mut account.storage.state).await?;
+    utils::update_library_cell(transport.as_ref(), &mut state.account.storage.state).await?;
 
-    let token_wallet_state = nekoton_contracts::jetton::TokenWalletContract(ExecutionContext {
-        clock: &SimpleClock,
-        account_stuff: &account,
-    });
+    let token_wallet_details =
+        nekoton_contracts::jetton::TokenWalletContract(state.as_context(clock)).get_details()?;
 
-    let token_wallet_details = token_wallet_state.get_details()?;
     Ok(token_wallet_details)
 }
 
 pub async fn get_token_root_meta(
+    clock: &dyn Clock,
     transport: Arc<dyn Transport>,
-    account: ton_block::AccountStuff,
+    address: &MsgAddressInt,
 ) -> Result<JettonRootMeta> {
-    let mut account = account;
+    let mut state = match transport.get_contract_state(address).await? {
+        RawContractState::Exists(state) => state,
+        RawContractState::NotExists { .. } => {
+            return Err(JettonWalletError::InvalidTokenWalletContract.into())
+        }
+    };
 
-    utils::update_library_cell(transport.as_ref(), &mut account.storage.state).await?;
+    utils::update_library_cell(transport.as_ref(), &mut state.account.storage.state).await?;
 
-    let token_root_state = nekoton_contracts::jetton::RootTokenContract(ExecutionContext {
-        clock: &SimpleClock,
-        account_stuff: &account,
-    });
+    let token_root_meta =
+        nekoton_contracts::jetton::RootTokenContract(state.as_context(clock)).get_meta()?;
 
-    let token_root_meta = token_root_state.get_meta()?;
     Ok(token_root_meta)
 }
 
