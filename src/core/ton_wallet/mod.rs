@@ -294,11 +294,17 @@ impl TonWallet {
         &mut self,
         current_state: &ton_block::AccountStuff,
         public_key: &PublicKey,
-        gift: Gift,
+        gifts: Vec<Gift>,
         expiration: Expiration,
     ) -> Result<TransferAction> {
         match self.wallet_type {
             WalletType::Multisig(multisig_type) => {
+                anyhow::ensure!(
+                    gifts.len() == 1,
+                    "Multiple outgoing messages are not supported by multisig contract"
+                );
+                let gift = gifts.into_iter().next().unwrap();
+
                 match &current_state.storage.state {
                     ton_block::AccountState::AccountFrozen { .. } => {
                         return Err(TonWalletError::AccountIsFrozen.into())
@@ -337,7 +343,7 @@ impl TonWallet {
                 public_key,
                 current_state,
                 0,
-                vec![gift],
+                gifts,
                 expiration,
             ),
             WalletType::WalletV4R1 => wallet_v4::prepare_transfer(
@@ -345,7 +351,7 @@ impl TonWallet {
                 public_key,
                 current_state,
                 0,
-                vec![gift],
+                gifts,
                 expiration,
                 wallet_v4::WalletV4Version::R1,
             ),
@@ -354,7 +360,7 @@ impl TonWallet {
                 public_key,
                 current_state,
                 0,
-                vec![gift],
+                gifts,
                 expiration,
                 wallet_v4::WalletV4Version::R2,
             ),
@@ -363,7 +369,7 @@ impl TonWallet {
                 public_key,
                 current_state,
                 0,
-                vec![gift],
+                gifts,
                 expiration,
             ),
             WalletType::EverWallet => ever_wallet::prepare_transfer(
@@ -371,14 +377,14 @@ impl TonWallet {
                 public_key,
                 current_state,
                 self.address().clone(),
-                vec![gift],
+                gifts,
                 expiration,
             ),
             WalletType::HighloadWalletV2 => highload_wallet_v2::prepare_transfer(
                 self.clock.as_ref(),
                 public_key,
                 current_state,
-                vec![gift],
+                gifts,
                 expiration,
             ),
         }
@@ -792,19 +798,16 @@ impl InternalMessageSender for TonWallet {
             return Err(InternalMessageSenderError::InvalidSender.into());
         }
 
-        self.prepare_transfer(
-            current_state,
-            public_key,
-            Gift {
-                flags: MessageFlags::default().into(),
-                bounce: message.bounce,
-                destination: message.destination,
-                amount: message.amount,
-                body: Some(message.body),
-                state_init: None,
-            },
-            expiration,
-        )
+        let gift = Gift {
+            flags: MessageFlags::default().into(),
+            bounce: message.bounce,
+            destination: message.destination,
+            amount: message.amount,
+            body: Some(message.body),
+            state_init: None,
+        };
+
+        self.prepare_transfer(current_state, public_key, vec![gift], expiration)
     }
 }
 
