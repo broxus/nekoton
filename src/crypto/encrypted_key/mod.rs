@@ -714,15 +714,15 @@ mod tests {
         let json = r#"[
     [
         "122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0",
-        "{\"mnemonic_type\":{\"Labs\":1},\"pubkey\":\"122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0\",\"encrypted_private_key\":\"7a714b8e92a9ef54c5da539141817018be4846fcf8a964e833712b39d560f50ec67dbde7c1a695fcb9303ef5c2002c70\",\"private_key_nonce\":\"1abc471cb49672d8ada0bed8\",\"encrypted_seed_phrase\":\"db7d9e170734990bff07e98758122aeb47d617393e12e761a69f384825b1b7423d991fed2ffa14e34cb31a26ba84e6ff3e688662655f401a6d9dd22b281a2be70ebab5f170ceb9a69c4770433aff5125cd7d35b5e6cc8a5dc0e3458ee9362cb5a3f50ac32be824171118cf802b5322e86a08ad8c9ead4b9f3afe549305107097960807d9c9b440ddc5b1fb8df0a0d97f9697a0c206accccd3d1795b524683bc0d7ac\",\"seed_phrase_nonce\":\"63d7a96bd2e8bd824f01a330\",\"salt\":\"b3ccb59480f3d4d6d6725b8f70bfaf520476cfa246bb50723f55a14535158358\"}"
+        "{\"mnemonic_type\":{\"Bip39\":{\"account_id\":0,\"network\":\"ever\",\"entropy\":\"bits128\"}},\"pubkey\":\"122a6ca3f3785aeab4d2944cb5c49cf30efca1cf8f818faa8a8e7a17593751e0\",\"encrypted_private_key\":\"7a714b8e92a9ef54c5da539141817018be4846fcf8a964e833712b39d560f50ec67dbde7c1a695fcb9303ef5c2002c70\",\"private_key_nonce\":\"1abc471cb49672d8ada0bed8\",\"encrypted_seed_phrase\":\"db7d9e170734990bff07e98758122aeb47d617393e12e761a69f384825b1b7423d991fed2ffa14e34cb31a26ba84e6ff3e688662655f401a6d9dd22b281a2be70ebab5f170ceb9a69c4770433aff5125cd7d35b5e6cc8a5dc0e3458ee9362cb5a3f50ac32be824171118cf802b5322e86a08ad8c9ead4b9f3afe549305107097960807d9c9b440ddc5b1fb8df0a0d97f9697a0c206accccd3d1795b524683bc0d7ac\",\"seed_phrase_nonce\":\"63d7a96bd2e8bd824f01a330\",\"salt\":\"b3ccb59480f3d4d6d6725b8f70bfaf520476cfa246bb50723f55a14535158358\"}"
     ],
     [
         "ef9ddfa972f424124033519c0190200d7e0f7964a637ebb131d1b0f999e02181",
-        "{\"name\":\"史萊克的模因\",\"mnemonic_type\":{\"Labs\":2},\"pubkey\":\"ef9ddfa972f424124033519c0190200d7e0f7964a637ebb131d1b0f999e02181\",\"encrypted_private_key\":\"5397c31290043841221ce797ad9c7dbed21dd460ed937d3d988fd6a26e371ae7d5a717018a91ed5ab1db3e9516e53782\",\"private_key_nonce\":\"818dc748e3bf30b4f9dfe8c9\",\"encrypted_seed_phrase\":\"3ed4d10cee5034f1a09e8758a6f9cca4918399f9884c4e7607f8e9ce44cd7dad5e6daa8f71ca2522eac64c820b4d1b4b012400252c8a3dedbf19d4026dcdf4c02bec654190b686bfc9949daa884679ef47b435cc419ce0b2b677b81a7068da1bd5cfcc4f7dc1c772c653fede224eb94608b420045abf11eef94ea044bd75cbd86be5dbb1e45a891ec241f281970a498fab3153591d9e6abf18e368ac46ef1b6b9f46\",\"seed_phrase_nonce\":\"c0c964e2bf869cccbb8bc019\",\"salt\":\"c9f141e6516f40ea0d8879cc1149b8e489e1c39325d3f79ced4cf1ec17affd81\"}"
+        "{\"name\":\"史萊克的模因\",\"mnemonic_type\":{\"Bip39\":{\"account_id\":2,\"network\":\"ever\",\"entropy\":\"bits128\"}},\"pubkey\":\"ef9ddfa972f424124033519c0190200d7e0f7964a637ebb131d1b0f999e02181\",\"encrypted_private_key\":\"5397c31290043841221ce797ad9c7dbed21dd460ed937d3d988fd6a26e371ae7d5a717018a91ed5ab1db3e9516e53782\",\"private_key_nonce\":\"818dc748e3bf30b4f9dfe8c9\",\"encrypted_seed_phrase\":\"3ed4d10cee5034f1a09e8758a6f9cca4918399f9884c4e7607f8e9ce44cd7dad5e6daa8f71ca2522eac64c820b4d1b4b012400252c8a3dedbf19d4026dcdf4c02bec654190b686bfc9949daa884679ef47b435cc419ce0b2b677b81a7068da1bd5cfcc4f7dc1c772c653fede224eb94608b420045abf11eef94ea044bd75cbd86be5dbb1e45a891ec241f281970a498fab3153591d9e6abf18e368ac46ef1b6b9f46\",\"seed_phrase_nonce\":\"c0c964e2bf869cccbb8bc019\",\"salt\":\"c9f141e6516f40ea0d8879cc1149b8e489e1c39325d3f79ced4cf1ec17affd81\"}"
     ],
     [
         "93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190",
-        "{\"mnemonic_type\":{\"Labs\":0},\"pubkey\":\"93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190\",\"encrypted_private_key\":\"518d6158968995a815f022bf5d0f9ada40c3d779454d54abb7a17e32b5a83a9f6ca57756142515b8fc968f87a1bceef7\",\"private_key_nonce\":\"0eaa9fcda666b7715c41b56b\",\"encrypted_seed_phrase\":\"f4e394d118230a8acb8af95b126fbf2a62fd764c24be9627f2bc2cb6d2aa48ba6694ecbac7cdf5317f42062acb8bb4645381d2c0ae63dd0ed577001743de96bec8f5968e516e585153d264b0d48132ead1daea9dd0bd68fb49263c3cd92df74a358f1611e92905ac3dc1f1105b743c07a9e2e7cb33344d1e3e3d6cf072a43ecbd771662e03ff61f4613015a2fc0298bbdbe9de87051d2e76ef01edfb25316d0f5131\",\"seed_phrase_nonce\":\"6266222cb4fd6bebf2b3b67e\",\"salt\":\"d3a0e42f386cbbc332d8d873b3e80ed0cde2ee9c16804f8866c0901493f2b6a5\"}"
+        "{\"mnemonic_type\":{\"Bip39\":{\"account_id\":0,\"network\":\"ever\",\"entropy\":\"bits128\"}},\"pubkey\":\"93bcfd9fb026ecd897f33b2e224ed311c6332f0dadad1c1ddd32b94282f67190\",\"encrypted_private_key\":\"518d6158968995a815f022bf5d0f9ada40c3d779454d54abb7a17e32b5a83a9f6ca57756142515b8fc968f87a1bceef7\",\"private_key_nonce\":\"0eaa9fcda666b7715c41b56b\",\"encrypted_seed_phrase\":\"f4e394d118230a8acb8af95b126fbf2a62fd764c24be9627f2bc2cb6d2aa48ba6694ecbac7cdf5317f42062acb8bb4645381d2c0ae63dd0ed577001743de96bec8f5968e516e585153d264b0d48132ead1daea9dd0bd68fb49263c3cd92df74a358f1611e92905ac3dc1f1105b743c07a9e2e7cb33344d1e3e3d6cf072a43ecbd771662e03ff61f4613015a2fc0298bbdbe9de87051d2e76ef01edfb25316d0f5131\",\"seed_phrase_nonce\":\"6266222cb4fd6bebf2b3b67e\",\"salt\":\"d3a0e42f386cbbc332d8d873b3e80ed0cde2ee9c16804f8866c0901493f2b6a5\"}"
     ]
 ]"#;
         let mut key = EncryptedKeySigner::new();
@@ -745,7 +745,7 @@ mod tests {
                 EncryptedKeyCreateInput {
                     name: Some("from giver".to_string()),
                     phrase: TEST_MNEMONIC.into(),
-                    mnemonic_type: MnemonicType::Labs(0),
+                    mnemonic_type: MnemonicType::Bip39(Bip39MnemonicData::default()),
                     password: Password::Explicit {
                         password: SecUtf8::from("supasecret"),
                         cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(2)),
@@ -771,7 +771,7 @@ mod tests {
                 EncryptedKeyCreateInput {
                     name: Some("new name. same mnemonic".to_string()),
                     phrase: TEST_MNEMONIC.into(),
-                    mnemonic_type: MnemonicType::Labs(0),
+                    mnemonic_type: MnemonicType::Bip39(Bip39MnemonicData::default()),
                     password: Password::Explicit {
                         password: SecUtf8::from("123123123123123123"),
                         cache_behavior: PasswordCacheBehavior::Store(Duration::from_secs(2)),
@@ -796,7 +796,7 @@ mod tests {
             EncryptedKeyCreateInput {
                 name: Some("from giver".to_string()),
                 phrase: TEST_MNEMONIC.into(),
-                mnemonic_type: MnemonicType::Labs(0),
+                mnemonic_type: MnemonicType::Bip39(Bip39MnemonicData::default()),
                 password: Password::Explicit {
                     password: SecUtf8::from("supasecret"),
                     cache_behavior: Default::default(),
@@ -811,7 +811,11 @@ mod tests {
             EncryptedKeyCreateInput {
                 name: Some("all my money 🤑".to_string()),
                 phrase: TEST_MNEMONIC.into(),
-                mnemonic_type: MnemonicType::Labs(1),
+                mnemonic_type: MnemonicType::Bip39(Bip39MnemonicData {
+                    account_id: 1,
+                    network: Default::default(),
+                    entropy: Default::default(),
+                }),
                 password: Password::Explicit {
                     password: SecUtf8::from("supasecret"),
                     cache_behavior: Default::default(),
@@ -826,7 +830,11 @@ mod tests {
             EncryptedKeyCreateInput {
                 name: Some("史萊克的模因".to_string()),
                 phrase: TEST_MNEMONIC.into(),
-                mnemonic_type: MnemonicType::Labs(2),
+                mnemonic_type: MnemonicType::Bip39(Bip39MnemonicData {
+                    account_id: 2,
+                    network: Default::default(),
+                    entropy: Default::default(),
+                }),
                 password: Password::Explicit {
                     password: SecUtf8::from("supasecret"),
                     cache_behavior: Default::default(),
