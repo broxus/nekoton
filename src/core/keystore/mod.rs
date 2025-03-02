@@ -591,8 +591,9 @@ pub enum KeyStoreError {
 #[cfg(test)]
 mod tests {
     use crate::crypto::{
-        DerivedKeyCreateInput, DerivedKeyPassword, DerivedKeySigner, EncryptedKeyCreateInput,
-        EncryptedKeyPassword, EncryptedKeySigner, MnemonicType, Password, PasswordCacheBehavior,
+        Bip39MnemonicData, DerivedKeyCreateInput, DerivedKeyPassword, DerivedKeySigner,
+        EncryptedKeyCreateInput, EncryptedKeyPassword, EncryptedKeySigner, MnemonicType, Password,
+        PasswordCacheBehavior,
     };
     use std::collections::HashMap;
 
@@ -663,7 +664,7 @@ mod tests {
             .add_key::<EncryptedKeySigner>(EncryptedKeyCreateInput {
                 name: None,
                 phrase: TEST_MNEMONICS[1].into(),
-                mnemonic_type: MnemonicType::Labs(0),
+                mnemonic_type: MnemonicType::Bip39(Bip39MnemonicData::default()),
                 password: useless_password.clone(),
             })
             .await
