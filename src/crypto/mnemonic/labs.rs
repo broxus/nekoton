@@ -4,7 +4,7 @@ use anyhow::Result;
 use nekoton_utils::TrustMe;
 use tiny_hderive::bip32::ExtendedPrivKey;
 
-use super::LANGUAGE;
+use super::{Bip39MnemonicData, LANGUAGE};
 
 pub fn derive_master_key(phrase: &str) -> Result<[u8; 64]> {
     let mnemonic = bip39::Mnemonic::from_phrase(phrase, LANGUAGE)?;
@@ -12,14 +12,22 @@ pub fn derive_master_key(phrase: &str) -> Result<[u8; 64]> {
     Ok(hd.as_bytes().try_into().trust_me())
 }
 
-pub fn derive_from_phrase(phrase: &str, account_id: u16) -> Result<ed25519_dalek::Keypair> {
+pub fn derive_from_phrase(
+    phrase: &str,
+    mnemonic_data: Bip39MnemonicData,
+) -> Result<ed25519_dalek::Keypair> {
     let mnemonic = bip39::Mnemonic::from_phrase(phrase, LANGUAGE)?;
     let hd = bip39::Seed::new(&mnemonic, "");
     let seed_bytes = hd.as_bytes();
 
-    let derived =
-        ExtendedPrivKey::derive(seed_bytes, format!("m/44'/396'/0'/0/{account_id}").as_str())
-            .map_err(|_| anyhow::anyhow!("Invalid derivation path"))?;
+    let account_id = mnemonic_data.account_id;
+    let derivation_path = mnemonic_data.network.derivation_path();
+
+    let derived = ExtendedPrivKey::derive(
+        seed_bytes,
+        format!("{derivation_path}/0/{account_id}").as_str(),
+    )
+    .map_err(|_| anyhow::anyhow!("Invalid derivation path"))?;
 
     let secret = ed25519_dalek::SecretKey::from_bytes(&derived.secret())?;
     let public = ed25519_dalek::PublicKey::from(&secret);
@@ -29,12 +37,17 @@ pub fn derive_from_phrase(phrase: &str, account_id: u16) -> Result<ed25519_dalek
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::crypto::{Bip39Entropy, Bip39Type};
 
     #[test]
     fn invalid_bip39_phrase() {
         let key = derive_from_phrase(
             "pioneer fever hazard scam install wise reform corn bubble leisure amazing note",
-            0,
+            Bip39MnemonicData {
+                account_id: 0,
+                network: Bip39Type::Ever,
+                entropy: Bip39Entropy::Bits128,
+            },
         );
         assert!(key.is_err());
     }
@@ -43,7 +56,11 @@ mod tests {
     fn correct_bip39_derive() {
         let key = derive_from_phrase(
             "pioneer fever hazard scan install wise reform corn bubble leisure amazing note",
-            0,
+            Bip39MnemonicData {
+                account_id: 0,
+                network: Bip39Type::Ever,
+                entropy: Bip39Entropy::Bits128,
+            },
         )
         .unwrap();
         let secret = key.secret;

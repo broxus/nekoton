@@ -14,18 +14,50 @@ const LANGUAGE: bip39::Language = bip39::Language::English;
 pub enum MnemonicType {
     /// Phrase with 24 words, used in Crystal Wallet
     Legacy,
-    /// Phrase with 12 words, used everywhere else. The additional parameter is used in
+    /// Phrase with 12 or 24 words, used everywhere else. The additional parameter is used in
     /// derivation path to create multiple keys from one mnemonic
-    Labs(u16),
+    Bip39(Bip39MnemonicData),
 }
 
 impl MnemonicType {
     pub fn account_id(self) -> u16 {
         match self {
             Self::Legacy => 0,
-            Self::Labs(id) => id,
+            Self::Bip39(item) => item.account_id,
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Default)]
+pub struct Bip39MnemonicData {
+    pub account_id: u16,
+    pub network: Bip39Type,
+    pub entropy: Bip39Entropy,
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum Bip39Type {
+    #[default]
+    Ever,
+    Ton,
+}
+
+impl Bip39Type {
+    pub const fn derivation_path(self) -> &'static str {
+        match self {
+            Self::Ton => "m/44'/607'/0'",
+            Self::Ever => "m/44'/396'/0'",
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum Bip39Entropy {
+    #[default]
+    Bits128,
+    Bits256,
 }
 
 #[derive(Debug, Serialize)]
@@ -38,7 +70,7 @@ pub struct GeneratedKey {
 pub fn derive_from_phrase(phrase: &str, mnemonic_type: MnemonicType) -> Result<Keypair, Error> {
     match mnemonic_type {
         MnemonicType::Legacy => legacy::derive_from_phrase(phrase),
-        MnemonicType::Labs(account_id) => labs::derive_from_phrase(phrase, account_id),
+        MnemonicType::Bip39(data) => labs::derive_from_phrase(phrase, data),
     }
 }
 
@@ -61,17 +93,20 @@ pub fn generate_key(account_type: MnemonicType) -> GeneratedKey {
             .collect()
     }
 
+    let entropy_size = match account_type {
+        MnemonicType::Legacy => 32,
+        MnemonicType::Bip39(data) => match data.entropy {
+            Bip39Entropy::Bits128 => 16,
+            Bip39Entropy::Bits256 => 32,
+        },
+    };
+
+    let entropy = (0..entropy_size)
+        .map(|_| rng.gen::<u8>())
+        .collect::<Vec<u8>>();
+
     GeneratedKey {
         account_type,
-        words: match account_type {
-            MnemonicType::Legacy => {
-                let entropy: [u8; 32] = rng.gen();
-                generate_words(&entropy)
-            }
-            MnemonicType::Labs(_) => {
-                let entropy: [u8; 16] = rng.gen();
-                generate_words(&entropy)
-            }
-        },
+        words: generate_words(&entropy),
     }
 }

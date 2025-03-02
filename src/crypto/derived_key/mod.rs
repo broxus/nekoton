@@ -500,7 +500,8 @@ impl MasterKey {
         let mut phrase = phrase.unsecure().to_string();
 
         // SECURITY: private key will be zeroized here
-        let public_key = derive_from_phrase(&phrase, MnemonicType::Labs(0))?.public;
+        let public_key =
+            derive_from_phrase(&phrase, MnemonicType::Bip39(Bip39MnemonicData::default()))?.public;
 
         let key_name = key_name.unwrap_or_else(|| default_key_name(public_key.as_bytes()));
 
