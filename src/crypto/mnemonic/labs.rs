@@ -21,7 +21,7 @@ pub fn derive_from_phrase(
     let seed_bytes = hd.as_bytes();
 
     let account_id = mnemonic_data.account_id;
-    let derivation_path = mnemonic_data.network.derivation_path();
+    let derivation_path = mnemonic_data.path.derivation_path();
 
     let derived = ExtendedPrivKey::derive(
         seed_bytes,
@@ -37,7 +37,7 @@ pub fn derive_from_phrase(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto::{Bip39Entropy, Bip39Type};
+    use crate::crypto::{Bip39Entropy, Bip39Path};
 
     #[test]
     fn invalid_bip39_phrase() {
@@ -45,7 +45,7 @@ mod tests {
             "pioneer fever hazard scam install wise reform corn bubble leisure amazing note",
             Bip39MnemonicData {
                 account_id: 0,
-                network: Bip39Type::Ever,
+                path: Bip39Path::Ever,
                 entropy: Bip39Entropy::Bits128,
             },
         );
@@ -58,7 +58,7 @@ mod tests {
             "pioneer fever hazard scan install wise reform corn bubble leisure amazing note",
             Bip39MnemonicData {
                 account_id: 0,
-                network: Bip39Type::Ever,
+                path: Bip39Path::Ever,
                 entropy: Bip39Entropy::Bits128,
             },
         )
