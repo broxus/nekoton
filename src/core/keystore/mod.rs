@@ -664,7 +664,7 @@ mod tests {
             .add_key::<EncryptedKeySigner>(EncryptedKeyCreateInput {
                 name: None,
                 phrase: TEST_MNEMONICS[1].into(),
-                mnemonic_type: MnemonicType::Bip39(Bip39MnemonicData::default()),
+                mnemonic_type: MnemonicType::Bip39(Bip39MnemonicData::labs_old(0)),
                 password: useless_password.clone(),
             })
             .await

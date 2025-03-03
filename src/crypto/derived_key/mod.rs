@@ -501,7 +501,8 @@ impl MasterKey {
 
         // SECURITY: private key will be zeroized here
         let public_key =
-            derive_from_phrase(&phrase, MnemonicType::Bip39(Bip39MnemonicData::default()))?.public;
+            derive_from_phrase(&phrase, MnemonicType::Bip39(Bip39MnemonicData::labs_old(0)))?
+                .public;
 
         let key_name = key_name.unwrap_or_else(|| default_key_name(public_key.as_bytes()));
 
