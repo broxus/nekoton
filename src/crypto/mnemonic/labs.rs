@@ -2,7 +2,6 @@ use std::convert::TryInto;
 
 use anyhow::Result;
 use nekoton_utils::TrustMe;
-use tiny_hderive::bip32::ExtendedPrivKey;
 
 use super::{Bip39MnemonicData, LANGUAGE};
 
@@ -21,15 +20,9 @@ pub fn derive_from_phrase(
     let seed_bytes = hd.as_bytes();
 
     let account_id = mnemonic_data.account_id;
-    let derivation_path = mnemonic_data.path.derivation_path();
+    let derived = mnemonic_data.path.derive(seed_bytes, account_id)?;
 
-    let derived = ExtendedPrivKey::derive(
-        seed_bytes,
-        format!("{derivation_path}/0/{account_id}").as_str(),
-    )
-    .map_err(|_| anyhow::anyhow!("Invalid derivation path"))?;
-
-    let secret = ed25519_dalek::SecretKey::from_bytes(&derived.secret())?;
+    let secret = ed25519_dalek::SecretKey::from_bytes(&derived)?;
     let public = ed25519_dalek::PublicKey::from(&secret);
     Ok(ed25519_dalek::Keypair { secret, public })
 }
