@@ -4,6 +4,8 @@ use rand::Rng;
 use serde::de::{MapAccess, Unexpected, Visitor};
 use serde::{de, Deserialize, Deserializer, Serialize};
 use sha2::Digest;
+use slip10_ed25519::derive_ed25519_private_key;
+use tiny_hderive::bip32::ExtendedPrivKey;
 
 pub mod dict;
 pub(super) mod labs;
@@ -107,11 +109,21 @@ pub enum Bip39Path {
 }
 
 impl Bip39Path {
-    pub const fn derivation_path(self) -> &'static str {
-        match self {
-            Self::Ton => "m/44'/607'/0'",
-            Self::Ever => "m/44'/396'/0'",
-        }
+    pub fn derive(&self, seed_bytes: &[u8], account_id: u16) -> anyhow::Result<[u8; 32]> {
+        let derived = match self {
+            Self::Ever => {
+                let derived = ExtendedPrivKey::derive(
+                    seed_bytes,
+                    format!("m/44'/396'/0'/0/{account_id}").as_str(),
+                )
+                .map_err(|_| anyhow::anyhow!("Invalid derivation path"))?;
+
+                derived.secret()
+            }
+            Self::Ton => derive_ed25519_private_key(&seed_bytes, &vec![44, 607, 0]),
+        };
+
+        Ok(derived)
     }
 }
 
@@ -177,6 +189,7 @@ pub fn generate_key(account_type: MnemonicType) -> GeneratedKey {
 mod tests {
     use serde::Deserialize;
 
+    use crate::crypto::mnemonic::LANGUAGE;
     use crate::crypto::{Bip39Entropy, Bip39MnemonicData, Bip39Path, MnemonicType};
 
     #[test]
@@ -208,5 +221,24 @@ mod tests {
                 entropy: Bip39Entropy::Bits128,
             })
         );
+    }
+
+    const TEST_MNEMONIC: &str = "moral ill excuse avoid only father maid cash coin fat replace roast damage egg garment slot begin wreck elephant sea left marble afford drip";
+
+    #[test]
+    fn ton_derive() {
+        let mnemonic = bip39::Mnemonic::from_phrase(TEST_MNEMONIC, LANGUAGE).unwrap();
+        let hd = bip39::Seed::new(&mnemonic, "");
+        let seed_bytes = hd.as_bytes();
+
+        let derived = Bip39Path::Ton.derive(seed_bytes, 0).unwrap();
+
+        let secret = ed25519_dalek::SecretKey::from_bytes(&derived).unwrap();
+        let public = ed25519_dalek::PublicKey::from(&secret);
+
+        assert_eq!(
+            hex::encode(public.to_bytes()),
+            "09304d7bd820598794b1be73c95d7bcdd749ef583c8a6a243487dcf4156212a5"
+        )
     }
 }
