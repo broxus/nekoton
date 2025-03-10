@@ -24,3 +24,23 @@ pub fn get_nft_url() -> &'static ton_abi::Function {
         outputs: vec![Param::new("nftUrl", ParamType::String)]
     }
 }
+
+/// Return url to metadata for NFT collection.
+///
+/// # Type
+/// Responsible getter method
+///
+/// # Inputs
+/// * `answerId: uint32` - responsible answer id
+///
+/// # Outputs
+/// * `collectionUrl: string` - NFT collection metadata URL
+pub fn get_collection_url() -> &'static ton_abi::Function {
+    declare_function! {
+        name: "getCollectionUrl",
+        inputs: vec![
+            Param::new("answerId", ParamType::Uint(32)),
+        ],
+        outputs: vec![Param::new("collectionUrl", ParamType::String)]
+    }
+}
