@@ -594,8 +594,12 @@ mod tests {
             account_stuff: &state,
         });
 
+
+
         let details = contract.get_details()?;
         assert_eq!(details.admin_address, MsgAddressInt::default());
+
+        println!("details {:?}", details.total_supply);
 
         let owner = nekoton_utils::unpack_std_smc_addr(
             "UQA8aeJrWO-5DZ-1Zs2juDYfT4V_ud2KY8gegMd33gHjeUaF",

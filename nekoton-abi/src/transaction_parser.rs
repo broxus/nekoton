@@ -102,7 +102,7 @@ impl TransactionParser {
             return if let Some(fun) = self.functions.get(&function_id) {
                 let tokens = TokenValue::decode_params(
                     fun.function.input_params(),
-                    body,
+                    body.slice,
                     &self.abi_version,
                     false,
                 )?;
@@ -550,9 +550,9 @@ impl WrappedFunction {
 
     pub fn decode_input(&self, data: SliceData, internal: bool) -> Result<Vec<Token>> {
         if self.allow_partial_match {
-            self.function.decode_input_partial(data, internal)
+            self.function.decode_input(data, internal, true)
         } else {
-            self.function.decode_input(data, internal)
+            self.function.decode_input(data, internal, false)
         }
     }
 

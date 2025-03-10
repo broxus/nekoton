@@ -17,7 +17,7 @@ thiserror = "1.0"
 
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
-ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
+ton_abi = { git = "https://github.com/broxus/ton-labs-abi", rev = "6a0a4b3424ffc576951e8c9bf62822cb84199493" }
 
 nekoton-abi = { path = "../nekoton-abi", features = ["derive"] }
 nekoton-jetton = { path = "../nekoton-jetton" }
