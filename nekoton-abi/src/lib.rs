@@ -58,8 +58,8 @@ use std::sync::Arc;
 use anyhow::Result;
 use num_traits::ToPrimitive;
 use smallvec::smallvec;
-use ton_abi::{Function, Param, Token, TokenValue};
 use ton_abi::token::Cursor;
+use ton_abi::{Function, Param, Token, TokenValue};
 use ton_block::{
     Account, AccountStuff, Deserializable, GetRepresentationHash, MsgAddrStd, MsgAddressInt,
     Serializable,
@@ -247,9 +247,12 @@ pub fn unpack_from_cell(
     abi_version: ton_abi::contract::AbiVersion,
 ) -> Result<Vec<Token>> {
     let cs: Cursor = cursor.into();
-    let (tokens, cursor) = TokenValue::decode_params_with_cursor(params, cs, &abi_version, allow_partial, false)?;
+    let (tokens, cursor) =
+        TokenValue::decode_params_with_cursor(params, cs, &abi_version, allow_partial, false)?;
 
-    if !allow_partial && (cursor.slice.remaining_references() != 0 || cursor.slice.remaining_bits() != 0) {
+    if !allow_partial
+        && (cursor.slice.remaining_references() != 0 || cursor.slice.remaining_bits() != 0)
+    {
         Err(AbiError::IncompleteDeserialization(cursor.slice).into())
     } else {
         Ok(tokens)
@@ -355,7 +358,7 @@ pub fn decode_input<'a>(
         None => return Ok(None),
     };
 
-    let input = function.decode_input(message_body, internal, false )?;
+    let input = function.decode_input(message_body, internal, false)?;
     Ok(Some((function, input)))
 }
 
