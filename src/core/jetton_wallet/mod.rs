@@ -594,8 +594,6 @@ mod tests {
             account_stuff: &state,
         });
 
-
-
         let details = contract.get_details()?;
         assert_eq!(details.admin_address, MsgAddressInt::default());
 

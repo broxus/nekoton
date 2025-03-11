@@ -386,7 +386,10 @@ fn parse_multisig_transaction_impl(
     let functions = MultisigFunctions::instance(multisig_type);
 
     if function_id == functions.send_transaction.input_id {
-        let inputs = functions.send_transaction.decode_input(body, false, false).ok()?;
+        let inputs = functions
+            .send_transaction
+            .decode_input(body, false, false)
+            .ok()?;
         MultisigSendTransaction::try_from(InputMessage(inputs))
             .map(MultisigTransaction::Send)
             .ok()
@@ -627,7 +630,10 @@ pub fn parse_token_transaction(
             .map(|Accept { tokens }| TokenWalletTransaction::Accept(tokens))
             .ok()
     } else if function_id == functions.transfer_to_wallet.input_id {
-        let inputs = functions.transfer_to_wallet.decode_input(body, true, false).ok()?;
+        let inputs = functions
+            .transfer_to_wallet
+            .decode_input(body, true, false)
+            .ok()?;
 
         TokenOutgoingTransfer::try_from((
             InputMessage(inputs),
@@ -647,7 +653,10 @@ pub fn parse_token_transaction(
         .map(TokenWalletTransaction::OutgoingTransfer)
         .ok()
     } else if function_id == functions.accept_transfer.input_id {
-        let inputs = functions.accept_transfer.decode_input(body, true, false).ok()?;
+        let inputs = functions
+            .accept_transfer
+            .decode_input(body, true, false)
+            .ok()?;
 
         TokenIncomingTransfer::try_from((InputMessage(inputs), version))
             .map(TokenWalletTransaction::IncomingTransfer)
@@ -764,13 +773,19 @@ pub fn parse_nft_transaction(
             .map(NftTransaction::Transfer)
             .ok()
     } else if function_id == functions.change_owner.input_id {
-        let inputs = functions.change_owner.decode_input(body, true, false).ok()?;
+        let inputs = functions
+            .change_owner
+            .decode_input(body, true, false)
+            .ok()?;
 
         IncomingChangeOwner::try_from(InputMessage(inputs))
             .map(NftTransaction::ChangeOwner)
             .ok()
     } else if function_id == functions.change_manager.input_id {
-        let inputs = functions.change_manager.decode_input(body, true, false).ok()?;
+        let inputs = functions
+            .change_manager
+            .decode_input(body, true, false)
+            .ok()?;
 
         IncomingChangeManager::try_from(InputMessage(inputs))
             .map(NftTransaction::ChangeManager)

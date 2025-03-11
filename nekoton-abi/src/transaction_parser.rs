@@ -905,7 +905,8 @@ mod test {
     fn test_msig_parse() {
         let tx = "te6ccgECDwEAAr8AA7d/71xm3kVHGFMHZGUoDXw6DEYPK9ScQcsnnLkSLZ7G3cAAAJFpV+GoGBraM/SKhFI5sLq29aWvh9Cc7HpKT3q05y2+JUAZVPJAAACRWdD3iGY0QYfwAFSAIDmpqAUEAQIRDIuzRh4pg8RAAwIAb8mPQkBMUWFAAAAAAAAEAAAAAAAEhws3kp1E19nx+DF4QzIQjUi+1JzypAC1LQxJxK7AHDZAkCWUAJ1GT2MTiAAAAAAAAAAAWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAIJyvZ7oWayNtj9p7dDDGY4u8mOlc6T9PagSN/dk55tf3KcOwX/qxUeMwXCfqjfXiQJmV6DW5IURhMdjuArzxL+8yAIB4AsGAgHdCQcBASAIAHXgB/euM28io4wpg7IylAa+HQYjB5XqTiDlk85ciRbPY27gAAASLSr8NQbGiDD+SY7BZoAAAAAAAAAAQAEBIAoAuWgB/euM28io4wpg7IylAa+HQYjB5XqTiDlk85ciRbPY27kAMBunFtCio/6UZXoAx/JqvgBqSFUrtp6qXa9XdhOj416Q7msoAAYUWGAAABItKvw1BMaIMP4UQEwRwAFFiAH964zbyKjjCmDsjKUBr4dBiMHlepOIOWTzlyJFs9jbuAwMAeHPuU4jwSwpcoLA0+z3WJHxdej431afc+MsrhdPbR+p4WrZYx/urBS9Y+Lrk3hvFHKs0oOYTpIEvw2q4X/8fdeAQQlWOwICTyEO9NR+mdgtOEOKrICwOY/mq7TMcFQSK+2AAABg8H/rVtjRBicEx2CzYA0BY4AYDdOLaFFR/0oyvQBj+TVfADUkKpXbT1Uu16u7CdHxr0AAAAAAAAAAAAAAAAdzWUAUDgAIKICYIw==";
         let tx = ton_block::Transaction::construct_from_base64(&tx).unwrap();
-        let msig_abi = ton_abi::Contract::load(include_str!("../test/msig_abi.json").as_bytes()).unwrap();
+        let msig_abi =
+            ton_abi::Contract::load(include_str!("../test/msig_abi.json").as_bytes()).unwrap();
 
         let events = msig_abi
             .events

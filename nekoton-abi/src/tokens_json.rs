@@ -44,8 +44,9 @@ pub fn make_abi_token_value(value: &ton_abi::TokenValue) -> anyhow::Result<serde
                 })
                 .collect::<Result<Vec<_>, _>>()?,
         ),
-        ton_abi::TokenValue::Address(value)
-        | ton_abi::TokenValue::AddressStd(value) => serde_json::Value::String(value.to_string()),
+        ton_abi::TokenValue::Address(value) | ton_abi::TokenValue::AddressStd(value) => {
+            serde_json::Value::String(value.to_string())
+        }
         ton_abi::TokenValue::Bytes(value) | ton_abi::TokenValue::FixedBytes(value) => {
             serde_json::Value::String(base64::encode(value))
         }
@@ -271,7 +272,7 @@ pub fn parse_abi_token_value(
 
             ton_abi::TokenValue::Map(*param_key.clone(), *param_value.clone(), result)
         }
-        ton_abi::ParamType::Address=> {
+        ton_abi::ParamType::Address => {
             let value = if let Some(value) = value.as_str() {
                 let value = value.trim();
                 ton_block::MsgAddressInt::from_str(value)
