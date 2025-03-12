@@ -164,6 +164,27 @@ impl TonWallet {
         })
     }
 
+    pub fn make_state_init(&self) -> Result<ton_block::StateInit> {
+        match self.wallet_type {
+            WalletType::Multisig(multisig_type) => Ok(multisig::prepare_state_init(
+                &self.public_key,
+                multisig_type,
+            )),
+            WalletType::WalletV3 => wallet_v3::prepare_state_init(&self.public_key),
+            WalletType::WalletV4R1 => {
+                wallet_v4::prepare_state_init(&self.public_key, wallet_v4::WalletV4Version::R1)
+            }
+            WalletType::WalletV4R2 => {
+                wallet_v4::prepare_state_init(&self.public_key, wallet_v4::WalletV4Version::R2)
+            }
+            WalletType::WalletV5R1 => wallet_v5r1::prepare_state_init(&self.public_key),
+            WalletType::EverWallet => ever_wallet::prepare_state_init(&self.public_key),
+            WalletType::HighloadWalletV2 => {
+                highload_wallet_v2::prepare_state_init(&self.public_key)
+            }
+        }
+    }
+
     pub fn contract_subscription(&self) -> &ContractSubscription {
         &self.contract_subscription
     }

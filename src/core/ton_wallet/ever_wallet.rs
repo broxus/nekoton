@@ -18,7 +18,7 @@ pub fn prepare_deploy(
     workchain: i8,
     expiration: Expiration,
 ) -> Result<Box<dyn UnsignedMessage>> {
-    let state_init = make_state_init(public_key)?;
+    let state_init = prepare_state_init(public_key)?;
     let hash = state_init.hash()?;
 
     let dst = MsgAddressInt::AddrStd(ton_block::MsgAddrStd::with_address(
@@ -74,7 +74,7 @@ pub fn prepare_transfer(
             return Err(EverWalletError::AccountIsFrozen.into())
         }
         ton_block::AccountState::AccountUninit => {
-            message.set_state_init(make_state_init(public_key)?);
+            message.set_state_init(prepare_state_init(public_key)?);
         }
     };
 
@@ -150,7 +150,7 @@ pub fn is_ever_wallet(code_hash: &UInt256) -> bool {
 }
 
 pub fn compute_contract_address(public_key: &PublicKey, workchain_id: i8) -> MsgAddressInt {
-    let hash = make_state_init(public_key)
+    let hash = prepare_state_init(public_key)
         .and_then(|state| state.hash())
         .trust_me();
     MsgAddressInt::AddrStd(ton_block::MsgAddrStd::with_address(
@@ -160,7 +160,7 @@ pub fn compute_contract_address(public_key: &PublicKey, workchain_id: i8) -> Msg
     ))
 }
 
-pub fn make_state_init(public_key: &PublicKey) -> Result<ton_block::StateInit> {
+pub fn prepare_state_init(public_key: &PublicKey) -> Result<ton_block::StateInit> {
     let mut data = BuilderData::new();
     data.append_raw(public_key.as_bytes(), 256)?.append_u64(0)?;
     let data = data.into_cell()?;

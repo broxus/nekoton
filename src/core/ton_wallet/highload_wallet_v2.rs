@@ -40,6 +40,11 @@ pub fn prepare_deploy(
     }))
 }
 
+pub fn prepare_state_init(public_key: &PublicKey) -> Result<ton_block::StateInit> {
+    let init_data = InitData::from_key(public_key).with_wallet_id(WALLET_ID);
+    init_data.make_state_init()
+}
+
 pub fn prepare_transfer(
     clock: &dyn Clock,
     public_key: &PublicKey,

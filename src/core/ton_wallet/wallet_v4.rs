@@ -41,6 +41,14 @@ pub fn prepare_deploy(
     }))
 }
 
+pub fn prepare_state_init(
+    public_key: &PublicKey,
+    version: WalletV4Version,
+) -> Result<ton_block::StateInit> {
+    let init_data = InitData::from_key(public_key).with_subwallet_id(SUBWALLET_ID);
+    init_data.make_state_init(version)
+}
+
 pub fn prepare_transfer(
     clock: &dyn Clock,
     public_key: &PublicKey,

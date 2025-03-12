@@ -40,6 +40,11 @@ pub fn prepare_deploy(
     }))
 }
 
+pub fn prepare_state_init(public_key: &PublicKey) -> Result<ton_block::StateInit> {
+    let init_data = InitData::from_key(public_key).with_wallet_id(WALLET_ID);
+    init_data.make_state_init()
+}
+
 /// Adjusts seqno if there are some recent pending transactions that have not expired
 pub fn estimate_seqno_offset(
     clock: &dyn Clock,
