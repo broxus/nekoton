@@ -1,7 +1,10 @@
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Request {
-    #[prost(oneof = "request::Call", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12")]
+    #[prost(
+        oneof = "request::Call",
+        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14"
+    )]
     pub call: ::core::option::Option<request::Call>,
 }
 /// Nested message and enum types in `Request`.
@@ -59,6 +62,12 @@ pub mod request {
         pub message: ::prost::bytes::Bytes,
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct GetKeyBlockProof {
+        #[prost(uint32, tag = "1")]
+        pub seqno: u32,
+    }
+    #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Call {
         #[prost(message, tag = "1")]
@@ -85,12 +94,19 @@ pub mod request {
         SendMessage(SendMessage),
         #[prost(message, tag = "12")]
         GetLibraryCell(GetLibraryCell),
+        #[prost(message, tag = "13")]
+        GetTransactionBlockId(GetTransaction),
+        #[prost(message, tag = "14")]
+        GetKeyBlockProof(GetKeyBlockProof),
     }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Response {
-    #[prost(oneof = "response::Result", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11")]
+    #[prost(
+        oneof = "response::Result",
+        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13"
+    )]
     pub result: ::core::option::Option<response::Result>,
 }
 /// Nested message and enum types in `Response`.
@@ -244,6 +260,48 @@ pub mod response {
         }
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct BlockId {
+        #[prost(int32, tag = "1")]
+        pub workchain: i32,
+        #[prost(uint64, tag = "2")]
+        pub shard: u64,
+        #[prost(uint32, tag = "3")]
+        pub seqno: u32,
+        #[prost(bytes = "bytes", tag = "4")]
+        pub root_hash: ::prost::bytes::Bytes,
+        #[prost(bytes = "bytes", tag = "5")]
+        pub file_hash: ::prost::bytes::Bytes,
+    }
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct GetTransactionBlockId {
+        #[prost(message, optional, tag = "1")]
+        pub block_id: ::core::option::Option<BlockId>,
+    }
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Signature {
+        #[prost(bytes = "bytes", tag = "1")]
+        pub node_id: ::prost::bytes::Bytes,
+        #[prost(bytes = "bytes", tag = "2")]
+        pub signature: ::prost::bytes::Bytes,
+    }
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct KeyBlockProof {
+        #[prost(bytes = "bytes", tag = "1")]
+        pub proof_boc: ::prost::bytes::Bytes,
+        #[prost(message, repeated, tag = "2")]
+        pub signatures: ::prost::alloc::vec::Vec<Signature>,
+    }
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct GetKeyBlockProofRes {
+        #[prost(message, optional, tag = "1")]
+        pub proof: ::core::option::Option<KeyBlockProof>,
+    }
+    #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Result {
         #[prost(message, tag = "1")]
@@ -268,6 +326,10 @@ pub mod response {
         SendMessage(()),
         #[prost(message, tag = "11")]
         GetLibraryCell(GetLibraryCell),
+        #[prost(message, tag = "12")]
+        GetTransactionBlockId(GetTransactionBlockId),
+        #[prost(message, tag = "13")]
+        GetKeyBlockProof(GetKeyBlockProofRes),
     }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
