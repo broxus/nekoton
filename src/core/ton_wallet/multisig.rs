@@ -406,7 +406,10 @@ pub fn ton_wallet_details(multisig_type: MultisigType) -> TonWalletDetails {
     }
 }
 
-fn prepare_state_init(public_key: &PublicKey, multisig_type: MultisigType) -> ton_block::StateInit {
+pub fn prepare_state_init(
+    public_key: &PublicKey,
+    multisig_type: MultisigType,
+) -> ton_block::StateInit {
     let mut state_init = multisig_type.state_init();
 
     let new_data = ton_abi::Contract::insert_pubkey(
