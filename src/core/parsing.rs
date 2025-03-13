@@ -121,7 +121,11 @@ pub fn parse_transaction_additional_info(
                         WalletInteractionMethod::WalletV3Transfer,
                     )
                 }
-                WalletType::WalletV4R1 | WalletType::WalletV4R2 | WalletType::WalletV5R1 => {
+                WalletType::WalletV3R1
+                | WalletType::WalletV3R2
+                | WalletType::WalletV4R1
+                | WalletType::WalletV4R2
+                | WalletType::WalletV5R1 => {
                     let mut out_msg = None;
                     tx.out_msgs
                         .iterate(|item| {
