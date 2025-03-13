@@ -271,9 +271,23 @@ pub mod response {
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct BlockId {
+        #[prost(int32, tag = "1")]
+        pub workchain: i32,
+        #[prost(uint64, tag = "2")]
+        pub shard: u64,
+        #[prost(uint32, tag = "3")]
+        pub seqno: u32,
+        #[prost(bytes = "bytes", tag = "4")]
+        pub root_hash: ::prost::bytes::Bytes,
+        #[prost(bytes = "bytes", tag = "5")]
+        pub file_hash: ::prost::bytes::Bytes,
+    }
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct GetTransactionBlockId {
-        #[prost(bytes = "bytes", optional, tag = "1")]
-        pub block_id: ::core::option::Option<::prost::bytes::Bytes>,
+        #[prost(message, optional, tag = "1")]
+        pub block_id: ::core::option::Option<BlockId>,
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
