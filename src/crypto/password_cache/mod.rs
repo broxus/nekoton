@@ -150,7 +150,7 @@ pub struct PasswordCacheTransaction<'a> {
     cache: &'a PasswordCache,
 }
 
-impl<'a> PasswordCacheTransaction<'a> {
+impl PasswordCacheTransaction<'_> {
     pub fn proceed(&self) {
         if let Some(duration) = self.store_duration {
             let _ = self
@@ -160,7 +160,7 @@ impl<'a> PasswordCacheTransaction<'a> {
     }
 }
 
-impl<'a> AsRef<str> for PasswordCacheTransaction<'a> {
+impl AsRef<str> for PasswordCacheTransaction<'_> {
     fn as_ref(&self) -> &str {
         self.password.unsecure()
     }
