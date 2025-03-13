@@ -281,25 +281,9 @@ pub mod response {
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct Signature {
-        #[prost(bytes = "bytes", tag = "1")]
-        pub node_id: ::prost::bytes::Bytes,
-        #[prost(bytes = "bytes", tag = "2")]
-        pub signature: ::prost::bytes::Bytes,
-    }
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct KeyBlockProof {
-        #[prost(bytes = "bytes", tag = "1")]
-        pub proof_boc: ::prost::bytes::Bytes,
-        #[prost(message, repeated, tag = "2")]
-        pub signatures: ::prost::alloc::vec::Vec<Signature>,
-    }
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct GetKeyBlockProofRes {
-        #[prost(message, optional, tag = "1")]
-        pub proof: ::core::option::Option<KeyBlockProof>,
+        #[prost(bytes = "bytes", optional, tag = "1")]
+        pub proof: ::core::option::Option<::prost::bytes::Bytes>,
     }
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]

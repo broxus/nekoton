@@ -159,18 +159,8 @@ message Response {
       optional BlockId block_id = 1;
     }
 
-    message Signature {
-      bytes node_id = 1;
-      bytes signature = 2;
-    }
-
-    message KeyBlockProof {
-      bytes       proof_boc = 1;
-      repeated    Signature signatures = 2;
-    }
-
     message GetKeyBlockProofRes {
-      optional KeyBlockProof proof = 1;
+      optional bytes proof = 1;
     }
 
   oneof Result {
