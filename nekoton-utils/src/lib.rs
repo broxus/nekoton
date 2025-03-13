@@ -30,7 +30,6 @@
     clippy::match_same_arms,
     clippy::match_wildcard_for_single_variants,
     clippy::mem_forget,
-    clippy::mismatched_target_os,
     clippy::needless_borrow,
     clippy::needless_continue,
     clippy::option_option,
@@ -49,7 +48,8 @@
     nonstandard_style,
     rust_2018_idioms,
     clippy::print_stdout,
-    clippy::dbg_macro
+    clippy::dbg_macro,
+    unexpected_cfgs
 )]
 
 pub use self::address::*;

@@ -120,7 +120,7 @@ impl Bip39Path {
 
                 derived.secret()
             }
-            Self::Ton => derive_ed25519_private_key(&seed_bytes, &vec![44, 607, account_id as u32]),
+            Self::Ton => derive_ed25519_private_key(seed_bytes, &[44, 607, account_id as u32]),
         };
 
         Ok(derived)

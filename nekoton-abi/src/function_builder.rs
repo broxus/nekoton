@@ -22,7 +22,7 @@ pub struct FunctionBuilder {
     inputs: Vec<Param>,
     /// Function output.
     outputs: Vec<Param>,
-    /// Whether answer_id is set
+    /// Whether `answer_id` is set
     responsible: bool,
 }
 

@@ -397,7 +397,7 @@ impl SignerStorage for DerivedKeySigner {
     fn store_state(&self) -> String {
         struct StoredMasterKeys<'a>(&'a HashMap<[u8; 32], MasterKey>);
 
-        impl<'a> Serialize for StoredMasterKeys<'a> {
+        impl Serialize for StoredMasterKeys<'_> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: Serializer,

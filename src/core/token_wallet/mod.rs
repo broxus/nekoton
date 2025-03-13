@@ -220,44 +220,6 @@ impl TokenWallet {
         Ok((attached_amount * FEE_MULTIPLIER) as u64)
     }
 
-    fn calculate_initial_balance(
-        &self,
-        config: &BlockchainConfig,
-        address: &MsgAddressInt,
-    ) -> Result<u128> {
-        let gas_config = config.get_gas_config(address.is_masterchain());
-
-        let prices = config.raw_config().storage_prices()?;
-        let mut most_recent_bit_price = 0;
-        let mut most_recent_mc_bit_price = 0;
-        let mut most_recent_time: i32 = -1;
-
-        prices.map.iterate(|price| {
-            if most_recent_time < price.utime_since as i32 {
-                most_recent_time = price.utime_since as i32;
-                most_recent_bit_price = price.bit_price_ps;
-                most_recent_mc_bit_price = price.mc_bit_price_ps;
-            }
-            Ok(true)
-        })?;
-
-        let storage_fees = if address.is_masterchain() {
-            most_recent_mc_bit_price
-        } else {
-            most_recent_bit_price
-        };
-
-        let fee_base = if storage_fees > 1 {
-            600_000_000u64
-        } else {
-            100_000_000u64
-        };
-
-        let fees = 30000u64.saturating_mul(gas_config.gas_price.shr(16)) + fee_base;
-
-        Ok(fees as u128)
-    }
-
     pub async fn prepare_transfer(
         &self,
         destination: TransferRecipient,
@@ -281,7 +243,7 @@ impl TokenWallet {
                     .get_blockchain_config(self.clock.as_ref(), true)
                     .await?;
 
-                let initial_balance = match self.calculate_initial_balance(&config, address) {
+                let initial_balance = match calculate_initial_balance(&config, address) {
                     Ok(value) => value + stub_balance(address),
                     Err(_) => stub_balance(address),
                 };
@@ -543,6 +505,40 @@ fn make_contract_state_handler(
             }
         }
     }
+}
+
+fn calculate_initial_balance(config: &BlockchainConfig, address: &MsgAddressInt) -> Result<u128> {
+    let gas_config = config.get_gas_config(address.is_masterchain());
+
+    let prices = config.raw_config().storage_prices()?;
+    let mut most_recent_bit_price = 0;
+    let mut most_recent_mc_bit_price = 0;
+    let mut most_recent_time: i32 = -1;
+
+    prices.map.iterate(|price| {
+        if most_recent_time < price.utime_since as i32 {
+            most_recent_time = price.utime_since as i32;
+            most_recent_bit_price = price.bit_price_ps;
+            most_recent_mc_bit_price = price.mc_bit_price_ps;
+        }
+        Ok(true)
+    })?;
+
+    let storage_fees = if address.is_masterchain() {
+        most_recent_mc_bit_price
+    } else {
+        most_recent_bit_price
+    };
+
+    let fee_base = if storage_fees > 1 {
+        600_000_000u64
+    } else {
+        100_000_000u64
+    };
+
+    let fees = 30000u64.saturating_mul(gas_config.gas_price.shr(16)) + fee_base;
+
+    Ok(fees as u128)
 }
 
 fn make_transactions_handler(

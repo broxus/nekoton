@@ -195,7 +195,7 @@ type TransactionsFut<'a> = Pin<Box<dyn Future<Output = Result<Vec<RawTransaction
 #[cfg(feature = "non_threadsafe")]
 type TransactionsFut<'a> = Pin<Box<dyn Future<Output = Result<Vec<RawTransaction>>> + 'a>>;
 
-impl<'a> Stream for LatestTransactions<'a> {
+impl Stream for LatestTransactions<'_> {
     type Item = Result<Vec<RawTransaction>>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
@@ -493,8 +493,8 @@ pub fn default_headers(
 
 type HeadersMap = HashMap<String, ton_abi::TokenValue>;
 
-pub async fn update_library_cell<'a>(
-    transport: &'a dyn Transport,
+pub async fn update_library_cell(
+    transport: &dyn Transport,
     state: &mut AccountState,
 ) -> Result<()> {
     if let AccountState::AccountActive { ref mut state_init } = state {

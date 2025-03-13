@@ -60,7 +60,7 @@ impl RootTokenContract<'_> {
 #[derive(Copy, Clone)]
 pub struct TokenWalletContract<'a>(pub ExecutionContext<'a>);
 
-impl<'a> TokenWalletContract<'a> {
+impl TokenWalletContract<'_> {
     pub fn root(&self) -> Result<ton_block::MsgAddressInt> {
         let inputs = [0u32.token_value().named("answerId")];
         let result = self
