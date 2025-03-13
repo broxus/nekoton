@@ -276,19 +276,21 @@ impl InitData {
 
         Ok(ton_block::StateInit {
             code: Some(code),
-            data: Some(self.serialize()?),
+            data: Some(self.serialize(version)?),
             ..Default::default()
         })
     }
 
-    pub fn serialize(&self) -> Result<Cell> {
+    pub fn serialize(&self, version: WalletVersion) -> Result<Cell> {
         let mut data = BuilderData::new();
         data.append_u32(self.seqno)?
             .append_i32(self.wallet_id)?
             .append_raw(self.public_key.as_slice(), 256)?;
 
-        // empty plugin dict
-        data.append_bit_zero()?;
+        if matches!(version, WalletVersion::V4R1 | WalletVersion::V4R2) {
+            // empty plugin dict
+            data.append_bit_zero()?;
+        }
 
         data.into_cell()
     }
@@ -380,6 +382,7 @@ enum WalletV4Error {
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
+
     use ton_block::Deserializable;
     use ton_types::UInt256;
 
