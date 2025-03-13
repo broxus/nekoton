@@ -264,7 +264,7 @@ impl AccountsStorage {
     async fn save(&self, assets: &AssetsMap) -> Result<()> {
         struct StoredAssetsMap<'a>(&'a AssetsMap);
 
-        impl<'a> serde::Serialize for StoredAssetsMap<'a> {
+        impl serde::Serialize for StoredAssetsMap<'_> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
@@ -340,7 +340,7 @@ pub struct AccountToAdd {
 #[derive(Debug)]
 pub struct StoredAccountsData<'a>(RwLockReadGuard<'a, AssetsMap>);
 
-impl<'a> StoredAccountsData<'a> {
+impl StoredAccountsData<'_> {
     pub fn accounts(&self) -> &AssetsMap {
         &self.0
     }

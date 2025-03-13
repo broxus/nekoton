@@ -6,7 +6,7 @@ use crate::{old_tip3, tip3, tip3_1, tip6};
 
 pub struct TokenWalletContractState<'a>(pub ExecutionContext<'a>);
 
-impl<'a> TokenWalletContractState<'a> {
+impl TokenWalletContractState<'_> {
     pub fn get_code_hash(&self) -> anyhow::Result<ton_types::UInt256> {
         match &self.0.account_stuff.storage.state {
             ton_block::AccountState::AccountActive { state_init, .. } => {

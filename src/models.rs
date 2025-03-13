@@ -20,9 +20,9 @@ pub use nekoton_contracts::tip3_any::{
 pub enum TransactionAdditionalInfo {
     /// Transaction with incoming message, which body is valid UTF-8 comment
     Comment(String),
-    /// DePool notification
+    /// `DePool` notification
     DePoolOnRoundComplete(DePoolOnRoundCompleteNotification),
-    /// DePool notification
+    /// `DePool` notification
     DePoolReceiveAnswer(DePoolReceiveAnswerNotification),
     /// Token wallet notification
     TokenWalletDeployed(TokenWalletDeployedNotification),

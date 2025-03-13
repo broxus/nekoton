@@ -373,7 +373,7 @@ impl KeyStore {
         #[derive(Serialize)]
         struct StoredDataItem<'a>(&'a str, &'a str);
 
-        impl<'a> Serialize for StoredData<'a> {
+        impl Serialize for StoredData<'_> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: Serializer,

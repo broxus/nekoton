@@ -435,7 +435,7 @@ fn make_message_expired_handler(
 #[derive(Debug)]
 pub struct CollectionContractState<'a>(pub &'a ExistingContract);
 
-impl<'a> CollectionContractState<'a> {
+impl CollectionContractState<'_> {
     pub fn check_collection_supported_interfaces(
         &self,
         clock: &dyn Clock,
@@ -501,7 +501,7 @@ pub struct NftInterfaces {
 #[derive(Debug)]
 pub struct NftContractState<'a>(pub &'a ExistingContract);
 
-impl<'a> NftContractState<'a> {
+impl NftContractState<'_> {
     pub fn check_supported_interfaces(&self, clock: &dyn Clock) -> Result<Option<NftInterfaces>> {
         let ctx = self.0.as_context(clock);
         let tip6_interface = tip6::SidContract(ctx);
@@ -514,7 +514,7 @@ impl<'a> NftContractState<'a> {
             tip6_interface.supports_interface(tip4_2_2::metadata_contract::INTERFACE_ID)?;
         result.tip4_3 = tip6_interface.supports_interface(tip4_3::nft_contract::INTERFACE_ID)?;
 
-        Ok((result.tip4_1 || result.tip4_3).then(|| result))
+        Ok((result.tip4_1 || result.tip4_3).then_some(result))
     }
 
     pub fn get_json(&self, clock: &dyn Clock) -> Result<String> {
@@ -533,7 +533,7 @@ impl<'a> NftContractState<'a> {
 #[derive(Debug)]
 pub struct IndexContractState<'a>(pub &'a ExistingContract);
 
-impl<'a> IndexContractState<'a> {
+impl IndexContractState<'_> {
     pub async fn get_info(&self, clock: &dyn Clock) -> Result<IndexGetInfoOutputs> {
         let ctx = self.0.as_context(clock);
         let index_interface = tip4_3::IndexContract(ctx);

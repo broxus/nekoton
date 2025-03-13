@@ -129,6 +129,7 @@ impl JettonWallet {
         Ok(attached_amount)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn prepare_transfer(
         &self,
         amount: BigUint,

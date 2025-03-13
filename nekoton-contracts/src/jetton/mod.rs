@@ -82,7 +82,7 @@ impl RootTokenContract<'_> {
 #[derive(Copy, Clone)]
 pub struct TokenWalletContract<'a>(pub ExecutionContext<'a>);
 
-impl<'a> TokenWalletContract<'a> {
+impl TokenWalletContract<'_> {
     pub fn root(&self) -> anyhow::Result<ton_block::MsgAddressInt> {
         let result = self.0.run_getter(GET_WALLET_DATA, &[])?;
 

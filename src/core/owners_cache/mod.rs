@@ -208,7 +208,7 @@ impl OwnersCache {
         struct OwnersMap<'a>(&'a HashMap<MsgAddressInt, MsgAddressInt>);
         struct OwnersMapItem<'a>(&'a MsgAddressInt, &'a MsgAddressInt);
 
-        impl<'a> serde::Serialize for OwnersMapItem<'a> {
+        impl serde::Serialize for OwnersMapItem<'_> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
@@ -222,7 +222,7 @@ impl OwnersCache {
             }
         }
 
-        impl<'a> serde::Serialize for OwnersMap<'a> {
+        impl serde::Serialize for OwnersMap<'_> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
