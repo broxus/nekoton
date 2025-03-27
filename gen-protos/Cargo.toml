@@ -11,4 +11,4 @@ rust-version = "1.62.0"
 edition = "2021"
 
 [dependencies]
-prost-build = "0.11"
+prost-build = "0.13.5"
