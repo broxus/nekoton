@@ -4,7 +4,6 @@ use nekoton_utils::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use ton_block::VarUInteger7;
 use ton_types::{Cell, UInt256};
 
 #[derive(Deserialize, Debug)]
@@ -69,6 +68,7 @@ pub struct Transaction {
 #[serde(rename_all = "camelCase")]
 pub struct AccountStateResult {
     pub account: AccountInfo,
+    #[allow(unused)]
     pub block: BlockId,
 }
 
@@ -142,6 +142,7 @@ pub struct LastTransaction {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountChangedResult {
+    #[allow(unused)]
     pub changed: bool,
     pub block: BlockId,
 }
@@ -149,6 +150,7 @@ pub struct AccountChangedResult {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigResult {
+    #[allow(unused)]
     pub exist: bool,
     pub config: Option<ConfigInfo>,
 }
@@ -158,6 +160,7 @@ pub struct ConfigResult {
 pub struct ConfigInfo {
     #[serde(with = "serde_cell")]
     pub cell: Cell,
+    #[allow(unused)]
     #[serde(with = "serde_base64_address")]
     pub address: ton_block::MsgAddressInt,
     pub global_balance: AccountBalance,
@@ -166,6 +169,7 @@ pub struct ConfigInfo {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountTransactionsResult {
+    #[allow(unused)]
     pub blocks: Vec<BlockId>,
     #[serde(rename = "boc", with = "serde_transaction_array")]
     pub transactions: Vec<ton_block::Transaction>,

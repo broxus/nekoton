@@ -100,7 +100,6 @@ pub mod serde_u64 {
     }
 }
 
-
 pub mod serde_u128 {
     use super::*;
 
