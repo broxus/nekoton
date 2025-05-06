@@ -238,21 +238,48 @@ impl Transport for TonTransport {
         &self,
         address: &MsgAddressInt,
         from_lt: u64,
-        _: u8,
+        count: u8,
     ) -> anyhow::Result<Vec<RawTransaction>> {
-        let result = self.get_account_transactions(address, from_lt).await?;
-        let mut transactions = Vec::with_capacity(result.transactions.len());
-        for t in result.transactions {
-            transactions.push(RawTransaction {
-                hash: t.hash()?,
-                data: t.clone(),
-            });
+        const AT_MOST: usize = 20;
+        
+        let mut remaining = count;
+        let mut transactions = Vec::with_capacity(count as usize);
+        
+        loop {
+            let result = self.get_account_transactions(address, from_lt).await?;
+            let len = result.transactions.len();
+            let to_process = if len > remaining as usize {
+                result.transactions.into_iter().take(remaining as usize).collect::<Vec<_>>()
+            } else {
+                result.transactions
+            };
+            
+            for t in &to_process {
+                transactions.push(RawTransaction {
+                    hash: t.hash()?,
+                    data: t.clone(),
+                });
+            }
+            remaining = remaining.saturating_sub(len as u8); 
+            
+            if AT_MOST > len || remaining == 0 {
+                break;
+            }
+            
+            if let Some(last) = transactions.last() {
+                if last.data.prev_trans_lt == 0 {
+                    break;
+                }
+            }
         }
+        
+        
+       
 
         Ok(transactions)
     }
 
-    async fn get_transaction(&self, id: &UInt256) -> anyhow::Result<Option<RawTransaction>> {
+    async fn get_transaction(&self, _: &UInt256) -> anyhow::Result<Option<RawTransaction>> {
         todo!()
     }
 
@@ -275,7 +302,7 @@ impl Transport for TonTransport {
     ) -> anyhow::Result<BlockchainConfig> {
         let latest_block = self.get_latest_block().await?;
         let config = self
-            .get_config(latest_block.last.seqno, vec![20, 21, 24, 25, 18, 31])
+            .get_config(latest_block.last.seqno, vec![8, 20, 21, 24, 25, 18, 31])
             .await?;
         if let Some(config) = config.config {
             let config = ton_block::ConfigParams::with_root(config.cell);
@@ -288,13 +315,14 @@ impl Transport for TonTransport {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::external::{TonApiError, TonConnection};
-    use crate::transport::ton::TonTransport;
-    use crate::transport::Transport;
     use nekoton_utils::{unpack_std_smc_addr, SimpleClock};
     use reqwest::Url;
     use serde_json::Value;
     use std::sync::Arc;
+
+    use crate::external::{TonApiError, TonConnection};
+    use crate::transport::ton::TonTransport;
+    use crate::transport::Transport;
 
     #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
     #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
@@ -306,6 +334,7 @@ pub mod tests {
             let path = base
                 .join(path)
                 .map_err(|e| TonApiError::General(e.into()))?;
+            
             let result = self
                 .get(path)
                 .header("ContentType", "application/json")
@@ -341,10 +370,15 @@ pub mod tests {
         let address =
             unpack_std_smc_addr("EQCo6VT63H1vKJTiUo6W4M8RrTURCyk5MdbosuL5auEqpz-C", true)?;
         let transport = TonTransport::new(Arc::new(client));
-        let state = transport
-            .get_transactions(&address, 27668319000001, 20)
+        let transactions = transport
+            .get_transactions(&address, 27668319000001, u8::MAX)
             .await?;
-        println!("{:?}", state);
+        
+        let mut prev_tx_lt = transactions.first().unwrap().data.lt;
+        for i in &transactions {
+            assert_eq!(i.data.lt, prev_tx_lt);
+            prev_tx_lt = i.data.prev_trans_lt;
+        }
         Ok(())
     }
 
