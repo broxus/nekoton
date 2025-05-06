@@ -17,14 +17,19 @@ use crate::transport::models::{
     ExistingContract, PollContractState, RawContractState, RawTransaction,
 };
 use crate::transport::ton::models::*;
+use crate::transport::utils::AccountsCache;
 
 pub struct TonTransport {
     connection: Arc<dyn TonConnection>,
+    accounts_cache: AccountsCache,
 }
 
 impl TonTransport {
     pub fn new(connection: Arc<dyn TonConnection>) -> Self {
-        Self { connection }
+        Self {
+            connection,
+            accounts_cache: AccountsCache::new(),
+        }
     }
     async fn get_latest_block(&self) -> anyhow::Result<LatestBlock> {
         let result = self.connection.send_get("block/latest").await?;
@@ -64,74 +69,10 @@ impl TonTransport {
         Ok(result)
     }
 
-    // async fn check_account_changed(&self, block_seqno: u64, address: &MsgAddressInt, since_lt: u64) -> anyhow::Result<AccountChangedResult> {
-    //     let base64_address = pack_std_smc_addr(false, address, false)?;
-    //     let result = self.connection.send_get(&format!("block/{block_seqno}/{base64_address}/changed/{since_lt}")).await?;
-    //     let result = serde_json::from_value(result)?;
-    //     Ok(result)
-    // }
-
-    async fn get_config<I>(&self, block_seqno: u32, params: I) -> anyhow::Result<ConfigResult>
-    where
-        I: IntoIterator<Item = u32>,
-    {
-        let params_string = params
-            .into_iter()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>()
-            .join(",");
-        let result = self
-            .connection
-            .send_get(&format!("block/{block_seqno}/config/{params_string}"))
-            .await?;
-        let result = serde_json::from_value(result)?;
-        Ok(result)
-    }
-
-    async fn get_account_transactions(
+    async fn get_contract_state_ext(
         &self,
         address: &MsgAddressInt,
-        lt: u64,
-    ) -> anyhow::Result<AccountTransactionsResult> {
-        let base64_address = pack_std_smc_addr(false, address, false)?;
-        let result = self
-            .connection
-            .send_get(&format!("account/{base64_address}/tx/{lt}/-"))
-            .await?;
-        let result = serde_json::from_value(result)?;
-        Ok(result)
-    }
-
-    async fn send_message(&self, message_cell: Cell) -> anyhow::Result<()> {
-        let bytes = ton_types::serialize_toc(&message_cell)?;
-        let boc = base64::encode(bytes);
-        let body = serde_json::to_value(&MessageBoc { boc })?;
-
-        self.connection.send_post(&body, "/send").await?;
-        Ok(())
-    }
-}
-
-#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
-#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
-impl Transport for TonTransport {
-    fn info(&self) -> TransportInfo {
-        TransportInfo {
-            max_transactions_per_fetch: 20,
-            reliable_behavior: ReliableBehavior::BlockWalking,
-            has_key_blocks: false,
-        }
-    }
-
-    async fn send_message(&self, message: &Message) -> anyhow::Result<()> {
-        let cell = message.serialize()?;
-        self.send_message(cell).await
-    }
-
-    async fn get_contract_state(
-        &self,
-        address: &MsgAddressInt,
-    ) -> anyhow::Result<RawContractState> {
+    ) -> Result<RawContractState, TonApiError> {
         let latest_block = self.get_latest_block().await?;
         let state_opt = self
             .get_account_state(latest_block.last.seqno, address)
@@ -213,16 +154,120 @@ impl Transport for TonTransport {
         Ok(contract_state)
     }
 
+    // async fn check_account_changed(&self, block_seqno: u64, address: &MsgAddressInt, since_lt: u64) -> anyhow::Result<AccountChangedResult> {
+    //     let base64_address = pack_std_smc_addr(false, address, false)?;
+    //     let result = self.connection.send_get(&format!("block/{block_seqno}/{base64_address}/changed/{since_lt}")).await?;
+    //     let result = serde_json::from_value(result)?;
+    //     Ok(result)
+    // }
+
+    async fn get_config<I>(&self, block_seqno: u32, params: I) -> anyhow::Result<ConfigResult>
+    where
+        I: IntoIterator<Item = u32>,
+    {
+        let params_string = params
+            .into_iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        let result = self
+            .connection
+            .send_get(&format!("block/{block_seqno}/config/{params_string}"))
+            .await?;
+        let result = serde_json::from_value(result)?;
+        Ok(result)
+    }
+
+    async fn get_account_transactions(
+        &self,
+        address: &MsgAddressInt,
+        lt: u64,
+    ) -> anyhow::Result<AccountTransactionsResult> {
+        let base64_address = pack_std_smc_addr(false, address, false)?;
+        let result = self
+            .connection
+            .send_get(&format!("account/{base64_address}/tx/{lt}/-"))
+            .await?;
+        let result = serde_json::from_value(result)?;
+        Ok(result)
+    }
+
+    async fn send_message(&self, message_cell: Cell) -> anyhow::Result<()> {
+        let bytes = ton_types::serialize_toc(&message_cell)?;
+        let boc = base64::encode(bytes);
+        let body = serde_json::to_value(&MessageBoc { boc })?;
+
+        self.connection.send_post(&body, "/send").await?;
+        Ok(())
+    }
+}
+
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
+impl Transport for TonTransport {
+    fn info(&self) -> TransportInfo {
+        TransportInfo {
+            max_transactions_per_fetch: 20,
+            reliable_behavior: ReliableBehavior::BlockWalking,
+            has_key_blocks: false,
+        }
+    }
+
+    async fn send_message(&self, message: &Message) -> anyhow::Result<()> {
+        let cell = message.serialize()?;
+        self.send_message(cell).await
+    }
+
+    async fn get_contract_state(
+        &self,
+        address: &MsgAddressInt,
+    ) -> anyhow::Result<RawContractState> {
+        if let Some(known_state) = self.accounts_cache.get_account_state(address) {
+            if let Some(last_trans_lt) = known_state.last_known_trans_lt() {
+                let poll = self.poll_contract_state(address, last_trans_lt).await?;
+                return Ok(match poll.to_changed() {
+                    Ok(contract) => {
+                        self.accounts_cache.update_account_state(address, &contract);
+                        contract
+                    }
+                    Err(timings) => {
+                        let mut known_state = known_state.as_ref().clone();
+                        known_state.update_timings(timings);
+                        known_state
+                    }
+                });
+            }
+        }
+
+        let state = self.get_contract_state_ext(address).await?;
+        self.accounts_cache.update_account_state(address, &state);
+        Ok(state)
+    }
+
     async fn get_library_cell(&self, _: &UInt256) -> anyhow::Result<Option<Cell>> {
         todo!()
     }
 
     async fn poll_contract_state(
         &self,
-        _: &MsgAddressInt,
-        _: u64,
+        address: &MsgAddressInt,
+        last_transaction_lt: u64,
     ) -> anyhow::Result<PollContractState> {
-        todo!()
+        let state = self.get_contract_state_ext(address).await?;
+        match &state {
+            RawContractState::Exists(contract) => {
+                if contract.last_transaction_id.lt() <= last_transaction_lt {
+                    return Ok(PollContractState::Unchanged {
+                        timings: GenTimings::Unknown,
+                    });
+                }
+                self.accounts_cache.update_account_state(address, &state);
+                Ok(PollContractState::Exists(contract.clone()))
+            }
+            RawContractState::NotExists { timings } => Ok(PollContractState::NotExists {
+                timings: timings.clone(),
+            }),
+        }
     }
 
     async fn get_accounts_by_code_hash(
@@ -241,40 +286,41 @@ impl Transport for TonTransport {
         count: u8,
     ) -> anyhow::Result<Vec<RawTransaction>> {
         const AT_MOST: usize = 20;
-        
+
         let mut remaining = count;
         let mut transactions = Vec::with_capacity(count as usize);
-        
+
         loop {
             let result = self.get_account_transactions(address, from_lt).await?;
             let len = result.transactions.len();
             let to_process = if len > remaining as usize {
-                result.transactions.into_iter().take(remaining as usize).collect::<Vec<_>>()
+                result
+                    .transactions
+                    .into_iter()
+                    .take(remaining as usize)
+                    .collect::<Vec<_>>()
             } else {
                 result.transactions
             };
-            
+
             for t in &to_process {
                 transactions.push(RawTransaction {
                     hash: t.hash()?,
                     data: t.clone(),
                 });
             }
-            remaining = remaining.saturating_sub(len as u8); 
-            
+            remaining = remaining.saturating_sub(len as u8);
+
             if AT_MOST > len || remaining == 0 {
                 break;
             }
-            
+
             if let Some(last) = transactions.last() {
                 if last.data.prev_trans_lt == 0 {
                     break;
                 }
             }
         }
-        
-        
-       
 
         Ok(transactions)
     }
@@ -334,7 +380,7 @@ pub mod tests {
             let path = base
                 .join(path)
                 .map_err(|e| TonApiError::General(e.into()))?;
-            
+
             let result = self
                 .get(path)
                 .header("ContentType", "application/json")
@@ -373,7 +419,7 @@ pub mod tests {
         let transactions = transport
             .get_transactions(&address, 27668319000001, u8::MAX)
             .await?;
-        
+
         let mut prev_tx_lt = transactions.first().unwrap().data.lt;
         for i in &transactions {
             assert_eq!(i.data.lt, prev_tx_lt);
