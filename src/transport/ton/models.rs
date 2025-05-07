@@ -163,6 +163,7 @@ pub struct ConfigInfo {
     #[allow(unused)]
     #[serde(with = "serde_base64_address")]
     pub address: ton_block::MsgAddressInt,
+    #[allow(unused)]
     pub global_balance: AccountBalance,
 }
 

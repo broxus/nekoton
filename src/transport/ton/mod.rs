@@ -11,7 +11,7 @@ use ton_executor::BlockchainConfig;
 use ton_types::{Cell, UInt256};
 
 use super::{Transport, TransportInfo};
-use crate::external::{TonApiError, TonConnection};
+use crate::external::TonConnection;
 use crate::models::{NetworkCapabilities, ReliableBehavior};
 use crate::transport::models::{
     ExistingContract, PollContractState, RawContractState, RawTransaction,
@@ -33,7 +33,11 @@ impl TonTransport {
     }
     async fn get_latest_block(&self) -> anyhow::Result<LatestBlock> {
         let result = self.connection.send_get("block/latest").await?;
-        let result = serde_json::from_value(result)?;
+        let result = match result {
+            Some(t) => t,
+            None => anyhow::bail!("Address or block not found"),
+        };
+        let result = serde_json::from_str(&result)?;
         Ok(result)
     }
 
@@ -54,18 +58,16 @@ impl TonTransport {
         block_seqno: u32,
         address: &MsgAddressInt,
     ) -> anyhow::Result<Option<AccountStateResult>> {
-        let base64_address = pack_std_smc_addr(false, address, false)?;
+        let base64_address = pack_std_smc_addr(true, address, false)?;
         let result = self
             .connection
             .send_get(&format!("block/{block_seqno}/{base64_address}"))
             .await;
         let result = match result {
-            Ok(result) if result.is_null() => return Ok(None),
-            Ok(result) => serde_json::from_value(result)?,
-            Err(TonApiError::NotFound) => return Ok(None),
+            Ok(Some(result)) => Some(serde_json::from_str(&result)?),
+            Ok(None) => return Ok(None),
             Err(err) => return Err(err.into()),
         };
-        let result = serde_json::from_value(result)?;
         Ok(result)
     }
 
@@ -103,7 +105,7 @@ impl TonTransport {
         block_seqno: u32,
         block_utime: u32,
         address: &MsgAddressInt,
-    ) -> Result<RawContractState, TonApiError> {
+    ) -> anyhow::Result<RawContractState> {
         let state_opt = self.get_account_state(block_seqno, address).await?;
 
         let timings = GenTimings::Known {
@@ -188,14 +190,20 @@ impl TonTransport {
         address: &MsgAddressInt,
         since_lt: u64,
     ) -> anyhow::Result<AccountChangedResult> {
-        let base64_address = pack_std_smc_addr(false, address, false)?;
+        let base64_address = pack_std_smc_addr(true, address, false)?;
         let result = self
             .connection
             .send_get(&format!(
                 "block/{block_seqno}/{base64_address}/changed/{since_lt}"
             ))
             .await?;
-        let result = serde_json::from_value(result)?;
+
+        let result = match result {
+            Some(t) => t,
+            None => anyhow::bail!("Address or block not found"),
+        };
+
+        let result = serde_json::from_str(&result)?;
         Ok(result)
     }
 
@@ -212,7 +220,13 @@ impl TonTransport {
             .connection
             .send_get(&format!("block/{block_seqno}/config/{params_string}"))
             .await?;
-        let result = serde_json::from_value(result)?;
+
+        let result = match result {
+            Some(t) => t,
+            None => anyhow::bail!("Block not found"),
+        };
+
+        let result = serde_json::from_str(&result)?;
         Ok(result)
     }
 
@@ -221,19 +235,24 @@ impl TonTransport {
         address: &MsgAddressInt,
         lt: u64,
     ) -> anyhow::Result<AccountTransactionsResult> {
-        let base64_address = pack_std_smc_addr(false, address, false)?;
+        let base64_address = pack_std_smc_addr(true, address, false)?;
         let result = self
             .connection
             .send_get(&format!("account/{base64_address}/tx/{lt}/-"))
             .await?;
-        let result = serde_json::from_value(result)?;
+
+        let result = match result {
+            Some(t) => t,
+            None => anyhow::bail!("Address not found"),
+        };
+        let result = serde_json::from_str(&result)?;
         Ok(result)
     }
 
     async fn send_message(&self, message_cell: Cell) -> anyhow::Result<()> {
         let bytes = ton_types::serialize_toc(&message_cell)?;
         let boc = base64::encode(bytes);
-        let body = serde_json::to_value(&MessageBoc { boc })?;
+        let body = serde_json::to_string(&MessageBoc { boc })?;
 
         self.connection.send_post(&body, "/send").await?;
         Ok(())
@@ -286,7 +305,7 @@ impl Transport for TonTransport {
     }
 
     async fn get_library_cell(&self, _: &UInt256) -> anyhow::Result<Option<Cell>> {
-        todo!()
+        Ok(None)
     }
 
     async fn poll_contract_state(
@@ -389,48 +408,44 @@ impl Transport for TonTransport {
 
 #[cfg(test)]
 pub mod tests {
+    use nekoton_utils::{unpack_std_smc_addr, SimpleClock};
+    use reqwest::Url;
+    use std::sync::Arc;
+
     use crate::core::generic_contract::{GenericContract, GenericContractSubscriptionHandler};
-    use crate::core::ContractSubscription;
-    use crate::external::{TonApiError, TonConnection};
+    use crate::external::TonConnection;
     use crate::models::{ContractState, PendingTransaction, Transaction, TransactionsBatchInfo};
     use crate::transport::ton::TonTransport;
     use crate::transport::Transport;
-    use nekoton_utils::{unpack_std_smc_addr, SimpleClock};
-    use reqwest::Url;
-    use serde_json::Value;
-    use std::sync::Arc;
 
     #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
     #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
     impl TonConnection for reqwest::Client {
-        async fn send_get(&self, path: &str) -> Result<Value, TonApiError> {
-            let base = Url::parse("https://mainnet-v4.tonhubapi.com")
-                .map_err(|e| TonApiError::General(e.into()))?;
-
-            let path = base
-                .join(path)
-                .map_err(|e| TonApiError::General(e.into()))?;
+        async fn send_get(&self, path: &str) -> anyhow::Result<Option<String>> {
+            let base = Url::parse("https://mainnet-v4.tonhubapi.com")?;
+            let path = base.join(path)?;
 
             let result = self
                 .get(path)
                 .header("ContentType", "application/json")
                 .send()
-                .await
-                .map_err(|e| TonApiError::General(e.into()))?
-                .json()
-                .await
-                .map_err(|e| TonApiError::General(e.into()))?;
+                .await?;
 
-            Ok(result)
+            if matches!(result.status(), reqwest::StatusCode::NOT_FOUND) {
+                return Ok(None);
+            }
+
+            let result = result.text().await?;
+            Ok(Some(result))
         }
 
-        async fn send_post(&self, body: &Value, path: &str) -> Result<Value, TonApiError> {
+        async fn send_post(&self, _: &str, _: &str) -> anyhow::Result<Option<String>> {
             todo!()
         }
     }
 
     #[tokio::test]
-    async fn test_account_state() -> anyhow::Result<(), TonApiError> {
+    async fn test_account_state() -> anyhow::Result<()> {
         let client = reqwest::Client::new();
         let address =
             unpack_std_smc_addr("EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N", true)?;
@@ -441,7 +456,7 @@ pub mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_transactions() -> anyhow::Result<(), TonApiError> {
+    async fn test_get_transactions() -> anyhow::Result<()> {
         let client = reqwest::Client::new();
         let address =
             unpack_std_smc_addr("EQCo6VT63H1vKJTiUo6W4M8RrTURCyk5MdbosuL5auEqpz-C", true)?;
@@ -459,7 +474,7 @@ pub mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_config() -> anyhow::Result<(), TonApiError> {
+    async fn test_get_config() -> anyhow::Result<()> {
         let client = reqwest::Client::new();
         let transport = TonTransport::new(Arc::new(client));
         let config = transport.get_blockchain_config(&SimpleClock, true).await?;
@@ -468,39 +483,40 @@ pub mod tests {
         Ok(())
     }
 
+    #[derive(Copy, Clone, Debug)]
     pub struct SimpleHandler;
     impl GenericContractSubscriptionHandler for SimpleHandler {
         fn on_message_sent(
             &self,
-            pending_transaction: PendingTransaction,
-            transaction: Option<Transaction>,
+            _: PendingTransaction,
+            _: Option<Transaction>,
         ) {
             println!("on_message_sent");
         }
 
-        fn on_message_expired(&self, pending_transaction: PendingTransaction) {
+        fn on_message_expired(&self, _: PendingTransaction) {
             println!("on_message_expired");
         }
 
-        fn on_state_changed(&self, new_state: ContractState) {
+        fn on_state_changed(&self, _: ContractState) {
             println!("on_state_changed");
         }
 
         fn on_transactions_found(
             &self,
-            transactions: Vec<Transaction>,
-            batch_info: TransactionsBatchInfo,
+            _: Vec<Transaction>,
+            _: TransactionsBatchInfo,
         ) {
             println!("on_transactions_found");
         }
     }
 
     #[tokio::test]
-    async fn subscription_test() -> anyhow::Result<(), TonApiError> {
+    async fn subscription_test() -> anyhow::Result<()> {
         let client = reqwest::Client::new();
         let transport = TonTransport::new(Arc::new(client));
         let address =
-            unpack_std_smc_addr("EQCo6VT63H1vKJTiUo6W4M8RrTURCyk5MdbosuL5auEqpz-C", true)?;
+            unpack_std_smc_addr("UQBXJ9VgpXcBGYGDXYurquCsl3LV0bLmsIWuhv9VmIkxCm8q", true)?;
         let sub = GenericContract::subscribe(
             Arc::new(SimpleClock),
             Arc::new(transport),

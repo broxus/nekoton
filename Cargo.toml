@@ -56,7 +56,7 @@ ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git", optional 
 tiny-bip39 = { git = "https://github.com/broxus/tiny-bip39.git", default-features = false, optional = true }
 tiny-hderive = { git = "https://github.com/broxus/tiny-hderive.git", optional = true }
 
-ton_abi = { git = "https://github.com/broxus/ton-labs-abi", branch = "feature/new-abi" }
+ton_abi = { git = "https://github.com/broxus/ton-labs-abi"}
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
