@@ -69,18 +69,46 @@ impl TonTransport {
         Ok(result)
     }
 
-    async fn get_contract_state_ext(
+    async fn check_account_changed_ext(
         &self,
         address: &MsgAddressInt,
-    ) -> Result<RawContractState, TonApiError> {
+        since_lt: u64,
+    ) -> anyhow::Result<PollContractState> {
         let latest_block = self.get_latest_block().await?;
-        let state_opt = self
-            .get_account_state(latest_block.last.seqno, address)
+        let result = self
+            .check_account_changed(latest_block.last.seqno, address, since_lt)
             .await?;
+        let state = self
+            .get_contract_state_ext(latest_block.last.seqno, latest_block.now, address)
+            .await?;
+
+        let state = match (result.changed, state) {
+            (false, RawContractState::Exists(_)) => PollContractState::Unchanged {
+                timings: GenTimings::Known {
+                    gen_lt: 0,
+                    gen_utime: latest_block.now,
+                },
+            },
+            (true, RawContractState::Exists(contract)) => PollContractState::Exists(contract),
+            (_, RawContractState::NotExists { timings }) => {
+                PollContractState::NotExists { timings }
+            }
+        };
+
+        Ok(state)
+    }
+
+    async fn get_contract_state_ext(
+        &self,
+        block_seqno: u32,
+        block_utime: u32,
+        address: &MsgAddressInt,
+    ) -> Result<RawContractState, TonApiError> {
+        let state_opt = self.get_account_state(block_seqno, address).await?;
 
         let timings = GenTimings::Known {
             gen_lt: 0,
-            gen_utime: latest_block.now,
+            gen_utime: block_utime,
         }; //TODO: how to get gen_lt
 
         let state = match state_opt {
@@ -154,12 +182,22 @@ impl TonTransport {
         Ok(contract_state)
     }
 
-    // async fn check_account_changed(&self, block_seqno: u64, address: &MsgAddressInt, since_lt: u64) -> anyhow::Result<AccountChangedResult> {
-    //     let base64_address = pack_std_smc_addr(false, address, false)?;
-    //     let result = self.connection.send_get(&format!("block/{block_seqno}/{base64_address}/changed/{since_lt}")).await?;
-    //     let result = serde_json::from_value(result)?;
-    //     Ok(result)
-    // }
+    async fn check_account_changed(
+        &self,
+        block_seqno: u32,
+        address: &MsgAddressInt,
+        since_lt: u64,
+    ) -> anyhow::Result<AccountChangedResult> {
+        let base64_address = pack_std_smc_addr(false, address, false)?;
+        let result = self
+            .connection
+            .send_get(&format!(
+                "block/{block_seqno}/{base64_address}/changed/{since_lt}"
+            ))
+            .await?;
+        let result = serde_json::from_value(result)?;
+        Ok(result)
+    }
 
     async fn get_config<I>(&self, block_seqno: u32, params: I) -> anyhow::Result<ConfigResult>
     where
@@ -208,7 +246,7 @@ impl Transport for TonTransport {
     fn info(&self) -> TransportInfo {
         TransportInfo {
             max_transactions_per_fetch: 20,
-            reliable_behavior: ReliableBehavior::BlockWalking,
+            reliable_behavior: ReliableBehavior::IntensivePolling,
             has_key_blocks: false,
         }
     }
@@ -239,7 +277,10 @@ impl Transport for TonTransport {
             }
         }
 
-        let state = self.get_contract_state_ext(address).await?;
+        let latest_block = self.get_latest_block().await?;
+        let state = self
+            .get_contract_state_ext(latest_block.last.seqno, latest_block.now, address)
+            .await?;
         self.accounts_cache.update_account_state(address, &state);
         Ok(state)
     }
@@ -253,21 +294,8 @@ impl Transport for TonTransport {
         address: &MsgAddressInt,
         last_transaction_lt: u64,
     ) -> anyhow::Result<PollContractState> {
-        let state = self.get_contract_state_ext(address).await?;
-        match &state {
-            RawContractState::Exists(contract) => {
-                if contract.last_transaction_id.lt() <= last_transaction_lt {
-                    return Ok(PollContractState::Unchanged {
-                        timings: GenTimings::Unknown,
-                    });
-                }
-                self.accounts_cache.update_account_state(address, &state);
-                Ok(PollContractState::Exists(contract.clone()))
-            }
-            RawContractState::NotExists { timings } => Ok(PollContractState::NotExists {
-                timings: timings.clone(),
-            }),
-        }
+        self.check_account_changed_ext(address, last_transaction_lt)
+            .await
     }
 
     async fn get_accounts_by_code_hash(
@@ -361,14 +389,16 @@ impl Transport for TonTransport {
 
 #[cfg(test)]
 pub mod tests {
+    use crate::core::generic_contract::{GenericContract, GenericContractSubscriptionHandler};
+    use crate::core::ContractSubscription;
+    use crate::external::{TonApiError, TonConnection};
+    use crate::models::{ContractState, PendingTransaction, Transaction, TransactionsBatchInfo};
+    use crate::transport::ton::TonTransport;
+    use crate::transport::Transport;
     use nekoton_utils::{unpack_std_smc_addr, SimpleClock};
     use reqwest::Url;
     use serde_json::Value;
     use std::sync::Arc;
-
-    use crate::external::{TonApiError, TonConnection};
-    use crate::transport::ton::TonTransport;
-    use crate::transport::Transport;
 
     #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
     #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
@@ -435,6 +465,52 @@ pub mod tests {
         let config = transport.get_blockchain_config(&SimpleClock, true).await?;
         println!("{:?}", config.get_fwd_prices(true));
         println!("{:?}", config.get_fwd_prices(false));
+        Ok(())
+    }
+
+    pub struct SimpleHandler;
+    impl GenericContractSubscriptionHandler for SimpleHandler {
+        fn on_message_sent(
+            &self,
+            pending_transaction: PendingTransaction,
+            transaction: Option<Transaction>,
+        ) {
+            println!("on_message_sent");
+        }
+
+        fn on_message_expired(&self, pending_transaction: PendingTransaction) {
+            println!("on_message_expired");
+        }
+
+        fn on_state_changed(&self, new_state: ContractState) {
+            println!("on_state_changed");
+        }
+
+        fn on_transactions_found(
+            &self,
+            transactions: Vec<Transaction>,
+            batch_info: TransactionsBatchInfo,
+        ) {
+            println!("on_transactions_found");
+        }
+    }
+
+    #[tokio::test]
+    async fn subscription_test() -> anyhow::Result<(), TonApiError> {
+        let client = reqwest::Client::new();
+        let transport = TonTransport::new(Arc::new(client));
+        let address =
+            unpack_std_smc_addr("EQCo6VT63H1vKJTiUo6W4M8RrTURCyk5MdbosuL5auEqpz-C", true)?;
+        let sub = GenericContract::subscribe(
+            Arc::new(SimpleClock),
+            Arc::new(transport),
+            address,
+            Arc::new(SimpleHandler),
+            true,
+        )
+        .await?;
+        let state = sub.contract_state();
+        println!("{:?}", state);
         Ok(())
     }
 }
