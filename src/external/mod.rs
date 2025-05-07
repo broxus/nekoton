@@ -69,20 +69,8 @@ pub trait ProtoConnection: Send + Sync {
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
 #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
 pub trait TonConnection: Send + Sync {
-    async fn send_get(&self, path: &str) -> Result<serde_json::Value, TonApiError>;
-    async fn send_post(
-        &self,
-        body: &serde_json::Value,
-        path: &str,
-    ) -> Result<serde_json::Value, TonApiError>;
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum TonApiError {
-    #[error("Requested entity not found")]
-    NotFound,
-    #[error("General error occurred {0}")]
-    General(#[from] anyhow::Error),
+    async fn send_get(&self, path: &str) -> Result<Option<String>>;
+    async fn send_post(&self, body: &str, path: &str) -> Result<Option<String>>;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

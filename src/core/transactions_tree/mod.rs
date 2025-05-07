@@ -284,7 +284,7 @@ mod test {
             .await?
             .text()
             .await?;
-        let contract = ton_abi::Contract::load(&abi)?;
+        let contract = ton_abi::Contract::load(abi.as_bytes())?;
 
         let parser = TransactionParser::builder()
             .events_list(contract.events.values().cloned())
