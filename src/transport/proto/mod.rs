@@ -450,23 +450,44 @@ mod tests {
         }
     }
 
+    pub struct OverrideClient {
+        client: reqwest::Client,
+    }
+
+    #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+    #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
+    impl ProtoConnection for OverrideClient {
+        async fn post(&self, req: external::ProtoRequest) -> Result<Vec<u8>> {
+            println!("{req:?}");
+            let response = self
+                .client
+                .post("https://rpc-testnet.tychoprotocol.com/")
+                .body(req.data)
+                .header("Content-Type", "application/x-protobuf")
+                .send()
+                .await?;
+
+            Ok(response.bytes().await?.into())
+        }
+    }
+
     #[tokio::test]
-    async fn test_library_cells_proto() {
-        let transport = ProtoTransport::new(Arc::new(reqwest::Client::new()));
+    async fn test_library_cells_proto() -> anyhow::Result<()> {
+        let transport = ProtoTransport::new(Arc::new(OverrideClient {
+            client: reqwest::Client::new(),
+        }));
+
         let result = transport
-            .get_library_cell(
-                &UInt256::from_str(
-                    "4f4f10cb9a30582792fb3c1e364de5a6fbe6fe04f4167f1f12f83468c767aeb3",
-                )
-                .unwrap(),
-            )
-            .await
-            .unwrap();
+            .get_library_cell(&UInt256::from_str(
+                "4f4f10cb9a30582792fb3c1e364de5a6fbe6fe04f4167f1f12f83468c767aeb3",
+            )?)
+            .await?;
 
         match result {
             Some(cell) => println!("{:?}", cell.repr_hash()),
             None => println!("No library cell"),
         }
+        Ok(())
     }
 
     #[tokio::test]
