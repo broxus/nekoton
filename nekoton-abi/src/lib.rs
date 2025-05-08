@@ -58,6 +58,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use num_traits::ToPrimitive;
 use smallvec::smallvec;
+use ton_abi::token::Cursor;
 use ton_abi::{Function, Param, Token, TokenValue};
 use ton_block::{
     Account, AccountStuff, Deserializable, GetRepresentationHash, MsgAddrStd, MsgAddressInt,
@@ -241,26 +242,18 @@ pub fn pack_into_cell(
 
 pub fn unpack_from_cell(
     params: &[Param],
-    mut cursor: SliceData,
+    cursor: SliceData,
     allow_partial: bool,
     abi_version: ton_abi::contract::AbiVersion,
 ) -> Result<Vec<Token>> {
-    let mut tokens = Vec::new();
+    let cs: Cursor = cursor.into();
+    let (tokens, cursor) =
+        TokenValue::decode_params_with_cursor(params, cs, &abi_version, allow_partial, false)?;
 
-    for param in params {
-        let last = Some(param) == params.last();
-        let (token_value, new_cursor) =
-            TokenValue::read_from(&param.kind, cursor, last, &abi_version, allow_partial)?;
-
-        cursor = new_cursor;
-        tokens.push(Token {
-            name: param.name.clone(),
-            value: token_value,
-        });
-    }
-
-    if !allow_partial && (cursor.remaining_references() != 0 || cursor.remaining_bits() != 0) {
-        Err(AbiError::IncompleteDeserialization(cursor).into())
+    if !allow_partial
+        && (cursor.slice.remaining_references() != 0 || cursor.slice.remaining_bits() != 0)
+    {
+        Err(AbiError::IncompleteDeserialization(cursor.slice).into())
     } else {
         Ok(tokens)
     }
@@ -365,7 +358,7 @@ pub fn decode_input<'a>(
         None => return Ok(None),
     };
 
-    let input = function.decode_input(message_body, internal)?;
+    let input = function.decode_input(message_body, internal, false)?;
     Ok(Some((function, input)))
 }
 
@@ -1202,7 +1195,7 @@ mod tests {
             "events": []
         }"#####;
 
-        let contract_abi = ton_abi::Contract::load(contract).trust_me();
+        let contract_abi = ton_abi::Contract::load(contract.as_bytes()).trust_me();
         let function = contract_abi.function("submitTransaction").trust_me();
 
         let _msg_code = base64::decode("te6ccgEBBAEA0QABRYgAMZM1//wnphAm4e74Ifiao3ipylccMDttQdF26orbI/4MAQHhkN2GJNWURKaCKnkZsRQhhRpn6THu/L5UVbrQqftLTfUQT74cmHie7f1G6gzgchbLtyMtLAADdEgyd74v9hADgPx2uNPC/rcj5o9MEu0xQtT7O4QxICY7yPkDTSqLNRfNQAAAXh+Daz0/////xMdgs2ACAWOAAxkzX//CemECbh7vgh+JqjeKnKVxwwO21B0Xbqitsj/gAAAAAAAAAAAAAAADuaygBAMAAA==").unwrap();

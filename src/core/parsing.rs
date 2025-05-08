@@ -33,7 +33,7 @@ pub fn parse_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
         if function_id == functions.transfer_to_wallet.input_id {
             let inputs = functions
                 .transfer_to_wallet
-                .decode_input(payload, true)
+                .decode_input(payload, true, false)
                 .ok()?;
 
             return TokenOutgoingTransfer::try_from((
@@ -44,7 +44,7 @@ pub fn parse_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
             .map(KnownPayload::TokenOutgoingTransfer)
             .ok();
         } else if function_id == functions.transfer.input_id {
-            let inputs = functions.transfer.decode_input(payload, true).ok()?;
+            let inputs = functions.transfer.decode_input(payload, true, false).ok()?;
 
             return TokenOutgoingTransfer::try_from((
                 InputMessage(inputs),
@@ -54,7 +54,7 @@ pub fn parse_payload(payload: ton_types::SliceData) -> Option<KnownPayload> {
             .map(KnownPayload::TokenOutgoingTransfer)
             .ok();
         } else if function_id == functions.burn.input_id {
-            let inputs = functions.burn.decode_input(payload, true).ok()?;
+            let inputs = functions.burn.decode_input(payload, true, false).ok()?;
 
             return TokenSwapBack::try_from((InputMessage(inputs), version))
                 .map(KnownPayload::TokenSwapBack)
@@ -202,7 +202,7 @@ pub fn parse_transaction_additional_info(
     } else if function_id == depool_notifications.on_round_complete.input_id {
         let inputs = depool_notifications
             .on_round_complete
-            .decode_input(body, true)
+            .decode_input(body, true, false)
             .ok()?;
 
         DePoolOnRoundCompleteNotification::try_from(InputMessage(inputs))
@@ -211,7 +211,7 @@ pub fn parse_transaction_additional_info(
     } else if function_id == depool_notifications.receive_answer.input_id {
         let inputs = depool_notifications
             .receive_answer
-            .decode_input(body, true)
+            .decode_input(body, true, false)
             .ok()?;
 
         DePoolReceiveAnswerNotification::try_from(InputMessage(inputs))
@@ -220,7 +220,7 @@ pub fn parse_transaction_additional_info(
     } else if function_id == token_notifications.notify_wallet_deployed.input_id {
         let inputs = token_notifications
             .notify_wallet_deployed
-            .decode_input(body, true)
+            .decode_input(body, true, false)
             .ok()?;
 
         TokenWalletDeployedNotification::try_from(InputMessage(inputs))
@@ -373,7 +373,7 @@ fn parse_multisig_transaction_impl(
     let parse_tx_input = |function: &ton_abi::Function,
                           mut body: ton_types::SliceData|
      -> Option<(ton_types::UInt256, InputMessage)> {
-        let inputs = function.decode_input(body.clone(), false).ok()?;
+        let inputs = function.decode_input(body.clone(), false, false).ok()?;
         body.move_by(PUBKEY_OFFSET).ok()?;
         let custodian = body.get_next_hash().ok()?;
         Some((custodian, InputMessage(inputs)))
@@ -390,7 +390,10 @@ fn parse_multisig_transaction_impl(
     let functions = MultisigFunctions::instance(multisig_type);
 
     if function_id == functions.send_transaction.input_id {
-        let inputs = functions.send_transaction.decode_input(body, false).ok()?;
+        let inputs = functions
+            .send_transaction
+            .decode_input(body, false, false)
+            .ok()?;
         MultisigSendTransaction::try_from(InputMessage(inputs))
             .map(MultisigTransaction::Send)
             .ok()
@@ -625,13 +628,16 @@ pub fn parse_token_transaction(
             None
         }
     } else if function_id == functions.accept_mint.input_id {
-        let inputs = functions.accept_mint.decode_input(body, true).ok()?;
+        let inputs = functions.accept_mint.decode_input(body, true, false).ok()?;
 
         Accept::try_from((InputMessage(inputs), version))
             .map(|Accept { tokens }| TokenWalletTransaction::Accept(tokens))
             .ok()
     } else if function_id == functions.transfer_to_wallet.input_id {
-        let inputs = functions.transfer_to_wallet.decode_input(body, true).ok()?;
+        let inputs = functions
+            .transfer_to_wallet
+            .decode_input(body, true, false)
+            .ok()?;
 
         TokenOutgoingTransfer::try_from((
             InputMessage(inputs),
@@ -641,7 +647,7 @@ pub fn parse_token_transaction(
         .map(TokenWalletTransaction::OutgoingTransfer)
         .ok()
     } else if function_id == functions.transfer.input_id {
-        let inputs = functions.transfer.decode_input(body, true).ok()?;
+        let inputs = functions.transfer.decode_input(body, true, false).ok()?;
 
         TokenOutgoingTransfer::try_from((
             InputMessage(inputs),
@@ -651,13 +657,16 @@ pub fn parse_token_transaction(
         .map(TokenWalletTransaction::OutgoingTransfer)
         .ok()
     } else if function_id == functions.accept_transfer.input_id {
-        let inputs = functions.accept_transfer.decode_input(body, true).ok()?;
+        let inputs = functions
+            .accept_transfer
+            .decode_input(body, true, false)
+            .ok()?;
 
         TokenIncomingTransfer::try_from((InputMessage(inputs), version))
             .map(TokenWalletTransaction::IncomingTransfer)
             .ok()
     } else if function_id == functions.burn.input_id {
-        let inputs = functions.burn.decode_input(body, true).ok()?;
+        let inputs = functions.burn.decode_input(body, true, false).ok()?;
 
         TokenSwapBack::try_from((InputMessage(inputs), version))
             .map(TokenWalletTransaction::SwapBack)
@@ -762,19 +771,25 @@ pub fn parse_nft_transaction(
     let functions = NftFunctions::instance();
 
     if function_id == functions.transfer.input_id {
-        let inputs = functions.transfer.decode_input(body, true).ok()?;
+        let inputs = functions.transfer.decode_input(body, true, false).ok()?;
 
         IncomingNftTransfer::try_from(InputMessage(inputs))
             .map(NftTransaction::Transfer)
             .ok()
     } else if function_id == functions.change_owner.input_id {
-        let inputs = functions.change_owner.decode_input(body, true).ok()?;
+        let inputs = functions
+            .change_owner
+            .decode_input(body, true, false)
+            .ok()?;
 
         IncomingChangeOwner::try_from(InputMessage(inputs))
             .map(NftTransaction::ChangeOwner)
             .ok()
     } else if function_id == functions.change_manager.input_id {
-        let inputs = functions.change_manager.decode_input(body, true).ok()?;
+        let inputs = functions
+            .change_manager
+            .decode_input(body, true, false)
+            .ok()?;
 
         IncomingChangeManager::try_from(InputMessage(inputs))
             .map(NftTransaction::ChangeManager)
