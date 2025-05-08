@@ -65,6 +65,14 @@ pub trait ProtoConnection: Send + Sync {
     async fn post(&self, req: ProtoRequest) -> Result<Vec<u8>>;
 }
 
+#[cfg(feature = "ton_transport")]
+#[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
+#[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
+pub trait TonConnection: Send + Sync {
+    async fn send_get(&self, path: &str) -> Result<Option<String>>;
+    async fn send_post(&self, body: &str, path: &str) -> Result<Option<String>>;
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LedgerSignatureContext {
