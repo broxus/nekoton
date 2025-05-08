@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["WalletVersion"],"fn":["compute_contract_address","is_wallet_v3r1","is_wallet_v3r2","is_wallet_v4r1","is_wallet_v4r2","prepare_deploy","prepare_state_init","prepare_transfer"],"static":["CODE_HASH_V3_R1","CODE_HASH_V3_R2","CODE_HASH_V4_R1","CODE_HASH_V4_R2","DETAILS"],"struct":["InitData"]};

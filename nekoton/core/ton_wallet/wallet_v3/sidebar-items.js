@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["compute_contract_address","estimate_seqno_offset","is_wallet_v3","prepare_deploy","prepare_transfer"],"static":["CODE_HASH","DETAILS"],"struct":["InitData"]};
+window.SIDEBAR_ITEMS = {"fn":["compute_contract_address","estimate_seqno_offset","is_wallet_v3","prepare_deploy","prepare_state_init","prepare_transfer"],"static":["CODE_HASH","DETAILS"],"struct":["InitData"]};
