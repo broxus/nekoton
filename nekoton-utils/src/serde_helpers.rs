@@ -46,6 +46,42 @@ impl<'de> Deserialize<'de> for StringOrNumber {
     }
 }
 
+struct U128StringOrNumber(u128);
+
+impl Serialize for U128StringOrNumber {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        if self.0 <= 0x1fffffffffffff_u128 || !serializer.is_human_readable() {
+            serializer.serialize_u128(self.0)
+        } else {
+            serializer.serialize_str(&self.0.to_string())
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for U128StringOrNumber {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum Value<'a> {
+            String(#[serde(borrow)] Cow<'a, str>),
+            Number(u128),
+        }
+
+        match Value::deserialize(deserializer)? {
+            Value::String(str) => u128::from_str(str.as_ref())
+                .map(Self)
+                .map_err(|_| D::Error::custom("Invalid number")),
+            Value::Number(value) => Ok(Self(value)),
+        }
+    }
+}
+
 pub mod serde_u64 {
     use super::*;
 
@@ -61,6 +97,24 @@ pub mod serde_u64 {
         D: serde::Deserializer<'de>,
     {
         StringOrNumber::deserialize(deserializer).map(|StringOrNumber(x)| x)
+    }
+}
+
+pub mod serde_u128 {
+    use super::*;
+
+    pub fn serialize<S>(data: &u128, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        U128StringOrNumber(*data).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<u128, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        U128StringOrNumber::deserialize(deserializer).map(|U128StringOrNumber(x)| x)
     }
 }
 
@@ -135,6 +189,33 @@ pub mod serde_base64_array {
         let data = serde_bytes_base64::deserialize(deserializer)?;
         data.try_into()
             .map_err(|_| D::Error::custom(format!("Invalid array length, expected: {N}")))
+    }
+}
+
+pub mod serde_optional_base64_array {
+    use super::*;
+
+    pub fn serialize<S>(data: &dyn AsRef<[u8]>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serde_bytes_base64::serialize(data, serializer)
+    }
+
+    pub fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<Option<[u8; N]>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = serde_bytes_base64::deserialize_string_optional(deserializer)?;
+        match data {
+            Some(data) => {
+                let result = data.try_into().map_err(|_| {
+                    D::Error::custom(format!("Invalid array length, expected: {N}"))
+                })?;
+                Ok(Some(result))
+            }
+            None => Ok(None),
+        }
     }
 }
 
@@ -292,6 +373,25 @@ pub mod serde_uint256 {
     }
 }
 
+pub mod serde_base64_uint256 {
+    use super::*;
+
+    pub fn serialize<S>(data: &UInt256, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serde_base64_array::serialize(data.as_slice(), serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<UInt256, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data: [u8; 32] = serde_base64_array::deserialize(deserializer)?;
+        Ok(UInt256::from_slice(&data[..]))
+    }
+}
+
 pub mod serde_optional_uint256 {
     use super::*;
 
@@ -394,6 +494,26 @@ pub mod serde_address {
     {
         let data = String::deserialize(deserializer)?;
         MsgAddressInt::from_str(&data).map_err(|_| D::Error::custom("Invalid address"))
+    }
+}
+
+pub mod serde_base64_address {
+    use super::*;
+    use crate::repack_address;
+
+    pub fn serialize<S>(data: &MsgAddressInt, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&data.to_string())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<MsgAddressInt, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let data = String::deserialize(deserializer)?;
+        repack_address(&data).map_err(|_| D::Error::custom("Invalid address"))
     }
 }
 
@@ -579,6 +699,37 @@ pub mod serde_bytes_base64 {
             deserializer.deserialize_bytes(BytesVisitor)
         }
     }
+
+    pub fn deserialize_string_optional<'de, D>(deserializer: D) -> Result<Option<Vec<u8>>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct Base64Visitor;
+
+        impl<'de> Visitor<'de> for Base64Visitor {
+            type Value = Option<Vec<u8>>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("base64-encoded byte array")
+            }
+
+            fn visit_str<E: Error>(self, value: &str) -> Result<Self::Value, E> {
+                if value.is_empty() {
+                    return Ok(None);
+                }
+                base64::decode(value)
+                    .map(|x| Some(x))
+                    .map_err(|_| E::invalid_type(Unexpected::Str(value), &self))
+            }
+
+            // See the `deserializing_flattened_field` test for an example why this is needed.
+            fn visit_bytes<E: Error>(self, value: &[u8]) -> Result<Self::Value, E> {
+                Ok(Some(value.to_vec()))
+            }
+        }
+
+        deserializer.deserialize_str(Base64Visitor)
+    }
 }
 
 pub mod serde_bytes_base64_optional {
@@ -669,6 +820,26 @@ pub mod serde_cell {
         let cell =
             ton_types::deserialize_tree_of_cells(&mut bytes.as_slice()).map_err(Error::custom)?;
         Ok(cell)
+    }
+}
+
+pub mod serde_transaction_array {
+    use super::*;
+    use ton_block::{Deserializable, Transaction};
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<ton_block::Transaction>, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let bytes = serde_bytes_base64::deserialize(deserializer)?;
+        let cells =
+            ton_types::deserialize_cells_tree(&mut bytes.as_slice()).map_err(Error::custom)?;
+        let mut transactions = Vec::new();
+        for c in cells {
+            let t = Transaction::construct_from_cell(c).map_err(Error::custom)?;
+            transactions.push(t);
+        }
+
+        Ok(transactions)
     }
 }
 
