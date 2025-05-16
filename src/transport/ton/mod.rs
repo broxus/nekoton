@@ -66,7 +66,7 @@ impl TonTransport {
         let result = match result {
             Ok(Some(result)) => Some(serde_json::from_str(&result)?),
             Ok(None) => return Ok(None),
-            Err(err) => return Err(err.into()),
+            Err(err) => return Err(err),
         };
         Ok(result)
     }
@@ -399,7 +399,7 @@ impl Transport for TonTransport {
             .await?;
         if let Some(config) = config.config {
             let config = ton_block::ConfigParams::with_root(config.cell);
-            return Ok(BlockchainConfig::with_config(config, 0)?);
+            return BlockchainConfig::with_config(config, 0);
         }
 
         anyhow::bail!("Failed to get blockchain config")

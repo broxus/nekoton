@@ -20,6 +20,7 @@ pub struct LatestBlock {
 #[serde(rename_all = "camelCase")]
 pub struct BlockId {
     #[serde(with = "serde_base64_uint256")]
+    #[allow(unused)]
     pub root_hash: UInt256,
     #[serde(with = "serde_base64_uint256")]
     pub file_hash: UInt256,
@@ -35,8 +36,10 @@ pub struct BlockId {
 #[serde(rename_all = "camelCase")]
 pub struct Init {
     #[serde(with = "serde_base64_uint256")]
+    #[allow(unused)]
     pub root_hash: UInt256,
     #[serde(with = "serde_base64_uint256")]
+    #[allow(unused)]
     pub file_hash: UInt256,
 }
 
@@ -57,10 +60,13 @@ pub struct ShardInfo {
 #[serde(rename_all = "camelCase")]
 pub struct Transaction {
     #[serde(with = "serde_base64_address")]
+    #[allow(unused)]
     pub account: ton_block::MsgAddressInt,
     #[serde(with = "serde_base64_uint256")]
+    #[allow(unused)]
     pub hash: UInt256,
     #[serde(with = "serde_u64")]
+    #[allow(unused)]
     pub lt: u64,
 }
 
@@ -144,6 +150,7 @@ pub struct LastTransaction {
 pub struct AccountChangedResult {
     #[allow(unused)]
     pub changed: bool,
+    #[allow(unused)]
     pub block: BlockId,
 }
 
