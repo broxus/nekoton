@@ -308,43 +308,71 @@ pub fn insert_state_init_data(
         TokenParamTypeMismatch,
     }
 
-    let mut map = ton_types::HashmapE::with_hashmap(
-        ton_abi::Contract::DATA_MAP_KEYLEN,
-        data.reference_opt(0),
-    );
+    if contract.data_map_supported() {
+        let mut map = ton_types::HashmapE::with_hashmap(
+            ton_abi::Contract::DATA_MAP_KEYLEN,
+            data.reference_opt(0),
+        );
 
-    if let Some(public_key) = public_key {
-        map.set_builder(
-            0u64.serialize().and_then(SliceData::load_cell).trust_me(),
-            ton_types::BuilderData::new()
-                .append_raw(public_key.as_bytes(), 256)
-                .trust_me(),
-        )?;
-    }
-
-    if !contract.data.is_empty() {
-        let tokens = tokens
-            .into_iter()
-            .map(|token| (token.name, token.value))
-            .collect::<HashMap<_, _>>();
-
-        for (param_name, param) in &contract.data {
-            let token = tokens
-                .get(param_name)
-                .ok_or_else(|| InitDataError::TokenNotFound(param_name.clone()))?;
-            if !token.type_check(&param.value.kind) {
-                return Err(InitDataError::TokenParamTypeMismatch.into());
-            }
-
-            let key = param.key.serialize();
-            let key = key.and_then(SliceData::load_cell).trust_me();
-
-            let builder = token.pack_into_chain(&contract.abi_version)?;
-            map.set_builder(key, &builder)?;
+        if let Some(public_key) = public_key {
+            map.set_builder(
+                0u64.serialize().and_then(SliceData::load_cell).trust_me(),
+                ton_types::BuilderData::new()
+                    .append_raw(public_key.as_bytes(), 256)
+                    .trust_me(),
+            )?;
         }
+
+        if !contract.data.is_empty() {
+            let tokens = tokens
+                .into_iter()
+                .map(|token| (token.name, token.value))
+                .collect::<HashMap<_, _>>();
+
+            for (param_name, param) in &contract.data {
+                let token = tokens
+                    .get(param_name)
+                    .ok_or_else(|| InitDataError::TokenNotFound(param_name.clone()))?;
+                if !token.type_check(&param.value.kind) {
+                    return Err(InitDataError::TokenParamTypeMismatch.into());
+                }
+
+                let key = param.key.serialize();
+                let key = key.and_then(SliceData::load_cell).trust_me();
+
+                let builder = token.pack_into_chain(&contract.abi_version)?;
+                map.set_builder(key, &builder)?;
+            }
+        }
+
+        return map.write_to_new_cell().and_then(SliceData::load_builder);
     }
 
-    map.write_to_new_cell().and_then(SliceData::load_builder)
+    if contract.init_fields_supported() {
+        let mut init_fields = HashMap::with_capacity(tokens.capacity());
+        for init_field_name in &contract.init_fields {
+            match (init_field_name.as_str(), public_key) {
+                ("_pubkey", Some(public_key)) => {
+                    init_fields.insert(
+                        init_field_name.to_string(),
+                        UInt256::with_array(*public_key.as_bytes()).token_value(),
+                    );
+                }
+                (name, _) => {
+                    if let Some(token) = tokens.iter().find(|x| x.name == name) {
+                        init_fields.insert(name.to_string(), token.value.clone());
+                    } else {
+                        return Err(InitDataError::TokenNotFound(name.to_string()).into());
+                    }
+                }
+            }
+        }
+
+        let builder_data = contract.encode_storage_fields(init_fields)?;
+        return SliceData::load_builder(builder_data);
+    }
+
+    SliceData::load_cell(ton_types::Cell::default())
 }
 
 pub fn decode_input<'a>(
