@@ -25,7 +25,7 @@ thiserror = "1.0"
 
 ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git" }
 
-ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
+ton_abi = { git = "https://github.com/broxus/ton-labs-abi"}
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
