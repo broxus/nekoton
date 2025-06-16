@@ -44,11 +44,9 @@ impl ContractSubscription {
             pending_transactions: Vec::new(),
             transactions_synced: false,
         };
-
         result.transactions_synced = !result
             .refresh_contract_state_impl(None, on_contract_state)
             .await?;
-
         if !result.transactions_synced {
             if let Some(on_transactions_found) = on_transactions_found {
                 // Preload transactions if `on_transactions_found` specified
