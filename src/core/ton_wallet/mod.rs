@@ -19,7 +19,7 @@ use super::models::{
     PendingTransaction, Transaction, TransactionAdditionalInfo, TransactionWithData,
     TransactionsBatchInfo,
 };
-use super::{ContractSubscription, PollingMethod};
+use super::{ContractSubscription, ContractSubscriptionCachedState, PollingMethod};
 use crate::core::parsing::*;
 use crate::core::InternalMessage;
 use crate::crypto::UnsignedMessage;
@@ -52,6 +52,7 @@ impl TonWallet {
         public_key: PublicKey,
         wallet_type: WalletType,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
+        cached_state: Option<ContractSubscriptionCachedState>,
     ) -> Result<Self> {
         let address = compute_address(&public_key, wallet_type, workchain);
 
@@ -61,6 +62,7 @@ impl TonWallet {
             clock.clone(),
             transport,
             address,
+            cached_state,
             &mut make_contract_state_handler(
                 clock.as_ref(),
                 handler.as_ref(),
@@ -90,6 +92,7 @@ impl TonWallet {
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
+        cached_state: Option<ContractSubscriptionCachedState>,
     ) -> Result<Self> {
         let (public_key, wallet_type) = match transport.get_contract_state(&address).await? {
             RawContractState::Exists(contract) => extract_wallet_init_data(&contract)?,
@@ -104,6 +107,7 @@ impl TonWallet {
             clock.clone(),
             transport,
             address,
+            cached_state,
             &mut make_contract_state_handler(
                 clock.as_ref(),
                 handler.as_ref(),
@@ -133,6 +137,7 @@ impl TonWallet {
         transport: Arc<dyn Transport>,
         existing_wallet: ExistingWalletInfo,
         handler: Arc<dyn TonWalletSubscriptionHandler>,
+        cached_state: Option<ContractSubscriptionCachedState>,
     ) -> Result<Self> {
         let mut wallet_data = WalletData::default();
 
@@ -140,6 +145,7 @@ impl TonWallet {
             clock.clone(),
             transport,
             existing_wallet.address,
+            cached_state,
             &mut make_contract_state_handler(
                 clock.as_ref(),
                 handler.as_ref(),
