@@ -490,6 +490,7 @@ mod tests {
         let contract = jetton::RootTokenContract(ExecutionContext {
             clock: &SimpleClock,
             account_stuff: &state,
+            libraries: Default::default(),
         });
 
         let total_supply = contract.total_supply()?;
@@ -506,6 +507,7 @@ mod tests {
         let contract = jetton::RootTokenContract(ExecutionContext {
             clock: &SimpleClock,
             account_stuff: &state,
+            libraries: Default::default(),
         });
 
         let name = contract.name()?;
@@ -541,6 +543,7 @@ mod tests {
         let contract = jetton::TokenWalletContract(ExecutionContext {
             clock: &SimpleClock,
             account_stuff: &state,
+            libraries: Default::default(),
         });
 
         let balance = contract.balance()?;
@@ -565,6 +568,7 @@ mod tests {
         let contract = jetton::RootTokenContract(ExecutionContext {
             clock: &SimpleClock,
             account_stuff: &state,
+            libraries: Default::default(),
         });
 
         let owner = nekoton_utils::unpack_std_smc_addr(
@@ -593,6 +597,7 @@ mod tests {
         let contract = jetton::RootTokenContract(ExecutionContext {
             clock: &SimpleClock,
             account_stuff: &state,
+            libraries: Default::default(),
         });
 
         let details = contract.get_details()?;
@@ -626,6 +631,7 @@ mod tests {
         let contract = jetton::RootTokenContract(ExecutionContext {
             clock: &SimpleClock,
             account_stuff: &state,
+            libraries: Default::default(),
         });
 
         let meta = contract.get_meta()?;
