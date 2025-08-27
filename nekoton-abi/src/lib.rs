@@ -65,7 +65,7 @@ use ton_block::{
     Serializable,
 };
 use ton_executor::{BlockchainConfig, OrdinaryTransactionExecutor, TransactionExecutor};
-use ton_types::{SliceData, UInt256};
+use ton_types::{HashmapE, SliceData, UInt256};
 use ton_vm::executor::BehaviorModifiers;
 
 #[cfg(feature = "derive")]
@@ -590,11 +590,17 @@ pub fn code_to_tvc(code: ton_types::Cell) -> Result<ton_block::StateInit> {
 pub struct ExecutionContext<'a> {
     pub clock: &'a dyn Clock,
     pub account_stuff: &'a AccountStuff,
+    pub libraries: &'a [HashmapE],
 }
 
 impl ExecutionContext<'_> {
     pub fn run_local(&self, function: &Function, input: &[Token]) -> Result<ExecutionOutput> {
-        function.run_local(self.clock, self.account_stuff.clone(), input)
+        function.run_local(
+            self.clock,
+            self.account_stuff.clone(),
+            input,
+            self.libraries,
+        )
     }
 
     pub fn run_local_responsible(
@@ -602,7 +608,12 @@ impl ExecutionContext<'_> {
         function: &Function,
         input: &[Token],
     ) -> Result<ExecutionOutput> {
-        function.run_local_responsible(self.clock, self.account_stuff.clone(), input)
+        function.run_local_responsible(
+            self.clock,
+            self.account_stuff.clone(),
+            input,
+            self.libraries,
+        )
     }
 
     pub fn run_getter<M>(
@@ -643,6 +654,7 @@ impl ExecutionContext<'_> {
             args,
             config,
             modifier,
+            self.libraries,
         )
     }
 }
@@ -684,6 +696,7 @@ pub trait FunctionExt {
         clock: &dyn Clock,
         account_stuff: AccountStuff,
         input: &[Token],
+        libraries: &[HashmapE],
     ) -> Result<ExecutionOutput> {
         self.run_local_ext(
             clock,
@@ -691,6 +704,7 @@ pub trait FunctionExt {
             input,
             false,
             &BriefBlockchainConfig::default(),
+            libraries,
         )
     }
 
@@ -699,6 +713,7 @@ pub trait FunctionExt {
         clock: &dyn Clock,
         account_stuff: AccountStuff,
         input: &[Token],
+        libraries: &[HashmapE],
     ) -> Result<ExecutionOutput> {
         self.run_local_ext(
             clock,
@@ -706,6 +721,7 @@ pub trait FunctionExt {
             input,
             true,
             &BriefBlockchainConfig::default(),
+            libraries,
         )
     }
 
@@ -716,6 +732,7 @@ pub trait FunctionExt {
         input: &[Token],
         responsible: bool,
         config: &BriefBlockchainConfig,
+        libraries: &[HashmapE],
     ) -> Result<ExecutionOutput>;
 }
 
@@ -734,8 +751,17 @@ where
         input: &[Token],
         responsible: bool,
         config: &BriefBlockchainConfig,
+        libraries: &[HashmapE],
     ) -> Result<ExecutionOutput> {
-        T::run_local_ext(self, clock, account_stuff, input, responsible, config)
+        T::run_local_ext(
+            self,
+            clock,
+            account_stuff,
+            input,
+            responsible,
+            config,
+            libraries,
+        )
     }
 }
 
@@ -752,8 +778,16 @@ impl FunctionExt for Function {
         input: &[Token],
         responsible: bool,
         config: &BriefBlockchainConfig,
+        libraries: &[HashmapE],
     ) -> Result<ExecutionOutput> {
-        FunctionAbi::new(self).run_local(clock, &mut account_stuff, input, responsible, config)
+        FunctionAbi::new(self).run_local(
+            clock,
+            &mut account_stuff,
+            input,
+            responsible,
+            config,
+            libraries,
+        )
     }
 }
 
@@ -778,6 +812,7 @@ impl<'a> FunctionAbi<'a> {
         input: &[Token],
         responsible: bool,
         config: &BriefBlockchainConfig,
+        libraries: &[HashmapE],
     ) -> Result<ExecutionOutput> {
         let function = self.abi;
 
@@ -838,6 +873,7 @@ impl<'a> FunctionAbi<'a> {
             &msg,
             config,
             &Default::default(),
+            libraries,
         )?;
 
         let tokens = if let Some(answer_id) = answer_id {
@@ -1279,6 +1315,7 @@ mod tests {
         let res = ExecutionContext {
             clock: &SimpleClock,
             account_stuff: &state,
+            libraries: Default::default(),
         }
         .run_getter("seqno", &[])
         .unwrap();

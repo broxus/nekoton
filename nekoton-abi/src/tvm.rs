@@ -4,7 +4,7 @@ use ton_block::{
     AccountStuff, CommonMsgInfo, CurrencyCollection, Deserializable, Message, MsgAddressInt,
     OutAction, OutActions, Serializable,
 };
-use ton_types::SliceData;
+use ton_types::{HashmapE, SliceData};
 use ton_vm::executor::gas::gas_state::Gas;
 use ton_vm::stack::integer::IntegerData;
 use ton_vm::stack::{savelist::SaveList, Stack};
@@ -50,6 +50,7 @@ pub fn call(
     stack: Stack,
     config: &BriefBlockchainConfig,
     modifiers: &BehaviorModifiers,
+    libraries: &[HashmapE],
 ) -> Result<(ton_vm::executor::Engine, i32, bool), ExecutionError> {
     let state = match &account.storage.state {
         ton_block::AccountState::AccountActive { state_init, .. } => Ok(state_init),
@@ -82,12 +83,14 @@ pub fn call(
         .put(7, &mut sci.into_temp_data_item())
         .map_err(|_| ExecutionError::FailedToPutSciIntoRegisters)?;
 
-    let mut engine = ton_vm::executor::Engine::with_capabilities(config.capabilities).setup(
-        SliceData::load_cell(code).map_err(|_| ExecutionError::FailedToPutDataIntoRegisters)?,
-        Some(ctrls),
-        Some(stack),
-        Some(gas),
-    );
+    let mut engine = ton_vm::executor::Engine::with_capabilities(config.capabilities)
+        .setup_with_libraries(
+            code,
+            Some(ctrls),
+            Some(stack),
+            Some(gas),
+            libraries.to_vec(),
+        );
     engine.set_signature_id(config.global_id);
     engine.modify_behavior(modifiers.clone());
 
@@ -118,6 +121,7 @@ pub fn call_msg(
     msg: &Message,
     config: &BriefBlockchainConfig,
     modifiers: &ton_vm::executor::BehaviorModifiers,
+    libraries: &[HashmapE],
 ) -> Result<ActionPhaseOutput, ExecutionError> {
     let msg_cell = msg
         .write_to_new_cell()
@@ -141,7 +145,12 @@ pub fn call_msg(
         .push(StackItem::Slice(msg.body().unwrap_or_default())) // message body
         .push(function_selector); // function selector
 
-    let (engine, exit_code, success) = call(utime, lt, account, stack, config, modifiers)?;
+    let (engine, exit_code, success) =
+        call(utime, lt, account, stack, config, modifiers, libraries)?;
+
+    if let Some(hash) = engine.get_missing_library() {
+        return Err(ExecutionError::MissingLibrary { hash });
+    }
     if !success {
         return Ok(ActionPhaseOutput {
             messages: None,
@@ -180,6 +189,7 @@ pub fn call_getter(
     args: &[ton_vm::stack::StackItem],
     config: &BriefBlockchainConfig,
     modifiers: &ton_vm::executor::BehaviorModifiers,
+    libraries: &[HashmapE],
 ) -> Result<VmGetterOutput, ExecutionError> {
     let mut stack = Stack::new();
     for arg in args {
@@ -187,7 +197,12 @@ pub fn call_getter(
     }
     stack.push(ton_vm::int!(method_id));
 
-    let (mut engine, exit_code, is_ok) = call(utime, lt, account, stack, config, modifiers)?;
+    let (mut engine, exit_code, is_ok) =
+        call(utime, lt, account, stack, config, modifiers, libraries)?;
+
+    if let Some(hash) = engine.get_missing_library() {
+        return Err(ExecutionError::MissingLibrary { hash });
+    }
 
     Ok(VmGetterOutput {
         stack: engine.withdraw_stack().storage,
@@ -247,4 +262,6 @@ pub enum ExecutionError {
     FailedToParseException,
     #[error("Failed to retrieve actions")]
     FailedToRetrieveActions,
+    #[error("Missing library: {hash}")]
+    MissingLibrary { hash: ton_types::UInt256 },
 }

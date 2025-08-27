@@ -430,7 +430,7 @@ fn run_local(
     let ExecutionOutput {
         tokens,
         result_code,
-    } = function.run_local(clock, account_stuff, &[])?;
+    } = function.run_local(clock, account_stuff, &[], &[])?;
     tokens.ok_or_else(|| MultisigError::NonZeroResultCode(result_code).into())
 }
 
