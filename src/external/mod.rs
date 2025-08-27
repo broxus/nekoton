@@ -100,3 +100,79 @@ pub trait LedgerConnection: Send + Sync {
         context: &LedgerSignatureContext,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
 }
+
+#[cfg(feature = "jrpc_transport")]
+pub enum JrpcResponse<T> {
+    Success(T),
+    Err(Box<serde_json::value::RawValue>),
+}
+
+#[cfg(feature = "jrpc_transport")]
+impl<'de, T> Deserialize<'de> for JrpcResponse<T>
+where
+    T: Deserialize<'de>,
+{
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use std::marker::PhantomData;
+
+        #[derive(Debug, Deserialize)]
+        #[serde(rename_all = "lowercase")]
+        enum Field {
+            Result,
+            Error,
+            #[serde(other)]
+            Other,
+        }
+
+        enum ResponseData<T> {
+            Result(T),
+            Error(Box<serde_json::value::RawValue>),
+        }
+
+        struct ResponseVisitor<T>(PhantomData<T>);
+
+        impl<'de, T> serde::de::Visitor<'de> for ResponseVisitor<T>
+        where
+            T: Deserialize<'de>,
+        {
+            type Value = ResponseData<T>;
+
+            fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("a JSON-RPC response object")
+            }
+
+            fn visit_map<A>(self, mut map: A) -> std::result::Result<Self::Value, A::Error>
+            where
+                A: serde::de::MapAccess<'de>,
+            {
+                let mut result = None::<ResponseData<T>>;
+
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Result if result.is_none() => {
+                            result = Some(map.next_value().map(ResponseData::Result)?);
+                        }
+                        Field::Error if result.is_none() => {
+                            result = Some(map.next_value().map(ResponseData::Error)?);
+                        }
+                        Field::Other => {
+                            map.next_value::<&serde_json::value::RawValue>()?;
+                        }
+                        Field::Result => return Err(serde::de::Error::duplicate_field("result")),
+                        Field::Error => return Err(serde::de::Error::duplicate_field("error")),
+                    }
+                }
+
+                result.ok_or_else(|| serde::de::Error::missing_field("result or error"))
+            }
+        }
+
+        Ok(match de.deserialize_map(ResponseVisitor(PhantomData))? {
+            ResponseData::Result(result) => JrpcResponse::Success(result),
+            ResponseData::Error(error) => JrpcResponse::Err(error),
+        })
+    }
+}

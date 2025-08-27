@@ -16,6 +16,7 @@ futures-util = "0.3"
 log = "0.4"
 reqwest = { version = "0.11", features = ["json", "gzip", "rustls-tls"], default-features = false }
 serde = { version = "1.0", features = ["derive"] }
+serde_json = {version = "1.0", features = ["raw_value"]}
 thiserror = "1.0"
 tokio = { version = "1", features = ["sync", "time"] }
 
@@ -26,11 +27,13 @@ nekoton = { path = ".." }
 [dev-dependencies]
 base64 = "0.13"
 tokio = { version = "1", features = ["sync", "time", "macros"] }
+ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
+
 
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
 
 [features]
-default = ["gql_transport"]
+default = ["jrpc_transport"]
 gql_transport = ["nekoton/gql_transport"]
 jrpc_transport = ["nekoton/jrpc_transport"]
 proto_transport = ["nekoton/proto_transport"]

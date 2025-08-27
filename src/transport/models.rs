@@ -124,6 +124,7 @@ impl ExistingContract {
         ExecutionContext {
             clock,
             account_stuff: &self.account,
+            libraries: Default::default(),
         }
     }
 }
