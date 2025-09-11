@@ -12,6 +12,7 @@ use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
 
 const SIGNED_EXTERNAL_PREFIX: u32 = 0x7369676E;
+const SIGNED_INTERNAL_PREFIX: u32 = 0x73696E74;
 
 pub fn prepare_deploy(
     clock: &dyn Clock,
@@ -32,7 +33,7 @@ pub fn prepare_deploy(
     message.set_state_init(init_data.make_state_init()?);
 
     let expire_at = ExpireAt::new(clock, expiration);
-    let (hash, payload) = init_data.make_transfer_payload(None, expire_at.timestamp)?;
+    let (hash, payload) = init_data.make_transfer_payload(None, expire_at.timestamp, false)?;
 
     Ok(Box::new(UnsignedWalletV5 {
         init_data,
@@ -58,6 +59,7 @@ pub fn prepare_transfer(
     seqno_offset: u32,
     gifts: Vec<Gift>,
     expiration: Expiration,
+    is_internal_transfer: bool,
 ) -> Result<TransferAction> {
     if gifts.len() > MAX_MESSAGES {
         return Err(WalletV5Error::TooManyGifts.into());
@@ -92,7 +94,11 @@ pub fn prepare_transfer(
     }
 
     let expire_at = ExpireAt::new(clock, expiration);
-    let (hash, payload) = init_data.make_transfer_payload(gifts.clone(), expire_at.timestamp)?;
+    let (hash, payload) = init_data.make_transfer_payload(
+        gifts.clone(),
+        expire_at.timestamp,
+        is_internal_transfer,
+    )?;
 
     Ok(TransferAction::Sign(Box::new(UnsignedWalletV5 {
         init_data,
@@ -122,7 +128,7 @@ impl UnsignedMessage for UnsignedWalletV5 {
 
         let (hash, payload) = self
             .init_data
-            .make_transfer_payload(self.gifts.clone(), self.expire_at())
+            .make_transfer_payload(self.gifts.clone(), self.expire_at(), false)
             .trust_me();
         self.hash = hash;
         self.payload = payload;
@@ -273,6 +279,7 @@ impl InitData {
         &self,
         gifts: impl IntoIterator<Item = Gift>,
         expire_at: u32,
+        is_internal_transfer: bool,
     ) -> Result<(UInt256, BuilderData)> {
         // Check if signatures are allowed
         if !self.is_signature_allowed {
@@ -284,10 +291,14 @@ impl InitData {
         }
 
         let mut payload = BuilderData::new();
-
         // insert prefix
+        if is_internal_transfer {
+            payload.append_u32(SIGNED_INTERNAL_PREFIX)?;
+        } else {
+            payload.append_u32(SIGNED_EXTERNAL_PREFIX)?;
+        }
+
         payload
-            .append_u32(SIGNED_EXTERNAL_PREFIX)?
             .append_u32(self.wallet_id)?
             .append_u32(expire_at)?
             .append_u32(self.seqno)?;

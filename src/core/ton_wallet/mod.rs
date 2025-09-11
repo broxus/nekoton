@@ -337,7 +337,12 @@ impl TonWallet {
         public_key: &PublicKey,
         gifts: Vec<Gift>,
         expiration: Expiration,
+        is_internal_transfer: bool,
     ) -> Result<TransferAction> {
+        if is_internal_transfer && !matches!(self.wallet_type, WalletType::WalletV5R1) {
+            return Err(TonWalletError::InvalidContractType.into());
+        }
+
         match self.wallet_type {
             WalletType::Multisig(multisig_type) => {
                 anyhow::ensure!(
@@ -430,6 +435,7 @@ impl TonWallet {
                 0,
                 gifts,
                 expiration,
+                is_internal_transfer,
             ),
             WalletType::EverWallet => ever_wallet::prepare_transfer(
                 self.clock.as_ref(),
@@ -868,7 +874,7 @@ impl InternalMessageSender for TonWallet {
             state_init: None,
         };
 
-        self.prepare_transfer(current_state, public_key, vec![gift], expiration)
+        self.prepare_transfer(current_state, public_key, vec![gift], expiration, false)
     }
 }
 
