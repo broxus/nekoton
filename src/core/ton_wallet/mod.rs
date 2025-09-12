@@ -8,7 +8,7 @@ use anyhow::Result;
 use ed25519_dalek::PublicKey;
 use serde::{Deserialize, Serialize};
 use ton_block::MsgAddressInt;
-use ton_types::{SliceData, UInt256};
+use ton_types::{BuilderData, SliceData, UInt256};
 
 use nekoton_abi::*;
 use nekoton_utils::*;
@@ -21,8 +21,10 @@ use super::models::{
 };
 use super::{ContractSubscription, PollingMethod};
 use crate::core::parsing::*;
+use crate::core::ton_wallet::wallet_v5r1::get_init_data;
 use crate::core::InternalMessage;
 use crate::crypto::UnsignedMessage;
+use crate::models::ExpireAt;
 use crate::transport::models::{ExistingContract, RawContractState, RawTransaction};
 use crate::transport::Transport;
 
@@ -329,6 +331,24 @@ impl TonWallet {
             // Non-multisig wallets doesn't support multiple owners
             _ => Err(TonWalletError::InvalidContractType.into()),
         }
+    }
+
+    pub fn make_unsigned_wallet_v5_transfer_payload(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
+        gifts: Vec<Gift>,
+        expiration: Expiration,
+        is_internal_flow: bool,
+    ) -> Result<(UInt256, BuilderData)> {
+        if !matches!(self.wallet_type, WalletType::WalletV5R1) {
+            return Err(TonWalletError::InvalidContractType.into());
+        }
+        let (init_data, _) = get_init_data(current_state, public_key)?;
+        let expire_at = ExpireAt::new(self.clock.as_ref(), expiration);
+        let (hash, builder_data) =
+            init_data.make_transfer_payload(gifts, expire_at.timestamp, is_internal_flow)?;
+        Ok((hash, builder_data))
     }
 
     pub fn prepare_transfer(

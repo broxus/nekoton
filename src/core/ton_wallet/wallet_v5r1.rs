@@ -12,6 +12,7 @@ use crate::core::models::{Expiration, ExpireAt};
 use crate::crypto::{SignedMessage, UnsignedMessage};
 
 const SIGNED_EXTERNAL_PREFIX: u32 = 0x7369676E;
+const SIGNED_INTERNAL_PREFIX: u32 = 0x73696E74;
 
 pub fn prepare_deploy(
     clock: &dyn Clock,
@@ -32,7 +33,7 @@ pub fn prepare_deploy(
     message.set_state_init(init_data.make_state_init()?);
 
     let expire_at = ExpireAt::new(clock, expiration);
-    let (hash, payload) = init_data.make_transfer_payload(None, expire_at.timestamp)?;
+    let (hash, payload) = init_data.make_transfer_payload(None, expire_at.timestamp, false)?;
 
     Ok(Box::new(UnsignedWalletV5 {
         init_data,
@@ -51,6 +52,25 @@ pub fn prepare_state_init(public_key: &PublicKey) -> Result<ton_block::StateInit
     init_data.make_state_init()
 }
 
+pub fn get_init_data(
+    current_state: &ton_block::AccountStuff,
+    public_key: &PublicKey,
+) -> Result<(InitData, bool)> {
+    match &current_state.storage.state {
+        ton_block::AccountState::AccountActive { state_init, .. } => match &state_init.data {
+            Some(data) => Ok((InitData::try_from(data)?, false)),
+            None => Err(WalletV5Error::InvalidInitData.into()),
+        },
+        ton_block::AccountState::AccountFrozen { .. } => Err(WalletV5Error::AccountIsFrozen.into()),
+        ton_block::AccountState::AccountUninit => Ok((
+            InitData::from_key(public_key)
+                .with_wallet_id(WALLET_ID)
+                .with_is_signature_allowed(true),
+            true,
+        )),
+    }
+}
+
 pub fn prepare_transfer(
     clock: &dyn Clock,
     public_key: &PublicKey,
@@ -62,22 +82,7 @@ pub fn prepare_transfer(
     if gifts.len() > MAX_MESSAGES {
         return Err(WalletV5Error::TooManyGifts.into());
     }
-
-    let (mut init_data, with_state_init) = match &current_state.storage.state {
-        ton_block::AccountState::AccountActive { state_init, .. } => match &state_init.data {
-            Some(data) => (InitData::try_from(data)?, false),
-            None => return Err(WalletV5Error::InvalidInitData.into()),
-        },
-        ton_block::AccountState::AccountFrozen { .. } => {
-            return Err(WalletV5Error::AccountIsFrozen.into())
-        }
-        ton_block::AccountState::AccountUninit => (
-            InitData::from_key(public_key)
-                .with_wallet_id(WALLET_ID)
-                .with_is_signature_allowed(true),
-            true,
-        ),
-    };
+    let (mut init_data, with_state_init) = get_init_data(current_state, public_key)?;
 
     init_data.seqno += seqno_offset;
 
@@ -92,7 +97,8 @@ pub fn prepare_transfer(
     }
 
     let expire_at = ExpireAt::new(clock, expiration);
-    let (hash, payload) = init_data.make_transfer_payload(gifts.clone(), expire_at.timestamp)?;
+    let (hash, payload) =
+        init_data.make_transfer_payload(gifts.clone(), expire_at.timestamp, false)?;
 
     Ok(TransferAction::Sign(Box::new(UnsignedWalletV5 {
         init_data,
@@ -122,7 +128,7 @@ impl UnsignedMessage for UnsignedWalletV5 {
 
         let (hash, payload) = self
             .init_data
-            .make_transfer_payload(self.gifts.clone(), self.expire_at())
+            .make_transfer_payload(self.gifts.clone(), self.expire_at(), false)
             .trust_me();
         self.hash = hash;
         self.payload = payload;
@@ -273,6 +279,7 @@ impl InitData {
         &self,
         gifts: impl IntoIterator<Item = Gift>,
         expire_at: u32,
+        is_internal_flow: bool,
     ) -> Result<(UInt256, BuilderData)> {
         // Check if signatures are allowed
         if !self.is_signature_allowed {
@@ -286,8 +293,13 @@ impl InitData {
         let mut payload = BuilderData::new();
 
         // insert prefix
+        if is_internal_flow {
+            payload.append_u32(SIGNED_INTERNAL_PREFIX)?;
+        } else {
+            payload.append_u32(SIGNED_EXTERNAL_PREFIX)?;
+        };
+
         payload
-            .append_u32(SIGNED_EXTERNAL_PREFIX)?
             .append_u32(self.wallet_id)?
             .append_u32(expire_at)?
             .append_u32(self.seqno)?;
