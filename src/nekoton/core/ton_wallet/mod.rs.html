@@ -361,7 +361,7 @@
 <a href=#361 id=361 data-nosnippet>361</a>        <span class="kw">if </span>!<span class="macro">matches!</span>(<span class="self">self</span>.wallet_type, WalletType::WalletV5R1) {
 <a href=#362 id=362 data-nosnippet>362</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(TonWalletError::InvalidContractType.into());
 <a href=#363 id=363 data-nosnippet>363</a>        }
-<a href=#364 id=364 data-nosnippet>364</a>        <span class="kw">let </span>init_data = wallet_v5r1::get_init_data_from_init_data(state_init)<span class="question-mark">?</span>;
+<a href=#364 id=364 data-nosnippet>364</a>        <span class="kw">let </span>init_data = wallet_v5r1::get_init_data_from_state_init(state_init)<span class="question-mark">?</span>;
 <a href=#365 id=365 data-nosnippet>365</a>
 <a href=#366 id=366 data-nosnippet>366</a>        <span class="kw">let </span>expire_at = ExpireAt::new(<span class="self">self</span>.clock.as_ref(), expiration);
 <a href=#367 id=367 data-nosnippet>367</a>        <span class="kw">let </span>(hash, builder_data) =

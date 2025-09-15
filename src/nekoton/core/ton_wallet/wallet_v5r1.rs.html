@@ -68,7 +68,7 @@
 <a href=#68 id=68 data-nosnippet>68</a>    }
 <a href=#69 id=69 data-nosnippet>69</a>}
 <a href=#70 id=70 data-nosnippet>70</a>
-<a href=#71 id=71 data-nosnippet>71</a><span class="kw">pub fn </span>get_init_data_from_init_data(init: <span class="kw-2">&amp;</span>ton_block::StateInit) -&gt; <span class="prelude-ty">Result</span>&lt;InitData&gt; {
+<a href=#71 id=71 data-nosnippet>71</a><span class="kw">pub fn </span>get_init_data_from_state_init(init: <span class="kw-2">&amp;</span>ton_block::StateInit) -&gt; <span class="prelude-ty">Result</span>&lt;InitData&gt; {
 <a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">match </span><span class="kw-2">&amp;</span>init.data {
 <a href=#73 id=73 data-nosnippet>73</a>        <span class="prelude-val">Some</span>(data) =&gt; <span class="prelude-val">Ok</span>(InitData::try_from(data)<span class="question-mark">?</span>),
 <a href=#74 id=74 data-nosnippet>74</a>        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(WalletV5Error::InvalidInitData.into()),

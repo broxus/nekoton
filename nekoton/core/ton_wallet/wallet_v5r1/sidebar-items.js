@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["compute_contract_address","get_init_data","get_init_data_from_init_data","is_wallet_v5r1","make_init_data","prepare_deploy","prepare_state_init","prepare_transfer"],"static":["CODE_HASH","DETAILS"],"struct":["InitData"]};
+window.SIDEBAR_ITEMS = {"fn":["compute_contract_address","get_init_data","get_init_data_from_state_init","is_wallet_v5r1","make_init_data","prepare_deploy","prepare_state_init","prepare_transfer"],"static":["CODE_HASH","DETAILS"],"struct":["InitData"]};
