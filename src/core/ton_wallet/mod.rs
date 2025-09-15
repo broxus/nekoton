@@ -21,7 +21,6 @@ use super::models::{
 };
 use super::{ContractSubscription, PollingMethod};
 use crate::core::parsing::*;
-use crate::core::ton_wallet::wallet_v5r1::get_init_data;
 use crate::core::InternalMessage;
 use crate::crypto::UnsignedMessage;
 use crate::models::ExpireAt;
@@ -344,11 +343,43 @@ impl TonWallet {
         if !matches!(self.wallet_type, WalletType::WalletV5R1) {
             return Err(TonWalletError::InvalidContractType.into());
         }
-        let (init_data, _) = get_init_data(current_state, public_key)?;
+        let (init_data, _) = wallet_v5r1::get_init_data(current_state.storage.state(), public_key)?;
+
         let expire_at = ExpireAt::new(self.clock.as_ref(), expiration);
         let (hash, builder_data) =
             init_data.make_transfer_payload(gifts, expire_at.timestamp, is_internal_flow)?;
         Ok((hash, builder_data))
+    }
+
+    pub fn make_unsigned_new_wallet_v5_transfer_payload(
+        &self,
+        state_init: &ton_block::StateInit,
+        gifts: Vec<Gift>,
+        expiration: Expiration,
+        is_internal_flow: bool,
+    ) -> Result<(UInt256, BuilderData)> {
+        if !matches!(self.wallet_type, WalletType::WalletV5R1) {
+            return Err(TonWalletError::InvalidContractType.into());
+        }
+        let init_data = wallet_v5r1::get_init_data_from_state_init(state_init)?;
+
+        let expire_at = ExpireAt::new(self.clock.as_ref(), expiration);
+        let (hash, builder_data) =
+            init_data.make_transfer_payload(gifts, expire_at.timestamp, is_internal_flow)?;
+        Ok((hash, builder_data))
+    }
+
+    pub fn get_wallet_v5_seqno(
+        &self,
+        current_state: &ton_block::AccountStuff,
+        public_key: &PublicKey,
+    ) -> Result<u32> {
+        if !matches!(self.wallet_type, WalletType::WalletV5R1) {
+            return Err(TonWalletError::InvalidContractType.into());
+        }
+
+        let (init_data, _) = wallet_v5r1::get_init_data(current_state.storage.state(), public_key)?;
+        Ok(init_data.seqno)
     }
 
     pub fn prepare_transfer(

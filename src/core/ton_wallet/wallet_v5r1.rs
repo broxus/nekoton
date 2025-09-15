@@ -20,9 +20,7 @@ pub fn prepare_deploy(
     workchain: i8,
     expiration: Expiration,
 ) -> Result<Box<dyn UnsignedMessage>> {
-    let init_data = InitData::from_key(public_key)
-        .with_wallet_id(WALLET_ID)
-        .with_is_signature_allowed(true);
+    let init_data = make_init_data(public_key);
     let dst = compute_contract_address(public_key, workchain);
     let mut message =
         ton_block::Message::with_ext_in_header(ton_block::ExternalInboundMessageHeader {
@@ -46,28 +44,34 @@ pub fn prepare_deploy(
 }
 
 pub fn prepare_state_init(public_key: &PublicKey) -> Result<ton_block::StateInit> {
-    let init_data = InitData::from_key(public_key)
-        .with_wallet_id(WALLET_ID)
-        .with_is_signature_allowed(true);
+    let init_data = make_init_data(public_key);
     init_data.make_state_init()
 }
 
+pub fn make_init_data(public_key: &PublicKey) -> InitData {
+    InitData::from_key(public_key)
+        .with_wallet_id(WALLET_ID)
+        .with_is_signature_allowed(true)
+}
+
 pub fn get_init_data(
-    current_state: &ton_block::AccountStuff,
+    current_state: &ton_block::AccountState,
     public_key: &PublicKey,
 ) -> Result<(InitData, bool)> {
-    match &current_state.storage.state {
+    match current_state {
         ton_block::AccountState::AccountActive { state_init, .. } => match &state_init.data {
             Some(data) => Ok((InitData::try_from(data)?, false)),
             None => Err(WalletV5Error::InvalidInitData.into()),
         },
         ton_block::AccountState::AccountFrozen { .. } => Err(WalletV5Error::AccountIsFrozen.into()),
-        ton_block::AccountState::AccountUninit => Ok((
-            InitData::from_key(public_key)
-                .with_wallet_id(WALLET_ID)
-                .with_is_signature_allowed(true),
-            true,
-        )),
+        ton_block::AccountState::AccountUninit => Ok((make_init_data(public_key), true)),
+    }
+}
+
+pub fn get_init_data_from_state_init(init: &ton_block::StateInit) -> Result<InitData> {
+    match &init.data {
+        Some(data) => Ok(InitData::try_from(data)?),
+        None => Err(WalletV5Error::InvalidInitData.into()),
     }
 }
 
@@ -82,7 +86,8 @@ pub fn prepare_transfer(
     if gifts.len() > MAX_MESSAGES {
         return Err(WalletV5Error::TooManyGifts.into());
     }
-    let (mut init_data, with_state_init) = get_init_data(current_state, public_key)?;
+    let (mut init_data, with_state_init) =
+        get_init_data(current_state.storage.state(), public_key)?;
 
     init_data.seqno += seqno_offset;
 
@@ -184,9 +189,7 @@ pub fn is_wallet_v5r1(code_hash: &UInt256) -> bool {
 }
 
 pub fn compute_contract_address(public_key: &PublicKey, workchain_id: i8) -> MsgAddressInt {
-    InitData::from_key(public_key)
-        .with_is_signature_allowed(true)
-        .with_wallet_id(WALLET_ID)
+    make_init_data(public_key)
         .compute_addr(workchain_id)
         .trust_me()
 }
