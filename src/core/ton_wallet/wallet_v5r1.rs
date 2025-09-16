@@ -382,13 +382,14 @@ enum WalletV5Error {
 
 #[cfg(test)]
 mod tests {
-    use ed25519_dalek::PublicKey;
-    use nekoton_contracts::wallets;
-    use ton_block::AccountState;
-
     use crate::core::ton_wallet::wallet_v5r1::{
         compute_contract_address, is_wallet_v5r1, InitData, WALLET_ID,
     };
+    use crate::crypto::extend_with_signature_id;
+    use ed25519_dalek::{PublicKey, Signature, Verifier};
+    use nekoton_contracts::wallets;
+    use ton_block::AccountState;
+    use ton_types::SliceData;
 
     #[test]
     fn state_init() -> anyhow::Result<()> {
@@ -424,5 +425,44 @@ mod tests {
         assert!(is_wallet_v5r1);
 
         Ok(())
+    }
+
+    #[test]
+    fn check_signature_test() -> anyhow::Result<()> {
+        let public_key_bytes =
+            hex::decode("6c2f9514c1c0f2ec54cffe1ac2ba0e85268e76442c14205581ebc808fe7ee52c")?;
+        //let payload = base64::decode("te6ccgECCQEAAWMAASFzaW50f///EWjJNSIAAAABoAECCg7DyG0DBQIB80IAEiSxvuIkjLwTZ/69OCTi5io4ZpgjPKnD56XnecGH1Q0gcJ32yAAAAAAAAAAAAAAAAABz4iFDAAAAAAAAAAAAAAAAO5rKAIAfPq6ksCQX/kNfsY8xS5PTRd4WSjwjs5C/fod9ktFK+MAAAAAAAAAAAAAAAAD39JAwAwFDgBI2HlLkTtTC7ntWgsSS4jmXMUkhy2OTDHvAO1YAIIdyCAQBCAAAAAAIAgoOw8htAwgGAdNCABIksb7iJIy8E2f+vTgk4uYqOGaYIzypw+el53nBh9UNIC+vCAAAAAAAAAAAAAAAAAAARqnX7AAAAAAAAAAAAAAAAAIA9mKAH6YK7ZtGhTyJBnq9b54dnz07z830q8r/r5MBXJdSioIQBwFDgBhcpJ/VWhGKPK44GyznIrRqKDcoivK5/ZanRrMrFKCjiAgAAA==")?;
+        let payload = base64::decode("te6ccgECCQEAAaMAAaFzaW50f///EWjJNSIAAAABr9SYdbfeTOkhxaWVTsB40YIzxnswT6p7oxjydvTUZ0afi8fq5F2NvuyGho+YxBUC2NPkhtL3+tuMa5CfUwJMg2ABAgoOw8htAwUCAfNCABIksb7iJIy8E2f+vTgk4uYqOGaYIzypw+el53nBh9UNIHCd9sgAAAAAAAAAAAAAAAAAc+IhQwAAAAAAAAAAAAAAADuaygCAHz6upLAkF/5DX7GPMUuT00XeFko8I7OQv36HfZLRSvjAAAAAAAAAAAAAAAAA9/SQMAMBQ4ASNh5S5E7Uwu57VoLEkuI5lzFJIctjkwx7wDtWACCHcggEAQgAAAAACAIKDsPIbQMIBgHTQgASJLG+4iSMvBNn/r04JOLmKjhmmCM8qcPnped5wYfVDSAvrwgAAAAAAAAAAAAAAAAAAEap1+wAAAAAAAAAAAAAAAACAPZigB+mCu2bRoU8iQZ6vW+eHZ89O8/N9KvK/6+TAVyXUoqCEAcBQ4AYXKSf1VoRijyuOBss5yK0aig3KIryuf2Wp0azKxSgo4gIAAA=")?;
+        let in_msg_body = ton_types::deserialize_tree_of_cells(&mut payload.as_slice())?;
+        let in_msg_body_slice = SliceData::load_cell(in_msg_body)?;
+
+        let public_key = PublicKey::from_bytes(public_key_bytes.as_slice())?;
+
+        let result = check_signature(in_msg_body_slice, public_key, Some(2000))?;
+        assert!(result);
+        Ok(())
+    }
+
+    fn check_signature(
+        mut in_msg_body: SliceData,
+        public_key: PublicKey,
+        signature_id: Option<i32>,
+    ) -> anyhow::Result<bool> {
+        let signature_binding = in_msg_body
+            .get_slice(in_msg_body.remaining_bits() - 512, 512)?
+            .remaining_data();
+        let sig = signature_binding.data();
+
+        let payload = in_msg_body
+            .shrink_data(in_msg_body.remaining_bits() - 512..)
+            .into_cell();
+
+        let hash = payload.repr_hash();
+
+        let data = extend_with_signature_id(hash.as_ref(), signature_id);
+
+        Ok(public_key
+            .verify(&*data, &Signature::from_bytes(sig)?)
+            .is_ok())
     }
 }
