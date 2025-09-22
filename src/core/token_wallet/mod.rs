@@ -142,7 +142,7 @@ impl TokenWallet {
 
         // Prepare internal message
         let internal_message = self
-            .prepare_transfer(destination, tokens, notify_receiver, payload, 0)
+            .prepare_transfer(destination, tokens, notify_receiver, payload, 0, None)
             .await?;
 
         let mut message = ton_block::Message::with_int_header(ton_block::InternalMessageHeader {
@@ -227,6 +227,7 @@ impl TokenWallet {
         notify_receiver: bool,
         payload: ton_types::Cell,
         mut attached_amount: u128,
+        remaining_gas_to: Option<MsgAddressInt>,
     ) -> Result<InternalMessage> {
         fn stub_balance(address: &MsgAddressInt) -> u128 {
             if address.is_masterchain() {
@@ -271,7 +272,7 @@ impl TokenWallet {
                     }
                 }
                 .arg(BigUint128(Default::default())) // grams / transfer_grams
-                .arg(&self.owner) // send_gas_to
+                .arg(remaining_gas_to.as_ref().unwrap_or(&self.owner)) // send_gas_to
                 .arg(notify_receiver) // notify_receiver
                 .arg(payload) // payload
                 .build()
@@ -291,7 +292,7 @@ impl TokenWallet {
                             .arg(BigUint128(initial_balance.into())) // deployWalletValue
                     }
                 }
-                .arg(&self.owner) // remainingGasTo
+                .arg(remaining_gas_to.as_ref().unwrap_or(&self.owner)) // remainingGasTo
                 .arg(notify_receiver) // notify
                 .arg(payload) // payload
                 .build()
