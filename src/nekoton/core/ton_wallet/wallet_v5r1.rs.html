@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/wallet_v5r1.rs`."><title>wallet_v5r1.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-84e720fa.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0 (29483883e 2025-08-04)" data-channel="1.89.0" data-search-js="search-92309212.js" data-settings-js="settings-5514c975.js" ><script src="../../../../static.files/storage-4e99c027.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-fd3af306.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nekoton/core/ton_wallet/</div>wallet_v5r1.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>std::convert::TryFrom;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/core/ton_wallet/wallet_v5r1.rs`."><title>wallet_v5r1.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-aa0817cf.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="nekoton" data-themes="" data-resource-suffix="" data-rustdoc-version="1.90.0 (1159e78c4 2025-09-14)" data-channel="1.90.0" data-search-js="search-fa3e91e5.js" data-settings-js="settings-5514c975.js" ><script src="../../../../static.files/storage-68b7e25d.js"></script><script defer src="../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nekoton/core/ton_wallet/</div>wallet_v5r1.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>std::convert::TryFrom;
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>anyhow::Result;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>ed25519_dalek::PublicKey;
@@ -382,47 +382,87 @@
 <a href=#382 id=382 data-nosnippet>382</a>
 <a href=#383 id=383 data-nosnippet>383</a><span class="attr">#[cfg(test)]
 <a href=#384 id=384 data-nosnippet>384</a></span><span class="kw">mod </span>tests {
-<a href=#385 id=385 data-nosnippet>385</a>    <span class="kw">use </span>ed25519_dalek::PublicKey;
-<a href=#386 id=386 data-nosnippet>386</a>    <span class="kw">use </span>nekoton_contracts::wallets;
-<a href=#387 id=387 data-nosnippet>387</a>    <span class="kw">use </span>ton_block::AccountState;
-<a href=#388 id=388 data-nosnippet>388</a>
-<a href=#389 id=389 data-nosnippet>389</a>    <span class="kw">use </span><span class="kw">crate</span>::core::ton_wallet::wallet_v5r1::{
-<a href=#390 id=390 data-nosnippet>390</a>        compute_contract_address, is_wallet_v5r1, InitData, WALLET_ID,
-<a href=#391 id=391 data-nosnippet>391</a>    };
-<a href=#392 id=392 data-nosnippet>392</a>
-<a href=#393 id=393 data-nosnippet>393</a>    <span class="attr">#[test]
-<a href=#394 id=394 data-nosnippet>394</a>    </span><span class="kw">fn </span>state_init() -&gt; anyhow::Result&lt;()&gt; {
-<a href=#395 id=395 data-nosnippet>395</a>        <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>base64::decode(<span class="string">"te6ccgECFgEAAucAAm6ADZRqTnEksRaYvpXRMbgzB92SzFv/19WbfQQgdDo7lYwEWQnKBnPzD1AAAXPmjwdAEj9i9OgmAgEAUYAAAAG///+IyIPTKTihvw1MFdzCAl7NQWIaeY9xhjENsss4FdrN+FAgART/APSkE/S88sgLAwIBIAYEAQLyBQEeINcLH4IQc2lnbrry4Ip/EQIBSBAHAgEgCQgAGb5fD2omhAgKDrkPoCwCASANCgIBSAwLABGyYvtRNDXCgCAAF7Ml+1E0HHXIdcLH4AIBbg8OABmvHfaiaEAQ65DrhY/AABmtznaiaEAg65Drhf/AAtzQINdJwSCRW49jINcLHyCCEGV4dG69IYIQc2ludL2wkl8D4IIQZXh0brqOtIAg1yEB0HTXIfpAMPpE+Cj6RDBYvZFb4O1E0IEBQdch9AWDB/QOb6ExkTDhgEDXIXB/2zzgMSDXSYECgLmRMOBw4hIRAeaO8O2i7fshgwjXIgKDCNcjIIAg1yHTH9Mf0x/tRNDSANMfINMf0//XCgAK+QFAzPkQmiiUXwrbMeHywIffArNQB7Dy0IRRJbry4IVQNrry4Ib4I7vy0IgikvgA3gGkf8jKAMsfAc8Wye1UIJL4D95w2zzYEgP27aLt+wL0BCFukmwhjkwCIdc5MHCUIccAs44tAdcoIHYeQ2wg10nACPLgkyDXSsAC8uCTINcdBscSwgBSMLDy0InXTNc5MAGk6GwShAe78uCT10rAAPLgk+1V4tIAAcAAkVvg69csCBQgkXCWAdcsCBwS4lIQseMPINdKFRQTABCTW9sx4ddM0AByMNcsCCSOLSHy4JLSAO1E0NIAURO68tCPVFAwkTGcAYEBQNch1woA8uCO4sjKAFjPFsntVJPywI3iAJYB+kAB+kT4KPpEMFi68uCR7UTQgQFB1xj0BQSdf8jKAEAEgwf0U/Lgi44UA4MH9Fvy4Iwi1woAIW4Bs7Dy0JDiyFADzxYS9ADJ7VQ="</span>).unwrap().as_slice()).unwrap();
-<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">let </span>state = nekoton_utils::deserialize_account_stuff(cell)<span class="question-mark">?</span>;
-<a href=#397 id=397 data-nosnippet>397</a>
-<a href=#398 id=398 data-nosnippet>398</a>        <span class="kw">if let </span>AccountState::AccountActive { state_init } = state.storage.state() {
-<a href=#399 id=399 data-nosnippet>399</a>            <span class="kw">let </span>init_data = InitData::try_from(state_init.data().unwrap())<span class="question-mark">?</span>;
-<a href=#400 id=400 data-nosnippet>400</a>            <span class="macro">assert_eq!</span>(init_data.is_signature_allowed, <span class="bool-val">true</span>);
-<a href=#401 id=401 data-nosnippet>401</a>            <span class="macro">assert_eq!</span>(
-<a href=#402 id=402 data-nosnippet>402</a>                init_data.public_key.to_hex_string(),
-<a href=#403 id=403 data-nosnippet>403</a>                <span class="string">"9107a65271437e1a982bb98404bd9a82c434f31ee30c621b6596702bb59bf0a0"
-<a href=#404 id=404 data-nosnippet>404</a>            </span>);
-<a href=#405 id=405 data-nosnippet>405</a>            <span class="macro">assert_eq!</span>(init_data.wallet_id, WALLET_ID);
-<a href=#406 id=406 data-nosnippet>406</a>            <span class="macro">assert_eq!</span>(init_data.extensions, <span class="prelude-val">None</span>);
-<a href=#407 id=407 data-nosnippet>407</a>
-<a href=#408 id=408 data-nosnippet>408</a>            <span class="kw">let </span>public_key = PublicKey::from_bytes(init_data.public_key.as_slice())<span class="question-mark">?</span>;
-<a href=#409 id=409 data-nosnippet>409</a>            <span class="kw">let </span>address = compute_contract_address(<span class="kw-2">&amp;</span>public_key, <span class="number">0</span>);
-<a href=#410 id=410 data-nosnippet>410</a>            <span class="macro">assert_eq!</span>(
-<a href=#411 id=411 data-nosnippet>411</a>                address.to_string(),
-<a href=#412 id=412 data-nosnippet>412</a>                <span class="string">"0:6ca35273892588b4c5f4ae898dc1983eec9662dffebeacdbe82103a1d1dcac60"
-<a href=#413 id=413 data-nosnippet>413</a>            </span>);
-<a href=#414 id=414 data-nosnippet>414</a>        }
-<a href=#415 id=415 data-nosnippet>415</a>
-<a href=#416 id=416 data-nosnippet>416</a>        <span class="prelude-val">Ok</span>(())
-<a href=#417 id=417 data-nosnippet>417</a>    }
-<a href=#418 id=418 data-nosnippet>418</a>
-<a href=#419 id=419 data-nosnippet>419</a>    <span class="attr">#[test]
-<a href=#420 id=420 data-nosnippet>420</a>    </span><span class="kw">fn </span>code_hash() -&gt; anyhow::Result&lt;()&gt; {
-<a href=#421 id=421 data-nosnippet>421</a>        <span class="kw">let </span>code_cell = wallets::code::wallet_v5r1();
-<a href=#422 id=422 data-nosnippet>422</a>
-<a href=#423 id=423 data-nosnippet>423</a>        <span class="kw">let </span>is_wallet_v5r1 = is_wallet_v5r1(<span class="kw-2">&amp;</span>code_cell.repr_hash());
-<a href=#424 id=424 data-nosnippet>424</a>        <span class="macro">assert!</span>(is_wallet_v5r1);
-<a href=#425 id=425 data-nosnippet>425</a>
-<a href=#426 id=426 data-nosnippet>426</a>        <span class="prelude-val">Ok</span>(())
-<a href=#427 id=427 data-nosnippet>427</a>    }
-<a href=#428 id=428 data-nosnippet>428</a>}</code></pre></div></section></main></body></html>
+<a href=#385 id=385 data-nosnippet>385</a>    <span class="kw">use </span><span class="kw">crate</span>::core::ton_wallet::wallet_v5r1::{
+<a href=#386 id=386 data-nosnippet>386</a>        compute_contract_address, is_wallet_v5r1, InitData, WALLET_ID,
+<a href=#387 id=387 data-nosnippet>387</a>    };
+<a href=#388 id=388 data-nosnippet>388</a>    <span class="kw">use </span><span class="kw">crate</span>::crypto::extend_with_signature_id;
+<a href=#389 id=389 data-nosnippet>389</a>    <span class="kw">use </span>ed25519_dalek::{PublicKey, Signature, Verifier};
+<a href=#390 id=390 data-nosnippet>390</a>    <span class="kw">use </span>nekoton_contracts::wallets;
+<a href=#391 id=391 data-nosnippet>391</a>    <span class="kw">use </span>ton_block::AccountState;
+<a href=#392 id=392 data-nosnippet>392</a>    <span class="kw">use </span>ton_types::SliceData;
+<a href=#393 id=393 data-nosnippet>393</a>
+<a href=#394 id=394 data-nosnippet>394</a>    <span class="attr">#[test]
+<a href=#395 id=395 data-nosnippet>395</a>    </span><span class="kw">fn </span>state_init() -&gt; anyhow::Result&lt;()&gt; {
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">let </span>cell = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>base64::decode(<span class="string">"te6ccgECFgEAAucAAm6ADZRqTnEksRaYvpXRMbgzB92SzFv/19WbfQQgdDo7lYwEWQnKBnPzD1AAAXPmjwdAEj9i9OgmAgEAUYAAAAG///+IyIPTKTihvw1MFdzCAl7NQWIaeY9xhjENsss4FdrN+FAgART/APSkE/S88sgLAwIBIAYEAQLyBQEeINcLH4IQc2lnbrry4Ip/EQIBSBAHAgEgCQgAGb5fD2omhAgKDrkPoCwCASANCgIBSAwLABGyYvtRNDXCgCAAF7Ml+1E0HHXIdcLH4AIBbg8OABmvHfaiaEAQ65DrhY/AABmtznaiaEAg65Drhf/AAtzQINdJwSCRW49jINcLHyCCEGV4dG69IYIQc2ludL2wkl8D4IIQZXh0brqOtIAg1yEB0HTXIfpAMPpE+Cj6RDBYvZFb4O1E0IEBQdch9AWDB/QOb6ExkTDhgEDXIXB/2zzgMSDXSYECgLmRMOBw4hIRAeaO8O2i7fshgwjXIgKDCNcjIIAg1yHTH9Mf0x/tRNDSANMfINMf0//XCgAK+QFAzPkQmiiUXwrbMeHywIffArNQB7Dy0IRRJbry4IVQNrry4Ib4I7vy0IgikvgA3gGkf8jKAMsfAc8Wye1UIJL4D95w2zzYEgP27aLt+wL0BCFukmwhjkwCIdc5MHCUIccAs44tAdcoIHYeQ2wg10nACPLgkyDXSsAC8uCTINcdBscSwgBSMLDy0InXTNc5MAGk6GwShAe78uCT10rAAPLgk+1V4tIAAcAAkVvg69csCBQgkXCWAdcsCBwS4lIQseMPINdKFRQTABCTW9sx4ddM0AByMNcsCCSOLSHy4JLSAO1E0NIAURO68tCPVFAwkTGcAYEBQNch1woA8uCO4sjKAFjPFsntVJPywI3iAJYB+kAB+kT4KPpEMFi68uCR7UTQgQFB1xj0BQSdf8jKAEAEgwf0U/Lgi44UA4MH9Fvy4Iwi1woAIW4Bs7Dy0JDiyFADzxYS9ADJ7VQ="</span>).unwrap().as_slice()).unwrap();
+<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">let </span>state = nekoton_utils::deserialize_account_stuff(cell)<span class="question-mark">?</span>;
+<a href=#398 id=398 data-nosnippet>398</a>
+<a href=#399 id=399 data-nosnippet>399</a>        <span class="kw">if let </span>AccountState::AccountActive { state_init } = state.storage.state() {
+<a href=#400 id=400 data-nosnippet>400</a>            <span class="kw">let </span>init_data = InitData::try_from(state_init.data().unwrap())<span class="question-mark">?</span>;
+<a href=#401 id=401 data-nosnippet>401</a>            <span class="macro">assert_eq!</span>(init_data.is_signature_allowed, <span class="bool-val">true</span>);
+<a href=#402 id=402 data-nosnippet>402</a>            <span class="macro">assert_eq!</span>(
+<a href=#403 id=403 data-nosnippet>403</a>                init_data.public_key.to_hex_string(),
+<a href=#404 id=404 data-nosnippet>404</a>                <span class="string">"9107a65271437e1a982bb98404bd9a82c434f31ee30c621b6596702bb59bf0a0"
+<a href=#405 id=405 data-nosnippet>405</a>            </span>);
+<a href=#406 id=406 data-nosnippet>406</a>            <span class="macro">assert_eq!</span>(init_data.wallet_id, WALLET_ID);
+<a href=#407 id=407 data-nosnippet>407</a>            <span class="macro">assert_eq!</span>(init_data.extensions, <span class="prelude-val">None</span>);
+<a href=#408 id=408 data-nosnippet>408</a>
+<a href=#409 id=409 data-nosnippet>409</a>            <span class="kw">let </span>public_key = PublicKey::from_bytes(init_data.public_key.as_slice())<span class="question-mark">?</span>;
+<a href=#410 id=410 data-nosnippet>410</a>            <span class="kw">let </span>address = compute_contract_address(<span class="kw-2">&amp;</span>public_key, <span class="number">0</span>);
+<a href=#411 id=411 data-nosnippet>411</a>            <span class="macro">assert_eq!</span>(
+<a href=#412 id=412 data-nosnippet>412</a>                address.to_string(),
+<a href=#413 id=413 data-nosnippet>413</a>                <span class="string">"0:6ca35273892588b4c5f4ae898dc1983eec9662dffebeacdbe82103a1d1dcac60"
+<a href=#414 id=414 data-nosnippet>414</a>            </span>);
+<a href=#415 id=415 data-nosnippet>415</a>        }
+<a href=#416 id=416 data-nosnippet>416</a>
+<a href=#417 id=417 data-nosnippet>417</a>        <span class="prelude-val">Ok</span>(())
+<a href=#418 id=418 data-nosnippet>418</a>    }
+<a href=#419 id=419 data-nosnippet>419</a>
+<a href=#420 id=420 data-nosnippet>420</a>    <span class="attr">#[test]
+<a href=#421 id=421 data-nosnippet>421</a>    </span><span class="kw">fn </span>code_hash() -&gt; anyhow::Result&lt;()&gt; {
+<a href=#422 id=422 data-nosnippet>422</a>        <span class="kw">let </span>code_cell = wallets::code::wallet_v5r1();
+<a href=#423 id=423 data-nosnippet>423</a>
+<a href=#424 id=424 data-nosnippet>424</a>        <span class="kw">let </span>is_wallet_v5r1 = is_wallet_v5r1(<span class="kw-2">&amp;</span>code_cell.repr_hash());
+<a href=#425 id=425 data-nosnippet>425</a>        <span class="macro">assert!</span>(is_wallet_v5r1);
+<a href=#426 id=426 data-nosnippet>426</a>
+<a href=#427 id=427 data-nosnippet>427</a>        <span class="prelude-val">Ok</span>(())
+<a href=#428 id=428 data-nosnippet>428</a>    }
+<a href=#429 id=429 data-nosnippet>429</a>
+<a href=#430 id=430 data-nosnippet>430</a>    <span class="attr">#[test]
+<a href=#431 id=431 data-nosnippet>431</a>    </span><span class="kw">fn </span>check_signature_test() -&gt; anyhow::Result&lt;()&gt; {
+<a href=#432 id=432 data-nosnippet>432</a>        <span class="kw">let </span>public_key_bytes =
+<a href=#433 id=433 data-nosnippet>433</a>            hex::decode(<span class="string">"6c2f9514c1c0f2ec54cffe1ac2ba0e85268e76442c14205581ebc808fe7ee52c"</span>)<span class="question-mark">?</span>;
+<a href=#434 id=434 data-nosnippet>434</a>        <span class="comment">//let payload = base64::decode("te6ccgECCQEAAWMAASFzaW50f///EWjJNSIAAAABoAECCg7DyG0DBQIB80IAEiSxvuIkjLwTZ/69OCTi5io4ZpgjPKnD56XnecGH1Q0gcJ32yAAAAAAAAAAAAAAAAABz4iFDAAAAAAAAAAAAAAAAO5rKAIAfPq6ksCQX/kNfsY8xS5PTRd4WSjwjs5C/fod9ktFK+MAAAAAAAAAAAAAAAAD39JAwAwFDgBI2HlLkTtTC7ntWgsSS4jmXMUkhy2OTDHvAO1YAIIdyCAQBCAAAAAAIAgoOw8htAwgGAdNCABIksb7iJIy8E2f+vTgk4uYqOGaYIzypw+el53nBh9UNIC+vCAAAAAAAAAAAAAAAAAAARqnX7AAAAAAAAAAAAAAAAAIA9mKAH6YK7ZtGhTyJBnq9b54dnz07z830q8r/r5MBXJdSioIQBwFDgBhcpJ/VWhGKPK44GyznIrRqKDcoivK5/ZanRrMrFKCjiAgAAA==")?;
+<a href=#435 id=435 data-nosnippet>435</a>        </span><span class="kw">let </span>payload = base64::decode(<span class="string">"te6ccgECCQEAAaMAAaFzaW50f///EWjJNSIAAAABr9SYdbfeTOkhxaWVTsB40YIzxnswT6p7oxjydvTUZ0afi8fq5F2NvuyGho+YxBUC2NPkhtL3+tuMa5CfUwJMg2ABAgoOw8htAwUCAfNCABIksb7iJIy8E2f+vTgk4uYqOGaYIzypw+el53nBh9UNIHCd9sgAAAAAAAAAAAAAAAAAc+IhQwAAAAAAAAAAAAAAADuaygCAHz6upLAkF/5DX7GPMUuT00XeFko8I7OQv36HfZLRSvjAAAAAAAAAAAAAAAAA9/SQMAMBQ4ASNh5S5E7Uwu57VoLEkuI5lzFJIctjkwx7wDtWACCHcggEAQgAAAAACAIKDsPIbQMIBgHTQgASJLG+4iSMvBNn/r04JOLmKjhmmCM8qcPnped5wYfVDSAvrwgAAAAAAAAAAAAAAAAAAEap1+wAAAAAAAAAAAAAAAACAPZigB+mCu2bRoU8iQZ6vW+eHZ89O8/N9KvK/6+TAVyXUoqCEAcBQ4AYXKSf1VoRijyuOBss5yK0aig3KIryuf2Wp0azKxSgo4gIAAA="</span>)<span class="question-mark">?</span>;
+<a href=#436 id=436 data-nosnippet>436</a>        <span class="kw">let </span>in_msg_body = ton_types::deserialize_tree_of_cells(<span class="kw-2">&amp;mut </span>payload.as_slice())<span class="question-mark">?</span>;
+<a href=#437 id=437 data-nosnippet>437</a>        <span class="kw">let </span>in_msg_body_slice = SliceData::load_cell(in_msg_body)<span class="question-mark">?</span>;
+<a href=#438 id=438 data-nosnippet>438</a>
+<a href=#439 id=439 data-nosnippet>439</a>        <span class="kw">let </span>public_key = PublicKey::from_bytes(public_key_bytes.as_slice())<span class="question-mark">?</span>;
+<a href=#440 id=440 data-nosnippet>440</a>
+<a href=#441 id=441 data-nosnippet>441</a>        <span class="kw">let </span>result = check_signature(in_msg_body_slice, public_key, <span class="prelude-val">Some</span>(<span class="number">2000</span>))<span class="question-mark">?</span>;
+<a href=#442 id=442 data-nosnippet>442</a>        <span class="macro">assert!</span>(result);
+<a href=#443 id=443 data-nosnippet>443</a>        <span class="prelude-val">Ok</span>(())
+<a href=#444 id=444 data-nosnippet>444</a>    }
+<a href=#445 id=445 data-nosnippet>445</a>
+<a href=#446 id=446 data-nosnippet>446</a>    <span class="kw">fn </span>check_signature(
+<a href=#447 id=447 data-nosnippet>447</a>        <span class="kw-2">mut </span>in_msg_body: SliceData,
+<a href=#448 id=448 data-nosnippet>448</a>        public_key: PublicKey,
+<a href=#449 id=449 data-nosnippet>449</a>        signature_id: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+<a href=#450 id=450 data-nosnippet>450</a>    ) -&gt; anyhow::Result&lt;bool&gt; {
+<a href=#451 id=451 data-nosnippet>451</a>        <span class="kw">let </span>signature_binding = in_msg_body
+<a href=#452 id=452 data-nosnippet>452</a>            .get_slice(in_msg_body.remaining_bits() - <span class="number">512</span>, <span class="number">512</span>)<span class="question-mark">?
+<a href=#453 id=453 data-nosnippet>453</a>            </span>.remaining_data();
+<a href=#454 id=454 data-nosnippet>454</a>        <span class="kw">let </span>sig = signature_binding.data();
+<a href=#455 id=455 data-nosnippet>455</a>
+<a href=#456 id=456 data-nosnippet>456</a>        <span class="kw">let </span>payload = in_msg_body
+<a href=#457 id=457 data-nosnippet>457</a>            .shrink_data(in_msg_body.remaining_bits() - <span class="number">512</span>..)
+<a href=#458 id=458 data-nosnippet>458</a>            .into_cell();
+<a href=#459 id=459 data-nosnippet>459</a>
+<a href=#460 id=460 data-nosnippet>460</a>        <span class="kw">let </span>hash = payload.repr_hash();
+<a href=#461 id=461 data-nosnippet>461</a>
+<a href=#462 id=462 data-nosnippet>462</a>        <span class="kw">let </span>data = extend_with_signature_id(hash.as_ref(), signature_id);
+<a href=#463 id=463 data-nosnippet>463</a>
+<a href=#464 id=464 data-nosnippet>464</a>        <span class="prelude-val">Ok</span>(public_key
+<a href=#465 id=465 data-nosnippet>465</a>            .verify(<span class="kw-2">&amp;*</span>data, <span class="kw-2">&amp;</span>Signature::from_bytes(sig)<span class="question-mark">?</span>)
+<a href=#466 id=466 data-nosnippet>466</a>            .is_ok())
+<a href=#467 id=467 data-nosnippet>467</a>    }
+<a href=#468 id=468 data-nosnippet>468</a>}</code></pre></div></section></main></body></html>
