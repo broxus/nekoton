@@ -56,7 +56,7 @@ ed25519-dalek = { git = "https://github.com/broxus/ed25519-dalek.git", optional 
 tiny-bip39 = { git = "https://github.com/broxus/tiny-bip39.git", default-features = false, optional = true }
 tiny-hderive = { git = "https://github.com/broxus/tiny-hderive.git", optional = true }
 
-ton_abi = { git = "https://github.com/broxus/ton-labs-abi" }
+ton_abi = { git = "https://github.com/broxus/ton-labs-abi"}
 ton_block = { git = "https://github.com/broxus/ton-labs-block.git" }
 ton_executor = { git = "https://github.com/broxus/ton-labs-executor.git" }
 ton_types = { git = "https://github.com/broxus/ton-labs-types.git" }
@@ -67,7 +67,7 @@ nekoton-utils = { path = "nekoton-utils" }
 nekoton-proto = { path = "nekoton-proto", optional = true }
 
 [dev-dependencies]
-reqwest = { version = "0.11.8", features = ["gzip"] }
+reqwest = { version = "0.11.8", features = ["gzip", "json"] }
 cargo-husky = { version = "1", features = ["default", "run-cargo-fmt", "run-cargo-check"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 
@@ -85,6 +85,7 @@ web = [
 gql_transport = ["dep:erased-serde"]
 jrpc_transport = ["dep:tiny-jsonrpc"]
 proto_transport = ["dep:nekoton-proto"]
+ton_transport = []
 extended_models = []
 non_threadsafe = []
 wallet_core = ["dep:pbkdf2", "dep:chacha20poly1305", "dep:zeroize", "dep:secstr", "dep:hmac", "dep:ed25519-dalek",

@@ -13,12 +13,15 @@ pub mod gql;
 pub mod jrpc;
 #[cfg(feature = "proto_transport")]
 pub mod proto;
+#[cfg(feature = "ton_transport")]
+pub mod ton;
 
 pub mod models;
 #[cfg(any(
     feature = "gql_transport",
     feature = "jrpc_transport",
     feature = "proto_transport",
+    feature = "ton_transport",
 ))]
 mod utils;
 

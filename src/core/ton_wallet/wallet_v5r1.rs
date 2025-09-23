@@ -398,7 +398,7 @@ mod tests {
 
         if let AccountState::AccountActive { state_init } = state.storage.state() {
             let init_data = InitData::try_from(state_init.data().unwrap())?;
-            assert_eq!(init_data.is_signature_allowed, true);
+            assert!(init_data.is_signature_allowed);
             assert_eq!(
                 init_data.public_key.to_hex_string(),
                 "9107a65271437e1a982bb98404bd9a82c434f31ee30c621b6596702bb59bf0a0"
