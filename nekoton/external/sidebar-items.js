@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["GqlRequest","LedgerSignatureContext"],"trait":["GqlConnection","LedgerConnection","Storage"]};
+window.SIDEBAR_ITEMS = {"enum":["JrpcResponse"],"struct":["GqlRequest","JrpcRequest","LedgerSignatureContext"],"trait":["GqlConnection","JrpcConnection","LedgerConnection","Storage"]};
