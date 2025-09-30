@@ -430,7 +430,7 @@
 <a href=#430 id=430 data-nosnippet>430</a>    <span class="kw">let </span>ExecutionOutput {
 <a href=#431 id=431 data-nosnippet>431</a>        tokens,
 <a href=#432 id=432 data-nosnippet>432</a>        result_code,
-<a href=#433 id=433 data-nosnippet>433</a>    } = function.run_local(clock, account_stuff, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+<a href=#433 id=433 data-nosnippet>433</a>    } = function.run_local(clock, account_stuff, <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
 <a href=#434 id=434 data-nosnippet>434</a>    tokens.ok_or_else(|| MultisigError::NonZeroResultCode(result_code).into())
 <a href=#435 id=435 data-nosnippet>435</a>}
 <a href=#436 id=436 data-nosnippet>436</a>
