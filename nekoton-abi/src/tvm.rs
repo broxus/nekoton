@@ -83,7 +83,10 @@ pub fn call(
         .put(7, &mut sci.into_temp_data_item())
         .map_err(|_| ExecutionError::FailedToPutSciIntoRegisters)?;
 
-    let mut engine = ton_vm::executor::Engine::with_capabilities(config.capabilities)
+    let mut enabled_capabilities = config.capabilities;
+    enabled_capabilities |= ton_block::GlobalCapabilities::CapSetLibCode as u64;
+
+    let mut engine = ton_vm::executor::Engine::with_capabilities(enabled_capabilities)
         .setup_with_libraries(
             code,
             Some(ctrls),
