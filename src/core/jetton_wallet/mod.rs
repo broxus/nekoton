@@ -14,7 +14,7 @@ use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::{MsgAddressInt, Serializable};
 use ton_types::{BuilderData, IBitstring, SliceData};
 
-use super::{utils, ContractSubscription, InternalMessage};
+use super::{utils, ContractSubscription, ContractSubscriptionCachedState, InternalMessage};
 
 pub const JETTON_TRANSFER_OPCODE: u32 = 0x0f8a7ea5;
 pub const JETTON_INTERNAL_TRANSFER_OPCODE: u32 = 0x178d4519;
@@ -36,6 +36,7 @@ impl JettonWallet {
         root_token_contract: MsgAddressInt,
         handler: Arc<dyn JettonWalletSubscriptionHandler>,
         preload_transactions: bool,
+        cached_state: Option<ContractSubscriptionCachedState>,
     ) -> Result<JettonWallet> {
         let state = match transport.get_contract_state(&root_token_contract).await? {
             RawContractState::Exists(state) => state,
@@ -69,6 +70,7 @@ impl JettonWallet {
                 clock.clone(),
                 transport,
                 address,
+                cached_state,
                 &mut make_contract_state_handler(clock.clone(), &mut balance),
                 on_transactions_found,
             )

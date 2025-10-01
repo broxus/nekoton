@@ -159,6 +159,7 @@ impl Nft {
             clock.clone(),
             transport,
             nft_address.clone(),
+            None,
             &mut make_contract_state_handler(
                 clock.as_ref(),
                 &mut info.owner,
