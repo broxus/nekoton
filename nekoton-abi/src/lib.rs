@@ -248,7 +248,7 @@ pub fn unpack_from_cell(
 ) -> Result<Vec<Token>> {
     let cs: Cursor = cursor.into();
     let (tokens, cursor) =
-        TokenValue::decode_params_with_cursor(params, cs, &abi_version, allow_partial, false)?;
+        TokenValue::decode_params_with_cursor(params, cs, &abi_version, allow_partial, true)?;
 
     if !allow_partial
         && (cursor.slice.remaining_references() != 0 || cursor.slice.remaining_bits() != 0)
@@ -1207,12 +1207,22 @@ pub fn default_blockchain_config() -> &'static ton_executor::BlockchainConfig {
 mod tests {
     use std::str::FromStr;
 
+    use super::*;
     use ton_abi::{Param, ParamType, Uint};
     use ton_block::{Deserializable, Message, Transaction};
-
-    use super::*;
+    use ton_types::deserialize_tree_of_cells;
 
     const DEFAULT_ABI_VERSION: ton_abi::contract::AbiVersion = ton_abi::contract::ABI_VERSION_2_0;
+
+    #[test]
+    fn string_test() {
+        let boc = "te6ccgEBAgEAEQABAAEAGEhlbGxvIFdvcmxkIQ==";
+        let cell = deserialize_tree_of_cells(&mut base64::decode(boc).unwrap().as_slice()).unwrap();
+        let slice = SliceData::load_cell(cell).unwrap();
+        let params = Param::new("boc", ParamType::String);
+        let tokens =
+            unpack_from_cell(&[params], slice, false, ton_abi::contract::ABI_VERSION_2_4).unwrap();
+    }
 
     #[test]
     fn correct_text_payload() {
