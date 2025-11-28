@@ -146,6 +146,7 @@ mod utils {
         (@abi_version v2_1) => { ::ton_abi::contract::ABI_VERSION_2_1 };
         (@abi_version v2_2) => { ::ton_abi::contract::ABI_VERSION_2_2 };
         (@abi_version v2_3) => { ::ton_abi::contract::ABI_VERSION_2_3 };
+        (@abi_version v2_7) => { ::ton_abi::contract::ABI_VERSION_2_7 };
 
         (@function_id $f:ident) => { $f.get_function_id() };
         (@function_id $f:ident $id:literal) => { $id };
