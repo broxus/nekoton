@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-contracts/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-e56847b5.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton_contracts" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.0 (f8297e351 2025-10-28)" data-channel="1.91.0" data-search-js="search-e256b49e.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-6dc2a7f3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nekoton_contracts/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![warn(
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `nekoton-contracts/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-e56847b5.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="nekoton_contracts" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.1 (ed61e7d7e 2025-11-07)" data-channel="1.91.1" data-search-js="search-e256b49e.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-6dc2a7f3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nekoton_contracts/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![warn(
 <a href=#2 id=2 data-nosnippet>2</a>    macro_use_extern_crate,
 <a href=#3 id=3 data-nosnippet>3</a>    keyword_idents,
 <a href=#4 id=4 data-nosnippet>4</a>    explicit_outlives_requirements,
@@ -146,24 +146,25 @@
 <a href=#146 id=146 data-nosnippet>146</a>        (@abi_version v2_1) =&gt; { ::ton_abi::contract::ABI_VERSION_2_1 };
 <a href=#147 id=147 data-nosnippet>147</a>        (@abi_version v2_2) =&gt; { ::ton_abi::contract::ABI_VERSION_2_2 };
 <a href=#148 id=148 data-nosnippet>148</a>        (@abi_version v2_3) =&gt; { ::ton_abi::contract::ABI_VERSION_2_3 };
-<a href=#149 id=149 data-nosnippet>149</a>
-<a href=#150 id=150 data-nosnippet>150</a>        (@function_id <span class="macro-nonterminal">$f</span>:ident) =&gt; { <span class="macro-nonterminal">$f</span>.get_function_id() };
-<a href=#151 id=151 data-nosnippet>151</a>        (@function_id <span class="macro-nonterminal">$f</span>:ident <span class="macro-nonterminal">$id</span>:literal) =&gt; { <span class="macro-nonterminal">$id </span>};
-<a href=#152 id=152 data-nosnippet>152</a>
-<a href=#153 id=153 data-nosnippet>153</a>        (@header) =&gt; { Vec::new() };
-<a href=#154 id=154 data-nosnippet>154</a>        (@header $(<span class="macro-nonterminal">$header</span>:ident),+) =&gt; {
-<a href=#155 id=155 data-nosnippet>155</a>            <span class="macro">vec!</span>[$(<span class="macro-nonterminal">$</span><span class="macro">crate::utils::declare_function!</span>(@<span class="macro-nonterminal">header_item $header</span>)),+]
-<a href=#156 id=156 data-nosnippet>156</a>        };
-<a href=#157 id=157 data-nosnippet>157</a>        (@header_item pubkey) =&gt; {
-<a href=#158 id=158 data-nosnippet>158</a>            ::ton_abi::Param::new(<span class="string">"pubkey"</span>, ::ton_abi::ParamType::PublicKey)
-<a href=#159 id=159 data-nosnippet>159</a>        };
-<a href=#160 id=160 data-nosnippet>160</a>        (@header_item time) =&gt; {
-<a href=#161 id=161 data-nosnippet>161</a>            ::ton_abi::Param::new(<span class="string">"time"</span>, ::ton_abi::ParamType::Time)
-<a href=#162 id=162 data-nosnippet>162</a>        };
-<a href=#163 id=163 data-nosnippet>163</a>        (@header_item expire) =&gt; {
-<a href=#164 id=164 data-nosnippet>164</a>            ::ton_abi::Param::new(<span class="string">"expire"</span>, ::ton_abi::ParamType::Expire)
-<a href=#165 id=165 data-nosnippet>165</a>        };
-<a href=#166 id=166 data-nosnippet>166</a>    }
-<a href=#167 id=167 data-nosnippet>167</a>
-<a href=#168 id=168 data-nosnippet>168</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>declare_function;
-<a href=#169 id=169 data-nosnippet>169</a>}</code></pre></div></section></main></body></html>
+<a href=#149 id=149 data-nosnippet>149</a>        (@abi_version v2_7) =&gt; { ::ton_abi::contract::ABI_VERSION_2_7 };
+<a href=#150 id=150 data-nosnippet>150</a>
+<a href=#151 id=151 data-nosnippet>151</a>        (@function_id <span class="macro-nonterminal">$f</span>:ident) =&gt; { <span class="macro-nonterminal">$f</span>.get_function_id() };
+<a href=#152 id=152 data-nosnippet>152</a>        (@function_id <span class="macro-nonterminal">$f</span>:ident <span class="macro-nonterminal">$id</span>:literal) =&gt; { <span class="macro-nonterminal">$id </span>};
+<a href=#153 id=153 data-nosnippet>153</a>
+<a href=#154 id=154 data-nosnippet>154</a>        (@header) =&gt; { Vec::new() };
+<a href=#155 id=155 data-nosnippet>155</a>        (@header $(<span class="macro-nonterminal">$header</span>:ident),+) =&gt; {
+<a href=#156 id=156 data-nosnippet>156</a>            <span class="macro">vec!</span>[$(<span class="macro-nonterminal">$</span><span class="macro">crate::utils::declare_function!</span>(@<span class="macro-nonterminal">header_item $header</span>)),+]
+<a href=#157 id=157 data-nosnippet>157</a>        };
+<a href=#158 id=158 data-nosnippet>158</a>        (@header_item pubkey) =&gt; {
+<a href=#159 id=159 data-nosnippet>159</a>            ::ton_abi::Param::new(<span class="string">"pubkey"</span>, ::ton_abi::ParamType::PublicKey)
+<a href=#160 id=160 data-nosnippet>160</a>        };
+<a href=#161 id=161 data-nosnippet>161</a>        (@header_item time) =&gt; {
+<a href=#162 id=162 data-nosnippet>162</a>            ::ton_abi::Param::new(<span class="string">"time"</span>, ::ton_abi::ParamType::Time)
+<a href=#163 id=163 data-nosnippet>163</a>        };
+<a href=#164 id=164 data-nosnippet>164</a>        (@header_item expire) =&gt; {
+<a href=#165 id=165 data-nosnippet>165</a>            ::ton_abi::Param::new(<span class="string">"expire"</span>, ::ton_abi::ParamType::Expire)
+<a href=#166 id=166 data-nosnippet>166</a>        };
+<a href=#167 id=167 data-nosnippet>167</a>    }
+<a href=#168 id=168 data-nosnippet>168</a>
+<a href=#169 id=169 data-nosnippet>169</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>declare_function;
+<a href=#170 id=170 data-nosnippet>170</a>}</code></pre></div></section></main></body></html>
