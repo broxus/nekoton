@@ -32,15 +32,21 @@ impl ContractSubscription {
         clock: Arc<dyn Clock>,
         transport: Arc<dyn Transport>,
         address: MsgAddressInt,
+        cached_state: Option<ContractSubscriptionCachedState>,
         on_contract_state: OnContractState<'_>,
         on_transactions_found: Option<OnTransactionsFound<'_>>,
     ) -> Result<Self> {
+        let (contract_state, latest_known_lt) = match cached_state {
+            Some(cached) => (cached.contract_state, cached.latest_known_lt),
+            None => (Default::default(), None),
+        };
+
         let mut result = Self {
             clock,
             transport,
             address,
-            contract_state: Default::default(),
-            latest_known_lt: None,
+            contract_state,
+            latest_known_lt,
             pending_transactions: Vec::new(),
             transactions_synced: false,
         };
@@ -486,6 +492,13 @@ pub struct TransactionExecutionOptions {
     pub disable_signature_check: bool,
     #[serde(with = "serde_optional_u64")]
     pub override_balance: Option<u64>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, Copy)]
+#[serde(rename_all = "camelCase")]
+pub struct ContractSubscriptionCachedState {
+    contract_state: ContractState,
+    latest_known_lt: Option<u64>,
 }
 
 #[cfg(test)]
