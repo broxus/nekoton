@@ -10,7 +10,9 @@ use nekoton_abi::*;
 use nekoton_contracts::tip4_1::nft_contract;
 use nekoton_contracts::{old_tip3, tip3_1};
 
-use crate::core::jetton_wallet::{JETTON_INTERNAL_TRANSFER_OPCODE, JETTON_TRANSFER_OPCODE};
+use crate::core::jetton_wallet::{
+    JETTON_BURN_NOTIFICATION_OPCODE, JETTON_INTERNAL_TRANSFER_OPCODE, JETTON_TRANSFER_OPCODE,
+};
 use crate::core::models::*;
 use crate::core::ton_wallet::{MultisigType, WalletType};
 
@@ -706,7 +708,10 @@ pub fn parse_jetton_transaction(
 
     let opcode = body.get_next_u32().ok()?;
 
-    if opcode != JETTON_TRANSFER_OPCODE && opcode != JETTON_INTERNAL_TRANSFER_OPCODE {
+    if opcode != JETTON_TRANSFER_OPCODE
+        && opcode != JETTON_INTERNAL_TRANSFER_OPCODE
+        && opcode != JETTON_BURN_NOTIFICATION_OPCODE
+    {
         return None;
     }
 
@@ -728,6 +733,12 @@ pub fn parse_jetton_transaction(
         })),
         JETTON_INTERNAL_TRANSFER_OPCODE => Some(JettonWalletTransaction::InternalTransfer(
             JettonIncomingTransfer {
+                from: addr,
+                tokens: amount,
+            },
+        )),
+        JETTON_BURN_NOTIFICATION_OPCODE => Some(JettonWalletTransaction::BurnNotification(
+            JettonBurnNotification {
                 from: addr,
                 tokens: amount,
             },

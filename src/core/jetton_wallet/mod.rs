@@ -18,6 +18,7 @@ use super::{utils, ContractSubscription, InternalMessage};
 
 pub const JETTON_TRANSFER_OPCODE: u32 = 0x0f8a7ea5;
 pub const JETTON_INTERNAL_TRANSFER_OPCODE: u32 = 0x178d4519;
+pub const JETTON_BURN_NOTIFICATION_OPCODE: u32 = 0x7bdd97de;
 
 pub struct JettonWallet {
     clock: Arc<dyn Clock>,
@@ -245,6 +246,9 @@ impl JettonWallet {
                                 }
                                 JettonWalletTransaction::InternalTransfer(transfer) => {
                                     balance += transfer.tokens.clone().to_bigint().trust_me();
+                                }
+                                JettonWalletTransaction::BurnNotification(transfer) => {
+                                    balance -= transfer.tokens.clone().to_bigint().trust_me();
                                 }
                             }
                         }

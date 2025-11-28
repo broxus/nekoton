@@ -283,6 +283,7 @@ pub enum TokenWalletTransaction {
 pub enum JettonWalletTransaction {
     Transfer(JettonOutgoingTransfer),
     InternalTransfer(JettonIncomingTransfer),
+    BurnNotification(JettonBurnNotification),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -315,6 +316,14 @@ pub struct TokenOutgoingTransfer {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct JettonIncomingTransfer {
+    #[serde(with = "serde_string")]
+    pub from: MsgAddressInt,
+    #[serde(with = "serde_string")]
+    pub tokens: BigUint,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct JettonBurnNotification {
     #[serde(with = "serde_string")]
     pub from: MsgAddressInt,
     #[serde(with = "serde_string")]
