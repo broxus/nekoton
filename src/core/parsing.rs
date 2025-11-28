@@ -683,6 +683,7 @@ pub fn parse_jetton_transaction(
     description: &ton_block::TransactionDescrOrdinary,
 ) -> Option<JettonWalletTransaction> {
     const STANDART_JETTON_CELLS: usize = 0;
+    const STANDART_JETTON_BURN_CELLS: usize = 1;
     const MINTLESS_JETTON_CELLS: usize = 2;
 
     if description.aborted {
@@ -701,7 +702,7 @@ pub fn parse_jetton_transaction(
                 let cell = body.reference_opt(1)?;
                 SliceData::load_cell(cell).ok()?
             }
-            STANDART_JETTON_CELLS => body,
+            STANDART_JETTON_CELLS | STANDART_JETTON_BURN_CELLS => body,
             _ => return None,
         }
     };

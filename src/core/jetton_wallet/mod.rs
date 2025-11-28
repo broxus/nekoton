@@ -484,7 +484,9 @@ mod tests {
     use nekoton_abi::ExecutionContext;
     use nekoton_contracts::jetton;
     use nekoton_utils::SimpleClock;
-    use ton_block::MsgAddressInt;
+    use ton_block::{Deserializable, MsgAddressInt};
+
+    use crate::core::parsing::parse_jetton_transaction;
 
     #[test]
     fn usdt_root_token_contract() -> anyhow::Result<()> {
@@ -645,5 +647,30 @@ mod tests {
         assert_eq!(meta.base_chain_id, "56");
 
         Ok(())
+    }
+
+    #[test]
+    fn burn_notification_parsing() -> anyhow::Result<()> {
+        let cell =
+            ton_types::deserialize_tree_of_cells(&mut base64::decode("te6ccgECDgEAAtwAA7dw7EIKKDHhLyj/OVq4ANbffwZhE/zz7DnHy2xys54unOAAAR/PW5agVBdSn5hltw0JCSXdIfbG4agOFEZxHRdR8cMPUm14lzxAAAEeKGv9VDaSmUEwADSAIARhSAUEAQIbBMDY/ckOt5mLmH4XnREDAgBvyZIDVEwwCKwAAAAAAAQAAgAAAAK2Mbb60iBkujrVIW/+w2U+3k6Hq33EPQm1sA+bZIajxkFQNBQAnke0LDxIFAAAAAAAAAABJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgnILJdp4X/Nif6YeRtU8WdWML176viuNHv8O2IzB0b1aN128pSHivvisB9zvx5HE4Vi8uebieCZDb7ilflucD0HBAgHgCgYBAd8HAbFIAB2IQUUGPCXlH+crVwAa2+/gzCJ/nn2HOPltjlZzxdOdAA4fK7NhiSx7wlc1oWV8DcPxu2CDM1VkTpMfHNrgA4rPkOcmingGMAj6AAAj+ety1AzSUygmwAgBa2gIjZsAAAAAAAAAAAAAAAAAAAPogAcPldmwxJY94Sua0LK+BuH43bBBmaqyJ0mPjm1wAcVn0AkBQ4Af5uyTNobDCA/FRmI9gESPFQJjZfNdNVN3T0Egw1N7kvAMAbFoAf5uyTNobDCA/FRmI9gESPFQJjZfNdNVN3T0Egw1N7kvAAOxCCigx4S8o/zlauADW338GYRP88+w5x8tscrOeLpzkOt5mLgGLSAsAAAj+ety1AjSUygmwAsBo3vdl94AAAAAAAAAACA+iABw+V2bDElj3hK5rQsr4G4fjdsEGZqrInSY+ObXABxWfQAOHyuzYYkse8JXNaFlfA3D8btggzNVZE6THxza4AOKz7AMAUOABw+V2bDElj3hK5rQsr4G4fjdsEGZqrInSY+ObXABxWfQDQAA").unwrap().as_slice())
+                .unwrap();
+
+        let transaction = ton_block::Transaction::construct_from_cell(cell.clone()).unwrap();
+
+        let description = match transaction.description.read_struct().ok().unwrap() {
+            ton_block::TransactionDescr::Ordinary(description) => description,
+            _ => panic!("Unexpected transaction description"),
+        };
+
+        let data = parse_jetton_transaction(&transaction, &description).unwrap();
+
+        match data {
+            crate::models::JettonWalletTransaction::Transfer(_) => panic!("wrong data"),
+            crate::models::JettonWalletTransaction::InternalTransfer(_) => panic!("wrong data"),
+            crate::models::JettonWalletTransaction::BurnNotification(jetton_burn_notification) => {
+                println!("jetton_burn_notification: {:#?}", jetton_burn_notification);
+                Ok(())
+            }
+        }
     }
 }
