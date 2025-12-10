@@ -1,20 +1,8 @@
-<p align="center">
-  <a href="https://github.com/venom-blockchain/developer-program">
-    <img src="https://raw.githubusercontent.com/venom-blockchain/developer-program/main/vf-dev-program.png" alt="Logo" width="366.8" height="146.4">
-  </a>
-</p>
-
 # nekoton &emsp; [![Workflow badge]][workflow] [![License Apache badge]][license apache] [![Docs badge]][docs]
 
 ## About
 
 Broxus SDK with TIP3 wallets support and a bunch of helpers.
-
-## Usage
-
-```bash
-cargo add nekoton
-```
 
 ### Prerequisites
 
