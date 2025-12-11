@@ -247,19 +247,22 @@
 <a href=#247 id=247 data-nosnippet>247</a>                    ::ton_block::MsgAddressInt::AddrVar(addr) =&gt; ::ton_block::MsgAddress::AddrVar(addr),
 <a href=#248 id=248 data-nosnippet>248</a>                })
 <a href=#249 id=249 data-nosnippet>249</a>            },
-<a href=#250 id=250 data-nosnippet>250</a>            TypeName::Cell =&gt; <span class="macro">quote!</span> {
-<a href=#251 id=251 data-nosnippet>251</a>                ::ton_abi::TokenValue::Cell(value)
+<a href=#250 id=250 data-nosnippet>250</a>            TypeName::AddressStd =&gt; <span class="macro">quote!</span> {
+<a href=#251 id=251 data-nosnippet>251</a>                :ton_abi::TokenValue::AddressStd(::ton_block::MsgAddress::AddrStd(addr))
 <a href=#252 id=252 data-nosnippet>252</a>            },
-<a href=#253 id=253 data-nosnippet>253</a>            TypeName::Bool =&gt; <span class="macro">quote!</span> {
-<a href=#254 id=254 data-nosnippet>254</a>                ::ton_abi::TokenValue::Bool(value)
+<a href=#253 id=253 data-nosnippet>253</a>            TypeName::Cell =&gt; <span class="macro">quote!</span> {
+<a href=#254 id=254 data-nosnippet>254</a>                ::ton_abi::TokenValue::Cell(value)
 <a href=#255 id=255 data-nosnippet>255</a>            },
-<a href=#256 id=256 data-nosnippet>256</a>            TypeName::String =&gt; <span class="macro">quote!</span> {
-<a href=#257 id=257 data-nosnippet>257</a>                ::ton_abi::TokenValue::String(value.into())
+<a href=#256 id=256 data-nosnippet>256</a>            TypeName::Bool =&gt; <span class="macro">quote!</span> {
+<a href=#257 id=257 data-nosnippet>257</a>                ::ton_abi::TokenValue::Bool(value)
 <a href=#258 id=258 data-nosnippet>258</a>            },
-<a href=#259 id=259 data-nosnippet>259</a>            TypeName::Bytes =&gt; <span class="macro">quote!</span> {
-<a href=#260 id=260 data-nosnippet>260</a>                ::ton_abi::TokenValue::Bytes(value)
+<a href=#259 id=259 data-nosnippet>259</a>            TypeName::String =&gt; <span class="macro">quote!</span> {
+<a href=#260 id=260 data-nosnippet>260</a>                ::ton_abi::TokenValue::String(value.into())
 <a href=#261 id=261 data-nosnippet>261</a>            },
-<a href=#262 id=262 data-nosnippet>262</a>            TypeName::None =&gt; <span class="macro">unreachable!</span>(),
-<a href=#263 id=263 data-nosnippet>263</a>        }
-<a href=#264 id=264 data-nosnippet>264</a>    }
-<a href=#265 id=265 data-nosnippet>265</a>}</code></pre></div></section></main></body></html>
+<a href=#262 id=262 data-nosnippet>262</a>            TypeName::Bytes =&gt; <span class="macro">quote!</span> {
+<a href=#263 id=263 data-nosnippet>263</a>                ::ton_abi::TokenValue::Bytes(value)
+<a href=#264 id=264 data-nosnippet>264</a>            },
+<a href=#265 id=265 data-nosnippet>265</a>            TypeName::None =&gt; <span class="macro">unreachable!</span>(),
+<a href=#266 id=266 data-nosnippet>266</a>        }
+<a href=#267 id=267 data-nosnippet>267</a>    }
+<a href=#268 id=268 data-nosnippet>268</a>}</code></pre></div></section></main></body></html>
