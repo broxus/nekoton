@@ -208,11 +208,16 @@ impl UnpackAbi<Cell> for TokenValue {
 impl UnpackAbi<MsgAddressInt> for TokenValue {
     fn unpack(self) -> UnpackerResult<MsgAddressInt> {
         match self {
-            TokenValue::Address(ton_block::MsgAddress::AddrStd(addr)) => {
+            TokenValue::Address(ton_block::MsgAddress::AddrStd(addr))
+            | TokenValue::AddressStd(ton_block::MsgAddress::AddrStd(addr)) => {
                 Ok(MsgAddressInt::AddrStd(addr))
             }
             TokenValue::Address(ton_block::MsgAddress::AddrVar(addr)) => {
                 Ok(MsgAddressInt::AddrVar(addr))
+            }
+            TokenValue::Address(ton_block::MsgAddress::AddrNone)
+            | TokenValue::AddressStd(ton_block::MsgAddress::AddrNone) => {
+                Ok(MsgAddressInt::AddrStd(MsgAddrStd::default()))
             }
             _ => Err(UnpackerError::InvalidAbi),
         }
@@ -222,7 +227,7 @@ impl UnpackAbi<MsgAddressInt> for TokenValue {
 impl UnpackAbi<MsgAddress> for TokenValue {
     fn unpack(self) -> UnpackerResult<MsgAddress> {
         match self {
-            TokenValue::Address(address) => Ok(address),
+            TokenValue::Address(address) | TokenValue::AddressStd(address) => Ok(address),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
@@ -231,7 +236,10 @@ impl UnpackAbi<MsgAddress> for TokenValue {
 impl UnpackAbi<MsgAddrStd> for TokenValue {
     fn unpack(self) -> UnpackerResult<MsgAddrStd> {
         match self {
-            TokenValue::Address(ton_block::MsgAddress::AddrStd(addr)) => Ok(addr),
+            TokenValue::Address(ton_block::MsgAddress::AddrStd(addr))
+            | TokenValue::AddressStd(ton_block::MsgAddress::AddrStd(addr)) => Ok(addr),
+            TokenValue::Address(ton_block::MsgAddress::AddrNone)
+            | TokenValue::AddressStd(ton_block::MsgAddress::AddrNone) => Ok(MsgAddrStd::default()),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }

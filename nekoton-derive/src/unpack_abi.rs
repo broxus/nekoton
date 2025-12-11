@@ -332,11 +332,26 @@ fn get_handler(type_name: &TypeName) -> proc_macro2::TokenStream {
         }
         TypeName::Address => {
             quote! {
-                ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrStd(addr)) => {
+                ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrStd(addr))
+                | ::ton_abi::TokenValue::AddressStd(::ton_block::MsgAddress::AddrStd(addr)) => {
                     ::ton_block::MsgAddressInt::AddrStd(addr)
                 },
                 ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrVar(addr)) => {
                     ::ton_block::MsgAddressInt::AddrVar(addr)
+                },
+                ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrNone)
+                | ::ton_abi::TokenValue::AddressStd(::ton_block::MsgAddress::AddrNone) => {
+                    ::ton_block::MsgAddressInt::AddrStd(Default::default())
+                },
+            }
+        }
+        TypeName::AddressStd => {
+            quote! {
+                ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrStd(addr)) => {
+                    addr
+                },
+                ::ton_abi::TokenValue::Address(::ton_block::MsgAddress::AddrNone) => {
+                    ::ton_block::MsgAddrStd::default()
                 },
             }
         }

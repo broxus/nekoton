@@ -372,6 +372,7 @@ pub enum TypeName {
     Bool,
     Cell,
     Address,
+    AddressStd,
     String,
     Bytes,
     None,
@@ -391,6 +392,7 @@ impl TypeName {
             "bool" => TypeName::Bool,
             "cell" => TypeName::Cell,
             "address" => TypeName::Address,
+            "address_std" => TypeName::AddressStd,
             "string" => TypeName::String,
             "bytes" => TypeName::Bytes,
             _ => TypeName::None,
@@ -425,6 +427,9 @@ impl TypeName {
             },
             TypeName::Address => quote! {
                 ::ton_abi::ParamType::Address
+            },
+            TypeName::AddressStd => quote! {
+                ::ton_abi::ParamType::AddressStd
             },
             TypeName::Cell => quote! {
                 ::ton_abi::ParamType::Cell

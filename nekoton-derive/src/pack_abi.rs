@@ -247,6 +247,9 @@ impl TypeName {
                     ::ton_block::MsgAddressInt::AddrVar(addr) => ::ton_block::MsgAddress::AddrVar(addr),
                 })
             },
+            TypeName::AddressStd => quote! {
+                :ton_abi::TokenValue::AddressStd(::ton_block::MsgAddress::AddrStd(addr))
+            },
             TypeName::Cell => quote! {
                 ::ton_abi::TokenValue::Cell(value)
             },
