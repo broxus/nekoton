@@ -206,7 +206,13 @@ pub mod address_only_hash {
             TokenValue::Address(ton_block::MsgAddress::AddrStd(ton_block::MsgAddrStd {
                 address,
                 ..
+            }))
+            | TokenValue::AddressStd(ton_block::MsgAddress::AddrStd(ton_block::MsgAddrStd {
+                address,
+                ..
             })) => Ok(UInt256::from_be_bytes(&address.get_bytestring(0))),
+            TokenValue::Address(ton_block::MsgAddress::AddrNone)
+            | TokenValue::AddressStd(ton_block::MsgAddress::AddrNone) => Ok(UInt256::ZERO),
             _ => Err(UnpackerError::InvalidAbi),
         }
     }
@@ -222,16 +228,7 @@ pub mod array_address_only_hash {
     pub fn pack(value: Vec<UInt256>) -> TokenValue {
         TokenValue::Array(
             param_type(),
-            value
-                .into_iter()
-                .map(|value| {
-                    TokenValue::Address(ton_block::MsgAddress::AddrStd(ton_block::MsgAddrStd {
-                        anycast: None,
-                        workchain_id: 0,
-                        address: value.into(),
-                    }))
-                })
-                .collect(),
+            value.into_iter().map(address_only_hash::pack).collect(),
         )
     }
 
@@ -240,12 +237,7 @@ pub mod array_address_only_hash {
             TokenValue::Array(_, values) => {
                 let mut result = Vec::with_capacity(values.len());
                 for value in values {
-                    match value {
-                        TokenValue::Address(ton_block::MsgAddress::AddrStd(
-                            ton_block::MsgAddrStd { address, .. },
-                        )) => result.push(UInt256::from_be_bytes(&address.get_bytestring(0))),
-                        _ => return Err(UnpackerError::InvalidAbi),
-                    }
+                    result.push(address_only_hash::unpack(value)?);
                 }
                 Ok(result)
             }
