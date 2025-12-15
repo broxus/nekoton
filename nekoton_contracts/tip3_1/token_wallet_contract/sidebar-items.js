@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["INTERFACE_ID"],"fn":["accept_mint","accept_transfer","owner","transfer","transfer_to_wallet"],"mod":["burnable"],"struct":["AcceptMintInputs","AcceptTransferInputs","TransferInputs","TransferToWalletInputs"]};
+window.SIDEBAR_ITEMS = {"constant":["INTERFACE_ID"],"fn":["accept_mint","accept_transfer","internal_transfer","owner","transfer","transfer_to_wallet"],"mod":["burnable"],"struct":["AcceptMintInputs","AcceptTransferInputs","InternalTransferInputs","TransferInputs","TransferToWalletInputs"]};
