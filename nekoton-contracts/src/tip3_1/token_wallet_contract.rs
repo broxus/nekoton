@@ -165,6 +165,25 @@ pub fn accept_mint() -> &'static ton_abi::Function {
     }
 }
 
+#[derive(Debug, Clone, KnownParamTypePlain, UnpackAbiPlain)]
+pub struct InternalTransferInputs {
+    #[abi(uint64)]
+    pub query_id: u64,
+    #[abi(grams)]
+    pub amount: ton_block::Grams,
+    #[abi(address)]
+    pub from: ton_block::MsgAddressInt,
+}
+
+pub fn internal_transfer() -> &'static ton_abi::Function {
+    declare_function! {
+        function_id: 0x178d4519,
+        name: "internalTransfer",
+        inputs: InternalTransferInputs::param_type(),
+        outputs: Vec::new(),
+    }
+}
+
 pub mod burnable {
     use super::*;
 

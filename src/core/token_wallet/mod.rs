@@ -349,7 +349,7 @@ impl TokenWallet {
                             _ => return None,
                         };
 
-                        let mut data =
+                        let data =
                             parse_token_transaction(&transaction.data, &description, version);
 
                         if let Some(data) = &data {
@@ -370,21 +370,6 @@ impl TokenWallet {
                                 }) => {
                                     balance -= tokens.clone().to_bigint().trust_me();
                                 }
-                            }
-                        } else {
-                            let jetton_data =
-                                parse_jetton_transaction(&transaction.data, &description);
-
-                            if let Some(JettonWalletTransaction::InternalTransfer(transfer)) =
-                                &jetton_data
-                            {
-                                balance += transfer.tokens.clone().to_bigint().trust_me();
-                                data = Some(TokenWalletTransaction::IncomingTransfer(
-                                    TokenIncomingTransfer {
-                                        tokens: transfer.tokens.clone(),
-                                        sender_address: transfer.from.clone(),
-                                    },
-                                ));
                             }
                         }
 
