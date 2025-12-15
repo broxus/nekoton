@@ -673,6 +673,20 @@ pub fn parse_token_transaction(
         TokenSwapBack::try_from((InputMessage(inputs), version))
             .map(TokenWalletTransaction::SwapBack)
             .ok()
+    } else if function_id == functions.internal_transfer.input_id {
+        let inputs = functions
+            .internal_transfer
+            .decode_input(body, true, true)
+            .ok()?;
+
+        JettonIncomingTransfer::try_from(InputMessage(inputs))
+            .map(|x| {
+                TokenWalletTransaction::IncomingTransfer(TokenIncomingTransfer {
+                    tokens: x.tokens,
+                    sender_address: x.from,
+                })
+            })
+            .ok()
     } else {
         None
     }
@@ -682,8 +696,8 @@ pub fn parse_jetton_transaction(
     tx: &ton_block::Transaction,
     description: &ton_block::TransactionDescrOrdinary,
 ) -> Option<JettonWalletTransaction> {
-    const STANDART_JETTON_CELLS: usize = 0;
-    const STANDART_JETTON_BURN_CELLS: usize = 1;
+    const STANDARD_JETTON_CELLS: usize = 0;
+    const STANDARD_JETTON_BURN_CELLS: usize = 1;
     const MINTLESS_JETTON_CELLS: usize = 2;
 
     if description.aborted {
@@ -702,7 +716,7 @@ pub fn parse_jetton_transaction(
                 let cell = body.reference_opt(1)?;
                 SliceData::load_cell(cell).ok()?
             }
-            STANDART_JETTON_CELLS | STANDART_JETTON_BURN_CELLS => body,
+            STANDARD_JETTON_CELLS | STANDARD_JETTON_BURN_CELLS => body,
             _ => return None,
         }
     };
@@ -821,6 +835,8 @@ struct TokenWalletFunctions {
     // Incoming
     accept_transfer: &'static ton_abi::Function,
     // Incoming
+    internal_transfer: &'static ton_abi::Function,
+    // Incoming
     burn: &'static ton_abi::Function,
     // Outgoing
     accept_burn: &'static ton_abi::Function,
@@ -837,6 +853,7 @@ impl TokenWalletFunctions {
                         transfer: old_tip3::token_wallet_contract::transfer_to_recipient(),
                         transfer_to_wallet: old_tip3::token_wallet_contract::transfer(),
                         accept_transfer: old_tip3::token_wallet_contract::internal_transfer(),
+                        internal_transfer: old_tip3::token_wallet_contract::stub(),
                         burn: old_tip3::token_wallet_contract::burn_by_owner(),
                         accept_burn: old_tip3::root_token_contract::tokens_burned(),
                     })
@@ -850,6 +867,7 @@ impl TokenWalletFunctions {
                         transfer: tip3_1::token_wallet_contract::transfer(),
                         transfer_to_wallet: tip3_1::token_wallet_contract::transfer_to_wallet(),
                         accept_transfer: tip3_1::token_wallet_contract::accept_transfer(),
+                        internal_transfer: tip3_1::token_wallet_contract::internal_transfer(),
                         burn: tip3_1::token_wallet_contract::burnable::burn(),
                         accept_burn: tip3_1::root_token_contract::accept_burn(),
                     })
@@ -883,6 +901,19 @@ impl TryFrom<(InputMessage, TokenWalletVersion)> for TokenSwapBack {
                     callback_payload: input.payload,
                 }
             }
+        })
+    }
+}
+
+impl TryFrom<InputMessage> for JettonIncomingTransfer {
+    type Error = UnpackerError;
+
+    fn try_from(value: InputMessage) -> Result<Self, Self::Error> {
+        let input: tip3_1::token_wallet_contract::InternalTransferInputs = value.0.unpack()?;
+
+        Ok(Self {
+            tokens: BigUint::from(input.amount.as_u128()),
+            from: input.from,
         })
     }
 }
@@ -1261,6 +1292,28 @@ mod tests {
                 from,
                 MsgAddressInt::from_str(
                     "0:2cf545d69ef7331c637cbcbaa358c7d58277a1b5713788736d62435dfa050ced"
+                )
+                .unwrap()
+            );
+        }
+    }
+
+    #[test]
+    fn test_tip3_jetton_incoming_transfer() {
+        let (tx, description) = parse_transaction("te6ccgECDAEAAlgAA7V3f+qdGMi8JjYzPKoZ9Z+bpmydkT1wisdXZ77gk1AFAhAAATx7yfqggC6iE75ppDvdzLmbyOcBCnxe+PDJ76cRgKt2Cy2ZIX6gAAE8e8n6oGaTw/dQADR5NE8IBQQBAhUECQBgwdZYeJGNEQMCAG/Jh6EgTBRYQAAAAAAABAACAAAAA8B4u2hCcp/bPN/dOsHOMIcjI4f1rR546mtVo5GE4BN0QFAVzACcRkopjFAAAAAAAAAAAPgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIJyH/HuNcxrNisZ3/ASNUm6oHt2S6OudgNcpDuLoGVKnHwuA9ejj3pxHzny2lpNan1PV91FIMUuTxfTeFZjxPvbkQIB4AgGAQHfBwCvSADv/VOjGReExsZnlUM+s/N0zZOyJ64RWOrs99wSagCgQwAOHyuzYYkse8JXNaFlfA3D8btggzNVZE6THxza4AOKz4684sQGFFhgAAAnj3k/VBLSeH7qQAGxaAHCojMY4mNubPmLxrR8IqPe3s4jRkwozPitECYHybqYEwAd/6p0YyLwmNjM8qhn1n5umbJ2RPXCKx1dnvuCTUAUCFAGDB1kBige6gAAJ495P1QK0nh+6sAJAacXjUUZAAAAAAAAAABDuaygCABw+V2bDElj3hK5rQsr4G4fjdsEGZqrInSY+ObXABxWfQAOHyuzYYkse8JXNaFlfA3D8btggzNVZE6THxza4AOKz4MKAQFACwAA");
+        let tip3_transaction =
+            parse_token_transaction(&tx, &description, TokenWalletVersion::Tip3).unwrap();
+
+        if let TokenWalletTransaction::IncomingTransfer(TokenIncomingTransfer {
+            tokens,
+            sender_address,
+        }) = tip3_transaction
+        {
+            assert_eq!(tokens.to_u128().unwrap(), 1000000000);
+            assert_eq!(
+                sender_address,
+                MsgAddressInt::from_str(
+                    "0:387caecd8624b1ef095cd68595f0370fc6ed820ccd55913a4c7c736b800e2b3e"
                 )
                 .unwrap()
             );

@@ -169,6 +169,14 @@ pub fn burn_by_owner() -> &'static ton_abi::Function {
     }
 }
 
+pub fn stub() -> &'static ton_abi::Function {
+    declare_function! {
+        name: "stub",
+        inputs: Vec::new(),
+        outputs: Vec::new(),
+    }
+}
+
 #[derive(Debug, Clone, UnpackAbiPlain, KnownParamTypePlain)]
 pub struct BurnByRootInputs {
     #[abi(with = "uint128_number")]
