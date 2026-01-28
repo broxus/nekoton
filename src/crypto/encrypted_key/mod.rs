@@ -4,19 +4,18 @@ use std::io::Read;
 
 use anyhow::Result;
 use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit, Nonce};
-use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signer};
+use ed25519_dalek::{Keypair, PublicKey, SecretKey};
 use rand::Rng;
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize};
 
-use nekoton_utils::*;
-
 use super::mnemonic::*;
 use super::{
-    default_key_name, extend_with_signature_id, Password, PasswordCache, PasswordCacheTransaction,
-    PubKey, SharedSecret, SignatureId, Signer as StoreSigner, SignerContext, SignerEntry,
-    SignerStorage,
+    default_key_name, signature_domain::SignatureDomain, Password, PasswordCache,
+    PasswordCacheTransaction, PubKey, SharedSecret, Signer as StoreSigner, SignerContext,
+    SignerEntry, SignerStorage,
 };
+use nekoton_utils::*;
 
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
 pub struct EncryptedKeySigner {
@@ -194,7 +193,7 @@ impl StoreSigner for EncryptedKeySigner {
         &self,
         ctx: SignerContext<'_>,
         data: &[u8],
-        signature_id: Option<SignatureId>,
+        signature_domain: SignatureDomain,
         input: Self::SignInput,
     ) -> Result<[u8; 64]> {
         let key = self.get_key(&input.public_key)?;
@@ -203,7 +202,7 @@ impl StoreSigner for EncryptedKeySigner {
             .password_cache
             .process_password(input.public_key.to_bytes(), input.password)?;
 
-        let signature = key.sign(data, signature_id, password.as_ref())?;
+        let signature = key.sign(signature_domain, data, password.as_ref())?;
 
         password.proceed();
         Ok(signature)
@@ -470,11 +469,11 @@ impl EncryptedKey {
 
     pub fn sign(
         &self,
+        signature_domain: SignatureDomain,
         data: &[u8],
-        signature_id: Option<SignatureId>,
         password: &str,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
-        self.inner.sign(data, signature_id, password)
+        self.inner.sign(signature_domain, data, password)
     }
 
     pub fn compute_shared_keys(
@@ -531,8 +530,8 @@ struct CryptoData {
 impl CryptoData {
     pub fn sign(
         &self,
+        signature_domain: SignatureDomain,
         data: &[u8],
-        signature_id: Option<SignatureId>,
         password: &str,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let secret = self.decrypt_secret(password)?;
@@ -540,8 +539,8 @@ impl CryptoData {
             secret,
             public: self.pubkey,
         };
-        let data = extend_with_signature_id(data, signature_id);
-        Ok(pair.sign(&data).to_bytes())
+        let signature = signature_domain.sign(&pair, data);
+        Ok(signature.to_bytes())
     }
 
     pub fn compute_shared_keys(
@@ -705,7 +704,7 @@ mod tests {
         .unwrap();
 
         assert!(!signer.as_json().is_empty());
-        let result = signer.sign(b"lol", None, "lol");
+        let result = signer.sign(SignatureDomain::Empty, b"lol", "lol");
         assert!(result.is_err());
     }
 

@@ -14,7 +14,7 @@ use tokio::sync::RwLock;
 use nekoton_utils::*;
 
 use crate::crypto::{
-    EncryptedData, EncryptionAlgorithm, PasswordCache, SharedSecret, Signature, SignatureId,
+    EncryptedData, EncryptionAlgorithm, PasswordCache, SharedSecret, Signature, SignatureDomain,
     Signer, SignerContext, SignerEntry, SignerStorage,
 };
 use crate::external::Storage;
@@ -290,7 +290,7 @@ impl KeyStore {
     pub async fn sign<T>(
         &self,
         data: &[u8],
-        signature_id: Option<SignatureId>,
+        signature_domain: SignatureDomain,
         input: T::SignInput,
     ) -> Result<Signature>
     where
@@ -303,7 +303,7 @@ impl KeyStore {
         };
         state
             .get_signer_ref::<T>()?
-            .sign(ctx, data, signature_id, input)
+            .sign(ctx, data, signature_domain, input)
             .await
     }
 

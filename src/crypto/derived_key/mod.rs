@@ -2,18 +2,17 @@ use std::collections::hash_map::{self, HashMap};
 
 use anyhow::Result;
 use chacha20poly1305::{ChaCha20Poly1305, KeyInit, Nonce};
-use ed25519_dalek::{Keypair, PublicKey, Signer};
+use ed25519_dalek::{Keypair, PublicKey};
 use secstr::SecUtf8;
 use serde::{Deserialize, Serialize, Serializer};
 
-use nekoton_utils::*;
-
 use super::mnemonic::*;
 use super::{
-    default_key_name, extend_with_signature_id, Password, PasswordCache, PasswordCacheTransaction,
-    PubKey, SharedSecret, SignatureId, Signer as StoreSigner, SignerContext, SignerEntry,
-    SignerStorage,
+    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
+    Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
+use crate::crypto::signature_domain::SignatureDomain;
+use nekoton_utils::*;
 
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
 pub struct DerivedKeySigner {
@@ -355,12 +354,12 @@ impl StoreSigner for DerivedKeySigner {
         &self,
         ctx: SignerContext<'_>,
         data: &[u8],
-        signature_id: Option<SignatureId>,
+        signature_domain: SignatureDomain,
         input: Self::SignInput,
     ) -> Result<[u8; 64]> {
         let keypair = self.use_sign_input(ctx.password_cache, input)?;
-        let data = extend_with_signature_id(data, signature_id);
-        Ok(keypair.sign(&data).to_bytes())
+        let signature = signature_domain.sign(&keypair, data);
+        Ok(signature.to_bytes())
     }
 }
 

@@ -385,7 +385,7 @@ mod tests {
     use crate::core::ton_wallet::wallet_v5r1::{
         compute_contract_address, is_wallet_v5r1, InitData, WALLET_ID,
     };
-    use crate::crypto::extend_with_signature_id;
+    use crate::crypto::{SignatureDomain, ToSign};
     use ed25519_dalek::{PublicKey, Signature, Verifier};
     use nekoton_contracts::wallets;
     use ton_block::AccountState;
@@ -438,7 +438,12 @@ mod tests {
 
         let public_key = PublicKey::from_bytes(public_key_bytes.as_slice())?;
 
-        let result = check_signature(in_msg_body_slice, public_key, Some(2000))?;
+        let result = check_signature(
+            in_msg_body_slice,
+            public_key,
+            SignatureDomain::L2 { global_id: 2000 },
+            false,
+        )?;
         assert!(result);
         Ok(())
     }
@@ -446,7 +451,8 @@ mod tests {
     fn check_signature(
         mut in_msg_body: SliceData,
         public_key: PublicKey,
-        signature_id: Option<i32>,
+        signature_domain: SignatureDomain,
+        enable_signature_domains: bool,
     ) -> anyhow::Result<bool> {
         let signature_binding = in_msg_body
             .get_slice(in_msg_body.remaining_bits() - 512, 512)?
@@ -458,11 +464,15 @@ mod tests {
             .into_cell();
 
         let hash = payload.repr_hash();
-
-        let data = extend_with_signature_id(hash.as_ref(), signature_id);
+        let to_sign = ToSign {
+            enable_signature_domains,
+            signature_domain,
+            data: hash.into_vec(),
+        };
+        let data = to_sign.write_to_bytes();
 
         Ok(public_key
-            .verify(&*data, &Signature::from_bytes(sig)?)
+            .verify(&data, &Signature::from_bytes(sig)?)
             .is_ok())
     }
 }
