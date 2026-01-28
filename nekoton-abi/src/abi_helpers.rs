@@ -4,6 +4,7 @@ use ton_types::UInt256;
 
 use super::{BuildTokenValue, KnownParamType, UnpackerError, UnpackerResult};
 
+#[derive(Clone, Debug)]
 pub struct BigUint128(pub BigUint);
 
 impl BuildTokenValue for BigUint128 {

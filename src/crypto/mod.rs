@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use anyhow::Result;
 use downcast_rs::{impl_downcast, Downcast};
 use dyn_clone::DynClone;
@@ -15,12 +13,14 @@ pub use encrypted_key::*;
 pub use ledger_key::*;
 pub use mnemonic::*;
 pub use password_cache::*;
+pub use signature_domain::*;
 
 mod derived_key;
 mod encrypted_key;
 mod ledger_key;
 mod mnemonic;
 mod password_cache;
+mod signature_domain;
 
 pub type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
 pub type PubKey = [u8; ed25519_dalek::PUBLIC_KEY_LENGTH];
@@ -166,7 +166,7 @@ pub trait Signer: SignerStorage {
         &self,
         ctx: SignerContext<'_>,
         data: &[u8],
-        signature_id: Option<SignatureId>,
+        signature_domain: SignatureDomain,
         input: Self::SignInput,
     ) -> Result<Signature>;
 }
@@ -240,17 +240,17 @@ pub fn default_key_name(public_key: &PubKey) -> String {
     )
 }
 
-pub fn extend_with_signature_id(data: &[u8], signature_id: Option<SignatureId>) -> Cow<'_, [u8]> {
-    match signature_id {
-        Some(signature_id) => {
-            let mut extended_data = Vec::with_capacity(4 + data.len());
-            extended_data.extend_from_slice(&signature_id.to_be_bytes());
-            extended_data.extend_from_slice(data);
-            Cow::Owned(extended_data)
-        }
-        None => Cow::Borrowed(data),
-    }
-}
+// pub fn extend_with_signature_id(data: &[u8], signature_id: Option<SignatureId>) -> Cow<'_, [u8]> {
+//     match signature_id {
+//         Some(signature_id) => {
+//             let mut extended_data = Vec::with_capacity(4 + data.len());
+//             extended_data.extend_from_slice(&signature_id.to_be_bytes());
+//             extended_data.extend_from_slice(data);
+//             Cow::Owned(extended_data)
+//         }
+//         None => Cow::Borrowed(data),
+//     }
+// }
 
 pub mod x25519 {
     use curve25519_dalek_ng::scalar::Scalar;
