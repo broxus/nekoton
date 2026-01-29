@@ -2,9 +2,9 @@ use ed25519_dalek::Signer;
 use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 
+#[derive(Debug, Clone)]
 pub struct ToSign {
-    pub enable_signature_domains: bool,
-    pub signature_domain: SignatureDomain,
+    pub ctx: SignatureContext,
     pub data: Vec<u8>,
 }
 
@@ -12,21 +12,55 @@ impl ToSign {
     pub fn write_to_bytes(&self) -> Vec<u8> {
         let mut output = Vec::new();
 
-        match self.signature_domain {
-            // Empty signature domain always doesn't have any prefix.
-            SignatureDomain::Empty => {}
-            // All other signature domains are prefixed as hash.
-            _ if self.enable_signature_domains => {
-                output.extend_from_slice(&self.signature_domain.get_tl_hash());
+        match (self.ctx.signature_type, self.ctx.global_id) {
+            (SignatureType::Empty, _) => {}
+            (SignatureType::SignatureId, None) => {}
+            (SignatureType::SignatureDomain, None) => {
+                let sd = SignatureDomain::Empty;
+                output.extend_from_slice(&sd.hash())
             }
-            // Fallback for the original `SignatureWithId` implementation
-            // if domains are disabled.
-            SignatureDomain::L2 { global_id } => output.extend_from_slice(&global_id.to_be_bytes()),
+            (SignatureType::SignatureDomain, Some(global_id)) => {
+                let sd = SignatureDomain::L2 { global_id };
+                output.extend_from_slice(&sd.hash())
+            }
+            (SignatureType::SignatureId, Some(global_id)) => {
+                output.extend_from_slice(&global_id.to_be_bytes())
+            }
         }
 
         output.extend_from_slice(&self.data);
 
         output
+    }
+}
+
+#[derive(Debug, Default, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub struct SignatureContext {
+    pub global_id: Option<i32>,
+    pub signature_type: SignatureType,
+}
+
+#[derive(Debug, Default, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub enum SignatureType {
+    Empty,
+    SignatureId,
+    #[default]
+    SignatureDomain,
+}
+
+impl SignatureContext {
+    pub fn sign<'a>(
+        &self,
+        key: &ed25519_dalek::Keypair,
+        data: &'a [u8],
+    ) -> ed25519_dalek::Signature {
+        let data = match self.signature_type {
+            SignatureType::Empty => Cow::Borrowed(data),
+            SignatureType::SignatureId => extend_with_signature_id(data, self.global_id),
+            SignatureType::SignatureDomain => extend_with_signature_domain(data, self.global_id),
+        };
+
+        key.sign(&data)
     }
 }
 
@@ -45,17 +79,12 @@ pub enum SignatureDomain {
 }
 
 impl SignatureDomain {
-    /// Signs arbitrary data using the key and optional signature id.
-    pub fn sign(&self, key: &ed25519_dalek::Keypair, data: &[u8]) -> ed25519_dalek::Signature {
-        let data = self.apply(data);
-        key.sign(&data)
-    }
     /// Prepares arbitrary data for signing.
-    pub fn apply<'a>(&self, data: &'a [u8]) -> Cow<'a, [u8]> {
+    fn apply<'a>(&self, data: &'a [u8]) -> Cow<'a, [u8]> {
         if let Self::Empty = self {
             Cow::Borrowed(data)
         } else {
-            let hash = self.get_tl_hash();
+            let hash = self.hash();
             let mut result = Vec::with_capacity(32 + data.len());
             result.extend_from_slice(&hash);
             result.extend_from_slice(data);
@@ -63,7 +92,7 @@ impl SignatureDomain {
         }
     }
 
-    fn get_tl_hash(&self) -> Vec<u8> {
+    fn hash(&self) -> Vec<u8> {
         Sha256::digest(self.write_to_bytes()).to_vec()
     }
 
@@ -81,4 +110,24 @@ impl SignatureDomain {
 
         data
     }
+}
+
+fn extend_with_signature_id(data: &[u8], global_id: Option<i32>) -> Cow<'_, [u8]> {
+    match global_id {
+        Some(signature_id) => {
+            let mut extended_data = Vec::with_capacity(4 + data.len());
+            extended_data.extend_from_slice(&signature_id.to_be_bytes());
+            extended_data.extend_from_slice(data);
+            Cow::Owned(extended_data)
+        }
+        None => Cow::Borrowed(data),
+    }
+}
+
+fn extend_with_signature_domain(data: &[u8], global_id: Option<i32>) -> Cow<'_, [u8]> {
+    let sd = match global_id {
+        None => SignatureDomain::Empty,
+        Some(global_id) => SignatureDomain::L2 { global_id },
+    };
+    sd.apply(data)
 }

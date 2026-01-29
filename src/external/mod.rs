@@ -2,7 +2,7 @@ use anyhow::Result;
 use nekoton_utils::serde_optional_hex_array;
 use serde::{Deserialize, Serialize};
 
-use super::crypto::SignatureDomain;
+use super::crypto::SignatureContext;
 
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
 #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
@@ -89,7 +89,7 @@ pub trait LedgerConnection: Send + Sync {
     async fn sign(
         &self,
         account: u16,
-        signature_domain: SignatureDomain,
+        signature_ctx: SignatureContext,
         message: &[u8],
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;
 
@@ -97,7 +97,7 @@ pub trait LedgerConnection: Send + Sync {
         &self,
         account: u16,
         wallet: u16,
-        signature_id: SignatureDomain,
+        signature_ctx: SignatureContext,
         message: &[u8],
         context: &LedgerSignatureContext,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]>;

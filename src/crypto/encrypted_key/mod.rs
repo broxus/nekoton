@@ -11,9 +11,8 @@ use serde::{Deserialize, Serialize};
 
 use super::mnemonic::*;
 use super::{
-    default_key_name, signature_domain::SignatureDomain, Password, PasswordCache,
-    PasswordCacheTransaction, PubKey, SharedSecret, Signer as StoreSigner, SignerContext,
-    SignerEntry, SignerStorage,
+    default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
+    SignatureContext, Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
 use nekoton_utils::*;
 
@@ -193,7 +192,7 @@ impl StoreSigner for EncryptedKeySigner {
         &self,
         ctx: SignerContext<'_>,
         data: &[u8],
-        signature_domain: SignatureDomain,
+        signature_ctx: SignatureContext,
         input: Self::SignInput,
     ) -> Result<[u8; 64]> {
         let key = self.get_key(&input.public_key)?;
@@ -202,7 +201,7 @@ impl StoreSigner for EncryptedKeySigner {
             .password_cache
             .process_password(input.public_key.to_bytes(), input.password)?;
 
-        let signature = key.sign(signature_domain, data, password.as_ref())?;
+        let signature = key.sign(data, password.as_ref(), signature_ctx)?;
 
         password.proceed();
         Ok(signature)
@@ -469,11 +468,11 @@ impl EncryptedKey {
 
     pub fn sign(
         &self,
-        signature_domain: SignatureDomain,
         data: &[u8],
         password: &str,
+        signature_ctx: SignatureContext,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
-        self.inner.sign(signature_domain, data, password)
+        self.inner.sign(data, password, signature_ctx)
     }
 
     pub fn compute_shared_keys(
@@ -530,16 +529,16 @@ struct CryptoData {
 impl CryptoData {
     pub fn sign(
         &self,
-        signature_domain: SignatureDomain,
         data: &[u8],
         password: &str,
+        signature_ctx: SignatureContext,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let secret = self.decrypt_secret(password)?;
         let pair = Keypair {
             secret,
             public: self.pubkey,
         };
-        let signature = signature_domain.sign(&pair, data);
+        let signature = signature_ctx.sign(&pair, data);
         Ok(signature.to_bytes())
     }
 
@@ -663,7 +662,7 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
-    use crate::crypto::PasswordCacheBehavior;
+    use crate::crypto::{PasswordCacheBehavior, SignatureType};
 
     const TEST_PASSWORD: &str = "123";
     const TEST_MNEMONIC: &str = "canyon stage apple useful bench lazy grass enact canvas like figure help pave reopen betray exotic nose fetch wagon senior acid across salon alley";
@@ -704,7 +703,11 @@ mod tests {
         .unwrap();
 
         assert!(!signer.as_json().is_empty());
-        let result = signer.sign(SignatureDomain::Empty, b"lol", "lol");
+        let sig_ctx = SignatureContext {
+            global_id: None,
+            signature_type: SignatureType::Empty,
+        };
+        let result = signer.sign(b"lol", "lol", sig_ctx);
         assert!(result.is_err());
     }
 

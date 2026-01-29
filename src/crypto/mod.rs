@@ -166,7 +166,7 @@ pub trait Signer: SignerStorage {
         &self,
         ctx: SignerContext<'_>,
         data: &[u8],
-        signature_domain: SignatureDomain,
+        signature_ctx: SignatureContext,
         input: Self::SignInput,
     ) -> Result<Signature>;
 }
@@ -239,18 +239,6 @@ pub fn default_key_name(public_key: &PubKey) -> String {
         hex::encode(&public_key[30..32])
     )
 }
-
-// pub fn extend_with_signature_id(data: &[u8], signature_id: Option<SignatureId>) -> Cow<'_, [u8]> {
-//     match signature_id {
-//         Some(signature_id) => {
-//             let mut extended_data = Vec::with_capacity(4 + data.len());
-//             extended_data.extend_from_slice(&signature_id.to_be_bytes());
-//             extended_data.extend_from_slice(data);
-//             Cow::Owned(extended_data)
-//         }
-//         None => Cow::Borrowed(data),
-//     }
-// }
 
 pub mod x25519 {
     use curve25519_dalek_ng::scalar::Scalar;
