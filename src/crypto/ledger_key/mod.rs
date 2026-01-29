@@ -10,11 +10,10 @@ use serde::{Deserialize, Serialize};
 use nekoton_utils::*;
 
 use super::{
-    default_key_name, SharedSecret, Signer as StoreSigner, SignerContext, SignerEntry,
-    SignerStorage,
+    default_key_name, SharedSecret, SignatureContext, Signer as StoreSigner, SignerContext,
+    SignerEntry, SignerStorage,
 };
 use crate::core::ton_wallet::WalletType;
-use crate::crypto::signature_domain::SignatureDomain;
 use crate::external::{LedgerConnection, LedgerSignatureContext};
 
 #[derive(Clone)]
@@ -151,14 +150,14 @@ impl StoreSigner for LedgerKeySigner {
         &self,
         _: SignerContext<'_>,
         data: &[u8],
-        signature_domain: SignatureDomain,
+        signature_ctx: SignatureContext,
         input: Self::SignInput,
     ) -> Result<[u8; ed25519_dalek::SIGNATURE_LENGTH]> {
         let key = self.get_key(&input.public_key)?;
         let signature = match input.context {
             None => {
                 self.connection
-                    .sign(key.account_id, signature_domain, data)
+                    .sign(key.account_id, signature_ctx, data)
                     .await?
             }
             Some(context) => {
@@ -166,7 +165,7 @@ impl StoreSigner for LedgerKeySigner {
                     .sign_transaction(
                         key.account_id,
                         input.wallet.try_into()?,
-                        signature_domain,
+                        signature_ctx,
                         data,
                         &context,
                     )

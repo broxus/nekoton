@@ -9,9 +9,8 @@ use serde::{Deserialize, Serialize, Serializer};
 use super::mnemonic::*;
 use super::{
     default_key_name, Password, PasswordCache, PasswordCacheTransaction, PubKey, SharedSecret,
-    Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
+    SignatureContext, Signer as StoreSigner, SignerContext, SignerEntry, SignerStorage,
 };
-use crate::crypto::signature_domain::SignatureDomain;
 use nekoton_utils::*;
 
 #[derive(Default, Clone, Debug, Eq, PartialEq)]
@@ -354,11 +353,11 @@ impl StoreSigner for DerivedKeySigner {
         &self,
         ctx: SignerContext<'_>,
         data: &[u8],
-        signature_domain: SignatureDomain,
+        signature_ctx: SignatureContext,
         input: Self::SignInput,
     ) -> Result<[u8; 64]> {
         let keypair = self.use_sign_input(ctx.password_cache, input)?;
-        let signature = signature_domain.sign(&keypair, data);
+        let signature = signature_ctx.sign(&keypair, data);
         Ok(signature.to_bytes())
     }
 }
