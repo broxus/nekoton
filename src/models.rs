@@ -10,10 +10,10 @@ use nekoton_abi::*;
 use nekoton_utils::*;
 
 // TODO: (-_-)
-use crate::crypto::{SignatureContext, SignatureDomain, SignatureType};
 pub use nekoton_contracts::tip3_any::{
     RootTokenContractDetails, TokenWalletDetails, TokenWalletVersion,
 };
+use nekoton_utils::{SignatureContext, SignatureDomain, SignatureType};
 
 #[non_exhaustive]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -445,7 +445,7 @@ impl NetworkCapabilities {
         let signature_domain_enabled = self.raw & Self::CAP_SIGNATURE_DOMAIN != 0;
 
         match (signature_domain_enabled, signature_id_enabled) {
-            (true, _) => SignatureContext {
+            (true, true) => SignatureContext {
                 global_id: Some(self.global_id),
                 signature_type: SignatureType::SignatureDomain,
             },

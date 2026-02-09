@@ -385,9 +385,9 @@ mod tests {
     use crate::core::ton_wallet::wallet_v5r1::{
         compute_contract_address, is_wallet_v5r1, InitData, WALLET_ID,
     };
-    use crate::crypto::{SignatureContext, SignatureType, ToSign};
     use ed25519_dalek::{PublicKey, Signature, Verifier};
     use nekoton_contracts::wallets;
+    use nekoton_utils::{SignatureContext, SignatureType, ToSign};
     use ton_block::AccountState;
     use ton_types::SliceData;
 

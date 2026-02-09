@@ -59,6 +59,7 @@ pub use self::crc::crc_16;
 #[cfg(feature = "encryption")]
 pub use self::encryption::*;
 pub use self::serde_helpers::*;
+pub use self::signature_domain::*;
 pub use self::traits::*;
 pub use self::transaction::*;
 
@@ -69,6 +70,7 @@ mod crc;
 #[cfg(feature = "encryption")]
 mod encryption;
 mod serde_helpers;
+mod signature_domain;
 mod traits;
 mod transaction;
 

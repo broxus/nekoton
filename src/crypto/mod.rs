@@ -13,14 +13,12 @@ pub use encrypted_key::*;
 pub use ledger_key::*;
 pub use mnemonic::*;
 pub use password_cache::*;
-pub use signature_domain::*;
 
 mod derived_key;
 mod encrypted_key;
 mod ledger_key;
 mod mnemonic;
 mod password_cache;
-mod signature_domain;
 
 pub type Signature = [u8; ed25519_dalek::SIGNATURE_LENGTH];
 pub type PubKey = [u8; ed25519_dalek::PUBLIC_KEY_LENGTH];

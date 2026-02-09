@@ -2,7 +2,7 @@ use anyhow::Result;
 use nekoton_utils::serde_optional_hex_array;
 use serde::{Deserialize, Serialize};
 
-use super::crypto::SignatureContext;
+use nekoton_utils::SignatureContext;
 
 #[cfg_attr(not(feature = "non_threadsafe"), async_trait::async_trait)]
 #[cfg_attr(feature = "non_threadsafe", async_trait::async_trait(?Send))]
