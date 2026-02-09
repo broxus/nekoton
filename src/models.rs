@@ -10,6 +10,7 @@ use nekoton_abi::*;
 use nekoton_utils::*;
 
 // TODO: (-_-)
+use crate::crypto::{SignatureContext, SignatureDomain, SignatureType};
 pub use nekoton_contracts::tip3_any::{
     RootTokenContractDetails, TokenWalletDetails, TokenWalletVersion,
 };
@@ -411,10 +412,43 @@ pub struct NetworkCapabilities {
 
 impl NetworkCapabilities {
     const CAP_SIGNATURE_WITH_ID: u64 = 0x4000000;
+    const CAP_SIGNATURE_DOMAIN: u64 = 0x800000000;
 
     /// Returns the signature id if `CapSignatureWithId` capability is enabled.
     pub fn signature_id(&self) -> Option<i32> {
         (self.raw & Self::CAP_SIGNATURE_WITH_ID != 0).then_some(self.global_id)
+    }
+
+    /// Returns the signature domain type from `CapSignatureDomain` value (enabled or not)
+    pub fn signature_domain(&self) -> SignatureDomain {
+        if self.raw & Self::CAP_SIGNATURE_DOMAIN != 0 {
+            SignatureDomain::L2 {
+                global_id: self.global_id,
+            }
+        } else {
+            SignatureDomain::Empty
+        }
+    }
+
+    /// Returns the signature context type which depends on enabled signature capability
+    pub fn signature_context(&self) -> SignatureContext {
+        let signature_id_enabled = self.raw & Self::CAP_SIGNATURE_WITH_ID != 0;
+        let signature_domain_enabled = self.raw & Self::CAP_SIGNATURE_DOMAIN != 0;
+
+        match (signature_domain_enabled, signature_id_enabled) {
+            (true, _) => SignatureContext {
+                global_id: Some(self.global_id),
+                signature_type: SignatureType::SignatureDomain,
+            },
+            (false, true) => SignatureContext {
+                global_id: Some(self.global_id),
+                signature_type: SignatureType::SignatureId,
+            },
+            _ => SignatureContext {
+                global_id: None,
+                signature_type: SignatureType::Empty,
+            },
+        }
     }
 }
 
