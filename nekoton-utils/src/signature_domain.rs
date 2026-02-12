@@ -13,12 +13,6 @@ impl ToSign {
         let mut output = Vec::new();
 
         match (self.ctx.signature_type, self.ctx.global_id) {
-            (SignatureType::Empty, _) => {}
-            (SignatureType::SignatureId, None) => {}
-            (SignatureType::SignatureDomain, None) => {
-                let sd = SignatureDomain::Empty;
-                output.extend_from_slice(&sd.hash())
-            }
             (SignatureType::SignatureDomain, Some(global_id)) => {
                 let sd = SignatureDomain::L2 { global_id };
                 output.extend_from_slice(&sd.hash())
@@ -26,6 +20,7 @@ impl ToSign {
             (SignatureType::SignatureId, Some(global_id)) => {
                 output.extend_from_slice(&global_id.to_be_bytes())
             }
+            _ => {}
         }
 
         output.extend_from_slice(&self.data);
