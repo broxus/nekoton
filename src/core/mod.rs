@@ -2,7 +2,9 @@ use anyhow::Result;
 use nekoton_utils::*;
 use serde::{Deserialize, Serialize};
 
-pub use self::contract_subscription::{ContractSubscription, TransactionExecutionOptions};
+pub use self::contract_subscription::{
+    ContractSubscription, ContractSubscriptionCachedState, TransactionExecutionOptions,
+};
 use self::models::PollingMethod;
 use crate::transport::Transport;
 
