@@ -1121,6 +1121,7 @@ impl FromStr for WalletType {
     }
 }
 
+// Mapping to Ledger wallet type IDs
 impl TryInto<u16> for WalletType {
     type Error = anyhow::Error;
 
@@ -1135,9 +1136,7 @@ impl TryInto<u16> for WalletType {
             WalletType::Multisig(MultisigType::SurfWallet) => 6,
             WalletType::Multisig(MultisigType::Multisig2) => 7,
             WalletType::Multisig(MultisigType::Multisig2_1) => 8,
-            WalletType::WalletV4R1 => 9,
-            WalletType::WalletV4R2 => 10,
-            WalletType::WalletV5R1 => 11,
+            WalletType::WalletV5R1 => 9,
             _ => anyhow::bail!("Unimplemented wallet type"),
         };
 
