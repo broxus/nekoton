@@ -156,7 +156,7 @@ impl UnsignedMessage for UnsignedWallet {
         prune_after_depth: u16,
     ) -> Result<SignedMessage> {
         let mut payload = self.payload.clone();
-        payload.append_raw(signature, signature.len() * 8)?;
+        payload.prepend_raw(signature, signature.len() * 8)?;
         let body = payload.into_cell()?;
 
         let mut message = self.message.clone();
