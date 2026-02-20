@@ -16,7 +16,7 @@ use num_bigint::{BigInt, BigUint, ToBigInt};
 use ton_block::MsgAddressInt;
 use ton_executor::BlockchainConfig;
 
-use super::{ContractSubscription, InternalMessage};
+use super::{ContractSubscription, ContractSubscriptionCachedState, InternalMessage};
 
 pub struct TokenWallet {
     clock: Arc<dyn Clock>,
@@ -36,6 +36,7 @@ impl TokenWallet {
         root_token_contract: MsgAddressInt,
         handler: Arc<dyn TokenWalletSubscriptionHandler>,
         preload_transactions: bool,
+        cached_state: Option<ContractSubscriptionCachedState>,
     ) -> Result<TokenWallet> {
         let state = match transport.get_contract_state(&root_token_contract).await? {
             RawContractState::Exists(state) => state,
@@ -77,6 +78,7 @@ impl TokenWallet {
                 clock.clone(),
                 transport,
                 address,
+                cached_state,
                 &mut make_contract_state_handler(clock.clone(), version, &mut balance),
                 on_transactions_found,
             )
