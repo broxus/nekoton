@@ -1,9 +1,9 @@
 (function() {
-    var implementors = Object.fromEntries([["nekoton",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.93.1/core/convert/trait.TryInto.html\" title=\"trait core::convert::TryInto\">TryInto</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.93.1/std/primitive.u16.html\">u16</a>&gt; for <a class=\"enum\" href=\"nekoton/core/ton_wallet/enum.WalletType.html\" title=\"enum nekoton::core::ton_wallet::WalletType\">WalletType</a>"]]]]);
+    const implementors = Object.fromEntries([["nekoton",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.96.1/core/convert/trait.TryInto.html\" title=\"trait core::convert::TryInto\">TryInto</a>&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.96.1/std/primitive.u16.html\">u16</a>&gt; for <a class=\"enum\" href=\"nekoton/core/ton_wallet/enum.WalletType.html\" title=\"enum nekoton::core::ton_wallet::WalletType\">WalletType</a>",0]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
         window.pending_implementors = implementors;
     }
 })()
-//{"start":57,"fragment_lengths":[413]}
+//{"start":59,"fragment_lengths":[415]}
