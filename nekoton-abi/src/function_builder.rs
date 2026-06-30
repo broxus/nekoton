@@ -24,6 +24,8 @@ pub struct FunctionBuilder {
     outputs: Vec<Param>,
     /// Whether `answer_id` is set
     responsible: bool,
+    /// Whether the function can be executed as external message.
+    external_msg: Option<bool>,
 }
 
 impl FunctionBuilder {
@@ -36,11 +38,13 @@ impl FunctionBuilder {
             inputs: Vec::new(),
             outputs: Vec::new(),
             responsible: false,
+            external_msg: None,
         }
     }
 
     pub fn new_responsible(function_name: &str) -> Self {
         let mut function = Self::new(function_name);
+        // Force all responsible functions to be called as internal.
         function.make_responsible();
         function
     }
@@ -69,6 +73,10 @@ impl FunctionBuilder {
                 .insert(0, Param::new(ANSWER_ID, ParamType::Uint(32)));
         }
         self.responsible = true;
+    }
+
+    pub fn external_msg(&mut self, external_msg: Option<bool>) {
+        self.external_msg = external_msg;
     }
 
     pub fn abi_version(mut self, abi_version: AbiVersion) -> Self {
@@ -140,6 +148,7 @@ impl FunctionBuilder {
             outputs: self.outputs,
             input_id: 0,
             output_id: 0,
+            external_msg: self.external_msg,
         };
         match self.id {
             Some(id) => {

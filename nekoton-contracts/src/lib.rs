@@ -120,7 +120,8 @@ mod utils {
             $(header: [$($header:ident),+],)?
             name: $name:literal,
             inputs: $inputs:expr,
-            outputs: $outputs:expr$(,)?
+            outputs: $outputs:expr
+            $(, external_msg: $external_msg:expr)?$(,)?
         ) => {
             static ABI: once_cell::race::OnceBox<ton_abi::Function> =
                 once_cell::race::OnceBox::new();
@@ -133,6 +134,7 @@ mod utils {
                     outputs: $outputs,
                     input_id: 0,
                     output_id: 0,
+                    external_msg: $crate::utils::declare_function!(@external_msg $($external_msg)?),
                 };
                 let id = $crate::utils::declare_function!(@function_id function $($id)?);
                 function.input_id = id & 0x7FFFFFFF;
@@ -164,6 +166,9 @@ mod utils {
         (@header_item expire) => {
             ::ton_abi::Param::new("expire", ::ton_abi::ParamType::Expire)
         };
+
+        (@external_msg) => { None };
+        (@external_msg $external_msg:expr) => { $external_msg };
     }
 
     pub(crate) use declare_function;

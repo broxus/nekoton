@@ -810,11 +810,17 @@ impl<'a> FunctionAbi<'a> {
         clock: &dyn Clock,
         account_stuff: &mut AccountStuff,
         input: &[Token],
-        responsible: bool,
+        mut responsible: bool,
         config: &BriefBlockchainConfig,
         libraries: &[HashmapE],
     ) -> Result<ExecutionOutput> {
         let function = self.abi;
+
+        if let Some(external_msg) = self.abi.external_msg {
+            // Force "upgrade" function to responsible when it cannot
+            // be executed as an external message.
+            responsible |= !external_msg;
+        }
 
         let answer_id = if responsible {
             account_stuff.storage.balance.grams = ton_block::Grams::from(100_000_000_000_000u64); // 100 000 TON
