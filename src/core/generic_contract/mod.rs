@@ -7,7 +7,10 @@ use ton_block::{GetRepresentationHash, MsgAddressInt};
 use nekoton_utils::Clock;
 
 use super::models::{ContractState, PendingTransaction, Transaction, TransactionsBatchInfo};
-use super::{ContractSubscription, PollingMethod, TransactionExecutionOptions};
+use super::{
+    ContractSubscription, ContractSubscriptionCachedState, PollingMethod,
+    TransactionExecutionOptions,
+};
 use crate::core::utils;
 use crate::transport::models::{RawContractState, RawTransaction};
 use crate::transport::Transport;
@@ -24,6 +27,7 @@ impl GenericContract {
         address: MsgAddressInt,
         handler: Arc<dyn GenericContractSubscriptionHandler>,
         preload_transactions: bool,
+        cached_state: Option<ContractSubscriptionCachedState>,
     ) -> Result<Self> {
         let contract_subscription = {
             let handler = handler.as_ref();
@@ -47,6 +51,7 @@ impl GenericContract {
                 clock,
                 transport,
                 address,
+                cached_state,
                 &mut make_contract_state_handler(handler),
                 on_transactions_found,
             )
